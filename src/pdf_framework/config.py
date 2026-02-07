@@ -158,6 +158,30 @@ class ParentChildSettings(BaseSettings):
     parent_store_path: Path = PROJECT_ROOT / "data" / "parent_store.db"
 
 
+class AdaptiveRAGSettings(BaseSettings):
+    """Phase 8: Adaptive RAG configuration.
+
+    Enables automatic query classification and strategy routing for optimal retrieval.
+    """
+
+    # Query Classification (8.1)
+    classifier_model: str = "claude-haiku-4-5-20251001"
+    classifier_cache_enabled: bool = True
+
+    # Strategy Routing (8.2)
+    routing_enabled: bool = True
+
+    # Sub-Question Decomposition (8.3)
+    decomposition_enabled: bool = True
+    max_sub_questions: int = 4
+
+    # Route configurations (overrides)
+    route_simple_strategy: str = "vector"
+    route_moderate_strategy: str = "hybrid"
+    route_complex_strategy: str = "two_stage"
+    route_thematic_strategy: str = "graphrag_global"
+
+
 class GraphStoreSettings(BaseSettings):
     """Graph store configuration."""
 
@@ -241,6 +265,7 @@ class Settings(BaseSettings):
     self_rag: SelfRAGSettings = Field(default_factory=SelfRAGSettings)  # Phase 5
     graph_rag: GraphRAGSettings = Field(default_factory=GraphRAGSettings)  # Phase 6
     parent_child: ParentChildSettings = Field(default_factory=ParentChildSettings)  # Phase 7
+    adaptive: AdaptiveRAGSettings = Field(default_factory=AdaptiveRAGSettings)  # Phase 8
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 
