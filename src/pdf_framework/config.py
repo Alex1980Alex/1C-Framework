@@ -134,6 +134,30 @@ class GraphRAGSettings(BaseSettings):
     incremental_updates_enabled: bool = True
 
 
+class ParentChildSettings(BaseSettings):
+    """Phase 7: Parent-Child Retrieval configuration.
+
+    Enables two-level chunking: small children for search, large parents for context.
+    """
+
+    enabled: bool = False
+
+    # Parent chunks (large, for context)
+    parent_chunk_size: int = 2000
+    parent_chunk_overlap: int = 200
+
+    # Child chunks (small, for search)
+    child_chunk_size: int = 400
+    child_chunk_overlap: int = 50
+
+    # Auto-merge settings
+    merge_threshold: int = 3  # Min children from same parent to trigger merge
+    fetch_multiplier: float = 3.0  # fetch_k = k * multiplier
+
+    # Parent store location
+    parent_store_path: Path = PROJECT_ROOT / "data" / "parent_store.db"
+
+
 class GraphStoreSettings(BaseSettings):
     """Graph store configuration."""
 
@@ -151,7 +175,7 @@ class PDFSettings(BaseSettings):
     loader: Literal["pymupdf", "pdfplumber", "unstructured"] = "pymupdf"
     chunk_size: int = 1000
     chunk_overlap: int = 200
-    splitter: Literal["recursive", "semantic", "by_heading", "by_page"] = "recursive"
+    splitter: Literal["recursive", "semantic", "by_heading", "by_page", "parent_child"] = "recursive"
     extract_tables: bool = True
     extract_images: bool = False
 
@@ -216,6 +240,7 @@ class Settings(BaseSettings):
     two_stage: TwoStageSettings = Field(default_factory=TwoStageSettings)
     self_rag: SelfRAGSettings = Field(default_factory=SelfRAGSettings)  # Phase 5
     graph_rag: GraphRAGSettings = Field(default_factory=GraphRAGSettings)  # Phase 6
+    parent_child: ParentChildSettings = Field(default_factory=ParentChildSettings)  # Phase 7
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 

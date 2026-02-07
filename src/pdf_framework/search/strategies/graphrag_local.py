@@ -12,7 +12,6 @@ import re
 import time
 from typing import Any
 
-import networkx as nx
 from src.pdf_framework.embeddings.engine import BaseEmbeddingEngine
 from src.pdf_framework.graph_store.base import BaseGraphStore
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
@@ -228,7 +227,7 @@ class GraphRAGLocalStrategy:
             enriched_metadata["related_entities"] = list(entities_in_chunk)
 
         return SearchResult(
-            chunk=result.chunk._replace(metadata=enriched_metadata),
+            chunk=result.chunk.model_copy(update={"metadata": enriched_metadata}),
             score=result.score,
         )
 

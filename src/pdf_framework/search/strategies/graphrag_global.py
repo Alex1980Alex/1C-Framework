@@ -11,7 +11,6 @@ import logging
 import time
 from typing import Any
 
-import networkx as nx
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -133,6 +132,7 @@ class GraphRAGGlobalStrategy:
         result = SearchResult(
             chunk=DocumentChunk(
                 id="global_search",
+                document_id="graphrag_global",
                 content=final_answer,
                 metadata={
                     "search_type": "global",
@@ -219,7 +219,7 @@ class GraphRAGGlobalStrategy:
         ranked_keys = sorted(similarities.keys(), key=lambda k: similarities[k], reverse=True)
         top_keys = ranked_keys[:top_k]
 
-        ranked_summaries = [summunities[k] for k in top_keys]
+        ranked_summaries = [summaries[k] for k in top_keys]
         logger.info(f"[GLOBAL_SEARCH] Ranked communities: {top_keys}")
 
         return ranked_summaries
