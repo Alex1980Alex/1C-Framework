@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes import auth, chat, documents, health, metrics, search
+from src.api.routes import openai_compat  # Phase 14: OpenAI-compatible API
 from src.pdf_framework.config import get_settings
 
 
@@ -43,8 +44,8 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="PDF Vector & Graph Framework",
-        version="1.4.0",
-        description="Intelligent PDF processing with Vector and Graph databases (RAPTOR & HyDE)",
+        version="1.5.0",
+        description="Intelligent PDF processing with Vector and Graph databases (UI & DX)",
         lifespan=lifespan,
     )
 
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
     app.include_router(search.router)
     app.include_router(chat.router)  # Phase 9: Conversational RAG
     app.include_router(metrics.router)  # Phase 11.6: Metrics Dashboard
+    app.include_router(openai_compat.router)  # Phase 14.3: OpenAI-compatible API
 
     return app
 
