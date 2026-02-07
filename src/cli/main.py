@@ -6,6 +6,8 @@ Commands:
     ask     - Ask a question using RAG
     chat    - Interactive chat with conversation memory (Phase 9)
     cache   - Manage caches (stats, clear) - Phase 11
+    tenant  - Manage tenants (create, list, delete) - Phase 12
+    auth    - Generate JWT tokens - Phase 12
     stats   - Show index statistics
     server  - Start REST API server
     eval    - Run evaluation benchmark
@@ -707,6 +709,137 @@ def cache(
             raise typer.Exit(1)
 
     asyncio.run(_run())
+
+
+@app.command()
+def tenant(
+    action: str = typer.Argument(..., help="Action: create, list, delete"),
+    tenant_id: str = typer.Option("", "--id", "-t", help="Tenant ID (for create/delete)"),
+):
+    """Manage tenants (Phase 12.1).
+
+    Actions:
+        create  - Create a new tenant
+        list    - List all tenants
+        delete  - Delete a tenant and all data (GDPR)
+    """
+    from src.pdf_framework.multitenancy import get_tenant_store_manager, get_tenant_graph_manager
+
+    async def _run():
+        store_mgr = get_tenant_store_manager()
+        graph_mgr = get_tenant_graph_manager()
+
+        if action == "create":
+            if not tenant_id:
+                console.print("[red]--id required for create[/red]")
+                raise typer.Exit(1)
+
+            metadata = await store_mgr.create_tenant(tenant_id)
+
+            console.print(f"[green]Tenant created:[/green] {tenant_id}")
+            console.print(f"  Collection: {metadata.collection_name}")
+            console.print(f"  Created at: {metadata.created_at}")
+
+        elif action == "list":
+            tenants = await store_mgr.list_tenants()
+
+            if not tenants:
+                console.print("[dim]No tenants found[/dim]")
+                return
+
+            table = Table(title="Tenants")
+            table.add_column("Tenant ID", width=30)
+            table.add_column("Collection", width=30)
+            table.add_column("Documents", width=10)
+            table.add_column("Created", width=25)
+
+            for tenant_id in tenants:
+                metadata = await store_mgr.get_tenant_metadata(tenant_id)
+                if metadata:
+                    table.add_row(
+                        metadata.tenant_id,
+                        metadata.collection_name,
+                        str(metadata.document_count),
+                        metadata.created_at[:19],
+                    )
+
+            console.print(table)
+
+        elif action == "delete":
+            if not tenant_id:
+                console.print("[red]--id required for delete[/red]")
+                raise typer.Exit(1)
+
+            # Confirm deletion
+            console.print(f"[yellow]Deleting tenant '{tenant_id}' and ALL data[/yellow]")
+            console.print("[dim]This cannot be undone![/dim]")
+
+            # Delete vector store data
+            await store_mgr.delete_tenant(tenant_id)
+
+            # Delete graph data
+            await graph_mgr.delete_tenant(tenant_id)
+
+            console.print(f"[green]Tenant deleted:[/green] {tenant_id}")
+
+        else:
+            console.print(f"[red]Unknown action:[/red] {action}")
+            console.print("Valid actions: create, list, delete")
+            raise typer.Exit(1)
+
+    asyncio.run(_run())
+
+
+@app.command()
+def auth(
+    action: str = typer.Argument(..., help="Action: token"),
+    tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant ID"),
+    role: str = typer.Option("viewer", "--role", "-r", help="User role (viewer/editor/admin)"),
+):
+    """Authentication utilities (Phase 12.3).
+
+    Actions:
+        token   - Generate a JWT token for a tenant
+
+    Example:
+        pdf-framework auth token --tenant myorg --role editor
+    """
+    from src.api.auth.jwt_handler import get_jwt_handler
+    from src.pdf_framework.config import get_settings
+
+    if action == "token":
+        settings = get_settings()
+
+        # Validate role
+        if role not in ("viewer", "editor", "admin"):
+            console.print(f"[red]Invalid role:[/red] {role}")
+            console.print("Valid roles: viewer, editor, admin")
+            raise typer.Exit(1)
+
+        # Create token
+        jwt_handler = get_jwt_handler(
+            secret=settings.auth.jwt_secret,
+            algorithm=settings.auth.jwt_algorithm,
+            expire_hours=settings.auth.token_expire_hours,
+        )
+
+        token = jwt_handler.create_token(tenant, role)
+
+        console.print(f"[green]Token generated:[/green]")
+        console.print(f"  Token: {token}")
+        console.print(f"  Tenant: {tenant}")
+        console.print(f"  Role: {role}")
+        console.print(f"  Expires: {settings.auth.token_expire_hours} hours")
+
+        # Show curl example
+        console.print("\n[dim]Example usage:[/dim]")
+        console.print(f"  curl -H \"Authorization: Bearer {token}\" \\")
+        console.print(f"    http://localhost:8000/search/")
+
+    else:
+        console.print(f"[red]Unknown action:[/red] {action}")
+        console.print("Valid actions: token")
+        raise typer.Exit(1)
 
 
 @app.command(name="eval")
