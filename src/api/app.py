@@ -43,8 +43,8 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="PDF Vector & Graph Framework",
-        version="1.3.0",
-        description="Intelligent PDF processing with Vector and Graph databases (Multi-tenant)",
+        version="1.4.0",
+        description="Intelligent PDF processing with Vector and Graph databases (RAPTOR & HyDE)",
         lifespan=lifespan,
     )
 

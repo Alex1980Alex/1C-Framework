@@ -46,10 +46,13 @@ def index(
     layout_aware: bool = typer.Option(False, "--layout-aware", help="Use layout-aware PDF parsing (Phase 10)"),
     extract_images: bool = typer.Option(False, "--extract-images", help="Extract and describe images (Phase 10)"),
     template: str = typer.Option("auto", "--template", help="Parse template: auto/generic/research_paper/user_manual (Phase 10)"),
+    raptor: bool = typer.Option(False, "--raptor", help="Build RAPTOR tree for hierarchical retrieval (Phase 13.1)"),
+    summarize: bool = typer.Option(False, "--summarize", help="Generate document summary for pre-routing (Phase 13.4)"),
 ):
     """Index a PDF document into the vector store.
 
     Phase 10: Use --layout-aware for structure-aware parsing, --extract-images for Vision API.
+    Phase 13: Use --raptor for RAPTOR tree, --summarize for document summary index.
     """
     components = _get_components()
 
@@ -205,13 +208,86 @@ def index(
                 components.graph_store._save_to_file()
                 console.print(f"[green]Summaries:[/green] {len(summaries)} community summaries generated")
 
+        # Phase 13.1: RAPTOR Tree Builder
+        if raptor or components.settings.raptor.enabled:
+            from src.pdf_framework.processing.raptor import get_raptor_builder
+
+            console.print("[yellow]Building RAPTOR tree...[/yellow]")
+
+            builder = get_raptor_builder(
+                max_levels=components.settings.raptor.max_levels,
+                summarization_model=components.settings.raptor.summarization_model,
+                api_key=components.settings.anthropic_api_key,
+            )
+
+            # Get embeddings for chunks
+            chunk_texts = [chunk.get("content", "") for chunk in chunks]
+            embeddings = await components.embedding_engine.embed_texts_batch(chunk_texts)
+
+            # Build tree
+            tree = await builder.build(
+                chunks=chunks,
+                embeddings=embeddings,
+                document_id=document.id,
+            )
+
+            # Index RAPTOR nodes into vector store
+            for level_nodes in tree.levels:
+                for node in level_nodes:
+                    from src.pdf_framework.schemas.search import DocumentChunk
+
+                    chunk = DocumentChunk(
+                        id=node.id,
+                        content=node.content,
+                        metadata={
+                            "raptor_node": True,
+                            "raptor_level": node.level,
+                            "document_id": document.id,
+                            "node_type": "summary" if node.level > 0 else "leaf",
+                            **node.metadata,
+                        },
+                    )
+
+                    if node.embedding:
+                        await components.vector_store.add_documents([chunk], [node.embedding])
+
+            console.print(
+                f"[green]RAPTOR:[/green] {tree.total_nodes} nodes, "
+                f"{len(tree.levels)} levels, max level {tree.max_level}"
+            )
+
+        # Phase 13.4: Document Summary Index
+        if summarize or components.settings.summary_index.enabled:
+            from src.pdf_framework.processing.summary_index import get_summary_index
+
+            console.print("[yellow]Generating document summary...[/yellow]")
+
+            summary_idx = get_summary_index(
+                collection_name=components.settings.summary_index.collection_name,
+                persist_dir=components.settings.vector_store.persist_dir,
+                summarization_model=components.settings.summary_index.summarization_model,
+                api_key=components.settings.anthropic_api_key,
+            )
+
+            doc_summary = await summary_idx.add_document(
+                document_id=document.id,
+                chunks=chunks,
+                title=document.metadata.get("title", document.id),
+                metadata={"source_path": document.source_path},
+            )
+
+            console.print(
+                f"[green]Summary:[/green] {len(doc_summary.summary)} chars, "
+                f"{doc_summary.chunk_count} chunks indexed"
+            )
+
     asyncio.run(_run())
 
 
 @app.command()
 def search(
     query: str = typer.Argument(..., help="Search query"),
-    strategy: str = typer.Option("vector", "--strategy", "-s", help="Search strategy (vector/graph/hybrid/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive)"),
+    strategy: str = typer.Option("vector", "--strategy", "-s", help="Search strategy (vector/graph/hybrid/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive/raptor)"),
     k: int = typer.Option(5, "--top-k", "-k", help="Number of results"),
     no_rerank: bool = typer.Option(False, "--no-rerank", help="Disable reranking (Phase 1.1)"),
     doc_type: str = typer.Option(None, "--doc-type", help="Filter by document_type (Phase 1.3)"),
@@ -229,6 +305,7 @@ def search(
     Phase 6: GraphRAG (--strategy graphrag_local / graphrag_global).
     Phase 7: Parent-Child (--strategy auto_merge).
     Phase 8: Adaptive RAG (--strategy adaptive), force route (--force-route vector).
+    Phase 13: RAPTOR (--strategy raptor).
     """
     components = _get_components()
 
@@ -279,7 +356,7 @@ def search(
 @app.command()
 def ask(
     question: str = typer.Argument(..., help="Question to ask"),
-    strategy: str = typer.Option("hybrid", "--strategy", "-s", help="Search strategy (hybrid/vector/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive)"),
+    strategy: str = typer.Option("hybrid", "--strategy", "-s", help="Search strategy (hybrid/vector/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive/raptor)"),
     stream: bool = typer.Option(False, "--stream", help="Enable streaming response (Phase 9)"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show Self-RAG pipeline details"),
     no_self_rag: bool = typer.Option(False, "--no-self-rag", help="Disable Self-RAG (use legacy chain)"),
