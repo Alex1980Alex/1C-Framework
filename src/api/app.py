@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import chat, documents, health, metrics, search
+from src.api.routes import auth, chat, documents, health, metrics, search
 from src.pdf_framework.config import get_settings
 
 
@@ -43,8 +43,8 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="PDF Vector & Graph Framework",
-        version="1.0.0",
-        description="Intelligent PDF processing with Vector and Graph databases",
+        version="1.3.0",
+        description="Intelligent PDF processing with Vector and Graph databases (Multi-tenant)",
         lifespan=lifespan,
     )
 
@@ -57,6 +57,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(auth.router)  # Phase 12: Authentication
     app.include_router(documents.router)
     app.include_router(search.router)
     app.include_router(chat.router)  # Phase 9: Conversational RAG

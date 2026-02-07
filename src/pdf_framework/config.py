@@ -199,7 +199,7 @@ class PDFSettings(BaseSettings):
     loader: Literal["pymupdf", "pdfplumber", "unstructured"] = "pymupdf"
     chunk_size: int = 1000
     chunk_overlap: int = 200
-    splitter: Literal["recursive", "semantic", "by_heading", "by_page", "parent_child"] = "recursive"
+    splitter: Literal["recursive", "semantic", "by_heading", "by_page", "parent_child", "structure_aware"] = "recursive"
     extract_tables: bool = True
     extract_images: bool = False
 
@@ -290,12 +290,53 @@ class ConversationSettings(BaseSettings):
     reformulation_model: str = "claude-haiku-4-5-20251001"  # Fast model for reformulation
 
 
+class ObservabilitySettings(BaseSettings):
+    """Phase 11: Observability configuration.
+
+    Configures tracing backends and trace storage.
+    """
+
+    tracer: Literal["jsonfile", "langsmith", "none"] = "jsonfile"
+    trace_dir: Path = PROJECT_ROOT / "data" / "traces"
+    langsmith_enabled: bool = False
+
+
+class CacheSettings(BaseSettings):
+    """Phase 11: Caching configuration.
+
+    Configures embedding, LLM, and document caching.
+    """
+
+    embedding_enabled: bool = True
+    embedding_ttl_days: int = 30
+    embedding_db_path: Path = PROJECT_ROOT / "data" / "cache" / "embeddings.db"
+
+    llm_enabled: bool = True
+    llm_ttl_seconds: int = 3600
+    llm_db_path: Path = PROJECT_ROOT / "data" / "cache" / "llm_responses.db"
+
+    document_enabled: bool = True
+    document_cache_dir: Path = PROJECT_ROOT / "data" / "cache" / "documents"
+
+    prompt_caching_enabled: bool = True
+
+
 class APISettings(BaseSettings):
     """REST API configuration."""
 
     host: str = "0.0.0.0"
     port: int = 8000
     cors_origins: list[str] = ["*"]
+
+
+class AuthSettings(BaseSettings):
+    """Phase 12: Authentication and authorization configuration."""
+
+    enabled: bool = False  # Disabled by default for dev
+    jwt_secret: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    token_expire_hours: int = 24
+    default_tenant: str = "default"
 
 
 class Settings(BaseSettings):
@@ -322,6 +363,9 @@ class Settings(BaseSettings):
     adaptive: AdaptiveRAGSettings = Field(default_factory=AdaptiveRAGSettings)  # Phase 8
     conversation: ConversationSettings = Field(default_factory=ConversationSettings)  # Phase 9
     layout: LayoutSettings = Field(default_factory=LayoutSettings)  # Phase 10
+    observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)  # Phase 11
+    cache: CacheSettings = Field(default_factory=CacheSettings)  # Phase 11
+    auth: AuthSettings = Field(default_factory=AuthSettings)  # Phase 12
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 
