@@ -4,13 +4,13 @@ Author: Claude Code
 Version: 1.0.0 - Phase 9.1: Conversation Memory
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timezone
 from typing import Literal
 
 from pydantic import BaseModel, Field
-
-from src.pdf_framework.agents.memory.backends import MemoryBackend, SQLiteBackend
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,9 @@ class ConversationMemory:
         self._max_history = max_history
         self._auto_cleanup_days = auto_cleanup_days
 
-        # Initialize backend
+        # Initialize backend (lazy import to avoid circular dependency)
+        from src.pdf_framework.agents.memory.backends import MemoryBackend, SQLiteBackend
+
         if backend == "sqlite":
             self._backend = SQLiteBackend(db_path)
         else:

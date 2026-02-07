@@ -39,12 +39,65 @@ def index(
     communities: bool = typer.Option(False, "--communities", help="Detect communities after graph build (Phase 6)"),
     parent_child: bool = typer.Option(False, "--parent-child", help="Use parent-child two-level splitting (Phase 7)"),
     contextual: bool = typer.Option(False, "--contextual", help="Generate LLM context per chunk (Phase 3.1)"),
+    layout_aware: bool = typer.Option(False, "--layout-aware", help="Use layout-aware PDF parsing (Phase 10)"),
+    extract_images: bool = typer.Option(False, "--extract-images", help="Extract and describe images (Phase 10)"),
+    template: str = typer.Option("auto", "--template", help="Parse template: auto/generic/research_paper/user_manual (Phase 10)"),
 ):
-    """Index a PDF document into the vector store."""
+    """Index a PDF document into the vector store.
+
+    Phase 10: Use --layout-aware for structure-aware parsing, --extract-images for Vision API.
+    """
     components = _get_components()
 
     async def _run():
-        document = await components.loader.load(file_path)
+        # Phase 10: Layout-aware loading
+        if layout_aware or components.settings.layout.layout_detection_enabled:
+            from src.pdf_framework.loaders.providers.layout_parser import LayoutAwareLoader
+
+            console.print("[yellow]Using layout-aware PDF parsing[/yellow]")
+
+            loader = LayoutAwareLoader(
+                strategy=components.settings.layout.layout_strategy,
+                infer_table_structure=components.settings.layout.infer_table_structure,
+                extract_images=extract_images or components.settings.layout.extract_images,
+            )
+            document = await loader.load(file_path)
+        else:
+            document = await components.loader.load(file_path)
+
+        # Phase 10: Table extraction
+        if layout_aware and components.settings.layout.extract_tables:
+            from src.pdf_framework.processing.table_extractor import TableExtractor
+
+            console.print("[yellow]Extracting tables...[/yellow]")
+
+            extractor = TableExtractor()
+            tables = extractor.extract_all(file_path)
+
+            for table in tables:
+                console.print(f"  Table p.{table.page_number}: "
+                            f"{len(table.headers)} cols × {len(table.rows)} rows")
+
+        # Phase 10: Image description
+        if extract_images and components.settings.layout.extract_images:
+            from src.pdf_framework.processing.image_extractor import ImageExtractor
+
+            console.print("[yellow]Describing images with Claude Vision...[/yellow]")
+
+            img_extractor = ImageExtractor(
+                api_key=components.settings.anthropic_api_key,
+                model=components.settings.layout.image_description_model,
+            )
+
+            if img_extractor.has_vision_support():
+                descriptions = await img_extractor.extract_all(file_path)
+
+                console.print(f"[green]Described {len(descriptions)} images[/green]")
+
+                for desc in descriptions:
+                    console.print(f"  p.{desc.page_number}: {desc.description[:60]}...")
+            else:
+                console.print("[dim]Vision API not available, skipping images[/dim]")
 
         # Phase 7: Parent-Child two-level splitting
         if parent_child or components.settings.parent_child.enabled:

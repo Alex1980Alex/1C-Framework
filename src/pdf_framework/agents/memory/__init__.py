@@ -7,8 +7,11 @@ Provides:
 - ConversationMemory: unified API for history management
 """
 
-from src.pdf_framework.agents.memory.backends import MemoryBackend, SQLiteBackend
+# Import conversation first (it has no dependency on backends at module level)
 from src.pdf_framework.agents.memory.conversation import ConversationMemory, Message
+
+# Then import backends (which depend on Message from conversation)
+from src.pdf_framework.agents.memory.backends import MemoryBackend, SQLiteBackend
 
 __all__ = [
     "Message",
