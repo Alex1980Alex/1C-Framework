@@ -236,6 +236,29 @@ class MCPServerSettings(BaseSettings):
     transport: Literal["stdio", "sse"] = "stdio"
 
 
+class ConversationSettings(BaseSettings):
+    """Phase 9: Conversational RAG configuration.
+
+    Enables multi-turn dialog support with history management and streaming.
+    """
+
+    # Memory backend
+    memory_backend: Literal["memory", "sqlite"] = "sqlite"
+
+    # History window
+    max_history: int = 10  # Maximum messages to retrieve per thread
+
+    # Auto-cleanup
+    auto_cleanup_days: int = 30  # Days before cleaning old threads (0 = disabled)
+
+    # Database path
+    db_path: Path = PROJECT_ROOT / "data" / "conversations.db"
+
+    # Reformulation
+    reformulation_enabled: bool = True  # History-aware query reformulation
+    reformulation_model: str = "claude-haiku-4-5-20251001"  # Fast model for reformulation
+
+
 class APISettings(BaseSettings):
     """REST API configuration."""
 
@@ -266,6 +289,7 @@ class Settings(BaseSettings):
     graph_rag: GraphRAGSettings = Field(default_factory=GraphRAGSettings)  # Phase 6
     parent_child: ParentChildSettings = Field(default_factory=ParentChildSettings)  # Phase 7
     adaptive: AdaptiveRAGSettings = Field(default_factory=AdaptiveRAGSettings)  # Phase 8
+    conversation: ConversationSettings = Field(default_factory=ConversationSettings)  # Phase 9
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 

@@ -1,0 +1,630 @@
+"""CLI interface for PDF Vector & Graph Framework.
+
+Commands:
+    index   - Index PDF documents into vector and graph stores
+    search  - Search indexed documents
+    ask     - Ask a question using RAG
+    chat    - Interactive chat with conversation memory (Phase 9)
+    stats   - Show index statistics
+    server  - Start REST API server
+"""
+
+import asyncio
+import uuid
+
+import typer
+from rich.console import Console
+from rich.table import Table
+
+app = typer.Typer(
+    name="pdf-framework",
+    help="PDF Vector & Graph Framework CLI",
+)
+console = Console()
+
+
+def _get_components():
+    """Lazily initialize framework components."""
+    from src.api.dependencies.components import Components
+
+    components = Components()
+    asyncio.get_event_loop().run_until_complete(components.initialize())
+    return components
+
+
+@app.command()
+def index(
+    file_path: str = typer.Argument(..., help="Path to PDF file to index"),
+    build_graph: bool = typer.Option(False, "--graph", help="Also build knowledge graph"),
+    communities: bool = typer.Option(False, "--communities", help="Detect communities after graph build (Phase 6)"),
+    parent_child: bool = typer.Option(False, "--parent-child", help="Use parent-child two-level splitting (Phase 7)"),
+    contextual: bool = typer.Option(False, "--contextual", help="Generate LLM context per chunk (Phase 3.1)"),
+):
+    """Index a PDF document into the vector store."""
+    components = _get_components()
+
+    async def _run():
+        document = await components.loader.load(file_path)
+
+        # Phase 7: Parent-Child two-level splitting
+        if parent_child or components.settings.parent_child.enabled:
+            from src.pdf_framework.vector_store.parent_store import ParentDocumentStore
+
+            parents, chunks = components.pipeline.process_parent_child(
+                document,
+                pc_settings=components.settings.parent_child,
+            )
+
+            # Store parents in ParentDocumentStore
+            parent_store = components.parent_store
+            if parent_store is None:
+                parent_store = ParentDocumentStore(
+                    db_path=components.settings.parent_child.parent_store_path,
+                )
+                await parent_store.initialize()
+
+            await parent_store.add_parents(parents)
+            console.print(
+                f"[green]Parent-Child:[/green] {len(parents)} parents, "
+                f"{len(chunks)} children"
+            )
+        else:
+            chunks = components.pipeline.process(document)
+
+        # Phase 3.1: Contextual Retrieval
+        if contextual or components.settings.contextual_retrieval.enabled:
+            from src.pdf_framework.processing.context_generator import ContextGenerator
+
+            generator = ContextGenerator(
+                settings=components.settings.agent,
+                context_settings=components.settings.contextual_retrieval,
+                api_key=components.settings.anthropic_api_key,
+            )
+            chunks = await generator.enrich_chunks(chunks, document)
+            console.print(f"[green]Context:[/green] generated for {len(chunks)} chunks")
+
+        result = await components.indexer.index_chunks(
+            chunks,
+            document_id=document.id,
+            source_path=document.source_path,
+        )
+        console.print(f"[green]Indexed:[/green] {result.chunks_stored} chunks, "
+                       f"{result.embeddings_computed} embeddings")
+
+        if build_graph:
+            from src.pdf_framework.graph_store.construction.builder import GraphBuilder
+            from src.pdf_framework.processing.extractors.entity_extractor import LLMEntityExtractor
+
+            extractor = LLMEntityExtractor(
+                settings=components.settings.agent,
+                api_key=components.settings.anthropic_api_key,
+            )
+            builder = GraphBuilder(extractor, components.graph_store)
+            stats = await builder.build_from_chunks(chunks)
+            console.print(f"[green]Graph:[/green] {stats['entities_added']} entities, "
+                          f"{stats['relations_added']} relations")
+
+            # Phase 6: Community detection and summarization
+            if communities and components.settings.graph_rag.community_detection_enabled:
+                from src.pdf_framework.graph_store.community import CommunityDetector
+                from src.pdf_framework.graph_store.summarizer import CommunitySummarizer
+
+                detector = CommunityDetector(settings=components.settings.graph_rag)
+                graph = components.graph_store._graph  # NetworkX graph
+
+                comm_map = await detector.detect(graph)
+                await detector.apply_to_graph(graph, comm_map)
+
+                comm_stats = detector.get_community_stats(graph, comm_map)
+                console.print(
+                    f"[green]Communities:[/green] {comm_stats['num_communities']} detected "
+                    f"(avg size {comm_stats['avg_community_size']:.1f})"
+                )
+
+                # Generate summaries
+                summarizer = CommunitySummarizer(settings=components.settings.graph_rag)
+                summaries = await summarizer.summarize_all(graph, comm_map)
+
+                # Store summaries as COMMUNITY nodes in graph
+                for comm_id, summary in summaries.items():
+                    graph.add_node(
+                        f"community_{comm_id}",
+                        node_type="COMMUNITY",
+                        community_id=comm_id,
+                        level=0,
+                        summary=summary,
+                    )
+
+                components.graph_store._save_to_file()
+                console.print(f"[green]Summaries:[/green] {len(summaries)} community summaries generated")
+
+    asyncio.run(_run())
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Search query"),
+    strategy: str = typer.Option("vector", "--strategy", "-s", help="Search strategy (vector/graph/hybrid/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive)"),
+    k: int = typer.Option(5, "--top-k", "-k", help="Number of results"),
+    no_rerank: bool = typer.Option(False, "--no-rerank", help="Disable reranking (Phase 1.1)"),
+    doc_type: str = typer.Option(None, "--doc-type", help="Filter by document_type (Phase 1.3)"),
+    language: str = typer.Option(None, "--language", help="Filter by language (Phase 1.3)"),
+    version: str = typer.Option(None, "--version", help="Filter by version (Phase 1.3)"),
+    diversity: float = typer.Option(None, "--diversity", help="MMR diversity lambda 0.0-1.0 (Phase 2.1)"),
+    expand_query: bool = typer.Option(False, "--expand-query", help="Enable query expansion (Phase 2.3)"),
+    force_route: str = typer.Option(None, "--force-route", help="Force adaptive to use specific strategy (Phase 8)"),
+):
+    """Search indexed documents.
+
+    Phase 1: Reranking, metadata filtering.
+    Phase 2: MMR (--strategy mmr --diversity 0.7), query expansion (--expand-query).
+    Phase 3: Two-stage pipeline (--strategy two_stage).
+    Phase 6: GraphRAG (--strategy graphrag_local / graphrag_global).
+    Phase 7: Parent-Child (--strategy auto_merge).
+    Phase 8: Adaptive RAG (--strategy adaptive), force route (--force-route vector).
+    """
+    components = _get_components()
+
+    async def _run():
+        # Build metadata filter (Phase 1.3)
+        filter_dict = {}
+        if doc_type:
+            filter_dict["document_type"] = doc_type
+        if language:
+            filter_dict["language"] = language
+        if version:
+            filter_dict["version"] = version
+
+        # Build extra kwargs for strategy-specific params
+        extra_kwargs = {}
+        if diversity is not None:
+            extra_kwargs["diversity"] = diversity
+        if force_route is not None:
+            extra_kwargs["force_route"] = force_route
+
+        response = await components.search_manager.search(
+            query=query,
+            strategy=strategy,
+            k=k,
+            filter=filter_dict if filter_dict else None,
+            rerank=not no_rerank,
+            expand_query=expand_query,
+            **extra_kwargs,
+        )
+        table = Table(title=f"Search results ({response.search_type}, {response.elapsed_ms:.0f}ms)")
+        table.add_column("#", width=3)
+        table.add_column("Score", width=8)
+        table.add_column("Content", max_width=80)
+        table.add_column("Source", width=20)
+
+        for i, result in enumerate(response.results, 1):
+            table.add_row(
+                str(i),
+                f"{result.score:.3f}",
+                result.chunk.content[:200] + "...",
+                result.source,
+            )
+        console.print(table)
+
+    asyncio.run(_run())
+
+
+@app.command()
+def ask(
+    question: str = typer.Argument(..., help="Question to ask"),
+    strategy: str = typer.Option("hybrid", "--strategy", "-s", help="Search strategy (hybrid/vector/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive)"),
+    stream: bool = typer.Option(False, "--stream", help="Enable streaming response (Phase 9)"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show Self-RAG pipeline details"),
+    no_self_rag: bool = typer.Option(False, "--no-self-rag", help="Disable Self-RAG (use legacy chain)"),
+):
+    """Ask a question using RAG agent (Phase 5: Self-RAG).
+
+    Uses LangGraph agent with document grading, query rewriting,
+    and hallucination checking. Use --no-self-rag for legacy chain mode.
+
+    Phase 9: Use --stream for real-time token streaming.
+    """
+    import logging
+
+    components = _get_components()
+
+    if verbose:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+        for name in ["src.pdf_framework.agents.rag"]:
+            logging.getLogger(name).setLevel(logging.DEBUG)
+
+    async def _run():
+        if stream:
+            # Phase 9: Streaming mode
+            from src.pdf_framework.agents.rag.agent import create_rag_agent
+            from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+
+            agent = create_rag_agent(
+                search_manager=components.search_manager,
+                settings=components.settings.agent,
+                self_rag_settings=components.settings.self_rag,
+                api_key=components.settings.anthropic_api_key,
+            )
+
+            runner = StreamingRAGRunner(agent, show_status=False)
+
+            # Stream and print tokens in real-time
+            console.print(f"\n[bold]Answer:[/bold]\n")
+            async for event in runner.stream(question, search_strategy=strategy):
+                if event.type.value == "token":
+                    console.print(event.data, end="", markup=False)
+                elif event.type.value == "source":
+                    console.print(f"\n\n[dim]Sources:[/dim]")
+                    for src in event.data:
+                        console.print(f"  - {src.get('id', 'unknown')}")
+                elif event.type.value == "error":
+                    console.print(f"\n[red]Error:[/red] {event.data}")
+            console.print("\n")
+            return
+
+        if no_self_rag:
+            # Legacy mode: use RetrievalQAChain directly
+            from src.pdf_framework.chains.qa.retrieval_qa import RetrievalQAChain
+
+            search_response = await components.search_manager.search(
+                query=question, strategy=strategy, k=5,
+            )
+            chain = RetrievalQAChain(
+                settings=components.settings.agent,
+                api_key=components.settings.anthropic_api_key,
+            )
+            answer = await chain.answer(question, search_response)
+            console.print(f"\n[bold]Answer:[/bold]\n{answer}\n")
+
+            if search_response.results:
+                console.print("[dim]Sources:[/dim]")
+                for r in search_response.results:
+                    src = r.chunk.metadata.get("source", "unknown")
+                    console.print(f"  - {src} (score: {r.score:.3f})")
+            return
+
+        # Self-RAG mode: use LangGraph agent
+        from src.pdf_framework.agents.rag.agent import create_rag_agent
+
+        agent = create_rag_agent(
+            search_manager=components.search_manager,
+            settings=components.settings.agent,
+            self_rag_settings=components.settings.self_rag,
+            api_key=components.settings.anthropic_api_key,
+        )
+
+        result = await agent.ainvoke({
+            "question": question,
+            "search_strategy": strategy,
+        })
+
+        answer = result.get("answer", "No answer generated.")
+        console.print(f"\n[bold]Answer:[/bold]\n{answer}\n")
+
+        # Show Self-RAG metadata in verbose mode
+        if verbose:
+            ratio = result.get("relevance_ratio")
+            retries = result.get("retry_count", 0)
+            hallucinated = result.get("is_hallucinated", False)
+            gen_attempts = result.get("generation_attempts", 0)
+
+            console.print("[dim]Self-RAG pipeline:[/dim]")
+            if ratio is not None:
+                console.print(f"  Relevance ratio: {ratio:.2%}")
+            if retries > 0:
+                console.print(f"  Query rewrites: {retries}")
+            console.print(f"  Hallucinated: {'yes' if hallucinated else 'no'}")
+            if gen_attempts > 0:
+                console.print(f"  Generation attempts: {gen_attempts}")
+
+        sources = result.get("sources", [])
+        if sources:
+            console.print("[dim]Sources:[/dim]")
+            for src in sources:
+                console.print(f"  - {src}")
+
+    asyncio.run(_run())
+
+
+@app.command()
+def chat(
+    thread: str = typer.Option(None, "--thread", "-t", help="Thread ID to continue (default: new thread)"),
+    strategy: str = typer.Option("adaptive", "--strategy", "-s", help="Search strategy"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show pipeline details"),
+):
+    """Interactive chat with conversation memory (Phase 9).
+
+    Commands:
+        /quit       - Exit chat
+        /clear      - Clear current thread history
+        /history    - Show conversation history
+        /strategy   - Change search strategy
+        /stream     - Toggle streaming mode
+    """
+    from src.pdf_framework.agents.memory.conversation import ConversationMemory
+    from src.pdf_framework.agents.rag.agent import create_rag_agent
+    from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+
+    components = _get_components()
+
+    # Setup
+    thread_id = thread or str(uuid.uuid4())
+    memory = ConversationMemory(
+        backend=components.settings.conversation.memory_backend,
+        db_path=str(components.settings.conversation.db_path),
+        max_history=components.settings.conversation.max_history,
+    )
+
+    # Get existing history or start new
+    history = asyncio.get_event_loop().run_until_complete(
+        memory.get_history(thread_id)
+    )
+
+    streaming_enabled = True
+
+    console.print(f"\n[bold green]Chat started[/bold green] (thread: {thread_id[:8]}...)")
+    console.print("[dim]Type /quit to exit, /help for commands[/dim]\n")
+
+    if history:
+        console.print(f"[dim]Continuing conversation ({len(history)} messages)[/dim]")
+
+    while True:
+        try:
+            # Get user input
+            user_input = console.input("\n[bold]You:[/bold] ").strip()
+
+            if not user_input:
+                continue
+
+            # Handle commands
+            if user_input.lower() in ("/quit", "/exit", "/q"):
+                console.print(f"\n[dim]Chat saved (thread: {thread_id[:8]}...)[/dim]")
+                break
+
+            if user_input.lower() == "/clear":
+                asyncio.get_event_loop().run_until_complete(memory.clear_thread(thread_id))
+                console.print("[yellow]Thread cleared[/yellow]")
+                continue
+
+            if user_input.lower() == "/history":
+                hist = asyncio.get_event_loop().run_until_complete(memory.get_history(thread_id))
+                for i, msg in enumerate(hist, 1):
+                    role = "[bold cyan]You[/bold cyan]" if msg.role == "user" else "[bold green]Assistant[/bold green]"
+                    content = msg.content[:100] + "..." if len(msg.content) > 100 else msg.content
+                    console.print(f"  [{i}] {role}: {content}")
+                continue
+
+            if user_input.lower().startswith("/strategy"):
+                parts = user_input.split(maxsplit=1)
+                if len(parts) > 1:
+                    strategy = parts[1]
+                    console.print(f"[yellow]Strategy changed to: {strategy}[/yellow]")
+                else:
+                    console.print(f"[yellow]Current strategy: {strategy}[/yellow]")
+                continue
+
+            if user_input.lower() == "/stream":
+                streaming_enabled = not streaming_enabled
+                status = "enabled" if streaming_enabled else "disabled"
+                console.print(f"[yellow]Streaming {status}[/yellow]")
+                continue
+
+            if user_input.lower() == "/help":
+                console.print("""
+[bold]Available commands:[/bold]
+  /quit, /exit, /q    - Exit chat
+  /clear             - Clear current thread history
+  /history           - Show conversation history
+  /strategy <name>   - Change search strategy
+  /stream            - Toggle streaming mode
+                """)
+                continue
+
+            # Process user message
+            async def _process():
+                # Store user message
+                await memory.add_message(thread_id, "user", user_input)
+
+                # Get history
+                chat_history = await memory.get_history(thread_id)
+                # Exclude just-added message
+                chat_history = chat_history[:-1] if len(chat_history) > 1 else []
+
+                # Setup agent and runner
+                agent = create_rag_agent(
+                    search_manager=components.search_manager,
+                    settings=components.settings.agent,
+                    self_rag_settings=components.settings.self_rag,
+                    api_key=components.settings.anthropic_api_key,
+                )
+                runner = StreamingRAGRunner(agent, show_status=verbose)
+
+                console.print("\n[bold green]Assistant:[/bold green]")
+
+                if streaming_enabled:
+                    # Stream tokens
+                    answer_parts = []
+                    sources = []
+
+                    async for event in runner.stream(
+                        user_input,
+                        thread_id=thread_id,
+                        chat_history=chat_history,
+                        search_strategy=strategy,
+                    ):
+                        if event.type.value == "token":
+                            console.print(event.data, end="", markup=False)
+                            answer_parts.append(event.data)
+                        elif event.type.value == "source":
+                            sources = event.data
+                        elif event.type.value == "status" and verbose:
+                            console.print(f"\n[dim][{event.data}][/dim]", end="")
+
+                    # Store assistant response
+                    full_answer = "".join(answer_parts)
+                    if full_answer:
+                        await memory.add_message(
+                            thread_id,
+                            "assistant",
+                            full_answer,
+                            metadata={"strategy": strategy},
+                        )
+
+                    console.print("\n")
+                    if sources:
+                        console.print(f"[dim]Sources: {len(sources)} documents[/dim]")
+                else:
+                    # Non-streaming
+                    result = await collect_stream(
+                        runner.stream(
+                            user_input,
+                            thread_id=thread_id,
+                            chat_history=chat_history,
+                            search_strategy=strategy,
+                        )
+                    )
+
+                    console.print(result.get("answer", ""))
+                    console.print()
+
+                    # Store assistant response
+                    if result.get("answer"):
+                        await memory.add_message(
+                            thread_id,
+                            "assistant",
+                            result["answer"],
+                            metadata={"strategy": strategy},
+                        )
+
+                    if result.get("sources"):
+                        console.print(f"[dim]Sources: {len(result['sources'])} documents[/dim]")
+
+            from src.pdf_framework.agents.rag.streaming import collect_stream
+            asyncio.run(_process())
+
+        except KeyboardInterrupt:
+            console.print("\n\n[dim]Use /quit to exit[/dim]")
+        except EOFError:
+            break
+
+
+@app.command()
+def stats():
+    """Show index statistics."""
+    components = _get_components()
+
+    async def _run():
+        vector_count = await components.vector_store.count()
+        graph_stats = await components.graph_store.get_statistics()
+
+        console.print(f"\n[bold]Vector Store:[/bold]")
+        console.print(f"  Documents: {vector_count}")
+        console.print(f"\n[bold]Graph Store:[/bold]")
+        for key, value in graph_stats.items():
+            console.print(f"  {key}: {value}")
+
+    asyncio.run(_run())
+
+
+@app.command()
+def server(
+    host: str = typer.Option("0.0.0.0", help="Server host"),
+    port: int = typer.Option(8000, help="Server port"),
+):
+    """Start the REST API server."""
+    import uvicorn
+
+    console.print(f"[green]Starting server on {host}:{port}[/green]")
+    uvicorn.run("src.api.app:app", host=host, port=port, reload=False)
+
+
+@app.command(name="eval")
+def evaluate(
+    dataset: str = typer.Argument(..., help="Path to evaluation dataset JSON"),
+    strategy: str = typer.Option("vector", "--strategy", "-s", help="Search strategy"),
+    k: int = typer.Option(5, "--top-k", "-k", help="Number of results per query"),
+    with_rag_triad: bool = typer.Option(False, "--with-rag-triad", help="Enable RAG Triad evaluation (requires LLM)"),
+):
+    """Run evaluation benchmark on a dataset (Phase 4)."""
+    components = _get_components()
+
+    async def _run():
+        from src.pdf_framework.evaluation.dataset import EvalDataset
+        from src.pdf_framework.evaluation.runner import EvalReport, EvalRunner
+
+        ds = EvalDataset.from_json(dataset)
+        console.print(f"[bold]Dataset:[/bold] {ds.name} ({len(ds.test_cases)} queries)")
+        console.print(f"[bold]Strategy:[/bold] {strategy}, k={k}")
+
+        rag_evaluator = None
+        qa_chain = None
+        if with_rag_triad:
+            from src.pdf_framework.chains.qa.retrieval_qa import RetrievalQAChain
+            from src.pdf_framework.evaluation.rag_evaluator import RAGEvaluator
+
+            rag_evaluator = RAGEvaluator(
+                settings=components.settings.agent,
+                api_key=components.settings.anthropic_api_key,
+            )
+            qa_chain = RetrievalQAChain(
+                settings=components.settings.agent,
+                api_key=components.settings.anthropic_api_key,
+            )
+            console.print("[dim]RAG Triad evaluation enabled[/dim]")
+
+        runner = EvalRunner(
+            search_manager=components.search_manager,
+            rag_evaluator=rag_evaluator,
+            qa_chain=qa_chain,
+        )
+
+        report: EvalReport = await runner.run(ds, strategy=strategy, k=k)
+
+        # Display results
+        table = Table(title="Evaluation Results")
+        table.add_column("Metric", width=25)
+        table.add_column("Value", width=15)
+
+        table.add_row("Queries", str(report.num_queries))
+        table.add_row("Strategy", report.strategy)
+        table.add_row("Precision@5", f"{report.precision_at_5:.4f}")
+        table.add_row("Recall@5", f"{report.recall_at_5:.4f}")
+        table.add_row("MRR", f"{report.mrr:.4f}")
+        table.add_row("NDCG@10", f"{report.ndcg_at_10:.4f}")
+        table.add_row("MAP", f"{report.map_score:.4f}")
+        table.add_row("Avg Latency (ms)", f"{report.avg_latency_ms:.1f}")
+        table.add_row("P95 Latency (ms)", f"{report.p95_latency_ms:.1f}")
+
+        if report.context_relevance is not None:
+            table.add_row("Context Relevance", f"{report.context_relevance:.4f}")
+        if report.groundedness is not None:
+            table.add_row("Groundedness", f"{report.groundedness:.4f}")
+        if report.answer_relevance is not None:
+            table.add_row("Answer Relevance", f"{report.answer_relevance:.4f}")
+
+        console.print(table)
+
+        # Per-query details
+        if report.details:
+            detail_table = Table(title="Per-Query Details")
+            detail_table.add_column("#", width=3)
+            detail_table.add_column("Query", max_width=40)
+            detail_table.add_column("P@k", width=6)
+            detail_table.add_column("MRR", width=6)
+            detail_table.add_column("Latency", width=10)
+
+            for i, d in enumerate(report.details, 1):
+                detail_table.add_row(
+                    str(i),
+                    d["query"][:40],
+                    f"{d['precision_at_k']:.2f}",
+                    f"{d['mrr']:.2f}",
+                    f"{d['latency_ms']:.0f}ms",
+                )
+            console.print(detail_table)
+
+    asyncio.run(_run())
+
+
+if __name__ == "__main__":
+    app()

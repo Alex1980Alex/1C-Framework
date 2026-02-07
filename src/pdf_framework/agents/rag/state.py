@@ -1,25 +1,35 @@
 """RAG agent state definition for LangGraph.
 
 Author: Claude Code
-Version: 0.6.0 - Phase 5: Self-RAG & Corrective RAG
+Version: 1.0.0 - Phase 9: Conversational RAG & Streaming
 """
 
 from typing import TypedDict
 
+from src.pdf_framework.agents.memory.conversation import Message
 from src.pdf_framework.schemas.documents import SearchResponse
 
 
 class RAGState(TypedDict, total=False):
-    """State for the RAG agent graph with Self-RAG support.
+    """State for the RAG agent graph with Self-RAG and Conversational support.
 
     Phase 5 (v0.6.0) adds fields for:
     - Document grading (relevance assessment)
     - Query rewriting with retries
     - Hallucination checking
+
+    Phase 9 (v1.0.0) adds fields for:
+    - Conversation history management
+    - Thread-based dialog tracking
     """
 
     # ========== Input ==========
     question: str
+
+    # ========== Phase 9: Conversational fields ==========
+    thread_id: str  # Conversation thread identifier
+    chat_history: list[Message]  # Previous messages in thread
+    disable_reformulation: bool  # Skip query reformulation if True
 
     # ========== Analysis ==========
     query_type: str  # "factual", "analytical", "comparative"
