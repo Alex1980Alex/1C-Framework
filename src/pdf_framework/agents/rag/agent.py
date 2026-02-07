@@ -8,8 +8,6 @@ Version: 0.6.0 - Phase 5: Self-RAG & Corrective RAG
 """
 
 import logging
-from typing import Any
-
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -65,22 +63,10 @@ def create_rag_agent(
         api_key=api_key or None,
     )
 
-    grading_llm = ChatAnthropic(
+    # Single fast LLM for all Self-RAG tasks (grading, rewriting, hallucination)
+    # All three use the same model (Haiku by default), so one instance suffices.
+    fast_llm = ChatAnthropic(
         model=self_rag_settings.grading_model,
-        temperature=0.0,
-        max_tokens=1024,
-        api_key=api_key or None,
-    )
-
-    rewrite_llm = ChatAnthropic(
-        model=self_rag_settings.rewrite_model,
-        temperature=0.3,
-        max_tokens=1024,
-        api_key=api_key or None,
-    )
-
-    hallucination_llm = ChatAnthropic(
-        model=self_rag_settings.hallucination_model,
         temperature=0.0,
         max_tokens=1024,
         api_key=api_key or None,
@@ -151,7 +137,7 @@ def create_rag_agent(
             # Self-RAG disabled: use legacy evaluation
             return _legacy_evaluate_results(state)
 
-        return await grade_documents(state, grading_llm, self_rag_settings)
+        return await grade_documents(state, fast_llm, self_rag_settings)
 
     def _legacy_evaluate_results(state: RAGState) -> dict:
         """Legacy evaluation for backward compatibility."""
@@ -166,7 +152,7 @@ def create_rag_agent(
     # ========== Node 4: Rewrite Query (Phase 5) ==========
     async def rewrite_query_node(state: RAGState) -> dict:
         """Rewrite query when relevance is low."""
-        return await rewrite_query(state, rewrite_llm, self_rag_settings)
+        return await rewrite_query(state, fast_llm, self_rag_settings)
 
     # ========== Node 5: Generate Answer ==========
     async def generate_answer(state: RAGState) -> dict:
@@ -215,7 +201,7 @@ def create_rag_agent(
             logger.debug("[HALLUCINATION] Disabled, skipping")
             return {"is_hallucinated": False}
 
-        return await check_hallucination(state, hallucination_llm, self_rag_settings)
+        return await check_hallucination(state, fast_llm, self_rag_settings)
 
     # ========== Node 7: Regenerate Answer (Phase 5) ==========
     async def regenerate_answer_node(state: RAGState) -> dict:

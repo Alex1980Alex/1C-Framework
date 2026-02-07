@@ -64,7 +64,7 @@ graph TD
 - [x] 5.3 — Query Rewriter node ✅
 - [x] 5.4 — Hallucination Checker node ✅
 - [x] 5.5 — Обновление графа RAG-агента ✅
-- [ ] Тесты и верификация (TODO)
+- [x] Тесты и верификация ✅ (73 unit-тестов: парсеры, conditional edges, strategy escalation)
 - [x] Документация обновлена ✅
 
 ### Реализованные компоненты
@@ -383,7 +383,7 @@ graph.add_edge("regenerate", END)
 - [x] Hallucination check срабатывает после генерации ✅
 - [x] Максимум ретраев ограничен (нет зацикливания) ✅
 - [x] При отключении Self-RAG → старое поведение сохраняется ✅
-- [x] CLI команда `ask` работает с новым агентом (требуется интеграция с CLI) ⚠️
+- [x] CLI команда `ask` работает с новым агентом ✅ (--verbose, --no-self-rag)
 
 ---
 
@@ -487,7 +487,10 @@ Answer: В документации 1С нет прямого упоминани
 | `src/pdf_framework/agents/rag/nodes/hallucination_checker.py` | **NEW** | ✅ | Hallucination Check |
 | `src/pdf_framework/agents/rag/agent.py` | **MODIFY** | ✅ | RAG Agent с Self-RAG графом |
 | `src/pdf_framework/config.py` | **MODIFY** | ✅ | SelfRAGSettings |
-| `src/api/dependencies/components.py` | **MODIFY** | ⚠️ | Передать настройки (TODO) |
+| `src/cli/main.py` | **MODIFY** | ✅ | CLI ask с Self-RAG агентом |
+| `tests/test_self_rag/test_parsers.py` | **NEW** | ✅ | Unit-тесты парсеров (44 теста) |
+| `tests/test_self_rag/test_conditional_edges.py` | **NEW** | ✅ | Unit-тесты conditional edges (20 тестов) |
+| `tests/test_self_rag/test_strategy_escalation.py` | **NEW** | ✅ | Unit-тесты эскалации стратегий (7 тестов) |
 
 ## Связанная документация
 
