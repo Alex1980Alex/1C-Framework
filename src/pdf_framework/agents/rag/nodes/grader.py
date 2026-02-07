@@ -151,8 +151,8 @@ def _parse_relevance(response: str) -> bool:
     response_clean = response.strip().lower()
 
     # Check for positive indicators
-    positive_words = ["yes", "relevant", "yes", "да"]
-    negative_words = ["no", "not relevant", "unrelated", "no", "нет"]
+    positive_words = ["yes", "relevant", "да"]
+    negative_words = ["no", "not relevant", "unrelated", "нет"]
 
     # Check starts with
     for word in positive_words:

@@ -57,6 +57,12 @@ async def check_hallucination(
             "hallucination_reason": "No context provided for verification",
         }
 
+    # Truncate context to avoid excessive token usage on fast model
+    max_chars = settings.max_context_chars
+    if len(context) > max_chars:
+        context = context[:max_chars] + "\n\n[... truncated for verification ...]"
+        logger.debug(f"[HALLUCINATION] Context truncated to {max_chars} chars")
+
     check_prompt = _get_hallucination_check_prompt(context, answer)
     messages = [
         SystemMessage(content=check_prompt["system"]),
