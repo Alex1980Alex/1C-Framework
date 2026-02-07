@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import chat, documents, health, search
+from src.api.routes import chat, documents, health, metrics, search
 from src.pdf_framework.config import get_settings
 
 
@@ -60,6 +60,7 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(search.router)
     app.include_router(chat.router)  # Phase 9: Conversational RAG
+    app.include_router(metrics.router)  # Phase 11.6: Metrics Dashboard
 
     return app
 

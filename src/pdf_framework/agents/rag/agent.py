@@ -3,8 +3,10 @@
 Enhanced agent pipeline:
   analyze → search → grade → (rewrite | generate) → hallucination_check → (regenerate | end)
 
+Phase 11.5: Anthropic prompt caching for token savings.
+
 Author: Claude Code
-Version: 0.6.0 - Phase 5: Self-RAG & Corrective RAG
+Version: 1.2.0 - Phase 5 & Phase 11.5: Self-RAG & Prompt Caching
 """
 
 import logging
@@ -24,6 +26,29 @@ from src.pdf_framework.config import AgentSettings, SelfRAGSettings
 from src.pdf_framework.search.manager import SearchManager
 
 logger = logging.getLogger(__name__)
+
+
+def _create_cached_system_message(content: str) -> SystemMessage:
+    """
+    Create a SystemMessage with prompt caching enabled.
+
+    Anthropic caches prompts with cache_control blocks.
+    Effective for prompts > 1024 tokens.
+
+    Args:
+        content: System prompt content
+
+    Returns:
+        SystemMessage with cache_control
+    """
+    # Only use caching for longer prompts (cost-effective threshold)
+    if len(content) > 1024:
+        return SystemMessage(
+            content=[
+                {"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}
+            ]
+        )
+    return SystemMessage(content=content)
 
 
 def create_rag_agent(
@@ -167,20 +192,31 @@ def create_rag_agent(
                 "sources": [],
             }
 
+        system_prompt = (
+            "Answer the question using ONLY the context provided. "
+            "If the context is insufficient, say so. "
+            "Cite sources by their number [1], [2], etc.\n\n"
+            f"Context:\n{context}"
+        )
+
         messages = [
-            SystemMessage(
-                content=(
-                    "Answer the question using ONLY the context provided. "
-                    "If the context is insufficient, say so. "
-                    "Cite sources by their number [1], [2], etc.\n\n"
-                    f"Context:\n{context}"
-                )
-            ),
+            _create_cached_system_message(system_prompt),
             HumanMessage(content=question),
         ]
 
         response = await main_llm.ainvoke(messages)
         answer = parser.invoke(response)
+
+        # Log token savings from prompt caching
+        usage = getattr(response, "usage", None)
+        if usage:
+            cache_read_tokens = getattr(usage, "cache_read_input_tokens", 0)
+            if cache_read_tokens > 0:
+                cache_creation_tokens = getattr(usage, "cache_creation_input_tokens", 0)
+                total_input_tokens = getattr(usage, "prompt_tokens", 0)
+                savings_pct = (cache_read_tokens / total_input_tokens * 100) if total_input_tokens > 0 else 0
+                logger.info(f"[GENERATE] Prompt cache saved {cache_read_tokens} tokens "
+                           f"({savings_pct:.1f}% reduction from {total_input_tokens} total)")
 
         logger.info(f"[GENERATE] Generated answer ({len(answer)} chars)")
 

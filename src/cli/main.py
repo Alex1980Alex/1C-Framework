@@ -5,8 +5,10 @@ Commands:
     search  - Search indexed documents
     ask     - Ask a question using RAG
     chat    - Interactive chat with conversation memory (Phase 9)
+    cache   - Manage caches (stats, clear) - Phase 11
     stats   - Show index statistics
     server  - Start REST API server
+    eval    - Run evaluation benchmark
 """
 
 import asyncio
@@ -79,7 +81,7 @@ def index(
                             f"{len(table.headers)} cols × {len(table.rows)} rows")
 
         # Phase 10: Image description
-        if extract_images and components.settings.layout.extract_images:
+        if extract_images or components.settings.layout.extract_images:
             from src.pdf_framework.processing.image_extractor import ImageExtractor
 
             console.print("[yellow]Describing images with Claude Vision...[/yellow]")
@@ -121,6 +123,16 @@ def index(
                 f"[green]Parent-Child:[/green] {len(parents)} parents, "
                 f"{len(chunks)} children"
             )
+        elif layout_aware or components.settings.layout.layout_detection_enabled:
+            # Phase 10: Structure-aware splitting for layout-parsed documents
+            from src.pdf_framework.processing.splitters.structure_aware import StructureAwareSplitter
+
+            splitter = StructureAwareSplitter(
+                max_chunk_size=components.settings.layout.structure_aware_chunk_size,
+                chunk_overlap=components.settings.layout.structure_aware_overlap,
+            )
+            chunks = splitter.split(document)
+            console.print(f"[green]Structure-aware:[/green] {len(chunks)} chunks")
         else:
             chunks = components.pipeline.process(document)
 
@@ -589,6 +601,112 @@ def server(
 
     console.print(f"[green]Starting server on {host}:{port}[/green]")
     uvicorn.run("src.api.app:app", host=host, port=port, reload=False)
+
+
+@app.command()
+def cache(
+    action: str = typer.Argument(..., help="Action: stats, clear"),
+    cache_type: str = typer.Option("all", "--type", "-t", help="Cache type: all/embedding/llm/document"),
+):
+    """Manage caches (Phase 11).
+
+    Actions:
+        stats  - Show cache statistics
+        clear  - Clear cache entries
+
+    Examples:
+        pdf-framework cache stats
+        pdf-framework cache clear --type embedding
+    """
+    from src.pdf_framework.agents.cache import get_llm_cache
+    from src.pdf_framework.embeddings.cache import get_embedding_cache
+    from src.pdf_framework.processing.cache import get_document_cache
+
+    async def _run():
+        llm_cache = get_llm_cache()
+        emb_cache = get_embedding_cache()
+        doc_cache = get_document_cache()
+
+        if action == "stats":
+            # Display statistics
+            table = Table(title="Cache Statistics")
+            table.add_column("Cache Type", width=20)
+            table.add_column("Status", width=10)
+            table.add_column("Hits", width=8)
+            table.add_column("Misses", width=8)
+            table.add_column("Total", width=8)
+            table.add_column("Hit Rate", width=12)
+
+            # Embedding cache
+            emb_stats = emb_cache.get_stats()
+            table.add_row(
+                "Embedding",
+                "[green]Active[/green]",
+                str(emb_stats.hits),
+                str(emb_stats.misses),
+                str(emb_stats.total),
+                f"{emb_stats.hit_rate:.1%}",
+            )
+
+            # LLM cache
+            llm_stats = llm_cache.get_stats()
+            table.add_row(
+                "LLM Response",
+                "[green]Active[/green]",
+                str(llm_stats["hits"]),
+                str(llm_stats["misses"]),
+                str(llm_stats["total"]),
+                f"{llm_stats['hit_rate']:.1%}",
+            )
+
+            # Document cache
+            doc_stats = doc_cache.get_stats()
+            table.add_row(
+                "Document",
+                "[blue]Passive[/blue]",
+                str(doc_stats.get("hits", 0)),
+                str(doc_stats.get("stale", 0)),
+                str(doc_stats.get("hits", 0) + doc_stats.get("stale", 0)),
+                "—",
+            )
+
+            console.print(table)
+
+            # Combined stats
+            total_hits = emb_stats.hits + llm_stats["hits"]
+            total_requests = emb_stats.total + llm_stats["total"]
+            combined_rate = total_hits / total_requests if total_requests > 0 else 0
+
+            console.print(f"\n[bold]Combined hit rate:[/bold] {combined_rate:.1%}")
+
+        elif action == "clear":
+            # Clear specified cache(s)
+            import asyncio
+
+            count = 0
+
+            if cache_type in ("all", "embedding"):
+                cleared = await emb_cache.clear()
+                count += cleared
+                console.print(f"[green]Cleared[/green] {cleared} embedding cache entries")
+
+            if cache_type in ("all", "llm"):
+                cleared = await llm_cache.clear()
+                count += cleared
+                console.print(f"[green]Cleared[/green] {cleared} LLM cache entries")
+
+            if cache_type in ("all", "document"):
+                cleared = doc_cache.clear()
+                count += cleared
+                console.print(f"[green]Cleared[/green] {cleared} document cache entries")
+
+            console.print(f"\n[bold]Total:[/bold] {count} entries cleared")
+        else:
+            console.print(f"[red]Unknown action:[/red] {action}")
+            console.print("Valid actions: stats, clear")
+            raise typer.Exit(1)
+
+    asyncio.run(_run())
 
 
 @app.command(name="eval")
