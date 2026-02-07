@@ -1,4 +1,4 @@
-"""Document processing pipeline with caching and versioning (Phase 11-12)."""
+"""Document processing pipeline with caching, versioning, and RAPTOR (Phase 11-13)."""
 
 from src.pdf_framework.processing.cache import (
     CachedDocument,
@@ -6,6 +6,17 @@ from src.pdf_framework.processing.cache import (
     get_document_cache,
 )
 from src.pdf_framework.processing.pipeline import ProcessingPipeline
+from src.pdf_framework.processing.raptor import (
+    RAPTORTree,
+    RAPTORTreeBuilder,
+    TreeNode,
+    get_raptor_builder,
+)
+from src.pdf_framework.processing.summary_index import (
+    DocumentSummary,
+    DocumentSummaryIndex,
+    get_summary_index,
+)
 from src.pdf_framework.processing.versioning import (
     DocumentVersionManager,
     VersionInfo,
@@ -20,4 +31,12 @@ __all__ = [
     "DocumentVersionManager",
     "VersionInfo",
     "get_version_manager",
+    # Phase 13: RAPTOR & Summary Index
+    "RAPTORTree",
+    "RAPTORTreeBuilder",
+    "TreeNode",
+    "get_raptor_builder",
+    "DocumentSummary",
+    "DocumentSummaryIndex",
+    "get_summary_index",
 ]

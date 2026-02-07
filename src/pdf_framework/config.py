@@ -339,6 +339,25 @@ class AuthSettings(BaseSettings):
     default_tenant: str = "default"
 
 
+class RAPTORSettings(BaseSettings):
+    """Phase 13.1: RAPTOR Tree Builder configuration."""
+
+    enabled: bool = False
+    max_levels: int = 4
+    search_mode: str = "collapsed"  # collapsed or tree_traversal
+    cluster_method: str = "kmeans"  # kmeans, umap_gmm
+    summarization_model: str = "claude-haiku-4-5-20251001"
+
+
+class SummaryIndexSettings(BaseSettings):
+    """Phase 13.4: Document Summary Index configuration."""
+
+    enabled: bool = False
+    collection_name: str = "document_summaries"
+    summarization_model: str = "claude-haiku-4-5-20251001"
+    min_chunks_for_summary: int = 10  # Only summarize docs with enough chunks
+
+
 class Settings(BaseSettings):
     """Root application settings."""
 
@@ -366,6 +385,8 @@ class Settings(BaseSettings):
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)  # Phase 11
     cache: CacheSettings = Field(default_factory=CacheSettings)  # Phase 11
     auth: AuthSettings = Field(default_factory=AuthSettings)  # Phase 12
+    raptor: RAPTORSettings = Field(default_factory=RAPTORSettings)  # Phase 13
+    summary_index: SummaryIndexSettings = Field(default_factory=SummaryIndexSettings)  # Phase 13
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 
