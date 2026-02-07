@@ -234,11 +234,12 @@ def index(
             # Index RAPTOR nodes into vector store
             for level_nodes in tree.levels:
                 for node in level_nodes:
-                    from src.pdf_framework.schemas.search import DocumentChunk
+                    from src.pdf_framework.schemas.documents import DocumentChunk
 
                     chunk = DocumentChunk(
                         id=node.id,
                         content=node.content,
+                        document_id=document.id,
                         metadata={
                             "raptor_node": True,
                             "raptor_level": node.level,
@@ -1003,6 +1004,63 @@ def evaluate(
                     f"{d['latency_ms']:.0f}ms",
                 )
             console.print(detail_table)
+
+    asyncio.run(_run())
+
+
+@app.command()
+def ui(
+    host: str = typer.Option(None, help="UI server host"),
+    port: int = typer.Option(None, "--port", "-p", help="UI server port"),
+    share: bool = typer.Option(False, "--share", help="Create public link"),
+    api_url: str = typer.Option("http://localhost:8000", "--api-url", help="Backend API URL"),
+):
+    """Launch Gradio Web UI (Phase 14.1).
+
+    Provides a browser-based interface for chat, search, document management,
+    graph visualization, and settings.
+
+    Example:
+        pdf-framework ui --port 7860
+    """
+    from src.ui import launch_ui
+
+    launch_ui(host=host, port=port, share=share, api_url=api_url)
+
+
+@app.command()
+def suggest(
+    query: str = typer.Option("", "--query", "-q", help="Context query for suggestions"),
+    k: int = typer.Option(5, "--top-k", "-k", help="Number of suggestions"),
+    method: str = typer.Option("entity", "--method", "-m", help="Suggestion method (entity/frequency/llm/related)"),
+):
+    """Get query suggestions for exploration (Phase 14.5).
+
+    Examples:
+        pdf-framework suggest
+        pdf-framework suggest --query "1С" --top-k 10
+        pdf-framework suggest --method llm
+    """
+    components = _get_components()
+
+    async def _run():
+        from src.pdf_framework.search.suggestions import QuerySuggester, SuggestionConfig
+
+        config = SuggestionConfig(method=method, max_suggestions=k)
+        suggester = QuerySuggester(
+            config=config,
+            api_key=components.settings.anthropic_api_key,
+        )
+
+        suggestions = await suggester.suggest(
+            query=query,
+            graph_store=components.graph_store,
+            k=k,
+        )
+
+        console.print(f"\n[bold]Suggestions ({method}):[/bold]\n")
+        for i, suggestion in enumerate(suggestions, 1):
+            console.print(f"  {i}. {suggestion}")
 
     asyncio.run(_run())
 

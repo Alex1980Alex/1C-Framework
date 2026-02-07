@@ -358,6 +358,35 @@ class SummaryIndexSettings(BaseSettings):
     min_chunks_for_summary: int = 10  # Only summarize docs with enough chunks
 
 
+class UISettings(BaseSettings):
+    """Phase 14.1: Gradio Web UI configuration."""
+
+    enabled: bool = True
+    host: str = "0.0.0.0"
+    port: int = 7860
+    share: bool = False
+    theme: str = "default"
+    api_backend_url: str = "http://localhost:8000"
+
+
+class OpenAICompatSettings(BaseSettings):
+    """Phase 14.3: OpenAI-Compatible API configuration."""
+
+    enabled: bool = True
+    model_name: str = "pdf-rag"
+    model_description: str = "PDF RAG Framework with Vector and Graph Search"
+
+
+class SuggestionSettings(BaseSettings):
+    """Phase 14.5: Query Suggestions configuration."""
+
+    enabled: bool = False
+    method: Literal["entity", "frequency", "llm", "related"] = "entity"
+    cache_ttl: int = 3600  # seconds
+    max_suggestions: int = 5
+    llm_model: str = "claude-haiku-4-5-20251001"
+
+
 class Settings(BaseSettings):
     """Root application settings."""
 
@@ -389,6 +418,9 @@ class Settings(BaseSettings):
     summary_index: SummaryIndexSettings = Field(default_factory=SummaryIndexSettings)  # Phase 13
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
+    ui: UISettings = Field(default_factory=UISettings)  # Phase 14
+    openai_compat: OpenAICompatSettings = Field(default_factory=OpenAICompatSettings)  # Phase 14
+    suggestions: SuggestionSettings = Field(default_factory=SuggestionSettings)  # Phase 14
 
     # API Keys
     anthropic_api_key: str = ""
