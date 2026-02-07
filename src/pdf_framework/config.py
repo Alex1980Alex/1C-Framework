@@ -236,6 +236,37 @@ class MCPServerSettings(BaseSettings):
     transport: Literal["stdio", "sse"] = "stdio"
 
 
+class LayoutSettings(BaseSettings):
+    """Phase 10: Layout-Aware PDF Parsing configuration.
+
+    Enables structure-aware PDF parsing with table extraction,
+    image understanding, and template-based processing.
+    """
+
+    # Layout detection
+    layout_detection_enabled: bool = False
+    layout_provider: Literal["unstructured", "surya", "none"] = "unstructured"
+    layout_strategy: Literal["hi_res", "fast"] = "hi_res"
+    infer_table_structure: bool = True
+
+    # Table extraction
+    extract_tables: bool = True
+    min_table_rows: int = 2
+    min_table_cols: int = 2
+
+    # Image understanding
+    extract_images: bool = False
+    image_description_model: str = "claude-sonnet-4-5-20250929"
+    min_image_size: int = 50  # pixels
+
+    # Template-based parsing
+    parse_template: Literal["auto", "generic", "research_paper", "user_manual"] = "auto"
+
+    # Structure-aware chunking
+    structure_aware_chunk_size: int = 1000
+    structure_aware_overlap: int = 200
+
+
 class ConversationSettings(BaseSettings):
     """Phase 9: Conversational RAG configuration.
 
@@ -290,6 +321,7 @@ class Settings(BaseSettings):
     parent_child: ParentChildSettings = Field(default_factory=ParentChildSettings)  # Phase 7
     adaptive: AdaptiveRAGSettings = Field(default_factory=AdaptiveRAGSettings)  # Phase 8
     conversation: ConversationSettings = Field(default_factory=ConversationSettings)  # Phase 9
+    layout: LayoutSettings = Field(default_factory=LayoutSettings)  # Phase 10
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 
