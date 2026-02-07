@@ -87,21 +87,51 @@ class SelfRAGSettings(BaseSettings):
 
     enabled: bool = True
 
+    # Fast LLM for all Self-RAG tasks (grading, rewriting, hallucination check)
+    grading_model: str = "claude-haiku-4-5-20251001"
+
     # Document Grading (5.2)
     relevance_threshold: float = 0.5  # Minimum relevance ratio to proceed
-    grading_model: str = "claude-haiku-4-5-20251001"  # Fast model for grading
 
     # Query Rewriting (5.3)
     max_retries: int = 2  # Maximum query rewrite attempts
-    rewrite_model: str = "claude-haiku-4-5-20251001"  # Model for rewriting
 
     # Hallucination Checking (5.4)
     hallucination_check_enabled: bool = True
-    hallucination_model: str = "claude-haiku-4-5-20251001"  # Fast model for checking
     max_generation_attempts: int = 2  # Max regenerations if hallucinated
+    max_context_chars: int = 4000  # Truncate context for hallucination check
 
     # Strategy Escalation (5.3)
     strategy_escalation_enabled: bool = True  # vector → hybrid → two_stage
+
+
+class GraphRAGSettings(BaseSettings):
+    """Phase 6: GraphRAG configuration.
+
+    Enables community detection, local/global search, and incremental updates.
+    """
+
+    # Community Detection (6.1)
+    community_detection_enabled: bool = True
+    leiden_resolution: float = 1.0  # Higher = more communities
+    community_levels: int = 2  # Hierarchy levels for community detection
+
+    # Community Summaries (6.2)
+    summary_model: str = "claude-haiku-4-5-20251001"  # Fast model for summaries
+    summary_cache_enabled: bool = True
+
+    # Local Search (6.3)
+    local_search_depth: int = 1  # Neighbor depth for graph context
+    local_search_include_summary: bool = True  # Include community summary
+
+    # Global Search (6.4)
+    global_search_max_communities: int = 20  # Max communities to process
+    global_search_rank_by_similarity: bool = True  # Rank communities by embedding
+    global_search_map_model: str = "claude-haiku-4-5-20251001"
+    global_search_reduce_model: str = "claude-sonnet-4-5-20250929"
+
+    # Incremental Updates (6.5)
+    incremental_updates_enabled: bool = True
 
 
 class GraphStoreSettings(BaseSettings):
@@ -185,6 +215,7 @@ class Settings(BaseSettings):
     contextual_retrieval: ContextualRetrievalSettings = Field(default_factory=ContextualRetrievalSettings)
     two_stage: TwoStageSettings = Field(default_factory=TwoStageSettings)
     self_rag: SelfRAGSettings = Field(default_factory=SelfRAGSettings)  # Phase 5
+    graph_rag: GraphRAGSettings = Field(default_factory=GraphRAGSettings)  # Phase 6
     mcp_server: MCPServerSettings = Field(default_factory=MCPServerSettings)
     api: APISettings = Field(default_factory=APISettings)
 
