@@ -219,6 +219,16 @@ def get_document_cache(**kwargs) -> DocumentProcessingCache  # Phase 11
 # observability/__init__.py
 def get_tracer(tracer_type, **kwargs) -> BaseTracer  # Phase 11
 def get_metrics_collector() -> MetricsCollector  # Phase 11
+
+# multitenancy/__init__.py
+def get_tenant_store_manager(**kwargs) -> TenantVectorStoreManager  # Phase 12
+def get_tenant_graph_manager(**kwargs) -> TenantGraphManager  # Phase 12
+
+# api/auth/__init__.py
+def get_jwt_handler(**kwargs) -> JWTHandler  # Phase 12
+
+# processing/__init__.py
+def get_version_manager(**kwargs) -> DocumentVersionManager  # Phase 12
 ```
 
 Фабрика читает `provider` из настроек и создаёт соответствующую реализацию.
@@ -251,13 +261,16 @@ IndexResult          → Результат индексации одного д
 PipelineResult       → Результат обработки пакета документов
 ```
 
-### Кэши и метрики (Phase 11)
+### Кэши и метрики (Phase 11-12)
 
 ```
 CacheStats           → Статистика кэша (hits, misses, total, hit_rate)
 CachedDocument       → Кэшированный документ (file_hash, chunks, embeddings, metadata)
 Span                 → Единица трассировки (name, duration_ms, status, attributes)
 SpanStatus           → Статус спана (ok, error)
+TenantMetadata       → Метаданные tenant (tenant_id, collection_name, created_at, doc_count)
+TokenPayload         → JWT токен (tenant_id, role, exp, iat)
+VersionInfo          → Информация о версии документа (version_id, file_hash, chunk_count)
 ```
 
 ## Конфигурация
@@ -276,6 +289,7 @@ Settings (root)
 ├── TwoStageSettings               # Phase 3.3: двухэтапный пайплайн
 ├── ObservabilitySettings          # Phase 11: tracer, trace_dir
 ├── CacheSettings                  # Phase 11: embedding_ttl, llm_ttl, prompt_caching
+├── AuthSettings                   # Phase 12: enabled, jwt_secret, jwt_algorithm
 ├── MCPServerSettings
 └── APISettings
 ```
@@ -349,3 +363,102 @@ Anthropic prompt caching для системных промптов > 1024 то�
 - Автоматическое добавление `cache_control` в SystemMessage
 - Логирование экономии токенов из `response.usage`
 - Graceful fallback при отсутствии поддержки
+
+## Multi-Tenancy & Production Hardening (Phase 12)
+
+### Tenant Isolation
+
+Каждый tenant получает изолированное хранилище данных:
+
+| Компонент | Изоляция | Хранилище |
+|-----------|----------|-----------|
+| **Vector Store** | Отдельная ChromaDB коллекция | `tenant_{sanitized_id}` |
+| **Graph Store** | Фильтрация по `tenant_id` атрибуту | `data/graph_db/tenant_{id}.json` |
+| **Document Cache** | Префикс по tenant_id | `data/cache/documents/{tenant}/{hash}.pkl` |
+
+### JWT Authentication
+
+Аутентификация через JWT токены:
+
+```python
+# Создать токен
+token = jwt_handler.create_token(tenant_id="myorg", role="editor")
+
+# FastAPI dependency
+from src.api.auth import TenantId
+
+async def my_endpoint(tenant_id: TenantId):
+    # tenant_id извлекается из Bearer токена
+    store = await get_tenant_store_manager().get_store(tenant_id)
+```
+
+### RBAC (Role-Based Access Control)
+
+Три роли с разными правами:
+
+| Роль | Права |
+|------|-------|
+| **viewer** | search:read, ask:read, documents:get, stats:read |
+| **editor** | viewer + documents:index, documents:delete, documents:update |
+| **admin** | editor + tenants:create/delete, users:manage, metrics:read |
+
+```python
+from src.api.auth import require_role, TokenPayloadDep
+
+@require_role("editor")
+async def upload_document(payload: TokenPayloadDep):
+    # Требуется роль editor или выше
+    pass
+```
+
+### Document Versioning
+
+Отслеживание версий с возможностью отката:
+
+```python
+from src.pdf_framework.processing import get_version_manager
+
+version_mgr = get_version_manager()
+
+# Создать версию при индексации
+await version_mgr.create_version(doc_id, chunks, embeddings, metadata)
+
+# Откатиться к предыдущей версии
+chunks, embeddings, metadata = await version_mgr.rollback(doc_id)
+```
+
+### Health Checks
+
+Production-ready health checks для Kubernetes:
+
+```bash
+GET /health          # Полный статус с компонентами
+GET /health/ready    # Readiness probe
+GET /health/live     # Liveness probe
+```
+
+### CLI команды (Phase 12)
+
+```bash
+# Управление tenants
+pdf-framework tenant create myorg
+pdf-framework tenant list
+pdf-framework tenant delete myorg
+
+# Генерация JWT токенов
+pdf-framework auth token --tenant myorg --role editor
+
+# Health check
+curl http://localhost:8000/health
+```
+
+### Конфигурация (Phase 12)
+
+```ini
+# Phase 12: Multi-Tenancy
+AUTH__ENABLED=false
+AUTH__JWT_SECRET=change-me-in-production
+AUTH__JWT_ALGORITHM=HS256
+AUTH__TOKEN_EXPIRE_HOURS=24
+AUTH__DEFAULT_TENANT=default
+```
