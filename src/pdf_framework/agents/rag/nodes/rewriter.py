@@ -18,13 +18,13 @@ from src.pdf_framework.config import SelfRAGSettings
 
 logger = logging.getLogger(__name__)
 
-# Strategy escalation order: vector → hybrid → two_stage
+# Strategy escalation order: vector → hybrid → mmr (always registered)
 STRATEGY_ESCALATION: dict[str, str] = {
     "vector": "hybrid",
-    "hybrid": "two_stage",
-    "two_stage": "two_stage",  # Max level
-    "mmr": "hybrid",
+    "hybrid": "mmr",
+    "mmr": "mmr",  # Max level
     "graph": "hybrid",
+    "two_stage": "two_stage",  # Already at advanced level
 }
 
 
@@ -144,23 +144,45 @@ async def _rewrite_via_llm(
         HumanMessage(content=user_prompt),
     ]
 
-    try:
-        response = await llm.ainvoke(messages)
-        rewritten = parser.invoke(response).strip()
+    # Ralph Wiggum: self-correcting retry with prefix cleanup
+    max_rw_retries = 2
+    rw_feedback = ""
+    bad_prefixes = [
+        "Rewritten:", "Rewritten question:", "Revised:",
+        "Here is the rewritten question:", "The rewritten question is:",
+        "Переформулированный вопрос:", "Переписанный вопрос:",
+    ]
 
-        # Clean up common prefixes
-        for prefix in [
-            "Rewritten:",
-            "Rewritten question:",
-            "Revised:",
-            "Here is the rewritten question:",
-            "The rewritten question is:",
-        ]:
-            if rewritten.lower().startswith(prefix.lower()):
-                rewritten = rewritten[len(prefix):].strip()
+    for rw_attempt in range(1, max_rw_retries + 1):
+        try:
+            attempt_messages = list(messages)
+            if rw_feedback:
+                attempt_messages.append(HumanMessage(content=f"\u26a0\ufe0f {rw_feedback}"))
 
-        return rewritten if rewritten else original_question
+            response = await llm.ainvoke(attempt_messages)
+            rewritten = parser.invoke(response).strip()
 
-    except Exception as e:
-        logger.error(f"[REWRITE] LLM error: {e}, using original question")
-        return original_question
+            # Clean prefixes
+            for prefix in bad_prefixes:
+                if rewritten.lower().startswith(prefix.lower()):
+                    rewritten = rewritten[len(prefix):].strip()
+
+            # Validate: non-empty, not identical, not too long
+            if not rewritten or len(rewritten) < 5:
+                rw_feedback = "Return ONLY the rewritten question, nothing else. It must not be empty."
+                logger.warning(f"[REWRITE] Attempt {rw_attempt}: empty result")
+                continue
+
+            if rewritten.strip() == original_question.strip():
+                rw_feedback = "The rewritten question must be DIFFERENT from the original. Use different words."
+                logger.warning(f"[REWRITE] Attempt {rw_attempt}: identical to original")
+                continue
+
+            return rewritten
+
+        except Exception as e:
+            logger.error(f"[REWRITE] Attempt {rw_attempt} error: {e}")
+            rw_feedback = f"Previous call failed: {e}. Try again."
+
+    logger.warning("[REWRITE] All attempts failed, using original question")
+    return original_question

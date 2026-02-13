@@ -1,0 +1,156 @@
+# Docker Compose for PDF Vector & Graph Framework (Phase 23.5)
+# Production-ready containerization
+
+version: '3.8'
+
+services:
+  # Main API application
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: pdf-rag-api
+    ports:
+      - "8000:8000"
+      - "7860:7860"  # Gradio UI
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATABASE_URL=postgresql://postgres:password@db:5432/pdf_rag
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+      - VECTOR_STORE__PROVIDER=qdrant
+      - VECTOR_STORE__QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - db
+      - qdrant
+      - redis
+    volumes:
+      - ../data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - pdf-rag-network
+
+  # PostgreSQL with pgvector (Phase 23.2)
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: pdf-rag-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pdf_rag
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pdf-rag-network
+
+  # Qdrant Vector Store (Phase 23.1)
+  qdrant:
+    image: qdrant/qdrant:v1.12.0
+    container_name: pdf-rag-qdrant
+    ports:
+      - "6333:6333"  # API
+      - "6334:6334"  # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - pdf-rag-network
+
+  # Redis for caching and rate limiting (Phase 23.3)
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - pdf-rag-network
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: pdf-rag-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - pdf-rag-network
+
+  # Monitoring - Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pdf-rag-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - pdf-rag-network
+
+  # Monitoring - Grafana (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pdf-rag-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - pdf-rag-network
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  pdf-rag-network:
+    driver: bridge

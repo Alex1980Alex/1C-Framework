@@ -40,6 +40,8 @@ class GraphRAGGlobalStrategy:
         vector_store: BaseVectorStore,
         graph_store: BaseGraphStore,
         settings: GraphRAGSettings | None = None,
+        api_key: str = "",
+        base_url: str = "",
     ):
         """
         Initialize GraphRAG Global Search strategy.
@@ -49,23 +51,33 @@ class GraphRAGGlobalStrategy:
             vector_store: For community summary embeddings
             graph_store: For accessing communities and summaries
             settings: GraphRAG configuration
+            api_key: Anthropic API key
+            base_url: Custom API endpoint (for Z.AI or other proxies)
         """
         self._embedding_engine = embedding_engine
         self._vector_store = vector_store
         self._graph_store = graph_store
         self.settings = settings or GraphRAGSettings()
 
-        # LLMs for map and reduce phases
-        self._map_llm = ChatAnthropic(
+        # LLMs for map and reduce phases — pass api_key and base_url for Z.AI
+        map_kwargs = dict(
             model=self.settings.global_search_map_model,
             temperature=0.0,
             max_tokens=1024,
         )
-        self._reduce_llm = ChatAnthropic(
+        reduce_kwargs = dict(
             model=self.settings.global_search_reduce_model,
             temperature=0.0,
             max_tokens=2048,
         )
+        if api_key:
+            map_kwargs["api_key"] = api_key
+            reduce_kwargs["api_key"] = api_key
+        if base_url:
+            map_kwargs["base_url"] = base_url
+            reduce_kwargs["base_url"] = base_url
+        self._map_llm = ChatAnthropic(**map_kwargs)
+        self._reduce_llm = ChatAnthropic(**reduce_kwargs)
         self._parser = StrOutputParser()
 
     async def search(

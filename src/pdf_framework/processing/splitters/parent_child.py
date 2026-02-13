@@ -8,11 +8,11 @@ Version: 0.8.0 - Phase 7.1: Parent-Child Splitter
 """
 
 import logging
-import uuid
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from src.pdf_framework.schemas.documents import DocumentChunk, ProcessedDocument
+from src.pdf_framework.utils.id_generator import generate_chunk_id
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class ParentChildSplitter:
 
         for parent_idx, parent_text in enumerate(parent_texts):
             # Create parent chunk
-            parent_id = f"{document.id}_parent_{parent_idx}_{uuid.uuid4().hex[:6]}"
+            parent_id = generate_chunk_id(document.id, f"parent_{parent_idx}", parent_text)
 
             parent_chunk = DocumentChunk(
                 id=parent_id,
@@ -115,7 +115,7 @@ class ParentChildSplitter:
             child_ids = []
 
             for child_idx, child_text in enumerate(child_texts):
-                child_id = f"{document.id}_child_{parent_idx}_{child_idx}_{uuid.uuid4().hex[:6]}"
+                child_id = generate_chunk_id(document.id, f"child_{parent_idx}_{child_idx}", child_text)
 
                 child_chunk = DocumentChunk(
                     id=child_id,

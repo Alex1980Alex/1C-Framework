@@ -85,7 +85,7 @@ class GraphRAGLocalStrategy:
         )
 
         # Step 2: Extract entities from chunks
-        entities_set = self._extract_entities_from_chunks(vector_results)
+        entities_set = await self._extract_entities_from_chunks(vector_results)
 
         logger.info(f"[LOCAL_SEARCH] Extracted {len(entities_set)} unique entities from chunks")
 
@@ -113,15 +113,16 @@ class GraphRAGLocalStrategy:
             elapsed_ms=elapsed,
         )
 
-    def _extract_entities_from_chunks(
+    async def _extract_entities_from_chunks(
         self,
         results: list[SearchResult],
     ) -> set[str]:
         """
         Extract unique entity names from chunk content.
 
-        Uses simple pattern matching for capitalized phrases.
-        For production, consider using a proper NER model.
+        Uses graph-aware matching: checks known entity names from the graph
+        against chunk content, supporting any language (Cyrillic, Latin, etc.).
+        Falls back to regex for capitalized phrases if no graph entities found.
 
         Args:
             results: Search results with chunk content
@@ -131,20 +132,26 @@ class GraphRAGLocalStrategy:
         """
         entities = set()
 
+        # Get known entity names from the graph for matching
+        known_names = await self._get_known_entity_names()
+
         for result in results:
             content = result.chunk.content
+            content_lower = content.lower()
 
-            # Simple pattern: capitalized words that might be entities
-            # This is basic - production should use proper NER
+            # Graph-aware: find known entity names that appear in chunk
+            for name in known_names:
+                if len(name) >= 3 and name.lower() in content_lower:
+                    entities.add(name)
+
+            # Regex fallback for Latin capitalized phrases and acronyms
             patterns = [
-                r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b',  # Multi-word entities
-                r'\b[A-Z]{2,}\b',  # Acronyms
+                r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b',
+                r'\b[A-Z]{2,}\b',
             ]
-
             for pattern in patterns:
                 matches = re.findall(pattern, content)
                 for match in matches:
-                    # Filter out common words
                     if match.lower() not in {
                         "the", "and", "this", "that", "with", "from",
                         "but", "not", "are", "was", "were", "been",
@@ -152,6 +159,18 @@ class GraphRAGLocalStrategy:
                         entities.add(match)
 
         return entities
+
+    async def _get_known_entity_names(self) -> set[str]:
+        """Get all entity names from the graph store for matching."""
+        names = set()
+        graph = getattr(self._graph_store, "_graph", None)
+        if graph is None:
+            return names
+        for _, data in graph.nodes(data=True):
+            name = data.get("name", "")
+            if name and data.get("node_type") != "COMMUNITY":
+                names.add(name)
+        return names
 
     async def _get_graph_contexts(
         self,
@@ -208,7 +227,7 @@ class GraphRAGLocalStrategy:
             Enriched search result
         """
         # Extract entities from this chunk
-        entities_in_chunk = self._extract_entities_from_chunks([result])
+        entities_in_chunk = await self._extract_entities_from_chunks([result])
 
         # Build graph context text
         context_parts = []

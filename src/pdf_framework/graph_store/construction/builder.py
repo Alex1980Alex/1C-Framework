@@ -1,9 +1,14 @@
 """Graph builder: orchestrates entity extraction → deduplication → storage."""
 
+import asyncio
+import logging
+
 from src.pdf_framework.graph_store.base import BaseGraphStore
 from src.pdf_framework.processing.extractors.entity_extractor import LLMEntityExtractor
 from src.pdf_framework.schemas.documents import DocumentChunk
 from src.pdf_framework.schemas.entities import ExtractionResult, Relation
+
+logger = logging.getLogger(__name__)
 
 
 class GraphBuilder:
@@ -13,22 +18,38 @@ class GraphBuilder:
         self,
         extractor: LLMEntityExtractor,
         graph_store: BaseGraphStore,
+        concurrency: int = 5,
     ):
         self._extractor = extractor
         self._graph_store = graph_store
+        self._concurrency = max(1, concurrency)
         # Track known entities for deduplication: (name_lower, entity_type) -> entity_id
         self._entity_index: dict[tuple[str, str], str] = {}
 
     async def build_from_chunks(self, chunks: list[DocumentChunk]) -> dict:
         """Extract entities from chunks and build the knowledge graph.
 
-        Returns summary statistics.
+        Phase 1: Parallel LLM extraction (limited by semaphore).
+        Phase 2: Sequential deduplication + storage.
         """
+        # Phase 1: Parallel extraction
+        semaphore = asyncio.Semaphore(self._concurrency)
+
+        async def _extract_one(chunk: DocumentChunk) -> ExtractionResult:
+            async with semaphore:
+                return await self._extractor.extract(chunk)
+
+        logger.info(
+            "Extracting entities from %d chunks (concurrency=%d)",
+            len(chunks), self._concurrency,
+        )
+        results = await asyncio.gather(*[_extract_one(c) for c in chunks])
+
+        # Phase 2: Sequential storage (deduplication requires ordering)
         total_entities = 0
         total_relations = 0
 
-        for chunk in chunks:
-            result = await self._extractor.extract(chunk)
+        for result in results:
             entities_added, relations_added = await self._store_extraction(result)
             total_entities += entities_added
             total_relations += relations_added

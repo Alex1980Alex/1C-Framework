@@ -1,24 +1,34 @@
 """CLI interface for PDF Vector & Graph Framework.
 
 Commands:
-    index   - Index PDF documents into vector and graph stores
-    search  - Search indexed documents
-    ask     - Ask a question using RAG
-    chat    - Interactive chat with conversation memory (Phase 9)
-    cache   - Manage caches (stats, clear) - Phase 11
-    tenant  - Manage tenants (create, list, delete) - Phase 12
-    auth    - Generate JWT tokens - Phase 12
-    stats   - Show index statistics
-    server  - Start REST API server
-    eval    - Run evaluation benchmark
+    index    - Index PDF documents into vector and graph stores
+    search   - Search indexed documents
+    ask      - Ask a question using RAG
+    chat     - Interactive chat with conversation memory (Phase 9)
+    cache    - Manage caches (stats, clear) - Phase 11
+    tenant   - Manage tenants (create, list, delete) - Phase 12
+    auth     - Generate JWT tokens - Phase 12
+    stats    - Show index statistics
+    server   - Start REST API server
+    eval     - Run evaluation benchmark
+    research - Deep research across documents (Phase 19)
+    autorag  - AutoRAG grid search optimization (Phase 20)
+    feedback - Manage feedback and self-learning (Phase 22)
 """
 
 import asyncio
+import io
+import sys
 import uuid
 
 import typer
 from rich.console import Console
 from rich.table import Table
+
+# Fix Cyrillic encoding on Windows
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 app = typer.Typer(
     name="pdf-framework",
@@ -32,7 +42,8 @@ def _get_components():
     from src.api.dependencies.components import Components
 
     components = Components()
-    asyncio.get_event_loop().run_until_complete(components.initialize())
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(components.initialize())
     return components
 
 
@@ -169,7 +180,10 @@ def index(
                 settings=components.settings.agent,
                 api_key=components.settings.anthropic_api_key,
             )
-            builder = GraphBuilder(extractor, components.graph_store)
+            builder = GraphBuilder(
+                extractor, components.graph_store,
+                concurrency=components.settings.agent.graph_concurrency,
+            )
             stats = await builder.build_from_chunks(chunks)
             console.print(f"[green]Graph:[/green] {stats['entities_added']} entities, "
                           f"{stats['relations_added']} relations")
@@ -192,7 +206,11 @@ def index(
                 )
 
                 # Generate summaries
-                summarizer = CommunitySummarizer(settings=components.settings.graph_rag)
+                summarizer = CommunitySummarizer(
+                    settings=components.settings.graph_rag,
+                    api_key=components.settings.anthropic_api_key,
+                    base_url=components.settings.agent.base_url,
+                )
                 summaries = await summarizer.summarize_all(graph, comm_map)
 
                 # Store summaries as COMMUNITY nodes in graph
@@ -218,6 +236,7 @@ def index(
                 max_levels=components.settings.raptor.max_levels,
                 summarization_model=components.settings.raptor.summarization_model,
                 api_key=components.settings.anthropic_api_key,
+                base_url=components.settings.agent.base_url,
             )
 
             # Get embeddings for chunks
@@ -268,6 +287,7 @@ def index(
                 persist_dir=components.settings.vector_store.persist_dir,
                 summarization_model=components.settings.summary_index.summarization_model,
                 api_key=components.settings.anthropic_api_key,
+                base_url=components.settings.agent.base_url,
             )
 
             doc_summary = await summary_idx.add_document(
@@ -501,7 +521,8 @@ def chat(
     )
 
     # Get existing history or start new
-    history = asyncio.get_event_loop().run_until_complete(
+    loop = asyncio.new_event_loop()
+    history = loop.run_until_complete(
         memory.get_history(thread_id)
     )
 
@@ -527,12 +548,12 @@ def chat(
                 break
 
             if user_input.lower() == "/clear":
-                asyncio.get_event_loop().run_until_complete(memory.clear_thread(thread_id))
+                loop.run_until_complete(memory.clear_thread(thread_id))
                 console.print("[yellow]Thread cleared[/yellow]")
                 continue
 
             if user_input.lower() == "/history":
-                hist = asyncio.get_event_loop().run_until_complete(memory.get_history(thread_id))
+                hist = loop.run_until_complete(memory.get_history(thread_id))
                 for i, msg in enumerate(hist, 1):
                     role = "[bold cyan]You[/bold cyan]" if msg.role == "user" else "[bold green]Assistant[/bold green]"
                     content = msg.content[:100] + "..." if len(msg.content) > 100 else msg.content
@@ -1050,6 +1071,7 @@ def suggest(
         suggester = QuerySuggester(
             config=config,
             api_key=components.settings.anthropic_api_key,
+            base_url=components.settings.agent.base_url,
         )
 
         suggestions = await suggester.suggest(
@@ -1061,6 +1083,243 @@ def suggest(
         console.print(f"\n[bold]Suggestions ({method}):[/bold]\n")
         for i, suggestion in enumerate(suggestions, 1):
             console.print(f"  {i}. {suggestion}")
+
+    asyncio.run(_run())
+
+
+@app.command()
+def research(
+    question: str = typer.Argument(..., help="Research question"),
+    strategy: str = typer.Option("hybrid", "--strategy", "-s", help="Search strategy"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show sub-questions and quality scores"),
+):
+    """Deep research across multiple documents (Phase 19).
+
+    Decomposes question into sub-questions, retrieves from multiple angles,
+    synthesizes a cross-document answer with citations.
+
+    Example:
+        pdf-framework research "Что такое регистр накопления и как он работает?"
+    """
+    components = _get_components()
+
+    async def _run():
+        from src.pdf_framework.agents.deep.planner import ResearchPlanner
+        from src.pdf_framework.agents.deep.synthesizer import CrossDocumentSynthesizer, SubResult
+        from src.pdf_framework.agents.deep.quality import ResearchQualityChecker
+
+        planner = ResearchPlanner(
+            api_key=components.settings.anthropic_api_key,
+            base_url=components.settings.agent.base_url,
+        )
+
+        # Step 1: Create research plan
+        console.print("[yellow]Planning research...[/yellow]")
+        plan = await planner.create_plan(question)
+
+        if verbose:
+            console.print(f"\n[bold]Sub-questions ({len(plan.sub_questions)}):[/bold]")
+            for i, sq in enumerate(plan.sub_questions, 1):
+                console.print(f"  {i}. {sq.question}")
+
+        # Step 2: Retrieve for each sub-question
+        console.print("[yellow]Retrieving documents...[/yellow]")
+        sub_results = []
+        for sq in plan.sub_questions:
+            response = await components.search_manager.search(
+                query=sq.question, strategy=strategy, k=5,
+            )
+            chunks_text = "\n\n".join(
+                r.chunk.content for r in response.results
+            )
+            sub_results.append(SubResult(
+                question=sq.question,
+                answer=chunks_text,
+                sources=[r.chunk.id for r in response.results],
+                confidence=max((r.score for r in response.results), default=0.0),
+            ))
+
+        # Step 3: Synthesize
+        console.print("[yellow]Synthesizing answer...[/yellow]")
+        synthesizer = CrossDocumentSynthesizer(
+            api_key=components.settings.anthropic_api_key,
+            base_url=components.settings.agent.base_url,
+        )
+        answer, citations = await synthesizer.synthesize(question, sub_results)
+
+        # Step 4: Quality check
+        checker = ResearchQualityChecker(
+            api_key=components.settings.anthropic_api_key,
+            base_url=components.settings.agent.base_url,
+        )
+        quality = await checker.check(question, plan, answer, sub_results)
+
+        # Display answer
+        console.print(f"\n[bold]Answer:[/bold]\n{answer}\n")
+
+        if citations:
+            console.print("[dim]Citations:[/dim]")
+            for c in citations:
+                console.print(f"  - {c}")
+
+        if verbose:
+            console.print(f"\n[bold]Quality:[/bold]")
+            console.print(f"  Coverage:     {quality.coverage_score:.2f}")
+            console.print(f"  Groundedness: {quality.groundedness_score:.2f}")
+            if quality.gaps:
+                console.print(f"  Gaps: {', '.join(quality.gaps)}")
+
+    asyncio.run(_run())
+
+
+@app.command()
+def autorag(
+    dataset: str = typer.Argument("default", help="Benchmark dataset name or path to JSON"),
+    max_experiments: int = typer.Option(20, "--max", help="Maximum number of experiments"),
+    smart: bool = typer.Option(True, "--smart/--full", help="Use SmartGrid (prune redundant combos)"),
+):
+    """Run AutoRAG grid search optimization (Phase 20).
+
+    Tests combinations of strategies, k values, reranking, and query expansion
+    to find the optimal RAG configuration for your dataset.
+
+    Example:
+        pdf-framework autorag data/benchmark.json --max 50
+    """
+    components = _get_components()
+
+    async def _run():
+        from src.pdf_framework.evaluation.autorag import ParameterGrid, SmartGrid
+        from src.pdf_framework.evaluation.autorag_runner import AutoRAGRunner
+        from src.pdf_framework.evaluation.autorag_analyzer import AutoRAGAnalyzer
+
+        # Build grid
+        grid_cls = SmartGrid if smart else ParameterGrid
+        grid = grid_cls(
+            strategy=["vector", "hybrid", "two_stage"],
+            k=[3, 5, 10],
+            rerank=[True, False],
+        )
+
+        total = grid.configs_count()
+        actual = min(total, max_experiments)
+        console.print(f"[bold]AutoRAG Optimization[/bold]")
+        console.print(f"  Grid: {total} configs, running {actual}")
+        console.print(f"  Dataset: {dataset}")
+
+        # Load benchmark
+        from src.pdf_framework.evaluation.benchmark import BenchmarkLoader
+        benchmark = BenchmarkLoader.load(dataset)
+
+        # Run
+        runner = AutoRAGRunner(components=components, benchmark=benchmark)
+        results = await runner.run_grid(grid)
+
+        # Analyze
+        analyzer = AutoRAGAnalyzer(results=results)
+        best = analyzer.best_config()
+
+        console.print(f"\n[bold]Results ({len(results)} experiments):[/bold]")
+        console.print(analyzer.comparison_table())
+
+        if best:
+            console.print(f"\n[bold green]Best config:[/bold green]")
+            for key, value in best.items():
+                console.print(f"  {key}: {value}")
+
+    asyncio.run(_run())
+
+
+@app.command(name="feedback")
+def feedback_cmd(
+    action: str = typer.Argument("stats", help="Action: stats, tune, clear, export"),
+    days: int = typer.Option(30, "--days", help="Days threshold for clear action"),
+    output: str = typer.Option("", "--output", "-o", help="Output path for export"),
+    min_samples: int = typer.Option(20, "--min-samples", help="Min samples for tuning"),
+    learning_rate: float = typer.Option(0.1, "--lr", help="Learning rate for tuning"),
+):
+    """Manage feedback and self-learning (Phase 22).
+
+    Actions:
+        stats   - Show feedback statistics
+        tune    - Tune strategy weights based on feedback
+        clear   - Clear old feedback entries
+        export  - Export feedback to JSON
+
+    Examples:
+        pdf-framework feedback stats
+        pdf-framework feedback tune --min-samples 10 --lr 0.05
+        pdf-framework feedback clear --days 90
+        pdf-framework feedback export -o feedback_backup.json
+    """
+    components = _get_components()
+
+    async def _run():
+        from src.pdf_framework.feedback.collector import FeedbackCollector
+
+        collector = components.feedback_collector
+        if collector is None:
+            collector = FeedbackCollector(settings=components.settings)
+
+        if action == "stats":
+            stats = collector.get_stats()
+
+            table = Table(title="Feedback Statistics")
+            table.add_column("Metric", width=25)
+            table.add_column("Value", width=15)
+
+            table.add_row("Total Feedback", str(stats.total_feedback))
+            table.add_row("Positive", str(stats.positive_count))
+            table.add_row("Negative", str(stats.negative_count))
+            table.add_row("Neutral", str(stats.neutral_count))
+            table.add_row("Positive Rate", f"{stats.positive_rate:.1%}")
+
+            console.print(table)
+
+            if stats.strategy_performance:
+                perf_table = Table(title="Strategy Performance")
+                perf_table.add_column("Strategy", width=20)
+                perf_table.add_column("Avg Score", width=12)
+                perf_table.add_column("Count", width=8)
+
+                for strat, perf in stats.strategy_performance.items():
+                    perf_table.add_row(
+                        strat,
+                        f"{perf.get('avg_score', 0):.3f}",
+                        str(perf.get("count", 0)),
+                    )
+                console.print(perf_table)
+
+        elif action == "tune":
+            from src.pdf_framework.feedback.tuner import StrategyTuner
+
+            tuner = StrategyTuner(settings=components.settings)
+            new_weights = tuner.tune_weights(
+                min_samples=min_samples,
+                learning_rate=learning_rate,
+            )
+
+            console.print("[bold green]Strategy weights updated:[/bold green]")
+            console.print(f"  vector:          {new_weights.vector:.3f}")
+            console.print(f"  hybrid:          {new_weights.hybrid:.3f}")
+            console.print(f"  graphrag_local:  {new_weights.graphrag_local:.3f}")
+            console.print(f"  graphrag_global: {new_weights.graphrag_global:.3f}")
+            console.print(f"  two_stage:       {new_weights.two_stage:.3f}")
+
+        elif action == "clear":
+            collector.clear_old_feedback(days=days)
+            console.print(f"[green]Cleared feedback older than {days} days[/green]")
+
+        elif action == "export":
+            if not output:
+                output = "feedback_export.json"
+            collector.export_feedback(output)
+            console.print(f"[green]Exported feedback to {output}[/green]")
+
+        else:
+            console.print(f"[red]Unknown action:[/red] {action}")
+            console.print("Valid actions: stats, tune, clear, export")
+            raise typer.Exit(1)
 
     asyncio.run(_run())
 

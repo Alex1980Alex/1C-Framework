@@ -56,7 +56,7 @@ class TenantVectorStoreManager:
             settings: Vector store settings for creating stores
             metadata_db: Path to SQLite metadata database
         """
-        from src.pdf_framework.vector_store.providers.chroma_store import ChromaDBStore
+        from src.pdf_framework.vector_store.providers.chroma import ChromaVectorStore
 
         self._settings = settings or VectorStoreSettings()
         self._metadata_db = Path(metadata_db)
@@ -67,7 +67,7 @@ class TenantVectorStoreManager:
         self._store_lock = asyncio.Lock()
 
         # Base store class for creating new tenant stores
-        self._store_class = ChromaDBStore
+        self._store_class = ChromaVectorStore
 
     def _sanitize_tenant_id(self, tenant_id: str) -> str:
         """
@@ -133,7 +133,7 @@ class TenantVectorStoreManager:
             tenant_settings = VectorStoreSettings(
                 provider=self._settings.provider,
                 collection_name=collection_name,
-                persist_directory=self._settings.persist_directory,
+                persist_dir=self._settings.persist_dir,
                 distance_metric=self._settings.distance_metric,
             )
 

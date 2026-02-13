@@ -1,19 +1,22 @@
-"""Image extraction and description using Claude Vision (Phase 10).
+"""Image extraction and description using Claude Vision (Phase 10/15).
 
 Extracts images from PDF and generates text descriptions via Claude Vision API.
+Descriptions are indexed as searchable text chunks.
 
 Author: Claude Code
-Version: 1.1.0 - Phase 10.4: Image Understanding
+Version: 2.0.0 - Phase 15: Full integration with indexing pipeline
 """
 
+import asyncio
 import base64
 import hashlib
 import logging
 from pathlib import Path
-from typing import Literal
 
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
+
+from src.pdf_framework.schemas.documents import DocumentChunk
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class ImageDescription(BaseModel):
 
     def to_markdown_chunk(self) -> str:
         """Convert to markdown chunk for embedding."""
-        return f"[Image on page {self.page_number}]\n{self.description}"
+        return f"[Изображение на странице {self.page_number}]\n{self.description}"
 
     def to_dict(self) -> dict:
         """Convert to dictionary (excluding binary data)."""
@@ -55,46 +58,42 @@ class ImageExtractor:
     Features:
     - Image extraction via PyMuPDF
     - Size filtering (skip decorative icons)
-    - Claude Vision description generation
+    - Claude Vision description generation (non-blocking)
     - Description caching
+    - Conversion to DocumentChunk for indexing
     """
 
     def __init__(
         self,
         api_key: str = "",
         model: str = "claude-sonnet-4-5-20250929",
-        min_size: int = 50,  # pixels
+        min_size: int = 100,  # pixels — skip small icons
         max_size: int = 4096,  # pixels (limit for Vision API)
         cache_enabled: bool = True,
+        base_url: str = "",  # Z.AI or other proxy endpoint
     ):
-        """
-        Initialize image extractor.
-
-        Args:
-            api_key: Anthropic API key
-            model: Claude model for Vision API
-            min_size: Minimum image dimension (filters icons)
-            max_size: Maximum image dimension (will resize)
-            cache_enabled: Enable description caching
-        """
         self._api_key = api_key
         self._model = model
         self._min_size = min_size
         self._max_size = max_size
         self._cache_enabled = cache_enabled
 
-        self._client = Anthropic(api_key=api_key) if api_key else None
+        if api_key:
+            kwargs = {"api_key": api_key}
+            if base_url:
+                kwargs["base_url"] = base_url
+            self._client = Anthropic(**kwargs)
+        else:
+            self._client = None
         self._description_cache: dict[str, str] = {}
 
-        # Check if PyMuPDF is available
         self._pymupdf_available = self._check_pymupdf()
 
         if not self._pymupdf_available:
-            logger.warning("[IMAGE] PyMuPDF not available")
+            logger.warning("[IMAGE] PyMuPDF not available — image extraction disabled")
 
     @staticmethod
     def _check_pymupdf() -> bool:
-        """Check if PyMuPDF is available."""
         try:
             import fitz  # PyMuPDF
             return True
@@ -102,64 +101,57 @@ class ImageExtractor:
             return False
 
     def has_vision_support(self) -> bool:
-        """Check if Vision API is available."""
         return bool(self._api_key) and self._client is not None
 
     async def extract_all(
         self,
         pdf_path: str | Path,
     ) -> list[ImageDescription]:
-        """
-        Extract and describe all images from PDF.
-
-        Args:
-            pdf_path: Path to PDF file
-
-        Returns:
-            List of ImageDescription objects
-        """
+        """Extract and describe all images from PDF."""
         if not self._pymupdf_available:
             return []
 
+        import time
+
         import fitz  # PyMuPDF
 
+        t0 = time.time()
         descriptions = []
+        skipped_small = 0
 
         with fitz.open(str(pdf_path)) as doc:
+            total_pages = len(doc)
+            logger.info(
+                "[IMAGE] Начало извлечения изображений из '%s' (%d страниц, модель=%s)",
+                Path(pdf_path).name, total_pages, self._model,
+            )
+
             for page_num, page in enumerate(doc, start=1):
+                raw_images = page.get_images()
                 page_images = await self._extract_from_page(page, page_num)
+                skipped_small += len(raw_images) - len(page_images)
                 descriptions.extend(page_images)
 
-        logger.info(f"[IMAGE] Extracted {len(descriptions)} images from PDF")
+                # Log progress: every page with images
+                if page_images:
+                    elapsed = time.time() - t0
+                    logger.info(
+                        "[IMAGE] Стр. %d/%d: %d изображений описано "
+                        "(всего %d, пропущено мелких %d, %.1f сек)",
+                        page_num, total_pages, len(page_images),
+                        len(descriptions), skipped_small, elapsed,
+                    )
+
+        elapsed = time.time() - t0
+        logger.info(
+            "[IMAGE] Готово: %d изображений из '%s' за %.1f сек "
+            "(пропущено мелких: %d, %.1f изобр/сек)",
+            len(descriptions), Path(pdf_path).name, elapsed,
+            skipped_small,
+            len(descriptions) / elapsed if elapsed > 0 else 0,
+        )
 
         return descriptions
-
-    async def extract_from_page(
-        self,
-        pdf_path: str | Path,
-        page_number: int,
-    ) -> list[ImageDescription]:
-        """
-        Extract and describe images from specific page.
-
-        Args:
-            pdf_path: Path to PDF file
-            page_number: Page number (1-based)
-
-        Returns:
-            List of ImageDescription objects
-        """
-        if not self._pymupdf_available:
-            return []
-
-        import fitz  # PyMuPDF
-
-        with fitz.open(str(pdf_path)) as doc:
-            if page_number < 1 or page_number > len(doc):
-                return []
-
-            page = doc[page_number - 1]
-            return await self._extract_from_page(page, page_number)
 
     async def _extract_from_page(
         self,
@@ -167,14 +159,14 @@ class ImageExtractor:
         page_number: int,
     ) -> list[ImageDescription]:
         """Extract images from a single PyMuPDF page."""
-        descriptions = []
+        import io
+        from PIL import Image
 
-        # Get image references
+        descriptions = []
         image_list = page.get_images()
 
         for img_index, img in enumerate(image_list):
             try:
-                # Extract image
                 xref = img[0]
                 base_image = page.parent.extract_image(xref)
 
@@ -184,113 +176,228 @@ class ImageExtractor:
                 image_bytes = base_image["image"]
                 image_format = base_image.get("ext", "png")
 
-                # Check image size
-                import io
-                from PIL import Image
-
                 pil_image = Image.open(io.BytesIO(image_bytes))
                 width, height = pil_image.size
 
                 # Filter small images (icons, decorative elements)
                 if width < self._min_size or height < self._min_size:
-                    logger.debug(f"[IMAGE] Skipping small image: {width}x{height}")
                     continue
 
-                # Resize if too large
+                # Resize if too large for Vision API
                 if width > self._max_size or height > self._max_size:
                     pil_image.thumbnail((self._max_size, self._max_size))
                     output = io.BytesIO()
-                    pil_image.save(output, format=image_format)
+                    save_format = "PNG" if image_format.lower() == "png" else "JPEG"
+                    pil_image.save(output, format=save_format)
                     image_bytes = output.getvalue()
+                    width, height = pil_image.size
 
-                # Generate description
-                description = await self._describe_image(image_bytes)
+                # Generate description via Claude Vision (non-blocking)
+                logger.debug(
+                    "[IMAGE] Описание изображения %d на стр. %d (%dx%d, %s, %d KB)...",
+                    img_index + 1, page_number, width, height,
+                    image_format, len(image_bytes) // 1024,
+                )
+                description = await self.describe_image(image_bytes)
 
                 descriptions.append(ImageDescription(
                     image_bytes=image_bytes,
                     description=description,
                     page_number=page_number,
-                    bbox=None,  # Could calculate from image position
+                    bbox=None,
                     image_format=image_format,
                     size=(width, height),
                     description_model=self._model,
                 ))
 
             except Exception as e:
-                logger.warning(f"[IMAGE] Error extracting image {img_index}: {e}")
+                logger.warning(f"[IMAGE] Error extracting image {img_index} on page {page_number}: {e}")
 
         return descriptions
 
-    async def describe_image(self, image_bytes: bytes) -> str:
-        """
-        Generate text description of image using Claude Vision.
+    # Patterns indicating a model refusal or hallucination
+    _REFUSAL_PATTERNS = [
+        "не могу просмотреть",
+        "не могу обработать",
+        "cannot transcribe",
+        "cannot read",
+        "I cannot",
+        "I am unable",
+        "не удалась",
+        "нет доступа к внешним",
+        "нет возможности анализировать",
+    ]
 
-        Args:
-            image_bytes: Raw image data
+    @staticmethod
+    def _is_garbage(text: str) -> bool:
+        """Detect hallucinated/garbage output (non-Cyrillic noise)."""
+        if len(text) < 50:
+            return True
+        # Count non-ASCII, non-Cyrillic characters (CJK, random symbols)
+        exotic = sum(1 for ch in text[:500] if ord(ch) > 0x3000)
+        if exotic > 10:
+            return True
+        # Mostly English in a Russian-language task — suspicious
+        latin_chars = sum(1 for ch in text[:500] if 'a' <= ch.lower() <= 'z')
+        cyrillic_chars = sum(1 for ch in text[:500] if '\u0400' <= ch <= '\u04ff')
+        if latin_chars > cyrillic_chars * 3 and len(text) > 200:
+            return True
+        return False
 
-        Returns:
-            Text description
+    def _is_refusal(self, text: str) -> bool:
+        """Check if model refused to process the image."""
+        lower = text.lower()
+        return any(p in lower for p in self._REFUSAL_PATTERNS)
+
+    async def describe_image(self, image_bytes: bytes, max_retries: int = 3) -> str:
+        """Generate text description via Claude Vision with Ralph Wiggum-style retry.
+
+        Uses self-correcting feedback loop: if a response fails validation,
+        the rejection reason is passed to the next attempt so the model can
+        correct itself (instead of blind retry).
         """
         if not self.has_vision_support():
-            return "[Image description not available - no API key]"
+            return "[Описание изображения недоступно — нет API ключа]"
 
         # Check cache
-        if self._cache_enabled:
-            cache_key = hashlib.md5(image_bytes).hexdigest()
-            if cache_key in self._description_cache:
-                logger.debug("[IMAGE] Using cached description")
-                return self._description_cache[cache_key]
+        cache_key = hashlib.md5(image_bytes).hexdigest()
+        if self._cache_enabled and cache_key in self._description_cache:
+            return self._description_cache[cache_key]
 
-        # Encode image to base64
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-
-        # Determine media type
         media_type = self._guess_media_type(image_bytes)
 
-        try:
-            message = {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": image_base64,
-                        },
+        last_description = ""
+        feedback = ""  # Ralph Wiggum: pass rejection reason to next attempt
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                description = await asyncio.to_thread(
+                    self._call_vision_api, image_base64, media_type, feedback
+                )
+                last_description = description
+
+                # Validate: refusal?
+                if self._is_refusal(description):
+                    feedback = (
+                        "Твой предыдущий ответ был отклонён: ты отказался анализировать "
+                        "изображение. Изображение реальное и содержит данные. "
+                        "Попробуй ещё раз — опиши ВСЁ, что видишь."
+                    )
+                    logger.warning(
+                        f"[IMAGE] Attempt {attempt}/{max_retries}: refusal → retry with feedback"
+                    )
+                    continue
+
+                # Validate: garbage/hallucination?
+                if self._is_garbage(description):
+                    feedback = (
+                        "Твой предыдущий ответ был отклонён: он содержал мусорный текст, "
+                        "символы других языков или бессмысленный контент. "
+                        "Отвечай ТОЛЬКО на русском языке. Опиши изображение по существу."
+                    )
+                    logger.warning(
+                        f"[IMAGE] Attempt {attempt}/{max_retries}: garbage → retry with feedback"
+                    )
+                    continue
+
+                # Valid description — convergence reached
+                if self._cache_enabled:
+                    self._description_cache[cache_key] = description
+                return description
+
+            except Exception as e:
+                logger.error(f"[IMAGE] Vision API error (attempt {attempt}): {e}")
+                feedback = f"Предыдущий вызов API завершился ошибкой: {e}. Попробуй ещё раз."
+                last_description = f"[Ошибка описания изображения: {e}]"
+
+        # All retries exhausted — return best available or error
+        logger.warning(
+            f"[IMAGE] All {max_retries} attempts failed (Ralph Wiggum loop exhausted)"
+        )
+        if self._cache_enabled and last_description:
+            self._description_cache[cache_key] = last_description
+        return last_description or "[Ошибка описания изображения]"
+
+    # System prompt forces structured output format (stronger than user instructions)
+    _SYSTEM_PROMPT = (
+        "Ты — OCR-транскриптор для технической документации 1С:Предприятие. "
+        "Твоя задача — извлечь ВЕСЬ текст и данные с изображения в структурированном виде.\n\n"
+        "ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА ФОРМАТИРОВАНИЯ:\n"
+        "- Таблицы ВСЕГДА оформляй как markdown-таблицы с разделителями | и ---\n"
+        "- Каждую строку таблицы — на отдельной строке\n"
+        "- НЕ описывай таблицу словами «в таблице видны колонки...» — ТРАНСКРИБИРУЙ её\n"
+        "- Текст на изображении — копируй дословно, не пересказывай\n"
+        "- Отвечай ТОЛЬКО на русском языке"
+    )
+
+    # Few-shot example of expected markdown table format
+    _TABLE_EXAMPLE = (
+        "Пример правильного формата таблицы:\n"
+        "| Имя реквизита | Тип | Проверка заполнения |\n"
+        "| --- | --- | --- |\n"
+        "| Контрагент | СправочникСсылка.Контрагенты | Выдавать ошибку |\n"
+        "| Склад | СправочникСсылка.Склады | Не проверять |\n\n"
+    )
+
+    def _call_vision_api(
+        self, image_base64: str, media_type: str, feedback: str = ""
+    ) -> str:
+        """Synchronous Vision API call (runs in thread).
+
+        Args:
+            feedback: Ralph Wiggum correction — reason why previous attempt
+                      was rejected. Appended to prompt so model can self-correct.
+        """
+        prompt_text = (
+            "Подробно опиши это изображение из технической документации 1С:Предприятие.\n\n"
+            "Правила:\n"
+            "1. ВЕСЬ текст на изображении — транскрибируй дословно (названия полей, кнопок, "
+            "заголовков, значения параметров, подписи, метки).\n"
+            "2. Таблицы — ОБЯЗАТЕЛЬНО воспроизведи как markdown-таблицу с | и ---. "
+            "НЕ описывай таблицу словами — транскрибируй все строки и столбцы.\n"
+            f"{self._TABLE_EXAMPLE}"
+            "3. Диаграммы/схемы — опиши все элементы, связи, направления стрелок.\n"
+            "4. Скриншоты интерфейса — опиши иерархию меню, названия вкладок, "
+            "состояние чекбоксов/переключателей, выбранные значения.\n"
+            "5. Настройки/свойства — перечисли ВСЕ видимые параметры с их значениями.\n\n"
+            "Будь максимально подробным — не сокращай информацию."
+        )
+
+        # Ralph Wiggum: append correction feedback from previous failed attempt
+        if feedback:
+            prompt_text += f"\n\n⚠️ КОРРЕКЦИЯ: {feedback}"
+
+        message = {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": image_base64,
                     },
-                    {
-                        "type": "text",
-                        "text": (
-                            "Describe this image in the context of a technical document. "
-                            "Focus on what information it conveys - text content, "
-                            "diagrams, charts, or structural elements. Be concise."
-                        ),
-                    },
-                ],
-            }
+                },
+                {
+                    "type": "text",
+                    "text": prompt_text,
+                },
+            ],
+        }
 
-            response = self._client.messages.create(
-                model=self._model,
-                max_tokens=512,
-                messages=[message],
-            )
+        response = self._client.messages.create(
+            model=self._model,
+            max_tokens=2048,
+            system=self._SYSTEM_PROMPT,
+            messages=[message],
+        )
 
-            description = response.content[0].text.strip()
-
-            # Cache description
-            if self._cache_enabled:
-                self._description_cache[cache_key] = description
-
-            return description
-
-        except Exception as e:
-            logger.error(f"[IMAGE] Vision API error: {e}")
-            return "[Image description failed]"
+        # Handle response.content being list[ContentBlock]
+        content = response.content[0]
+        return getattr(content, "text", str(content)).strip()
 
     def _guess_media_type(self, image_bytes: bytes) -> str:
-        """Guess media type from image bytes."""
-        # Check for common magic numbers
         if image_bytes.startswith(b"\x89PNG"):
             return "image/png"
         elif image_bytes.startswith(b"\xff\xd8\xff"):
@@ -299,41 +406,43 @@ class ImageExtractor:
             return "image/gif"
         elif image_bytes.startswith(b"WEBP", 0, 4):
             return "image/webp"
-        else:
-            return "image/png"  # Default
+        return "image/png"
 
-    def descriptions_to_chunks(
+    def to_document_chunks(
         self,
         descriptions: list[ImageDescription],
-        document_id: str = "unknown",
-    ) -> list[dict]:
-        """
-        Convert image descriptions to chunks for embedding.
+        document_id: str,
+        source_path: str = "",
+    ) -> list[DocumentChunk]:
+        """Convert image descriptions to DocumentChunk objects for indexing.
 
-        Args:
-            descriptions: List of ImageDescription objects
-            document_id: Document identifier
-
-        Returns:
-            List of chunk dicts with content and metadata
+        Each image description becomes a searchable text chunk with
+        metadata marking it as an image chunk.
         """
         chunks = []
 
-        for img_desc in descriptions:
-            chunks.append({
-                "content": img_desc.to_markdown_chunk(),
-                "metadata": {
-                    "element_type": "image",
-                    "page_number": img_desc.page_number,
-                    "bbox": img_desc.bbox,
-                    "image_data": img_desc.to_dict(),
+        for idx, img_desc in enumerate(descriptions):
+            chunk_id = f"{document_id}_img_{img_desc.page_number}_{idx}"
+            chunks.append(DocumentChunk(
+                id=chunk_id,
+                content=img_desc.to_markdown_chunk(),
+                document_id=document_id,
+                page_number=img_desc.page_number,
+                section="",  # Phase 29: empty → will be inherited from nearest text chunk
+                chunk_index=9000 + idx,  # High index so images sort after text
+                metadata={
                     "chunk_type": "image",
+                    "element_type": "image",
+                    "source": source_path,
                     "document_id": document_id,
+                    "image_format": img_desc.image_format,
+                    "image_size": f"{img_desc.size[0]}x{img_desc.size[1]}",
+                    "description_model": img_desc.description_model,
+                    "page_number": str(img_desc.page_number),
                 },
-            })
+            ))
 
         return chunks
 
     def clear_cache(self) -> None:
-        """Clear description cache."""
         self._description_cache.clear()

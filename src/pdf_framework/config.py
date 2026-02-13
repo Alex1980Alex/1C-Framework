@@ -16,30 +16,58 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 class EmbeddingSettings(BaseSettings):
     """Embedding provider configuration."""
 
-    provider: Literal["openai", "voyage", "local"] = "local"
-    model: str = "all-MiniLM-L6-v2"
-    dimensions: int = 384
+    provider: Literal["openai", "voyage", "local", "giga"] = "local"
+    model: str = "intfloat/multilingual-e5-large"
+    dimensions: int = 1024
     batch_size: int = 64
     cache_enabled: bool = True
     cache_dir: Path = PROJECT_ROOT / "data" / "cache" / "embeddings"
+    device: str = "auto"  # "auto" | "cpu" | "cuda" | "mps"
+
+    # Phase 43: ONNX/OpenVINO acceleration (7x speedup on CPU)
+    backend: Literal["torch", "onnx", "openvino"] = "torch"
 
 
 class VectorStoreSettings(BaseSettings):
     """Vector store configuration."""
 
-    provider: Literal["chroma", "qdrant", "faiss"] = "chroma"
+    provider: Literal["chroma", "qdrant", "faiss", "pgvector"] = "chroma"
+    dimensions: int = 1024  # Must match embedding model dimensions
+
+    # Phase 23: Qdrant settings
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str = ""
+
+    # Phase 23: PgVector settings
+    pgvector_dsn: str = ""
+    pgvector_table_name: str = "embeddings"
     persist_dir: Path = PROJECT_ROOT / "data" / "vector_db"
     collection_name: str = "pdf_documents"
     distance_metric: Literal["cosine", "euclidean", "dot"] = "cosine"
 
+    # Qdrant native BM25 (sparse vectors)
+    qdrant_bm25_enabled: bool = True
+    qdrant_bm25_language: str = "russian"
+    qdrant_bm25_k: float = 1.2
+    qdrant_bm25_b: float = 0.75
+
 
 class SearchSettings(BaseSettings):
-    """Search configuration (Phase 1–3)."""
+    """Search configuration (Phase 1–3, 16)."""
 
     # Hybrid search weights
-    hybrid_vector_weight: float = 0.6
-    hybrid_graph_weight: float = 0.4
+    hybrid_vector_weight: float = 0.5
+    hybrid_graph_weight: float = 0.2
     hybrid_rrf_k: int = 60
+
+    # Phase 16: BM25 Lexical Search
+    bm25_enabled: bool = True
+    bm25_weight: float = 0.3
+    bm25_db_path: Path = PROJECT_ROOT / "data" / "bm25_index.db"
+    bm25_backend: Literal["qdrant", "fts5", "both"] = "qdrant"  # native sparse vs SQLite FTS5
+
+    # Phase 27: BM25 multi-column FTS5
+    bm25_two_pass: bool = False  # Two-pass title/body RRF merge
 
     # Dynamic weighting (future enhancement)
     dynamic_weighting_enabled: bool = False
@@ -88,10 +116,11 @@ class SelfRAGSettings(BaseSettings):
     enabled: bool = True
 
     # Fast LLM for all Self-RAG tasks (grading, rewriting, hallucination check)
-    grading_model: str = "claude-haiku-4-5-20251001"
+    grading_model: str = "claude-sonnet-4-5-20250929"
 
     # Document Grading (5.2)
     relevance_threshold: float = 0.5  # Minimum relevance ratio to proceed
+    score_prefilter_threshold: float = 0.1  # Skip LLM grading for docs below this search score
 
     # Query Rewriting (5.3)
     max_retries: int = 2  # Maximum query rewrite attempts
@@ -103,6 +132,12 @@ class SelfRAGSettings(BaseSettings):
 
     # Strategy Escalation (5.3)
     strategy_escalation_enabled: bool = True  # vector → hybrid → two_stage
+
+    # Answer Enrichment (Phase 42)
+    enrichment_enabled: bool = True
+    enrichment_max_rounds: int = 1  # Max enrichment iterations
+    enrichment_sub_queries: int = 3  # Sub-queries per round
+    enrichment_k: int = 5  # Results per sub-query
 
 
 class GraphRAGSettings(BaseSettings):
@@ -117,7 +152,7 @@ class GraphRAGSettings(BaseSettings):
     community_levels: int = 2  # Hierarchy levels for community detection
 
     # Community Summaries (6.2)
-    summary_model: str = "claude-haiku-4-5-20251001"  # Fast model for summaries
+    summary_model: str = "claude-sonnet-4-5-20250929"  # Fast model for summaries
     summary_cache_enabled: bool = True
 
     # Local Search (6.3)
@@ -127,7 +162,7 @@ class GraphRAGSettings(BaseSettings):
     # Global Search (6.4)
     global_search_max_communities: int = 20  # Max communities to process
     global_search_rank_by_similarity: bool = True  # Rank communities by embedding
-    global_search_map_model: str = "claude-haiku-4-5-20251001"
+    global_search_map_model: str = "claude-sonnet-4-5-20250929"
     global_search_reduce_model: str = "claude-sonnet-4-5-20250929"
 
     # Incremental Updates (6.5)
@@ -165,7 +200,7 @@ class AdaptiveRAGSettings(BaseSettings):
     """
 
     # Query Classification (8.1)
-    classifier_model: str = "claude-haiku-4-5-20251001"
+    classifier_model: str = "claude-sonnet-4-5-20250929"
     classifier_cache_enabled: bool = True
 
     # Strategy Routing (8.2)
@@ -180,6 +215,13 @@ class AdaptiveRAGSettings(BaseSettings):
     route_moderate_strategy: str = "hybrid"
     route_complex_strategy: str = "two_stage"
     route_thematic_strategy: str = "graphrag_global"
+
+    # Phase 26: Turbo Pipeline
+    fast_classify_enabled: bool = True
+    bm25_early_termination: bool = True
+    bm25_early_threshold: float = 0.7
+    parallel_decomposition: bool = True
+    parallel_expansion: bool = True
 
 
 class GraphStoreSettings(BaseSettings):
@@ -196,12 +238,12 @@ class GraphStoreSettings(BaseSettings):
 class PDFSettings(BaseSettings):
     """PDF processing configuration."""
 
-    loader: Literal["pymupdf", "pdfplumber", "unstructured"] = "pymupdf"
+    loader: Literal["pymupdf", "pdfplumber", "unstructured", "docling", "pymupdf4llm", "smart", "hybrid"] = "pymupdf"
     chunk_size: int = 1000
     chunk_overlap: int = 200
     splitter: Literal["recursive", "semantic", "by_heading", "by_page", "parent_child", "structure_aware"] = "recursive"
     extract_tables: bool = True
-    extract_images: bool = False
+    extract_images: bool = True
 
     # Phase 2.2: Semantic chunking
     semantic_threshold: float = 0.75
@@ -212,20 +254,26 @@ class PDFSettings(BaseSettings):
 class AgentSettings(BaseSettings):
     """LangGraph agent configuration."""
 
-    model: str = "claude-sonnet-4-5-20250929"
+    model: str = "claude-opus-4-6"
     temperature: float = 0.0
     max_tokens: int = 4096
     search_k: int = 5
 
-    # Reranking configuration (Phase 1.1)
+    # Reranking configuration (Phase 1.1 / Phase 25)
     reranker_enabled: bool = True
-    reranker_model: str = "BAAI/bge-reranker-v2-m3"
+    reranker_type: Literal["cross_encoder", "llm", "colbert"] = "llm"  # "llm" = Claude, "cross_encoder" = local, "colbert" = ColBERT
+    reranker_model: str = "BAAI/bge-reranker-v2-m3"  # For cross_encoder type
+    colbert_model: str = "jinaai/jina-colbert-v2"  # For colbert type (Phase 35)
+    reranker_llm_model: str = "claude-sonnet-4-5-20250929"  # For llm type
     reranker_top_k: int = 20  # Retrieve more, then rerank to top_k
 
     checkpointer: Literal["memory", "postgres", "sqlite"] = "memory"
 
     # API endpoint configuration (for Z.AI or other proxies)
     base_url: str = ""  # Empty = use default Anthropic endpoint
+
+    # Parallel entity extraction (graph building)
+    graph_concurrency: int = 5  # Max concurrent LLM calls for entity extraction
 
 
 class MCPServerSettings(BaseSettings):
@@ -245,7 +293,7 @@ class LayoutSettings(BaseSettings):
 
     # Layout detection
     layout_detection_enabled: bool = False
-    layout_provider: Literal["unstructured", "surya", "none"] = "unstructured"
+    layout_provider: Literal["unstructured", "surya", "docling", "none"] = "unstructured"
     layout_strategy: Literal["hi_res", "fast"] = "hi_res"
     infer_table_structure: bool = True
 
@@ -255,7 +303,7 @@ class LayoutSettings(BaseSettings):
     min_table_cols: int = 2
 
     # Image understanding
-    extract_images: bool = False
+    extract_images: bool = True
     image_description_model: str = "claude-sonnet-4-5-20250929"
     min_image_size: int = 50  # pixels
 
@@ -265,6 +313,91 @@ class LayoutSettings(BaseSettings):
     # Structure-aware chunking
     structure_aware_chunk_size: int = 1000
     structure_aware_overlap: int = 200
+
+
+class DoclingSettings(BaseSettings):
+    """Phase 15.1: Docling PDF parsing configuration.
+
+    IBM Docling for advanced document understanding:
+    - Layout detection (DocLayNet model)
+    - Table structure recognition (TableFormer, 97.9% accuracy)
+    - OCR for scanned documents (EasyOCR/Tesseract)
+    """
+
+    model_config = SettingsConfigDict(env_prefix="DOCLING__")
+
+    # OCR
+    ocr_enabled: bool = True
+    ocr_engine: Literal["easyocr", "tesseract", "rapidocr"] = "rapidocr"
+    ocr_languages: list[str] = ["ru", "en"]
+    force_full_page_ocr: bool = False
+
+    # Tables
+    table_structure_enabled: bool = True
+    table_mode: Literal["fast", "accurate"] = "accurate"
+
+    # Images
+    extract_images: bool = True
+    generate_picture_images: bool = True
+
+    # Performance
+    document_timeout: float = 1800.0  # seconds (30 min — large PDFs need more time)
+    layout_batch_size: int = 16
+    ocr_batch_size: int = 16
+    table_batch_size: int = 4
+
+    # ONNX (lightweight alternative to PyTorch)
+    use_onnx: bool = False
+
+
+class SmartRouterSettings(BaseSettings):
+    """Phase 15.1: Smart Loader Router configuration.
+
+    Auto-selects best loader based on PDF characteristics:
+    - Native simple PDF → PyMuPDF4LLM (fast, <0.1 sec/page)
+    - Native complex PDF → Docling (full pipeline)
+    - Scanned PDF → Docling with OCR
+    """
+
+    model_config = SettingsConfigDict(env_prefix="SMART_ROUTER__")
+
+    # Thresholds for PDF classification
+    min_text_chars_per_page: int = 100  # Less = scanned PDF
+    complex_layout_threshold: float = 0.3  # Ratio of pages with >1 column
+    table_heavy_threshold: float = 0.3  # Ratio of pages with tables
+
+    # Loader selection
+    fast_loader: Literal["pymupdf", "pymupdf4llm"] = "pymupdf4llm"
+    full_loader: Literal["docling", "unstructured"] = "docling"
+
+
+class HybridLoaderSettings(BaseSettings):
+    """Phase 28: Resilient Hybrid Loader configuration.
+
+    4-level cascade for 100% page coverage:
+    - Level 1: PyMuPDF4LLM text extraction (page_chunks=True)
+    - Level 2: PyMuPDF find_tables() for fast table extraction
+    - Level 3: Docling TableFormer for complex tables
+    - Level 4: Claude Vision OCR for scanned pages
+    """
+
+    model_config = SettingsConfigDict(env_prefix="HYBRID_LOADER__")
+
+    enable_fitz_tables: bool = True
+    enable_docling_tables: bool = True
+    enable_vision_ocr: bool = True  # Level 4: auto-OCR scanned pages via Vision
+    verify_coverage: bool = True
+    coverage_threshold: float = 0.95
+    table_dedup_enabled: bool = True
+    table_dedup_threshold: float = 0.6
+    docling_max_retries: int = 2
+    docling_table_mode: Literal["fast", "accurate"] = "accurate"
+
+    # Level 4: Vision OCR settings
+    vision_model: str = "claude-sonnet-4-5-20250929"
+    vision_max_retries: int = 2
+    vision_dpi: int = 200  # Render resolution for scanned pages
+    vision_min_text_chars: int = 50  # Pages with less text → treated as scanned
 
 
 class ConversationSettings(BaseSettings):
@@ -287,7 +420,7 @@ class ConversationSettings(BaseSettings):
 
     # Reformulation
     reformulation_enabled: bool = True  # History-aware query reformulation
-    reformulation_model: str = "claude-haiku-4-5-20251001"  # Fast model for reformulation
+    reformulation_model: str = "claude-sonnet-4-5-20250929"  # Fast model for reformulation
 
 
 class ObservabilitySettings(BaseSettings):
@@ -320,6 +453,13 @@ class CacheSettings(BaseSettings):
 
     prompt_caching_enabled: bool = True
 
+    # Phase 17: Semantic Search Cache
+    semantic_enabled: bool = True
+    semantic_threshold: float = 0.95
+    semantic_ttl_seconds: int = 3600
+    semantic_max_entries: int = 5000
+    semantic_db_path: Path = PROJECT_ROOT / "data" / "cache" / "semantic_cache.db"
+
 
 class APISettings(BaseSettings):
     """REST API configuration."""
@@ -346,7 +486,7 @@ class RAPTORSettings(BaseSettings):
     max_levels: int = 4
     search_mode: str = "collapsed"  # collapsed or tree_traversal
     cluster_method: str = "kmeans"  # kmeans, umap_gmm
-    summarization_model: str = "claude-haiku-4-5-20251001"
+    summarization_model: str = "claude-sonnet-4-5-20250929"
 
 
 class SummaryIndexSettings(BaseSettings):
@@ -354,7 +494,7 @@ class SummaryIndexSettings(BaseSettings):
 
     enabled: bool = False
     collection_name: str = "document_summaries"
-    summarization_model: str = "claude-haiku-4-5-20251001"
+    summarization_model: str = "claude-sonnet-4-5-20250929"
     min_chunks_for_summary: int = 10  # Only summarize docs with enough chunks
 
 
@@ -384,7 +524,108 @@ class SuggestionSettings(BaseSettings):
     method: Literal["entity", "frequency", "llm", "related"] = "entity"
     cache_ttl: int = 3600  # seconds
     max_suggestions: int = 5
-    llm_model: str = "claude-haiku-4-5-20251001"
+    llm_model: str = "claude-sonnet-4-5-20250929"
+
+
+class DeepResearchSettings(BaseSettings):
+    """Phase 19: Deep Research Agent configuration."""
+
+    enabled: bool = False
+    max_sub_questions: int = 4
+    max_retrieval_steps: int = 5
+
+
+class AutoRAGSettings(BaseSettings):
+    """Phase 20: AutoRAG Optimization configuration."""
+
+    enabled: bool = False
+    max_experiments: int = 50
+    output_dir: Path = PROJECT_ROOT / "data" / "autorag_results"
+
+
+class RAGASSettings(BaseSettings):
+    """Phase 21: RAGAS Evaluation configuration."""
+
+    enabled: bool = False
+    eval_history_db_path: Path = PROJECT_ROOT / "data" / "eval_history.db"
+    regression_threshold: float = 0.05
+    baseline_path: Path = PROJECT_ROOT / "data" / "baseline.json"
+
+
+class FeedbackSettings(BaseSettings):
+    """Phase 22: Self-Learning Feedback configuration."""
+
+    enabled: bool = True
+    db_path: Path = PROJECT_ROOT / "data" / "feedback.db"
+    async_db_path: Path = PROJECT_ROOT / "data" / "feedback_v2.db"
+    few_shot_max_examples: int = 3
+    few_shot_similarity_threshold: float = 0.7
+    boost_max: float = 1.3
+    boost_min_count: int = 3
+
+
+class HierarchicalSearchSettings(BaseSettings):
+    """Phase 30: Hierarchical RAG configuration.
+
+    Section-first search, section summaries, breadcrumb context.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="HIERARCHICAL__")
+
+    section_first_enabled: bool = True
+    summary_enabled: bool = True
+    summary_model: str = "claude-sonnet-4-5-20250929"
+    summary_db_path: Path = PROJECT_ROOT / "data" / "section_summaries.db"
+    context_breadcrumb: bool = True
+
+
+class LightRAGSettings(BaseSettings):
+    """Phase 38: LightRAG Mode — Economical GraphRAG.
+
+    Vector search over entity/relation embeddings instead of LLM map-reduce.
+    ~100 tokens/query vs ~5000 for full GraphRAG Global (50x cheaper).
+
+    Auto-selection: classifier routes simple→LightRAG, thematic→Full GraphRAG.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="LIGHTRAG__")
+
+    enabled: bool = True
+    collection_name: str = "graph_embeddings"  # Qdrant collection for entity/relation vectors
+
+    # Search parameters
+    entity_top_k: int = 10  # Top entities to retrieve per query
+    relation_top_k: int = 10  # Top relations to retrieve per query
+    neighbor_depth: int = 1  # Depth for neighbor expansion from found entities
+    max_chunks: int = 10  # Max source chunks to return
+
+    # Auto-selection: when to use LightRAG vs Full GraphRAG
+    auto_select_enabled: bool = True
+    # Complexity thresholds: simple/moderate → light, complex/thematic → full
+    light_complexities: list[str] = ["simple", "moderate"]
+    full_complexities: list[str] = ["complex", "thematic"]
+
+
+class ExternalSourcesSettings(BaseSettings):
+    """External sources / web search settings (Phase 37)."""
+
+    model_config = SettingsConfigDict(env_prefix="EXTERNAL__")
+    web_search_enabled: bool = False
+    tavily_api_key: str = ""
+    serpapi_key: str = ""
+    confidence_threshold: float = 0.5  # below this, fall back to web
+    web_trust_score: float = 0.3  # web results scored lower than docs
+
+
+class OptimizationSettings(BaseSettings):
+    """DSPy prompt optimization settings (Phase 34)."""
+
+    model_config = SettingsConfigDict(env_prefix="OPTIMIZATION__")
+    enabled: bool = False
+    dataset_path: str = "data/dspy_evaluation_dataset.json"
+    optimized_dir: str = "data/dspy_optimized"
+    model: str = "claude-sonnet-4-5-20250929"
+    max_trials: int = 50
 
 
 class Settings(BaseSettings):
@@ -412,6 +653,8 @@ class Settings(BaseSettings):
     conversation: ConversationSettings = Field(default_factory=ConversationSettings)  # Phase 9
     layout: LayoutSettings = Field(default_factory=LayoutSettings)  # Phase 10
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)  # Phase 11
+    docling: DoclingSettings = Field(default_factory=DoclingSettings)  # Phase 15.1
+    smart_router: SmartRouterSettings = Field(default_factory=SmartRouterSettings)  # Phase 15.1
     cache: CacheSettings = Field(default_factory=CacheSettings)  # Phase 11
     auth: AuthSettings = Field(default_factory=AuthSettings)  # Phase 12
     raptor: RAPTORSettings = Field(default_factory=RAPTORSettings)  # Phase 13
@@ -421,6 +664,15 @@ class Settings(BaseSettings):
     ui: UISettings = Field(default_factory=UISettings)  # Phase 14
     openai_compat: OpenAICompatSettings = Field(default_factory=OpenAICompatSettings)  # Phase 14
     suggestions: SuggestionSettings = Field(default_factory=SuggestionSettings)  # Phase 14
+    deep_research: DeepResearchSettings = Field(default_factory=DeepResearchSettings)  # Phase 19
+    autorag: AutoRAGSettings = Field(default_factory=AutoRAGSettings)  # Phase 20
+    ragas_eval: RAGASSettings = Field(default_factory=RAGASSettings)  # Phase 21
+    feedback: FeedbackSettings = Field(default_factory=FeedbackSettings)  # Phase 22
+    hybrid_loader: HybridLoaderSettings = Field(default_factory=HybridLoaderSettings)  # Phase 28
+    hierarchical: HierarchicalSearchSettings = Field(default_factory=HierarchicalSearchSettings)  # Phase 30
+    light_rag: LightRAGSettings = Field(default_factory=LightRAGSettings)  # Phase 38
+    optimization: "OptimizationSettings" = Field(default_factory=lambda: OptimizationSettings())  # Phase 34
+    external: "ExternalSourcesSettings" = Field(default_factory=lambda: ExternalSourcesSettings())  # Phase 37
 
     # API Keys
     anthropic_api_key: str = ""
@@ -436,6 +688,12 @@ class Settings(BaseSettings):
     temp_dir: Path = PROJECT_ROOT / "data" / "temp"
 
 
+_settings_instance: Settings | None = None
+
+
 def get_settings() -> Settings:
-    """Get application settings singleton."""
-    return Settings()
+    """Get application settings singleton (cached)."""
+    global _settings_instance
+    if _settings_instance is None:
+        _settings_instance = Settings()
+    return _settings_instance

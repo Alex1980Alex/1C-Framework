@@ -10,7 +10,6 @@ Author: Claude Code
 Version: 1.5.0 - Phase 14.5: Query Suggestions
 """
 
-import asyncio
 import logging
 from typing import Literal
 
@@ -43,9 +42,11 @@ class QuerySuggester:
         self,
         config: SuggestionConfig | None = None,
         api_key: str = "",
+        base_url: str = "",
     ):
         self._config = config or SuggestionConfig()
-        _api_key = api_key
+        self._api_key = api_key
+        self._base_url = base_url
         self._cache: dict[str, tuple[list[str], float]] = {}
         self._query_counts: dict[str, int] = {}
 
@@ -137,10 +138,14 @@ class QuerySuggester:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm = ChatAnthropic(
+            llm_kwargs = dict(
                 model_name=self._config.llm_model,
                 temperature=0.5,
+                api_key=self._api_key,
             )
+            if self._base_url:
+                llm_kwargs["base_url"] = self._base_url
+            llm = ChatAnthropic(**llm_kwargs)
 
             prompt = f'''Based on the query "{context}", suggest {k} interesting follow-up questions
 that a user might want to ask to explore this topic further.
@@ -151,8 +156,16 @@ Questions:'''
 
             response = await llm.ainvoke([HumanMessage(content=prompt)])
 
-            # Parse response - handle both string and list response
-            content = response.content if isinstance(response.content, str) else str(response.content)
+            # Parse response - handle both string and list content from LangChain
+            raw = response.content
+            if isinstance(raw, list):
+                content = " ".join(
+                    getattr(block, "text", str(block))
+                    for block in raw
+                    if getattr(block, "text", None)
+                )
+            else:
+                content = str(raw)
             lines = content.strip().split("\n")
             suggestions = []
             for line in lines:

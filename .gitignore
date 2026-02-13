@@ -1,0 +1,52 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Data (all DB files and large data)
+data/
+!data/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Temp files
+temp_*.json
+temp_*.txt
+%TEMP%*
+*Frameworkdata*
+*Frameworktemp*
+
+# Ad-hoc test scripts in root (structured tests are in tests/)
+/test_*.py
+/test_*.txt
+
+# Ad-hoc scripts in root
+/search_*.py
+/check_*.py
+/reindex_*.py
+/verify_*.py
+
+# Hook shared state (regenerated at runtime)
+.claude/cache/hook-todos.json

@@ -28,6 +28,16 @@ class ChromaVectorStore(BaseVectorStore):
         self._client: chromadb.ClientAPI | None = None
         self._collection: chromadb.Collection | None = None
 
+    @staticmethod
+    def _safe_int(value: object) -> int | None:
+        """Safely convert metadata value to int, handling 'None' strings."""
+        if value is None or value == "None" or value == "":
+            return None
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return None
+
     @property
     def collection(self) -> chromadb.Collection:
         if self._collection is None:
@@ -210,6 +220,48 @@ class ChromaVectorStore(BaseVectorStore):
 
         return search_results
 
+    async def scroll(
+        self,
+        filter: dict[str, Any] | None = None,
+        limit: int = 10000,
+        fields: list[str] | None = None,
+    ) -> list[DocumentChunk]:
+        """Get chunks by metadata filter using ChromaDB get."""
+        where = filter if filter else None
+        results = self.collection.get(
+            where=where,
+            limit=limit,
+            include=["documents", "metadatas"],
+        )
+
+        chunks: list[DocumentChunk] = []
+        for i, doc_id in enumerate(results["ids"]):
+            meta = results["metadatas"][i] if results.get("metadatas") else {}
+            content = results["documents"][i] if results.get("documents") else ""
+            standard_fields = {"document_id", "page_number", "section", "chunk_index"}
+            chunk_metadata = {k: v for k, v in meta.items() if k not in standard_fields}
+
+            chunks.append(DocumentChunk(
+                id=doc_id,
+                content=content,
+                document_id=meta.get("document_id", ""),
+                page_number=self._safe_int(meta.get("page_number")),
+                section=meta.get("section", ""),
+                chunk_index=self._safe_int(meta.get("chunk_index")) or 0,
+                metadata=chunk_metadata,
+            ))
+        return chunks
+
+    async def delete_by_filter(self, filter: dict[str, Any]) -> int:
+        """Delete all chunks matching a metadata filter."""
+        if not filter:
+            return 0
+        results = self.collection.get(where=filter, include=[])
+        ids = results.get("ids", [])
+        if ids:
+            self.collection.delete(ids=ids)
+        return len(ids)
+
     async def delete(self, ids: list[str]) -> None:
         self.collection.delete(ids=ids)
 
@@ -224,9 +276,9 @@ class ChromaVectorStore(BaseVectorStore):
                     id=doc_id,
                     content=content,
                     document_id=meta.get("document_id", ""),
-                    page_number=int(meta.get("page_number", 0)) or None,
+                    page_number=self._safe_int(meta.get("page_number")),
                     section=meta.get("section", ""),
-                    chunk_index=int(meta.get("chunk_index", 0)),
+                    chunk_index=self._safe_int(meta.get("chunk_index")) or 0,
                 )
             )
         return chunks

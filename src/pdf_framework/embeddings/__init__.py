@@ -16,6 +16,10 @@ def get_embedding_engine(settings: EmbeddingSettings | None = None) -> BaseEmbed
         from src.pdf_framework.embeddings.providers.local import LocalEmbeddingEngine
 
         return LocalEmbeddingEngine(settings)
+    if settings.provider == "giga":
+        from src.pdf_framework.embeddings.providers.giga import GigaEmbeddingEngine
+
+        return GigaEmbeddingEngine(settings)
     raise ValueError(f"Unsupported embedding provider: {settings.provider}")
 
 

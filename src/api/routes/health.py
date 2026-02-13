@@ -82,14 +82,16 @@ async def check_llm() -> dict:
                 "message": "No API key configured",
             }
 
-        # Simple check - try to create a client
+        # Simple check — create a client with base_url (for Z.AI proxy etc.)
         from anthropic import AsyncAnthropic
 
-        client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+        base_url = getattr(settings.agent, "base_url", None) or None
+        client = AsyncAnthropic(
+            api_key=settings.anthropic_api_key,
+            base_url=base_url,
+        )
 
-        # Try a minimal API call (messages.list is lightweight)
         start = asyncio.get_event_loop().time()
-        # Note: messages.list might not be available, using a simple model check instead
         _ = client  # Client creation is the check
         latency_ms = (asyncio.get_event_loop().time() - start) * 1000
 

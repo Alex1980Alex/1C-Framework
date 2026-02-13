@@ -13,12 +13,12 @@ Algorithm (breakpoint-based):
 """
 
 import re
-import uuid
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from src.pdf_framework.schemas.documents import DocumentChunk, ProcessedDocument
+from src.pdf_framework.utils.id_generator import generate_chunk_id
 
 
 def _split_sentences(text: str) -> list[str]:
@@ -203,7 +203,7 @@ class SemanticTextSplitter:
         """Create DocumentChunk objects from text segments."""
         chunks: list[DocumentChunk] = []
         for i, text in enumerate(texts):
-            chunk_id = f"{document.id}_chunk_{uuid.uuid4().hex[:8]}"
+            chunk_id = generate_chunk_id(document.id, i, text)
             chunks.append(
                 DocumentChunk(
                     id=chunk_id,

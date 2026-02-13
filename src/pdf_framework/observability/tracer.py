@@ -9,8 +9,8 @@ Author: Claude Code
 Version: 1.2.0 - Phase 11.1: Tracing
 """
 
-import asyncio
-import hashlib
+from __future__ import annotations
+
 import json
 import logging
 import time
@@ -38,6 +38,7 @@ class Span:
 
     name: str
     start_time: float = field(default_factory=time.perf_counter)
+    start_timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     end_time: float | None = None
     status: SpanStatus = SpanStatus.OK
     attributes: dict = field(default_factory=dict)
@@ -56,7 +57,7 @@ class Span:
         """Convert span to dictionary for serialization."""
         return {
             "name": self.name,
-            "timestamp": datetime.fromtimestamp(self.start_time, timezone.utc).isoformat(),
+            "timestamp": self.start_timestamp,
             "duration_ms": self.duration_ms,
             "status": self.status.value,
             "attributes": self.attributes,
@@ -140,9 +141,7 @@ class JsonFileTracer(BaseTracer):
 
     def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
         """End span and write to buffer."""
-        span.status = status
-        span.output = output
-        span.error = error
+        span.end(status=status, output=output, error=error)
 
         if self._enabled:
             self._buffer.append(span.to_dict())
@@ -160,13 +159,15 @@ class JsonFileTracer(BaseTracer):
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         trace_file = self._trace_dir / f"{today}.jsonl"
 
+        count = len(self._buffer)
+
         # Append traces
         with open(trace_file, "a", encoding="utf-8") as f:
             for trace in self._buffer:
                 f.write(json.dumps(trace, ensure_ascii=False) + "\n")
 
         self._buffer.clear()
-        logger.debug(f"[TRACE] Flushed {len(self._buffer)} traces to {trace_file}")
+        logger.debug(f"[TRACE] Flushed {count} traces to {trace_file}")
 
 
 class LangSmithTracer(BaseTracer):
@@ -207,13 +208,27 @@ class LangSmithTracer(BaseTracer):
 
     def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
         """End span (no-op for LangSmith, automatic)."""
-        span.status = status
-        span.output = output
-        span.error = error
+        span.end(status=status, output=output, error=error)
         # LangSmith traces automatically via callbacks
 
     def flush(self) -> None:
         """Flush (no-op for LangSmith)."""
+        pass
+
+
+class NoOpTracer(BaseTracer):
+    """No-op tracer that discards all spans."""
+
+    def start_span(self, name: str, attributes: dict | None = None) -> Span:
+        """Start a span (no-op)."""
+        return Span(name=name, attributes=attributes or {})
+
+    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+        """End a span (no-op)."""
+        span.end(status=status, output=output, error=error)
+
+    def flush(self) -> None:
+        """Flush (no-op)."""
         pass
 
 
@@ -317,7 +332,7 @@ def get_tracer(
         return LangSmithTracer(**kwargs)
     else:
         # No-op tracer
-        return BaseTracer()
+        return NoOpTracer()
 
 
 def get_metrics_collector() -> MetricsCollector:

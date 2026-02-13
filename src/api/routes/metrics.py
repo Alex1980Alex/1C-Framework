@@ -9,7 +9,7 @@ Version: 1.2.0 - Phase 11.6: Metrics Dashboard
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 from src.pdf_framework.observability.tracer import get_metrics_collector
@@ -135,33 +135,33 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
 <body>
     <div class="container">
         <h1>PDF Framework Metrics</h1>
-        <div class="timestamp">Last updated: <span id="timestamp">{timestamp}</span></div>
+        <div class="timestamp">Last updated: <span id="timestamp">$timestamp</span></div>
 
         <!-- Key Metrics -->
         <div class="grid">
             <div class="card">
                 <div class="card-title">Total Queries</div>
-                <div class="card-value">{queries_total}</div>
+                <div class="card-value">$queries_total</div>
             </div>
             <div class="card">
                 <div class="card-title">Queries Today</div>
-                <div class="card-value">{queries_today}</div>
+                <div class="card-value">$queries_today</div>
             </div>
             <div class="card">
                 <div class="card-title">Avg Latency</div>
-                <div class="card-value">{avg_latency_ms:.1f}<span class="card-unit">ms</span></div>
+                <div class="card-value">$avg_latency_ms<span class="card-unit">ms</span></div>
             </div>
             <div class="card">
                 <div class="card-title">P95 Latency</div>
-                <div class="card-value">{p95_latency_ms:.1f}<span class="card-unit">ms</span></div>
+                <div class="card-value">$p95_latency_ms<span class="card-unit">ms</span></div>
             </div>
             <div class="card">
                 <div class="card-title">Cache Hit Rate</div>
-                <div class="card-value {cache_class}">{cache_hit_rate:.1%}</div>
+                <div class="card-value $cache_class">$cache_hit_rate</div>
             </div>
             <div class="card">
                 <div class="card-title">Error Rate</div>
-                <div class="card-value {error_class}">{error_rate:.1%}</div>
+                <div class="card-value $error_class">$error_rate</div>
             </div>
         </div>
 
@@ -183,35 +183,35 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
                     <tr>
                         <td><strong>Embedding Cache</strong></td>
                         <td><span class="tag tag-green">Active</span></td>
-                        <td>{emb_hits}</td>
-                        <td>{emb_misses}</td>
-                        <td>{emb_total}</td>
+                        <td>$emb_hits</td>
+                        <td>$emb_misses</td>
+                        <td>$emb_total</td>
                         <td>
-                            <div>{emb_hit_rate:.1%}</div>
+                            <div>$emb_hit_rate</div>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: {emb_hit_rate_pct:.0f}%"></div>
+                                <div class="progress-fill" style="width: ${emb_hit_rate_pct}%"></div>
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td><strong>LLM Response Cache</strong></td>
                         <td><span class="tag tag-green">Active</span></td>
-                        <td>{llm_hits}</td>
-                        <td>{llm_misses}</td>
-                        <td>{llm_total}</td>
+                        <td>$llm_hits</td>
+                        <td>$llm_misses</td>
+                        <td>$llm_total</td>
                         <td>
-                            <div>{llm_hit_rate:.1%}</div>
+                            <div>$llm_hit_rate</div>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: {llm_hit_rate_pct:.0f}%"></div>
+                                <div class="progress-fill" style="width: ${llm_hit_rate_pct}%"></div>
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td><strong>Document Cache</strong></td>
                         <td><span class="tag tag-blue">Passive</span></td>
-                        <td>{doc_hits}</td>
-                        <td>{doc_stale}</td>
-                        <td>{doc_total}</td>
+                        <td>$doc_hits</td>
+                        <td>$doc_stale</td>
+                        <td>$doc_total</td>
                         <td>—</td>
                     </tr>
                 </tbody>
@@ -230,7 +230,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
                     </tr>
                 </thead>
                 <tbody>
-                    {strategy_rows}
+                    $strategy_rows
                 </tbody>
             </table>
         </div>
@@ -258,13 +258,13 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
     <script>
         // Auto-refresh every 30 seconds
         let countdown = 30;
-        setInterval(() => {{
+        setInterval(() => {
             countdown--;
-            if (countdown <= 0) {{
+            if (countdown <= 0) {
                 window.location.reload();
                 countdown = 30;
-            }}
-        }}, 1000);
+            }
+        }, 1000);
 
         // Update timestamp
         document.getElementById('timestamp').textContent = new Date().toLocaleString();
@@ -336,7 +336,7 @@ async def get_metrics_html():
         """)
 
     if not strategy_rows:
-        strategy_rows = '<tr><td colspan="3" style="text-align:center;color:#999;">No data yet</td></tr>'
+        strategy_rows.append('<tr><td colspan="3" style="text-align:center;color:#999;">No data yet</td></tr>')
 
     # Determine color classes
     cache_rate = metrics_data.get("cache_hit_rate", 0)
@@ -345,30 +345,36 @@ async def get_metrics_html():
     error_rate = metrics_data.get("error_rate", 0)
     error_class = "" if error_rate < 0.01 else "warning" if error_rate < 0.05 else "error"
 
-    # Fill template
-    html = _DASHBOARD_HTML.format(
+    # Fill template using string.Template ($var) to avoid CSS brace conflicts
+    from string import Template
+
+    emb = metrics_data["embedding_cache"]
+    llm = metrics_data["llm_cache"]
+    doc = metrics_data["document_cache"]
+
+    html = Template(_DASHBOARD_HTML).safe_substitute(
         timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
         queries_total=metrics_data.get("queries_total", 0),
         queries_today=metrics_data.get("queries_today", 0),
-        avg_latency_ms=metrics_data.get("avg_latency_ms", 0),
-        p95_latency_ms=metrics_data.get("p95_latency_ms", 0),
-        cache_hit_rate=cache_rate,
+        avg_latency_ms=f"{metrics_data.get('avg_latency_ms', 0):.1f}",
+        p95_latency_ms=f"{metrics_data.get('p95_latency_ms', 0):.1f}",
+        cache_hit_rate=f"{cache_rate:.1%}",
         cache_class=cache_class,
-        error_rate=error_rate,
+        error_rate=f"{error_rate:.1%}",
         error_class=error_class,
-        emb_hits=metrics_data["embedding_cache"]["hits"],
-        emb_misses=metrics_data["embedding_cache"]["misses"],
-        emb_total=metrics_data["embedding_cache"]["total"],
-        emb_hit_rate=metrics_data["embedding_cache"]["hit_rate"],
-        emb_hit_rate_pct=metrics_data["embedding_cache"]["hit_rate"] * 100,
-        llm_hits=metrics_data["llm_cache"]["hits"],
-        llm_misses=metrics_data["llm_cache"]["misses"],
-        llm_total=metrics_data["llm_cache"]["total"],
-        llm_hit_rate=metrics_data["llm_cache"]["hit_rate"],
-        llm_hit_rate_pct=metrics_data["llm_cache"]["hit_rate"] * 100,
-        doc_hits=metrics_data["document_cache"]["hits"],
-        doc_stale=metrics_data["document_cache"]["stale"],
-        doc_total=metrics_data["document_cache"]["hits"] + metrics_data["document_cache"]["stale"],
+        emb_hits=emb["hits"],
+        emb_misses=emb["misses"],
+        emb_total=emb["total"],
+        emb_hit_rate=f"{emb['hit_rate']:.1%}",
+        emb_hit_rate_pct=f"{emb['hit_rate'] * 100:.0f}",
+        llm_hits=llm["hits"],
+        llm_misses=llm["misses"],
+        llm_total=llm["total"],
+        llm_hit_rate=f"{llm['hit_rate']:.1%}",
+        llm_hit_rate_pct=f"{llm['hit_rate'] * 100:.0f}",
+        doc_hits=doc["hits"],
+        doc_stale=doc["stale"],
+        doc_total=doc["hits"] + doc["stale"],
         strategy_rows="".join(strategy_rows),
     )
 

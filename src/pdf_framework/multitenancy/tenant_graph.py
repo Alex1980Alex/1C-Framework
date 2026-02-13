@@ -6,14 +6,13 @@ Author: Claude Code
 Version: 1.3.0 - Phase 12.2: Tenant Graph Isolation
 """
 
-import json
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
-
 from src.pdf_framework.graph_store.base import BaseGraphStore
+from src.pdf_framework.schemas.entities import Entity, Relation, SubGraph
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +49,8 @@ class TenantGraphStore(BaseGraphStore):
 
         # Create base store with tenant-specific path
         self._base_store = base_store_class()
-        if hasattr(self._base_store, "_db_path"):
-            self._base_store._db_path = str(self._graph_path)
-        if hasattr(self._base_store, "_graph_file"):
-            self._base_store._graph_file = str(self._graph_path)
+        if hasattr(self._base_store, "_persist_path"):
+            self._base_store._persist_path = self._graph_path
 
         self._initialized = False
 
@@ -69,17 +66,22 @@ class TenantGraphStore(BaseGraphStore):
         await self._ensure_tenant_attributes()
 
     async def _ensure_tenant_attributes(self) -> None:
-        """Ensure all nodes and edges have tenant_id attribute."""
+        """Ensure all nodes and edges have tenant_id in properties."""
         try:
             graph = self._base_store._graph
             for node in graph.nodes():
-                if "tenant_id" not in graph.nodes[node]:
-                    graph.nodes[node]["tenant_id"] = self._tenant_id
+                node_data = graph.nodes[node]
+                props = node_data.get("properties", {})
+                if "tenant_id" not in props:
+                    props["tenant_id"] = self._tenant_id
+                    node_data["properties"] = props
 
-            for u, v, key in graph.edges(keys=True):
-                edge_data = graph.edges[u, v, key]
-                if "tenant_id" not in edge_data:
-                    edge_data["tenant_id"] = self._tenant_id
+            for u, v in graph.edges():
+                edge_data = graph.edges[u, v]
+                props = edge_data.get("properties", {})
+                if "tenant_id" not in props:
+                    props["tenant_id"] = self._tenant_id
+                    edge_data["properties"] = props
 
             # Save if modified
             if hasattr(self._base_store, "_save_to_file"):
@@ -88,33 +90,20 @@ class TenantGraphStore(BaseGraphStore):
         except Exception as e:
             logger.warning(f"[TENANT_GRAPH] Could not ensure tenant attributes: {e}")
 
-    async def add_entity(
-        self,
-        name: str,
-        entity_type: str,
-        properties: dict[str, Any] | None = None,
-    ) -> str:
+    async def add_entity(self, entity: Entity) -> str:
         """Add entity with tenant_id."""
-        properties = properties or {}
-        properties["tenant_id"] = self._tenant_id
-        return await self._base_store.add_entity(name, entity_type, properties)
+        entity.properties["tenant_id"] = self._tenant_id
+        return await self._base_store.add_entity(entity)
 
-    async def add_relation(
-        self,
-        from_entity: str,
-        to_entity: str,
-        relation_type: str,
-        properties: dict[str, Any] | None = None,
-    ) -> str:
+    async def add_relation(self, relation: Relation) -> str:
         """Add relation with tenant_id."""
-        properties = properties or {}
-        properties["tenant_id"] = self._tenant_id
-        return await self._base_store.add_relation(from_entity, to_entity, relation_type, properties)
+        relation.properties["tenant_id"] = self._tenant_id
+        return await self._base_store.add_relation(relation)
 
-    async def get_entity(self, entity_id: str) -> dict[str, Any] | None:
+    async def get_entity(self, entity_id: str) -> Entity | None:
         """Get entity (tenant-scoped)."""
         entity = await self._base_store.get_entity(entity_id)
-        if entity and entity.get("tenant_id") == self._tenant_id:
+        if entity and entity.properties.get("tenant_id") == self._tenant_id:
             return entity
         return None
 
@@ -122,66 +111,81 @@ class TenantGraphStore(BaseGraphStore):
         self,
         name: str | None = None,
         entity_type: str | None = None,
-        properties: dict[str, Any] | None = None,
-        limit: int = 100,
-    ) -> list[dict[str, Any]]:
+        limit: int = 10,
+    ) -> list[Entity]:
         """Find entities (filtered by tenant_id)."""
-        # Always add tenant_id filter
-        filter_props = properties or {}
-        filter_props["tenant_id"] = self._tenant_id
-
-        return await self._base_store.find_entities(
+        # Over-fetch and filter by tenant
+        results = await self._base_store.find_entities(
             name=name,
             entity_type=entity_type,
-            properties=filter_props,
-            limit=limit,
+            limit=limit * 3,
         )
+        return [
+            e for e in results
+            if e.properties.get("tenant_id") == self._tenant_id
+        ][:limit]
 
     async def get_neighbors(
         self,
         entity_id: str,
-        direction: str = "both",
-        edge_type: str | None = None,
+        relation_type: str | None = None,
         depth: int = 1,
-    ) -> list[dict[str, Any]]:
+    ) -> SubGraph:
         """Get neighbors (tenant-scoped)."""
-        neighbors = await self._base_store.get_neighbors(
-            entity_id, direction, edge_type, depth
+        # Verify entity belongs to tenant
+        entity = await self.get_entity(entity_id)
+        if not entity:
+            return SubGraph()
+
+        subgraph = await self._base_store.get_neighbors(
+            entity_id, relation_type, depth
         )
 
         # Filter by tenant_id
-        return [
-            n for n in neighbors
-            if n.get("tenant_id") == self._tenant_id
+        subgraph.entities = [
+            e for e in subgraph.entities
+            if e.properties.get("tenant_id") == self._tenant_id
         ]
+        subgraph.relations = [
+            r for r in subgraph.relations
+            if r.properties.get("tenant_id") == self._tenant_id
+        ]
+        return subgraph
 
     async def find_path(
         self,
-        from_entity: str,
-        to_entity: str,
-        max_length: int = 5,
-    ) -> list[str] | None:
+        source_id: str,
+        target_id: str,
+        max_depth: int = 5,
+    ) -> SubGraph:
         """Find path (tenant-scoped)."""
         # Verify both entities belong to tenant
-        from_entity_data = await self.get_entity(from_entity)
-        to_entity_data = await self.get_entity(to_entity)
+        from_entity = await self.get_entity(source_id)
+        to_entity = await self.get_entity(target_id)
 
-        if not from_entity_data or not to_entity_data:
-            return None
+        if not from_entity or not to_entity:
+            return SubGraph()
 
-        return await self._base_store.find_path(from_entity, to_entity, max_length)
+        return await self._base_store.find_path(source_id, target_id, max_depth)
 
-    async def query(self, query: str) -> list[dict[str, Any]]:
+    async def query(
+        self,
+        query_str: str,
+        params: dict[str, Any] | None = None,
+    ) -> SubGraph:
         """Execute query (filtered by tenant_id)."""
-        # For graph queries, we need to add tenant filter
-        # This is a simple implementation - full Cypher/Gremlin support would be more complex
-        results = await self._base_store.query(query)
+        result = await self._base_store.query(query_str, params)
 
         # Filter results by tenant_id
-        return [
-            r for r in results
-            if r.get("tenant_id") == self._tenant_id
+        result.entities = [
+            e for e in result.entities
+            if e.properties.get("tenant_id") == self._tenant_id
         ]
+        result.relations = [
+            r for r in result.relations
+            if r.properties.get("tenant_id") == self._tenant_id
+        ]
+        return result
 
     async def get_statistics(self) -> dict[str, Any]:
         """Get statistics (tenant-scoped)."""
@@ -192,11 +196,11 @@ class TenantGraphStore(BaseGraphStore):
             graph = self._base_store._graph
             tenant_nodes = [
                 n for n, attrs in graph.nodes(data=True)
-                if attrs.get("tenant_id") == self._tenant_id
+                if attrs.get("properties", {}).get("tenant_id") == self._tenant_id
             ]
             tenant_edges = [
                 (u, v) for u, v, attrs in graph.edges(data=True)
-                if attrs.get("tenant_id") == self._tenant_id
+                if attrs.get("properties", {}).get("tenant_id") == self._tenant_id
             ]
 
             stats["entity_count"] = len(tenant_nodes)
@@ -207,12 +211,11 @@ class TenantGraphStore(BaseGraphStore):
 
         return stats
 
-    async def delete_entity(self, entity_id: str) -> bool:
+    async def delete_entity(self, entity_id: str) -> None:
         """Delete entity (tenant-scoped)."""
         entity = await self.get_entity(entity_id)
         if entity:
-            return await self._base_store.delete_entity(entity_id)
-        return False
+            await self._base_store.delete_entity(entity_id)
 
     async def clear(self) -> None:
         """Clear all tenant data."""
@@ -231,7 +234,6 @@ class TenantGraphStore(BaseGraphStore):
 
 def _sanitize_tenant_id(tenant_id: str) -> str:
     """Sanitize tenant ID for file names."""
-    import re
     return re.sub(r"[^a-zA-Z0-9_-]", "_", tenant_id)[:63]
 
 
@@ -254,9 +256,9 @@ class TenantGraphManager:
             base_store_class: Base graph store class
             graph_dir: Directory for tenant graph files
         """
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXStore
+        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
 
-        self._base_store_class = base_store_class or NetworkXStore
+        self._base_store_class = base_store_class or NetworkXGraphStore
         self._graph_dir = Path(graph_dir)
         self._graph_dir.mkdir(parents=True, exist_ok=True)
 

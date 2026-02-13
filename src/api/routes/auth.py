@@ -5,10 +5,10 @@ Version: 1.3.0 - Phase 12.3: JWT Authentication
 """
 
 import logging
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, status
 
-from src.api.auth.dependencies import UserRole, get_token_payload
 from src.api.auth.jwt_handler import get_jwt_handler
 from src.pdf_framework.config import get_settings
 
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 async def create_token(
     api_key: str,
     tenant_id: str | None = None,
-    role: UserRole = "viewer",
+    role: Literal["viewer", "editor", "admin"] = "viewer",
 ):
     """
     Create a JWT token.
