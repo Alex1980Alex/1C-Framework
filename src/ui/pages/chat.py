@@ -1,4 +1,4 @@
-"""Chat page for Gradio UI (Phase 14.1)."""
+"""Chat page for Gradio UI (Phase 14.1) — Russian localization."""
 
 import logging
 import requests
@@ -7,130 +7,94 @@ import gradio as gr
 
 logger = logging.getLogger(__name__)
 
+STRATEGY_HINTS = {
+    "adaptive": "Adaptive — автоматически выбирает лучшую стратегию для запроса",
+    "hybrid": "Hybrid — комбинация векторного и графового поиска",
+    "vector": "Vector — семантический поиск по эмбеддингам",
+    "mmr": "MMR — максимальное разнообразие результатов",
+    "graphrag_local": "GraphRAG Local — поиск по ближайшим сущностям графа",
+    "graphrag_global": "GraphRAG Global — анализ через сообщества графа",
+    "raptor": "RAPTOR — иерархический поиск по дереву саммари",
+}
+
 
 def create_chat_page(api_url: str):
     """Create chat interface page."""
 
     with gr.Column() as page:
-        gr.Markdown("### Chat with your documents")
+        gr.Markdown(
+            "### Чат с документами\n"
+            "Задавайте вопросы — система найдёт ответ в проиндексированных PDF-файлах."
+        )
 
         with gr.Row():
             strategy = gr.Dropdown(
-                choices=["adaptive", "hybrid", "vector", "mmr", "graphrag_local", "graphrag_global", "raptor"],
+                choices=list(STRATEGY_HINTS.keys()),
                 value="adaptive",
-                label="Search Strategy",
+                label="Стратегия поиска",
+                info="Определяет, как система ищет релевантные фрагменты для ответа",
                 scale=3,
             )
-            clear_btn = gr.Button("Clear History", scale=1)
+            clear_btn = gr.Button("Очистить историю", scale=1)
 
-        chatbot = gr.Chatbot(height=500, label="Conversation")
+        strategy_hint = gr.Markdown(
+            f"*{STRATEGY_HINTS['adaptive']}*"
+        )
+
+        chatbot = gr.Chatbot(height=500, label="Диалог")
 
         with gr.Row():
             msg = gr.Textbox(
-                placeholder="Ask a question about your documents...",
+                placeholder="Введите вопрос по документам... (Enter — отправить)",
                 show_label=False,
                 scale=4,
             )
-            submit_btn = gr.Button("Send", variant="primary", scale=1)
+            submit_btn = gr.Button("Отправить", variant="primary", scale=1)
 
         sources_box = gr.Markdown("")
 
+        def update_strategy_hint(s: str):
+            return f"*{STRATEGY_HINTS.get(s, '')}*"
+
         def chat_fn(message: str, history: list, strategy: str):
             """Call chat API."""
+            if not message or not message.strip():
+                return history, "", ""
             try:
                 response = requests.post(
-                    f"{api_url}/chat/",
-                    json={"message": message, "strategy": strategy},
+                    f"{api_url}/chat/message",
+                    json={"message": message, "strategy": strategy, "stream": False},
                     timeout=120,
                 )
                 response.raise_for_status()
                 data = response.json()
 
-                answer = data.get("answer", "No response")
+                answer = data.get("answer", "Нет ответа")
                 sources = data.get("sources", [])
 
-                # Format sources
                 sources_text = ""
                 if sources:
-                    sources_text = "\n\n**Sources:**\n" + "\n".join(
-                        f"- {s.get('id', s.get('source', 'unknown'))}"
+                    sources_text = "\n\n**Источники:**\n" + "\n".join(
+                        f"- {s.get('id', s.get('source', 'неизвестно'))}"
                         for s in sources[:5]
                     )
 
-                history.append([message, answer])
+                history.append({"role": "user", "content": message})
+                history.append({"role": "assistant", "content": answer})
                 return history, "", sources_text
 
             except Exception as e:
                 logger.error(f"Chat error: {e}")
-                error_msg = f"Error: {str(e)}"
-                history.append([message, error_msg])
+                history.append({"role": "user", "content": message})
+                history.append({"role": "assistant", "content": f"Ошибка: {e}"})
                 return history, "", ""
 
         def clear_history():
-            """Clear conversation history."""
             return [], "", ""
 
+        strategy.change(update_strategy_hint, [strategy], [strategy_hint])
         msg.submit(chat_fn, [msg, chatbot, strategy], [chatbot, msg, sources_box])
         submit_btn.click(chat_fn, [msg, chatbot, strategy], [chatbot, msg, sources_box])
         clear_btn.click(clear_history, None, [chatbot, msg, sources_box])
-
-    return page
-
-
-def create_streaming_chat_page(api_url: str):
-    """Create streaming chat interface (alternative)."""
-
-    with gr.Column() as page:
-        gr.Markdown("### Chat (Streaming)")
-
-        with gr.Row():
-            strategy = gr.Dropdown(
-                choices=["adaptive", "hybrid", "vector"],
-                value="adaptive",
-                label="Search Strategy",
-            )
-
-        chatbot = gr.Chatbot(height=500)
-        msg = gr.Textbox(placeholder="Ask a question...", show_label=False)
-        submit = gr.Button("Send", variant="primary")
-
-        def stream_chat(message: str, history: list, strategy: str):
-            """Stream chat response."""
-            try:
-                response = requests.post(
-                    f"{api_url}/chat/",
-                    json={"message": message, "strategy": strategy, "stream": True},
-                    stream=True,
-                    timeout=120,
-                )
-
-                history.append([message, ""])
-                yield history, ""
-
-                for line in response.iter_lines():
-                    if line:
-                        import json
-                        try:
-                            data = json.loads(line.decode("utf-8").lstrip("data: "))
-                            if data.get("type") == "token":
-                                token = data.get("data", "")
-                                history[-1][1] += token
-                                yield history, ""
-                            elif data.get("type") == "source":
-                                sources = data.get("data", [])
-                                sources_text = "\n\n**Sources:**\n" + "\n".join(
-                                    f"- {s.get('id', 'unknown')}" for s in sources[:5]
-                                )
-                                yield history, sources_text
-                        except json.JSONDecodeError:
-                            pass
-
-            except Exception as e:
-                logger.error(f"Stream error: {e}")
-                history.append([message, f"Error: {e}"])
-                yield history, ""
-
-        msg.submit(stream_chat, [msg, chatbot, strategy], [chatbot, msg])
-        submit.click(stream_chat, [msg, chatbot, strategy], [chatbot, msg])
 
     return page

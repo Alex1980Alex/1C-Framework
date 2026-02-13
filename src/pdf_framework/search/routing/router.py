@@ -10,9 +10,11 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.pdf_framework.search.routing.classifier import QueryClassification
+
+logger = logging.getLogger(__name__)
 
 
 class RoutingDecision(BaseModel):
@@ -34,7 +36,7 @@ class RoutingDecision(BaseModel):
     k: int = 5
 
     # Additional parameters
-    extra_params: dict[str, Any] = field(default_factory=dict)
+    extra_params: dict[str, Any] = Field(default_factory=dict)
 
 
 @dataclass
@@ -46,11 +48,7 @@ class RouteConfig:
     use_query_expansion: bool = False
     decompose: bool = False
     k: int = 5
-    extra_params: dict[str, Any] = None
-
-    def __post_init__(self):
-        if self.extra_params is None:
-            self.extra_params = {}
+    extra_params: dict[str, Any] = field(default_factory=dict)
 
 
 class StrategyRouter:
@@ -112,8 +110,7 @@ class StrategyRouter:
                 f"[ROUTER] Strategy '{strategy}' not available, finding fallback..."
             )
             strategy = self._find_fallback_strategy(route_config)
-            if strategy:
-                logger.info(f"[ROUTER] Fallback to strategy: {strategy}")
+            logger.info(f"[ROUTER] Fallback to strategy: {strategy}")
 
         # Build routing decision
         decision = RoutingDecision(
@@ -140,25 +137,27 @@ class StrategyRouter:
 
         return decision
 
-    def _find_fallback_strategy(self, route_config: RouteConfig) -> str | None:
+    def _find_fallback_strategy(self, route_config: RouteConfig) -> str:
         """Find fallback strategy if preferred one is unavailable."""
         preferred = route_config.strategy
 
         # Fallback hierarchy
-        fallback_map = {
-            "global": "hybrid",
-            "two_stage": "hybrid",
-            "hybrid": "vector",
-            "graphrag_local": "vector",
-            "graphrag_global": "vector",
-            "auto_merge": "vector",
+        fallback_map: dict[str, list[str]] = {
+            "global": ["hybrid", "vector"],
+            "two_stage": ["hybrid", "vector"],
+            "hybrid": ["vector"],
+            "graphrag_local": ["hybrid", "vector"],
+            "graphrag_global": ["hybrid", "vector"],
+            "auto_merge": ["vector"],
         }
 
-        for candidate in [preferred] + fallback_map.get(preferred, []):
+        candidates = [preferred] + fallback_map.get(preferred, [])
+        for candidate in candidates:
             if candidate in self._available_strategies:
                 return candidate
 
-        return None
+        # Ultimate fallback
+        return "vector"
 
     def _get_default_routes(self) -> dict[str, RouteConfig]:
         """Get default route configurations."""

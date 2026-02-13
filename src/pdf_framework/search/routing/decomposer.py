@@ -29,6 +29,8 @@ class SubQuestionDecomposer:
         llm: ChatAnthropic | None = None,
         model: str = "claude-haiku-4-5-20251001",
         max_sub_questions: int = 4,
+        api_key: str = "",
+        base_url: str = "",
     ):
         """
         Initialize sub-question decomposer.
@@ -37,8 +39,17 @@ class SubQuestionDecomposer:
             llm: LLM for decomposition (default: Haiku)
             model: Model name
             max_sub_questions: Maximum number of sub-questions
+            api_key: Anthropic API key
+            base_url: Custom API endpoint (for Z.AI or other proxies)
         """
-        self._llm = llm or ChatAnthropic(model=model, temperature=0.0, max_tokens=1024)
+        if llm is None:
+            llm_kwargs = dict(model=model, temperature=0.0, max_tokens=1024)
+            if api_key:
+                llm_kwargs["api_key"] = api_key
+            if base_url:
+                llm_kwargs["base_url"] = base_url
+            llm = ChatAnthropic(**llm_kwargs)
+        self._llm = llm
         self._max_sub_questions = max_sub_questions
         self._parser = StrOutputParser()
 
@@ -58,9 +69,10 @@ class SubQuestionDecomposer:
         try:
             sub_questions = await self._decompose_with_llm(query)
 
+            previews = ", ".join(q[:30] + "..." for q in sub_questions)
             logger.info(
                 f"[DECOMPOSER] Decomposed query into {len(sub_questions)} sub-questions: "
-                f"[{'][']['".join([q[:30] + '...' for q in sub_questions])}]"
+                f"[{previews}]"
             )
 
             return sub_questions

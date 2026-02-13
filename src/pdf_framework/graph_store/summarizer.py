@@ -35,6 +35,8 @@ class CommunitySummarizer:
         self,
         llm: ChatAnthropic | None = None,
         settings: GraphRAGSettings | None = None,
+        api_key: str = "",
+        base_url: str = "",
     ):
         """
         Initialize community summarizer.
@@ -42,12 +44,21 @@ class CommunitySummarizer:
         Args:
             llm: LLM for summary generation (default: Haiku for speed)
             settings: GraphRAG configuration
+            api_key: Anthropic API key
+            base_url: Custom API endpoint (for Z.AI or other proxies)
         """
-        self.llm = llm or ChatAnthropic(
-            model="claude-haiku-4-5-20251001",
-            temperature=0.0,
-            max_tokens=1024,
-        )
+        if llm is None:
+            llm_kwargs = dict(
+                model="claude-haiku-4-5-20251001",
+                temperature=0.0,
+                max_tokens=1024,
+            )
+            if api_key:
+                llm_kwargs["api_key"] = api_key
+            if base_url:
+                llm_kwargs["base_url"] = base_url
+            llm = ChatAnthropic(**llm_kwargs)
+        self.llm = llm
         self.settings = settings or GraphRAGSettings()
         self.parser = StrOutputParser()
 
@@ -91,30 +102,47 @@ class CommunitySummarizer:
             HumanMessage(content=prompt),
         ]
 
-        try:
-            response = await self.llm.ainvoke(messages)
-            summary = self.parser.invoke(response).strip()
+        # Ralph Wiggum: self-correcting retry for community summaries
+        entity_names = [e.name for e in entities[:5]]
+        rw_feedback = ""
 
-            # Add metadata prefix
-            formatted_summary = f"[Community {community_id} (level {level})] {summary}"
+        for rw_attempt in range(1, 3):  # max 2 attempts
+            try:
+                attempt_messages = list(messages)
+                if rw_feedback:
+                    attempt_messages.append(HumanMessage(content=f"\u26a0\ufe0f {rw_feedback}"))
 
-            self._summary_cache[cache_key] = formatted_summary
-            logger.info(
-                f"[SUMMARY] Generated summary for community {community_id} "
-                f"({len(entities)} entities, {len(relations)} relations)"
-            )
+                response = await self.llm.ainvoke(attempt_messages)
+                summary = self.parser.invoke(response).strip()
 
-            return formatted_summary
+                # Validate: non-empty and mentions at least one entity
+                if len(summary) < 30:
+                    rw_feedback = (
+                        f"Summary must be 2-4 sentences. Mention key entities: "
+                        f"{', '.join(entity_names)}."
+                    )
+                    logger.warning(f"[SUMMARY] Attempt {rw_attempt}: too short ({len(summary)} chars)")
+                    continue
 
-        except Exception as e:
-            logger.error(f"[SUMMARY] Error generating summary for {cache_key}: {e}")
-            # Fallback summary
-            fallback = (
-                f"[Community {community_id} (level {level})] "
-                f"Contains {len(entities)} entities focused on related topics. "
-                f"Main entities: {', '.join(e.name for e in entities[:5])}"
-            )
-            return fallback
+                formatted_summary = f"[Community {community_id} (level {level})] {summary}"
+                self._summary_cache[cache_key] = formatted_summary
+                logger.info(
+                    f"[SUMMARY] Generated summary for community {community_id} "
+                    f"({len(entities)} entities, {len(relations)} relations)"
+                )
+                return formatted_summary
+
+            except Exception as e:
+                logger.error(f"[SUMMARY] Attempt {rw_attempt} error for {cache_key}: {e}")
+                rw_feedback = f"Previous call failed: {e}."
+
+        # Fallback summary
+        fallback = (
+            f"[Community {community_id} (level {level})] "
+            f"Contains {len(entities)} entities focused on related topics. "
+            f"Main entities: {', '.join(e.name for e in entities[:5])}"
+        )
+        return fallback
 
     async def summarize_all(
         self,

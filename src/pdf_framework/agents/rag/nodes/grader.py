@@ -1,11 +1,13 @@
 """Document Grader node for Self-RAG.
 
 Evaluates each retrieved document for relevance to the query using LLM.
+Optimized: parallel grading + score-based pre-filter.
 
 Author: Claude Code
-Version: 0.6.0 - Phase 5.2: Document Grading
+Version: 0.6.1 - Parallel grading & score pre-filter
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -18,96 +20,126 @@ from src.pdf_framework.config import SelfRAGSettings
 
 logger = logging.getLogger(__name__)
 
+_parser = StrOutputParser()
+
 
 async def grade_documents(
     state: RAGState,
     llm: ChatAnthropic,
     settings: SelfRAGSettings,
 ) -> dict[str, Any]:
-    """Grade each retrieved document for relevance to the query.
+    """Grade retrieved documents for relevance — parallel + pre-filter.
 
-    Uses binary grading (yes/no) via fast LLM (Claude Haiku) to assess
-    whether each document is relevant to the original question.
+    Optimizations:
+    1. Score pre-filter: docs with search score < threshold skip LLM grading.
+    2. Parallel grading: remaining docs graded concurrently via asyncio.gather.
 
     Args:
         state: Current RAG state with search_response
-        llm: LLM instance (should use Haiku for speed)
+        llm: LLM instance for grading
         settings: SelfRAGSettings configuration
 
     Returns:
-        Updated state with:
-        - graded_documents: List of grading results
-        - relevance_ratio: Float (0.0-1.0) proportion of relevant docs
+        Updated state with graded_documents and relevance_ratio
     """
     search_response = state.get("search_response")
     question = state.get("original_question") or state.get("question", "")
 
     if not search_response or not search_response.results:
         logger.warning("[GRADE] No search results to grade")
-        return {
-            "graded_documents": [],
-            "relevance_ratio": 0.0,
-        }
+        return {"graded_documents": [], "relevance_ratio": 0.0}
 
-    graded = []
-    parser = StrOutputParser()
+    score_threshold = settings.score_prefilter_threshold
+    results = search_response.results
 
-    for i, result in enumerate(search_response.results, 1):
+    # Split: candidates for LLM grading vs auto-rejected by score
+    to_grade = []
+    auto_rejected = []
+    for result in results:
+        if result.score >= score_threshold:
+            to_grade.append(result)
+        else:
+            auto_rejected.append(result)
+
+    if auto_rejected:
+        logger.info(
+            f"[GRADE] Pre-filter: {len(auto_rejected)} docs skipped "
+            f"(score < {score_threshold}), {len(to_grade)} sent to LLM"
+        )
+
+    # Grade one document via LLM (Ralph Wiggum: 1 retry for structured yes/no)
+    async def _grade_one(result) -> dict:
         content = result.chunk.content
-        # Truncate very long content for grading
         content_preview = content[:500] + "..." if len(content) > 500 else content
-
-        grade_prompt = _get_grading_prompt(question, content_preview)
-        messages = [
-            SystemMessage(content=grade_prompt["system"]),
-            HumanMessage(content=grade_prompt["user"]),
+        prompt = _get_grading_prompt(question, content_preview)
+        base_messages = [
+            SystemMessage(content=prompt["system"]),
+            HumanMessage(content=prompt["user"]),
         ]
 
-        try:
-            response = await llm.ainvoke(messages)
-            result_text = parser.invoke(response).strip().lower()
+        feedback = ""
+        for attempt in range(1, 3):  # max 2 attempts
+            try:
+                messages = list(base_messages)
+                if feedback:
+                    messages.append(HumanMessage(content=f"\u26a0\ufe0f {feedback}"))
 
-            # Parse binary response
-            is_relevant = _parse_relevance(result_text)
+                response = await llm.ainvoke(messages)
+                result_text = _parser.invoke(response).strip().lower()
 
-            logger.debug(
-                f"[GRADE] Document {i}/{len(search_response.results)}: "
-                f"{'relevant ✓' if is_relevant else 'not relevant ✗'} "
-                f"(raw: {result_text[:50]})"
-            )
+                # Validate: starts with yes/no/да/нет?
+                valid = any(result_text.startswith(w) for w in ["yes", "no", "да", "нет", "relevant", "not"])
+                if not valid and attempt < 2:
+                    feedback = f"Reply ONLY 'yes' or 'no'. Previous: '{result_text[:60]}'"
+                    logger.warning(f"[GRADE] Attempt {attempt}: unclear '{result_text[:40]}' for {result.chunk.id[:12]}")
+                    continue
 
-            graded.append({
-                "chunk_id": result.chunk.id,
-                "is_relevant": is_relevant,
-                "reason": result_text[:200],  # Store explanation
-                "score": result.score,  # Original search score
-                "content_preview": content_preview[:100],
-            })
+                is_relevant = _parse_relevance(result_text)
+                return {
+                    "chunk_id": result.chunk.id,
+                    "is_relevant": is_relevant,
+                    "reason": result_text[:200],
+                    "score": result.score,
+                    "content_preview": content_preview[:100],
+                }
+            except Exception as e:
+                logger.error(f"[GRADE] Attempt {attempt} error for {result.chunk.id[:12]}: {e}")
+                feedback = f"Previous call failed: {e}."
 
-        except Exception as e:
-            logger.error(f"[GRADE] Error grading document {i}: {e}")
-            # On error, assume relevant to avoid false negatives
-            graded.append({
-                "chunk_id": result.chunk.id,
-                "is_relevant": True,  # Fallback: assume relevant
-                "reason": f"Error during grading: {str(e)}",
-                "score": result.score,
-                "content_preview": content_preview[:100],
-            })
+        # All attempts failed — conservative fallback
+        return {
+            "chunk_id": result.chunk.id,
+            "is_relevant": True,
+            "reason": "All grading attempts failed",
+            "score": result.score,
+            "content_preview": content_preview[:100],
+        }
 
-    # Calculate relevance ratio
+    # Run all LLM grading calls concurrently
+    if to_grade:
+        graded = list(await asyncio.gather(*[_grade_one(r) for r in to_grade]))
+    else:
+        graded = []
+
+    # Append auto-rejected docs (no LLM call needed)
+    for result in auto_rejected:
+        graded.append({
+            "chunk_id": result.chunk.id,
+            "is_relevant": False,
+            "reason": f"auto-rejected: score {result.score:.3f} < {score_threshold}",
+            "score": result.score,
+            "content_preview": result.chunk.content[:100],
+        })
+
     relevant_count = sum(1 for g in graded if g["is_relevant"])
     ratio = relevant_count / len(graded) if graded else 0.0
 
     logger.info(
-        f"[GRADE] Relevance ratio: {ratio:.2%} "
-        f"({relevant_count}/{len(graded)} relevant, threshold: {settings.relevance_threshold:.0%})"
+        f"[GRADE] {relevant_count}/{len(graded)} relevant "
+        f"(LLM-graded: {len(to_grade)}, pre-filtered: {len(auto_rejected)})"
     )
 
-    return {
-        "graded_documents": graded,
-        "relevance_ratio": ratio,
-    }
+    return {"graded_documents": graded, "relevance_ratio": ratio}
 
 
 def _get_grading_prompt(question: str, content: str) -> dict[str, str]:

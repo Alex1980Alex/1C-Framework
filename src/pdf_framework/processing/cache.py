@@ -203,8 +203,6 @@ def _hash_file(file_path: Path) -> str:
     with open(file_path, "rb") as f:
         # Read in chunks for large files
         for chunk in iter(lambda: f.read(8192), b""):
-            if not chunk:
-                break
             sha256.update(chunk)
 
     return sha256.hexdigest()

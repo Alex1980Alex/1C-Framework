@@ -12,7 +12,6 @@ Version: 1.5.0 - Phase 14.1: Gradio Web UI
 """
 
 import logging
-import os
 
 import gradio as gr
 from src.pdf_framework.config import get_settings
@@ -39,44 +38,35 @@ def create_app(api_url: str = "http://localhost:8000"):
 
     with gr.Blocks(
         title="PDF Vector & Graph Framework",
-        theme=settings.ui.theme,
-        css="""
-        .gradio-container {
-            max-width: 1400px !important;
-        }
-        .chat-container {
-            height: 600px;
-        }
-        """,
     ) as app:
         gr.Markdown(
             """
             # PDF Vector & Graph Framework
 
-            Intelligent PDF processing with Vector Search and Knowledge Graphs.
+            Интеллектуальная обработка PDF-документов с векторным поиском и графами знаний.
             """
         )
 
         with gr.Tabs():
-            with gr.Tab("💬 Chat"):
+            with gr.Tab("Чат"):
                 create_chat_page(api_url)
 
-            with gr.Tab("🔍 Search"):
+            with gr.Tab("Поиск"):
                 create_search_page(api_url)
 
-            with gr.Tab("📄 Documents"):
-                create_documents_page(api_url)
+            with gr.Tab("Документы"):
+                create_documents_page(api_url, app=app)
 
-            with gr.Tab("🕸️ Graph"):
-                create_graph_page(api_url)
+            with gr.Tab("Граф знаний"):
+                create_graph_page(api_url, app=app)
 
-            with gr.Tab("⚙️ Settings"):
-                create_settings_page(api_url)
+            with gr.Tab("Настройки"):
+                create_settings_page(api_url, app=app)
 
         gr.Markdown(
             """
             ---
-            **PDF Vector & Graph Framework** v1.5.0 | Phase 14: UI & Developer Experience
+            **PDF Vector & Graph Framework** v1.5.0
             """
         )
 

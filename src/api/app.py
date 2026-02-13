@@ -1,13 +1,21 @@
 """FastAPI application factory."""
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import auth, chat, documents, health, metrics, search
+from src.api.routes import analytics, auth, cache, chat, collections, documents, feedback, graph, health, metrics, optimization, search, toc
 from src.api.routes import openai_compat  # Phase 14: OpenAI-compatible API
 from src.pdf_framework.config import get_settings
+
+# Configure module-level logging so [LOADER], [PIPELINE], [INDEXER], etc. are visible
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-5s %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 
 @asynccontextmanager
@@ -62,8 +70,15 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(search.router)
     app.include_router(chat.router)  # Phase 9: Conversational RAG
+    app.include_router(graph.router)  # Knowledge graph API
+    app.include_router(cache.router)  # Cache management API
     app.include_router(metrics.router)  # Phase 11.6: Metrics Dashboard
     app.include_router(openai_compat.router)  # Phase 14.3: OpenAI-compatible API
+    app.include_router(feedback.router)  # Phase 22: Self-Learning Feedback
+    app.include_router(toc.router)  # Phase 30: ToC Navigation API
+    app.include_router(collections.router)  # Phase 32: Collection Management
+    app.include_router(optimization.router)  # Phase 34: DSPy Optimization
+    app.include_router(analytics.router)  # Phase 40: Enterprise Analytics
 
     return app
 

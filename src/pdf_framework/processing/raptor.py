@@ -33,8 +33,8 @@ class TreeNode(BaseModel):
 
     @property
     def is_root(self) -> bool:
-        """Check if this is a root node (top level)."""
-        return self.level > 0 and not self.children_ids
+        """Check if this is a top-level summary node."""
+        return self.level > 0 and len(self.children_ids) > 0
 
 
 class RAPTORTree(BaseModel):
@@ -116,6 +116,7 @@ class RAPTORTreeBuilder:
         min_clusters: int = 2,
         summarization_model: str = "claude-haiku-4-5-20251001",
         api_key: str = "",
+        base_url: str = "",
     ):
         """
         Initialize RAPTOR tree builder.
@@ -125,11 +126,13 @@ class RAPTORTreeBuilder:
             min_clusters: Minimum clusters before stopping
             summarization_model: LLM for summarization
             api_key: Anthropic API key
+            base_url: Custom API endpoint (for Z.AI or other proxies)
         """
         self._max_levels = max_levels
         self._min_clusters = min_clusters
-        _summarization_model = summarization_model
-        _api_key = api_key
+        self._summarization_model = summarization_model
+        self._api_key = api_key
+        self._base_url = base_url
 
     async def build(
         self,
@@ -307,12 +310,15 @@ class RAPTORTreeBuilder:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm = ChatAnthropic(
-                model="claude-haiku-4-5-20251001",
+            llm_kwargs = dict(
+                model=self._summarization_model,
                 temperature=0.3,
                 max_tokens=512,
-                api_key=_api_key or None,
+                api_key=self._api_key or None,
             )
+            if self._base_url:
+                llm_kwargs["base_url"] = self._base_url
+            llm = ChatAnthropic(**llm_kwargs)
 
             prompt = f"""Summarize the following passages from a document.
 
@@ -325,7 +331,13 @@ Passages:
 Summary:"""
 
             response = await llm.ainvoke([HumanMessage(content=prompt)])
-            summary = response.content.strip()
+            content = response.content
+            if isinstance(content, list):
+                summary = " ".join(
+                    getattr(block, "text", str(block)) for block in content
+                ).strip()
+            else:
+                summary = content.strip()
 
             logger.debug(f"[RAPTOR] Generated summary ({len(summary)} chars)")
             return summary
@@ -337,14 +349,16 @@ Summary:"""
     async def _embed_text(self, text: str) -> list[float]:
         """Generate embedding for text."""
         # This would use the embedding engine from components
-        # For now, return dummy embedding
+        # For now, return dummy embedding with correct dimensions
         import hashlib
-        import numpy as np
 
-        # Simple hash-based embedding (replace with real embedding engine)
-        hash_val = hashlib.md5(text.encode()).hexdigest()
-        embedding = np.array([float(int(h, 16)) / 255.0 for h in hash_val])[:384]
-        return embedding.tolist()
+        # Repeat hash to reach target dimensions (384)
+        target_dim = 384
+        hash_val = hashlib.sha256(text.encode()).hexdigest()
+        # Each hex char → one float; sha256 gives 64 chars, repeat as needed
+        hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
+        embedding = [float(int(h, 16)) / 15.0 for h in hex_chars]
+        return embedding
 
 
 # Global RAPTOR tree builder instance

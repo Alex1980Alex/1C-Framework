@@ -7,7 +7,7 @@ Version: 1.4.0 - Phase 13.4: Document Summary Index
 """
 
 import logging
-from datetime import timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +44,7 @@ class DocumentSummaryIndex:
         persist_dir: str | Path = "data/vector_db",
         summarization_model: str = "claude-haiku-4-5-20251001",
         api_key: str = "",
+        base_url: str = "",
     ):
         """
         Initialize document summary index.
@@ -53,11 +54,13 @@ class DocumentSummaryIndex:
             persist_dir: Vector store persist directory
             summarization_model: LLM for summarization
             api_key: Anthropic API key
+            base_url: Custom API endpoint (for Z.AI or other proxies)
         """
         self._collection_name = collection_name
         self._persist_dir = Path(persist_dir)
         self._summarization_model = summarization_model
-        _api_key = api_key
+        self._api_key = api_key
+        self._base_url = base_url
 
         # Lazy initialization
         self._vector_store = None
@@ -117,16 +120,17 @@ class DocumentSummaryIndex:
             title=title or document_id,
             chunk_count=len(chunks),
             embedding=embedding,
-            created_at=timezone.utc.now().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
             metadata=metadata or {},
         )
 
         # Store in vector store
-        from src.pdf_framework.schemas.search import DocumentChunk
+        from src.pdf_framework.schemas.documents import DocumentChunk
 
         chunk = DocumentChunk(
             id=f"summary_{document_id}",
             content=summary,
+            document_id=document_id,
             metadata={
                 "summary_id": document_id,
                 "title": title,
@@ -164,27 +168,27 @@ class DocumentSummaryIndex:
         """
         await self._ensure_initialized()
 
-        # Search in summary collection
-        from src.pdf_framework.schemas.search import SearchRequest
+        if query_embedding is None:
+            logger.warning("[SUMMARY_IDX] No query_embedding provided, cannot search")
+            return []
 
-        request = SearchRequest(
-            query=query,
+        # Search in summary collection
+        # BaseVectorStore.search(query_embedding, k, filter) -> list[SearchResult]
+        results = await self._vector_store.search(
             query_embedding=query_embedding,
             k=k,
         )
 
-        response = await self._vector_store.search(request)
-
         # Convert to DocumentSummary
         summaries = []
-        for result in response.results:
+        for result in results:
             metadata = result.chunk.metadata
             summaries.append(DocumentSummary(
                 document_id=metadata.get("summary_id", ""),
                 summary=result.chunk.content,
                 title=metadata.get("title", ""),
                 chunk_count=metadata.get("chunk_count", 0),
-                embedding=result.embedding,
+                embedding=None,
                 created_at=metadata.get("created_at", ""),
                 metadata=metadata,
             ))
@@ -222,12 +226,15 @@ class DocumentSummaryIndex:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm = ChatAnthropic(
+            llm_kwargs = dict(
                 model=self._summarization_model,
                 temperature=0.3,
                 max_tokens=500,
-                api_key=_api_key or None,
+                api_key=self._api_key or None,
             )
+            if self._base_url:
+                llm_kwargs["base_url"] = self._base_url
+            llm = ChatAnthropic(**llm_kwargs)
 
             # Combine chunk contents
             passages = []
@@ -252,7 +259,14 @@ Summary:"""
 
             response = await llm.ainvoke([HumanMessage(content=prompt)])
 
-            summary = response.content.strip()
+            content = response.content
+            if isinstance(content, list):
+                summary = " ".join(
+                    getattr(block, "text", str(block)) for block in content
+                ).strip()
+            else:
+                summary = content.strip()
+
             logger.info(f"[SUMMARY_IDX] Generated summary for {document_id} ({len(summary)} chars)")
 
             return summary
@@ -265,11 +279,13 @@ Summary:"""
         """Generate embedding for text."""
         # TODO: Use actual embedding engine from components
         import hashlib
-        import numpy as np
 
-        hash_val = hashlib.md5(text.encode()).hexdigest()
-        embedding = np.array([float(int(h, 16)) / 255.0 for h in hash_val])[:384]
-        return embedding.tolist()
+        # Repeat hash to reach target dimensions (384)
+        target_dim = 384
+        hash_val = hashlib.sha256(text.encode()).hexdigest()
+        hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
+        embedding = [float(int(h, 16)) / 15.0 for h in hex_chars]
+        return embedding
 
 
 # Global document summary index instance

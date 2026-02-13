@@ -6,13 +6,13 @@ Author: Claude Code
 Version: 1.4.0 - Phase 13.2: RAPTOR Search Strategy
 """
 
+import time
 import logging
 from typing import Any
 
 from pydantic import BaseModel
 
-from src.pdf_framework.search.base import BaseSearchStrategy
-from src.pdf_framework.schemas.search import SearchResult, SearchResponse
+from src.pdf_framework.schemas.documents import SearchResult, SearchResponse
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class RAPTORSearchConfig(BaseModel):
     include_summaries: bool = True
 
 
-class RAPTORSearchStrategy(BaseSearchStrategy):
+class RAPTORSearchStrategy:
     """
     Search strategy for RAPTOR trees.
 
@@ -89,25 +89,36 @@ class RAPTORSearchStrategy(BaseSearchStrategy):
 
         This is simpler and often more effective than traversal.
         """
+        start = time.perf_counter()
+
+        if query_embedding is None:
+            logger.warning("[RAPTOR] No query_embedding provided, cannot search")
+            return SearchResponse(
+                query=query,
+                results=[],
+                total_found=0,
+                search_type="raptor_collapsed",
+            )
+
         # Build filter for RAPTOR nodes
-        raptor_filter = filter or {}
+        raptor_filter = dict(filter) if filter else {}
         raptor_filter["raptor_node"] = True  # Filter for RAPTOR indexed nodes
 
         # Search in vector store (all levels in same collection)
+        # BaseVectorStore.search(query_embedding, k, filter) -> list[SearchResult]
         results = await self._vector_store.search(
-            query=query,
             query_embedding=query_embedding,
-            k=k * 2,  # Fetch more to filter
+            k=k * 2,  # Fetch more to filter/reweight
             filter=raptor_filter,
         )
 
-        # Convert to SearchResult format
+        # Apply level weighting
         search_results = []
-        for result in results.results:
+        for result in results:
             # Extract raptor_level from metadata
             raptor_level = result.chunk.metadata.get("raptor_level", 0)
 
-            # Create SearchResult
+            # Create new SearchResult with weighted score
             search_result = SearchResult(
                 chunk=result.chunk,
                 score=result.score * self._level_weight(raptor_level),
@@ -119,13 +130,15 @@ class RAPTORSearchStrategy(BaseSearchStrategy):
         search_results.sort(key=lambda r: r.score, reverse=True)
         search_results = search_results[:k]
 
+        elapsed = (time.perf_counter() - start) * 1000
+
         # Build response
         response = SearchResponse(
             query=query,
             results=search_results,
             search_type="raptor_collapsed",
-            total_results=len(search_results),
-            elapsed_ms=results.elapsed_ms,
+            total_found=len(search_results),
+            elapsed_ms=elapsed,
         )
 
         logger.info(

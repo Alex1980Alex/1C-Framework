@@ -6,6 +6,7 @@ Author: Claude Code
 Version: 1.1.0 - Phase 10.1: Layout Detection Provider
 """
 
+import asyncio
 import hashlib
 import logging
 from datetime import datetime, timezone
@@ -15,7 +16,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from src.pdf_framework.loaders.base import BaseLoader
-from src.pdf_framework.schemas.documents import ProcessedDocument
+from src.pdf_framework.schemas.documents import DocumentMetadata, ProcessedDocument
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,14 @@ class LayoutAwareLoader(BaseLoader):
         if not self._unstructured_available:
             logger.warning("[LAYOUT] unstructured not available, will use PyMuPDF fallback")
 
+        # Auto-downgrade hi_res → fast if Tesseract is not installed
+        if self._unstructured_available and self._strategy == "hi_res":
+            if not self._check_tesseract():
+                logger.warning(
+                    "[LAYOUT] Tesseract not found, downgrading strategy hi_res → fast"
+                )
+                self._strategy = "fast"
+
     @staticmethod
     def _check_unstructured() -> bool:
         """Check if unstructured library is available."""
@@ -108,6 +117,13 @@ class LayoutAwareLoader(BaseLoader):
             return True
         except ImportError:
             return False
+
+    @staticmethod
+    def _check_tesseract() -> bool:
+        """Check if Tesseract OCR is installed (required for hi_res strategy)."""
+        import shutil
+
+        return shutil.which("tesseract") is not None
 
     def supported_extensions(self) -> list[str]:
         """Return supported file extensions."""
@@ -165,19 +181,25 @@ class LayoutAwareLoader(BaseLoader):
 
         # Create ProcessedDocument
         full_text = "\n\n".join(content_parts)
+        page_count = max((el.page_number for el in layout_elements), default=1)
 
         doc = ProcessedDocument(
             id=self._generate_doc_id(source_path),
             source_path=str(source_path),
-            content=full_text,
-            metadata={
-                "layout_elements": [el.to_dict() for el in layout_elements],
-                "layout_detection_method": "unstructured",
-                "layout_strategy": self._strategy,
-                "total_elements": len(layout_elements),
-                "pages": max((el.page_number for el in layout_elements), default=1),
-                "loaded_at": datetime.now(timezone.utc).isoformat(),
-            },
+            raw_text=full_text,
+            metadata=DocumentMetadata(
+                source=str(source_path),
+                title=source_path.stem,
+                page_count=page_count,
+                file_size_bytes=source_path.stat().st_size,
+                extra={
+                    "layout_elements": [el.to_dict() for el in layout_elements],
+                    "layout_detection_method": "unstructured",
+                    "layout_strategy": self._strategy,
+                    "total_elements": len(layout_elements),
+                    "loaded_at": datetime.now(timezone.utc).isoformat(),
+                },
+            ),
         )
 
         # Log statistics
@@ -188,40 +210,54 @@ class LayoutAwareLoader(BaseLoader):
 
         return doc
 
+    async def load_batch(self, sources: list[str | Path]) -> list[ProcessedDocument]:
+        """Load multiple PDF documents."""
+        tasks = [self.load(s) for s in sources]
+        return await asyncio.gather(*tasks)
+
     async def _load_with_pymupdf(self, source_path: Path) -> ProcessedDocument:
         """Fallback: Load with PyMuPDF without layout detection."""
         import fitz  # PyMuPDF
 
-        doc = fitz.open(str(source_path))
+        pdf_doc = fitz.open(str(source_path))
 
         layout_elements = []
         content_parts = []
 
-        for page_num, page in enumerate(doc, start=1):
+        for page_num in range(len(pdf_doc)):
+            page = pdf_doc[page_num]
             text = page.get_text()
             if text.strip():
                 # Treat entire page as paragraph (no structure detection)
                 layout_el = LayoutElement(
                     type="paragraph",
                     content=text.strip(),
-                    page_number=page_num,
+                    page_number=page_num + 1,
                 )
                 layout_elements.append(layout_el)
                 content_parts.append(text.strip())
+
+        page_count = len(pdf_doc)
+        pdf_doc.close()
 
         full_text = "\n\n".join(content_parts)
 
         return ProcessedDocument(
             id=self._generate_doc_id(source_path),
             source_path=str(source_path),
-            content=full_text,
-            metadata={
-                "layout_elements": [el.to_dict() for el in layout_elements],
-                "layout_detection_method": "pymupdf_fallback",
-                "total_elements": len(layout_elements),
-                "pages": len(doc),
-                "loaded_at": datetime.now(timezone.utc).isoformat(),
-            },
+            raw_text=full_text,
+            metadata=DocumentMetadata(
+                source=str(source_path),
+                title=source_path.stem,
+                page_count=page_count,
+                file_size_bytes=source_path.stat().st_size,
+                extra={
+                    "layout_elements": [el.to_dict() for el in layout_elements],
+                    "layout_detection_method": "pymupdf_fallback",
+                    "total_elements": len(layout_elements),
+                    "loaded_at": datetime.now(timezone.utc).isoformat(),
+                },
+            ),
         )
 
     def _convert_unstructured_element(self, element) -> LayoutElement | None:
@@ -263,35 +299,42 @@ class LayoutAwareLoader(BaseLoader):
         # Get content
         content = element.text or ""
 
+        # Get metadata safely (API varies across unstructured versions)
+        meta = getattr(element, "metadata", None)
+        page_number = getattr(meta, "page_number", None) or 1
+
         # Get bounding box if available
         bbox = None
-        if hasattr(element, "metadata"):
-            coord = element.metadata.coordinates
-            if coord:
-                bbox = (
-                    coord.points[0][0],  # x0
-                    coord.points[0][1],  # y0
-                    coord.points[2][0],  # x1
-                    coord.points[2][1],  # y1
-                )
+        if meta:
+            coord = getattr(meta, "coordinates", None)
+            if coord and hasattr(coord, "points") and coord.points:
+                try:
+                    bbox = (
+                        coord.points[0][0],  # x0
+                        coord.points[0][1],  # y0
+                        coord.points[2][0],  # x1
+                        coord.points[2][1],  # y1
+                    )
+                except (IndexError, TypeError):
+                    pass
 
         # Generate element ID for deduplication
         element_id = self._generate_element_id(
-            element_type, content, element.metadata.page_number
+            element_type, content, page_number
         )
 
         # Extract additional metadata
         extra_metadata = {}
-        if hasattr(element, "metadata"):
-            if element.metadata.category:
-                extra_metadata["unstructured_category"] = element.metadata.category
-            if element.metadata.element_id:
-                extra_metadata["unstructured_id"] = element.metadata.element_id
+        # category lives on element itself, not on metadata in 0.18+
+        extra_metadata["unstructured_category"] = category
+        elem_id = getattr(meta, "element_id", None) or getattr(element, "id", None)
+        if elem_id:
+            extra_metadata["unstructured_id"] = str(elem_id)
 
         return LayoutElement(
             type=element_type,
             content=content,
-            page_number=element.metadata.page_number,
+            page_number=page_number,
             bbox=bbox,
             element_id=element_id,
             metadata=extra_metadata,

@@ -3,10 +3,14 @@
 Orchestrates query classification, routing, and optional decomposition
 for automatic strategy selection.
 
+Phase 26: Turbo Pipeline — cascading early termination, fast classify,
+parallel sub-queries and multi-query expansion.
+
 Author: Claude Code
-Version: 0.9.0 - Phase 8.4: AdaptiveSearchStrategy
+Version: 0.10.0 - Phase 26: Turbo Search Pipeline
 """
 
+import asyncio
 import logging
 import time
 from typing import Any
@@ -36,6 +40,8 @@ class AdaptiveSearchStrategy:
         self,
         search_manager: SearchManager,
         settings: AdaptiveRAGSettings | None = None,
+        api_key: str = "",
+        base_url: str = "",
     ):
         """
         Initialize adaptive search strategy.
@@ -43,12 +49,16 @@ class AdaptiveSearchStrategy:
         Args:
             search_manager: SearchManager for executing searches
             settings: AdaptiveRAG configuration
+            api_key: Anthropic API key (for Z.AI or other endpoints)
+            base_url: Custom API endpoint
         """
         self._search_manager = search_manager
         self._settings = settings or AdaptiveRAGSettings()
 
-        # Initialize components
-        self._classifier = QueryClassifier()
+        # Initialize components with API credentials
+        self._classifier = QueryClassifier(
+            api_key=api_key, base_url=base_url,
+        )
         self._router = StrategyRouter(
             available_strategies=search_manager.available_strategies
         )
@@ -57,7 +67,9 @@ class AdaptiveSearchStrategy:
         self._decomposer = None
         if self._settings.decomposition_enabled:
             self._decomposer = SubQuestionDecomposer(
-                max_sub_questions=self._settings.max_sub_questions
+                max_sub_questions=self._settings.max_sub_questions,
+                api_key=api_key,
+                base_url=base_url,
             )
 
         logger.info("[ADAPTIVE] Initialized with classification, routing, decomposition")
@@ -70,8 +82,7 @@ class AdaptiveSearchStrategy:
         force_route: str | None = None,
         **kwargs,
     ) -> SearchResponse:
-        """
-        Perform adaptive search with automatic strategy selection.
+        """Perform adaptive search with automatic strategy selection.
 
         Args:
             query: Search query
@@ -98,6 +109,14 @@ class AdaptiveSearchStrategy:
         # Override k if decision specifies different k
         final_k = decision.k or k
 
+        # Step 2.5: BM25 early termination for simple queries (Phase 26)
+        if (classification.complexity == "simple"
+                and self._settings.bm25_early_termination
+                and "bm25" in self._search_manager.available_strategies):
+            early = await self._try_bm25_early(query, final_k, filter, classification, start)
+            if early is not None:
+                return early
+
         # Step 3a: Decompose if needed
         if decision.decompose and self._decomposer:
             if self._decomposer.should_decompose(classification):
@@ -109,6 +128,53 @@ class AdaptiveSearchStrategy:
         return await self._execute_standard_search(
             query, final_k, filter, decision, classification, start
         )
+
+    async def _try_bm25_early(
+        self,
+        query: str,
+        k: int,
+        filter: dict[str, Any] | None,
+        classification: QueryClassification,
+        start_time: float,
+    ) -> SearchResponse | None:
+        """Try BM25 fast path for simple queries. Returns None if not confident."""
+        threshold = self._settings.bm25_early_threshold
+
+        bm25_response = await self._search_manager.search(
+            query=query, strategy="bm25", k=k, filter=filter,
+            rerank=False,
+        )
+
+        if not bm25_response.results or len(bm25_response.results) < min(k, 2):
+            return None
+
+        top_score = bm25_response.results[0].score
+        if top_score < threshold:
+            logger.info(
+                "[ADAPTIVE] BM25 early: score=%.2f < threshold=%.2f, falling through",
+                top_score, threshold,
+            )
+            return None
+
+        # BM25 found confident results — return immediately
+        bm25_response.metadata = {
+            "adaptive_routing": {
+                "complexity": "simple",
+                "query_type": classification.query_type,
+                "confidence": classification.confidence,
+                "routed_strategy": "bm25_early",
+                "reranking_used": False,
+                "early_termination": True,
+                "bm25_top_score": top_score,
+            }
+        }
+        elapsed = (time.perf_counter() - start_time) * 1000
+        bm25_response.elapsed_ms = elapsed
+        logger.info(
+            "[ADAPTIVE] BM25 early termination: score=%.2f >= %.2f, time=%.0fms",
+            top_score, threshold, elapsed,
+        )
+        return bm25_response
 
     async def _execute_standard_search(
         self,
@@ -180,23 +246,22 @@ class AdaptiveSearchStrategy:
 
         logger.info(f"[ADAPTIVE] Decomposed into {len(sub_queries)} sub-queries")
 
-        # Execute search for each sub-query
-        all_results: list[SearchResult] = []
-        sub_responses: list[SearchResponse] = []
+        # Execute all sub-queries in parallel (Phase 26)
+        for i, sq in enumerate(sub_queries):
+            logger.info(f"[ADAPTIVE] Sub-query {i + 1}/{len(sub_queries)}: {sq[:40]}...")
 
-        for i, sub_query in enumerate(sub_queries):
-            logger.info(f"[ADAPTIVE] Sub-query {i + 1}/{len(sub_queries)}: {sub_query[:40]}...")
-
-            sub_response = await self._search_manager.search(
-                query=sub_query,
-                strategy=decision.strategy,
-                k=k,
-                filter=filter,
-                rerank=decision.use_reranking,
+        tasks = [
+            self._search_manager.search(
+                query=sq, strategy=decision.strategy, k=k,
+                filter=filter, rerank=decision.use_reranking,
             )
+            for sq in sub_queries
+        ]
+        sub_responses = list(await asyncio.gather(*tasks))
 
-            sub_responses.append(sub_response)
-            all_results.extend(sub_response.results)
+        all_results: list[SearchResult] = []
+        for sr in sub_responses:
+            all_results.extend(sr.results)
 
         # Synthesize answers
         sub_answers = [r.results[0].chunk.content if r.results else "" for r in sub_responses]

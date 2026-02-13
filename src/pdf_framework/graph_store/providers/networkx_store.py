@@ -22,6 +22,7 @@ class NetworkXGraphStore(BaseGraphStore):
         self._settings = settings or GraphStoreSettings()
         self._graph = nx.DiGraph()
         self._persist_path = Path(self._settings.persist_dir) / "graph.json"
+        self._batch_mode = False
 
     async def initialize(self) -> None:
         self._persist_path.parent.mkdir(parents=True, exist_ok=True)
@@ -48,6 +49,14 @@ class NetworkXGraphStore(BaseGraphStore):
             encoding="utf-8",
         )
 
+    def set_batch_mode(self, enabled: bool) -> None:
+        """Enable/disable batch mode. In batch mode, file saves are deferred."""
+        self._batch_mode = enabled
+
+    def flush(self) -> None:
+        """Persist graph to file (call after batch mode operations)."""
+        self._save_to_file()
+
     async def add_entity(self, entity: Entity) -> str:
         self._graph.add_node(
             entity.id,
@@ -58,7 +67,8 @@ class NetworkXGraphStore(BaseGraphStore):
             source_chunk_ids=entity.source_chunk_ids,
             confidence=entity.confidence,
         )
-        self._save_to_file()
+        if not self._batch_mode:
+            self._save_to_file()
         return entity.id
 
     async def add_relation(self, relation: Relation) -> str:
@@ -71,7 +81,8 @@ class NetworkXGraphStore(BaseGraphStore):
             confidence=relation.confidence,
             source_chunk_id=relation.source_chunk_id,
         )
-        self._save_to_file()
+        if not self._batch_mode:
+            self._save_to_file()
         return relation.id
 
     async def get_entity(self, entity_id: str) -> Entity | None:

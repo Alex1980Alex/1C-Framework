@@ -4,15 +4,13 @@ Provides SSE-compatible streaming events for token-by-token response
 delivery using LangGraph's astream_events.
 
 Author: Claude Code
-Version: 1.0.0 - Phase 9.3: Streaming Pipeline
+Version: 1.0.1 - Phase 9.3: Streaming Pipeline (E7-1 fix)
 """
 
 import json
 import logging
 from enum import Enum
 from typing import Any, AsyncIterator
-
-from langchain_core.messages import AIMessage
 
 from src.pdf_framework.agents.rag.state import RAGState
 
@@ -72,6 +70,22 @@ class StreamEvent:
             "data": self.data,
             "metadata": self.metadata,
         }
+
+
+def _format_sources(sources: list) -> list[dict]:
+    """Format source items (strings or dicts) into uniform dicts."""
+    formatted = []
+    for s in sources:
+        if isinstance(s, dict):
+            formatted.append({
+                "id": s.get("id", ""),
+                "score": s.get("score", 0.0),
+                "metadata": s.get("metadata", {}),
+            })
+        else:
+            # RAGState.sources is list[str] (file paths)
+            formatted.append({"id": str(s), "score": 0.0, "metadata": {}})
+    return formatted
 
 
 class StreamingRAGRunner:
@@ -146,15 +160,35 @@ class StreamingRAGRunner:
                 input_state,
                 version="v2",
             ):
+                # Guard: astream_events can yield non-dict objects
+                # in LangGraph 1.0.x (strings, metadata markers)
+                if not isinstance(event, dict):
+                    continue
+
                 event_type = event.get("event", "")
                 event_name = event.get("name", "")
                 event_data = event.get("data", {})
 
+                if not isinstance(event_data, dict):
+                    continue
+
                 # Handle token streaming from LLM
                 if event_type == "on_chat_model_stream":
+                    # Only capture tokens from answer generation nodes,
+                    # not from analyze/grade/rewrite/hallucination nodes
+                    node = event.get("metadata", {}).get("langgraph_node", "")
+                    if node not in ("generate", "regenerate"):
+                        continue
+
                     chunk = event_data.get("chunk")
-                    if isinstance(chunk, AIMessage):
+                    if hasattr(chunk, "content"):
                         content = chunk.content
+                        # content can be str or list[ContentBlock]
+                        if isinstance(content, list):
+                            content = "".join(
+                                getattr(block, "text", "")
+                                for block in content
+                            )
                         if content:
                             answer_parts.append(content)
                             yield StreamEvent(
@@ -164,23 +198,19 @@ class StreamingRAGRunner:
 
                 # Handle chain end (capture sources)
                 elif event_type == "on_chain_end":
-                    output = event_data.get("output", {})
+                    output = event_data.get("output")
 
-                    # Extract sources if available
-                    if "sources" in output and output["sources"]:
+                    # Only process dict outputs with sources
+                    if isinstance(output, dict) and output.get("sources"):
                         sources = output["sources"]
                         if self._show_sources:
                             yield StreamEvent(
                                 type=StreamEventType.SOURCE,
-                                data=[{
-                                    "id": s.get("id", ""),
-                                    "score": s.get("score", 0.0),
-                                    "metadata": s.get("metadata", {}),
-                                } for s in sources],
+                                data=_format_sources(sources),
                             )
 
-                    # Detect stage changes based on node name
-                    if event_name == "retrieve_documents":
+                    # Detect stage changes: "search" node = retrieval done
+                    if event_name in ("search", "execute_search"):
                         if self._show_status:
                             yield StreamEvent(
                                 type=StreamEventType.STATUS,

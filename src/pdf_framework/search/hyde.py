@@ -40,6 +40,7 @@ class HyDEGenerator:
         self,
         api_key: str = "",
         config: HyDEConfig | None = None,
+        base_url: str = "",
     ):
         """
         Initialize HyDE generator.
@@ -47,9 +48,11 @@ class HyDEGenerator:
         Args:
             api_key: Anthropic API key
             config: HyDE configuration
+            base_url: Custom API endpoint (for Z.AI or other proxies)
         """
-        _api_key = api_key
+        self._api_key = api_key
         self._config = config or HyDEConfig()
+        self._base_url = base_url
 
     async def generate_hypothetical(
         self,
@@ -68,24 +71,52 @@ class HyDEGenerator:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm = ChatAnthropic(
+            llm_kwargs = dict(
                 model=self._config.model,
                 temperature=self._config.temperature,
                 max_tokens=self._config.max_tokens,
-                api_key=_api_key or None,
+                api_key=self._api_key or None,
             )
+            if self._base_url:
+                llm_kwargs["base_url"] = self._base_url
+            llm = ChatAnthropic(**llm_kwargs)
 
             prompt = self._config.prompt_template.format(query=query)
 
-            response = await llm.ainvoke([HumanMessage(content=prompt)])
+            # Ralph Wiggum: self-correcting retry
+            rw_feedback = ""
+            for rw_attempt in range(1, 3):  # max 2 attempts
+                try:
+                    full_prompt = prompt
+                    if rw_feedback:
+                        full_prompt += f"\n\n\u26a0\ufe0f {rw_feedback}"
 
-            hypothetical = response.content.strip()
-            logger.info(f"[HyDE] Generated hypothetical ({len(hypothetical)} chars)")
+                    response = await llm.ainvoke([HumanMessage(content=full_prompt)])
 
-            return hypothetical
+                    content = response.content
+                    if isinstance(content, list):
+                        hypothetical = " ".join(
+                            getattr(block, "text", str(block)) for block in content
+                        ).strip()
+                    else:
+                        hypothetical = content.strip()
+
+                    if len(hypothetical) < 30:
+                        rw_feedback = "Write 2-3 sentences answering the question. Do not refuse."
+                        logger.warning(f"[HyDE] Attempt {rw_attempt}: too short ({len(hypothetical)} chars)")
+                        continue
+
+                    logger.info(f"[HyDE] Generated hypothetical ({len(hypothetical)} chars)")
+                    return hypothetical
+
+                except Exception as e:
+                    logger.error(f"[HyDE] Attempt {rw_attempt} failed: {e}")
+                    rw_feedback = f"Previous call failed: {e}."
+
+            return ""
 
         except Exception as e:
-            logger.error(f"[HyDE] Hypothetical generation failed: {e}")
+            logger.error(f"[HyDE] Initialization failed: {e}")
             return ""
 
     async def embed_hypothetical(
@@ -189,7 +220,10 @@ class QueryExpander:
             if embedding_engine is None:
                 raise ValueError("embedding_engine required for HyDE expansion")
 
-            hyde_gen = HyDEGenerator(api_key=kwargs.get("api_key", ""))
+            hyde_gen = HyDEGenerator(
+                api_key=kwargs.get("api_key", ""),
+                base_url=kwargs.get("base_url", ""),
+            )
             return await hyde_gen.expand_query(
                 query=query,
                 embedding_engine=embedding_engine,

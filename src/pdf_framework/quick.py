@@ -63,6 +63,22 @@ class QuickRAG:
 
         self._initialized = True
 
+    async def _aadd(self, path: str | Path) -> "IndexResult":
+        """Internal async add implementation."""
+        from src.pdf_framework.loaders.base import BaseLoader
+
+        loader: BaseLoader = self._components.loader
+        document = await loader.load(str(path))
+
+        chunks = self._components.pipeline.process(document)
+
+        result = await self._components.indexer.index_chunks(
+            chunks,
+            document_id=document.id,
+            source_path=document.source_path,
+        )
+        return result
+
     def add(self, path: str | Path) -> "IndexResult":
         """
         Index a PDF document (sync wrapper).
@@ -74,28 +90,29 @@ class QuickRAG:
             IndexResult with chunks_stored, embeddings_computed
         """
         self._ensure_initialized()
-
-        async def _add():
-            from src.pdf_framework.loaders.base import BaseLoader
-
-            loader: BaseLoader = self._components.loader
-            document = await loader.load(str(path))
-
-            chunks = self._components.pipeline.process(document)
-
-            result = await self._components.indexer.index_chunks(
-                chunks,
-                document_id=document.id,
-                source_path=document.source_path,
-            )
-            return result
-
-        return self._loop.run_until_complete(_add())
+        return self._loop.run_until_complete(self._aadd(path))
 
     async def aadd(self, path: str | Path) -> "IndexResult":
         """Async version of add()."""
         self._ensure_initialized()
-        return await self.add(path)
+        return await self._aadd(path)
+
+    async def _asearch(self, query: str, k: int, strategy: str) -> list[dict[str, Any]]:
+        """Internal async search implementation."""
+        response = await self._components.search_manager.search(
+            query=query,
+            strategy=strategy,
+            k=k,
+        )
+        return [
+            {
+                "score": r.score,
+                "content": r.chunk.content,
+                "source": r.source,
+                "metadata": r.chunk.metadata,
+            }
+            for r in response.results
+        ]
 
     def search(self, query: str, k: int = 5, strategy: str = "hybrid") -> list[dict[str, Any]]:
         """
@@ -110,29 +127,30 @@ class QuickRAG:
             List of dicts with keys: score, content, source, metadata
         """
         self._ensure_initialized()
-
-        async def _search():
-            response = await self._components.search_manager.search(
-                query=query,
-                strategy=strategy,
-                k=k,
-            )
-            return [
-                {
-                    "score": r.score,
-                    "content": r.chunk.content,
-                    "source": r.source,
-                    "metadata": r.chunk.metadata,
-                }
-                for r in response.results
-            ]
-
-        return self._loop.run_until_complete(_search())
+        return self._loop.run_until_complete(self._asearch(query, k, strategy))
 
     async def asearch(self, query: str, k: int = 5, strategy: str = "hybrid") -> list[dict[str, Any]]:
         """Async version of search()."""
         self._ensure_initialized()
-        return await self.search(query, k, strategy)
+        return await self._asearch(query, k, strategy)
+
+    async def _aask(self, question: str, strategy: str) -> str:
+        """Internal async ask implementation."""
+        from src.pdf_framework.agents.rag.agent import create_rag_agent
+
+        agent = create_rag_agent(
+            search_manager=self._components.search_manager,
+            settings=self._components.settings.agent,
+            self_rag_settings=self._components.settings.self_rag,
+            api_key=self._components.settings.anthropic_api_key,
+        )
+
+        result = await agent.ainvoke({
+            "question": question,
+            "search_strategy": strategy,
+        })
+
+        return result.get("answer", "No answer generated.")
 
     def ask(self, question: str, strategy: str = "hybrid") -> str:
         """
@@ -146,30 +164,23 @@ class QuickRAG:
             Answer text
         """
         self._ensure_initialized()
-
-        async def _ask():
-            from src.pdf_framework.agents.rag.agent import create_rag_agent
-
-            agent = create_rag_agent(
-                search_manager=self._components.search_manager,
-                settings=self._components.settings.agent,
-                self_rag_settings=self._components.settings.self_rag,
-                api_key=self._components.settings.anthropic_api_key,
-            )
-
-            result = await agent.ainvoke({
-                "question": question,
-                "search_strategy": strategy,
-            })
-
-            return result.get("answer", "No answer generated.")
-
-        return self._loop.run_until_complete(_ask())
+        return self._loop.run_until_complete(self._aask(question, strategy))
 
     async def aask(self, question: str, strategy: str = "hybrid") -> str:
         """Async version of ask()."""
         self._ensure_initialized()
-        return await self.ask(question, strategy)
+        return await self._aask(question, strategy)
+
+    async def _astats(self) -> dict[str, Any]:
+        """Internal async stats implementation."""
+        vector_count = await self._components.vector_store.count()
+        graph_stats = await self._components.graph_store.get_statistics()
+
+        return {
+            "chunks": vector_count,
+            "entities": graph_stats.get("entity_count", 0),
+            "relations": graph_stats.get("relation_count", 0),
+        }
 
     def stats(self) -> dict[str, Any]:
         """
@@ -179,23 +190,12 @@ class QuickRAG:
             Dict with document_count, chunk_count, entity_count, etc.
         """
         self._ensure_initialized()
-
-        async def _stats():
-            vector_count = await self._components.vector_store.count()
-            graph_stats = await self._components.graph_store.get_statistics()
-
-            return {
-                "chunks": vector_count,
-                "entities": graph_stats.get("entity_count", 0),
-                "relations": graph_stats.get("relation_count", 0),
-            }
-
-        return self._loop.run_until_complete(_stats())
+        return self._loop.run_until_complete(self._astats())
 
     async def astats(self) -> dict[str, Any]:
         """Async version of stats()."""
         self._ensure_initialized()
-        return await self.stats()
+        return await self._astats()
 
 
 class IndexResult(BaseModel):
