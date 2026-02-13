@@ -1,0 +1,62 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(xargs:*)",
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" build_bm25_index.py)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\research-task-detector.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\search-optimizer.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "WebSearch|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\knowledge-cache-reminder.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\ralph_wiggum_stop.py"
+          },
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\task-enforcer.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
