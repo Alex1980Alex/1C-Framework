@@ -14,6 +14,11 @@
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\research-task-detector.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\decision-to-triad.py",
+            "timeout": 5
           }
         ]
       }

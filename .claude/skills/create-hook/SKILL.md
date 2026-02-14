@@ -193,6 +193,9 @@ with hook_lock("my-hook-name", timeout=10) as acquired:
 ### 5. ralph_wiggum_stop.py (Stop)
 Контролирует итеративный цикл Ralph Wiggum (completion markers).
 
+### 6. decision-to-triad.py (UserPromptSubmit)
+Мета-хук: ловит РЕШЕНИЯ и ИДЕИ из чата (в отличие от research-task-detector, который ловит ВОПРОСЫ). Направляет через Фабрику триады (Q1-Q5 классификация → формула → артефакты).
+
 ---
 
 ## Паттерн: Расширение домена (Hook + Skill)

@@ -13,23 +13,33 @@ description: "Используй этот скилл для понимания �
 СОБЫТИЕ (что произошло?)  →  ЗНАНИЕ (что делать?)  →  ИНСТРУМЕНТ (чем сделать?)
 ```
 
-Это работает и в коде, и в разговоре:
+Уровни не отдельные — **Hook связывает разговор и автоматизацию**:
 
-| Уровень | Событие (КОГДА) | Знание (КАК) | Инструмент (ЧЕМ) |
-|---------|-----------------|---------------|-------------------|
-| **Разговор** | Обсуждаем проблему | Принимаем решение | Реализуем кодом/инструментом |
-| **Автоматизация** | Hook (.py) срабатывает | Skill (.md) описывает процедуру | MCP Tool выполняет |
-| **Артефакт** | settings.json | SKILL.md + cache/ | server.py @tool |
+```
+Пользователь пишет в чат                     ← событие разговора
+     │
+     ▼
+Hook (research-task-detector.py)              ← Hook = событие В чате
+     │  Ловит событие, классифицирует
+     ▼
+Skill (1c-doc-research / tech-research)       ← Знание: КАК действовать
+     │  5-фазный research workflow
+     ▼
+MCP Tool (search_documents, WebSearch)        ← Инструмент: ЧЕМ сделать
+     │
+     ▼
+Результат → cache → следующая сессия          ← Артефакт
+```
 
-Три компонента в коде:
+Hook — это **не абстрактная автоматизация рядом с чатом**. Хук срабатывает **ВНУТРИ** разговора. Он ловит то, что пользователь написал, и превращает это в действие. Хук = событие чата, закодированное в `.py`.
 
 | Компонент | Роль | Вопрос | Формат |
 |-----------|------|--------|--------|
-| **Hooks** | Событийный триггер | КОГДА делать? | Python скрипты (.py) |
+| **Hooks** | Событие в чате → триггер | КОГДА делать? | Python скрипты (.py) |
 | **Skills** | Процедурное знание | КАК / ЧТО делать? | Markdown (SKILL.md) |
 | **MCP** | Внешние инструменты | ЧЕМ делать? | JSON-RPC серверы |
 
-**Ключевое правило:** Если в разговоре принято решение — оно ДОЛЖНО стать артефактом. Разговор — это событие (Hook), решение — это знание (Skill), реализация — это инструмент (MCP). Если решение осталось только в чате — оно потеряно.
+**Ключевое правило:** Если в разговоре принято решение — оно ДОЛЖНО стать артефактом. Хук ловит событие чата. Skill описывает решение. MCP реализует инструментом. Если решение осталось только в чате — оно потеряно.
 
 ---
 
@@ -290,11 +300,12 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
 
 ## Текущая конфигурация
 
-### Hooks (5 шт.) — КОГДА
+### Hooks (6 шт.) — КОГДА
 
 | Hook | Event | Matcher | Назначение |
 |------|-------|---------|-----------|
-| `research-task-detector.py` | UserPromptSubmit | — | Детекция вопросов → роутинг: 1С → `1c-doc-research`, Tech → `tech-research` |
+| `research-task-detector.py` | UserPromptSubmit | — | Детекция ВОПРОСОВ → роутинг: 1С → `1c-doc-research`, Tech → `tech-research` |
+| `decision-to-triad.py` | UserPromptSubmit | — | Детекция РЕШЕНИЙ/ИДЕЙ → роутинг через Фабрику (Q1-Q5) |
 | `knowledge-cache-reminder.py` | PostToolUse | WebSearch\|WebFetch | Напоминание сохранить в кеш: 1С или Tech |
 | `search-optimizer.py` | PreToolUse | Bash | Оптимизация параметров Search API |
 | `task-enforcer.py` | Stop | — | Блокировка без выполнения mandatory задач |
@@ -390,7 +401,34 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
 ОТВЕТ ПОЛЬЗОВАТЕЛЮ с атрибуцией
 ```
 
-### Pipeline 3: Stop Enforcement
+### Pipeline 3: Decision → Artifact (мета-цикл)
+
+```
+ПОЛЬЗОВАТЕЛЬ: "давай создадим новый домен для DevOps"
+     │
+     ▼
+[КОГДА] decision-to-triad.py (UserPromptSubmit)
+     │  Keyword scoring: "давай создадим" + "новый домен" → strong signal
+     │  → systemMessage: "Прогони через ФАБРИКУ ТРИАДЫ (Q1-Q5)"
+     ▼
+[КАК] Skill: hooks-skills-mcp-triad (Фабрика, ШАГ 1-5)
+     │  Q1=Да → Hook   Q2=Да → Skill   Q3=Да → MCP
+     │  Q4=Да → Cache  Q5=Да → Enforcer
+     │  ФОРМУЛА: Hook + Skill + MCP + Cache + Enforcer
+     ▼
+[ЧЕМ] Claude создаёт артефакты:
+     │  skills/devops-research/SKILL.md
+     │  skills/devops-research/cache/_index.json
+     │  DEVOPS_TERMS в research-task-detector.py
+     │  DEVOPS_SIGNALS в knowledge-cache-reminder.py
+     │  settings.json, MEMORY.md обновлены
+     ▼
+ВЕРИФИКАЦИЯ → echo '{"prompt":"как работает helm?"}' | python detector
+```
+
+Это мета-цикл: хук ловит **саму идею** из чата и превращает её в работающую автоматизацию через Фабрику.
+
+### Pipeline 4: Stop Enforcement
 
 ```
 knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
@@ -422,7 +460,8 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   │   ├── __init__.py          (re-exports)
 │   │   ├── task_master.py       (задачи: add, complete, pending, cooldown)
 │   │   └── hook_lock.py         (межхуковая синхронизация)
-│   ├── research-task-detector.py
+│   ├── research-task-detector.py   (ВОПРОСЫ → skill routing)
+│   ├── decision-to-triad.py       (РЕШЕНИЯ → Factory Q1-Q5)
 │   ├── knowledge-cache-reminder.py
 │   ├── task-enforcer.py
 │   ├── search-optimizer.py
