@@ -117,6 +117,12 @@ src/
 
 ---
 
+## Output Rules
+
+- **Все ссылки на файлы в ответах — кликабельны.** Используй markdown: `[filename.py](.claude/hooks/filename.py)` или `[filename.py:42](.claude/hooks/filename.py#L42)`. Никогда бектики или plain text для путей к файлам.
+
+---
+
 ## Development Rules
 
 - All store implementations extend abstract base classes in `*/base.py`
