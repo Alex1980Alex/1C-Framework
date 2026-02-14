@@ -152,7 +152,7 @@ class DecisionToTriad(BaseHook):
         return HookOutput().system_message(
             f"[{tag}] {description}\n"
             "\n"
-            "Прогони через ФАБРИКУ ТРИАДЫ (skill `hooks-skills-mcp-triad`):\n"
+            "Прогони через ФАБРИКУ ТРИАДЫ (skill `triad-factory`):\n"
             "\n"
             "ШАГ 1 — КЛАССИФИКАЦИЯ (5 вопросов):\n"
             "  Q1: Должно срабатывать АВТОМАТИЧЕСКИ на событие? → Hook\n"

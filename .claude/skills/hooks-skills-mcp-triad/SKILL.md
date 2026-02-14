@@ -3,301 +3,11 @@ name: hooks-skills-mcp-triad
 description: "Используй этот скилл для понимания архитектуры Hooks + Skills + MCP в PDF Framework. Триггеры: 'триада', 'triad', 'hooks skills mcp', 'как работают хуки', 'автоматизация фреймворка', 'как устроена интеграция', 'архитектура хуков', 'hook architecture'."
 ---
 
-# Hooks + Skills + MCP — Триада PDF Framework
+# Hooks + Skills + MCP — Реализация в PDF Framework
 
-## Обзор
+**Этот файл — знание.** Описывает конкретную реализацию триады в этом проекте: какие хуки, скиллы и MCP-инструменты существуют, как они связаны, как работают вместе.
 
-**Этот файл — и знание, и программа.** Skill, который описывает как создавать другие skills, hooks и инструменты. Мета-уровень: триада, описывающая саму триаду. Когда хук `decision-to-triad.py` ловит решение в чате, он направляет сюда — и Фабрика (ШАГ 1-5) исполняется как алгоритм.
-
-Триада — универсальный цикл принятия и закрепления решений на **любом** уровне:
-
-```
-СОБЫТИЕ (что произошло?)  →  ЗНАНИЕ (что делать?)  →  ИНСТРУМЕНТ (чем сделать?)
-```
-
-Уровни не отдельные — **Hook связывает разговор и автоматизацию**. Пример ниже иллюстрирует общую концепцию; сама концепция (Фабрика, классификация, формулы) описана в этом файле далее:
-
-```
-Пользователь пишет в чат                     ← СОБЫТИЕ
-     │
-     ▼
-Hook (.py)                                   ← Ловит событие, классифицирует
-     │
-     ▼
-Skill (.md)                                  ← ЗНАНИЕ: КАК действовать
-     │
-     ▼
-MCP Tool / API                               ← ИНСТРУМЕНТ: ЧЕМ сделать
-     │
-     ▼
-Артефакт (cache / hook / skill / MEMORY)     ← РЕЗУЛЬТАТ → следующая сессия
-```
-
-Hook — это **не абстрактная автоматизация рядом с чатом**. Хук срабатывает **ВНУТРИ** разговора. Он ловит то, что пользователь написал, и превращает это в действие. Хук = событие чата, закодированное в `.py`.
-
-| Компонент | Роль | Вопрос | Формат |
-|-----------|------|--------|--------|
-| **Hooks** | Событие в чате → триггер | КОГДА делать? | Python скрипты (.py) |
-| **Skills** | Процедурное знание | КАК / ЧТО делать? | Markdown (SKILL.md) |
-| **Инструменты** | Нативные (Write/Edit) + MCP | ЧЕМ делать? | Claude Code tools + JSON-RPC серверы |
-
-**Ключевое правило:** Если в разговоре принято решение — оно ДОЛЖНО стать артефактом. Хук ловит событие чата. Skill описывает решение. MCP реализует инструментом. Если решение осталось только в чате — оно потеряно.
-
-**Конкретные реализации** этого паттерна — см. Pipelines ниже (1С Research, Tech Research, Decision→Artifact, Stop Enforcement).
-
----
-
-## ФАБРИКА ТРИАДЫ — главный процесс
-
-**Любое новое решение, задача или требование проходит через эту фабрику.** Результат — набор артефактов (hooks, skills, MCP tools), которые система использует автоматически.
-
-Фабрика превращает **разговор** в **работающую автоматизацию**:
-
-```
-ВХОД: Новое решение / требование / задача
-  │
-  ▼
-ШАГ 1: КЛАССИФИКАЦИЯ — ответь на 5 вопросов
-  │
-  ▼
-ШАГ 2: ФОРМУЛА — определи комбинацию компонентов
-  │
-  ▼
-ШАГ 3: ГЕНЕРАЦИЯ — создай артефакты по шаблонам
-  │
-  ▼
-ШАГ 4: СВЯЗЫВАНИЕ — подключи к существующей системе
-  │
-  ▼
-ШАГ 5: ВЕРИФИКАЦИЯ — проверь что всё работает
-  │
-  ▼
-ВЫХОД: Работающая автоматизация (или документированное знание)
-```
-
----
-
-### ШАГ 1: КЛАССИФИКАЦИЯ
-
-Ответь на 5 вопросов (да/нет):
-
-| # | Вопрос | Если ДА → компонент |
-|---|--------|---------------------|
-| Q1 | Это должно срабатывать **автоматически** на событие? | → **Hook** нужен |
-| Q2 | Есть **процедура/знание** которое нужно описать? | → **Skill** нужен |
-| Q3 | Нужен **внешний инструмент** (API, DB, поиск)? | → **MCP Tool** нужен |
-| Q4 | Нужно **накапливать знания** по теме? | → **Cache** нужен (в Skill) |
-| Q5 | Нужно **принудительно** выполнять (не пропускать)? | → **Enforcer** нужен (Hook Stop) |
-
-**Примеры классификации:**
-
-```
-"Исследование новой технологии" →
-  Q1=Да (при вопросе автоматически роутить) → Hook
-  Q2=Да (5-фазный research workflow) → Skill
-  Q3=Да (WebSearch, MCP search) → MCP
-  Q4=Да (кеш знаний) → Cache
-  Q5=Да (обязательно кешировать) → Enforcer
-  ФОРМУЛА: Hook + Skill + MCP + Cache + Enforcer
-
-"Шаблон создания хуков" →
-  Q1=Нет (только по запросу) → —
-  Q2=Да (шаблон, чеклист) → Skill
-  Q3=Нет (работа с файлами) → —
-  Q4=Нет → —
-  Q5=Нет → —
-  ФОРМУЛА: Skill-only
-
-"Оптимизация параметров поиска" →
-  Q1=Да (перед каждым вызовом API) → Hook
-  Q2=Нет (простая проверка) → —
-  Q3=Нет → —
-  Q4=Нет → —
-  Q5=Нет → —
-  ФОРМУЛА: Hook-only
-```
-
----
-
-### ШАГ 2: ФОРМУЛА
-
-По ответам на Q1-Q5 определяется формула — комбинация компонентов:
-
-| Формула | Когда | Создаваемые файлы |
-|---------|-------|--------------------|
-| **Hook + Skill + MCP + Cache + Enforcer** | Новый домен знаний | skill/, detector, reminder, enforcer, MCP tool |
-| **Hook + Skill + MCP** | Архитектурное решение + инструмент | hook.py, SKILL.md, MCP tool |
-| **Hook + Skill** | Автоматизация workflow | hook.py, SKILL.md (или фаза в существующем) |
-| **Skill + MCP** | Инструмент по запросу | SKILL.md, MCP tool |
-| **Skill + Cache** | Доменное знание без автоматики | SKILL.md, cache/ |
-| **Skill-only** | Процедура / шаблон | SKILL.md |
-| **Hook-only** | Простой триггер / валидация | hook.py |
-| **MEMORY-only** | Баг / workaround / факт | MEMORY.md запись |
-
----
-
-### ШАГ 3: ГЕНЕРАЦИЯ
-
-Для каждого компонента в формуле — конкретные файлы:
-
-#### Если нужен Hook:
-
-| Подтип | Event | Шаблон |
-|--------|-------|--------|
-| Детектор (роутер) | UserPromptSubmit | Keyword scoring → systemMessage с инструкцией skill |
-| Мета-роутер | UserPromptSubmit | Keyword scoring → systemMessage с инструкцией Фабрики (Q1-Q5) |
-| Напоминание | PostToolUse | Проверка результата → add_task() + systemMessage |
-| Валидатор | PreToolUse | Проверка параметров → systemMessage или block() |
-| Блокировщик | Stop | Проверка pending tasks → exit(2) если есть |
-
-```
-Файл: .claude/hooks/<name>.py
-  → Наследует BaseHook из base/protocol.py
-  → Регистрация в settings.json
-  → См. skill `create-hook` для полного шаблона
-```
-
-#### Если нужен Skill:
-
-| Подтип | Содержимое |
-|--------|-----------|
-| Доменный (research) | 5 фаз, source hierarchy, шаблон кеша, trigger keywords |
-| Процедурный | Шаблон, чеклист, антипаттерны, примеры |
-| Мета | Архитектура, диаграммы, связи между компонентами |
-
-```
-Директория: .claude/skills/<name>/
-  → SKILL.md с YAML frontmatter (name, description, triggers)
-  → См. skill `doc-to-skill` для конвертации
-```
-
-#### Если нужен Cache:
-
-```
-Директория: .claude/skills/<domain>-research/cache/
-  → _topic_template.md (шаблон, N категорий)
-  → _index.json (реестр тем: keywords, last_verified)
-  → <topic-name>.md (каждая исследованная тема)
-```
-
-**Критерии домена для кеша:**
-- Уникальные источники (URL, авторитеты) → **выделенный** домен
-- Уникальная терминология (не пересекается) → **выделенный** домен
-- Похожий workflow / пересекающиеся источники → **общий** домен (расширить существующий)
-
-#### Если нужен MCP Tool:
-
-```
-Файл: src/mcp_server/server.py
-  → @server.tool() декоратор
-  → Обновить .vscode/mcp.json
-  → Обновить таблицу MCP в этом скилле
-```
-
-#### Если нужен Enforcer:
-
-```
-Связка:
-  1. Hook (PostToolUse/другой) вызывает add_task() → hook-todos.json
-  2. Hook (Stop) task-enforcer.py читает hook-todos.json
-  3. Если pending → exit(2) BLOCK
-  4. Claude выполняет → complete_task() → Stop ALLOW
-```
-
----
-
-### ШАГ 4: СВЯЗЫВАНИЕ
-
-После создания артефактов — подключить их к системе:
-
-| Артефакт | Подключение |
-|----------|-------------|
-| Hook (.py) | Добавить в `.claude/settings.json` → hooks → EventName |
-| Skill (SKILL.md) | Автоматически подхватывается Claude Code по triggers в frontmatter |
-| MCP Tool | Регистрация через `@server.tool()` в server.py |
-| Cache | Инициализировать `_index.json`, добавить инвалидацию |
-| Enforcer | Связать с task-enforcer.py через hook-todos.json |
-
-**Связи между компонентами:**
-```
-Hook (detector)    ──systemMessage──→ Claude ──читает──→ Skill (research)
-Hook (meta-router) ──systemMessage──→ Claude ──читает──→ Skill (triad/factory)
-                                          │
-Skill (research) ──WebSearch──→ Hook (reminder) ──add_task──→ hook-todos.json
-                                                                    │
-Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json ──pending?──→ BLOCK
-```
-
-**Обновить реестры:**
-- Таблица Hooks в этом скилле
-- Таблица Skills в этом скилле
-- Таблица MCP tools (если менялась)
-- CLAUDE.md → Knowledge Cache / Active Skills (если новый домен/skill)
-- MEMORY.md → краткая запись
-
----
-
-### ШАГ 5: ВЕРИФИКАЦИЯ
-
-| Компонент | Тест |
-|-----------|------|
-| Hook | `echo '{"prompt":"тест"}' \| python hook.py` → проверить stdout JSON |
-| Skill | Открыть новую сессию → задать вопрос по triggers → skill подхватился? |
-| MCP Tool | `curl localhost:8000/...` или MCP client call |
-| Cache | Проверить `_index.json` обновился после исследования |
-| Enforcer | Создать pending task → попытаться остановиться → BLOCK? |
-| Связки | Полный pipeline: вопрос → detector → skill → reminder → enforcer |
-
----
-
-## Сквозной пример: Фабрика порождает домен tech-research
-
-Пошаговое применение фабрики к реальному решению:
-
-```
-ВХОД: "RAG/ML/Python нужен отдельный домен знаний, не в 1С"
-
-ШАГ 1: КЛАССИФИКАЦИЯ
-  Q1=Да (автоматически роутить при вопросе) → Hook
-  Q2=Да (5-фазный research) → Skill
-  Q3=Да (WebSearch, MCP search) → MCP
-  Q4=Да (кеш знаний) → Cache
-  Q5=Да (обязательно кешировать) → Enforcer
-
-ШАГ 2: ФОРМУЛА = Hook + Skill + MCP + Cache + Enforcer
-
-ШАГ 3: ГЕНЕРАЦИЯ
-  Skill:  skills/tech-research/SKILL.md (5 фаз, 7 категорий)
-  Cache:  skills/tech-research/cache/_topic_template.md
-          skills/tech-research/cache/_index.json
-  Hook:   TECH_TERMS добавлен в research-task-detector.py
-          TECH_SIGNALS добавлен в knowledge-cache-reminder.py
-  MCP:    search_documents уже есть (переиспользование)
-  Enforcer: task-enforcer.py уже есть (переиспользование)
-
-ШАГ 4: СВЯЗЫВАНИЕ
-  detector → systemMessage "используй tech-research"
-  reminder → add_task("Сохрани в Tech-кеш")
-  enforcer → читает hook-todos.json (без изменений)
-  Обновлены: triad skill, CLAUDE.md, MEMORY.md
-
-ШАГ 5: ВЕРИФИКАЦИЯ
-  echo '{"prompt":"как работает ColBERT?"}' | python research-task-detector.py
-  → {"continue":true,"systemMessage":"[TECH-RESEARCH-DETECTED]..."}  ✓
-```
-
----
-
-## Примеры готовых формул (справочник)
-
-| Решение | Формула | Артефакты |
-|---------|---------|-----------|
-| Новый домен (tech-research) | Hook+Skill+MCP+Cache+Enforcer | SKILL.md, cache/, TERMS в детекторе |
-| Автоматизация кеширования | Hook+Hook+Skill | reminder.py, enforcer.py, Фаза 5 |
-| Захват решений из чата | Hook+Skill | decision-to-triad.py, hooks-skills-mcp-triad |
-| Документирование workflow | Skill-only | doc-to-skill/SKILL.md |
-| Простая валидация | Hook-only | search-optimizer.py |
-| Баг/workaround | MEMORY-only | MEMORY.md запись |
+Для создания нового компонента — используй Фабрику: skill `triad-factory` (ШАГ 1-5, Q1-Q5, формулы).
 
 ---
 
@@ -308,13 +18,13 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
 | Hook | Event | Matcher | Назначение |
 |------|-------|---------|-----------|
 | `research-task-detector.py` | UserPromptSubmit | — | Детекция ВОПРОСОВ → роутинг: 1С → `1c-doc-research`, Tech → `tech-research` |
-| `decision-to-triad.py` | UserPromptSubmit | — | Детекция РЕШЕНИЙ/ИДЕЙ → роутинг через Фабрику (Q1-Q5) |
+| `decision-to-triad.py` | UserPromptSubmit | — | Детекция РЕШЕНИЙ/ИДЕЙ → роутинг через Фабрику (`triad-factory`, Q1-Q5) |
 | `knowledge-cache-reminder.py` | PostToolUse | WebSearch\|WebFetch | Напоминание сохранить в кеш: 1С или Tech |
 | `search-optimizer.py` | PreToolUse | Bash | Оптимизация параметров Search API |
 | `task-enforcer.py` | Stop | — | Блокировка без выполнения mandatory задач |
 | `ralph_wiggum_stop.py` | Stop | — | Контроль итеративного цикла Ralph |
 
-### Skills (6 шт.) — КАК / ЧТО
+### Skills (7 шт.) — КАК / ЧТО
 
 | Skill | Тип | Домен | Назначение |
 |-------|-----|-------|-----------|
@@ -323,7 +33,8 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
 | `doc-to-skill` | Процедурный | — | Конвертер документации в SKILL.md |
 | `pdf-knowledge` | Доменный | PDF | Работа с MCP-инструментами PDF |
 | `create-hook` | Процедурный | — | Создание новых хуков (шаблон, чеклист) |
-| `hooks-skills-mcp-triad` | Мета | — | Этот документ — архитектура триады + фабрика |
+| `triad-factory` | Программа | — | Фабрика: универсальный алгоритм создания компонентов (ШАГ 1-5) |
+| `hooks-skills-mcp-triad` | Знание | — | Этот документ — реализация триады в проекте |
 
 ### MCP Server (1 сервер, 12 инструментов) — ЧЕМ
 
@@ -412,9 +123,9 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
      ▼
 [КОГДА] decision-to-triad.py (UserPromptSubmit)
      │  Keyword scoring: "давай создадим" + "новый домен" → strong signal
-     │  → systemMessage: "Прогони через ФАБРИКУ ТРИАДЫ (Q1-Q5)"
+     │  → systemMessage: "Прогони через ФАБРИКУ ТРИАДЫ (skill triad-factory)"
      ▼
-[КАК] Skill: hooks-skills-mcp-triad (Фабрика, ШАГ 1-5)
+[КАК] Skill: triad-factory (Фабрика, ШАГ 1-5)
      │  Q1=Да → Hook   Q2=Да → Skill   Q3=Да → MCP
      │  Q4=Да → Cache  Q5=Да → Enforcer
      │  ФОРМУЛА: Hook + Skill + MCP + Cache + Enforcer
@@ -428,8 +139,6 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
      ▼
 ВЕРИФИКАЦИЯ → echo '{"prompt":"как работает helm?"}' | python detector
 ```
-
-Это мета-цикл: хук ловит **саму идею** из чата и превращает её в работающую автоматизацию через Фабрику.
 
 ### Pipeline 4: Stop Enforcement
 
@@ -464,7 +173,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   │   ├── task_master.py       (задачи: add, complete, pending, cooldown)
 │   │   └── hook_lock.py         (межхуковая синхронизация)
 │   ├── research-task-detector.py   (ВОПРОСЫ → skill routing)
-│   ├── decision-to-triad.py       (РЕШЕНИЯ → Factory Q1-Q5)
+│   ├── decision-to-triad.py       (РЕШЕНИЯ → triad-factory Q1-Q5)
 │   ├── knowledge-cache-reminder.py
 │   ├── task-enforcer.py
 │   ├── search-optimizer.py
@@ -475,37 +184,13 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── doc-to-skill/            (+ references/)
 │   ├── pdf-knowledge/
 │   ├── create-hook/
-│   └── hooks-skills-mcp-triad/
+│   ├── triad-factory/           (ПРОГРАММА: Фабрика ШАГ 1-5)
+│   └── hooks-skills-mcp-triad/  (ЗНАНИЕ: этот файл)
 ├── cache/
 │   └── hook-todos.json          (задачи от хуков)
 ├── settings.json                (регистрация хуков)
 └── commands/
     └── pdf-search.md
-```
-
-### Протокол hook stdin/stdout
-
-**Вход (stdin JSON):**
-```json
-{
-  "session_id": "abc123",
-  "prompt": "текст промпта",
-  "tool_name": "Read",
-  "tool_input": {"file_path": "..."},
-  "tool_result": "..."
-}
-```
-
-**Выход (stdout JSON) — два варианта:**
-
-Подсказка (не блокирует):
-```json
-{"continue": true, "systemMessage": "Информация для Claude"}
-```
-
-Блокировка:
-```json
-{"continue": false, "decision": "block", "reason": "причина блокировки"}
 ```
 
 ### Коммуникация между хуками
@@ -517,11 +202,12 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 
 ---
 
-## Принципы
+## Антипаттерны
 
-1. **Hooks легковесны** — keyword matching, file read, не тяжёлые вычисления (3-5s timeout)
-2. **Skills информативны** — полные инструкции, шаблоны, примеры, антипаттерны
-3. **MCP мощные** — тяжёлая работа (поиск, индексация, RAG) в MCP серверах
-4. **Graceful degradation** — хуки никогда не ломают workflow (исключение → pass through)
-5. **Separate state** — hook-todos.json отделён от Claude TodoWrite (нет race conditions)
-6. **Фабрика как процесс** — каждое решение проходит через ШАГ 1-5, а не ad-hoc
+| Плохо | Почему | Как правильно |
+|-------|--------|---------------|
+| `except: pass` без logging | Скрывает ошибки | `BaseHook.run()` уже обрабатывает — не нужно дополнительно |
+| Hook вызывает тот же инструмент | Зацикливание (PreToolUse:Read → Read) | Использовать альтернативный инструмент |
+| Блокировка без причины | Claude не понимает что делать | Всегда указывать `reason` в `block()` |
+| Относительные пути в settings.json | Не находит python.exe | Абсолютные: `D:\\1С-Framework\\.venv\\Scripts\\python.exe` |
+| Тяжёлые вычисления в хуке | Timeout (3-5s) | Хуки должны быть лёгкими (keyword matching, file read) |
