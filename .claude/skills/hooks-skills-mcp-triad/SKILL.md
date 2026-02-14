@@ -7,28 +7,30 @@ description: "Используй этот скилл для понимания �
 
 ## Обзор
 
+**Этот файл — и знание, и программа.** Skill, который описывает как создавать другие skills, hooks и инструменты. Мета-уровень: триада, описывающая саму триаду. Когда хук `decision-to-triad.py` ловит решение в чате, он направляет сюда — и Фабрика (ШАГ 1-5) исполняется как алгоритм.
+
 Триада — универсальный цикл принятия и закрепления решений на **любом** уровне:
 
 ```
 СОБЫТИЕ (что произошло?)  →  ЗНАНИЕ (что делать?)  →  ИНСТРУМЕНТ (чем сделать?)
 ```
 
-Уровни не отдельные — **Hook связывает разговор и автоматизацию**:
+Уровни не отдельные — **Hook связывает разговор и автоматизацию**. Пример ниже иллюстрирует общую концепцию; сама концепция (Фабрика, классификация, формулы) описана в этом файле далее:
 
 ```
-Пользователь пишет в чат                     ← событие разговора
+Пользователь пишет в чат                     ← СОБЫТИЕ
      │
      ▼
-Hook (research-task-detector.py)              ← Hook = событие В чате
-     │  Ловит событие, классифицирует
-     ▼
-Skill (1c-doc-research / tech-research)       ← Знание: КАК действовать
-     │  5-фазный research workflow
-     ▼
-MCP Tool (search_documents, WebSearch)        ← Инструмент: ЧЕМ сделать
+Hook (.py)                                   ← Ловит событие, классифицирует
      │
      ▼
-Результат → cache → следующая сессия          ← Артефакт
+Skill (.md)                                  ← ЗНАНИЕ: КАК действовать
+     │
+     ▼
+MCP Tool / API                               ← ИНСТРУМЕНТ: ЧЕМ сделать
+     │
+     ▼
+Артефакт (cache / hook / skill / MEMORY)     ← РЕЗУЛЬТАТ → следующая сессия
 ```
 
 Hook — это **не абстрактная автоматизация рядом с чатом**. Хук срабатывает **ВНУТРИ** разговора. Он ловит то, что пользователь написал, и превращает это в действие. Хук = событие чата, закодированное в `.py`.
@@ -37,9 +39,11 @@ Hook — это **не абстрактная автоматизация ряд�
 |-----------|------|--------|--------|
 | **Hooks** | Событие в чате → триггер | КОГДА делать? | Python скрипты (.py) |
 | **Skills** | Процедурное знание | КАК / ЧТО делать? | Markdown (SKILL.md) |
-| **MCP** | Внешние инструменты | ЧЕМ делать? | JSON-RPC серверы |
+| **Инструменты** | Нативные (Write/Edit) + MCP | ЧЕМ делать? | Claude Code tools + JSON-RPC серверы |
 
 **Ключевое правило:** Если в разговоре принято решение — оно ДОЛЖНО стать артефактом. Хук ловит событие чата. Skill описывает решение. MCP реализует инструментом. Если решение осталось только в чате — оно потеряно.
+
+**Конкретные реализации** этого паттерна — см. Pipelines ниже (1С Research, Tech Research, Decision→Artifact, Stop Enforcement).
 
 ---
 
@@ -48,9 +52,6 @@ Hook — это **не абстрактная автоматизация ряд�
 **Любое новое решение, задача или требование проходит через эту фабрику.** Результат — набор артефактов (hooks, skills, MCP tools), которые система использует автоматически.
 
 Фабрика превращает **разговор** в **работающую автоматизацию**:
-```
-Обсуждение (событие) → Решение (знание) → [Фабрика: 5 шагов] → Артефакты триады
-```
 
 ```
 ВХОД: Новое решение / требование / задача
@@ -144,6 +145,7 @@ Hook — это **не абстрактная автоматизация ряд�
 | Подтип | Event | Шаблон |
 |--------|-------|--------|
 | Детектор (роутер) | UserPromptSubmit | Keyword scoring → systemMessage с инструкцией skill |
+| Мета-роутер | UserPromptSubmit | Keyword scoring → systemMessage с инструкцией Фабрики (Q1-Q5) |
 | Напоминание | PostToolUse | Проверка результата → add_task() + systemMessage |
 | Валидатор | PreToolUse | Проверка параметров → systemMessage или block() |
 | Блокировщик | Stop | Проверка pending tasks → exit(2) если есть |
@@ -218,8 +220,9 @@ Hook — это **не абстрактная автоматизация ряд�
 
 **Связи между компонентами:**
 ```
-Hook (detector) ──systemMessage──→ Claude ──читает──→ Skill (research)
-                                      │
+Hook (detector)    ──systemMessage──→ Claude ──читает──→ Skill (research)
+Hook (meta-router) ──systemMessage──→ Claude ──читает──→ Skill (triad/factory)
+                                          │
 Skill (research) ──WebSearch──→ Hook (reminder) ──add_task──→ hook-todos.json
                                                                     │
 Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json ──pending?──→ BLOCK
@@ -291,7 +294,7 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
 |---------|---------|-----------|
 | Новый домен (tech-research) | Hook+Skill+MCP+Cache+Enforcer | SKILL.md, cache/, TERMS в детекторе |
 | Автоматизация кеширования | Hook+Hook+Skill | reminder.py, enforcer.py, Фаза 5 |
-| Архитектурное решение (hybrid search) | Hook+Skill+MCP | optimizer.py, pdf-knowledge, MCP tool |
+| Захват решений из чата | Hook+Skill | decision-to-triad.py, hooks-skills-mcp-triad |
 | Документирование workflow | Skill-only | doc-to-skill/SKILL.md |
 | Простая валидация | Hook-only | search-optimizer.py |
 | Баг/workaround | MEMORY-only | MEMORY.md запись |
@@ -416,7 +419,7 @@ Claude ──Stop──→ Hook (enforcer) ──reads──→ hook-todos.json 
      │  Q4=Да → Cache  Q5=Да → Enforcer
      │  ФОРМУЛА: Hook + Skill + MCP + Cache + Enforcer
      ▼
-[ЧЕМ] Claude создаёт артефакты:
+[ЧЕМ] Claude создаёт артефакты (Write/Edit + MCP):
      │  skills/devops-research/SKILL.md
      │  skills/devops-research/cache/_index.json
      │  DEVOPS_TERMS в research-task-detector.py
@@ -493,14 +496,16 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 }
 ```
 
-**Выход (stdout JSON):**
+**Выход (stdout JSON) — два варианта:**
+
+Подсказка (не блокирует):
 ```json
-{
-  "continue": true,
-  "systemMessage": "Информация для Claude",
-  "decision": "allow|block",
-  "reason": "причина блокировки"
-}
+{"continue": true, "systemMessage": "Информация для Claude"}
+```
+
+Блокировка:
+```json
+{"continue": false, "decision": "block", "reason": "причина блокировки"}
 ```
 
 ### Коммуникация между хуками
