@@ -87,7 +87,7 @@ src/
 
 ### ФАБРИКА ТРИАДЫ — главный процесс
 
-**Любое решение проходит через 5 шагов фабрики** (полное описание в `hooks-skills-mcp-triad/SKILL.md`):
+**Любое решение проходит через 5 шагов фабрики** (полное описание в skill `triad-factory`):
 
 ```
 ВХОД → ШАГ 1: Классификация (5 вопросов Q1-Q5)
@@ -108,12 +108,12 @@ src/
 | Принудительно выполнять? | Enforcer |
 
 ### Создание нового компонента:
-- **Любое решение** → пропусти через Фабрику (ШАГ 1-5) из skill `hooks-skills-mcp-triad`
+- **Любое решение** → пропусти через Фабрику (ШАГ 1-5) из skill `triad-factory`
 - Hook → используй skill `create-hook` (шаблон + чеклист)
 - Skill → используй skill `doc-to-skill` (конвертер)
 - Домен → Фабрика определит формулу: Hook + Skill + Cache + Enforcer
 
-**См. Фабрику Триады:** `.claude/skills/hooks-skills-mcp-triad/SKILL.md`
+**Фабрика (программа):** skill `triad-factory` | **Реализация (знание):** skill `hooks-skills-mcp-triad`
 
 ---
 
@@ -195,4 +195,5 @@ See `.claude/skills/1c-doc-research/SKILL.md` for full research protocol.
 | `pdf-knowledge` | Доменный | MCP-инструменты для PDF search и indexing |
 | `doc-to-skill` | Процедурный | Конвертер документации → SKILL.md |
 | `create-hook` | Процедурный | Шаблон + чеклист для создания хуков |
-| `hooks-skills-mcp-triad` | Мета | Архитектура триады Hooks + Skills + MCP |
+| `triad-factory` | Программа | Фабрика: алгоритм создания компонентов (ШАГ 1-5, Q1-Q5) |
+| `hooks-skills-mcp-triad` | Знание | Реализация триады в проекте (таблицы, pipelines) |
