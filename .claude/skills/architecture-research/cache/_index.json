@@ -1,0 +1,59 @@
+{
+  "domain": "architecture",
+  "description": "Кеш архитектурных исследований для PDF Framework",
+  "topics": [
+    {
+      "file": "haystack-vs-langchain-architecture.md",
+      "title": "Haystack vs LangChain — глубокое архитектурное исследование",
+      "keywords": [
+        "haystack", "langchain", "langgraph", "architecture", "comparison",
+        "framework-choice", "quality-attributes", "sei-cmu", "pipeline",
+        "component", "benchmarks", "overhead", "token-usage", "production",
+        "migration", "qdrant", "hayhooks", "supercomponent", "dspy",
+        "llamaindex", "middleware", "agents", "typed-io", "serialization",
+        "developer-experience", "debugging", "testing", "scalability"
+      ],
+      "last_verified": "2026-02-14",
+      "sources_count": 18,
+      "github_repos_count": 18
+    },
+    {
+      "file": "knowledge-organization-patterns.md",
+      "title": "Knowledge Organization Patterns — разделение фактов и решений",
+      "keywords": [
+        "knowledge-management", "zettelkasten", "atomic-notes", "adr",
+        "architecture-decision-records", "google-adk", "kba",
+        "knowledge-base", "inference-engine", "3-tier", "separation-of-concerns"
+      ],
+      "last_verified": "2026-02-14",
+      "sources_count": 7,
+      "github_repos_count": 3
+    },
+    {
+      "file": "project-structure-best-practices.md",
+      "title": "Структура проекта — Best Practices для Python RAG Framework",
+      "keywords": [
+        "project-structure", "folder-organization", "layer-based", "feature-based",
+        "clean-architecture", "hexagonal", "ddd", "service-layer", "monorepo",
+        "uv-workspaces", "entry-points", "fastapi-structure", "langgraph-structure",
+        "rag-framework", "god-object", "dependency-injection", "components",
+        "best-practices", "python-packaging", "src-layout"
+      ],
+      "last_verified": "2026-02-12",
+      "sources_count": 14,
+      "github_repos_count": 3
+    },
+    {
+      "file": "core-vs-framework-separation.md",
+      "title": "Core vs Framework Separation — User-Level / Project-Level",
+      "keywords": [
+        "core-framework", "separation", "user-level", "project-level",
+        "monorepo", "hooks-merge", "skills-merge", "claude-code",
+        "portability", "reuse", "infrastructure", "domain-specific"
+      ],
+      "last_verified": "2026-02-12",
+      "sources_count": 3,
+      "github_repos_count": 0
+    }
+  ]
+}

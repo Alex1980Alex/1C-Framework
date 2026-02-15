@@ -1,0 +1,61 @@
+{
+  "description": "Architecture Decision Records — решения по PDF Framework",
+  "format": "ADR (Context → Decision → Consequences → Alternatives)",
+  "lifecycle": ["proposed", "accepted", "superseded", "deprecated"],
+  "records": [
+    {
+      "id": "ADR-001",
+      "file": "001-langchain-over-haystack.md",
+      "title": "LangChain + LangGraph вместо Haystack",
+      "status": "accepted",
+      "date": "2026-02-14",
+      "research": "../cache/haystack-vs-langchain-architecture.md",
+      "tags": ["framework-choice", "langchain", "haystack", "langgraph"]
+    },
+    {
+      "id": "ADR-002",
+      "file": "002-knowledge-3tier-structure.md",
+      "title": "3-tier структура знаний: cache + adr + skill",
+      "status": "accepted",
+      "date": "2026-02-14",
+      "research": "../cache/knowledge-organization-patterns.md",
+      "tags": ["knowledge-management", "zettelkasten", "adr", "architecture"]
+    },
+    {
+      "id": "ADR-003",
+      "file": "003-adr-as-factory-pattern.md",
+      "title": "ADR как структурный паттерн в Фабрике Триады",
+      "status": "accepted",
+      "date": "2026-02-14",
+      "research": "../cache/knowledge-organization-patterns.md",
+      "tags": ["pattern", "structural", "triad-factory", "q6", "adr"]
+    },
+    {
+      "id": "ADR-004",
+      "file": "004-triad-factory-as-gof-pattern.md",
+      "title": "Фабрика Триады как GoF-паттерн (Abstract Factory + Builder)",
+      "status": "accepted",
+      "date": "2026-02-14",
+      "research": "../cache/knowledge-organization-patterns.md",
+      "tags": ["pattern", "creational", "gof", "abstract-factory", "builder", "triad-factory"]
+    },
+    {
+      "id": "ADR-005",
+      "file": "005-layer-based-structure-for-domain-library.md",
+      "title": "Layer-based структура для domain library",
+      "status": "accepted",
+      "date": "2026-02-12",
+      "research": "../cache/project-structure-best-practices.md",
+      "tags": ["project-structure", "layer-based", "clean-architecture", "service-layer", "god-object"]
+    },
+    {
+      "id": "ADR-006",
+      "file": "006-core-framework-separation.md",
+      "title": "Разделение Core и Framework через User-Level / Project-Level",
+      "status": "accepted",
+      "date": "2026-02-12",
+      "research": "../cache/core-vs-framework-separation.md",
+      "tags": ["core-framework", "separation", "user-level", "project-level", "claude-code", "portability"]
+    }
+  ]
+}
