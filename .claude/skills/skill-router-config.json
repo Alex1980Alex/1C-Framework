@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "cooldown_minutes": 3,
   "min_score": 1,
   "max_bundles": 3,
@@ -7,7 +7,7 @@
     "search": {
       "keywords": ["поиск", "search", "найди", "найти", "запрос к базе", "hybrid", "bm25", "семантический поиск"],
       "skills": ["pdf-search"],
-      "optional": []
+      "optional": ["search-pipeline-debug"]
     },
     "research-1c": {
       "keywords": ["1с", "1c", "справочник", "документ 1с", "регистр", "bsl", "конфигурация 1с", "платформа 1с", "проведение", "табличная часть", "реквизит", "подсистема"],
@@ -17,7 +17,7 @@
     "research-tech": {
       "keywords": ["rag", "embedding", "embeddings", "qdrant", "langchain", "langgraph", "reranking", "reranker", "chunking", "vector search", "bm25", "sparse vector", "colbert", "graphrag", "sentence-transformers", "faiss", "hybrid search"],
       "skills": ["tech-research"],
-      "optional": []
+      "optional": ["embedding-models"]
     },
     "architecture": {
       "keywords": ["архитектура", "подход", "паттерн", "best practice", "лучшие практики", "как лучше", "как реализовать", "выбор подхода", "новый функционал"],
@@ -37,6 +37,51 @@
     "evaluation": {
       "keywords": ["brainstorm", "оценка подходов", "сравни варианты", "предложи подход", "какой вариант лучше", "давай обсудим варианты"],
       "skills": ["task-evaluation"],
+      "optional": []
+    },
+    "search-debug": {
+      "keywords": ["отладка поиска", "debug search", "pipeline debug", "стратегия поиска", "search strategy", "rrf", "score threshold", "search config", "турбо поиск", "turbo search", "section-first"],
+      "skills": ["search-pipeline-debug"],
+      "optional": ["pdf-search"]
+    },
+    "indexing": {
+      "keywords": ["индексация", "индексировать", "загрузить pdf", "загрузка pdf", "splitter", "split", "batch indexing", "reindex", "переиндексация", "loader", "hybrid loader", "загрузчик"],
+      "skills": ["indexing-pipeline"],
+      "optional": []
+    },
+    "eval-benchmark": {
+      "keywords": ["evaluation", "оценка качества", "метрики", "metrics", "ragas", "benchmark", "бенчмарк", "regression test", "autorag", "rag triad", "ndcg", "mrr"],
+      "skills": ["evaluation-benchmark"],
+      "optional": []
+    },
+    "graph": {
+      "keywords": ["граф", "graph", "entity", "relation", "lightrag", "knowledge graph", "граф знаний", "entity extraction", "networkx", "traversal"],
+      "skills": ["graph-operations"],
+      "optional": []
+    },
+    "agents": {
+      "keywords": ["агент", "agent", "multi-agent", "orchestration", "оркестрация", "self-rag", "research agent", "analytical agent", "мульти-агент"],
+      "skills": ["agent-orchestration"],
+      "optional": []
+    },
+    "embedding": {
+      "keywords": ["модель эмбеддинга", "embedding model", "e5 model", "giga embedding", "bge-m3", "onnx", "openvino", "backend embedding", "размерность", "dimensions"],
+      "skills": ["embedding-models"],
+      "optional": []
+    },
+    "qdrant-ops": {
+      "keywords": ["qdrant collection", "sparse vectors", "snapshot", "rebuild sparse", "named vectors", "миграция qdrant", "qdrant config", "uuid conversion", "qdrant docker"],
+      "skills": ["qdrant-operations"],
+      "optional": []
+    },
+    "prompt-opt": {
+      "keywords": ["dspy", "оптимизация промптов", "prompt optimization", "miprov2", "a/b testing", "dspy module", "dspy metric"],
+      "skills": ["prompt-engineering"],
+      "optional": []
+    },
+    "deploy": {
+      "keywords": ["deploy", "docker", "production", "health check", "rate limit", "cors", "docker compose", "uvicorn", "развёртывание", "nginx"],
+      "skills": ["deployment"],
       "optional": []
     }
   }

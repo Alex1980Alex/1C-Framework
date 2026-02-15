@@ -2,12 +2,13 @@
 
 ## Обзор
 
-9 skills в `.claude/skills/`:
+18 skills в `.claude/skills/`:
 
 | Категория | Skills | Тип |
 |-----------|--------|-----|
 | **Procedural** (4) | triad-factory, create-hook, doc-to-skill, task-evaluation | Алгоритмы и шаблоны |
 | **Knowledge** (4) | 1c-doc-research, tech-research, architecture-research, hooks-skills-mcp-triad | Домены знаний + кеш |
+| **Domain** (9) | search-pipeline-debug, indexing-pipeline, evaluation-benchmark, graph-operations, agent-orchestration, embedding-models, qdrant-operations, prompt-engineering, deployment | Операционные домены фреймворка |
 | **Project** (1) | pdf-knowledge | Специфичные для PDF Framework |
 
 ## Procedural Skills
@@ -143,6 +144,84 @@
 | **Тип** | Knowledge (reference) |
 
 Документация по архитектуре триады. Таблицы всех hooks, skills, MCP tools. Правила создания новых компонентов.
+
+---
+
+## Domain Skills (операционные)
+
+9 доменных скиллов для работы с конкретными компонентами фреймворка. Зарегистрированы в skill-router-config.json (16 бандлов).
+
+### search-pipeline-debug
+| | |
+|---|---|
+| **Trigger** | "отладка поиска", "debug search", "rrf", "search strategy", "score threshold" |
+| **Тип** | Domain (diagnostic) |
+
+10 стратегий поиска, RRF формула, конфигурация реранкинга, таблица диагностики.
+
+### indexing-pipeline
+| | |
+|---|---|
+| **Trigger** | "индексация", "загрузить pdf", "splitter", "reindex", "loader" |
+| **Тип** | Domain (operational) |
+
+Hybrid loader (4 уровня), splitting стратегии, batch/resume, deterministic IDs.
+
+### evaluation-benchmark
+| | |
+|---|---|
+| **Trigger** | "evaluation", "метрики", "ragas", "benchmark", "autorag" |
+| **Тип** | Domain (quality) |
+
+5 ranking метрик, RAG Triad, RAGAS адаптер, AutoRAG оптимизация.
+
+### graph-operations
+| | |
+|---|---|
+| **Trigger** | "граф", "graph", "entity", "lightrag", "knowledge graph" |
+| **Тип** | Domain (operational) |
+
+LightRAG vs Full GraphRAG, entity extraction, NetworkX store.
+
+### agent-orchestration
+| | |
+|---|---|
+| **Trigger** | "агент", "agent", "multi-agent", "orchestration", "self-rag" |
+| **Тип** | Domain (operational) |
+
+RAG Agent (Self-RAG 7 узлов), Multi-Agent (4 агента), Analytical, Research v2.
+
+### embedding-models
+| | |
+|---|---|
+| **Trigger** | "embedding model", "e5", "giga embedding", "onnx", "openvino" |
+| **Тип** | Domain (configuration) |
+
+E5/Giga/BGE-M3 модели, prefix requirements, ONNX/OpenVINO backends.
+
+### qdrant-operations
+| | |
+|---|---|
+| **Trigger** | "qdrant collection", "sparse vectors", "rebuild", "named vectors" |
+| **Тип** | Domain (operational) |
+
+Named vectors (dense+BM25 sparse), UUID conversion, hybrid search, rebuild.
+
+### prompt-engineering
+| | |
+|---|---|
+| **Trigger** | "dspy", "оптимизация промптов", "miprov2", "a/b testing" |
+| **Тип** | Domain (optimization) |
+
+DSPy модули (6), MIPROv2 optimizer, weighted metrics, API endpoints.
+
+### deployment
+| | |
+|---|---|
+| **Trigger** | "deploy", "docker", "production", "health check", "rate limit" |
+| **Тип** | Domain (infrastructure) |
+
+Docker Compose (7 сервисов), health checks, rate limiting, 13 API routes.
 
 ---
 
