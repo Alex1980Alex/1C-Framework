@@ -15,6 +15,7 @@ Complements research-task-detector.py:
 import json
 import os
 import sys
+from datetime import datetime
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
@@ -52,6 +53,20 @@ def _get_fuzzy_matcher(all_keywords: list[str]):
         except Exception:
             _fuzzy_matcher = False
     return _fuzzy_matcher if _fuzzy_matcher is not False else None
+
+
+def _log_match(prompt_snippet: str, bundles: list[str], skills: list[str]) -> None:
+    """Append match info to data/skill-router.log for monitoring (Phase 10)."""
+    try:
+        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+        log_path = os.path.join(project_dir, "data", "skill-router.log")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        line = f"{ts} | bundles={','.join(bundles)} | skills={','.join(skills)} | prompt={prompt_snippet}\n"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception:
+        pass  # Logging must never block the hook
 
 
 def _load_config() -> dict | None:
@@ -144,6 +159,9 @@ class SkillRouter(BaseHook):
 
         # Final dedup: remove from optional anything that ended up in required
         optional_skills = [s for s in optional_skills if s not in required_skills]
+
+        # --- Log match ---
+        _log_match(prompt_lower[:80], matched_bundle_names, required_skills)
 
         # --- Build systemMessage ---
         parts = [

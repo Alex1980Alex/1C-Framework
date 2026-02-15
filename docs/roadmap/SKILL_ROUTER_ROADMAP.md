@@ -1,7 +1,7 @@
 # Дорожная карта: Intelligent Skill Router
 
 **Дата создания:** 2026-02-12
-**Статус:** Частично реализовано (Фазы 0, 1, 7, 9 для PDF Framework)
+**Статус:** PDF Framework DONE (Фазы 0, 1, 7, 8, 9, 10). 1C-Enterprise Pending (Фазы 2-6)
 **Проекты:** PDF Framework + 1C-Enterprise (shared pattern)
 
 ## Проблема
@@ -287,23 +287,21 @@ Level 2: Domain Skills (по запросу)    ~400-800 tokens × 3-5
 
 ---
 
-## Фаза 8: PDF Framework — Будущие Domain Skills
+## Фаза 8: PDF Framework — Domain Skills ✅ DONE
 
-Создаются **по мере необходимости**, не упреждающе.
+9 доменных скиллов созданы и зарегистрированы в `skill-router-config.json` (16 бандлов).
 
-| # | Skill | Триггер создания | Содержание |
-|---|-------|-----------------|-----------|
-| 8.1 | `search-pipeline-debug` | При частых вопросах "почему поиск не находит" | Pipeline stages, score debug, BM25 vs vector |
-| 8.2 | `indexing-pipeline` | При работе с новыми PDF | Loaders, splitters, page_offsets, batch |
-| 8.3 | `graph-operations` | При вопросах по графу | LightRAG, GraphRAG, entity extraction |
-| 8.4 | `evaluation-benchmark` | При оценке качества | RAGAS, метрики, regression tests |
-| 8.5 | `embedding-models` | При смене/сравнении моделей | E5, BGE-M3, Jina-v3, ONNX backend |
-| 8.6 | `qdrant-operations` | При миграциях/настройке | Collections, sparse vectors, snapshots |
-| 8.7 | `agent-orchestration` | При работе с агентами | RAG agent, multi-agent, LangGraph nodes |
-| 8.8 | `prompt-engineering` | При оптимизации промптов | DSPy modules, A/B testing |
-| 8.9 | `deployment` | При деплое | Docker compose, health checks, monitoring |
-
-Каждый skill: **30-60 мин на создание**, добавляется в `skill-router-config.json` одной записью.
+| # | Skill | SKILL.md | Bundle в router |
+|---|-------|----------|----------------|
+| 8.1 | `search-pipeline-debug` | ✅ 10 стратегий, RRF, debug | `search-debug` |
+| 8.2 | `indexing-pipeline` | ✅ Hybrid loader, 4 levels, batch | `indexing` |
+| 8.3 | `graph-operations` | ✅ LightRAG, GraphRAG, extraction | `graph` |
+| 8.4 | `evaluation-benchmark` | ✅ RAGAS, AutoRAG, regression | `eval-benchmark` |
+| 8.5 | `embedding-models` | ✅ E5, Giga, BGE-M3, ONNX | `embedding` |
+| 8.6 | `qdrant-operations` | ✅ Named vectors, sparse, rebuild | `qdrant-ops` |
+| 8.7 | `agent-orchestration` | ✅ RAG, Multi, Analytical, Research | `agents` |
+| 8.8 | `prompt-engineering` | ✅ DSPy, MIPROv2, metrics | `prompt-opt` |
+| 8.9 | `deployment` | ✅ Docker, health, rate limit | `deploy` |
 
 ---
 
@@ -321,37 +319,35 @@ Level 2: Domain Skills (по запросу)    ~400-800 tokens × 3-5
 
 ---
 
-## Фаза 10: Мониторинг и оптимизация
+## Фаза 10: Мониторинг и оптимизация (частично ✅)
 
-| # | Задача | Как | Когда |
-|---|--------|-----|-------|
-| 10.1 | Логирование skill-router | Hook пишет в `data/skill-router.log` | С Фазы 1 |
-| 10.2 | Статистика: какие bundles срабатывают чаще | Парсинг лога | Через 2 недели |
-| 10.3 | Анализ: false positives (лишние скиллы) | Ручная проверка | Через 2 недели |
-| 10.4 | Анализ: false negatives (нужный скилл не загружен) | User feedback | Итеративно |
-| 10.5 | Оптимизация keywords | Добавить/убрать по статистике | Итеративно |
-| 10.6 | Оптимизация bundles | Разделить/объединить | Итеративно |
-| 10.7 | Token budget report | Подсчёт tokens per session | Ежемесячно |
+| # | Задача | Как | Когда | Статус |
+|---|--------|-----|-------|--------|
+| 10.1 | Логирование skill-router | Hook пишет в `data/skill-router.log` | С Фазы 1 | **DONE** |
+| 10.2 | Статистика: какие bundles срабатывают чаще | Парсинг лога | Через 2 недели | Pending |
+| 10.3 | Анализ: false positives (лишние скиллы) | Ручная проверка | Через 2 недели | Pending |
+| 10.4 | Анализ: false negatives (нужный скилл не загружен) | User feedback | Итеративно | Pending |
+| 10.5 | Оптимизация keywords | Добавить/убрать по статистике | Итеративно | Pending |
+| 10.6 | Оптимизация bundles | Разделить/объединить | Итеративно | Pending |
+| 10.7 | Token budget report | Подсчёт tokens per session | Ежемесячно | Pending |
 
 ---
 
 ## Сводка по фазам
 
-| Фаза | Что | Проект | Усилия | Приоритет |
-|------|-----|--------|--------|-----------|
 | Фаза | Что | Проект | Усилия | Приоритет | Статус |
 |------|-----|--------|--------|-----------|--------|
-| **0** | Проектирование | Оба | 1-2 часа | P0 | **DONE** (PDF) |
+| **0** | Проектирование | Оба | 1-2 часа | P0 | **DONE** |
 | **1** | Universal Router Engine | Shared | 3-4 часа | P0 | **DONE** (skill-router.py) |
 | **2** | 1C Meta-Skill | 1C-Enterprise | 30 мин | P0 | Pending |
 | **3** | 1C Top-3 Skills (query, skd, forms) | 1C-Enterprise | 4-6 часов | P1 | Pending |
 | **4** | 1C Priority-2 Skills (5 шт) | 1C-Enterprise | 5-7 часов | P1 | Pending |
 | **5** | 1C Priority-3 Skills (5 шт) | 1C-Enterprise | 4-5 часов | P2 | Pending |
 | **6** | 1C Integration & Testing | 1C-Enterprise | 2-3 часа | P1 | Pending |
-| **7** | PDF Config & Testing | PDF Framework | 2-3 часа | P1 | **DONE** (7 bundles, 5 tests) |
-| **8** | PDF Future Skills | PDF Framework | По запросу | P3 | On-demand |
+| **7** | PDF Config & Testing | PDF Framework | 2-3 часа | P1 | **DONE** (16 bundles, 8 tests) |
+| **8** | PDF Domain Skills (9 шт) | PDF Framework | 2-3 часа | P1 | **DONE** (9 SKILL.md + router) |
 | **9** | MCP Per-Project | Оба | 2-3 часа | P1 | **DONE** (PDF .mcp.json) |
-| **10** | Мониторинг | Оба | Итеративно | P2 | Pending |
+| **10** | Мониторинг | Оба | Итеративно | P2 | **10.1 DONE** (logging) |
 
 ## Порядок выполнения
 
@@ -419,46 +415,8 @@ Level 2: Domain Skills (по запросу)    ~400-800 tokens × 3-5
 }
 ```
 
-## Пример конфига для PDF Framework
+## Актуальный конфиг PDF Framework
 
-```json
-{
-  "bundles": {
-    "search": {
-      "keywords": ["поиск", "search", "найди", "запрос к базе", "hybrid", "bm25"],
-      "skills": ["pdf-search"],
-      "optional": []
-    },
-    "research-1c": {
-      "keywords": ["1с", "1c", "справочник", "документ 1с", "регистр"],
-      "skills": ["1c-doc-research"],
-      "optional": []
-    },
-    "research-tech": {
-      "keywords": ["rag", "embedding", "qdrant", "langchain", "reranking", "bm25"],
-      "skills": ["tech-research"],
-      "optional": []
-    },
-    "architecture": {
-      "keywords": ["архитектура", "подход", "паттерн", "best practice", "как лучше"],
-      "skills": ["architecture-research"],
-      "optional": []
-    },
-    "infrastructure": {
-      "keywords": ["hook", "skill", "mcp", "триада", "triad", "factory"],
-      "skills": ["hooks-skills-mcp-triad"],
-      "optional": ["triad-factory", "create-hook"]
-    },
-    "creation": {
-      "keywords": ["создай hook", "новый скилл", "новый хук", "create"],
-      "skills": ["create-hook"],
-      "optional": ["doc-to-skill"]
-    },
-    "evaluation": {
-      "keywords": ["brainstorm", "оценка подходов", "сравни варианты", "предложи"],
-      "skills": ["task-evaluation"],
-      "optional": []
-    }
-  }
-}
-```
+См. `.claude/skills/skill-router-config.json` — **v2, 16 бандлов, 18 скиллов**.
+
+7 базовых + 9 доменных бандлов. Логирование в `data/skill-router.log`.

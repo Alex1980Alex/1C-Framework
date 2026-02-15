@@ -199,7 +199,18 @@ See `.claude/skills/1c-doc-research/SKILL.md` for full research protocol.
 | `1c-doc-research` | Доменный | Исследование 1С: 5 фаз, кеш (8 категорий), атрибуция |
 | `tech-research` | Доменный | Исследование RAG/ML/Python: 5 фаз, кеш (7 категорий) |
 | `pdf-knowledge` | Доменный | MCP-инструменты для PDF search и indexing |
+| `architecture-research` | Доменный | Архитектурные решения: facts + ADR + procedure |
 | `doc-to-skill` | Процедурный | Конвертер документации → SKILL.md |
 | `create-hook` | Процедурный | Шаблон + чеклист для создания хуков |
+| `task-evaluation` | Классификатор | Research / Brainstorm / Hybrid маршрутизация |
 | `triad-factory` | Программа | Фабрика: алгоритм создания компонентов (ШАГ 1-5, Q1-Q5) |
 | `hooks-skills-mcp-triad` | Знание | Реализация триады в проекте (таблицы, pipelines) |
+| `search-pipeline-debug` | Операционный | 10 стратегий поиска, RRF, debug, reranking |
+| `indexing-pipeline` | Операционный | Hybrid loader, splitting, batch/resume, IDs |
+| `evaluation-benchmark` | Операционный | RAGAS, AutoRAG, метрики, regression tests |
+| `graph-operations` | Операционный | LightRAG, GraphRAG, entity extraction |
+| `agent-orchestration` | Операционный | RAG/Multi/Analytical/Research агенты |
+| `embedding-models` | Операционный | E5/Giga/BGE-M3, ONNX/OpenVINO backends |
+| `qdrant-operations` | Операционный | Named vectors, sparse, rebuild, migration |
+| `prompt-engineering` | Операционный | DSPy модули, MIPROv2, A/B testing |
+| `deployment` | Операционный | Docker, health checks, rate limiting, API |
