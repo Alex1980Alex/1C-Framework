@@ -1,7 +1,7 @@
 # Дорожная карта: Intelligent Skill Router
 
 **Дата создания:** 2026-02-12
-**Статус:** Планирование
+**Статус:** Частично реализовано (Фазы 0, 1, 7, 9 для PDF Framework)
 **Проекты:** PDF Framework + 1C-Enterprise (shared pattern)
 
 ## Проблема
@@ -339,17 +339,19 @@ Level 2: Domain Skills (по запросу)    ~400-800 tokens × 3-5
 
 | Фаза | Что | Проект | Усилия | Приоритет |
 |------|-----|--------|--------|-----------|
-| **0** | Проектирование | Оба | 1-2 часа | P0 |
-| **1** | Universal Router Engine | Shared | 3-4 часа | P0 |
-| **2** | 1C Meta-Skill | 1C-Enterprise | 30 мин | P0 |
-| **3** | 1C Top-3 Skills (query, skd, forms) | 1C-Enterprise | 4-6 часов | P1 |
-| **4** | 1C Priority-2 Skills (5 шт) | 1C-Enterprise | 5-7 часов | P1 |
-| **5** | 1C Priority-3 Skills (5 шт) | 1C-Enterprise | 4-5 часов | P2 |
-| **6** | 1C Integration & Testing | 1C-Enterprise | 2-3 часа | P1 |
-| **7** | PDF Config & Testing | PDF Framework | 2-3 часа | P1 |
-| **8** | PDF Future Skills | PDF Framework | По запросу | P3 |
-| **9** | MCP Per-Project | Оба | 2-3 часа | P1 |
-| **10** | Мониторинг | Оба | Итеративно | P2 |
+| Фаза | Что | Проект | Усилия | Приоритет | Статус |
+|------|-----|--------|--------|-----------|--------|
+| **0** | Проектирование | Оба | 1-2 часа | P0 | **DONE** (PDF) |
+| **1** | Universal Router Engine | Shared | 3-4 часа | P0 | **DONE** (skill-router.py) |
+| **2** | 1C Meta-Skill | 1C-Enterprise | 30 мин | P0 | Pending |
+| **3** | 1C Top-3 Skills (query, skd, forms) | 1C-Enterprise | 4-6 часов | P1 | Pending |
+| **4** | 1C Priority-2 Skills (5 шт) | 1C-Enterprise | 5-7 часов | P1 | Pending |
+| **5** | 1C Priority-3 Skills (5 шт) | 1C-Enterprise | 4-5 часов | P2 | Pending |
+| **6** | 1C Integration & Testing | 1C-Enterprise | 2-3 часа | P1 | Pending |
+| **7** | PDF Config & Testing | PDF Framework | 2-3 часа | P1 | **DONE** (7 bundles, 5 tests) |
+| **8** | PDF Future Skills | PDF Framework | По запросу | P3 | On-demand |
+| **9** | MCP Per-Project | Оба | 2-3 часа | P1 | **DONE** (PDF .mcp.json) |
+| **10** | Мониторинг | Оба | Итеративно | P2 | Pending |
 
 ## Порядок выполнения
 

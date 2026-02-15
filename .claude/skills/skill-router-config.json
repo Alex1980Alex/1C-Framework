@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "cooldown_minutes": 3,
+  "min_score": 1,
+  "max_bundles": 3,
+  "bundles": {
+    "search": {
+      "keywords": ["поиск", "search", "найди", "найти", "запрос к базе", "hybrid", "bm25", "семантический поиск"],
+      "skills": ["pdf-search"],
+      "optional": []
+    },
+    "research-1c": {
+      "keywords": ["1с", "1c", "справочник", "документ 1с", "регистр", "bsl", "конфигурация 1с", "платформа 1с", "проведение", "табличная часть", "реквизит", "подсистема"],
+      "skills": ["1c-doc-research"],
+      "optional": []
+    },
+    "research-tech": {
+      "keywords": ["rag", "embedding", "embeddings", "qdrant", "langchain", "langgraph", "reranking", "reranker", "chunking", "vector search", "bm25", "sparse vector", "colbert", "graphrag", "sentence-transformers", "faiss", "hybrid search"],
+      "skills": ["tech-research"],
+      "optional": []
+    },
+    "architecture": {
+      "keywords": ["архитектура", "подход", "паттерн", "best practice", "лучшие практики", "как лучше", "как реализовать", "выбор подхода", "новый функционал"],
+      "skills": ["architecture-research"],
+      "optional": []
+    },
+    "infrastructure": {
+      "keywords": ["hook", "skill", "mcp", "триада", "triad", "factory", "фабрика", "хук", "навык"],
+      "skills": ["hooks-skills-mcp-triad"],
+      "optional": ["triad-factory", "create-hook"]
+    },
+    "creation": {
+      "keywords": ["создай hook", "новый скилл", "новый хук", "create hook", "добавить hook", "создай хук", "новый навык"],
+      "skills": ["create-hook"],
+      "optional": ["doc-to-skill"]
+    },
+    "evaluation": {
+      "keywords": ["brainstorm", "оценка подходов", "сравни варианты", "предложи подход", "какой вариант лучше", "давай обсудим варианты"],
+      "skills": ["task-evaluation"],
+      "optional": []
+    }
+  }
+}
