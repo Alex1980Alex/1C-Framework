@@ -2,13 +2,13 @@
 
 ## Обзор
 
-12 hooks в `.claude/hooks/`:
+13 hooks в `.claude/hooks/`:
 
 | Категория | Hooks | Python | Назначение |
 |-----------|-------|--------|-----------|
 | **Ralph Wiggum** (2) | ralph_activator, ralph_wiggum_stop | venv | Автономный цикл |
 | **Guards** (3) | root-clutter-guard, bulk-action-guard, git-commit-enforcer | venv | Защита от ошибок |
-| **Domain routing** (3) | research-task-detector, decision-to-triad, search-optimizer | venv | Маршрутизация задач |
+| **Domain routing** (4) | skill-router, research-task-detector, decision-to-triad, search-optimizer | venv | Маршрутизация задач |
 | **Enforcement** (4) | knowledge-cache-reminder, factory-enforcer, task-enforcer, docs-change-tracker | venv | Обязательные действия |
 
 ## Hook Protocol
@@ -123,6 +123,36 @@
 ---
 
 ## Domain Routing
+
+### skill-router.py
+| | |
+|---|---|
+| **Event** | UserPromptSubmit |
+| **Timeout** | 5s |
+| **Назначение** | Config-driven маршрутизация промптов к скиллам по keyword bundles |
+
+**Config**: `.claude/skills/skill-router-config.json` (7 bundles, ~50 keywords).
+
+**Логика** (2-layer):
+1. **Layer A**: phrase matching — lowercase prompt → scan bundle keywords → score
+2. **Layer B**: fuzzy matching — pymorphy3 лемматизация + rapidfuzz опечатки (threshold 78%)
+
+**Bundles**:
+| Bundle | Skills | Keywords (примеры) |
+|--------|--------|-------------------|
+| search | pdf-search | поиск, search, найди, hybrid, bm25 |
+| research-1c | 1c-doc-research | 1с, справочник, регистр, bsl |
+| research-tech | tech-research | rag, embedding, qdrant, langchain |
+| architecture | architecture-research | архитектура, подход, паттерн, best practice |
+| infrastructure | hooks-skills-mcp-triad (+opt: triad-factory, create-hook) | hook, skill, mcp, триада |
+| creation | create-hook (+opt: doc-to-skill) | создай hook, новый скилл |
+| evaluation | task-evaluation | brainstorm, оценка подходов |
+
+**Multi-bundle**: top-3 по score, dedup skills. No match → pass-through.
+
+**Отличие от research-task-detector**: skill-router говорит КАКИЕ скиллы загрузить (data-driven), research-task-detector говорит КАКОЙ WORKFLOW использовать (code-driven).
+
+---
 
 ### research-task-detector.py
 | | |

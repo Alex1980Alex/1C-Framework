@@ -230,6 +230,32 @@ Phase 5: Сохранение в кеш
 - Формат: markdown с категориями
 ```
 
+## Skill Router
+
+Config-driven маршрутизация промптов к скиллам. Конфигурация: `.claude/skills/skill-router-config.json`.
+
+**Хук**: [skill-router.py](../../.claude/hooks/skill-router.py) (UserPromptSubmit, runs FIRST)
+
+**Как работает**: prompt → keyword matching (phrase + fuzzy) → score bundles → top-3 → dedup skills → systemMessage
+
+**Конфиг**: 7 bundles → 9 skills. Добавить новый bundle = 1 JSON-запись, без правки кода.
+
+```json
+{
+  "bundles": {
+    "search": {
+      "keywords": ["поиск", "search", "найди"],
+      "skills": ["pdf-search"],
+      "optional": []
+    }
+  }
+}
+```
+
+**Дополняет** research-task-detector: router=КАКИЕ скиллы, detector=КАКОЙ workflow.
+
+---
+
 ## См. также
 
 - [Triad Architecture](triad-architecture.md)

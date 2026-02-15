@@ -26,7 +26,7 @@ A framework for intelligent PDF document processing using vector databases (sema
 │  Embeddings │ Cache (3 types) │ Observability │ Config │ Analytics    │
 ├───────────────────────────────────────────────────────────────────────┤
 │                     Claude Code Integration                           │
-│  Hooks (12) │ Skills (9) │ MCP Tools (12) │ Ralph Wiggum │ Triad     │
+│  Hooks (13) │ Skills (9) │ MCP Tools (12) │ Ralph Wiggum │ Triad     │
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
