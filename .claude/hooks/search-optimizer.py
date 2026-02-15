@@ -14,7 +14,12 @@ Adapted from 1C-Enterprise_Framework multi-pipeline-blocker.py (advisory mode).
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Core path resolution: find base/ + shared/ in user-level or project-level
+_HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
+sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
 

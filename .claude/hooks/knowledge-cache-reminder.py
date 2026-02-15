@@ -5,8 +5,10 @@ Event: PostToolUse
 Matcher: WebSearch|WebFetch
 Purpose: After web search/fetch, remind Claude to save research findings
          to the appropriate knowledge cache:
-         - 1C results -> 1c-doc-research/cache/ (Phase 5)
-         - Tech results -> tech-research/cache/ (Phase 5)
+         - 1C results -> .claude/skills/1c-doc-research/cache/ (Phase 5)
+         - Tech results -> .claude/skills/tech-research/cache/ (Phase 5)
+         - Arch results -> .claude/skills/architecture-research/cache/ (Phase 5)
+         Cache lives in project-level .claude/skills/.
          Creates mandatory task in hook-todos.json.
 Timeout: 5s
 
@@ -16,12 +18,22 @@ Adapted from 1C-Enterprise_Framework documentation-blocker.py.
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Core path resolution: find base/ + shared/ in user-level or project-level
+_HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
+sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
 from shared.task_master import add_task, has_recent_completion, get_pending_tasks
 
 HOOK_ID = "knowledge-cache-reminder-hook"
+
+# Cache lives in project-level .claude/skills/
+_PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # .claude/
+_PROJECT_SKILLS = os.path.join(_PROJECT_DIR, "skills")
+_CACHE_PREFIX = ".claude/skills"  # For human-readable messages
 
 
 class KnowledgeCacheReminder(BaseHook):
@@ -34,6 +46,17 @@ class KnowledgeCacheReminder(BaseHook):
         "перечисление", "обработка", "модуль",
         "табличная часть", "реквизит", "проведение",
         "its.1c.ru", "infostart.ru", "bsl",
+    ]
+
+    # Signals that architecture research was performed
+    ARCHITECTURE_SIGNALS = [
+        "best practice", "best practices",
+        "pattern", "architecture", "approach",
+        "паттерн", "архитектура", "подход",
+        "production", "scalab", "benchmark",
+        "comparison", "tradeoff", "trade-off",
+        "implementation", "design pattern",
+        "github.com", "awesome-", "stars",
     ]
 
     # Signals that tech/RAG/ML research was performed
@@ -70,6 +93,9 @@ class KnowledgeCacheReminder(BaseHook):
         c1_score = sum(1 for s in self.C1_SIGNALS if s in result_lower)
         tech_score = sum(1 for s in self.TECH_SIGNALS if s in result_lower)
 
+        # Score architecture domain
+        arch_score = sum(1 for s in self.ARCHITECTURE_SIGNALS if s in result_lower)
+
         # --- 1C research (priority — domain-specific) ---
         if c1_score >= 2:
             pending = get_pending_tasks(created_by=HOOK_ID)
@@ -94,6 +120,30 @@ class KnowledgeCacheReminder(BaseHook):
                 "2. Заполни по шаблону cache/_topic_template.md "
                 "(8 категорий знаний)\n"
                 "3. Обнови _index.json (keywords, last_verified)"
+            )
+
+        # --- Architecture research ---
+        if arch_score >= 2:
+            pending = get_pending_tasks(created_by=HOOK_ID)
+            if not pending:
+                add_task(
+                    title="Сохранить результаты исследования в кеш (Architecture)",
+                    description=(
+                        "Фаза 5 skill architecture-research: создать topic-файл "
+                        "в .claude/skills/architecture-research/cache/<тема>.md "
+                        "и обновить _index.json"
+                    ),
+                    priority="high",
+                    created_by=HOOK_ID,
+                )
+
+            return HookOutput().system_message(
+                "[CACHE-REMINDER] Обнаружены результаты исследования "
+                "архитектурных подходов / best practices.\n"
+                "ОБЯЗАТЕЛЬНО выполни Фазу 5 skill `architecture-research`:\n"
+                "1. Создай topic-файл в "
+                ".claude/skills/architecture-research/cache/<тема>.md\n"
+                "2. Обнови _index.json (keywords, last_verified)"
             )
 
         # --- Tech research ---
@@ -129,8 +179,9 @@ class KnowledgeCacheReminder(BaseHook):
                 "[CACHE-HINT] Найдена информация через "
                 f"{tool_name}.\n"
                 "Если это полезное знание — рассмотри сохранение в кеш:\n"
-                "- 1С → 1c-doc-research/cache/\n"
-                "- Tech → tech-research/cache/"
+                "- 1С → .claude/skills/1c-doc-research/cache/\n"
+                "- Tech → .claude/skills/tech-research/cache/\n"
+                "- Arch → .claude/skills/architecture-research/cache/"
             )
 
         return None

@@ -1,6 +1,6 @@
 [project]
 name = "pdf-vector-graph-framework"
-version = "0.1.0"
+version = "1.5.0"
 description = "Framework for intelligent PDF document processing with Vector and Graph databases"
 requires-python = ">=3.11"
 readme = "README.md"
@@ -79,6 +79,7 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.8",
     "mypy>=1.13",
+    "interrogate>=1.7",
 ]
 
 [project.scripts]
@@ -105,3 +106,16 @@ asyncio_mode = "auto"
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-semiprivate = true
+ignore-private = true
+ignore-module = false
+ignore-nested-functions = true
+ignore-nested-classes = true
+fail-under = 60
+exclude = ["tests", "docs", "scripts", "data"]
+verbose = 1

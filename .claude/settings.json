@@ -3,13 +3,20 @@
     "allow": [
       "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.executable\\)\")",
       "Bash(xargs:*)",
-      "Bash(\".venv\\\\Scripts\\\\python.exe\" build_bm25_index.py)"
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" build_bm25_index.py)",
+      "WebSearch",
+      "WebFetch"
     ]
   },
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\ralph_activator.py",
+            "timeout": 5
+          },
           {
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\research-task-detector.py",
@@ -19,11 +26,26 @@
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\decision-to-triad.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\document-persistence.py",
+            "timeout": 3
           }
         ]
       }
     ],
     "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\root-clutter-guard.py",
+            "timeout": 3
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -45,6 +67,31 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\factory-enforcer.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\docs-change-tracker.py",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\bulk-action-guard.py",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "Stop": [
@@ -53,7 +100,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\ralph_wiggum_stop.py"
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\ralph_wiggum_stop.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\git-commit-enforcer.py",
+            "timeout": 5
           },
           {
             "type": "command",

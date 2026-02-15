@@ -50,11 +50,35 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
 
+    openapi_tags = [
+        {"name": "health", "description": "Health checks, readiness/liveness probes for Kubernetes"},
+        {"name": "auth", "description": "JWT authentication, token management, RBAC roles"},
+        {"name": "documents", "description": "PDF upload, indexing (sync/stream/batch/delta), document listing, BM25/sparse rebuild"},
+        {"name": "search", "description": "Vector, BM25, hybrid, section-aware search. RAG QA with LLM reranking"},
+        {"name": "chat", "description": "Conversational RAG with message history and streaming"},
+        {"name": "graph", "description": "Knowledge graph: entities, relations, neighbors, communities, LightRAG"},
+        {"name": "cache", "description": "Semantic search cache management"},
+        {"name": "metrics", "description": "Prometheus metrics, evaluation results dashboard"},
+        {"name": "openai_compat", "description": "OpenAI-compatible /v1/chat/completions endpoint"},
+        {"name": "feedback", "description": "User feedback collection for self-learning retrieval"},
+        {"name": "toc", "description": "Table of contents navigation, section summaries"},
+        {"name": "collections", "description": "Multi-document knowledge bases: collections, scoped search"},
+        {"name": "optimization", "description": "DSPy prompt optimization, A/B experiments"},
+        {"name": "analytics", "description": "Enterprise analytics: query tracking, cost analysis, audit logs"},
+    ]
+
     app = FastAPI(
         title="PDF Vector & Graph Framework",
         version="1.5.0",
-        description="Intelligent PDF processing with Vector and Graph databases (UI & DX)",
+        description=(
+            "Intelligent PDF processing with Vector and Graph databases.\n\n"
+            "**Features**: 12 search strategies, LLM reranking, hybrid BM25+vector search, "
+            "knowledge graphs, conversational RAG, multi-document collections, "
+            "DSPy optimization, enterprise analytics.\n\n"
+            "**Stack**: Qdrant, E5 multilingual embeddings, Claude (Anthropic), LangGraph agents."
+        ),
         lifespan=lifespan,
+        openapi_tags=openapi_tags,
     )
 
     app.add_middleware(

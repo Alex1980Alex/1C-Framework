@@ -1,5 +1,22 @@
 {
   "domains": ["rag", "embeddings", "vector-db", "llm", "python", "ml", "agents", "search", "tools"],
-  "last_updated": null,
-  "topics": {}
+  "last_updated": "2026-02-12",
+  "topics": {
+    "project-gap-analysis": {
+      "file": "project-gap-analysis.md",
+      "domain": "rag",
+      "category": "analysis",
+      "created": "2026-02-12",
+      "keywords": ["gap analysis", "roadmap", "SOTA", "embedding", "observability", "graph", "CI/CD", "streaming"],
+      "summary": "Deep analysis of PDF Framework (43 phases, 120+ files) vs SOTA RAG 2025-2026. Key gaps: embedding model (E5→BGE-M3/Jina-v3), observability (1 file vs Langfuse), graph store (NetworkX→Neo4j), CI/CD. Strengths: Section-First search, Ralph Wiggum, Triad architecture, Hybrid Loader."
+    },
+    "mcp-lazy-loading": {
+      "file": "mcp-lazy-loading.md",
+      "domain": "tools",
+      "category": "pattern",
+      "created": "2026-02-12",
+      "keywords": ["mcp", "lazy loading", "token optimization", "tool search", "mcp-cli", "allowedTools"],
+      "summary": "MCP tool token bloat solutions: allowedTools filtering (0 effort), Claude Code Tool Search (85% reduction, auto), mcp-cli (99% reduction, cross-agent). Threshold: 20+ tools. Current project: 12 tools (OK). Combined with 1C-Enterprise: ~30 tools (needs strategy). Source: docs/MCP_CLI_Исследование.md"
+    }
+  }
 }

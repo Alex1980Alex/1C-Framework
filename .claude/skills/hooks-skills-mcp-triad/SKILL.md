@@ -13,21 +13,24 @@ description: "Используй этот скилл для понимания �
 
 ## Текущая конфигурация
 
-### Hooks (6 шт.) — КОГДА
+### Hooks (8 шт.) — КОГДА
 
 | Hook | Event | Matcher | Назначение |
 |------|-------|---------|-----------|
-| `research-task-detector.py` | UserPromptSubmit | — | Детекция ВОПРОСОВ → роутинг: 1С → `1c-doc-research`, Tech → `tech-research` |
-| `decision-to-triad.py` | UserPromptSubmit | — | Детекция РЕШЕНИЙ/ИДЕЙ → роутинг через Фабрику (`triad-factory`, Q1-Q5) |
-| `knowledge-cache-reminder.py` | PostToolUse | WebSearch\|WebFetch | Напоминание сохранить в кеш: 1С или Tech |
+| `research-task-detector.py` | UserPromptSubmit | — | Детекция ВОПРОСОВ → роутинг: Architecture → `architecture-research`, 1С → `1c-doc-research`, Tech → `tech-research` |
+| `decision-to-triad.py` | UserPromptSubmit | — | Детекция РЕШЕНИЙ/ИДЕЙ → роутинг через Фабрику (`triad-factory`, Q1-Q6) |
+| `knowledge-cache-reminder.py` | PostToolUse | WebSearch\|WebFetch | Напоминание сохранить в кеш: Architecture, 1С или Tech |
+| `factory-enforcer.py` | PostToolUse | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация артефактов |
 | `search-optimizer.py` | PreToolUse | Bash | Оптимизация параметров Search API |
 | `task-enforcer.py` | Stop | — | Блокировка без выполнения mandatory задач |
+| `git-commit-enforcer.py` | Stop | — | Блокировка без коммита изменений в `.claude/` |
 | `ralph_wiggum_stop.py` | Stop | — | Контроль итеративного цикла Ralph |
 
-### Skills (7 шт.) — КАК / ЧТО
+### Skills (8 шт.) — КАК / ЧТО
 
 | Skill | Тип | Домен | Назначение |
 |-------|-----|-------|-----------|
+| `architecture-research` | Доменный | Architecture | Архитектурные решения: cache/ (факты) + adr/ (решения, ADR формат) |
 | `1c-doc-research` | Доменный | 1С | Исследование 1С: 5 фаз, кеш знаний (8 категорий), атрибуция |
 | `tech-research` | Доменный | RAG/ML/Python | Исследование технологий: 5 фаз, кеш знаний (7 категорий) |
 | `doc-to-skill` | Процедурный | — | Конвертер документации в SKILL.md |
@@ -121,23 +124,35 @@ description: "Используй этот скилл для понимания �
 ПОЛЬЗОВАТЕЛЬ: "давай создадим новый домен для DevOps"
      │
      ▼
-[КОГДА] decision-to-triad.py (UserPromptSubmit)
+[КОГДА] decision-to-triad.py (UserPromptSubmit)          ← ВХОД
      │  Keyword scoring: "давай создадим" + "новый домен" → strong signal
      │  → systemMessage: "Прогони через ФАБРИКУ ТРИАДЫ (skill triad-factory)"
      ▼
-[КАК] Skill: triad-factory (Фабрика, ШАГ 1-5)
+[КАК] Skill: triad-factory (Фабрика, ШАГ 1-3)
      │  Q1=Да → Hook   Q2=Да → Skill   Q3=Да → MCP
      │  Q4=Да → Cache  Q5=Да → Enforcer
      │  ФОРМУЛА: Hook + Skill + MCP + Cache + Enforcer
      ▼
-[ЧЕМ] Claude создаёт артефакты (Write/Edit + MCP):
+[ЧЕМ] Claude создаёт артефакты (Write):
      │  skills/devops-research/SKILL.md
-     │  skills/devops-research/cache/_index.json
-     │  DEVOPS_TERMS в research-task-detector.py
-     │  DEVOPS_SIGNALS в knowledge-cache-reminder.py
-     │  settings.json, MEMORY.md обновлены
+     │  hooks/devops-detector.py
      ▼
-ВЕРИФИКАЦИЯ → echo '{"prompt":"как работает helm?"}' | python detector
+[КОГДА] factory-enforcer.py (PostToolUse:Write)           ← СЕРЕДИНА
+     │  Обнаружена запись в .claude/hooks/ или .claude/skills/
+     │  → add_task("ШАГ 4: Зарегистрировать") в hook-todos.json
+     │  → add_task("ШАГ 5: Верифицировать") в hook-todos.json
+     │  → systemMessage: "Выполни ШАГ 4 + ШАГ 5"
+     ▼
+[КАК] Claude выполняет ШАГ 4-5:
+     │  settings.json, MEMORY.md, triad SKILL.md обновлены
+     │  echo '{"prompt":"..."}' | python hook.py → тест
+     ▼
+[КОГДА] task-enforcer.py (Stop)                           ← ВЫХОД
+     │  Проверка hook-todos.json: pending tasks?
+     │  → Есть → exit(2) BLOCK
+     │  → Нет  → exit(0) ALLOW
+     ▼
+ОТВЕТ ПОЛЬЗОВАТЕЛЮ
 ```
 
 ### Pipeline 4: Stop Enforcement
@@ -175,16 +190,19 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── research-task-detector.py   (ВОПРОСЫ → skill routing)
 │   ├── decision-to-triad.py       (РЕШЕНИЯ → triad-factory Q1-Q5)
 │   ├── knowledge-cache-reminder.py
+│   ├── factory-enforcer.py        (ШАГ 4-5 Фабрики: mandatory tasks)
 │   ├── task-enforcer.py
+│   ├── git-commit-enforcer.py   (Stop: блокировка без коммита)
 │   ├── search-optimizer.py
 │   └── ralph_wiggum_stop.py
 ├── skills/
+│   ├── architecture-research/   (+ cache/ + adr/ — 3-tier: факты, решения, процедура)
 │   ├── 1c-doc-research/         (+ cache/ — 8 категорий, 1С-домен)
 │   ├── tech-research/           (+ cache/ — 7 категорий, RAG/ML/Python)
 │   ├── doc-to-skill/            (+ references/)
 │   ├── pdf-knowledge/
 │   ├── create-hook/
-│   ├── triad-factory/           (ПРОГРАММА: Фабрика ШАГ 1-5)
+│   ├── triad-factory/           (ПРОГРАММА: Фабрика ШАГ 1-6, Q1-Q6)
 │   └── hooks-skills-mcp-triad/  (ЗНАНИЕ: этот файл)
 ├── cache/
 │   └── hook-todos.json          (задачи от хуков)
@@ -196,7 +214,8 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 ### Коммуникация между хуками
 
 Хуки общаются через `hook-todos.json`:
-- **knowledge-cache-reminder** создаёт задачу → **task-enforcer** читает и блокирует stop
+- **knowledge-cache-reminder** создаёт задачу (кеш) → **task-enforcer** блокирует stop
+- **factory-enforcer** создаёт задачу (ШАГ 4-5) → **task-enforcer** блокирует stop
 - Файл защищён file lock (Windows msvcrt / Unix fcntl)
 - Atomic writes предотвращают corruption
 

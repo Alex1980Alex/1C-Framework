@@ -1,464 +1,307 @@
-# Архитектура фреймворка
+# Architecture Overview
 
-## Обзор
+## PDF Vector & Graph Framework
 
-PDF Vector & Graph Framework построен по принципу **Provider Pattern** с **Dependency Injection**. Все ключевые компоненты определяют абстрактные интерфейсы (ABC), а конкретные реализации подключаются через фабричные функции на основе конфигурации.
+A framework for intelligent PDF document processing using vector databases (semantic search, RAG) and knowledge graphs (entity relations). Built with Python, LangChain, LangGraph, and FastAPI.
 
-## Слои архитектуры
+---
+
+## Architecture Layers
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    Интерфейсный слой                         │
-│           CLI  │  REST API  │  MCP Server                    │
-├──────────────────────────────────────────────────────────────┤
-│                    Слой оркестрации                          │
-│  Components (DI) │ SearchManager │ RAG Agent │ Evaluation    │
-├──────────────────────────────────────────────────────────────┤
-│                    Слой бизнес-логики                        │
-│  Loader │ Pipeline │ Indexer │ Chains │ Tools │ Reranking    │
-├──────────────────────────────────────────────────────────────┤
-│                    Слой хранения                             │
-│         ChromaDB (Vector)  │  NetworkX (Graph)               │
-├──────────────────────────────────────────────────────────────┤
-│                    Инфраструктурный слой                     │
-│  Embeddings │ Cache (3 types) │ Logger │ Metrics │ Config    │
-└──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                        Interface Layer                                │
+│        CLI (Typer)  │  REST API (FastAPI)  │  MCP Server              │
+├───────────────────────────────────────────────────────────────────────┤
+│                      Orchestration Layer                              │
+│  Components (DI) │ SearchManager │ RAG Agent │ Multi-Agent │ DSPy     │
+├───────────────────────────────────────────────────────────────────────┤
+│                      Business Logic Layer                             │
+│  Loaders │ Pipeline │ Indexer │ Chains │ Reranking │ Evaluation       │
+├───────────────────────────────────────────────────────────────────────┤
+│                        Storage Layer                                  │
+│  Qdrant (Vector+BM25) │ FTS5 (BM25 fallback) │ NetworkX (Graph)      │
+├───────────────────────────────────────────────────────────────────────┤
+│                      Infrastructure Layer                             │
+│  Embeddings │ Cache (3 types) │ Observability │ Config │ Analytics    │
+├───────────────────────────────────────────────────────────────────────┤
+│                     Claude Code Integration                           │
+│  Hooks (12) │ Skills (9) │ MCP Tools (12) │ Ralph Wiggum │ Triad     │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-## Ключевые компоненты
+## Core Design Principles
 
-### Components (DI-контейнер)
+- **Provider Pattern** — all stores extend abstract base classes (`*/base.py`)
+- **Dependency Injection** — `Components` class assembles all providers
+- **Async-first** — all I/O is `async`, sync libs wrapped with `asyncio.to_thread()`
+- **Pydantic contracts** — data models in `schemas/` as single source of truth
+- **Configuration** — `pydantic-settings` with `__` env delimiter
 
-`src/api/dependencies/components.py` — центральная точка сборки всех компонентов.
+---
+
+## Key Components
+
+### Components (DI Container)
+
+[components.py](../../src/api/dependencies/components.py) — central assembly point:
 
 ```python
 class Components:
-    loader: BaseLoader              # Загрузчик PDF
-    pipeline: ProcessingPipeline    # Обработка текста (recursive / semantic splitter)
-    embedding_engine: BaseEmbeddingEngine  # Генерация эмбеддингов
-    vector_store: BaseVectorStore   # Векторное хранилище
-    graph_store: BaseGraphStore     # Графовое хранилище
-    indexer: DocumentIndexer        # Оркестратор индексации
-    search_manager: SearchManager   # Маршрутизатор поиска (vector, graph, hybrid, mmr, two_stage)
-    context_generator: ContextGenerator  # Контекстуальный ретривал (Phase 3.1)
-    eval_runner: EvalRunner         # Бенчмарк-раннер (Phase 4)
+    loader: BaseLoader              # PDF loading (Hybrid/PyMuPDF/Docling)
+    pipeline: ProcessingPipeline    # Splitting, cleaning, metadata
+    embedding_engine: EmbeddingEngine  # E5 multilingual (1024d)
+    vector_store: QdrantVectorStore # Dense + sparse vectors
+    graph_store: NetworkXGraphStore # Knowledge graph
+    indexer: DocumentIndexer        # Orchestrates indexing
+    search_manager: SearchManager   # Routes to strategies
+    bm25_store: BM25Store          # FTS5 lexical search
 ```
 
-Зарегистрированные стратегии поиска:
+### Search Strategies
 
-| Стратегия | Класс | Описание |
-|-----------|-------|----------|
-| `vector` | `VectorSearchStrategy` | Cosine similarity через bi-encoder |
-| `graph` | `GraphSearchStrategy` | Поиск по графу сущностей |
-| `hybrid` | `HybridSearchStrategy` | Vector + Graph с RRF-слиянием |
-| `mmr` | `MMRSearchStrategy` | Maximal Marginal Relevance (баланс релевантность/разнообразие) |
-| `two_stage` | `TwoStagePipeline` | Двухэтапный пайплайн: broad recall → precise selection |
+| Strategy | Class | Description |
+|----------|-------|-------------|
+| `vector` | `VectorSearchStrategy` | Cosine similarity via bi-encoder |
+| `bm25` | `BM25SearchStrategy` | FTS5 lexical search (5-14ms) |
+| `hybrid` | `HybridSearchStrategy` | Qdrant native RRF (dense + BM25 sparse) |
+| `graph` | `GraphSearchStrategy` | Entity graph traversal |
+| `mmr` | `MMRSearchStrategy` | Maximal Marginal Relevance |
+| `two_stage` | `TwoStagePipeline` | Broad recall + precise reranking |
+| `section` | Section-first pipeline | BM25 section detection + hybrid within section |
+| `bm25` (FTS5) | `BM25SearchStrategy` | FTS5 fallback with pymorphy3 lemmatization |
+| `raptor` | `RAPTORSearchStrategy` | Tree-based recursive summarization |
+| `web` | `WebSearchStrategy` | External web search via MCP |
+| `graphrag_auto` | `GraphRAGAutoStrategy` | Auto-select local/global/lightrag |
+| `lightrag` | `LightRAGStrategy` | Entity/relation embedding search |
 
-Дополнительные возможности поиска:
-- **Reranking** (Phase 1.1) — CrossEncoder переранжирование (`BAAI/bge-reranker-v2-m3`)
-- **Query Expansion** (Phase 2.3) — расширение запросов (LLM / synonyms / HyDE)
-- **FlashRank** (Phase 3.2) — выбор по маргинальной полезности в пределах токен-бюджета
+### Search Pipelines
 
-Все три интерфейса (CLI, API, MCP) используют `Components` как единую точку доступа к функциональности.
+- **Turbo Pipeline** — rule-based fast classify (0ms), BM25 early termination for simple queries
+- **Section-Aware Pipeline** — two-pass: BM25 detects dominant section, hybrid searches within it
+- **Hierarchical Pipeline** — section-first with breadcrumb context
 
-### SearchManager (Маршрутизатор стратегий)
+### Reranking
 
-```python
-search_manager = SearchManager(agent_settings=..., search_settings=...)
-search_manager.register_strategy("vector", VectorSearchStrategy(...))
-search_manager.register_strategy("graph", GraphSearchStrategy(...))
-search_manager.register_strategy("hybrid", HybridSearchStrategy(...))
-search_manager.register_strategy("mmr", MMRSearchStrategy(...))
-search_manager.register_strategy("two_stage", TwoStagePipeline(...))
+| Reranker | Config | Latency |
+|----------|--------|---------|
+| LLM (Claude Sonnet) | `AGENT__RERANKER_TYPE=llm` | 1-3s |
+| CrossEncoder | `AGENT__RERANKER_TYPE=cross_encoder` | 60-120s |
+| FlashRank | Token-budget selection | <1s |
+| ColBERT | Late interaction MaxSim | ~2s |
 
-# Единый интерфейс для всех потребителей
-response = await search_manager.search(query="...", strategy="hybrid", k=5)
+---
 
-# С reranking и query expansion
-response = await search_manager.search(
-    query="...", strategy="vector", k=5,
-    rerank=True, expand_query=True,
-)
-```
+## Data Flows
 
-### Поток данных
-
-#### Индексация
+### Indexing
 
 ```
-PDF файл
-  → PyMuPDFLoader.load()              # ProcessedDocument (raw_text + metadata)
-  → ProcessingPipeline.process()      # Splitter (recursive ИЛИ semantic) → list[DocumentChunk]
-  │   ├─ RecursiveTextSplitter        #   фиксированный размер + overlap
-  │   └─ SemanticTextSplitter         #   разбиение по семантическим границам (Phase 2.2)
-  → MetadataEnricher.enrich_chunks()  # структурированные метаданные (Phase 1.3)
-  → ContextGenerator.enrich_chunks()  # LLM-контекст для каждого чанка (Phase 3.1, опционально)
-  │   chunk.metadata["contextual_content"] = context + content
-  → DocumentIndexer.index_chunks()    # embed_batch → add_documents
-  → ChromaDB                          # персистентное хранение
+PDF file
+  → Hybrid Loader (PyMuPDF4LLM + fitz tables + Docling tables + Vision OCR)
+  → ProcessingPipeline (split + clean + metadata + page numbers)
+  → ImageExtractor (Claude Vision descriptions)
+  → EmbeddingEngine (E5 multilingual, "passage: " prefix)
+  → Qdrant (dense vectors + BM25 sparse vectors)
+  → FTS5 (multi-column: title 10x, body 1x)
+  → NetworkX (entity extraction + relation building)
 ```
 
-Семантический сплиттер (Phase 2.2) определяет точки разрыва по косинусному
-сходству между последовательными предложениями и формирует когерентные чанки
-с учётом ограничений `min_chunk_size` / `max_chunk_size`.
-
-Contextual Retrieval (Phase 3.1) генерирует для каждого чанка короткое описание
-его места в документе через LLM. Поле `contextual_content` используется при
-создании эмбеддинга, что улучшает точность поиска на 20-30%.
-
-#### Поиск (Vector)
+### Search
 
 ```
-Текстовый запрос
-  → EmbeddingEngine.embed_text()   # query_embedding
-  → VectorStore.search()           # cosine similarity → top-k
-  → list[SearchResult]             # chunk + score + source
+Query
+  → Fast Classify (rule-based, 0ms)
+  → BM25 early check (simple queries → 5-14ms)
+  → Qdrant hybrid (dense + sparse RRF)
+  → Graph merge (if complex query)
+  → LLM Reranker (Claude Sonnet via Z.AI)
+  → Results with section context + page numbers
 ```
 
-#### Поиск (Hybrid)
+### RAG Agent (LangGraph)
 
 ```
-Текстовый запрос
-  ├→ VectorSearch → ranked results (vector)
-  └→ GraphSearch  → ranked results (graph)
-       ↓
-  RRF Merge (Reciprocal Rank Fusion)
-       ↓
-  list[SearchResult] (merged + re-scored)
+Question
+  → Query Analysis (classify + strategy selection)
+  → Search (via SearchManager)
+  → Relevance Grading (parallel, with Ralph self-correction)
+  → Hallucination Check (grounded/not_grounded)
+  → Answer Generation (with section references)
+  → Enrichment Loop (FAIR-RAG completeness check)
 ```
 
-#### RAG (вопрос-ответ)
+---
 
-```
-Вопрос
-  → RAG Agent: analyze_query()     # Классификация + выбор стратегии
-  → RAG Agent: execute_search()    # SearchManager.search()
-  → RAG Agent: evaluate_results()  # Проверка релевантности
-  → RAG Agent: generate_answer()   # LLM + контекст → ответ с источниками
-```
+## Storage
 
-#### Поиск (Two-Stage)
+### Qdrant (Primary Vector Store)
 
-Двухэтапный пайплайн (Phase 3.3): широкий охват на первом этапе, точный отбор на втором.
+- Dense vectors: 1024 dimensions (E5 multilingual)
+- Sparse vectors: BM25 with IDF modifier
+- Named vectors: `dense` + `bm25`
+- Hybrid search: native RRF (dense + BM25 prefetch)
+- IDs: UUID5 from deterministic string IDs
 
-```
-Текстовый запрос
-  ↓
-  [Этап 1: Bi-Encoder — Быстрый, Широкий]
-    stage1_strategy.search(k=stage1_k)        # top 50 (hybrid / vector)
-  ↓
-  [Этап 2: Cross-Encoder — Точный]
-    CrossEncoderReranker.rerank(stage2_rerank_k)  # top 20
-    ↓ (опционально)
-    MMR diversity filtering                       # убрать дубли
-    ↓ (опционально)
-    FlashRank token-budget selection              # маргинальная полезность
-  ↓
-  Финальные результаты (top-k)
-```
+### FTS5 (BM25 Fallback)
 
-Конфигурируется через `TwoStageSettings`: выбор стратегии первого этапа,
-количество кандидатов, пороги MMR и FlashRank.
+- SQLite virtual table with multi-column schema
+- Columns: title (weight 10x) + body (weight 1x)
+- Lemmatization: pymorphy3 for Russian morphology
+- Section titles stored as bold markdown (`**5.8.Справочники**`)
 
-#### Evaluation (Phase 4)
+### NetworkX (Graph)
 
-Оценка качества поиска и RAG через бенчмарки.
+- Entities: 3166 nodes with typed properties
+- Relations: 3528 edges with typed connections
+- LightRAG: entity/relation embeddings in Qdrant `graph_embeddings` collection
+- Graph batch mode for construction
 
-```
-EvalDataset (JSON: запросы + ground-truth chunk IDs)
-  ↓
-  EvalRunner.run(dataset, strategy, k)
-  ├─ Для каждого test case:
-  │   ├─ SearchManager.search(query, strategy)   # получить результаты
-  │   ├─ Ranking-метрики:
-  │   │   Precision@k, Recall@k, MRR, nDCG@10, MAP
-  │   └─ RAG Triad (опционально, через RAGEvaluator):
-  │       ├─ Context Relevance   (LLM-as-a-Judge)
-  │       ├─ Groundedness        (LLM-as-a-Judge)
-  │       └─ Answer Relevance    (LLM-as-a-Judge)
-  ↓
-  EvalReport
-    ├─ Агрегированные метрики (mean precision, recall, mrr, ndcg, map)
-    ├─ Латентность (avg, p95)
-    └─ Детализация по каждому запросу
-```
+---
 
-## Абстрактные базовые классы
+## Configuration
 
-| ABC | Файл | Абстрактные методы |
-|-----|------|--------------------|
-| `BaseLoader` | `loaders/base.py` | `load()`, `load_batch()`, `supported_extensions()` |
-| `BaseEmbeddingEngine` | `embeddings/engine.py` | `embed_text()`, `embed_batch()`, `get_dimensions()`, `get_model_name()` |
-| `BaseVectorStore` | `vector_store/base.py` | `initialize()`, `add_documents()`, `search()`, `search_mmr()`, `delete()`, `get_by_ids()`, `count()`, `clear()` |
-| `BaseGraphStore` | `graph_store/base.py` | `initialize()`, `add_entity()`, `add_relation()`, `get_entity()`, `find_entities()`, `get_neighbors()`, `find_path()`, `query()`, `get_statistics()`, `delete_entity()`, `clear()` |
-
-## Фабричные функции
-
-Каждый модуль с провайдерами имеет фабричную функцию в `__init__.py`:
-
-```python
-# loaders/__init__.py
-def get_loader(settings: PDFSettings) -> BaseLoader
-
-# embeddings/__init__.py
-def get_embedding_engine(settings: EmbeddingSettings) -> BaseEmbeddingEngine
-def get_embedding_cache(**kwargs) -> EmbeddingCache  # Phase 11
-
-# vector_store/__init__.py
-def get_vector_store(settings: VectorStoreSettings) -> BaseVectorStore
-
-# graph_store/__init__.py
-def get_graph_store(settings: GraphStoreSettings) -> BaseGraphStore
-
-# agents/__init__.py
-def get_llm_cache(**kwargs) -> LLMResponseCache  # Phase 11
-
-# processing/__init__.py
-def get_document_cache(**kwargs) -> DocumentProcessingCache  # Phase 11
-
-# observability/__init__.py
-def get_tracer(tracer_type, **kwargs) -> BaseTracer  # Phase 11
-def get_metrics_collector() -> MetricsCollector  # Phase 11
-
-# multitenancy/__init__.py
-def get_tenant_store_manager(**kwargs) -> TenantVectorStoreManager  # Phase 12
-def get_tenant_graph_manager(**kwargs) -> TenantGraphManager  # Phase 12
-
-# api/auth/__init__.py
-def get_jwt_handler(**kwargs) -> JWTHandler  # Phase 12
-
-# processing/__init__.py
-def get_version_manager(**kwargs) -> DocumentVersionManager  # Phase 12
-```
-
-Фабрика читает `provider` из настроек и создаёт соответствующую реализацию.
-
-## Модели данных (Pydantic)
-
-### Документы
-
-```
-DocumentMetadata     → Метаданные PDF (автор, название, страницы)
-DocumentChunk        → Фрагмент текста с привязкой к документу
-ProcessedDocument    → Полный документ: метаданные + текст + чанки
-SearchResult         → Результат поиска: чанк + оценка + источник
-SearchResponse       → Ответ поиска: запрос + результаты + время
-```
-
-### Сущности
-
-```
-Entity               → Именованная сущность (имя, тип, свойства)
-Relation             → Связь между сущностями (тип, направление)
-SubGraph             → Подграф: сущности + связи вокруг центра
-ExtractionResult     → Результат извлечения из одного чанка
-```
-
-### Ответы
-
-```
-IndexResult          → Результат индексации одного документа
-PipelineResult       → Результат обработки пакета документов
-```
-
-### Кэши и метрики (Phase 11-12)
-
-```
-CacheStats           → Статистика кэша (hits, misses, total, hit_rate)
-CachedDocument       → Кэшированный документ (file_hash, chunks, embeddings, metadata)
-Span                 → Единица трассировки (name, duration_ms, status, attributes)
-SpanStatus           → Статус спана (ok, error)
-TenantMetadata       → Метаданные tenant (tenant_id, collection_name, created_at, doc_count)
-TokenPayload         → JWT токен (tenant_id, role, exp, iat)
-VersionInfo          → Информация о версии документа (version_id, file_hash, chunk_count)
-```
-
-## Конфигурация
-
-Иерархическая конфигурация через `pydantic-settings`:
+Hierarchical via `pydantic-settings` (`src/pdf_framework/config/`):
 
 ```
 Settings (root)
-├── EmbeddingSettings              # провайдер, модель, кэш
-├── VectorStoreSettings            # провайдер, коллекция, метрика расстояния
-├── GraphStoreSettings             # провайдер, Neo4j / NetworkX
-├── PDFSettings                    # загрузчик, сплиттер (recursive / semantic), размеры чанков
-├── AgentSettings                  # LLM, reranker, checkpointer
-├── SearchSettings                 # гибридные веса, MMR, query expansion, FlashRank
-├── ContextualRetrievalSettings    # Phase 3.1: LLM-контекст для чанков
-├── TwoStageSettings               # Phase 3.3: двухэтапный пайплайн
-├── ObservabilitySettings          # Phase 11: tracer, trace_dir
-├── CacheSettings                  # Phase 11: embedding_ttl, llm_ttl, prompt_caching
-├── AuthSettings                   # Phase 12: enabled, jwt_secret, jwt_algorithm
-├── MCPServerSettings
-└── APISettings
+├── EmbeddingSettings        # model, backend (torch/onnx/openvino)
+├── VectorStoreSettings      # provider (qdrant/chroma), collection
+├── GraphStoreSettings       # provider (networkx/neo4j)
+├── PDFSettings              # loader, splitter, chunk sizes
+├── AgentSettings            # LLM, reranker, checkpointer
+├── SearchSettings           # hybrid weights, MMR, BM25 threshold
+├── InfrastructureSettings   # rate limits, batch sizes
+├── ObservabilitySettings    # tracer, metrics
+├── CacheSettings            # embedding/llm/document TTLs
+├── AuthSettings             # JWT, RBAC
+├── FeaturesSettings         # feature flags
+├── ExternalSettings         # API keys, proxy URLs
+└── APISettings / MCPServerSettings
 ```
 
-Ключевые параметры новых настроек:
+Environment variables: `EMBEDDING__MODEL=intfloat/multilingual-e5-large`, `VECTOR_STORE__PROVIDER=qdrant`
 
-| Настройка | Параметр | По умолчанию | Описание |
-|-----------|----------|--------------|----------|
-| `SearchSettings` | `mmr_diversity_lambda` | `0.5` | Баланс релевантность/разнообразие (0..1) |
-| `SearchSettings` | `query_expansion_enabled` | `false` | Включить расширение запросов |
-| `SearchSettings` | `query_expansion_method` | `llm` | Метод: `llm` / `synonyms` / `hyde` |
-| `SearchSettings` | `flashrank_enabled` | `false` | FlashRank с токен-бюджетом |
-| `ContextualRetrievalSettings` | `enabled` | `false` | Генерация LLM-контекста при индексации |
-| `ContextualRetrievalSettings` | `max_context_tokens` | `128` | Максимум токенов контекста |
-| `TwoStageSettings` | `enabled` | `false` | Включить двухэтапный поиск |
-| `TwoStageSettings` | `stage1_k` | `50` | Кандидатов на первом этапе |
-| `TwoStageSettings` | `stage1_strategy` | `hybrid` | Стратегия первого этапа |
-| `TwoStageSettings` | `stage2_rerank_k` | `20` | Кандидатов после reranking |
-| `TwoStageSettings` | `stage2_use_mmr` | `true` | MMR-фильтрация на втором этапе |
-| `TwoStageSettings` | `stage2_use_flashrank` | `false` | FlashRank на втором этапе |
+---
 
-Вложенные настройки задаются через `__` разделитель:
-`EMBEDDING__PROVIDER=local`, `VECTOR_STORE__DISTANCE_METRIC=cosine`, `TWO_STAGE__STAGE1_K=100`.
+## Claude Code Integration
 
-## Async-first
+The framework extends Claude Code CLI with a **Hooks + Skills + MCP Triad**:
 
-Все I/O операции асинхронны:
-- Загрузка PDF — `asyncio.to_thread()` (PyMuPDF синхронный)
-- Эмбеддинги — `asyncio.to_thread()` (sentence-transformers синхронный)
-- Векторное хранилище — нативный async ChromaDB
-- Графовое хранилище — обёртка над синхронным NetworkX
-- REST API — FastAPI (нативный async)
-- LangChain/LangGraph — `ainvoke()` для всех вызовов LLM
+### Structure (`.claude/`)
 
-## Observability & Caching (Phase 11)
+| Component | Count | Contents |
+|-----------|-------|----------|
+| **Hooks** | 12 | Ralph Wiggum (2), Guards (3), Domain routing (3), Enforcement (4) |
+| **Skills** | 9 | Procedural (4), Knowledge with cache (4), Project-specific (1) |
 
-### Три уровня кэширования
+All hooks and skills live in `.claude/` within the project directory.
 
-| Кэш | Бэкенд | TTL | Ключ |
-|-----|--------|-----|-----|
-| **Embedding Cache** | SQLite | 30 дней | SHA-256(text + model) |
-| **LLM Response Cache** | SQLite | 1 час | SHA-256(model + messages + temperature) |
-| **Document Cache** | Pickle | Бессрочно | SHA-256(file contents) |
+### Ralph Wiggum Autonomous Loop
 
-### Трассировка (Tracing)
+Prevents premature task completion:
+- **Activator** detects complex tasks, sets iteration limits (8-15)
+- **Stop hook** blocks exit until criteria are met
+- **5 tiers**: Factory, Phase, Brainstorm, Research, Multi-step
+- **Safety**: 2-hour staleness timeout, max iterations cap
 
-Поддержка нескольких бэкендов:
-- **JsonFileTracer** — JSON Lines файлы с ежедневной ротацией
-- **LangSmithTracer** — интеграция с LangSmith Dashboard
-- **OpenTelemetryTracer** — экспорт в Jaeger/Zipkin (опционально)
+### Self-Correcting LLM Calls
 
-### Metrics Dashboard
+All 13 LLM integration points use feedback-driven retries:
+- Max 2 attempts, pass failure reason to next attempt
+- Validators: format, length, language, JSON structure, identity
 
-API endpoints:
+---
+
+## Implemented Phases (v1.5.0)
+
+All 43 phases complete:
+
+| Phase | Version | Feature |
+|-------|---------|---------|
+| 1-4 | v0.2-0.5 | Reranking, MMR, Contextual Retrieval, Evaluation |
+| 5-14 | — | Self-RAG, GraphRAG, Parent-Child, Adaptive, Conversational, Layout, Observability, Multi-tenant, RAPTOR/HyDE, UI |
+| 15 | v0.6.0 | Image Understanding (Claude Vision) |
+| 16 | v0.7.0 | BM25 Lexical Search + Hybrid Fusion |
+| 17 | v0.8.0 | Semantic Search Cache |
+| 18 | v0.9.0 | Incremental Indexing (deterministic IDs, resume) |
+| 19 | v0.10.0 | Deep Research Agent |
+| 20 | v0.11.0 | AutoRAG Optimization |
+| 21 | v0.12.0 | RAGAS Evaluation |
+| 22 | v0.13.0 | Self-Learning Feedback |
+| 23 | v0.14.0 | Production Hardening (Qdrant, PgVector, RBAC) |
+| 24 | v0.15.0 | Qdrant Native BM25 + FTS5 Fallback |
+| 25 | v0.16.0 | LLM Reranker (Claude via Z.AI) |
+| 26 | v0.17.0 | Turbo Search Pipeline |
+| 27 | v0.18.0 | Section-Aware Search |
+| 28 | v0.19.0 | Resilient Hybrid Loader |
+| 29 | v0.20.0 | Post-Indexing + Hierarchical Search |
+| 30 | v0.21.0 | Hierarchical RAG |
+| 31 | v0.23.0 | GigaEmbeddings (BGE-M3) |
+| 32 | v0.24.0 | Multi-Document KB |
+| 33 | v0.25.0 | Analytical RAG Agent |
+| 34 | v0.26.0 | DSPy Prompt Optimization |
+| 35 | v0.27.0 | ColBERT Late Interaction |
+| 36 | v0.28.0 | Research Agent v2 (plan-tree DAG) |
+| 37 | v0.29.0 | MCP + External Sources |
+| 38 | v0.22.0 | LightRAG Mode |
+| 39 | v0.30.0 | Multi-Agent Orchestration |
+| 40 | v0.31.0 | Enterprise Analytics |
+| 41 | v0.32.0 | Section-Referenced Answers |
+| 42 | v0.33.0 | Answer Enrichment Loop (FAIR-RAG) |
+| 43 | v0.33.1 | Framework Integration (ONNX/OpenVINO, LangGraph checkpointing) |
+
+---
+
+## Project Structure
+
 ```
-GET  /metrics          # JSON метрики
-GET  /metrics/html     # HTML дашборд
-POST /metrics/reset    # Сброс счётчиков
-```
-
-CLI команды:
-```bash
-pdf-framework cache stats                    # Статистика всех кэшей
-pdf-framework cache clear                    # Очистить все кэши
-pdf-framework cache clear --type embedding   # Очистить конкретный кэш
-```
-
-### Prompt Caching
-
-Anthropic prompt caching для системных промптов > 1024 токенов:
-- Автоматическое добавление `cache_control` в SystemMessage
-- Логирование экономии токенов из `response.usage`
-- Graceful fallback при отсутствии поддержки
-
-## Multi-Tenancy & Production Hardening (Phase 12)
-
-### Tenant Isolation
-
-Каждый tenant получает изолированное хранилище данных:
-
-| Компонент | Изоляция | Хранилище |
-|-----------|----------|-----------|
-| **Vector Store** | Отдельная ChromaDB коллекция | `tenant_{sanitized_id}` |
-| **Graph Store** | Фильтрация по `tenant_id` атрибуту | `data/graph_db/tenant_{id}.json` |
-| **Document Cache** | Префикс по tenant_id | `data/cache/documents/{tenant}/{hash}.pkl` |
-
-### JWT Authentication
-
-Аутентификация через JWT токены:
-
-```python
-# Создать токен
-token = jwt_handler.create_token(tenant_id="myorg", role="editor")
-
-# FastAPI dependency
-from src.api.auth import TenantId
-
-async def my_endpoint(tenant_id: TenantId):
-    # tenant_id извлекается из Bearer токена
-    store = await get_tenant_store_manager().get_store(tenant_id)
-```
-
-### RBAC (Role-Based Access Control)
-
-Три роли с разными правами:
-
-| Роль | Права |
-|------|-------|
-| **viewer** | search:read, ask:read, documents:get, stats:read |
-| **editor** | viewer + documents:index, documents:delete, documents:update |
-| **admin** | editor + tenants:create/delete, users:manage, metrics:read |
-
-```python
-from src.api.auth import require_role, TokenPayloadDep
-
-@require_role("editor")
-async def upload_document(payload: TokenPayloadDep):
-    # Требуется роль editor или выше
-    pass
+src/
+  pdf_framework/           # Core library
+    config/                # Pydantic settings (12 modules)
+    loaders/               # PDF loading (hybrid, pymupdf4llm, docling)
+    processing/            # Splitting, cleaning, metadata, pipeline
+    embeddings/            # Embedding providers + cache
+    vector_store/          # Vector DB (qdrant, chroma, pgvector)
+    graph_store/           # Graph DB + LightRAG
+    search/                # Strategies, pipelines, reranking, BM25
+    agents/                # RAG, analytical, research, multi-agent
+    chains/                # QA chains, enrichment
+    tools/                 # LangChain tools
+    schemas/               # Pydantic models
+    evaluation/            # RAGAS, benchmarks
+    feedback/              # Self-learning store
+    callbacks/             # Token tracking middleware
+    indexing/              # Batch indexing, dedup
+    analytics/             # QueryTracker, CostTracker, AuditLogger
+    knowledge_base/        # Collections, document registry
+    optimization/          # DSPy modules, MIPROv2, metrics
+    multitenancy/          # Tenant store, tenant graph
+    utils/                 # ID generator, helpers
+  mcp_server/              # MCP server (12 tools)
+  api/                     # REST API (FastAPI)
+    routes/                # 14 routers: search, documents, graph, analytics, toc, auth, cache, chat, collections, feedback, health, metrics, openai_compat, optimization
+    auth/                  # JWT, RBAC
+    middleware/             # Rate limiting, token tracking
+    dependencies/          # Components DI
+  cli/                     # CLI interface (Typer)
+  ui/                      # Streamlit UI
 ```
 
-### Document Versioning
+---
 
-Отслеживание версий с возможностью отката:
+## Architecture Documents
 
-```python
-from src.pdf_framework.processing import get_version_manager
+| Document | Description |
+|----------|-------------|
+| [Integration Structure](core-framework-separation.md) | All 12 hooks + 9 skills in `.claude/` |
+| [Triad Architecture](triad-architecture.md) | Hooks + Skills + MCP: when, how, and with what |
+| [Hooks Reference](hooks-reference.md) | All 12 hooks: events, matchers, logic, signals |
+| [Skills Reference](skills-reference.md) | All 9 skills: triggers, workflows, cache |
+| [Ralph Wiggum](ralph-wiggum.md) | Autonomous loop system + self-correcting LLM retries |
 
-version_mgr = get_version_manager()
+## See Also
 
-# Создать версию при индексации
-await version_mgr.create_version(doc_id, chunks, embeddings, metadata)
-
-# Откатиться к предыдущей версии
-chunks, embeddings, metadata = await version_mgr.rollback(doc_id)
-```
-
-### Health Checks
-
-Production-ready health checks для Kubernetes:
-
-```bash
-GET /health          # Полный статус с компонентами
-GET /health/ready    # Readiness probe
-GET /health/live     # Liveness probe
-```
-
-### CLI команды (Phase 12)
-
-```bash
-# Управление tenants
-pdf-framework tenant create myorg
-pdf-framework tenant list
-pdf-framework tenant delete myorg
-
-# Генерация JWT токенов
-pdf-framework auth token --tenant myorg --role editor
-
-# Health check
-curl http://localhost:8000/health
-```
-
-### Конфигурация (Phase 12)
-
-```ini
-# Phase 12: Multi-Tenancy
-AUTH__ENABLED=false
-AUTH__JWT_SECRET=change-me-in-production
-AUTH__JWT_ALGORITHM=HS256
-AUTH__TOKEN_EXPIRE_HOURS=24
-AUTH__DEFAULT_TENANT=default
-```
+- [Roadmap V3](../ROADMAP_V3.md) — full phase roadmap
+- [Usage Guide](../USAGE_GUIDE.md) — getting started
+- [API Documentation](../api/) — REST API reference
