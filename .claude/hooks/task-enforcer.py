@@ -19,13 +19,28 @@ import json
 import sys
 from pathlib import Path
 
-# Direct path to hook-todos.json (no imports, max reliability)
-CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
+# Resolve cache path: core_paths if available, else fallback
+def _find_cache_dir() -> Path:
+    try:
+        import os as _os
+        _this = _os.path.dirname(_os.path.abspath(__file__))
+        _user = _os.path.join(_os.path.expanduser("~"), ".claude", "hooks")
+        if _os.path.isdir(_os.path.join(_user, "shared")):
+            sys.path.insert(0, _user)
+        sys.path.insert(0, _this)
+        from shared.core_paths import get_cache_dir
+        return get_cache_dir()
+    except (ImportError, Exception):
+        return Path(__file__).resolve().parent.parent / "cache"
+
+
+CACHE_DIR = _find_cache_dir()
 TODOS_FILE = CACHE_DIR / "hook-todos.json"
 
 # Hook IDs whose pending tasks block stop
 MANDATORY_HOOKS = {
     "knowledge-cache-reminder-hook",
+    "factory-enforcer-hook",
 }
 
 
@@ -77,8 +92,8 @@ def main():
             f"[TASK-ENFORCER] {len(pending)} mandatory task(s) pending!\n\n"
             f"{tasks_str}\n\n"
             "Execute these tasks before stopping:\n"
-            "- Cache tasks: save research to "
-            ".claude/skills/1c-doc-research/cache/\n"
+            "- Cache tasks: save research to skills cache\n"
+            "- Factory tasks: update settings.json, registries, MEMORY.md\n"
             "- After completing ALL tasks, you may stop."
         )
 

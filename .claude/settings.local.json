@@ -104,7 +104,10 @@
       "Bash(gh api:*)",
       "WebFetch(domain:sajalsharma.com)",
       "WebFetch(domain:www.datacamp.com)",
-      "WebFetch(domain:rahulkolekar.com)"
+      "WebFetch(domain:rahulkolekar.com)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor: split triad skill into knowledge + program\n\nSeparate concerns:\n- triad-factory/SKILL.md — universal Factory algorithm \\(steps 1-5, Q1-Q5\\)\n- hooks-skills-mcp-triad/SKILL.md — concrete implementation \\(tables, pipelines\\)\n\nKnowledge changes independently from program.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(echo:*)"
     ]
   }
 }

@@ -127,6 +127,14 @@ WebSearch: "site:github.com [тема] stars:>100"
 WebSearch: "site:github.com [библиотека] examples [паттерн]"
 ```
 
+**Stack Overflow (проверенные ответы):**
+```
+WebSearch: "site:stackoverflow.com [тема] [библиотека] votes:10"
+WebSearch: "site:stackoverflow.com [ошибка] [библиотека] is:answer"
+```
+> **Ограничение:** `WebFetch` НЕ работает с stackoverflow.com (блокируют ботов).
+> Используй ТОЛЬКО `WebSearch` для поиска SO-ответов. Извлекай суть из сниппетов поисковой выдачи.
+
 **Papers (для алгоритмов):**
 ```
 WebSearch: "site:arxiv.org [алгоритм] [год]"

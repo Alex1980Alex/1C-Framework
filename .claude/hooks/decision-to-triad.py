@@ -6,13 +6,10 @@ Matcher: (none — fires on every user prompt)
 Purpose: Detect IDEAS and DECISIONS in chat conversation and route them
          through the Factory (Triad) for artifact creation.
 
-         This is the META-HOOK — it catches the conversation itself as an event.
-         When user discusses an idea ("давай сделаем", "нужно создать"),
-         this hook injects the Factory process (Q1-Q5 classification)
-         so the decision becomes an artifact, not just a chat message.
-
-         Different from research-task-detector.py which catches QUESTIONS
-         ("что такое", "как работает"). This hook catches ACTION/DECISION intent.
+         Uses two detection layers:
+         Layer A: Phrase matching (multi-word patterns like "давай сделаем")
+         Layer B: Fuzzy single-word matching via pymorphy3 + rapidfuzz
+                  (catches typos "удалть" and inflections "удалим")
 
 Timeout: 5s
 """
@@ -20,20 +17,53 @@ Timeout: 5s
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Core path resolution: find base/ + shared/ in user-level or project-level
+_HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
+sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
+
+# Lazy-load FuzzyMatcher (heavy imports: pymorphy3, rapidfuzz)
+_fuzzy_matcher = None
+
+
+def _get_fuzzy_matcher():
+    """Lazy-init fuzzy matcher with action verbs."""
+    global _fuzzy_matcher
+    if _fuzzy_matcher is None:
+        try:
+            from shared.fuzzy_match import FuzzyMatcher
+            _fuzzy_matcher = FuzzyMatcher(
+                keywords=[
+                    # Action verbs (will match all inflections + typos)
+                    "удалить", "создать", "добавить", "реализовать",
+                    "автоматизировать", "внедрить", "убрать", "очистить",
+                    "предотвратить", "блокировать", "развернуть",
+                    "переименовать", "переместить", "заменить",
+                ],
+                fuzzy_threshold=78,
+            )
+        except Exception:
+            _fuzzy_matcher = False  # Mark as failed, don't retry
+    return _fuzzy_matcher if _fuzzy_matcher is not False else None
 
 
 class DecisionToTriad(BaseHook):
     """Detect decisions/ideas in chat and route through Factory."""
 
-    # --- Decision/action intent keywords (Russian) ---
-    DECISION_KEYWORDS_RU = [
+    # --- Layer A: Multi-word phrase patterns (exact substring match) ---
+
+    DECISION_PHRASES_RU = [
         "давай сделаем", "давай реализуем", "давай создадим",
         "давай добавим", "давай внедрим", "давай автоматизируем",
         "нужно создать", "нужно добавить", "нужно реализовать",
         "нужно автоматизировать", "нужно внедрить",
+        "нужно удал", "нужно очист", "нужно убрать",
+        "удалить автоматически", "удалять автоматически",
+        "очистить автоматически",
         "решили что", "решено", "принято решение",
         "хочу чтобы", "хочу автоматизировать",
         "пусть срабатывает", "пусть автоматически",
@@ -41,10 +71,10 @@ class DecisionToTriad(BaseHook):
         "нужен новый", "создать новый",
         "должно быть", "должны быть", "должен быть",
         "всегда должно", "всегда должны",
+        "чтобы не повторялось",
     ]
 
-    # --- Decision/action intent keywords (English) ---
-    DECISION_KEYWORDS_EN = [
+    DECISION_PHRASES_EN = [
         "let's create", "let's implement", "let's add",
         "let's build", "let's automate",
         "we need to create", "we need to add",
@@ -53,8 +83,7 @@ class DecisionToTriad(BaseHook):
         "create a new", "add a new", "implement a new",
     ]
 
-    # --- Triad-specific terms (strong signal for Factory routing) ---
-    TRIAD_TERMS = [
+    TRIAD_PHRASES = [
         "хук для", "hook for", "новый хук", "новый hook",
         "create hook", "создай hook", "создай хук",
         "скилл для", "skill for", "новый скилл", "новый skill",
@@ -64,11 +93,10 @@ class DecisionToTriad(BaseHook):
         "кешировать", "добавить в кеш",
         "паттерн для", "добавь паттерн",
         "триада", "triad", "фабрика", "factory",
+        "чтобы больше не", "чтобы не повтор", "не допускать",
     ]
 
-    # --- Architecture/design terms (signal for Factory) ---
-    # Include inflected forms (accusative/genitive) for Russian
-    ARCHITECTURE_TERMS = [
+    ARCHITECTURE_PHRASES = [
         "новая фаза", "новую фазу", "new phase",
         "следующая фаза", "следующую фазу",
         "новый pipeline", "новый пайплайн",
@@ -81,7 +109,6 @@ class DecisionToTriad(BaseHook):
         "новый компонент", "новый модуль",
     ]
 
-    # --- Skip small/routine tasks (no Factory needed) ---
     SKIP_KEYWORDS = [
         "исправь", "поправь", "fix", "typo",
         "замени", "удали строку", "переименуй",
@@ -89,6 +116,9 @@ class DecisionToTriad(BaseHook):
         "запусти", "run", "test", "тест",
         "git status", "git log", "git diff",
         "коммит", "commit", "push",
+        # Brainstorm — handled by research-task-detector
+        "придумай", "предложи варианты",
+        "давай обсудим варианты", "какой подход выбрать",
     ]
 
     def execute(self, inp: HookInput) -> HookOutput | None:
@@ -103,8 +133,8 @@ class DecisionToTriad(BaseHook):
         if skip_score >= 2:
             return None
 
-        # --- Strong signal: triad-specific terms ---
-        triad_score = sum(1 for kw in self.TRIAD_TERMS if kw in prompt_lower)
+        # --- Layer A: Phrase matching (multi-word patterns) ---
+        triad_score = sum(1 for kw in self.TRIAD_PHRASES if kw in prompt_lower)
         if triad_score >= 1:
             return self._factory_message(
                 "TRIAD-COMPONENT-DETECTED",
@@ -112,20 +142,26 @@ class DecisionToTriad(BaseHook):
                 "(hook / skill / MCP / домен).",
             )
 
-        # --- Score decision intent ---
-        decision_score_ru = sum(
-            1 for kw in self.DECISION_KEYWORDS_RU if kw in prompt_lower
+        decision_score = sum(
+            1 for kw in self.DECISION_PHRASES_RU if kw in prompt_lower
+        ) + sum(
+            1 for kw in self.DECISION_PHRASES_EN if kw in prompt_lower
         )
-        decision_score_en = sum(
-            1 for kw in self.DECISION_KEYWORDS_EN if kw in prompt_lower
-        )
-        decision_score = decision_score_ru + decision_score_en
 
         arch_score = sum(
-            1 for kw in self.ARCHITECTURE_TERMS if kw in prompt_lower
+            1 for kw in self.ARCHITECTURE_PHRASES if kw in prompt_lower
         )
 
-        # --- Strong decision + architecture = full Factory ---
+        # --- Layer B: Fuzzy single-word matching (typos + inflections) ---
+        fuzzy_score = 0
+        matcher = _get_fuzzy_matcher()
+        if matcher is not None:
+            fuzzy_matches = matcher.match_prompt(prompt)
+            fuzzy_score = len(fuzzy_matches)
+            # Fuzzy matches count as decision intent
+            decision_score += fuzzy_score
+
+        # --- Scoring logic ---
         if decision_score >= 1 and arch_score >= 1:
             return self._factory_message(
                 "ARCHITECTURE-DECISION",
@@ -133,14 +169,12 @@ class DecisionToTriad(BaseHook):
                 "(новый компонент / фаза / стратегия).",
             )
 
-        # --- Decision intent alone (2+ keywords = confident) ---
         if decision_score >= 2:
             return self._factory_message(
                 "DECISION-DETECTED",
                 "Обнаружена идея / решение в чате.",
             )
 
-        # --- Architecture terms alone (2+ = confident) ---
         if arch_score >= 2:
             return self._factory_message(
                 "ARCHITECTURE-IDEA",

@@ -22,13 +22,16 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Cache directory: .claude/cache/
-CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "cache"
+from shared.core_paths import get_cache_dir
+
+# Cache directory resolved via core_paths (supports Core/Framework separation)
+CACHE_DIR = get_cache_dir()
 TODOS_FILE = CACHE_DIR / "hook-todos.json"
 
 # Mandatory hook IDs (task-enforcer checks these)
 MANDATORY_HOOKS = {
     "knowledge-cache-reminder-hook",
+    "factory-enforcer-hook",
 }
 
 

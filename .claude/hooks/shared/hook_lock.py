@@ -18,8 +18,10 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
-# Lock file location
-CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "cache"
+from shared.core_paths import get_cache_dir
+
+# Lock file location resolved via core_paths (supports Core/Framework separation)
+CACHE_DIR = get_cache_dir()
 LOCK_FILE = CACHE_DIR / "hooks-lock.json"
 
 # Stale lock threshold (seconds)
