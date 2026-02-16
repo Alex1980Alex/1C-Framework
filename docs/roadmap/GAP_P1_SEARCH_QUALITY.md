@@ -178,12 +178,13 @@
 
 ## Чеклист завершения P1
 
-- [ ] Jina-v3 provider работает, `EMBEDDING__PROVIDER=jina`
-- [ ] Migration script переиндексирует все чанки
-- [ ] recall@10 улучшение ≥3% vs E5 baseline
-- [ ] Late Chunking опционально включается
+- [x] Jina-v3 provider работает, `EMBEDDING__PROVIDER=jina` (Phase 47 — JinaEmbeddingEngine + factory + config)
+- [x] Migration script переиндексирует все чанки (Phase 47 — scripts/migrate_embeddings.py)
+- [x] Benchmark script (recall@5/10, MRR, NDCG) (Phase 47 — scripts/embedding_benchmark.py)
+- [ ] recall@10 улучшение ≥3% vs E5 baseline (blocked: needs Jina API key + eval dataset)
+- [ ] Late Chunking опционально включается (Phase 48 — depends on Jina API)
 - [x] `/search/ask?stream=true` стримит токены (Phase 49 — SSE with early sources + progress)
 - [x] WebSocket `/ws/search` работает (Phase 49 — bidirectional, cancel support)
 - [x] Contextual Retrieval генерирует context prefix (Phase 50 — SQLite cache, batch, prompt caching)
 - [x] BM25 и vector используют contextual content (Phase 50 — indexer.py + bm25_store)
-- [x] All new code покрыт unit tests (14 tests: 9 contextual + 5 websocket)
+- [x] All new code покрыт unit tests (28 tests: 9 contextual + 5 websocket + 14 jina)
