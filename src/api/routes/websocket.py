@@ -116,8 +116,17 @@ async def websocket_search(websocket: WebSocket):
                 )
 
                 collected: list[str] = []
+                gen_start = time.perf_counter()
+                ttft_sent = False
                 async for token in chain.stream_answer(question, search_response):
                     collected.append(token)
+                    # Phase 49: TTFT metric
+                    if not ttft_sent:
+                        ttft_ms = (time.perf_counter() - gen_start) * 1000
+                        await websocket.send_text(
+                            _ws_message("ttft", "", {"ttft_ms": round(ttft_ms)})
+                        )
+                        ttft_sent = True
                     await websocket.send_text(
                         _ws_message("token", token)
                     )
@@ -137,6 +146,8 @@ async def websocket_search(websocket: WebSocket):
                 await websocket.send_text(
                     _ws_message("done", "", {
                         "elapsed_ms": round(elapsed),
+                        "ttft_ms": round(ttft_ms) if ttft_sent else None,
+                        "search_ms": round(search_ms),
                         "search_type": search_response.search_type,
                         "total_found": search_response.total_found,
                     })

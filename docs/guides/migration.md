@@ -119,3 +119,75 @@ SEARCH__LIGHTRAG_ENABLED=true
 ```
 
 Переиндексация **не требуется** для обновления v1.0 → v1.5.
+
+---
+
+## v1.5 → v2.0 (Phase 47-50: Search Quality)
+
+### Jina Embeddings v3 (Phase 47)
+
+Переход с локальной E5 модели на Jina v3 API:
+
+| | E5 (local) | Jina v3 (API) |
+|---|---|---|
+| Качество MTEB | ~63% | 68.5% |
+| Task prompting | ручные префиксы | нативный API |
+| Matryoshka | нет | 1024→512→256 |
+| GPU нужен | да | нет |
+| Стоимость | $0 | ~$0.02/1M tokens (10M free) |
+
+### Шаги миграции
+
+1. **Получить API ключ** на [jina.ai/embeddings](https://jina.ai/embeddings/)
+
+2. **Обновить `.env`:**
+```env
+EMBEDDING__PROVIDER=jina
+EMBEDDING__MODEL=jina-embeddings-v3
+EMBEDDING__JINA_API_KEY=jina_xxxxx
+```
+
+3. **Dry run** (показать план без выполнения):
+```bash
+python scripts/migrate_embeddings.py --provider jina --jina-key jina_xxxxx --dry-run
+```
+
+4. **Выполнить миграцию:**
+```bash
+python scripts/migrate_embeddings.py --provider jina --jina-key jina_xxxxx
+```
+
+Скрипт автоматически:
+- Переэмбеддит все чанки через Jina API
+- Пересоздаст Qdrant коллекцию (если dimensions изменились)
+- Перестроит BM25 sparse vectors
+- Перестроит graph entity embeddings
+
+5. **Опционально: уменьшить размерность** (Matryoshka truncation):
+```bash
+python scripts/migrate_embeddings.py --provider jina --jina-key jina_xxxxx --jina-truncate-dim 512
+```
+
+### Contextual Retrieval (Phase 50)
+
+Включить обогащение чанков контекстом (Anthropic pattern, +5-10% recall):
+
+```env
+CONTEXTUAL_RETRIEVAL__ENABLED=true
+CONTEXTUAL_RETRIEVAL__MODEL=claude-haiku-4-5-20251001
+```
+
+Требует переиндексации: `POST /documents/index` с `contextual=true`.
+
+### Откат
+
+Переключение обратно на E5:
+```env
+EMBEDDING__PROVIDER=local
+EMBEDDING__MODEL=intfloat/multilingual-e5-large
+```
+
+Для полной консистентности запустить обратную миграцию:
+```bash
+python scripts/migrate_embeddings.py --provider local
+```
