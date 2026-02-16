@@ -45,7 +45,6 @@ class JinaEmbeddingEngine(BaseEmbeddingEngine):
             )
         self._model = self._settings.model or "jina-embeddings-v3"
         self._client = httpx.AsyncClient(
-            base_url=_JINA_API_URL,
             headers={
                 "Authorization": f"Bearer {self._settings.jina_api_key}",
                 "Content-Type": "application/json",
@@ -64,7 +63,7 @@ class JinaEmbeddingEngine(BaseEmbeddingEngine):
         if self._settings.jina_truncate_dim is not None:
             body["dimensions"] = self._settings.jina_truncate_dim
 
-        response = await self._client.post("", json=body)
+        response = await self._client.post(_JINA_API_URL, json=body)
         response.raise_for_status()
         data = response.json()
 
