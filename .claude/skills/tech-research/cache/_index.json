@@ -17,6 +17,14 @@
       "created": "2026-02-12",
       "keywords": ["mcp", "lazy loading", "token optimization", "tool search", "mcp-cli", "allowedTools"],
       "summary": "MCP tool token bloat solutions: allowedTools filtering (0 effort), Claude Code Tool Search (85% reduction, auto), mcp-cli (99% reduction, cross-agent). Threshold: 20+ tools. Current project: 12 tools (OK). Combined with 1C-Enterprise: ~30 tools (needs strategy). Source: docs/MCP_CLI_Исследование.md"
+    },
+    "p1-search-quality-implementation": {
+      "file": "p1-search-quality-implementation.md",
+      "domain": "search",
+      "category": "analysis",
+      "created": "2026-02-16",
+      "keywords": ["P1", "search quality", "embedding upgrade", "jina-v3", "late chunking", "streaming", "contextual retrieval", "implementation status", "gap analysis"],
+      "summary": "Implementation analysis of P1 Search Quality (Phases 47-50). Overall ~30%. Q3 Streaming 80% (SSE works, WebSocket missing). Q1 Embedding 40% (E5+Giga exist, Jina missing). Q2 Late Chunking 0% (blocked by Q1). Q4 Contextual Retrieval 0% (independent). Recommended order: Q3→Q4→Q1→Q2. Total 6-9 days."
     }
   }
 }
