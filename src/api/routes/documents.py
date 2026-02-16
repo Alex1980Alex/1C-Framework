@@ -59,6 +59,37 @@ async def _remove_existing_document(components: "Components", source_path: str) 
         return 0
 
 
+async def _enrich_contextual(
+    chunks: list,
+    document,
+    components: "Components",
+    force: bool = False,
+) -> list:
+    """Apply Contextual Retrieval enrichment if enabled (Phase 50).
+
+    Adds LLM-generated context prefix to each chunk's metadata.
+    The contextual_content is then used for embedding + BM25 indexing.
+
+    Args:
+        chunks: List of DocumentChunk objects.
+        document: ProcessedDocument with raw_text.
+        components: DI container with settings.
+        force: If True, override config and always enrich.
+    """
+    ctx_settings = components.settings.contextual_retrieval
+    if not force and not ctx_settings.enabled:
+        return chunks
+
+    from src.pdf_framework.processing.context_generator import ContextGenerator
+
+    generator = ContextGenerator(
+        settings=components.settings.agent,
+        context_settings=ctx_settings,
+        api_key=components.settings.anthropic_api_key,
+    )
+    return await generator.enrich_chunks(chunks, document)
+
+
 class IndexRequest(BaseModel):
     file_path: str
     loader: str = "default"  # "default" | "pymupdf" | "docling" | "pymupdf4llm" | "smart"
@@ -180,6 +211,9 @@ async def index_document(
                     logger.info(f"[IMAGE] Added {image_chunk_count} image chunks for {Path(request.file_path).name}")
             except Exception as e:
                 logger.warning(f"[IMAGE] Image extraction failed (text indexing continues): {e}")
+
+        # Phase 50: Contextual Retrieval — enrich chunks with LLM context prefix
+        chunks = await _enrich_contextual(chunks, document, components, force=request.contextual)
 
         result = await components.indexer.index_chunks(
             chunks,
@@ -321,6 +355,16 @@ async def index_document_stream(
                         yield send("images_done", "Изображений не найдено", image_chunks=0)
                 except Exception as e:
                     yield send("images_error", f"Ошибка извлечения изображений: {e}")
+
+            # Step 2.7: Contextual Retrieval (Phase 50)
+            if request.contextual or components.settings.contextual_retrieval.enabled:
+                yield send("contextual", f"Генерация контекста для {len(chunks)} чанков...")
+                t_ctx = time.time()
+                chunks = await _enrich_contextual(chunks, document, components, force=request.contextual)
+                ctx_count = sum(1 for c in chunks if c.metadata.get("context"))
+                yield send("contextual_done",
+                            f"Контекст добавлен: {ctx_count}/{len(chunks)} чанков за {time.time() - t_ctx:.1f} сек",
+                            contextual_chunks=ctx_count)
 
             # Step 3: Embed + store (with checkpointing + real-time batch streaming)
             yield send("embed", f"Вычисление эмбеддингов для {len(chunks)} чанков...")
@@ -532,6 +576,9 @@ async def index_batch_stream(
                     except Exception as e:
                         yield send("file_warn", f"Image extraction failed: {e}",
                                     file_index=file_idx)
+
+                # Phase 50: Contextual Retrieval
+                chunks = await _enrich_contextual(chunks, document, components)
 
                 # Embed + store
                 result = await components.indexer.index_chunks(
@@ -983,6 +1030,9 @@ async def index_delta(
                         chunks.extend(img_chunks)
                 except Exception as e:
                     logger.warning(f"[DELTA] Image extraction failed: {e}")
+
+            # Phase 50: Contextual Retrieval
+            chunks = await _enrich_contextual(chunks, document, components)
 
             # Index chunks (with checkpointing)
             await components.indexer.index_chunks(

@@ -42,10 +42,20 @@ class SearchSettings(BaseSettings):
 
 
 class ContextualRetrievalSettings(BaseSettings):
-    """Phase 3.1: Contextual Retrieval configuration."""
+    """Phase 3.1 / Phase 50: Contextual Retrieval configuration.
+
+    At index time, generates 1-2 sentence context prefix for each chunk via LLM.
+    The contextual_content (context + original) is used for embedding and BM25,
+    while original content is preserved for display.
+    """
 
     enabled: bool = False
     max_context_tokens: int = 128
+    model: str = "claude-haiku-4-5-20251001"  # Fast model for economy (~$0.01/page)
+    batch_concurrency: int = 10  # Max parallel LLM calls
+    min_chunk_tokens: int = 50  # Skip short chunks (< N words)
+    cache_enabled: bool = True  # SQLite cache for generated contexts
+    cache_db_path: Path = _PROJECT_ROOT / "data" / "context_cache.db"
 
 
 class TwoStageSettings(BaseSettings):

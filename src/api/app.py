@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import analytics, auth, cache, chat, collections, documents, feedback, graph, health, metrics, optimization, search, toc
+from src.api.routes import analytics, auth, cache, chat, collections, documents, feedback, graph, health, metrics, optimization, search, toc, websocket
 from src.api.routes import openai_compat  # Phase 14: OpenAI-compatible API
 from src.pdf_framework.config import get_settings
 
@@ -103,6 +103,7 @@ def create_app() -> FastAPI:
     app.include_router(collections.router)  # Phase 32: Collection Management
     app.include_router(optimization.router)  # Phase 34: DSPy Optimization
     app.include_router(analytics.router)  # Phase 40: Enterprise Analytics
+    app.include_router(websocket.router)  # Phase 49: WebSocket streaming
 
     return app
 

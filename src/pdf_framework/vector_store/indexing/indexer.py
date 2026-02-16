@@ -143,7 +143,7 @@ class DocumentIndexer:
                         ]
                         await self._bm25_store.add_chunks(
                             chunk_ids=[c.id for c in batch_chunks],
-                            contents=[c.content for c in batch_chunks],
+                            contents=[c.metadata.get("contextual_content", c.content) for c in batch_chunks],
                             document_ids=[c.document_id for c in batch_chunks],
                             sources=[c.metadata.get("source", source_path) for c in batch_chunks],
                             sections=sections,

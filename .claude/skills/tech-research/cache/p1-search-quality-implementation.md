@@ -94,14 +94,14 @@ P1 covers 4 phases (47-50) targeting search quality. Overall: ~30% implemented.
 **Critical path:** Q1 → Q2 (sequential). Q3 and Q4 are parallel/independent.
 **Total estimate:** 6-9 days (matches roadmap).
 
-## Checklist Status
+## Checklist Status (updated 2026-02-16)
 
 - [ ] Jina-v3 provider: `EMBEDDING__PROVIDER=jina`
 - [ ] Migration script for re-embedding
 - [ ] recall@10 improvement ≥3% vs E5 baseline
 - [ ] Late Chunking toggle
-- [x] `/search/ask?stream=true` streams tokens (SSE)
-- [ ] WebSocket `/ws/search`
-- [ ] Contextual Retrieval context prefix
-- [ ] BM25 + vector use contextual content
-- [ ] Unit test coverage for new code
+- [x] `/search/ask?stream=true` streams tokens (SSE) — early sources + progress events
+- [x] WebSocket `/ws/search` — bidirectional, cancel support, 170 lines
+- [x] Contextual Retrieval — ContextGenerator + SQLite cache + batch concurrency + prompt caching
+- [x] BM25 + vector use contextual content — indexer.py lines 122, 146
+- [x] Unit test coverage — 14 tests (9 contextual + 5 websocket), all passing
