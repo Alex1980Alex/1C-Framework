@@ -85,8 +85,14 @@ async def run_benchmark(
     dataset_path: Path,
     jina_key: str = "",
     jina_truncate_dim: int | None = None,
+    context_prefix: str = "",
 ) -> dict:
-    """Run embedding benchmark for a given provider."""
+    """Run embedding benchmark for a given provider.
+
+    Args:
+        context_prefix: Optional prefix to prepend to each corpus text
+            (simulates Contextual Retrieval). Use --contextual flag.
+    """
     settings_kwargs: dict = {"provider": provider}
     if provider == "jina":
         settings_kwargs["jina_api_key"] = jina_key
@@ -104,13 +110,18 @@ async def run_benchmark(
     queries = dataset["queries"]
     corpus = dataset["corpus"]
 
-    logger.info("Provider: %s, Model: %s, Dims: %d",
-                provider, engine.get_model_name(), engine.get_dimensions())
+    label = f"{provider}+ctx" if context_prefix else provider
+    logger.info("Provider: %s, Model: %s, Dims: %d, Contextual: %s",
+                label, engine.get_model_name(), engine.get_dimensions(),
+                bool(context_prefix))
     logger.info("Corpus: %d passages, Queries: %d", len(corpus), len(queries))
 
-    # Embed corpus
+    # Embed corpus (with optional contextual prefix)
     t0 = time.perf_counter()
-    corpus_texts = [c["text"] for c in corpus]
+    corpus_texts = [
+        f"{context_prefix} {c['text']}" if context_prefix else c["text"]
+        for c in corpus
+    ]
     corpus_embeddings = await engine.embed_batch(corpus_texts)
     embed_time = time.perf_counter() - t0
     logger.info("Corpus embedded in %.2fs (%.0f texts/sec)",
@@ -172,8 +183,12 @@ async def main():
     parser.add_argument("--jina-key", default="", help="Jina API key")
     parser.add_argument("--jina-truncate-dim", type=int, default=None, help="Jina Matryoshka dim (512/256)")
     parser.add_argument("--compare", nargs="+", help="Compare multiple providers")
+    parser.add_argument("--contextual", action="store_true",
+                        help="Run with contextual prefix (simulates Contextual Retrieval)")
     parser.add_argument("--output", type=Path, default=None, help="Output JSON path")
     args = parser.parse_args()
+
+    ctx_prefix = "Этот фрагмент из документации 1С:Предприятие 8.3.27 описывает:" if args.contextual else ""
 
     if not args.dataset.exists():
         logger.error("Dataset not found: %s", args.dataset)
@@ -184,7 +199,7 @@ async def main():
     if args.compare:
         all_results = {}
         for prov in args.compare:
-            results = await run_benchmark(prov, args.dataset, args.jina_key, args.jina_truncate_dim)
+            results = await run_benchmark(prov, args.dataset, args.jina_key, args.jina_truncate_dim, ctx_prefix)
             all_results[prov] = results
 
         # Comparison table
@@ -204,8 +219,9 @@ async def main():
 
         output = args.output or _RESULTS_DIR / "embedding_comparison.json"
     else:
-        all_results = await run_benchmark(args.provider, args.dataset, args.jina_key, args.jina_truncate_dim)
-        output = args.output or _RESULTS_DIR / f"embedding_baseline_{args.provider}.json"
+        all_results = await run_benchmark(args.provider, args.dataset, args.jina_key, args.jina_truncate_dim, ctx_prefix)
+        suffix = f"_{args.provider}_ctx" if args.contextual else f"_{args.provider}"
+        output = args.output or _RESULTS_DIR / f"embedding_baseline{suffix}.json"
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with open(output, "w", encoding="utf-8") as f:

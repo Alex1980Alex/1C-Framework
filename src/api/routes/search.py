@@ -229,8 +229,15 @@ async def ask_question(
         yield _sse_event("status", "generating")
 
         collected: list[str] = []
+        gen_start = time.perf_counter()
+        ttft_sent = False
         async for token in chain.stream_answer(request.question, search_response):
             collected.append(token)
+            # Phase 49: TTFT (Time To First Token) metric
+            if not ttft_sent:
+                ttft_ms = (time.perf_counter() - gen_start) * 1000
+                yield _sse_event("ttft", "", {"ttft_ms": round(ttft_ms)})
+                ttft_sent = True
             yield _sse_event("token", token)
 
         # Post-processing: append section refs if LLM didn't include them
@@ -244,6 +251,8 @@ async def ask_question(
         elapsed = (time.perf_counter() - t0) * 1000
         yield _sse_event("done", "", {
             "elapsed_ms": round(elapsed),
+            "ttft_ms": round(ttft_ms) if ttft_sent else None,
+            "search_ms": round(search_ms),
             "search_type": search_response.search_type,
         })
 
