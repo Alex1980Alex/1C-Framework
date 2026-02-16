@@ -4,11 +4,12 @@ import json
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.api.dependencies.components import Components, get_components
+from src.api.dependencies.auth import get_current_user  # F3.2.4: Get user from JWT
 from src.pdf_framework.chains.qa.retrieval_qa import RetrievalQAChain
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -62,8 +63,12 @@ class AskResponse(BaseModel):
 async def search_documents(
     request: SearchRequest,
     components: Components = Depends(get_components),
+    current_user: str | None = Depends(get_current_user),  # F3.2.4: User attribution for tracing
 ):
     """Search indexed documents."""
+    # F3.2.4: Extract user_id for trace attribution
+    user_id = current_user or "anonymous"
+
     # Phase 32: Resolve collection_id to document_id filter
     search_filter = dict(request.filter) if request.filter else {}
     if request.collection_id:
@@ -76,7 +81,7 @@ async def search_documents(
                 # Empty collection — return no results
                 return SearchResponseModel(
                     query=request.query, results=[], total_found=0,
-                    search_type="collection_empty", elapsed_ms=0, metadata={},
+                    search_type="collection_empty", elapsed_ms=0, metadata={"user_id": user_id},
                 )
 
     effective_filter = search_filter or None
@@ -116,6 +121,10 @@ async def search_documents(
         results_count=response.total_found,
     )
 
+    # F3.2.4: Add user_id to response metadata for trace attribution
+    response_metadata = dict(response.metadata)
+    response_metadata["user_id"] = user_id
+
     return SearchResponseModel(
         query=response.query,
         results=[
@@ -131,7 +140,7 @@ async def search_documents(
         total_found=response.total_found,
         search_type=response.search_type,
         elapsed_ms=response.elapsed_ms,
-        metadata=response.metadata,
+        metadata=response_metadata,
     )
 
 
@@ -145,6 +154,7 @@ def _sse_event(event_type: str, data: Any, metadata: dict | None = None) -> str:
 async def ask_question(
     request: AskRequest,
     components: Components = Depends(get_components),
+    current_user: str | None = Depends(get_current_user),  # F3.2.4: User attribution
 ):
     """Ask a question and get an LLM-generated answer with context.
 
@@ -152,6 +162,9 @@ async def ask_question(
     With stream=false (default), returns JSON response.
     """
     t0 = time.perf_counter()
+
+    # F3.2.4: Extract user_id for trace attribution
+    user_id = current_user or "anonymous"
 
     search_response = await components.search_manager.search(
         query=request.question,
@@ -207,6 +220,14 @@ async def ask_question(
         search_ms = (time.perf_counter() - t0) * 1000
         yield _sse_event("status", "searching_done", {"elapsed_ms": round(search_ms)})
 
+        # Early source delivery — client gets sources before generation starts
+        yield _sse_event("sources", sources, {
+            "total_found": search_response.total_found,
+            "search_type": search_response.search_type,
+        })
+
+        yield _sse_event("status", "generating")
+
         collected: list[str] = []
         async for token in chain.stream_answer(request.question, search_response):
             collected.append(token)
@@ -219,8 +240,6 @@ async def ask_question(
         extra = final_answer[len(full_answer):]
         if extra:
             yield _sse_event("token", extra)
-
-        yield _sse_event("sources", sources)
 
         elapsed = (time.perf_counter() - t0) * 1000
         yield _sse_event("done", "", {

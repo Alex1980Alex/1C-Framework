@@ -182,8 +182,8 @@
 - [ ] Migration script переиндексирует все чанки
 - [ ] recall@10 улучшение ≥3% vs E5 baseline
 - [ ] Late Chunking опционально включается
-- [ ] `/search/ask?stream=true` стримит токены
-- [ ] WebSocket `/ws/search` работает
-- [ ] Contextual Retrieval генерирует context prefix
-- [ ] BM25 и vector используют contextual content
-- [ ] All new code покрыт unit tests
+- [x] `/search/ask?stream=true` стримит токены (Phase 49 — SSE with early sources + progress)
+- [x] WebSocket `/ws/search` работает (Phase 49 — bidirectional, cancel support)
+- [x] Contextual Retrieval генерирует context prefix (Phase 50 — SQLite cache, batch, prompt caching)
+- [x] BM25 и vector используют contextual content (Phase 50 — indexer.py + bm25_store)
+- [x] All new code покрыт unit tests (14 tests: 9 contextual + 5 websocket)
