@@ -20,6 +20,10 @@ def get_embedding_engine(settings: EmbeddingSettings | None = None) -> BaseEmbed
         from src.pdf_framework.embeddings.providers.giga import GigaEmbeddingEngine
 
         return GigaEmbeddingEngine(settings)
+    if settings.provider == "jina":
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        return JinaEmbeddingEngine(settings)
     raise ValueError(f"Unsupported embedding provider: {settings.provider}")
 
 
