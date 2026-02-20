@@ -23,29 +23,31 @@ UPLOAD_DIR = Path("data/pdfs")
 async def _remove_existing_document(components: "Components", source_path: str) -> int:
     """Remove existing chunks for a source_path to prevent duplicates on re-index.
 
-    Returns the number of chunks deleted.
-    Uses provider-agnostic BaseVectorStore methods (works with ChromaDB, Qdrant, etc.).
+    Performs cascade cleanup across all storage layers (same as DELETE endpoint).
+
+    Returns the number of vector chunks deleted.
     """
     try:
-        # Phase 17: Invalidate semantic cache before deleting
-        semantic_cache = getattr(components, "semantic_cache", None)
-        if semantic_cache is not None:
-            try:
-                existing_chunks = await components.vector_store.scroll(
-                    filter={"source": source_path}, limit=10000,
-                )
-                doc_ids = {c.document_id for c in existing_chunks if c.document_id}
-                for doc_id in doc_ids:
-                    await semantic_cache.invalidate_by_document(doc_id)
-            except Exception as e:
-                logger.warning("Semantic cache invalidation failed: %s", e)
+        # Resolve source_path to document_ids via vector store scroll
+        doc_ids: set[str] = set()
+        try:
+            existing_chunks = await components.vector_store.scroll(
+                filter={"source": source_path}, limit=10000,
+            )
+            doc_ids = {c.document_id for c in existing_chunks if c.document_id}
+        except Exception as e:
+            logger.warning("Scroll for doc_ids failed: %s", e)
 
-        # Delete from vector store using provider-agnostic filter
+        # Cascade-delete each document_id (cleans all layers)
+        for doc_id in doc_ids:
+            await _cascade_delete_document(components, doc_id)
+
+        # Also delete by source path in vector store (catches any chunks without document_id)
         deleted = await components.vector_store.delete_by_filter({"source": source_path})
         if deleted:
             logger.info("Dedup: removed %d old chunks for %s", deleted, Path(source_path).name)
 
-        # Phase 16: Also remove from BM25 index
+        # BM25 also indexes by source path
         bm25_store = getattr(components, "bm25_store", None)
         if bm25_store is not None:
             try:
@@ -915,31 +917,128 @@ async def rebuild_bm25(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+async def _cascade_delete_document(components: "Components", document_id: str) -> dict:
+    """Delete a document from ALL storage layers.
+
+    Returns a report dict with per-store deletion counts and errors.
+    """
+    report: dict[str, int | str] = {}
+
+    # 1. Vector Store (chunks + RAPTOR summaries live here)
+    try:
+        deleted = await components.vector_store.delete_by_filter(
+            {"document_id": document_id}
+        )
+        report["vector_store"] = deleted
+    except Exception as e:
+        logger.warning("[CASCADE] Vector store delete failed: %s", e)
+        report["vector_store_error"] = str(e)
+
+    # 2. BM25 Store
+    bm25_store = getattr(components, "bm25_store", None)
+    if bm25_store is not None:
+        try:
+            await bm25_store.delete_by_document(document_id)
+            report["bm25"] = "ok"
+        except Exception as e:
+            logger.warning("[CASCADE] BM25 delete failed: %s", e)
+            report["bm25_error"] = str(e)
+
+    # 3. Parent Store
+    parent_store = getattr(components, "parent_store", None)
+    if parent_store is not None:
+        try:
+            await parent_store.delete_by_document(document_id)
+            report["parent_store"] = "ok"
+        except Exception as e:
+            logger.warning("[CASCADE] Parent store delete failed: %s", e)
+            report["parent_store_error"] = str(e)
+
+    # 4. Graph Store (entities + relations)
+    try:
+        graph_deleted = await components.graph_store.delete_by_document(document_id)
+        report["graph_store"] = graph_deleted
+    except Exception as e:
+        logger.warning("[CASCADE] Graph store delete failed: %s", e)
+        report["graph_store_error"] = str(e)
+
+    # 5. Entity Embeddings (LightRAG)
+    entity_embeddings = getattr(components, "entity_embeddings", None)
+    if entity_embeddings is not None:
+        try:
+            emb_deleted = await entity_embeddings.delete_by_document(document_id)
+            report["entity_embeddings"] = emb_deleted
+        except Exception as e:
+            logger.warning("[CASCADE] Entity embeddings delete failed: %s", e)
+            report["entity_embeddings_error"] = str(e)
+
+    # 6. Semantic Cache
+    semantic_cache = getattr(components, "semantic_cache", None)
+    if semantic_cache is not None:
+        try:
+            await semantic_cache.invalidate_by_document(document_id)
+            report["semantic_cache"] = "ok"
+        except Exception as e:
+            logger.warning("[CASCADE] Semantic cache invalidation failed: %s", e)
+            report["semantic_cache_error"] = str(e)
+
+    # 7. Document Registry
+    try:
+        await components.document_registry.delete(document_id)
+        report["document_registry"] = "ok"
+    except Exception as e:
+        logger.warning("[CASCADE] Document registry delete failed: %s", e)
+        report["document_registry_error"] = str(e)
+
+    # 8. Collection Store (remove from all collections)
+    try:
+        collection_ids = await components.collection_store.get_collections_for_document(
+            document_id
+        )
+        for cid in collection_ids:
+            await components.collection_store.remove_document(cid, document_id)
+        report["collections_removed"] = len(collection_ids)
+    except Exception as e:
+        logger.warning("[CASCADE] Collection store cleanup failed: %s", e)
+        report["collection_store_error"] = str(e)
+
+    # 9. Version Manager
+    version_manager = getattr(components, "version_manager", None)
+    if version_manager is not None:
+        try:
+            versions_deleted = await version_manager.delete_document(document_id)
+            report["versions_deleted"] = versions_deleted
+        except Exception as e:
+            logger.warning("[CASCADE] Version manager delete failed: %s", e)
+            report["version_manager_error"] = str(e)
+
+    return report
+
+
 @router.delete("/{document_id}")
 async def delete_document(
     document_id: str,
     components: Components = Depends(get_components),
 ):
-    """Delete a document and its chunks from the vector store.
+    """Delete a document and all its data from every storage layer.
 
-    Uses provider-agnostic delete_by_filter (works with ChromaDB, Qdrant, etc.).
+    Cascade deletes from: vector store, BM25, parent store, graph store,
+    entity embeddings, semantic cache, document registry, collections,
+    and version manager.
     """
     try:
-        deleted = await components.vector_store.delete_by_filter(
-            {"document_id": document_id}
-        )
-        if deleted == 0:
+        report = await _cascade_delete_document(components, document_id)
+
+        # Check if document existed at all
+        vector_deleted = report.get("vector_store", 0)
+        if vector_deleted == 0 and "vector_store_error" not in report:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        # Also clean BM25 index
-        bm25_store = getattr(components, "bm25_store", None)
-        if bm25_store is not None:
-            try:
-                await bm25_store.delete_by_document(document_id)
-            except Exception as e:
-                logger.warning("BM25 delete failed: %s", e)
-
-        return {"deleted_chunks": deleted, "document_id": document_id}
+        return {
+            "document_id": document_id,
+            "deleted_chunks": vector_deleted,
+            "cascade_report": report,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -1097,6 +1196,71 @@ async def clear_delta_cache(
         return {"message": "Hash database cleared"}
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Phase 59: Async indexing endpoints
+@router.post("/index-async")
+async def index_document_async(
+    request: IndexRequest,
+    tenant_id: str = "default",
+    components: Components = Depends(get_components),
+):
+    """Index a PDF document asynchronously via background queue.
+
+    Returns immediately with a job_id. Use GET /jobs/{job_id} to check progress.
+    """
+    if not components.settings.queue.enabled:
+        raise HTTPException(
+            status_code=503,
+            detail="Async queue is disabled. Set QUEUE__ENABLED=true to enable.",
+        )
+
+    try:
+        from arq import create_pool
+        from arq.connections import RedisSettings
+
+        redis = await create_pool(RedisSettings.from_dsn(components.settings.queue.redis_url))
+
+        # Enqueue indexing job
+        job_id = await redis.enqueue_job(
+            "src.workers.tasks.indexing.index_document",
+            file_path=request.file_path,
+            document_id=None,  # Will be generated
+            tenant_id=tenant_id,
+            options={
+                "loader": request.loader,
+                "build_graph": request.build_graph,
+                "contextual": request.contextual,
+                "parent_child": request.parent_child,
+                "raptor": request.raptor,
+                "summarize": request.summarize,
+                "extract_images": request.extract_images,
+                "collection_id": request.collection_id,
+            },
+            _queue_name=components.settings.queue.queue_name,
+        )
+
+        # Initialize job status
+        await redis.hset(
+            f"job:{job_id}",
+            mapping={
+                "status": "pending",
+                "progress": "0",
+            }
+        )
+        await redis.expire(f"job:{job_id}", components.settings.queue.job_timeout)
+
+        logger.info(f"[ASYNC] Enqueued indexing job: {job_id}")
+
+        return {
+            "job_id": job_id,
+            "status": "pending",
+            "message": f"Indexing queued. Use GET /jobs/{job_id} to check progress.",
+        }
+
+    except Exception as e:
+        logger.error(f"[ASYNC] Failed to enqueue indexing: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -267,3 +267,89 @@ class SearchManager:
     def available_strategies(self) -> list[str]:
         """Return names of registered strategies."""
         return list(self._strategies.keys())
+
+    def register_visual_strategy(
+        self,
+        colpali_provider: Any,
+        vector_store: Any,
+        collection_name: str = "visual_pages",
+    ) -> None:
+        """Register visual search strategy (Phase 55).
+
+        Args:
+            colpali_provider: ColPali embedding provider
+            vector_store: Vector store with visual collection
+            collection_name: Name of visual pages collection
+        """
+        from src.pdf_framework.search.strategies.visual import VisualSearchStrategy
+
+        strategy = VisualSearchStrategy(
+            colpali_provider=colpali_provider,
+            vector_store=vector_store,
+            visual_collection=collection_name,
+        )
+        self.register_strategy("visual", strategy)
+        logger.info("[SEARCH] Registered visual search strategy")
+
+    async def search_visual(
+        self,
+        query: str,
+        k: int = 5,
+        document_id: str | None = None,
+        **kwargs,
+    ) -> SearchResponse:
+        """Search visual pages (Phase 55).
+
+        Args:
+            query: Text description of visual content
+            k: Number of results
+            document_id: Optional document filter
+            **kwargs: Additional parameters
+
+        Returns:
+            SearchResponse with visual page results
+        """
+        strategy = self._strategies.get("visual")
+        if strategy is None:
+            raise ValueError("Visual search strategy not registered")
+
+        return await strategy.search(query, k=k, document_id=document_id, **kwargs)
+
+    async def search_hybrid_visual_text(
+        self,
+        query: str,
+        k: int = 5,
+        visual_weight: float = 0.5,
+        text_weight: float = 0.5,
+        **kwargs,
+    ) -> SearchResponse:
+        """Hybrid visual + text search (Phase 55).
+
+        Args:
+            query: Search query
+            k: Number of results
+            visual_weight: Weight for visual results
+            text_weight: Weight for text results
+            **kwargs: Additional parameters
+
+        Returns:
+            SearchResponse with fused results
+        """
+        strategy = self._strategies.get("visual")
+        if strategy is None:
+            raise ValueError("Visual search strategy not registered")
+
+        # Get text embedding for fusion
+        if self._embedding_engine:
+            text_embedding = await self._embedding_engine.embed_text(query)
+        else:
+            text_embedding = None
+
+        return await strategy.hybrid_visual_text_search(
+            query=query,
+            text_embedding=text_embedding,
+            k=k,
+            visual_weight=visual_weight,
+            text_weight=text_weight,
+            **kwargs,
+        )

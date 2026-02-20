@@ -72,5 +72,16 @@ class BaseGraphStore(ABC):
         """Delete entity and all its relations."""
 
     @abstractmethod
+    async def delete_by_document(self, document_id: str) -> int:
+        """Delete all entities and relations originating from a document.
+
+        Args:
+            document_id: The document whose entities should be removed.
+
+        Returns:
+            Number of entities deleted.
+        """
+
+    @abstractmethod
     async def clear(self) -> None:
         """Remove all entities and relations."""

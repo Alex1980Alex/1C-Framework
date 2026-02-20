@@ -30,6 +30,8 @@ class GraphRAGSettings(BaseSettings):
 
     # Incremental Updates (6.5)
     incremental_updates_enabled: bool = True
+    auto_update_enabled: bool = True  # Phase 61: Auto-trigger after document re-index
+    auto_update_on_reindex: bool = True  # Auto-update when document is re-indexed
 
 
 class LightRAGSettings(BaseSettings):

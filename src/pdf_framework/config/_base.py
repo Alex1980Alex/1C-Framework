@@ -12,12 +12,14 @@ from .external import ExternalSourcesSettings, OptimizationSettings
 from .features import (
     AdaptiveRAGSettings,
     ConversationSettings,
+    GuardrailsSettings,
     HierarchicalSearchSettings,
     LayoutSettings,
     ParentChildSettings,
     RAPTORSettings,
     SuggestionSettings,
     SummaryIndexSettings,
+    VisualSearchSettings,
 )
 from .graphrag import GraphRAGSettings, LightRAGSettings
 from .infrastructure import (
@@ -26,6 +28,7 @@ from .infrastructure import (
     GraphStoreSettings,
     MCPServerSettings,
     OpenAICompatSettings,
+    QueueSettings,
     UISettings,
 )
 from .observability import (
@@ -87,6 +90,9 @@ class Settings(BaseSettings):
     light_rag: LightRAGSettings = Field(default_factory=LightRAGSettings)  # Phase 38
     optimization: OptimizationSettings = Field(default_factory=OptimizationSettings)  # Phase 34
     external: ExternalSourcesSettings = Field(default_factory=ExternalSourcesSettings)  # Phase 37
+    guardrails: GuardrailsSettings = Field(default_factory=GuardrailsSettings)  # Phase 53
+    queue: QueueSettings = Field(default_factory=QueueSettings)  # Phase 59
+    visual_search: VisualSearchSettings = Field(default_factory=VisualSearchSettings)  # Phase 55
 
     # API Keys
     anthropic_api_key: str = ""

@@ -146,6 +146,18 @@ class SuggestionSettings(BaseSettings):
     llm_model: str = "claude-sonnet-4-5-20250929"
 
 
+class GuardrailsSettings(BaseSettings):
+    """Phase 53: Guardrails configuration."""
+
+    model_config = SettingsConfigDict(env_prefix="GUARDRAILS__")
+
+    pii_mode: Literal["detect", "redact", "block"] = "detect"
+    injection_mode: Literal["log", "warn", "block"] = "log"
+    injection_threshold: float = 0.7
+    max_query_length: int = 10_000
+    max_file_size_bytes: int = 100 * 1024 * 1024  # 100MB
+
+
 class HierarchicalSearchSettings(BaseSettings):
     """Phase 30: Hierarchical RAG configuration.
 
@@ -159,3 +171,26 @@ class HierarchicalSearchSettings(BaseSettings):
     summary_model: str = "claude-sonnet-4-5-20250929"
     summary_db_path: Path = _PROJECT_ROOT / "data" / "section_summaries.db"
     context_breadcrumb: bool = True
+
+
+class VisualSearchSettings(BaseSettings):
+    """Phase 55: Visual Search configuration (ColPali).
+
+    Enables end-to-end visual retrieval for tables, charts, and diagrams.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="VISUAL_SEARCH__")
+
+    enabled: bool = False
+    model_name: str = "colpali-v1.3"  # colpali-v1.3 or colqwen2-v1.0
+    collection_name: str = "visual_pages"
+    render_dpi: int = 150
+    hybrid_weight_visual: float = 0.5
+    hybrid_weight_text: float = 0.5
+
+    # Auto-detect visual queries
+    auto_detect_enabled: bool = True
+    visual_keywords: list[str] = [
+        "table", "chart", "graph", "diagram", "figure", "chart",
+        "таблица", "график", "диаграмма", "рисунок", "схема",
+    ]

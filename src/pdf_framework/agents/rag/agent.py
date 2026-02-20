@@ -96,7 +96,7 @@ def create_rag_agent(
     if settings.base_url:
         main_llm_kwargs["base_url"] = settings.base_url
     main_llm = ChatAnthropic(**main_llm_kwargs)
-    with_middleware(main_llm, token_tracker, ContentGuard())
+    main_llm = with_middleware(main_llm, token_tracker, ContentGuard())  # F3.2: Assign result
 
     # Single fast LLM for all Self-RAG tasks (grading, rewriting, hallucination)
     # All three use the same model (Haiku by default), so one instance suffices.
@@ -109,7 +109,7 @@ def create_rag_agent(
     if settings.base_url:
         fast_llm_kwargs["base_url"] = settings.base_url
     fast_llm = ChatAnthropic(**fast_llm_kwargs)
-    with_middleware(fast_llm, token_tracker)
+    fast_llm = with_middleware(fast_llm, token_tracker)  # F3.2: Assign result
 
     parser = StrOutputParser()
 

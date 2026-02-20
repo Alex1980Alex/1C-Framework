@@ -12,11 +12,19 @@ class ObservabilitySettings(BaseSettings):
     """Phase 11: Observability configuration.
 
     Configures tracing backends and trace storage.
+    Phase 46: Langfuse integration.
     """
 
-    tracer: Literal["jsonfile", "langsmith", "none"] = "jsonfile"
+    tracer: Literal["jsonfile", "langsmith", "langfuse", "none"] = "jsonfile"
     trace_dir: Path = _PROJECT_ROOT / "data" / "traces"
     langsmith_enabled: bool = False
+
+    # Phase 46: Langfuse configuration
+    langfuse_enabled: bool = False
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_project_name: str = "pdf-framework"
 
 
 class CacheSettings(BaseSettings):

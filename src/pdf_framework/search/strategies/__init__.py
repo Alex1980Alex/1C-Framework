@@ -9,6 +9,9 @@ Phase 7 (v0.8.0) - Parent-Child Retrieval:
 
 Phase 8 (v0.9.0) - Adaptive RAG:
 - Adaptive Search: automatic query classification and strategy routing
+
+Phase 55 (P3.1) - Visual Retrieval:
+- Visual Search: ColPali-based visual similarity search
 """
 
 from src.pdf_framework.search.strategies.adaptive import AdaptiveSearchStrategy
@@ -19,6 +22,7 @@ from src.pdf_framework.search.strategies.graphrag_local import GraphRAGLocalStra
 from src.pdf_framework.search.strategies.hybrid_search import HybridSearchStrategy
 from src.pdf_framework.search.strategies.mmr_search import MMRSearchStrategy
 from src.pdf_framework.search.strategies.vector_search import VectorSearchStrategy
+from src.pdf_framework.search.strategies.visual import VisualSearchStrategy
 
 __all__ = [
     "VectorSearchStrategy",
@@ -29,4 +33,5 @@ __all__ = [
     "GraphRAGGlobalStrategy",  # Phase 6.4
     "AutoMergeStrategy",  # Phase 7.3
     "AdaptiveSearchStrategy",  # Phase 8.4
+    "VisualSearchStrategy",  # Phase 55 - ColPali Visual Retrieval
 ]

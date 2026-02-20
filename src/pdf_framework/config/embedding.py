@@ -26,3 +26,7 @@ class EmbeddingSettings(BaseSettings):
     jina_api_key: str = ""  # Jina AI API key (or set EMBEDDING__JINA_API_KEY)
     jina_task: str = "retrieval.passage"  # Task type for Jina v3
     jina_truncate_dim: int | None = None  # Matryoshka dimension truncation (1024→512/256)
+
+    # Phase 48: Late Chunking (Jina v3)
+    late_chunking: bool = False  # Enable late chunking (preserves cross-chunk context)
+    late_chunking_max_tokens: int = 7000  # Max tokens per late chunking window (~8192 limit)

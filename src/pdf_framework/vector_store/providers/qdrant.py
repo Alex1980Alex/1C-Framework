@@ -679,3 +679,254 @@ class QdrantVectorStore(BaseVectorStore):
 
         logger.info("[QDRANT] Sparse rebuild complete: %d total points", updated)
         return updated
+
+    # ------------------------------------------------------------------
+    # BGE-M3 Unified Model (Phase 56) - 3 named vectors
+    # ------------------------------------------------------------------
+
+    async def create_bgem3_collection(
+        self,
+        collection_name: str = "document_chunks_bgem3",
+        dimensions: int = 1024,
+    ) -> None:
+        """Create a BGE-M3 unified collection with 3 named vectors.
+
+        Args:
+            collection_name: Collection name
+            dimensions: Dense vector dimension (1024 for BGE-M3)
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        from qdrant_client.models import Distance, VectorParams, SparseVectorParams
+
+        await self._client.create_collection(
+            collection_name=collection_name,
+            vectors_config={
+                "dense": VectorParams(size=dimensions, distance=Distance.COSINE),
+                "colbert": VectorParams(size=dimensions, distance=Distance.COSINE),
+            },
+            sparse_vectors_config={
+                "sparse": SparseVectorParams(),
+            },
+            optimizers_config={"indexing_threshold": 10000},
+        )
+        logger.info(f"[QDRANT] Created BGE-M3 collection: {collection_name}")
+
+    async def add_bgem3_documents(
+        self,
+        chunks: list[Any],
+        embeddings: list[Any],
+    ) -> list[str]:
+        """Add documents with BGE-M3 embeddings (dense + sparse + colbert).
+
+        Args:
+            chunks: Document chunks
+            embeddings: BGE-M3 output objects
+
+        Returns:
+            List of chunk IDs
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        from qdrant_client.models import PointStruct
+        import numpy as np
+
+        ids = []
+        points = []
+
+        for chunk, output in zip(chunks, embeddings):
+            # Mean pool ColBERT to single vector
+            colbert_pooled = np.mean(output.colbert, axis=0).tolist()
+
+            points.append(PointStruct(
+                id=_to_qdrant_id(chunk.id),
+                vector={
+                    "dense": output.dense,
+                    "sparse": output.sparse,
+                    "colbert": colbert_pooled,
+                },
+                payload={
+                    "original_id": chunk.id,
+                    "content": chunk.content,
+                    "document_id": chunk.document_id,
+                    "page_number": chunk.page_number or 0,
+                    "section": chunk.section,
+                    "chunk_index": chunk.chunk_index,
+                    **{k: v for k, v in chunk.metadata.items()
+                       if k not in _STANDARD_PAYLOAD_FIELDS},
+                },
+            ))
+            ids.append(chunk.id)
+
+        # Batch upsert
+        for i in range(0, len(points), _UPSERT_BATCH_SIZE):
+            batch = points[i:i + _UPSERT_BATCH_SIZE]
+            await self._client.upsert(
+                collection_name=self._collection_name,
+                points=batch,
+            )
+
+        logger.info(f"[QDRANT] Added {len(points)} BGE-M3 points")
+        return ids
+
+    # ------------------------------------------------------------------
+    # Visual Search (Phase 55) - ColPali multi-vector support
+    # ------------------------------------------------------------------
+
+    async def create_visual_collection(
+        self,
+        collection_name: str = "visual_pages",
+        dimensions: int = 128,
+    ) -> None:
+        """Create a separate collection for visual embeddings.
+
+        Visual embeddings use multi-vector ColPali format.
+        Each point stores a single 128-dim vector (mean of multi-vectors).
+
+        Args:
+            collection_name: Name of visual collection
+            dimensions: Embedding dimension (default 128 for ColPali)
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        from qdrant_client.models import Distance, VectorParams
+
+        collections = await self._client.get_collections()
+        existing = [c.name for c in collections.collections]
+
+        if collection_name not in existing:
+            await self._client.create_collection(
+                collection_name=collection_name,
+                vectors_config=VectorParams(
+                    size=dimensions,
+                    distance=Distance.COSINE,
+                ),
+                optimizers_config={"indexing_threshold": 10000},
+            )
+            logger.info(f"[QDRANT] Created visual collection: {collection_name}")
+
+    async def add_visual_pages(
+        self,
+        visual_pages: list[Any],  # VisualPage objects
+        collection_name: str = "visual_pages",
+    ) -> list[str]:
+        """Add visual page embeddings to Qdrant.
+
+        Args:
+            visual_pages: List of VisualPage objects with embeddings
+            collection_name: Visual collection name
+
+        Returns:
+            List of page IDs
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        from qdrant_client.models import PointStruct
+        import numpy as np
+
+        # Ensure collection exists
+        await self.create_visual_collection(collection_name)
+
+        ids = []
+        points = []
+
+        for page in visual_pages:
+            # VisualPage multi-vector embedding: (n_tokens, dim)
+            # For Qdrant, we use mean pooling to get single vector
+            multi_vec = page.embedding
+            single_vec = np.mean(multi_vec, axis=0).tolist()
+
+            qdrant_id = _to_qdrant_id(page.page_id)
+
+            points.append(PointStruct(
+                id=qdrant_id,
+                vector=single_vec,
+                payload={
+                    "page_id": page.page_id,
+                    "document_id": page.document_id,
+                    "page_number": page.page_number,
+                    "n_tokens": multi_vec.shape[0],
+                    "thumbnail_path": page.thumbnail_path,
+                    "indexed_at": page.indexed_at.isoformat(),
+                    **page.metadata,
+                },
+            ))
+            ids.append(page.page_id)
+
+        # Batch upsert
+        for i in range(0, len(points), _UPSERT_BATCH_SIZE):
+            batch = points[i:i + _UPSERT_BATCH_SIZE]
+            await self._client.upsert(
+                collection_name=collection_name,
+                points=batch,
+            )
+
+        logger.info(f"[QDRANT] Added {len(points)} visual pages to {collection_name}")
+        return ids
+
+    async def visual_search(
+        self,
+        query_embedding: list[float],
+        collection_name: str = "visual_pages",
+        k: int = 5,
+        filter: dict[str, Any] | None = None,
+    ) -> list[SearchResult]:
+        """Search visual pages by query embedding.
+
+        Args:
+            query_embedding: Query vector (single 128-dim)
+            collection_name: Visual collection name
+            k: Number of results
+            filter: Optional metadata filter
+
+        Returns:
+            List of search results
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        from qdrant_client.models import Filter, FieldCondition, MatchValue
+
+        search_filter = None
+        if filter:
+            conditions = [
+                FieldCondition(key=key, match=MatchValue(value=value))
+                for key, value in filter.items()
+            ]
+            search_filter = Filter(must=conditions)
+
+        result = await self._client.query_points(
+            collection_name=collection_name,
+            query=query_embedding,
+            limit=k,
+            query_filter=search_filter,
+            with_payload=True,
+        )
+
+        # Convert to SearchResult
+        results = []
+        for point in result.points:
+            payload = point.payload or {}
+            results.append(SearchResult(
+                chunk=DocumentChunk(
+                    id=payload.get("page_id", str(point.id)),
+                    content=f"Visual page {payload.get('page_number', 0)}",
+                    document_id=payload.get("document_id", ""),
+                    page_number=payload.get("page_number", 0),
+                    section="visual",
+                    chunk_index=payload.get("page_number", 0),
+                    metadata={
+                        "chunk_type": "visual",
+                        "thumbnail_path": payload.get("thumbnail_path"),
+                        "n_tokens": payload.get("n_tokens", 0),
+                    },
+                ),
+                score=point.score,
+                source="qdrant_visual",
+            ))
+
+        return results

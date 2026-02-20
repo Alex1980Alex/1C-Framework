@@ -62,3 +62,18 @@ class OpenAICompatSettings(BaseSettings):
     enabled: bool = True
     model_name: str = "pdf-rag"
     model_description: str = "PDF RAG Framework with Vector and Graph Search"
+
+
+class QueueSettings(BaseSettings):
+    """Phase 59: Async Processing Queue (ARQ) configuration."""
+
+    enabled: bool = False  # Disabled by default for dev
+    redis_url: str = "redis://localhost:6379/0"
+    max_jobs: int = 100
+    job_timeout: int = 3600  # 1 hour
+    retry_attempts: int = 3
+    retry_delay_seconds: int = 60
+    # Queue settings
+    queue_name: str = "arq:queue"
+    # Health check
+    health_check_interval: int = 30

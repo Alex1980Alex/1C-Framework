@@ -281,3 +281,11 @@ class IncrementalGraphUpdater:
             return self._graph_store._graph
         # Fallback: should not happen in production
         return nx.DiGraph()
+
+
+def get_incremental_updater(
+    graph_store,
+    settings: GraphRAGSettings | None = None,
+) -> IncrementalGraphUpdater:
+    """Factory: create an IncrementalGraphUpdater for the given graph store."""
+    return IncrementalGraphUpdater(graph_store=graph_store, settings=settings)

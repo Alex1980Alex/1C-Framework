@@ -29,6 +29,14 @@ class AgentSettings(BaseSettings):
     # Parallel entity extraction (graph building)
     graph_concurrency: int = 5  # Max concurrent LLM calls for entity extraction
 
+    # Phase 54: Model Routing
+    model_map_simple: str = "claude-haiku-3-5"
+    model_map_moderate: str = "claude-sonnet-4-5-20250929"
+    model_map_complex: str = "claude-opus-4-6"
+    cost_budget_per_query: float = 0.10  # USD
+    cost_budget_daily: float = 50.0  # USD
+    model_routing_enabled: bool = False
+
 
 class SelfRAGSettings(BaseSettings):
     """Phase 5: Self-RAG & Corrective RAG configuration.
