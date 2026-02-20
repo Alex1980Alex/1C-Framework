@@ -11,6 +11,7 @@ from .external import ExternalSourcesSettings, OptimizationSettings
 from .features import (
     AdaptiveRAGSettings,
     ConversationSettings,
+    GuardrailsSettings,
     HierarchicalSearchSettings,
     LayoutSettings,
     ParentChildSettings,
@@ -25,6 +26,7 @@ from .infrastructure import (
     GraphStoreSettings,
     MCPServerSettings,
     OpenAICompatSettings,
+    QueueSettings,
     UISettings,
 )
 from .observability import (
@@ -70,6 +72,7 @@ __all__ = [
     "AuthSettings",
     "UISettings",
     "OpenAICompatSettings",
+    "QueueSettings",
     # Features
     "ParentChildSettings",
     "AdaptiveRAGSettings",
@@ -79,6 +82,7 @@ __all__ = [
     "SummaryIndexSettings",
     "SuggestionSettings",
     "HierarchicalSearchSettings",
+    "GuardrailsSettings",
     # Observability
     "ObservabilitySettings",
     "CacheSettings",

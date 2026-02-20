@@ -170,6 +170,47 @@ async def list_tools() -> list[Tool]:
             description="Get statistics about indexed documents and knowledge graph.",
             inputSchema={"type": "object", "properties": {}},
         ),
+        # ---- Phase 55: Visual Search ----
+        Tool(
+            name="visual_search",
+            description="Search visual pages (tables, charts, diagrams) by text description.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Text description of visual content"},
+                    "k": {"type": "integer", "default": 5},
+                    "document_id": {"type": "string", "description": "Filter by document"},
+                },
+                "required": ["query"],
+            },
+        ),
+        Tool(
+            name="visual_hybrid_search",
+            description="Hybrid visual + text search with RRF fusion.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"},
+                    "k": {"type": "integer", "default": 5},
+                    "visual_weight": {"type": "number", "default": 0.5},
+                    "text_weight": {"type": "number", "default": 0.5},
+                },
+                "required": ["query"],
+            },
+        ),
+        # ---- Phase 57: Plan-Execute ----
+        Tool(
+            name="plan_execute",
+            description="Plan-Execute agent: breaks complex queries into steps and executes with appropriate tools.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Complex query to analyze"},
+                    "max_iterations": {"type": "integer", "default": 5},
+                },
+                "required": ["query"],
+            },
+        ),
     ]
 
 
@@ -371,6 +412,102 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             "vector_store": {"document_count": vector_count},
             "graph_store": graph_stats,
         }))]
+
+    elif name == "visual_search":
+        response = await components.search_manager.search_visual(
+            query=arguments["query"],
+            k=arguments.get("k", 5),
+            document_id=arguments.get("document_id"),
+        )
+        results = [
+            {
+                "chunk_id": r.chunk.id,
+                "content": r.chunk.content[:500],
+                "page": r.chunk.metadata.get("page_number"),
+                "score": round(r.score, 3),
+                "source": r.source,
+            }
+            for r in response.results
+        ]
+        return [TextContent(type="text", text=json.dumps(results, ensure_ascii=False))]
+
+    elif name == "visual_hybrid_search":
+        response = await components.search_manager.search_hybrid_visual_text(
+            query=arguments["query"],
+            k=arguments.get("k", 5),
+            visual_weight=arguments.get("visual_weight", 0.5),
+            text_weight=arguments.get("text_weight", 0.5),
+        )
+        results = [
+            {
+                "chunk_id": r.chunk.id,
+                "content": r.chunk.content[:500],
+                "page": r.chunk.metadata.get("page_number"),
+                "score": round(r.score, 3),
+                "source": r.source,
+            }
+            for r in response.results
+        ]
+        metadata = response.metadata or {}
+        return [TextContent(type="text", text=json.dumps({
+            "results": results,
+            "visual_count": metadata.get("visual_count", 0),
+            "text_count": metadata.get("text_count", 0),
+        }, ensure_ascii=False))]
+
+    elif name == "plan_execute":
+        from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
+        from langchain_anthropic import ChatAnthropic
+
+        llm_kwargs = {
+            "model": components.settings.agent.model,
+            "temperature": 0.0,
+            "max_tokens": 4096,
+        }
+        if components.settings.agent.base_url:
+            llm_kwargs["base_url"] = components.settings.agent.base_url
+
+        llm = ChatAnthropic(
+            **llm_kwargs,
+            api_key=components.settings.anthropic_api_key.get_secret_value(),
+        )
+
+        tools = {
+            "search": lambda q, **kw: components.search_manager.search(q, "hybrid", **kw),
+            "graph_query": lambda q, **kw: components.search_manager.search(q, "graph", **kw),
+            "calculate": lambda expr: str(eval(expr, {"__builtins__": {}}, {})),
+            "web_search": lambda q, **kw: components.search_manager.search(q, "hybrid", **kw),
+        }
+
+        agent = create_plan_execute_agent(
+            llm=llm,
+            search_manager=components.search_manager,
+            tools=tools,
+            max_iterations=arguments.get("max_iterations", 5),
+        )
+
+        result = await agent.ainvoke({
+            "query": arguments["query"],
+            "max_iterations": arguments.get("max_iterations", 5),
+        })
+
+        steps = [
+            {
+                "step_id": s.step_id,
+                "description": s.description,
+                "tool": s.tool,
+                "status": s.status,
+                "result": str(s.result) if s.result else None,
+            }
+            for s in result.plan
+        ]
+
+        return [TextContent(type="text", text=json.dumps({
+            "query": arguments["query"],
+            "answer": result.final_answer,
+            "steps": steps,
+            "iterations": result.iterations,
+        }, ensure_ascii=False))]
 
     else:
         return [TextContent(type="text", text=f"Unknown tool: {name}")]

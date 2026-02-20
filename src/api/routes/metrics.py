@@ -391,3 +391,34 @@ async def reset_metrics():
     metrics_collector._last_reset = datetime.now(timezone.utc)
 
     return {"status": "ok", "message": "Daily metrics reset"}
+
+
+# =============================================================================
+# Phase 46: Prometheus Metrics Endpoint
+# =============================================================================
+
+from fastapi.responses import Response
+
+from src.pdf_framework.observability.prometheus_metrics import (
+    get_content_type,
+    get_metrics_text,
+)
+
+
+@router.get("/prometheus")
+async def get_prometheus_metrics():
+    """
+    F3.3.3: Get metrics in Prometheus exposition format.
+
+    Returns metrics in Prometheus text format for scraping by Prometheus server.
+    Includes:
+    - query_latency_seconds (histogram)
+    - query_total (counter)
+    - cache_hit_total, cache_miss_total (counters)
+    - token_usage_total (counter)
+    - error_total (counter)
+    """
+    metrics_text = get_metrics_text()
+    content_type = get_content_type()
+
+    return Response(content=metrics_text, media_type=content_type)

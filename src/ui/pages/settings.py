@@ -1,4 +1,10 @@
-"""Settings page for Gradio UI (Phase 14.1) — Russian localization."""
+"""Settings page for Gradio UI (UX v2).
+
+Improvements:
+- Confirmation dialogs for all destructive actions
+- Visual health status indicators (colored dots)
+- Error handling with gr.Info/Warning/Error
+"""
 
 import logging
 import os
@@ -10,7 +16,6 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-# Exit code that signals "restart requested" to the wrapper script
 RESTART_EXIT_CODE = 42
 
 
@@ -39,25 +44,16 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                 cache_info = gr.Markdown("*Загрузка...*")
 
             with gr.Tab("Здоровье системы"):
-                health_info = gr.Markdown("*Загрузка...*")
+                health_info = gr.HTML("<p><em>Загрузка...</em></p>")
                 check_health_btn = gr.Button("Проверить")
 
             with gr.Tab("Очистка данных"):
                 gr.Markdown(
-                    "Очистка хранилищ данных. "
-                    "После очистки нужно переиндексировать документы."
+                    "**Внимание:** очистка хранилищ необратима. "
+                    "Будут удалены все чанки, граф знаний и кэш. "
+                    "После очистки потребуется переиндексация документов."
                 )
                 data_result = gr.Markdown("")
-                with gr.Row():
-                    clear_vectors_btn = gr.Button(
-                        "Очистить векторное хранилище", variant="stop",
-                    )
-                    clear_graph_btn = gr.Button(
-                        "Очистить граф знаний", variant="stop",
-                    )
-                    clear_cache_btn = gr.Button(
-                        "Очистить кэш", variant="stop",
-                    )
                 reset_all_btn = gr.Button(
                     "Сбросить всё (вектор + граф + кэш)", variant="stop", size="lg",
                 )
@@ -92,6 +88,8 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     f"- Сущностей в графе: **{nodes}**\n"
                     f"- Связей в графе: **{edges}**"
                 )
+            except requests.ConnectionError:
+                return "**API сервер недоступен.** Запустите backend: `make api`"
             except Exception as e:
                 return f"**Ошибка:** {e}"
 
@@ -122,10 +120,13 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     f"- Кэш LLM (hit rate): {data.get('llm', {}).get('hit_rate', 'н/д')}\n"
                     f"- Кэш документов: {data.get('document', {}).get('entries', 'н/д')} записей"
                 )
+            except requests.ConnectionError:
+                return "**API сервер недоступен.** Запустите backend: `make api`"
             except Exception as e:
                 return f"**Ошибка:** {e}"
 
         def check_health():
+            """Check health with visual status indicators."""
             try:
                 response = requests.get(f"{api_url}/health", timeout=10)
                 response.raise_for_status()
@@ -133,12 +134,23 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
 
                 raw_status = data.get("status", "")
                 is_healthy = raw_status in ("healthy", "unknown", "ok", "up")
-                status = "Работает" if is_healthy else "Проблемы"
+
+                # Build HTML with status dots
+                status_color = "#22c55e" if is_healthy else "#ef4444"
+                status_text = "Работает" if is_healthy else "Проблемы"
+
+                html_parts = [
+                    f'<div style="margin-bottom:12px;">'
+                    f'<span class="status-dot" style="display:inline-block;width:12px;height:12px;'
+                    f'border-radius:50%;background:{status_color};margin-right:8px;"></span>'
+                    f'<strong>Состояние системы: {status_text}</strong></div>',
+                    '<div style="margin-top:8px;"><strong>Компоненты:</strong><ul style="list-style:none;padding-left:0;">',
+                ]
 
                 checks = data.get("checks", {})
-                check_lines = []
                 for k, v in checks.items():
                     ok = v.get("status") in ("ok", "up", "healthy")
+                    dot_color = "#22c55e" if ok else "#ef4444"
                     label = "OK" if ok else "ОШИБКА"
                     extra = ""
                     if k == "vector_store" and v.get("document_count") is not None:
@@ -148,49 +160,31 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     elif k == "llm":
                         extra = f" ({v.get('model', '')})"
                     elif k == "disk_space":
-                        extra = f" (свободно {v.get('free_gb', 0):.0f} ГБ)"
-                    check_lines.append(f"- {k}: {label}{extra}")
+                        free = v.get('free_gb', 0)
+                        extra = f" (свободно {free:.0f} ГБ)" if isinstance(free, (int, float)) else ""
 
+                    html_parts.append(
+                        f'<li style="padding:4px 0;">'
+                        f'<span style="display:inline-block;width:10px;height:10px;'
+                        f'border-radius:50%;background:{dot_color};margin-right:8px;"></span>'
+                        f'{k}: {label}{extra}</li>'
+                    )
+
+                html_parts.append('</ul></div>')
+                return "".join(html_parts)
+
+            except requests.ConnectionError:
                 return (
-                    f"**Состояние системы:** {status}\n\n"
-                    "**Компоненты:**\n" + "\n".join(check_lines) if check_lines
-                    else f"**Состояние системы:** {status}"
+                    '<div style="padding:12px;">'
+                    '<span style="display:inline-block;width:12px;height:12px;'
+                    'border-radius:50%;background:#ef4444;margin-right:8px;"></span>'
+                    '<strong>API сервер недоступен.</strong> Запустите backend: <code>make api</code></div>'
                 )
             except Exception as e:
-                return f"**Ошибка:** {e}"
-
-        def clear_cache():
-            try:
-                response = requests.post(f"{api_url}/cache/clear", timeout=30)
-                response.raise_for_status()
-                data = response.json()
-                return f"**Кэш очищен:** {data.get('cleared', 0)} записей удалено"
-            except Exception as e:
-                return f"**Ошибка:** {e}"
-
-        def clear_vectors():
-            try:
-                resp = requests.delete(f"{api_url}/documents/clear", timeout=60)
-                resp.raise_for_status()
-                data = resp.json()
-                return f"**Векторное хранилище очищено:** удалено {data.get('cleared_chunks', 0)} чанков"
-            except Exception as e:
-                return f"**Ошибка:** {e}"
-
-        def clear_graph_data():
-            try:
-                resp = requests.delete(f"{api_url}/graph/clear", timeout=60)
-                resp.raise_for_status()
-                data = resp.json()
-                nodes = data.get("deleted_nodes", 0)
-                edges = data.get("deleted_edges", 0)
-                return f"**Граф очищен:** удалено {nodes} сущностей, {edges} связей"
-            except Exception as e:
-                return f"**Ошибка:** {e}"
+                return f'<div style="padding:12px;"><strong>Ошибка:</strong> {e}</div>'
 
         def reset_all_data():
             results = []
-            # 1. Vector store
             try:
                 resp = requests.delete(f"{api_url}/documents/clear", timeout=60)
                 resp.raise_for_status()
@@ -198,7 +192,6 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                 results.append(f"Вектор: {chunks} чанков удалено")
             except Exception as e:
                 results.append(f"Вектор: ошибка — {e}")
-            # 2. Graph
             try:
                 resp = requests.delete(f"{api_url}/graph/clear", timeout=60)
                 resp.raise_for_status()
@@ -206,7 +199,6 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                 results.append(f"Граф: {data.get('deleted_nodes', 0)} сущностей удалено")
             except Exception as e:
                 results.append(f"Граф: ошибка — {e}")
-            # 3. Cache
             try:
                 resp = requests.post(f"{api_url}/cache/clear", timeout=30)
                 resp.raise_for_status()
@@ -214,13 +206,12 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                 results.append(f"Кэш: {cleared} записей удалено")
             except Exception as e:
                 results.append(f"Кэш: ошибка — {e}")
+            gr.Info("Полный сброс завершён")
             return "**Сброс завершён:**\n- " + "\n- ".join(results)
 
         def restart_server():
-            """Restart the UI server: spawn a new process, then exit."""
+            """Restart the UI server."""
             logger.info("UI restart requested by user")
-
-            # Build a command that waits for port to free, then starts UI
             python = sys.executable
             cwd = os.getcwd()
             no_window = (
@@ -237,7 +228,6 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
 
             def _do_restart():
                 import time
-                # Spawn a helper that will outlive us and start the server silently
                 subprocess.Popen(
                     [python, "-c", restart_script],
                     creationflags=no_window,
@@ -250,7 +240,15 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
             threading.Thread(target=_do_restart, daemon=True).start()
             return
 
-        # JS: countdown timer then auto-refresh the page
+        # --- JS confirmations ---
+        reset_all_confirm_js = """
+        () => {
+            if (!confirm('СБРОСИТЬ ВСЕ ДАННЫЕ?\\n\\nБудут удалены:\\n- Все чанки из векторного хранилища\\n- Все сущности и связи из графа\\n- Весь кэш\\n\\nЭто действие необратимо!')) {
+                throw new Error('cancelled');
+            }
+        }
+        """
+
         restart_js = """
         () => {
             let sec = 7;
@@ -273,10 +271,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
 
         refresh_stats_btn.click(load_stats, None, [stats_info])
         check_health_btn.click(check_health, None, [health_info])
-        clear_vectors_btn.click(clear_vectors, None, [data_result])
-        clear_graph_btn.click(clear_graph_data, None, [data_result])
-        clear_cache_btn.click(clear_cache, None, [data_result])
-        reset_all_btn.click(reset_all_data, None, [data_result])
+        reset_all_btn.click(reset_all_data, None, [data_result], js=reset_all_confirm_js)
         restart_btn.click(restart_server, None, None, js=restart_js)
 
         if app is not None:

@@ -274,6 +274,18 @@ class NetworkXGraphStore(BaseGraphStore):
             self._graph.remove_node(entity_id)
             self._save_to_file()
 
+    async def delete_by_document(self, document_id: str) -> int:
+        nodes_to_remove = [
+            nid
+            for nid, data in self._graph.nodes(data=True)
+            if data.get("source_document_id") == document_id
+        ]
+        for nid in nodes_to_remove:
+            self._graph.remove_node(nid)  # also removes connected edges
+        if nodes_to_remove:
+            self._save_to_file()
+        return len(nodes_to_remove)
+
     async def clear(self) -> None:
         self._graph.clear()
         self._save_to_file()

@@ -5,6 +5,7 @@ Provides interception points for LLM calls:
 - Request/response logging
 - Content safety validation
 - Dynamic model selection based on query complexity
+- Langfuse tracing integration (Phase 46)
 
 Usage:
     from src.pdf_framework.agents.rag.middleware import TokenTracker, with_middleware
@@ -24,6 +25,14 @@ from langchain_core.messages import BaseMessage
 from langchain_core.outputs import LLMResult
 
 logger = logging.getLogger(__name__)
+
+# Try to import Langfuse callback (Phase 46)
+try:
+    from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
+    LANGFUSE_AVAILABLE = True
+except ImportError:
+    LANGFUSE_AVAILABLE = False
+    logger.debug("[MIDDLEWARE] Langfuse callback not available")
 
 
 # ---------------------------------------------------------------------------
@@ -158,12 +167,56 @@ class ContentGuard(AsyncCallbackHandler):
 def with_middleware(
     llm: Any,
     *handlers: AsyncCallbackHandler,
+    enable_langfuse: bool = True,
+    user_id: str | None = None,
+    session_id: str | None = None,
 ) -> Any:
     """Attach callback handlers to an LLM instance.
 
-    Returns the same LLM with callbacks configured.
+    Args:
+        llm: The LLM instance
+        *handlers: Additional callback handlers to attach
+        enable_langfuse: Whether to add Langfuse callback (if available)
+        user_id: User ID for trace attribution
+        session_id: Session ID for trace grouping
+
+    Returns:
+        The same LLM with callbacks configured.
     """
     existing = list(llm.callbacks or [])
     existing.extend(handlers)
+
+    # Add Langfuse callback if enabled and available (F3.2)
+    if enable_langfuse and LANGFUSE_AVAILABLE:
+        langfuse_cb = LangfuseCallbackHandler(
+            enabled=True,
+            user_id=user_id,
+            session_id=session_id,
+        )
+        existing.append(langfuse_cb)
+
     llm.callbacks = existing
     return llm
+
+
+def create_traced_llm(
+    llm: Any,
+    user_id: str | None = None,
+    session_id: str | None = None,
+    **llm_kwargs
+) -> Any:
+    """
+    F3.2.2: Create LLM with Langfuse tracing enabled.
+
+    Convenience function to create an LLM with automatic tracing.
+
+    Args:
+        llm: Base LLM instance
+        user_id: User ID for attribution
+        session_id: Session ID for grouping
+        **llm_kwargs: Additional kwargs for LLM initialization
+
+    Returns:
+        LLM with Langfuse callback attached
+    """
+    return with_middleware(llm, user_id=user_id, session_id=session_id)

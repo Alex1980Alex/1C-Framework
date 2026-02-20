@@ -232,3 +232,105 @@ async def get_neighbors(entity_id: str, depth: int = 1):
             for r in subgraph.relations
         ],
     }
+
+
+# Phase 61: Incremental graph update endpoints
+
+@router.post("/incremental-update")
+async def incremental_graph_update(document_id: str, tenant_id: str = "default"):
+    """Incrementally update graph for a document.
+
+    Only processes changed chunks instead of full document rebuild.
+
+    Phase 61: Incremental Graph Update - detects changes,
+    re-extracts entities for modified/new chunks, and updates
+    entity embeddings.
+    """
+    from src.pdf_framework.graph_store.change_detector import get_change_detector
+    from src.pdf_framework.graph_store.incremental import IncrementalGraphUpdater
+    from src.pdf_framework.vector_store.base import DocumentChunk
+
+    components = await get_components()
+
+    # Get document chunks from vector store
+    chunks = await components.vector_store.get_chunks(document_id, tenant_id)
+
+    if not chunks:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No chunks found for document: {document_id}",
+        )
+
+    # Convert chunks to dict format for change detector
+    chunk_dicts = [
+        {
+            "id": c.chunk_id,
+            "content": c.text,
+            "metadata": getattr(c, "metadata", {}),
+        }
+        for c in chunks
+    ]
+
+    # Create incremental updater
+    updater = IncrementalGraphUpdater(
+        graph_store=components.graph_store,
+        entity_extractor=getattr(components, "entity_extractor", None),
+    )
+
+    # Update graph incrementally
+    result = await updater.update_document(
+        chunks=chunk_dicts,
+        document_id=document_id,
+        tenant_id=tenant_id,
+    )
+
+    # Update entity embeddings if enabled
+    if components.entity_embeddings and result.get("added_entities", 0) > 0:
+        # Get added/modified entity IDs
+        # This would require tracking entity IDs during update
+        # For now, do a full rebuild
+        try:
+            await components.entity_embeddings.build(components.graph_store)
+        except Exception as e:
+            logger.warning("[INCREMENTAL] Entity embedding update failed: %s", e)
+
+    return {
+        "status": "success",
+        "document_id": document_id,
+        **result,
+    }
+
+
+@router.get("/incremental/detect-changes")
+async def detect_graph_changes(document_id: str):
+    """Detect changes in document chunks for incremental update.
+
+    Returns ChangeSet with added/modified/deleted chunk IDs.
+    """
+    from src.pdf_framework.graph_store.change_detector import get_change_detector
+
+    components = await get_components()
+
+    # Get current chunks
+    chunks = await components.vector_store.get_chunks(document_id, "default")
+
+    chunk_dicts = [
+        {
+            "id": c.chunk_id,
+            "content": c.text,
+            "metadata": getattr(c, "metadata", {}),
+        }
+        for c in chunks
+    ]
+
+    # Detect changes
+    detector = get_change_detector()
+    changes = await detector.detect_changes(chunk_dicts, document_id)
+
+    return {
+        "document_id": document_id,
+        "changes": changes.summary(),
+        "added_chunk_ids": changes.added,
+        "modified_chunk_ids": changes.modified,
+        "deleted_chunk_ids": changes.deleted,
+    }

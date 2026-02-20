@@ -310,3 +310,239 @@ class EntityEmbeddingBuilder:
             {**point.payload, "score": point.score}
             for point in result.points
         ]
+
+    # Phase 61: Incremental update methods
+
+    async def update_entities(
+        self,
+        entity_ids: list[str],
+        graph_store: Any,
+    ) -> dict[str, int]:
+        """Update embeddings for specific entities.
+
+        Args:
+            entity_ids: List of entity IDs to update
+            graph_store: Graph store with _graph attribute
+
+        Returns:
+            Stats dict: updated_count
+        """
+        graph = getattr(graph_store, "_graph", None)
+        if graph is None:
+            return {"updated_count": 0}
+
+        await self._ensure_collection()
+
+        items_to_update = []
+        node_names: dict[str, str] = {}
+
+        for node_id, data in graph.nodes(data=True):
+            if node_id not in entity_ids:
+                continue
+
+            if data.get("node_type") == "COMMUNITY":
+                continue
+
+            name = data.get("name", "")
+            if not name:
+                continue
+
+            node_names[node_id] = name
+            entity_type = data.get("entity_type", data.get("type", "UNKNOWN"))
+            props = data.get("properties", {})
+            if isinstance(props, str):
+                props = {}
+
+            text = _entity_text(name, entity_type, props)
+            eid = _make_id("entity", node_id)
+
+            payload = {
+                "type": "entity",
+                "graph_id": node_id,
+                "name": name,
+                "entity_type": entity_type,
+                "text": text,
+                "source_chunk_ids": data.get("source_chunk_ids", []),
+                "source_document_id": data.get("source_document_id", ""),
+            }
+            items_to_update.append((eid, text, payload))
+
+        if not items_to_update:
+            return {"updated_count": 0}
+
+        # Embed and upsert
+        texts = [item[1] for item in items_to_update]
+        embeddings = await self._embedding_engine.embed_batch(texts)
+
+        from qdrant_client.models import PointStruct
+
+        client = await self._get_client()
+        points = [
+            PointStruct(id=eid, vector=embeddings[i], payload=payload)
+            for i, (eid, _text, payload) in enumerate(items_to_update)
+        ]
+
+        await client.upsert(
+            collection_name=self._collection_name,
+            points=points,
+        )
+
+        logger.info("[LIGHTRAG] Updated %d entity embeddings", len(points))
+        return {"updated_count": len(points)}
+
+    async def delete_entities(self, entity_ids: list[str]) -> dict[str, int]:
+        """Delete embeddings for specific entities.
+
+        Args:
+            entity_ids: List of entity graph IDs to delete
+
+        Returns:
+            Stats dict: deleted_count
+        """
+        client = await self._get_client()
+
+        deleted = 0
+        for entity_id in entity_ids:
+            eid = _make_id("entity", entity_id)
+            try:
+                await client.delete(
+                    collection_name=self._collection_name,
+                    points_selector=[eid],
+                )
+                deleted += 1
+            except Exception:
+                pass  # Point may not exist
+
+        logger.info("[LIGHTRAG] Deleted %d entity embeddings", deleted)
+        return {"deleted_count": deleted}
+
+    async def delete_by_document(self, document_id: str) -> int:
+        """Delete all entity/relation embeddings originating from a document.
+
+        Uses Qdrant scroll + filter on payload.source_document_id.
+
+        Returns:
+            Number of points deleted.
+        """
+        from qdrant_client.models import Filter, FieldCondition, MatchValue, PointIdsList
+
+        client = await self._get_client()
+
+        # Check if collection exists
+        collections = await client.get_collections()
+        names = [c.name for c in collections.collections]
+        if self._collection_name not in names:
+            return 0
+
+        doc_filter = Filter(
+            must=[
+                FieldCondition(
+                    key="source_document_id",
+                    match=MatchValue(value=document_id),
+                )
+            ]
+        )
+
+        # Scroll to count, then delete
+        points, _offset = await client.scroll(
+            collection_name=self._collection_name,
+            scroll_filter=doc_filter,
+            limit=10000,
+            with_payload=False,
+        )
+        if not points:
+            return 0
+
+        point_ids = [p.id for p in points]
+        await client.delete(
+            collection_name=self._collection_name,
+            points_selector=PointIdsList(points=point_ids),
+        )
+        logger.info(
+            "[LIGHTRAG] Deleted %d entity embeddings for document %s",
+            len(point_ids), document_id,
+        )
+        return len(point_ids)
+
+    async def update_relations(
+        self,
+        relation_keys: list[tuple[str, str, str]],
+        graph_store: Any,
+    ) -> dict[str, int]:
+        """Update embeddings for specific relations.
+
+        Args:
+            relation_keys: List of (source_id, relation_type, target_id) tuples
+            graph_store: Graph store with _graph attribute
+
+        Returns:
+            Stats dict: updated_count
+        """
+        graph = getattr(graph_store, "_graph", None)
+        if graph is None:
+            return {"updated_count": 0}
+
+        await self._ensure_collection()
+
+        items_to_update = []
+        node_names: dict[str, str] = {}
+
+        # Collect node names first
+        for node_id, data in graph.nodes(data=True):
+            name = data.get("name", "")
+            if name:
+                node_names[node_id] = name
+
+        # Find matching edges
+        relation_set = set(relation_keys)
+
+        for src_id, tgt_id, data in graph.edges(data=True):
+            rel_type = data.get("relation_type", data.get("type", "RELATED_TO"))
+            key = (src_id, rel_type, tgt_id)
+
+            if key not in relation_set:
+                continue
+
+            src_name = node_names.get(src_id, src_id)
+            tgt_name = node_names.get(tgt_id, tgt_id)
+            props = data.get("properties", {})
+            if isinstance(props, str):
+                props = {}
+
+            text = _relation_text(src_name, rel_type, tgt_name, props)
+            rid = _make_id("relation", f"{src_id}:{rel_type}:{tgt_id}")
+
+            payload = {
+                "type": "relation",
+                "source_id": src_id,
+                "target_id": tgt_id,
+                "source_name": src_name,
+                "target_name": tgt_name,
+                "relation_type": rel_type,
+                "text": text,
+                "source_chunk_id": data.get("source_chunk_id", ""),
+            }
+            items_to_update.append((rid, text, payload))
+
+        if not items_to_update:
+            return {"updated_count": 0}
+
+        # Embed and upsert
+        texts = [item[1] for item in items_to_update]
+        embeddings = await self._embedding_engine.embed_batch(texts)
+
+        from qdrant_client.models import PointStruct
+
+        client = await self._get_client()
+        points = [
+            PointStruct(id=rid, vector=embeddings[i], payload=payload)
+            for i, (rid, _text, payload) in enumerate(items_to_update)
+        ]
+
+        await client.upsert(
+            collection_name=self._collection_name,
+            points=points,
+        )
+
+        logger.info("[LIGHTRAG] Updated %d relation embeddings", len(points))
+        return {"updated_count": len(points)}

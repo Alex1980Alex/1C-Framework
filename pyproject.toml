@@ -24,6 +24,12 @@ dependencies = [
 
     # === Embeddings ===
     "sentence-transformers>=3.0",
+    # ColPali visual retrieval (Phase 55)
+    "colpali-engine>=0.1.0",
+    "transformers[torch]>=4.40.0",
+    "pillow>=10.0",
+    # BGE-M3 unified model (Phase 56)
+    "FlagEmbedding>=1.2.0",
 
     # === Graph ===
     "networkx>=3.4",
@@ -41,6 +47,7 @@ dependencies = [
     "pydantic-settings>=2.6",
     "rich>=13.0",
     "typer>=0.15",
+    "prometheus-client>=0.21",
 ]
 
 [project.optional-dependencies]
@@ -68,12 +75,17 @@ nlp = ["spacy>=3.8"]
 deep = ["deepagents>=0.1"]
 # LangSmith observability
 langsmith = ["langsmith>=0.2"]
+# Langfuse observability
+langfuse = ["langfuse>=2.0"]
 # All optional dependencies
 all = [
-    "pdf-vector-graph-framework[faiss,qdrant,neo4j,unstructured,docling,voyage,nlp,deep,langsmith]",
+    "pdf-vector-graph-framework[faiss,qdrant,neo4j,unstructured,docling,voyage,nlp,deep,langsmith,langfuse,queue]",
 ]
+# Phase 59: Async Processing Queue (ARQ + Redis)
+queue = ["arq>=0.26"]
 # Development
 dev = [
+    "pre-commit>=4.0",
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
@@ -102,6 +114,12 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests (require external services)",
+    "e2e: marks tests as end-to-end tests (require full stack)",
+    "unit: marks tests as unit tests (fast, isolated)",
+]
 
 [tool.mypy]
 python_version = "3.11"

@@ -1,4 +1,4 @@
-"""Gradio Web UI main application (Phase 14.1).
+"""Gradio Web UI main application (Phase 14.1 → UX v2).
 
 Provides a browser-based interface for:
 - Chat with PDF documents
@@ -8,7 +8,7 @@ Provides a browser-based interface for:
 - System settings and stats
 
 Author: Claude Code
-Version: 1.5.0 - Phase 14.1: Gradio Web UI
+Version: 2.0.0 - UX Overhaul: Theme, Dark Mode, Confirmations, Error Handling
 """
 
 import logging
@@ -20,8 +20,11 @@ from src.ui.pages.search import create_search_page
 from src.ui.pages.documents import create_documents_page
 from src.ui.pages.graph import create_graph_page
 from src.ui.pages.settings import create_settings_page
+from src.ui.theme import CUSTOM_CSS, CUSTOM_JS, PDFFrameworkTheme
 
 logger = logging.getLogger(__name__)
+
+APP_VERSION = "2.0.0"
 
 
 def create_app(api_url: str = "http://localhost:8000"):
@@ -34,16 +37,19 @@ def create_app(api_url: str = "http://localhost:8000"):
     Returns:
         Gradio Blocks app
     """
-    settings = get_settings()
-
     with gr.Blocks(
         title="PDF Vector & Graph Framework",
     ) as app:
-        gr.Markdown(
-            """
-            # PDF Vector & Graph Framework
-
-            Интеллектуальная обработка PDF-документов с векторным поиском и графами знаний.
+        # ── Branded header with dark mode toggle ──
+        gr.HTML(
+            f"""
+            <div class="header-bar">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <h1>PDF Vector & Graph Framework</h1>
+                    <span class="version-badge">v{APP_VERSION}</span>
+                </div>
+                <button id="dark-toggle" onclick="toggleDarkMode()">Dark Mode</button>
+            </div>
             """
         )
 
@@ -63,11 +69,8 @@ def create_app(api_url: str = "http://localhost:8000"):
             with gr.Tab("Настройки"):
                 create_settings_page(api_url, app=app)
 
-        gr.Markdown(
-            """
-            ---
-            **PDF Vector & Graph Framework** v1.5.0
-            """
+        gr.HTML(
+            f'<div class="footer-bar">PDF Vector & Graph Framework v{APP_VERSION}</div>'
         )
 
     return app
@@ -92,11 +95,16 @@ def launch_ui(
 
     app = create_app(api_url=api_url)
 
+    theme = PDFFrameworkTheme()
+
     app.launch(
         server_name=host or settings.ui.host,
         server_port=port or settings.ui.port,
         share=share if share is not None else settings.ui.share,
         show_error=True,
+        theme=theme,
+        css=CUSTOM_CSS,
+        js=CUSTOM_JS,
     )
 
 

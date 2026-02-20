@@ -57,6 +57,7 @@ class AskResponse(BaseModel):
     sources: list[str] = Field(default_factory=list)
     search_type: str
     elapsed_ms: float
+    model_used: str = ""  # Phase 54: Which LLM model was used
 
 
 @router.post("/", response_model=SearchResponseModel)
@@ -505,4 +506,216 @@ async def multi_agent_question(
         agents_used=report.get("agents_used", []),
         sources=report.get("sources", []),
         messages=result.get("messages", []),
+    )
+
+
+# Phase 55: Visual Search (ColPali)
+
+
+class VisualSearchRequest(BaseModel):
+    query: str
+    k: int = 5
+    document_id: str | None = None
+    visual_weight: float = 0.5  # For hybrid visual+text search
+    text_weight: float = 0.5
+
+
+class VisualSearchResponse(BaseModel):
+    query: str
+    results: list[SearchResultItem]
+    total_found: int
+    visual_results: int
+    text_results: int
+    elapsed_ms: float
+    search_type: str = "visual"
+
+
+@router.post("/visual", response_model=VisualSearchResponse)
+async def visual_search(
+    request: VisualSearchRequest,
+    components: Components = Depends(get_components),
+    current_user: str | None = Depends(get_current_user),
+):
+    """Visual search using ColPali embeddings for tables/charts/diagrams.
+
+    Phase 55: End-to-end visual retrieval without OCR.
+    Searches page images by visual similarity.
+    """
+    user_id = current_user or "anonymous"
+    t0 = time.perf_counter()
+
+    # Try to get visual strategy from search manager
+    visual_strategy = components.search_manager._strategies.get("visual")
+
+    if visual_strategy is None:
+        # Fallback: return empty results with error info
+        return VisualSearchResponse(
+            query=request.query,
+            results=[],
+            total_found=0,
+            visual_results=0,
+            text_results=0,
+            elapsed_ms=0,
+            search_type="visual_not_configured",
+        )
+
+    # Get text embedding for hybrid search
+    text_embedding = await components.embedding_engine.embed_text(request.query)
+
+    # Perform hybrid visual+text search
+    response = await visual_strategy.hybrid_visual_text_search(
+        query=request.query,
+        text_embedding=text_embedding,
+        k=request.k,
+        visual_weight=request.visual_weight,
+        text_weight=request.text_weight,
+        document_id=request.document_id,
+    )
+
+    latency = (time.perf_counter() - t0) * 1000
+
+    # Phase 40: Track query
+    components.query_tracker.track(
+        query=request.query,
+        strategy="visual",
+        agent="visual_search",
+        results_count=response.total_found,
+        latency_ms=latency,
+    )
+
+    metadata = response.metadata or {}
+    visual_count = metadata.get("visual_count", 0)
+    text_count = metadata.get("text_count", 0)
+
+    return VisualSearchResponse(
+        query=response.query,
+        results=[
+            SearchResultItem(
+                chunk_id=r.chunk.id,
+                content=r.chunk.content,
+                score=r.score,
+                source=r.source,
+                metadata=r.chunk.metadata,
+            )
+            for r in response.results
+        ],
+        total_found=response.total_found,
+        visual_results=visual_count,
+        text_results=text_count,
+        elapsed_ms=response.elapsed_ms,
+        search_type=response.search_type,
+    )
+
+
+# Phase 57: Plan-Execute Agent
+
+
+class PlanExecuteRequest(BaseModel):
+    query: str
+    max_iterations: int = 5
+    stream: bool = False
+
+
+class PlanExecuteStep(BaseModel):
+    step_id: str
+    description: str
+    tool: str
+    query: str
+    status: str  # pending/in_progress/completed/failed
+    result: str | None = None
+
+
+class PlanExecuteResponse(BaseModel):
+    query: str
+    answer: str
+    steps: list[PlanExecuteStep] = Field(default_factory=list)
+    iterations: int = 0
+    elapsed_ms: float
+    model_used: str = ""
+
+
+@router.post("/plan-execute", response_model=PlanExecuteResponse)
+async def plan_execute_query(
+    request: PlanExecuteRequest,
+    components: Components = Depends(get_components),
+    current_user: str | None = Depends(get_current_user),
+):
+    """Plan-Execute agent for complex queries (Phase 57).
+
+    Breaks down complex queries into 2-5 steps, executes each with appropriate tool,
+    and synthesizes a final answer.
+    """
+    from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
+    from langchain_anthropic import ChatAnthropic
+
+    user_id = current_user or "anonymous"
+    t0 = time.perf_counter()
+
+    # Create LLM for planning and synthesis
+    llm_kwargs: dict[str, Any] = {
+        "model": components.settings.agent.model,
+        "temperature": 0.0,
+        "max_tokens": 4096,
+    }
+    if components.settings.agent.base_url:
+        llm_kwargs["base_url"] = components.settings.agent.base_url
+
+    llm = ChatAnthropic(
+        **llm_kwargs,
+        api_key=components.settings.anthropic_api_key or None,
+    )
+
+    # Create tools
+    tools = {
+        "search": lambda q, **kw: components.search_manager.search(q, "hybrid", **kw),
+        "graph_query": lambda q, **kw: components.search_manager.search(q, "graph", **kw),
+        "calculate": lambda expr: eval(expr, {"__builtins__": {}}, {}),
+        "web_search": lambda q, **kw: components.search_manager.search(q, "hybrid", **kw),
+    }
+
+    # Create agent
+    agent = create_plan_execute_agent(
+        llm=llm,
+        search_manager=components.search_manager,
+        tools=tools,
+        max_iterations=request.max_iterations,
+    )
+
+    # Run agent
+    result = await agent.ainvoke({
+        "query": request.query,
+        "max_iterations": request.max_iterations,
+    })
+
+    latency = (time.perf_counter() - t0) * 1000
+
+    # Track query
+    components.query_tracker.track(
+        query=request.query,
+        strategy="plan_execute",
+        agent="plan_execute",
+        results_count=len(result.plan),
+        latency_ms=latency,
+    )
+
+    # Convert steps to response format
+    steps = [
+        PlanExecuteStep(
+            step_id=step.step_id,
+            description=step.description,
+            tool=step.tool,
+            query=step.query,
+            status=step.status,
+            result=str(step.result) if step.result else None,
+        )
+        for step in result.plan
+    ]
+
+    return PlanExecuteResponse(
+        query=request.query,
+        answer=result.final_answer,
+        steps=steps,
+        iterations=result.iterations,
+        elapsed_ms=latency,
+        model_used=components.settings.agent.model,
     )
