@@ -50,6 +50,7 @@ def test_docling_loader_basic():
     not _is_docling_available(),
     reason="Docling not installed"
 )
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_docling_loader_load():
     """Test Docling loader with a sample PDF."""
