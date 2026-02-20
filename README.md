@@ -1,5 +1,10 @@
 # PDF Vector & Graph Framework
 
+[![CI](https://github.com/your-org/pdf-vector-graph-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/pdf-vector-graph-framework/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/your-org/pdf-vector-graph-framework/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/pdf-vector-graph-framework)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+
 Фреймворк для интеллектуальной обработки PDF-документов с использованием векторных и графовых баз данных. Загрузка PDF, разбивка на чанки, построение эмбеддингов, индексация в Qdrant (dense + sparse BM25 vectors), извлечение сущностей в граф знаний (NetworkX), гибридный поиск и ответы на вопросы через RAG-агента на базе LangGraph.
 
 **Версия:** v1.5.0 (43 фазы реализованы)
