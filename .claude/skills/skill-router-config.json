@@ -34,38 +34,43 @@
       "skills": ["create-hook"],
       "optional": ["doc-to-skill"]
     },
+    "doc-to-cache": {
+      "keywords": ["doc-to-cache", "конвертировать документацию", "обработать документацию", "создать знания из файлов", "загрузить доки в кеш", "convert docs to cache", "process documentation", "документация в кеш", "docs to cache"],
+      "skills": ["doc-to-cache"],
+      "optional": ["tech-research"]
+    },
     "evaluation": {
       "keywords": ["brainstorm", "оценка подходов", "сравни варианты", "предложи подход", "какой вариант лучше", "давай обсудим варианты"],
       "skills": ["task-evaluation"],
       "optional": []
     },
     "search-debug": {
-      "keywords": ["отладка поиска", "debug search", "pipeline debug", "стратегия поиска", "search strategy", "rrf", "score threshold", "search config", "турбо поиск", "turbo search", "section-first"],
+      "keywords": ["отладка поиска", "debug search", "pipeline debug", "стратегия поиска", "search strategy", "rrf", "score threshold", "search config", "турбо поиск", "turbo search", "section-first", "какую стратегию", "выбор стратегии", "mmr", "two_stage", "adaptive search", "graphrag_light", "graphrag_auto", "web_search strategy", "visual search strategy"],
       "skills": ["search-pipeline-debug"],
       "optional": ["pdf-search"]
     },
     "indexing": {
-      "keywords": ["индексация", "индексировать", "загрузить pdf", "загрузка pdf", "splitter", "split", "batch indexing", "reindex", "переиндексация", "loader", "hybrid loader", "загрузчик"],
+      "keywords": ["индексация", "индексировать", "загрузить pdf", "загрузка pdf", "splitter", "split", "batch indexing", "reindex", "переиндексация", "loader", "hybrid loader", "загрузчик", "граф знаний", "parent-child", "raptor", "communities", "delta indexing", "инкрементальная", "visual indexing", "colpali indexing", "versioning"],
       "skills": ["indexing-pipeline"],
       "optional": []
     },
     "eval-benchmark": {
-      "keywords": ["evaluation", "оценка качества", "метрики", "metrics", "ragas", "benchmark", "бенчмарк", "regression test", "autorag", "rag triad", "ndcg", "mrr"],
+      "keywords": ["evaluation", "оценка качества", "метрики", "metrics", "ragas", "benchmark", "бенчмарк", "regression test", "autorag", "rag triad", "ndcg", "mrr", "feedback", "обратная связь"],
       "skills": ["evaluation-benchmark"],
       "optional": []
     },
     "graph": {
-      "keywords": ["граф", "graph", "entity", "relation", "lightrag", "knowledge graph", "граф знаний", "entity extraction", "networkx", "traversal"],
+      "keywords": ["граф", "graph", "entity", "relation", "lightrag", "knowledge graph", "граф знаний", "entity extraction", "networkx", "traversal", "incremental graph", "change detector", "neo4j"],
       "skills": ["graph-operations"],
       "optional": []
     },
     "agents": {
-      "keywords": ["агент", "agent", "multi-agent", "orchestration", "оркестрация", "self-rag", "research agent", "analytical agent", "мульти-агент"],
+      "keywords": ["агент", "agent", "multi-agent", "orchestration", "оркестрация", "self-rag", "research agent", "analytical agent", "мульти-агент", "adaptive rag", "deep research", "conversational", "чат с историей"],
       "skills": ["agent-orchestration"],
       "optional": []
     },
     "embedding": {
-      "keywords": ["модель эмбеддинга", "embedding model", "e5 model", "giga embedding", "bge-m3", "onnx", "openvino", "backend embedding", "размерность", "dimensions"],
+      "keywords": ["модель эмбеддинга", "embedding model", "e5 model", "giga embedding", "bge-m3", "onnx", "openvino", "backend embedding", "размерность", "dimensions", "jina embeddings", "colpali", "visual embeddings"],
       "skills": ["embedding-models"],
       "optional": []
     },
@@ -80,8 +85,48 @@
       "optional": []
     },
     "deploy": {
-      "keywords": ["deploy", "docker", "production", "health check", "rate limit", "cors", "docker compose", "uvicorn", "развёртывание", "nginx"],
+      "keywords": ["deploy", "docker", "production", "health check", "rate limit", "cors", "docker compose", "uvicorn", "развёртывание", "nginx", "мультитенантность", "tenant", "jwt", "авторизация", "мониторинг", "langfuse", "prometheus", "grafana", "gpu docker", "workers", "arq", "queue", "async jobs", "redis queue"],
       "skills": ["deployment"],
+      "optional": []
+    },
+    "framework-config": {
+      "keywords": ["настройка", ".env", "конфигурация", "config", "переменная окружения", "environment", "профиль", "configure", "settings", "env файл"],
+      "skills": ["framework-config"],
+      "optional": []
+    },
+    "framework-cli": {
+      "keywords": ["CLI", "команда", "command", "pdf-framework", "терминал", "консоль", "как запустить", "python -m src.cli"],
+      "skills": ["framework-cli"],
+      "optional": []
+    },
+    "framework-api": {
+      "keywords": ["REST API", "endpoint", "curl", "HTTP", "API запрос", "OpenAI compatible", "websocket", "Swagger", "/search/", "/documents/"],
+      "skills": ["framework-api"],
+      "optional": []
+    },
+    "framework-troubleshooting": {
+      "keywords": ["ошибка", "не работает", "error", "проблема", "troubleshoot", "медленно", "slow", "миграция", "migration", "performance", "timeout", "guardrails", "pii", "injection", "content filter"],
+      "skills": ["framework-troubleshooting"],
+      "optional": []
+    },
+    "framework-caching": {
+      "keywords": ["кеш", "кэш", "cache", "TTL", "очистить кеш", "cache stats", "семантический кеш", "semantic cache", "cache clear"],
+      "skills": ["framework-caching"],
+      "optional": []
+    },
+    "framework-mcp-ui": {
+      "keywords": ["MCP server", "Gradio", "Web UI", "Python API", "QuickRAG", "интерфейс", "веб-интерфейс", "Components API"],
+      "skills": ["framework-mcp-ui"],
+      "optional": []
+    },
+    "framework-quickstart": {
+      "keywords": ["установка", "install", "quickstart", "первый запуск", "getting started", "начать", "развернуть", "системные требования"],
+      "skills": ["framework-quickstart"],
+      "optional": []
+    },
+    "audit-docs": {
+      "keywords": ["audit", "аудит", "аудит документации", "проверить покрытие", "check docs", "актуализировать документацию", "обновить доки", "doc coverage", "audit-docs"],
+      "skills": ["audit-docs"],
       "optional": []
     }
   }

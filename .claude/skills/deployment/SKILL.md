@@ -3,7 +3,81 @@
 ## Когда использовать
 - "deploy", "docker", "production"
 - "health check", "rate limiting", "CORS"
+- "мультитенантность", "авторизация", "JWT", "мониторинг"
 - Настройка окружения, мониторинг, Docker compose
+
+---
+
+## Для пользователя — администрирование
+
+### Мультитенантность
+
+| Компонент | Изоляция |
+|-----------|----------|
+| Qdrant | Отдельная коллекция per tenant |
+| BM25 FTS5 | Фильтр по tenant_id |
+| Graph Store | Отдельный граф per tenant |
+| Cache | Ключ включает tenant_id |
+
+```bash
+# CLI
+pdf-framework tenant create --id company-a
+pdf-framework tenant list
+pdf-framework tenant delete --id company-a
+
+# Индексация и поиск в тенанте
+python -m src.cli.main index "doc.pdf" --tenant company-a
+python -m src.cli.main search "запрос" --tenant company-a
+```
+
+```bash
+# API
+curl -X POST http://localhost:8000/tenants/ \
+    -d '{"id": "company-a", "name": "Company A"}'
+curl -X POST http://localhost:8000/search/ \
+    -H "X-Tenant-ID: company-a" -d '{"query": "запрос"}'
+```
+
+### Авторизация (JWT + RBAC)
+
+| Роль | Права |
+|------|-------|
+| **viewer** | Поиск, чтение |
+| **editor** | + индексация, удаление |
+| **admin** | + управление тенантами, настройками |
+
+```bash
+pdf-framework auth token --tenant company-a --role admin
+curl -H "Authorization: Bearer <jwt-token>" http://localhost:8000/search/ ...
+```
+
+```env
+AUTH__ENABLED=true
+AUTH__JWT_SECRET=your-secret-key-min-32-chars-long
+AUTH__JWT_EXPIRATION_HOURS=24
+```
+
+### Мониторинг
+
+| Компонент | Назначение | Настройка |
+|-----------|-----------|-----------|
+| JSON Tracing | Логи операций | `OBSERVABILITY__TRACER=jsonfile` |
+| Langfuse | LLM traces, costs | `LANGFUSE__ENABLED=true` |
+| Prometheus | Метрики | `GET /metrics/` |
+| HTML Dashboard | Визуализация | `GET /metrics/html` |
+
+```env
+LANGFUSE__ENABLED=true
+LANGFUSE__PUBLIC_KEY=pk-...
+LANGFUSE__SECRET_KEY=sk-...
+LANGFUSE__HOST=https://cloud.langfuse.com
+```
+
+Prometheus: `search_requests_total`, `search_latency_seconds`, `index_chunks_total`, `cache_hits_total`, `llm_tokens_total`
+
+---
+
+## Infrastructure — Docker и запуск
 
 ## Docker Compose Stack
 
@@ -29,33 +103,68 @@
 
 - **In-memory**: Token bucket (100 req/60s default)
 - **Redis**: Distributed rate limiting
-- Key extraction: X-API-Key → `apikey:{key}`, X-Forwarded-For → `ip:{ip}`
+- Key: X-API-Key → `apikey:{key}`, X-Forwarded-For → `ip:{ip}`
 - Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`
 
-## API Routes (13 routers)
+```env
+RATE_LIMIT__ENABLED=true
+RATE_LIMIT__REQUESTS_PER_MINUTE=60
+RATE_LIMIT__BURST=10
+```
 
-| Route | Назначение |
-|-------|-----------|
-| `/documents` | Upload, index (sync/stream/batch/delta), list, rebuild BM25 |
-| `/search` | Vector/BM25/hybrid/section-first + reranking |
-| `/search/ask` | RAG Q&A с streaming |
-| `/chat` | WebSocket conversational RAG |
-| `/graph` | Entity/relation queries, traversal |
-| `/optimization` | DSPy stats, optimize, dataset |
-| `/auth` | JWT tokens, RBAC |
-| `/analytics` | Query/cost tracking, audit logs |
+## Async Workers / ARQ Queue (Phase 59)
 
-## Environment Variables
+Тяжёлые задачи (индексация, граф, evaluation) выполняются асинхронно через ARQ + Redis.
+
+| Компонент | Назначение |
+|-----------|-----------|
+| `src/workers/worker.py` | ARQ Worker entry point (factory: `create_worker()`) |
+| `src/workers/tasks/indexing.py` | index_document, rebuild_bm25, rebuild_embeddings |
+| `src/workers/tasks/graph.py` | rebuild_graph (entities + relations) |
+| `src/workers/tasks/evaluation.py` | run_evaluation (RAGAS) |
+
+### Запуск Worker
+
+```bash
+# Worker (отдельный процесс)
+arq src.workers.worker.WorkerSettings
+
+# Или через Makefile
+make worker
+```
+
+### Конфигурация
 
 ```env
-ANTHROPIC_API_KEY=sk-...
-VECTOR_STORE__PROVIDER=qdrant
-VECTOR_STORE__QDRANT_URL=http://localhost:6333
-EMBEDDING__MODEL=intfloat/multilingual-e5-large
-AGENT__MODEL=claude-opus-4-6
-AGENT__BASE_URL=                  # Z.AI proxy if needed
-LOG_LEVEL=INFO
+QUEUE__REDIS_URL=redis://localhost:6379
+QUEUE__MAX_JOBS=10
+QUEUE__JOB_TIMEOUT=3600
+QUEUE__RETRY_ATTEMPTS=3
+QUEUE__RETRY_DELAY_SECONDS=60
 ```
+
+### Постановка задач
+
+```bash
+# Async индексация через API
+curl -X POST http://localhost:8000/documents/index-async \
+    -F "file=@document.pdf" -F 'options={"graph": true}'
+
+# Статус задачи
+curl http://localhost:8000/jobs/{job_id}
+
+# Streaming прогресса (SSE)
+curl http://localhost:8000/jobs/{job_id}/progress
+```
+
+### Progress Tracking
+
+Каждая задача обновляет прогресс в Redis (0-100%):
+- **Indexing**: loading → chunking → indexing → embedding → bm25 → complete
+- **Graph**: retrieving → extracting → storing → relations → complete
+- **Evaluation**: loading → evaluating → complete
+
+---
 
 ## Запуск
 
@@ -69,15 +178,25 @@ uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 # Docker
 docker compose -f docker/docker-compose.yml up -d
 
+# GPU Docker
+docker compose -f docker/docker-compose.gpu.yml up -d
+
 # MCP Server
 python -m src.mcp_server.server
 ```
 
+## Связанные скиллы
+
+- `framework-config` — все .env переменные
+- `framework-api` — все REST API endpoints
+- `framework-troubleshooting` — ошибки и миграция
+
 ## Файлы
 - App: `src/api/app.py`
-- Routes: `src/api/routes/` (13 routers)
+- Routes: `src/api/routes/`
 - Health: `src/api/routes/health.py`
 - Rate limit: `src/api/middleware/rate_limit.py`
-- DI: `src/api/dependencies/components.py`
+- Auth: `src/api/dependencies/auth.py`
 - Docker: `docker/Dockerfile`, `docker/docker-compose.yml`
-- MCP: `src/mcp_server/server.py` (12 tools)
+- MCP: `src/mcp_server/server.py`
+- Workers: `src/workers/worker.py`, `src/workers/tasks/`

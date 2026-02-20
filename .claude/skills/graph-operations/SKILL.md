@@ -54,6 +54,19 @@ LIGHTRAG__AUTO_SELECT_ENABLED=true
 GRAPHSTORE__PROVIDER=networkx     # networkx|neo4j
 ```
 
+## Incremental Graph Update (Phase 61)
+
+Инкрементальное обновление графа без полной перестройки:
+
+| Компонент | Класс | Назначение |
+|-----------|-------|-----------|
+| **Change Detector** | `GraphChangeDetector` | Сравнивает entities/relations с предыдущей версией |
+| **Incremental Updater** | `IncrementalGraphUpdater` | Добавляет/удаляет/обновляет только изменения |
+
+**Pipeline:** Re-extract entities → Change Detector (diff) → Incremental Updater (apply delta)
+
+Экономит **80-95% времени** при обновлении документа (только изменённые entity/relation).
+
 ## Диагностика
 
 | Симптом | Причина | Решение |
@@ -66,7 +79,10 @@ GRAPHSTORE__PROVIDER=networkx     # networkx|neo4j
 ## Файлы
 - Base: `src/pdf_framework/graph_store/base.py`
 - NetworkX: `src/pdf_framework/graph_store/providers/networkx_store.py`
+- Neo4j: `src/pdf_framework/graph_store/providers/neo4j_store.py`
 - Builder: `src/pdf_framework/graph_store/construction/builder.py`
 - Entity embeddings: `src/pdf_framework/graph_store/entity_embeddings.py`
+- Change Detector: `src/pdf_framework/graph_store/change_detector.py`
+- Incremental Updater: `src/pdf_framework/graph_store/incremental.py`
 - Strategies: `src/pdf_framework/search/strategies/graph_search.py`, `graphrag_light.py`, `graphrag_global.py`, `graphrag_auto.py`
 - Extractor: `src/pdf_framework/processing/extractors/entity_extractor.py`

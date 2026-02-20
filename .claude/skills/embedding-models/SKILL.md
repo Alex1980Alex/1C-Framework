@@ -12,6 +12,8 @@
 | `intfloat/multilingual-e5-large` | 1024 | SOTA multilingual | Fast | **Default** |
 | `ai-sage/Giga-Embeddings-instruct` | 1024 | SOTA Russian (69.1 ruMTEB) | Fast | Russian-heavy |
 | `BAAI/bge-m3` | 1024 | Good (100+ languages) | Fast | Fallback |
+| `jina-embeddings-v3` | 1024 | SOTA (Matryoshka) | API | Multilingual, task prompting (Phase 47) |
+| `vidore/colpali-v1.3` | multi-vector | SOTA visual | Slow (GPU) | Visual page retrieval (Phase 55) |
 | `all-MiniLM-L6-v2` | 384 | OK | Fastest | **Deprecated!** |
 
 ## Prefix Requirements (КРИТИЧНО)
@@ -23,6 +25,18 @@
 **GigaEmbeddings** (instruction family):
 - Query: `"Instruct: Given a search query...\nQuery: " + text`
 - Passage: без prefix
+
+**Jina v3** (Phase 47) — API-based, task prompting, Matryoshka dimensions:
+- Provider: `jina` (отдельный, не local)
+- API: `https://api.jina.ai/v1/embeddings`
+- Поддерживает Late Chunking
+- Task: `retrieval.query`, `retrieval.passage`, `text-matching`
+
+**ColPali** (Phase 55) — Visual multi-vector embeddings:
+- Не для текста — для **изображений страниц PDF**
+- Multi-token embeddings (n_tokens × dim)
+- Модели: `vidore/colpali-v1.3`, `vidore/colqwen2-v1.0`
+- Требует GPU
 
 ## Backends (Phase 43)
 
@@ -58,5 +72,8 @@ EMBEDDING__CACHE_ENABLED=true
 - Engine interface: `src/pdf_framework/embeddings/engine.py`
 - Local provider: `src/pdf_framework/embeddings/providers/local.py`
 - Giga provider: `src/pdf_framework/embeddings/providers/giga.py`
+- BGE-M3 provider: `src/pdf_framework/embeddings/providers/bgem3.py`
+- Jina v3 provider: `src/pdf_framework/embeddings/providers/jina.py`
+- ColPali provider: `src/pdf_framework/embeddings/providers/colpali.py`
 - Cache: `src/pdf_framework/embeddings/cache/`
 - Config: `src/pdf_framework/config/embedding.py`
