@@ -47,6 +47,12 @@ temp_*.txt
 /check_*.py
 /reindex_*.py
 /verify_*.py
+/temp_*.py
+/temp_*.html
+
+# Scraped web pages (ad-hoc research artifacts)
+/claude_*.html
+/skills_content*.txt
 
 # Hook shared state (regenerated at runtime)
 .claude/cache/hook-todos.json
