@@ -32,6 +32,8 @@ TODOS_FILE = CACHE_DIR / "hook-todos.json"
 MANDATORY_HOOKS = {
     "knowledge-cache-reminder-hook",
     "factory-enforcer-hook",
+    "docs-change-tracker-hook",
+    "auto-git-save-hook",
 }
 
 

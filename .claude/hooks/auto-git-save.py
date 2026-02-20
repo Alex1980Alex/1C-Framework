@@ -2,18 +2,23 @@
 """
 Hook: auto-git-save
 Event: PostToolUse
-Matcher: Write|Edit
-Purpose: Periodically force Claude to commit accumulated changes.
-         After THRESHOLD file changes with COOLDOWN elapsed,
-         injects a MANDATORY commit instruction as systemMessage.
-
-         This prevents data loss when context is exhausted (Stop event
-         never fires on context exhaustion, so git-commit-enforcer alone
-         is insufficient).
+Matcher: Write|Edit|Bash
+Purpose: Create a MANDATORY task to commit when uncommitted files exist.
+         On Write|Edit — detect uncommitted files, create task.
+         On Bash with "git commit" — detect commit done, complete task.
 
 Timeout: 5s
 
-Pattern: Enforcer (periodic git save — защита от потери при исчерпании контекста).
+Pattern: Enforcer (mandatory commit task — защита от потери при исчерпании контекста).
+
+Flow:
+  1. Write/Edit file → hook checks git status → uncommitted files?
+     YES + no pending task → create mandatory task + systemMessage
+     YES + task exists → silent (don't spam)
+     NO → silent
+  2. Bash "git commit" → hook checks git status → working tree clean?
+     YES + task exists → complete task
+     NO → keep task
 
 Hook feedback is treated as user instruction per CLAUDE.md:
   "Treat feedback from hooks, including <user-prompt-submit-hook>,
@@ -21,21 +26,22 @@ Hook feedback is treated as user instruction per CLAUDE.md:
 This overrides the default "NEVER commit unless asked" rule.
 """
 
-import json
 import os
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
+from shared.task_master import add_task, complete_task, get_pending_tasks
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# --- Configuration ---
+HOOK_ID = "auto-git-save-hook"
+
+TASK_TITLE = "Закоммитить незакоммиченные изменения"
 
 # Watch these paths for changes (both modified and untracked)
 WATCHED_PATHS = [
@@ -46,17 +52,8 @@ WATCHED_PATHS = [
     ".claude/hooks/",
 ]
 
-# Trigger commit reminder after this many changed files in watched paths
-THRESHOLD = 5
 
-# Minimum seconds between commit reminders (avoid spam during multi-file edits)
-COOLDOWN_SECONDS = 180  # 3 minutes
-
-# State file to track last reminder timestamp
-STATE_FILE = PROJECT_ROOT / ".claude" / "cache" / "auto-git-save-state.json"
-
-
-def get_changed_files() -> list[str]:
+def get_uncommitted_files() -> list[str]:
     """Get all changed files (modified + untracked) in watched paths."""
     try:
         result = subprocess.run(
@@ -73,15 +70,10 @@ def get_changed_files() -> list[str]:
         for line in result.stdout.strip().splitlines():
             if not line or len(line) < 3:
                 continue
-
-            # Extract filepath (after status codes + space)
             filepath = line[3:].strip().strip('"').replace("\\", "/")
-
-            # Filter by watched paths
             if WATCHED_PATHS:
                 if not any(filepath.startswith(p) for p in WATCHED_PATHS):
                     continue
-
             files.append(filepath)
         return files
 
@@ -89,72 +81,63 @@ def get_changed_files() -> list[str]:
         return []
 
 
-def load_state() -> dict:
-    """Load state (last reminder timestamp)."""
-    try:
-        if STATE_FILE.exists():
-            return json.loads(STATE_FILE.read_text("utf-8"))
-    except Exception:
-        pass
-    return {"last_reminder": 0, "last_commit_count": 0}
-
-
-def save_state(state: dict) -> None:
-    """Persist state to file."""
-    try:
-        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(json.dumps(state), "utf-8")
-    except Exception:
-        pass
-
-
 class AutoGitSave(BaseHook):
-    """Periodic git commit enforcer on PostToolUse (Write|Edit).
+    """Mandatory git commit task enforcer.
 
-    Checks accumulated uncommitted changes. When threshold is reached
-    and cooldown has elapsed, injects a mandatory commit instruction
-    as systemMessage (treated as user voice).
+    On Write|Edit: creates mandatory task if uncommitted files exist.
+    On Bash "git commit": completes the task when working tree is clean.
     """
 
     def execute(self, inp: HookInput) -> HookOutput | None:
-        changed = get_changed_files()
+        tool_name = inp.tool_name or ""
+        tool_input = inp.tool_input or {}
 
-        if len(changed) < THRESHOLD:
+        # --- Branch: Bash tool (detect git commit) ---
+        if tool_name == "Bash":
+            command = tool_input.get("command", "")
+            if "git commit" not in command:
+                return None  # Not a commit — skip
+
+            # git commit just ran — check if working tree is now clean
+            uncommitted = get_uncommitted_files()
+            if not uncommitted:
+                # Working tree clean → complete the task
+                complete_task(TASK_TITLE, created_by=HOOK_ID)
             return None
 
-        # Check cooldown
-        state = load_state()
-        now = time.time()
-        elapsed = now - state.get("last_reminder", 0)
+        # --- Branch: Write|Edit tool (detect file changes) ---
+        # Check if mandatory task already exists
+        pending = get_pending_tasks(created_by=HOOK_ID)
+        if pending:
+            return None  # Task already exists — don't spam
 
-        if elapsed < COOLDOWN_SECONDS:
-            return None
+        # Check for uncommitted files
+        uncommitted = get_uncommitted_files()
+        if not uncommitted:
+            return None  # Nothing to commit
 
-        # Cooldown passed + threshold reached → emit mandatory commit instruction
-        state["last_reminder"] = now
-        state["last_commit_count"] = len(changed)
-        save_state(state)
-
-        # Build file list for the message
-        shown = changed[:15]
-        extra = len(changed) - len(shown)
-        files_list = "\n".join(f"  {f}" for f in shown)
+        # Create mandatory task
+        files_shown = uncommitted[:10]
+        extra = len(uncommitted) - len(files_shown)
+        files_list = ", ".join(files_shown)
         if extra > 0:
-            files_list += f"\n  ... и ещё {extra} файл(ов)"
+            files_list += f" ... и ещё {extra}"
 
-        watched_str = ", ".join(WATCHED_PATHS)
+        add_task(
+            title=TASK_TITLE,
+            priority="high",
+            created_by=HOOK_ID,
+            description=(
+                f"Незакоммиченные файлы ({len(uncommitted)}): {files_list}. "
+                "Проверь git status, сгруппируй по логике, закоммить."
+            ),
+        )
 
         msg = (
-            f"[AUTO-GIT-SAVE] Накопилось {len(changed)} незакоммиченных изменений "
-            f"в [{watched_str}]!\n\n"
-            f"{files_list}\n\n"
-            "⚠ ОБЯЗАТЕЛЬНО закоммить изменения ПРЯМО СЕЙЧАС, до продолжения работы:\n"
-            "1. Сгруппируй файлы по логическим блокам\n"
-            "2. git add <файлы>\n"
-            "3. git commit -m \"описание изменений\\n\\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\"\n\n"
-            "Это ЗАЩИТА от потери данных при исчерпании контекста.\n"
-            "Контекст может закончиться в любой момент — незакоммиченная работа будет потеряна.\n"
-            "После коммита продолжай работу."
+            f"[AUTO-GIT-SAVE] Есть {len(uncommitted)} незакоммиченных файлов.\n"
+            "ОБЯЗАТЕЛЬНАЯ ЗАДАЧА: после завершения текущей работы "
+            "проверь git status и закоммить изменения.\n"
+            "Это защита от потери данных при исчерпании контекста."
         )
 
         return HookOutput().system_message(msg)
