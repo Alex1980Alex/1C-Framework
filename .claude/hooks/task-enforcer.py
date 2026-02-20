@@ -41,6 +41,7 @@ TODOS_FILE = CACHE_DIR / "hook-todos.json"
 MANDATORY_HOOKS = {
     "knowledge-cache-reminder-hook",
     "factory-enforcer-hook",
+    "docs-change-tracker-hook",
 }
 
 
@@ -94,6 +95,7 @@ def main():
             "Execute these tasks before stopping:\n"
             "- Cache tasks: save research to skills cache\n"
             "- Factory tasks: update settings.json, registries, MEMORY.md\n"
+            "- Docs tasks: update documentation and skills per docs-change-tracker\n"
             "- After completing ALL tasks, you may stop."
         )
 

@@ -107,7 +107,25 @@
       "WebFetch(domain:rahulkolekar.com)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor: split triad skill into knowledge + program\n\nSeparate concerns:\n- triad-factory/SKILL.md — universal Factory algorithm \\(steps 1-5, Q1-Q5\\)\n- hooks-skills-mcp-triad/SKILL.md — concrete implementation \\(tables, pipelines\\)\n\nKnowledge changes independently from program.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(/d/1С-Framework/.venv/Scripts/pip3.exe install:*)",
+      "Bash(/d/1С-Framework/.venv/Scripts/python.exe:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(git config:*)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\":*)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/git-commit-enforcer.py\")",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/docs-change-tracker.py\")",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" scripts/audit_docs_skills.py --fix --stdout)",
+      "Bash(PYTHONIOENCODING=utf-8 \"D:/1С-Framework/.venv/Scripts/python.exe\":*)",
+      "Bash(git checkout:*)",
+      "Bash(PYTHONIOENCODING=utf-8 grep:*)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \":*)",
+      "Bash(git commit:*)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "pdf-vector-graph"
+  ]
 }
