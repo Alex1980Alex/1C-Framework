@@ -1,0 +1,474 @@
+# Audit: Code ↔ Documentation ↔ Skills
+
+**Generated:** 2026-02-20 21:12
+
+## Summary
+
+| Category | In Code | Doc Gaps | Skill Gaps | Doc Coverage | Skill Coverage |
+|----------|---------|----------|------------|-------------|----------------|
+| Agent Types | 5 | **0** | **0** | 100.0% | 100.0% |
+| CLI Commands | 15 | **0** | **0** | 100.0% | 100.0% |
+| Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
+| REST API Endpoints | 92 | **0** | **0** | 100.0% | 100.0% |
+| MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
+| Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
+| **TOTAL** | **439** | **0** | **0** | | |
+
+## All Extracted Features (reference)
+
+### Agent Types (5)
+
+- `analytical` — `src\pdf_framework\agents\analytical\agent.py`
+- `plan_execute` — `src\pdf_framework\agents\plan_execute\agent.py`
+- `rag` — `src\pdf_framework\agents\rag\agent.py`
+- `research_v2` — `src\pdf_framework\agents\research_v2\agent.py`
+- `multi` — `src\pdf_framework\agents\multi\orchestrator.py`
+
+### CLI Commands (15)
+
+- `index` — `src/cli/main.py`
+- `search` — `src/cli/main.py`
+- `ask` — `src/cli/main.py`
+- `chat` — `src/cli/main.py`
+- `stats` — `src/cli/main.py`
+- `server` — `src/cli/main.py`
+- `cache` — `src/cli/main.py`
+- `tenant` — `src/cli/main.py`
+- `auth` — `src/cli/main.py`
+- `eval` — `src/cli/main.py`
+- `ui` — `src/cli/main.py`
+- `suggest` — `src/cli/main.py`
+- `research` — `src/cli/main.py`
+- `autorag` — `src/cli/main.py`
+- `feedback` — `src/cli/main.py`
+
+### Config Variables (.env) (298)
+
+- `AGENT__MODEL` — `src\pdf_framework\config\agent.py`
+- `AGENT__TEMPERATURE` — `src\pdf_framework\config\agent.py`
+- `AGENT__MAX_TOKENS` — `src\pdf_framework\config\agent.py`
+- `AGENT__SEARCH_K` — `src\pdf_framework\config\agent.py`
+- `AGENT__RERANKER_ENABLED` — `src\pdf_framework\config\agent.py`
+- `AGENT__RERANKER_TYPE` — `src\pdf_framework\config\agent.py`
+- `AGENT__RERANKER_MODEL` — `src\pdf_framework\config\agent.py`
+- `AGENT__COLBERT_MODEL` — `src\pdf_framework\config\agent.py`
+- `AGENT__RERANKER_LLM_MODEL` — `src\pdf_framework\config\agent.py`
+- `AGENT__RERANKER_TOP_K` — `src\pdf_framework\config\agent.py`
+- `AGENT__CHECKPOINTER` — `src\pdf_framework\config\agent.py`
+- `AGENT__BASE_URL` — `src\pdf_framework\config\agent.py`
+- `AGENT__GRAPH_CONCURRENCY` — `src\pdf_framework\config\agent.py`
+- `AGENT__COST_BUDGET_PER_QUERY` — `src\pdf_framework\config\agent.py`
+- `AGENT__COST_BUDGET_DAILY` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__ENABLED` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__GRADING_MODEL` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__RELEVANCE_THRESHOLD` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__SCORE_PREFILTER_THRESHOLD` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__MAX_RETRIES` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__HALLUCINATION_CHECK_ENABLED` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__MAX_GENERATION_ATTEMPTS` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__MAX_CONTEXT_CHARS` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__STRATEGY_ESCALATION_ENABLED` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__ENRICHMENT_ENABLED` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__ENRICHMENT_MAX_ROUNDS` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__ENRICHMENT_SUB_QUERIES` — `src\pdf_framework\config\agent.py`
+- `SELF_RAG__ENRICHMENT_K` — `src\pdf_framework\config\agent.py`
+- `DEEP_RESEARCH__ENABLED` — `src\pdf_framework\config\agent.py`
+- `DEEP_RESEARCH__MAX_SUB_QUESTIONS` — `src\pdf_framework\config\agent.py`
+- `DEEP_RESEARCH__MAX_RETRIEVAL_STEPS` — `src\pdf_framework\config\agent.py`
+- `EMBEDDING__PROVIDER` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__MODEL` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__DIMENSIONS` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__BATCH_SIZE` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__CACHE_ENABLED` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__CACHE_DIR` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__DEVICE` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__BACKEND` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__JINA_API_KEY` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__JINA_TASK` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__JINA_TRUNCATE_DIM` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__LATE_CHUNKING` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__LATE_CHUNKING_MAX_TOKENS` — `src\pdf_framework\config\embedding.py`
+- `EXTERNAL__WEB_SEARCH_ENABLED` — `src\pdf_framework\config\external.py`
+- `EXTERNAL__TAVILY_API_KEY` — `src\pdf_framework\config\external.py`
+- `EXTERNAL__SERPAPI_KEY` — `src\pdf_framework\config\external.py`
+- `EXTERNAL__CONFIDENCE_THRESHOLD` — `src\pdf_framework\config\external.py`
+- `EXTERNAL__WEB_TRUST_SCORE` — `src\pdf_framework\config\external.py`
+- `OPTIMIZATION__ENABLED` — `src\pdf_framework\config\external.py`
+- `OPTIMIZATION__DATASET_PATH` — `src\pdf_framework\config\external.py`
+- `OPTIMIZATION__OPTIMIZED_DIR` — `src\pdf_framework\config\external.py`
+- `OPTIMIZATION__MODEL` — `src\pdf_framework\config\external.py`
+- `OPTIMIZATION__MAX_TRIALS` — `src\pdf_framework\config\external.py`
+- `PARENT_CHILD__ENABLED` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__PARENT_CHUNK_SIZE` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__PARENT_CHUNK_OVERLAP` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__CHILD_CHUNK_SIZE` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__CHILD_CHUNK_OVERLAP` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__MERGE_THRESHOLD` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__FETCH_MULTIPLIER` — `src\pdf_framework\config\features.py`
+- `PARENT_CHILD__PARENT_STORE_PATH` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__CLASSIFIER_MODEL` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__CLASSIFIER_CACHE_ENABLED` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__ROUTING_ENABLED` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__DECOMPOSITION_ENABLED` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__MAX_SUB_QUESTIONS` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__ROUTE_SIMPLE_STRATEGY` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__ROUTE_MODERATE_STRATEGY` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__ROUTE_COMPLEX_STRATEGY` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__ROUTE_THEMATIC_STRATEGY` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__FAST_CLASSIFY_ENABLED` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__BM25_EARLY_TERMINATION` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__BM25_EARLY_THRESHOLD` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__PARALLEL_DECOMPOSITION` — `src\pdf_framework\config\features.py`
+- `ADAPTIVE__PARALLEL_EXPANSION` — `src\pdf_framework\config\features.py`
+- `CONVERSATION__MEMORY_BACKEND` — `src\pdf_framework\config\features.py`
+- `CONVERSATION__MAX_HISTORY` — `src\pdf_framework\config\features.py`
+- `CONVERSATION__AUTO_CLEANUP_DAYS` — `src\pdf_framework\config\features.py`
+- `CONVERSATION__DB_PATH` — `src\pdf_framework\config\features.py`
+- `CONVERSATION__REFORMULATION_ENABLED` — `src\pdf_framework\config\features.py`
+- `CONVERSATION__REFORMULATION_MODEL` — `src\pdf_framework\config\features.py`
+- `LAYOUT__LAYOUT_DETECTION_ENABLED` — `src\pdf_framework\config\features.py`
+- `LAYOUT__LAYOUT_PROVIDER` — `src\pdf_framework\config\features.py`
+- `LAYOUT__LAYOUT_STRATEGY` — `src\pdf_framework\config\features.py`
+- `LAYOUT__INFER_TABLE_STRUCTURE` — `src\pdf_framework\config\features.py`
+- `LAYOUT__EXTRACT_TABLES` — `src\pdf_framework\config\features.py`
+- `LAYOUT__MIN_TABLE_ROWS` — `src\pdf_framework\config\features.py`
+- `LAYOUT__MIN_TABLE_COLS` — `src\pdf_framework\config\features.py`
+- `LAYOUT__EXTRACT_IMAGES` — `src\pdf_framework\config\features.py`
+- `LAYOUT__IMAGE_DESCRIPTION_MODEL` — `src\pdf_framework\config\features.py`
+- `LAYOUT__MIN_IMAGE_SIZE` — `src\pdf_framework\config\features.py`
+- `LAYOUT__PARSE_TEMPLATE` — `src\pdf_framework\config\features.py`
+- `LAYOUT__STRUCTURE_AWARE_CHUNK_SIZE` — `src\pdf_framework\config\features.py`
+- `LAYOUT__STRUCTURE_AWARE_OVERLAP` — `src\pdf_framework\config\features.py`
+- `RAPTOR__ENABLED` — `src\pdf_framework\config\features.py`
+- `RAPTOR__MAX_LEVELS` — `src\pdf_framework\config\features.py`
+- `RAPTOR__SEARCH_MODE` — `src\pdf_framework\config\features.py`
+- `RAPTOR__CLUSTER_METHOD` — `src\pdf_framework\config\features.py`
+- `RAPTOR__SUMMARIZATION_MODEL` — `src\pdf_framework\config\features.py`
+- `SUMMARY_INDEX__ENABLED` — `src\pdf_framework\config\features.py`
+- `SUMMARY_INDEX__COLLECTION_NAME` — `src\pdf_framework\config\features.py`
+- `SUMMARY_INDEX__SUMMARIZATION_MODEL` — `src\pdf_framework\config\features.py`
+- `SUMMARY_INDEX__MIN_CHUNKS_FOR_SUMMARY` — `src\pdf_framework\config\features.py`
+- `SUGGESTIONS__ENABLED` — `src\pdf_framework\config\features.py`
+- `SUGGESTIONS__METHOD` — `src\pdf_framework\config\features.py`
+- `SUGGESTIONS__CACHE_TTL` — `src\pdf_framework\config\features.py`
+- `SUGGESTIONS__MAX_SUGGESTIONS` — `src\pdf_framework\config\features.py`
+- `SUGGESTIONS__LLM_MODEL` — `src\pdf_framework\config\features.py`
+- `GUARDRAILS__PII_MODE` — `src\pdf_framework\config\features.py`
+- `GUARDRAILS__INJECTION_MODE` — `src\pdf_framework\config\features.py`
+- `GUARDRAILS__INJECTION_THRESHOLD` — `src\pdf_framework\config\features.py`
+- `GUARDRAILS__MAX_QUERY_LENGTH` — `src\pdf_framework\config\features.py`
+- `GUARDRAILS__MAX_FILE_SIZE_BYTES` — `src\pdf_framework\config\features.py`
+- `HIERARCHICAL__SECTION_FIRST_ENABLED` — `src\pdf_framework\config\features.py`
+- `HIERARCHICAL__SUMMARY_ENABLED` — `src\pdf_framework\config\features.py`
+- `HIERARCHICAL__SUMMARY_MODEL` — `src\pdf_framework\config\features.py`
+- `HIERARCHICAL__SUMMARY_DB_PATH` — `src\pdf_framework\config\features.py`
+- `HIERARCHICAL__CONTEXT_BREADCRUMB` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__ENABLED` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__COLLECTION_NAME` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__RENDER_DPI` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__HYBRID_WEIGHT_VISUAL` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__HYBRID_WEIGHT_TEXT` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__AUTO_DETECT_ENABLED` — `src\pdf_framework\config\features.py`
+- `VISUAL_SEARCH__VISUAL_KEYWORDS` — `src\pdf_framework\config\features.py`
+- `GRAPH_RAG__COMMUNITY_DETECTION_ENABLED` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__LEIDEN_RESOLUTION` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__COMMUNITY_LEVELS` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__SUMMARY_MODEL` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__SUMMARY_CACHE_ENABLED` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__LOCAL_SEARCH_DEPTH` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__LOCAL_SEARCH_INCLUDE_SUMMARY` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__GLOBAL_SEARCH_MAX_COMMUNITIES` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__GLOBAL_SEARCH_RANK_BY_SIMILARITY` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__GLOBAL_SEARCH_MAP_MODEL` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__GLOBAL_SEARCH_REDUCE_MODEL` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__INCREMENTAL_UPDATES_ENABLED` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__AUTO_UPDATE_ENABLED` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_RAG__AUTO_UPDATE_ON_REINDEX` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__ENABLED` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__COLLECTION_NAME` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__ENTITY_TOP_K` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__RELATION_TOP_K` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__NEIGHBOR_DEPTH` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__MAX_CHUNKS` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__AUTO_SELECT_ENABLED` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__LIGHT_COMPLEXITIES` — `src\pdf_framework\config\graphrag.py`
+- `LIGHT_RAG__FULL_COMPLEXITIES` — `src\pdf_framework\config\graphrag.py`
+- `GRAPH_STORE__PROVIDER` — `src\pdf_framework\config\infrastructure.py`
+- `GRAPH_STORE__PERSIST_DIR` — `src\pdf_framework\config\infrastructure.py`
+- `GRAPH_STORE__NEO4J_URI` — `src\pdf_framework\config\infrastructure.py`
+- `GRAPH_STORE__NEO4J_USER` — `src\pdf_framework\config\infrastructure.py`
+- `GRAPH_STORE__NEO4J_PASSWORD` — `src\pdf_framework\config\infrastructure.py`
+- `MCP_SERVER__NAME` — `src\pdf_framework\config\infrastructure.py`
+- `MCP_SERVER__VERSION` — `src\pdf_framework\config\infrastructure.py`
+- `MCP_SERVER__TRANSPORT` — `src\pdf_framework\config\infrastructure.py`
+- `API__HOST` — `src\pdf_framework\config\infrastructure.py`
+- `API__PORT` — `src\pdf_framework\config\infrastructure.py`
+- `API__CORS_ORIGINS` — `src\pdf_framework\config\infrastructure.py`
+- `AUTH__ENABLED` — `src\pdf_framework\config\infrastructure.py`
+- `AUTH__JWT_SECRET` — `src\pdf_framework\config\infrastructure.py`
+- `AUTH__JWT_ALGORITHM` — `src\pdf_framework\config\infrastructure.py`
+- `AUTH__TOKEN_EXPIRE_HOURS` — `src\pdf_framework\config\infrastructure.py`
+- `AUTH__DEFAULT_TENANT` — `src\pdf_framework\config\infrastructure.py`
+- `UI__ENABLED` — `src\pdf_framework\config\infrastructure.py`
+- `UI__HOST` — `src\pdf_framework\config\infrastructure.py`
+- `UI__PORT` — `src\pdf_framework\config\infrastructure.py`
+- `UI__SHARE` — `src\pdf_framework\config\infrastructure.py`
+- `UI__THEME` — `src\pdf_framework\config\infrastructure.py`
+- `UI__API_BACKEND_URL` — `src\pdf_framework\config\infrastructure.py`
+- `OPENAI_COMPAT__ENABLED` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__ENABLED` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__REDIS_URL` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__MAX_JOBS` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__JOB_TIMEOUT` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__RETRY_ATTEMPTS` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__RETRY_DELAY_SECONDS` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__QUEUE_NAME` — `src\pdf_framework\config\infrastructure.py`
+- `QUEUE__HEALTH_CHECK_INTERVAL` — `src\pdf_framework\config\infrastructure.py`
+- `OBSERVABILITY__TRACER` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__TRACE_DIR` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__LANGSMITH_ENABLED` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__LANGFUSE_ENABLED` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__LANGFUSE_PUBLIC_KEY` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__LANGFUSE_SECRET_KEY` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__LANGFUSE_HOST` — `src\pdf_framework\config\observability.py`
+- `OBSERVABILITY__LANGFUSE_PROJECT_NAME` — `src\pdf_framework\config\observability.py`
+- `CACHE__EMBEDDING_ENABLED` — `src\pdf_framework\config\observability.py`
+- `CACHE__EMBEDDING_TTL_DAYS` — `src\pdf_framework\config\observability.py`
+- `CACHE__EMBEDDING_DB_PATH` — `src\pdf_framework\config\observability.py`
+- `CACHE__LLM_ENABLED` — `src\pdf_framework\config\observability.py`
+- `CACHE__LLM_TTL_SECONDS` — `src\pdf_framework\config\observability.py`
+- `CACHE__LLM_DB_PATH` — `src\pdf_framework\config\observability.py`
+- `CACHE__DOCUMENT_ENABLED` — `src\pdf_framework\config\observability.py`
+- `CACHE__DOCUMENT_CACHE_DIR` — `src\pdf_framework\config\observability.py`
+- `CACHE__PROMPT_CACHING_ENABLED` — `src\pdf_framework\config\observability.py`
+- `CACHE__SEMANTIC_ENABLED` — `src\pdf_framework\config\observability.py`
+- `CACHE__SEMANTIC_THRESHOLD` — `src\pdf_framework\config\observability.py`
+- `CACHE__SEMANTIC_TTL_SECONDS` — `src\pdf_framework\config\observability.py`
+- `CACHE__SEMANTIC_MAX_ENTRIES` — `src\pdf_framework\config\observability.py`
+- `CACHE__SEMANTIC_DB_PATH` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__ENABLED` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__DB_PATH` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__ASYNC_DB_PATH` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__FEW_SHOT_MAX_EXAMPLES` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__FEW_SHOT_SIMILARITY_THRESHOLD` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__BOOST_MAX` — `src\pdf_framework\config\observability.py`
+- `FEEDBACK__BOOST_MIN_COUNT` — `src\pdf_framework\config\observability.py`
+- `RAGAS_EVAL__ENABLED` — `src\pdf_framework\config\observability.py`
+- `RAGAS_EVAL__EVAL_HISTORY_DB_PATH` — `src\pdf_framework\config\observability.py`
+- `RAGAS_EVAL__REGRESSION_THRESHOLD` — `src\pdf_framework\config\observability.py`
+- `RAGAS_EVAL__BASELINE_PATH` — `src\pdf_framework\config\observability.py`
+- `AUTORAG__ENABLED` — `src\pdf_framework\config\observability.py`
+- `AUTORAG__MAX_EXPERIMENTS` — `src\pdf_framework\config\observability.py`
+- `AUTORAG__OUTPUT_DIR` — `src\pdf_framework\config\observability.py`
+- `PDF__LOADER` — `src\pdf_framework\config\pdf.py`
+- `PDF__CHUNK_SIZE` — `src\pdf_framework\config\pdf.py`
+- `PDF__CHUNK_OVERLAP` — `src\pdf_framework\config\pdf.py`
+- `PDF__SPLITTER` — `src\pdf_framework\config\pdf.py`
+- `PDF__EXTRACT_TABLES` — `src\pdf_framework\config\pdf.py`
+- `PDF__EXTRACT_IMAGES` — `src\pdf_framework\config\pdf.py`
+- `PDF__SEMANTIC_THRESHOLD` — `src\pdf_framework\config\pdf.py`
+- `PDF__MIN_CHUNK_SIZE` — `src\pdf_framework\config\pdf.py`
+- `PDF__MAX_CHUNK_SIZE` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__OCR_ENABLED` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__OCR_ENGINE` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__OCR_LANGUAGES` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__FORCE_FULL_PAGE_OCR` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__TABLE_STRUCTURE_ENABLED` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__TABLE_MODE` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__EXTRACT_IMAGES` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__GENERATE_PICTURE_IMAGES` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__DOCUMENT_TIMEOUT` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__LAYOUT_BATCH_SIZE` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__OCR_BATCH_SIZE` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__TABLE_BATCH_SIZE` — `src\pdf_framework\config\pdf.py`
+- `DOCLING__USE_ONNX` — `src\pdf_framework\config\pdf.py`
+- `SMART_ROUTER__MIN_TEXT_CHARS_PER_PAGE` — `src\pdf_framework\config\pdf.py`
+- `SMART_ROUTER__COMPLEX_LAYOUT_THRESHOLD` — `src\pdf_framework\config\pdf.py`
+- `SMART_ROUTER__TABLE_HEAVY_THRESHOLD` — `src\pdf_framework\config\pdf.py`
+- `SMART_ROUTER__FAST_LOADER` — `src\pdf_framework\config\pdf.py`
+- `SMART_ROUTER__FULL_LOADER` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__ENABLE_FITZ_TABLES` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__ENABLE_DOCLING_TABLES` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__ENABLE_VISION_OCR` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__VERIFY_COVERAGE` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__COVERAGE_THRESHOLD` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__TABLE_DEDUP_ENABLED` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__TABLE_DEDUP_THRESHOLD` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__DOCLING_MAX_RETRIES` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__DOCLING_TABLE_MODE` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__VISION_MODEL` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__VISION_MAX_RETRIES` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__VISION_DPI` — `src\pdf_framework\config\pdf.py`
+- `HYBRID_LOADER__VISION_MIN_TEXT_CHARS` — `src\pdf_framework\config\pdf.py`
+- `SEARCH__HYBRID_VECTOR_WEIGHT` — `src\pdf_framework\config\search.py`
+- `SEARCH__HYBRID_GRAPH_WEIGHT` — `src\pdf_framework\config\search.py`
+- `SEARCH__HYBRID_RRF_K` — `src\pdf_framework\config\search.py`
+- `SEARCH__BM25_ENABLED` — `src\pdf_framework\config\search.py`
+- `SEARCH__BM25_WEIGHT` — `src\pdf_framework\config\search.py`
+- `SEARCH__BM25_DB_PATH` — `src\pdf_framework\config\search.py`
+- `SEARCH__BM25_BACKEND` — `src\pdf_framework\config\search.py`
+- `SEARCH__BM25_TWO_PASS` — `src\pdf_framework\config\search.py`
+- `SEARCH__DYNAMIC_WEIGHTING_ENABLED` — `src\pdf_framework\config\search.py`
+- `SEARCH__MMR_DIVERSITY_LAMBDA` — `src\pdf_framework\config\search.py`
+- `SEARCH__MMR_FETCH_K` — `src\pdf_framework\config\search.py`
+- `SEARCH__QUERY_EXPANSION_ENABLED` — `src\pdf_framework\config\search.py`
+- `SEARCH__QUERY_EXPANSION_METHOD` — `src\pdf_framework\config\search.py`
+- `SEARCH__FLASHRANK_ENABLED` — `src\pdf_framework\config\search.py`
+- `SEARCH__FLASHRANK_TOKEN_BUDGET` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__ENABLED` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__MAX_CONTEXT_TOKENS` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__MODEL` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__BATCH_CONCURRENCY` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__MIN_CHUNK_TOKENS` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__CACHE_ENABLED` — `src\pdf_framework\config\search.py`
+- `CONTEXTUAL_RETRIEVAL__CACHE_DB_PATH` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__ENABLED` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__STAGE1_K` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__STAGE1_STRATEGY` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__STAGE2_RERANK_K` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__STAGE2_USE_MMR` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__STAGE2_MMR_LAMBDA` — `src\pdf_framework\config\search.py`
+- `TWO_STAGE__STAGE2_USE_FLASHRANK` — `src\pdf_framework\config\search.py`
+- `VECTOR_STORE__PROVIDER` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__DIMENSIONS` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__QDRANT_URL` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__QDRANT_API_KEY` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__PGVECTOR_DSN` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__PGVECTOR_TABLE_NAME` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__PERSIST_DIR` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__COLLECTION_NAME` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__DISTANCE_METRIC` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__QDRANT_BM25_ENABLED` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__QDRANT_BM25_LANGUAGE` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__QDRANT_BM25_K` — `src\pdf_framework\config\vector_store.py`
+- `VECTOR_STORE__QDRANT_BM25_B` — `src\pdf_framework\config\vector_store.py`
+
+### REST API Endpoints (92)
+
+- `GET /analytics/summary` — `src\api\routes\analytics.py`
+- `GET /analytics/queries` — `src\api\routes\analytics.py`
+- `GET /analytics/queries/recent` — `src\api\routes\analytics.py`
+- `GET /analytics/costs` — `src\api\routes\analytics.py`
+- `GET /analytics/audit` — `src\api\routes\analytics.py`
+- `GET /analytics/audit/stats` — `src\api\routes\analytics.py`
+- `GET /analytics/audit/user/{user_id}` — `src\api\routes\analytics.py`
+- `POST /auth/token` — `src\api\routes\auth.py`
+- `POST /auth/validate` — `src\api\routes\auth.py`
+- `GET /cache/stats` — `src\api\routes\cache.py`
+- `POST /cache/clear` — `src\api\routes\cache.py`
+- `POST /chat/message` — `src\api\routes\chat.py`
+- `GET /chat/history/{thread_id}` — `src\api\routes\chat.py`
+- `DELETE /chat/history/{thread_id}` — `src\api\routes\chat.py`
+- `GET /chat/threads` — `src\api\routes\chat.py`
+- `GET /chat/stats/{thread_id}` — `src\api\routes\chat.py`
+- `POST /collections/` — `src\api\routes\collections.py`
+- `GET /collections/` — `src\api\routes\collections.py`
+- `GET /collections/{collection_id}` — `src\api\routes\collections.py`
+- `PATCH /collections/{collection_id}` — `src\api\routes\collections.py`
+- `DELETE /collections/{collection_id}` — `src\api\routes\collections.py`
+- `POST /collections/{collection_id}/documents` — `src\api\routes\collections.py`
+- `DELETE /collections/{collection_id}/documents/{document_id}` — `src\api\routes\collections.py`
+- `GET /collections/{collection_id}/documents` — `src\api\routes\collections.py`
+- `POST /completions/chat/completions` — `src\api\routes\completions.py`
+- `GET /completions/models` — `src\api\routes\completions.py`
+- `GET /completions/models/{model_id}` — `src\api\routes\completions.py`
+- `POST /completions/embeddings` — `src\api\routes\completions.py`
+- `POST /documents/upload` — `src\api\routes\documents.py`
+- `POST /documents/index` — `src\api\routes\documents.py`
+- `POST /documents/index/stream` — `src\api\routes\documents.py`
+- `POST /documents/index/batch/stream` — `src\api\routes\documents.py`
+- `GET /documents/files` — `src\api\routes\documents.py`
+- `GET /documents/registry` — `src\api\routes\documents.py`
+- `PATCH /documents/registry/{document_id}` — `src\api\routes\documents.py`
+- `GET /documents/` — `src\api\routes\documents.py`
+- `GET /documents/stats` — `src\api\routes\documents.py`
+- `DELETE /documents/clear` — `src\api\routes\documents.py`
+- `POST /documents/rebuild-sparse` — `src\api\routes\documents.py`
+- `POST /documents/rebuild-bm25` — `src\api\routes\documents.py`
+- `DELETE /documents/{document_id}` — `src\api\routes\documents.py`
+- `POST /documents/index/delta` — `src\api\routes\documents.py`
+- `GET /documents/index/delta/stats` — `src\api\routes\documents.py`
+- `POST /documents/index/delta/clear` — `src\api\routes\documents.py`
+- `POST /documents/index-async` — `src\api\routes\documents.py`
+- `POST /feedback/submit` — `src\api\routes\feedback.py`
+- `GET /feedback/stats` — `src\api\routes\feedback.py`
+- `GET /feedback/examples/positive` — `src\api\routes\feedback.py`
+- `POST /feedback/tune` — `src\api\routes\feedback.py`
+- `POST /feedback/clear` — `src\api\routes\feedback.py`
+- `GET /graph/stats` — `src\api\routes\graph.py`
+- `GET /graph/entities` — `src\api\routes\graph.py`
+- `DELETE /graph/clear` — `src\api\routes\graph.py`
+- `POST /graph/build-communities` — `src\api\routes\graph.py`
+- `POST /graph/build-entity-embeddings` — `src\api\routes\graph.py`
+- `GET /graph/entity-embeddings/stats` — `src\api\routes\graph.py`
+- `GET /graph/neighbors/{entity_id}` — `src\api\routes\graph.py`
+- `POST /graph/incremental-update` — `src\api\routes\graph.py`
+- `GET /graph/incremental/detect-changes` — `src\api\routes\graph.py`
+- `GET /health/ready` — `src\api\routes\health.py`
+- `GET /health/live` — `src\api\routes\health.py`
+- `POST /jobs/enqueue` — `src\api\routes\jobs.py`
+- `GET /jobs/{job_id}` — `src\api\routes\jobs.py`
+- `DELETE /jobs/{job_id}` — `src\api\routes\jobs.py`
+- `GET /jobs/{job_id}/stream` — `src\api\routes\jobs.py`
+- `GET /metrics/html` — `src\api\routes\metrics.py`
+- `POST /metrics/reset` — `src\api\routes\metrics.py`
+- `GET /metrics/prometheus` — `src\api\routes\metrics.py`
+- `POST /openai_compat/chat/completions` — `src\api\routes\openai_compat.py`
+- `POST /openai_compat/embeddings` — `src\api\routes\openai_compat.py`
+- `GET /openai_compat/models` — `src\api\routes\openai_compat.py`
+- `GET /optimization/stats` — `src\api\routes\optimization.py`
+- `POST /optimization/optimize` — `src\api\routes\optimization.py`
+- `GET /optimization/dataset` — `src\api\routes\optimization.py`
+- `POST /optimization/dataset/add` — `src\api\routes\optimization.py`
+- `GET /optimization/last-result` — `src\api\routes\optimization.py`
+- `POST /search/` — `src\api\routes\search.py`
+- `POST /search/ask` — `src\api\routes\search.py`
+- `POST /search/analyze` — `src\api\routes\search.py`
+- `POST /search/research` — `src\api\routes\search.py`
+- `POST /search/multi-agent` — `src\api\routes\search.py`
+- `POST /search/visual` — `src\api\routes\search.py`
+- `POST /search/plan-execute` — `src\api\routes\search.py`
+- `GET /tenants/{tenant_id}` — `src\api\routes\tenants.py`
+- `GET /tenants/{tenant_id}/stats` — `src\api\routes\tenants.py`
+- `GET /tenants/{tenant_id}/usage` — `src\api\routes\tenants.py`
+- `PUT /tenants/{tenant_id}` — `src\api\routes\tenants.py`
+- `DELETE /tenants/{tenant_id}` — `src\api\routes\tenants.py`
+- `GET /toc/{document_id}` — `src\api\routes\toc.py`
+- `GET /toc/{document_id}/section/{section_number:path}` — `src\api\routes\toc.py`
+- `POST /toc/{document_id}/generate-summaries` — `src\api\routes\toc.py`
+- `WEBSOCKET /websocket/ws/search` — `src\api\routes\websocket.py`
+
+### MCP Tools (15)
+
+- `index_pdf` — `src/mcp_server/server.py`
+- `search_documents` — `src/mcp_server/server.py`
+- `ask_question` — `src/mcp_server/server.py`
+- `graph_query` — `src/mcp_server/server.py`
+- `analyze` — `src/mcp_server/server.py`
+- `research` — `src/mcp_server/server.py`
+- `web_search` — `src/mcp_server/server.py`
+- `search_with_fallback` — `src/mcp_server/server.py`
+- `list_collections` — `src/mcp_server/server.py`
+- `list_documents` — `src/mcp_server/server.py`
+- `get_toc` — `src/mcp_server/server.py`
+- `get_stats` — `src/mcp_server/server.py`
+- `visual_search` — `src/mcp_server/server.py`
+- `visual_hybrid_search` — `src/mcp_server/server.py`
+- `plan_execute` — `src/mcp_server/server.py`
+
+### Search Strategies (14)
+
+- `adaptive` — `src\pdf_framework\search\strategies\adaptive.py`
+- `auto_merge` — `src\pdf_framework\search\strategies\auto_merge.py`
+- `b_m25` — `src\pdf_framework\search\strategies\bm25_search.py`
+- `graph` — `src\pdf_framework\search\strategies\graph_search.py`
+- `graph_r_a_g_auto` — `src\pdf_framework\search\strategies\graphrag_auto.py`
+- `graph_r_a_g_global` — `src\pdf_framework\search\strategies\graphrag_global.py`
+- `light_r_a_g` — `src\pdf_framework\search\strategies\graphrag_light.py`
+- `graph_r_a_g_local` — `src\pdf_framework\search\strategies\graphrag_local.py`
+- `hybrid` — `src\pdf_framework\search\strategies\hybrid_search.py`
+- `m_m_r` — `src\pdf_framework\search\strategies\mmr_search.py`
+- `r_a_p_t_o_r` — `src\pdf_framework\search\strategies\raptor_search.py`
+- `vector` — `src\pdf_framework\search\strategies\vector_search.py`
+- `visual` — `src\pdf_framework\search\strategies\visual.py`
+- `web` — `src\pdf_framework\search\strategies\web_search.py`

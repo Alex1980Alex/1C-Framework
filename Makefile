@@ -95,6 +95,26 @@ test-fast: ## Run tests excluding slow integration tests
 check: lint format-check typecheck docstrings test ## Run all checks (lint + format + typecheck + docstrings + tests)
 	@echo "[OK] All checks passed"
 
+.PHONY: ci
+ci: lint format-check typecheck test-fast ## Run full CI pipeline locally (fast tests)
+	@echo "[OK] CI checks passed"
+
+.PHONY: pre-commit
+pre-commit: ## Run pre-commit hooks on all files
+	$(PYTHON_VENV) -m pre_commit run --all-files
+
+.PHONY: pre-commit-install
+pre-commit-install: ## Install pre-commit hooks
+	$(PYTHON_VENV) -m pre_commit install
+
+.PHONY: requirements
+requirements: ## Generate requirements.txt from pyproject.toml
+	@echo "# Generated from pyproject.toml" > requirements.txt
+	@$(UV) pip compile --all-extras pyproject.toml -o requirements.txt 2>/dev/null || \
+		$(PIP) compile --all-extras pyproject.toml -o requirements.txt 2>/dev/null || \
+		echo "# Install uv or pip-tools to generate requirements.txt" > requirements.txt
+	@echo "Generated requirements.txt"
+
 # ============================================================
 #  Run Services
 # ============================================================
@@ -192,6 +212,22 @@ docs: ## Open API docs in browser
 		xdg-open http://localhost:$(API_PORT)/docs 2>/dev/null || \
 		start http://localhost:$(API_PORT)/docs 2>/dev/null || \
 		echo "Visit: http://localhost:$(API_PORT)/docs"
+
+# ============================================================
+#  Audit
+# ============================================================
+
+.PHONY: audit-docs
+audit-docs: ## Audit code vs docs vs skills (gap report)
+	$(PYTHON_VENV) scripts/audit_docs_skills.py --fix
+
+.PHONY: audit-docs-json
+audit-docs-json: ## Audit code vs docs vs skills (JSON)
+	$(PYTHON_VENV) scripts/audit_docs_skills.py --json --stdout
+
+.PHONY: audit-docs-update
+audit-docs-update: ## Auto-update docs and skills with missing features
+	$(PYTHON_VENV) scripts/audit_docs_skills.py --update --fix
 
 # ============================================================
 #  Help
