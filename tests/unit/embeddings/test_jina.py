@@ -248,6 +248,118 @@ class TestJinaEmbeddingEngine:
 
 
 @pytest.mark.unit
+class TestJinaLateChunking:
+    """Tests for Late Chunking (Phase 48)."""
+
+    def test_group_into_windows_basic(self):
+        """Should group texts into windows within char limit."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        texts = ["a" * 100, "b" * 100, "c" * 100]
+        windows = JinaEmbeddingEngine._group_into_windows(texts, max_chars=250)
+        # 100+100=200 fits, +100=300 exceeds 250 → 2 windows
+        assert len(windows) == 2
+        assert len(windows[0]) == 2  # "a"*100, "b"*100
+        assert len(windows[1]) == 1  # "c"*100
+
+    def test_group_into_windows_all_fit(self):
+        """Should keep all texts in one window when they fit."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        texts = ["short1", "short2", "short3"]
+        windows = JinaEmbeddingEngine._group_into_windows(texts, max_chars=1000)
+        assert len(windows) == 1
+        assert len(windows[0]) == 3
+
+    def test_group_into_windows_oversized_text(self):
+        """Single text exceeding limit gets its own window."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        texts = ["small", "x" * 5000, "small2"]
+        windows = JinaEmbeddingEngine._group_into_windows(texts, max_chars=100)
+        assert len(windows) == 3  # each in own window
+        assert windows[0] == ["small"]
+        assert windows[1] == ["x" * 5000]
+        assert windows[2] == ["small2"]
+
+    def test_group_into_windows_empty(self):
+        """Empty input returns empty list."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        windows = JinaEmbeddingEngine._group_into_windows([], max_chars=1000)
+        assert windows == []
+
+    @pytest.mark.asyncio
+    async def test_late_chunking_sends_parameter(self):
+        """When late_chunking=True, API call should include late_chunking param."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        settings = _make_jina_settings(late_chunking=True, late_chunking_max_tokens=10000)
+        engine = JinaEmbeddingEngine(settings)
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = _mock_api_response(3)
+        mock_response.raise_for_status = MagicMock()
+
+        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+            await engine.embed_batch(["chunk1", "chunk2", "chunk3"])
+
+        body = mock_post.call_args.kwargs["json"]
+        assert body["late_chunking"] is True
+
+    @pytest.mark.asyncio
+    async def test_late_chunking_disabled_no_parameter(self):
+        """When late_chunking=False (default), API should NOT include late_chunking."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        settings = _make_jina_settings(late_chunking=False)
+        engine = JinaEmbeddingEngine(settings)
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = _mock_api_response(1)
+        mock_response.raise_for_status = MagicMock()
+
+        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+            await engine.embed_batch(["text"])
+
+        body = mock_post.call_args.kwargs["json"]
+        assert "late_chunking" not in body
+
+    @pytest.mark.asyncio
+    async def test_late_chunking_multiple_windows(self):
+        """Late chunking should split into token windows and make multiple API calls."""
+        from src.pdf_framework.embeddings.providers.jina import JinaEmbeddingEngine
+
+        # max_tokens=50 * 3 chars/token = 150 chars per window
+        settings = _make_jina_settings(late_chunking=True, late_chunking_max_tokens=50)
+        engine = JinaEmbeddingEngine(settings)
+
+        # 3 texts of 100 chars each → 150 max → 2 windows (100+100 > 150, so 1+1+1)
+        # Actually: 100 fits, 100+100=200 > 150 → window1=[text0], window2=[text1], window3=[text2]
+        texts = ["a" * 100, "b" * 100, "c" * 100]
+
+        call_count = 0
+        all_bodies = []
+
+        async def mock_post(url, json=None):
+            nonlocal call_count
+            call_count += 1
+            all_bodies.append(json)
+            n = len(json["input"])
+            resp = MagicMock()
+            resp.json.return_value = _mock_api_response(n)
+            resp.raise_for_status = MagicMock()
+            return resp
+
+        with patch.object(engine._client, "post", side_effect=mock_post):
+            result = await engine.embed_batch(texts)
+
+        assert len(result) == 3
+        assert call_count == 3  # Each text in own window (100 > 150/2)
+        assert all(b["late_chunking"] is True for b in all_bodies)
+
+
+@pytest.mark.unit
 class TestJinaFactory:
     """Test factory integration."""
 
