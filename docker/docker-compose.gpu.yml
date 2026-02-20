@@ -1,0 +1,24 @@
+# Docker Compose override for GPU support (Phase 52.3)
+# Usage: docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml up -d
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 8g
+          cpus: "4.0"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - EMBEDDING__PROVIDER=local
+      - EMBEDDING__DEVICE=cuda

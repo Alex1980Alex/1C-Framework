@@ -1,0 +1,61 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+      - id: end-of-file-fixer
+        name: Fix End of Files
+      - id: check-yaml
+        name: Check YAML
+        args: ['--unsafe']
+      - id: check-json
+        name: Check JSON
+      - id: check-toml
+        name: Check TOML
+      - id: check-added-large-files
+        name: Check for Large Files
+        args: ['--maxkb=1000']
+      - id: no-commit-to-branch
+        name: No Direct Commits to Main
+        args: ['--branch', 'main']
+
+  # Ruff - Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        name: Ruff Lint
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        name: Ruff Format
+
+  # mypy - Static type checker
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        name: Type Check (mypy)
+        additional_dependencies:
+          - pydantic>=2.10
+          - fastapi>=0.115
+          - types-requests
+        args: [--ignore-missing-imports, --warn-return-any]
+        exclude: ^(tests/|docs/|scripts/)
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

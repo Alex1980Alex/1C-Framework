@@ -1,10 +1,13 @@
-"""Tenant-isolated vector store manager (Phase 12.1).
+"""Tenant-isolated vector store manager (Phase 12.1, Phase 60).
 
 Each tenant gets a separate ChromaDB collection for complete data isolation.
-
-Author: Claude Code
-Version: 1.3.0 - Phase 12.1: Tenant Vector Store Isolation
+Phase 60: Added quota enforcement and tenant management API.
 """
+
+from datetime import datetime, timezone, timedelta
+from typing import Optional
+
+from src.pdf_framework.schemas.tenant import TenantQuota
 
 import asyncio
 import logging
@@ -293,6 +296,126 @@ class TenantVectorStoreManager:
         async with self._store_lock:
             self._store_cache.clear()
             logger.info("[TENANT] Shutdown complete, all stores cleared")
+
+    # Phase 60: Quota enforcement methods
+
+    async def set_quota(self, tenant_id: str, quota: TenantQuota) -> None:
+        """Set quota for tenant.
+
+        Args:
+            tenant_id: Tenant ID
+            quota: Quota limits
+        """
+        async with aiosqlite.connect(self._metadata_db) as db:
+            # Add quota column if not exists
+            try:
+                await db.execute("""
+                    ALTER TABLE tenants ADD COLUMN quota_json TEXT
+                """)
+            except Exception:
+                pass  # Column already exists
+
+        # Store quota as JSON
+        import json
+        async with aiosqlite.connect(self._metadata_db) as db:
+            await db.execute("""
+                UPDATE tenants SET quota_json = ? WHERE tenant_id = ?
+            """, (quota.model_dump_json(), tenant_id))
+            await db.commit()
+
+    async def get_quota(self, tenant_id: str) -> Optional[TenantQuota]:
+        """Get quota for tenant.
+
+        Args:
+            tenant_id: Tenant ID
+
+        Returns:
+            TenantQuota or default quota
+        """
+        import json
+        async with aiosqlite.connect(self._metadata_db) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute("""
+                SELECT quota_json FROM tenants WHERE tenant_id = ?
+            """, (tenant_id,))
+            row = await cursor.fetchone()
+
+            if row and row["quota_json"]:
+                return TenantQuota.model_validate_json(row["quota_json"])
+
+            # Return default quota
+            return TenantQuota()
+
+    async def check_quota(self, tenant_id: str) -> list[str]:
+        """Check if tenant has exceeded any quotas.
+
+        Args:
+            tenant_id: Tenant ID
+
+        Returns:
+            List of exceeded quota names
+        """
+        metadata = await self.get_tenant_metadata(tenant_id)
+        if not metadata:
+            return ["Tenant not found"]
+
+        quota = await self.get_quota(tenant_id)
+        exceeded = []
+
+        if metadata.document_count >= quota.max_documents:
+            exceeded.append("max_documents")
+        if metadata.storage_bytes >= quota.max_storage_mb * 1024 * 1024:
+            exceeded.append("max_storage_mb")
+
+        return exceeded
+
+    async def increment_query_count(self, tenant_id: str) -> bool:
+        """Increment daily query count for tenant.
+
+        Args:
+            tenant_id: Tenant ID
+
+        Returns:
+            True if within quota, False if exceeded
+        """
+        quota = await self.get_quota(tenant_id)
+
+        # Check daily query quota
+        today = datetime.now(timezone.utc).date().isoformat()
+
+        async with aiosqlite.connect(self._metadata_db) as db:
+            # Ensure query_stats table exists
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS tenant_query_stats (
+                    tenant_id TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    query_count INTEGER DEFAULT 0,
+                    PRIMARY KEY (tenant_id, date)
+                )
+            """)
+
+            # Get current count
+            cursor = await db.execute("""
+                SELECT query_count FROM tenant_query_stats
+                WHERE tenant_id = ? AND date = ?
+            """, (tenant_id, today))
+            row = await cursor.fetchone()
+
+            current_count = row[0] if row else 0
+
+            if current_count >= quota.max_queries_per_day:
+                return False
+
+            # Increment count
+            await db.execute("""
+                INSERT INTO tenant_query_stats (tenant_id, date, query_count)
+                VALUES (?, ?, 1)
+                ON CONFLICT (tenant_id, date) DO UPDATE SET
+                query_count = query_count + 1
+            """, (tenant_id, today))
+            await db.commit()
+
+        return True
 
 
 # Global tenant store manager instance
