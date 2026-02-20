@@ -128,6 +128,41 @@
       "keywords": ["audit", "аудит", "аудит документации", "проверить покрытие", "check docs", "актуализировать документацию", "обновить доки", "doc coverage", "audit-docs"],
       "skills": ["audit-docs"],
       "optional": []
+    },
+    "claude-code-plugins": {
+      "keywords": ["plugin", "плагин", "marketplace", "маркетплейс", "создать плагин", "create plugin", "manifest", "slash command", "distribute plugin", "установить плагин", "install plugin", "LSP server plugin"],
+      "skills": ["claude-code-plugins"],
+      "optional": []
+    },
+    "claude-code-subagents": {
+      "keywords": ["subagent", "подагент", "создать агента claude", "create agent claude", "Task tool", "делегировать", "delegate", "agent YAML", "agent frontmatter", "permission mode", "встроенные агенты", "built-in agents", "Explore agent", "Plan agent"],
+      "skills": ["claude-code-subagents"],
+      "optional": []
+    },
+    "claude-code-settings": {
+      "keywords": ["settings.json claude", "параметры claude code", "claude code config", "настройки claude code", "managed settings", "CLAUDE.md", "память claude", "memory management claude", "model config claude", "output style", "стиль вывода", "scopes", "области конфигурации", "environment variables claude", "project rules"],
+      "skills": ["claude-code-settings"],
+      "optional": []
+    },
+    "claude-code-cli": {
+      "keywords": ["cli reference claude", "справочник cli claude", "горячие клавиши", "keyboard shortcuts", "vim mode", "interactive mode", "интерактивный режим", "checkpoints", "контрольные точки", "rewind", "отмотать", "slash commands", "cli flags claude", "флаги cli", "background tasks claude", "фоновые задачи claude", "bash mode"],
+      "skills": ["claude-code-cli-interactive"],
+      "optional": []
+    },
+    "claude-code-github-actions": {
+      "keywords": ["github actions claude", "github action claude", "CI/CD claude", "PR automation", "автоматизация PR", "claude-code-action", "code review CI", "github workflow claude", "@claude trigger", "автоматический review"],
+      "skills": ["claude-code-github-actions"],
+      "optional": []
+    },
+    "claude-code-programmatic": {
+      "keywords": ["headless claude", "programmatic claude", "программный запуск", "agent sdk", "structured output claude", "json schema claude", "-p flag", "print mode", "автоматизация claude", "ralph wiggum", "автономный цикл", "autonomous loop", "stream-json", "claude -p", "скрипт с claude", "CI pipeline claude"],
+      "skills": ["claude-code-programmatic"],
+      "optional": []
+    },
+    "claude-code-admin": {
+      "keywords": ["monitoring claude", "мониторинг claude", "opentelemetry claude", "otel claude", "security claude", "безопасность claude", "IAM claude", "access control claude", "costs claude", "затраты claude", "rate limit claude", "managed settings", "enterprise claude", "analytics claude", "аналитика claude", "credential management"],
+      "skills": ["claude-code-admin"],
+      "optional": []
     }
   }
 }
