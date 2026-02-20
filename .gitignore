@@ -50,4 +50,6 @@ temp_*.txt
 
 # Hook shared state (regenerated at runtime)
 .claude/cache/hook-todos.json
+.claude/cache/hook-todos.lock
+.claude/cache/auto-git-save-state.json
 test_all_phases_results.json

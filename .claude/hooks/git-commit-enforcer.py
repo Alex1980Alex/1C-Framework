@@ -24,13 +24,16 @@ from pathlib import Path
 # Project root (hooks/ -> .claude/ -> project/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# Only enforce for these paths (empty list = all tracked files)
-# Adjust as needed: add "src/", "docs/" etc.
+# Enforce for all project-critical paths
 WATCHED_PATHS = [
-    ".claude/",
+    "src/",
+    "docs/",
+    "tests/",
+    ".claude/skills/",
+    ".claude/hooks/",
 ]
 
-# Git status codes that indicate changes (not untracked)
+# Git status codes that indicate changes (including untracked)
 CHANGE_STATUSES = {"M", "A", "D", "R", "C", "U", "T"}
 
 
@@ -59,13 +62,13 @@ def get_uncommitted_changes() -> list[str]:
             work_status = line[1]    # unstaged
             filepath = line[3:].strip().strip('"')
 
-            # Skip untracked files (??)
-            if index_status == "?" and work_status == "?":
-                continue
+            # Include untracked files (new files should be committed too)
+            is_untracked = index_status == "?" and work_status == "?"
 
             # At least one status must indicate a real change
             has_change = (
-                index_status in CHANGE_STATUSES
+                is_untracked
+                or index_status in CHANGE_STATUSES
                 or work_status in CHANGE_STATUSES
             )
             if not has_change:
