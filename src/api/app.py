@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import analytics, auth, cache, chat, collections, documents, feedback, graph, health, metrics, optimization, search, toc, websocket
+from src.api.routes import analytics, auth, cache, chat, collections, documents, feedback, graph, health, jobs, metrics, optimization, search, tenants, toc, websocket
 from src.api.routes import openai_compat  # Phase 14: OpenAI-compatible API
 from src.pdf_framework.config import get_settings
 
@@ -65,6 +65,8 @@ def create_app() -> FastAPI:
         {"name": "collections", "description": "Multi-document knowledge bases: collections, scoped search"},
         {"name": "optimization", "description": "DSPy prompt optimization, A/B experiments"},
         {"name": "analytics", "description": "Enterprise analytics: query tracking, cost analysis, audit logs"},
+        {"name": "jobs", "description": "Async job management: enqueue, status, progress streaming, cancellation"},
+        {"name": "tenants", "description": "Multi-tenant management: CRUD, quotas, usage stats, isolation"},
     ]
 
     app = FastAPI(
@@ -89,6 +91,18 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Phase 53: Guardrails middleware (PII → Injection → ContentFilter)
+    from src.api.middleware.guardrails import GuardrailsMiddleware
+
+    app.add_middleware(
+        GuardrailsMiddleware,
+        pii_mode=settings.guardrails.pii_mode,
+        injection_mode=settings.guardrails.injection_mode,
+        injection_threshold=settings.guardrails.injection_threshold,
+        max_query_length=settings.guardrails.max_query_length,
+        max_file_size_bytes=settings.guardrails.max_file_size_bytes,
+    )
+
     app.include_router(health.router)
     app.include_router(auth.router)  # Phase 12: Authentication
     app.include_router(documents.router)
@@ -104,6 +118,8 @@ def create_app() -> FastAPI:
     app.include_router(optimization.router)  # Phase 34: DSPy Optimization
     app.include_router(analytics.router)  # Phase 40: Enterprise Analytics
     app.include_router(websocket.router)  # Phase 49: WebSocket streaming
+    app.include_router(jobs.router)  # Phase 59: Async Jobs API
+    app.include_router(tenants.router)  # Phase 60: Multi-tenant Management
 
     return app
 

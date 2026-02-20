@@ -3,10 +3,12 @@
 Provides multiple tracing implementations:
 - JsonFileTracer: local JSONL files for dev/testing
 - LangSmithTracer: LangSmith dashboard integration
+- LangfuseTracer: Langfuse dashboard integration (Phase 46)
 - OpenTelemetryTracer: standard observability (optional)
 
 Author: Claude Code
 Version: 1.2.0 - Phase 11.1: Tracing
+Version: 1.3.0 - Phase 46: Langfuse integration
 """
 
 from __future__ import annotations
@@ -216,6 +218,168 @@ class LangSmithTracer(BaseTracer):
         pass
 
 
+class LangfuseTracer(BaseTracer):
+    """
+    Tracer that integrates with Langfuse observability platform.
+
+    Requires LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY environment variables.
+    Supports:
+    - Distributed tracing across services
+    - LLM call tracking
+    - Query scoring and feedback
+    - Token usage tracking
+    """
+
+    def __init__(
+        self,
+        enabled: bool = False,
+        public_key: str | None = None,
+        secret_key: str | None = None,
+        host: str | None = None,
+        project_name: str = "pdf-framework",
+    ):
+        """
+        Initialize Langfuse tracer.
+
+        Args:
+            enabled: Whether Langfuse tracing is active
+            public_key: Langfuse public key (overrides env var)
+            secret_key: Langfuse secret key (overrides env var)
+            host: Langfuse host URL (for cloud/on-premise)
+            project_name: Langfuse project name
+        """
+        self._enabled = enabled
+        self._project_name = project_name
+        self._client = None
+
+        if self._enabled:
+            try:
+                from langfuse import Langfuse
+                import os
+
+                key = public_key or os.environ.get("LANGFUSE_PUBLIC_KEY", "")
+                secret = secret_key or os.environ.get("LANGFUSE_SECRET_KEY", "")
+                host_url = host or os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com")
+
+                if key and secret:
+                    self._client = Langfuse(
+                        public_key=key,
+                        secret_key=secret,
+                        host=host_url,
+                    )
+                    logger.info(f"[TRACE] Langfuse tracing enabled (project: {project_name})")
+                else:
+                    logger.warning("[TRACE] LANGFUSE_PUBLIC_KEY or LANGFUSE_SECRET_KEY not set")
+                    self._enabled = False
+            except ImportError:
+                logger.warning("[TRACE] langfuse not installed, disabling Langfuse tracer")
+                self._enabled = False
+
+    def start_span(self, name: str, attributes: dict | None = None) -> Span:
+        """Start a new span."""
+        return Span(name=name, attributes=attributes or {})
+
+    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+        """End span and flush to Langfuse."""
+        span.end(status=status, output=output, error=error)
+
+        if self._enabled and self._client:
+            try:
+                # Create Langfuse observation
+                self._client.span(
+                    name=span.name,
+                    start_time=span.start_timestamp,
+                    end_time=datetime.now(timezone.utc).isoformat(),
+                    level="ERROR" if status == SpanStatus.ERROR else "DEFAULT",
+                    metadata=span.attributes,
+                    output=str(output) if output else None,
+                    status_message=error,
+                )
+
+                # Flush immediately for real-time observability
+                self._client.flush()
+            except Exception as e:
+                logger.warning(f"[TRACE] Failed to write span to Langfuse: {e}")
+
+    def record_query(
+        self,
+        query: str,
+        results: list,
+        latency_ms: float,
+        score: float | None = None,
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Record a search query with optional scoring.
+
+        Args:
+            query: Search query string
+            results: Search results
+            latency_ms: Query latency
+            score: Optional relevance score (0-1)
+            user_id: Optional user ID for attribution
+        """
+        if self._enabled and self._client:
+            try:
+                self._client.score(
+                    name="search_relevance",
+                    value=score or 0.0,
+                    comment=f"Query: {query[:100]}",
+                )
+                self._client.flush()
+            except Exception as e:
+                logger.warning(f"[TRACE] Failed to record score to Langfuse: {e}")
+
+    def create_generation(
+        self,
+        name: str,
+        model: str,
+        prompt: str,
+        completion: str,
+        tokens_input: int,
+        tokens_output: int,
+        latency_ms: float,
+    ) -> None:
+        """
+        Create an LLM generation observation in Langfuse.
+
+        Args:
+            name: Generation name
+            model: Model identifier
+            prompt: Input prompt
+            completion: Model output
+            tokens_input: Input tokens count
+            tokens_output: Output tokens count
+            latency_ms: Generation latency
+        """
+        if self._enabled and self._client:
+            try:
+                self._client.generation(
+                    name=name,
+                    model=model,
+                    input=prompt,
+                    output=completion,
+                    usage={
+                        "input": tokens_input,
+                        "output": tokens_output,
+                        "total": tokens_input + tokens_output,
+                    },
+                    latency_ms=latency_ms,
+                )
+                self._client.flush()
+            except Exception as e:
+                logger.warning(f"[TRACE] Failed to create generation in Langfuse: {e}")
+
+    def flush(self) -> None:
+        """Flush pending traces to Langfuse."""
+        if self._enabled and self._client:
+            try:
+                self._client.flush()
+                logger.debug("[TRACE] Flushed traces to Langfuse")
+            except Exception as e:
+                logger.warning(f"[TRACE] Failed to flush to Langfuse: {e}")
+
+
 class NoOpTracer(BaseTracer):
     """No-op tracer that discards all spans."""
 
@@ -313,7 +477,7 @@ _metrics_collector = MetricsCollector()
 
 
 def get_tracer(
-    tracer_type: Literal["jsonfile", "langsmith", "none"] = "jsonfile",
+    tracer_type: Literal["jsonfile", "langsmith", "langfuse", "none"] = "jsonfile",
     **kwargs,
 ) -> BaseTracer:
     """
@@ -330,6 +494,8 @@ def get_tracer(
         return JsonFileTracer(**kwargs)
     elif tracer_type == "langsmith":
         return LangSmithTracer(**kwargs)
+    elif tracer_type == "langfuse":
+        return LangfuseTracer(**kwargs)
     else:
         # No-op tracer
         return NoOpTracer()

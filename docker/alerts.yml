@@ -1,0 +1,112 @@
+# Prometheus alert rules for PDF Vector & Graph Framework
+# F3.4.5: Alert rules for latency, errors, cache health
+
+groups:
+  - name: pdf_framework_alerts
+    interval: 30s
+    rules:
+      # F3.4.5: High latency alert
+      - alert: HighQueryLatency
+        expr: histogram_quantile(0.95, rate(query_latency_seconds_bucket{strategy="hybrid"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: search
+        annotations:
+          summary: "High query latency detected"
+          description: "P95 query latency is {{ $value }}s for strategy 'hybrid' (threshold: 5s)"
+
+      - alert: CriticalQueryLatency
+        expr: histogram_quantile(0.95, rate(query_latency_seconds_bucket{strategy="hybrid"}[5m])) > 10
+        for: 2m
+        labels:
+          severity: critical
+          component: search
+        annotations:
+          summary: "Critical query latency detected"
+          description: "P95 query latency is {{ $value }}s (threshold: 10s)"
+
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: rate(error_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors/sec (threshold: 0.1/sec)"
+
+      # Low cache hit rate alert
+      - alert: LowCacheHitRate
+        expr: |
+          (
+            sum(rate(cache_hit_total[5m])) by (cache_type)
+            /
+            (sum(rate(cache_hit_total[5m])) by (cache_type) + sum(rate(cache_miss_total[5m])) by (cache_type))
+          ) < 0.5
+        for: 10m
+        labels:
+          severity: info
+          component: cache
+        annotations:
+          summary: "Low cache hit rate for {{ $labels.cache_type }}"
+          description: "Cache hit rate is {{ $value }}% (threshold: 50%)"
+
+      # API service down alert
+      - alert: APIServiceDown
+        expr: up{job="pdf-framework-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "API service is down"
+          description: "PDF Framework API has been down for more than 1 minute"
+
+      # Qdrant service down alert
+      - alert: QdrantServiceDown
+        expr: up{job="qdrant"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: vector-store
+        annotations:
+          summary: "Qdrant service is down"
+          description: "Qdrant vector store has been down for more than 2 minutes"
+
+      # High token usage alert
+      - alert: HighTokenUsage
+        expr: sum(rate(token_usage_total[1h])) by (model) > 1000
+        for: 15m
+        labels:
+          severity: warning
+          component: llm
+        annotations:
+          summary: "High token usage for model {{ $labels.model }}"
+          description: "Token usage rate is {{ $value }} tokens/sec (threshold: 1000/sec)"
+
+      # Queue depth alert
+      - alert: HighQueueDepth
+        expr: queue_depth > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High processing queue depth"
+          description: "Queue depth is {{ $value }} (threshold: 100)"
+
+  - name: pdf_framework_health
+    interval: 1m
+    rules:
+      # Health check summary
+      - alert: ServiceHealthCheck
+        expr: up{job=~"pdf-framework.*"} < 1
+        for: 5m
+        labels:
+          severity: critical
+          component: health
+        annotations:
+          summary: "Service health check failed"
+          description: "{{ $labels.job }} is not responding"

@@ -1,0 +1,49 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Data (indexed documents — rebuild in container)
+data/
+*.db
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing / CI
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Docker (avoid recursive context)
+docker/
+
+# Docs and scripts not needed at runtime
+docs/
+scripts/
+*.md
+LICENSE
+
+# Environment files (secrets — use Docker secrets instead)
+.env
+.env.*
+!.env.example
+
+# Claude Code
+.claude/
+skills/
+memory/
+hooks/
