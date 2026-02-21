@@ -14,6 +14,9 @@ Timeout: 5s
 
 import sys
 import os
+import subprocess
+from datetime import datetime
+from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
@@ -22,9 +25,17 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
-from shared.task_master import add_task, get_pending_tasks, complete_task
+from shared.task_master import (
+    add_task,
+    get_pending_tasks,
+    complete_task,
+    has_recent_completion,
+    update_task_metadata,
+    get_task_with_metadata,
+)
 
 HOOK_ID = "docs-change-tracker-hook"
+COOLDOWN_MINUTES = 3
 
 # ═══════════════════════════════════════════════════════════════════════
 # MAPPING: code path → (documentation files, skill names, update hints)
@@ -416,6 +427,9 @@ class DocsChangeTracker(BaseHook):
         if inp.tool_name not in ("Write", "Edit"):
             return None
 
+        # Zombie prevention: auto-complete tasks whose target docs are already updated
+        self._sync_zombie_tasks()
+
         tool_input = inp.tool_input
         file_path = ""
         if isinstance(tool_input, dict):
@@ -454,7 +468,9 @@ class DocsChangeTracker(BaseHook):
     def _try_complete_tasks(self, path_norm: str) -> int:
         """Auto-complete pending tasks when their target doc/skill is actually edited.
 
-        Mechanism: task description contains paths of docs and skill names.
+        Two matching strategies:
+        1. Description text: task description contains paths of docs and skill names.
+        2. Metadata: task metadata has target_docs and target_skills arrays.
         When Claude edits one of those files — task is done.
         """
         is_doc = "docs/framework documentation/" in path_norm
@@ -470,6 +486,10 @@ class DocsChangeTracker(BaseHook):
         completed = 0
         for task in pending:
             desc_lower = task.get("description", "").replace("\\", "/").lower()
+            meta = task.get("metadata", {})
+
+            # Strategy 1: Match by description text (original)
+            matched = False
 
             # Doc edit: check if the relative doc path is mentioned in the task
             if is_doc:
@@ -477,29 +497,105 @@ class DocsChangeTracker(BaseHook):
                 if idx >= 0:
                     rel_path = path_norm[idx:]
                     if rel_path in desc_lower:
-                        complete_task(task["content"], created_by=HOOK_ID)
-                        completed += 1
-                        continue
+                        matched = True
 
             # Skill edit: check if the skill name is mentioned in the task
-            if is_skill:
+            if not matched and is_skill:
                 parts = path_norm.split(".claude/skills/")
                 if len(parts) > 1:
                     skill_name = parts[1].split("/")[0]
                     if skill_name and skill_name in desc_lower:
-                        complete_task(task["content"], created_by=HOOK_ID)
-                        completed += 1
-                        continue
+                        matched = True
+
+            # Strategy 2: Match by metadata (new)
+            if not matched and meta:
+                target_docs = meta.get("target_docs", [])
+                target_skills = meta.get("target_skills", [])
+
+                if is_doc:
+                    for doc in target_docs:
+                        if doc.lower() in path_norm:
+                            matched = True
+                            break
+
+                if not matched and is_skill:
+                    for skill in target_skills:
+                        if f".claude/skills/{skill}/" in path_norm:
+                            matched = True
+                            break
+
+            if matched:
+                complete_task(task["content"], created_by=HOOK_ID)
+                completed += 1
 
         return completed
 
+    def _sync_zombie_tasks(self):
+        """Auto-complete pending tasks whose target docs/skills were already updated.
+
+        For each pending task with metadata, check git log timestamps:
+        if ALL target docs were modified AFTER code_changed_at → task is done.
+        """
+        pending = get_pending_tasks(created_by=HOOK_ID)
+        if not pending:
+            return
+
+        for task in pending:
+            meta = task.get("metadata", {})
+            code_changed_at = meta.get("code_changed_at")
+            target_docs = meta.get("target_docs", [])
+            target_skills = meta.get("target_skills", [])
+
+            if not code_changed_at or (not target_docs and not target_skills):
+                continue
+
+            # Check if all targets were updated after code change
+            all_targets = list(target_docs)
+            for skill in target_skills:
+                all_targets.append(f".claude/skills/{skill}/SKILL.md")
+
+            if not all_targets:
+                continue
+
+            all_updated = True
+            for target in all_targets:
+                try:
+                    result = subprocess.run(
+                        ["git", "log", "-1", "--format=%cI", "--", target],
+                        capture_output=True, text=True, timeout=5,
+                        cwd=os.environ.get("CLAUDE_PROJECT_DIR", "."),
+                    )
+                    if result.returncode != 0 or not result.stdout.strip():
+                        all_updated = False
+                        break
+                    doc_time = result.stdout.strip()
+                    if doc_time < code_changed_at:
+                        all_updated = False
+                        break
+                except (subprocess.TimeoutExpired, Exception):
+                    all_updated = False
+                    break
+
+            if all_updated:
+                complete_task(task["content"], created_by=HOOK_ID)
+
     def _remind(self, changed_file, matches):
         """Create task and return systemMessage with all affected docs+skills."""
+        # Cooldown: don't spam tasks if we recently completed one
+        if has_recent_completion(hook_id=HOOK_ID, cooldown_minutes=COOLDOWN_MINUTES):
+            return None
+
         pending = get_pending_tasks(created_by=HOOK_ID)
         if len(pending) >= 20:
             return None
 
         basename = os.path.basename(changed_file)
+        rel_path = changed_file.replace("\\", "/")
+        # Try to make path relative
+        for prefix in ["d:/1С-Framework/", "D:/1С-Framework/"]:
+            if rel_path.lower().startswith(prefix.lower()):
+                rel_path = rel_path[len(prefix):]
+                break
 
         # Collect unique docs and skills
         all_docs = []
@@ -532,6 +628,14 @@ class DocsChangeTracker(BaseHook):
             priority="normal",
             created_by=HOOK_ID,
         )
+
+        # Store structured metadata for zombie prevention and smart completion
+        update_task_metadata(HOOK_ID, {
+            "source_file": rel_path,
+            "target_docs": all_docs,
+            "target_skills": all_skills,
+            "code_changed_at": datetime.now().isoformat(),
+        }, merge=False)
 
         msg = (
             f"[DOCS-TRACKER] Изменён файл: {basename}\n\n"
