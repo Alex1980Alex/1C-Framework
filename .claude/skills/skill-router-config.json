@@ -15,7 +15,7 @@
       "optional": []
     },
     "research-tech": {
-      "keywords": ["rag", "embedding", "embeddings", "qdrant", "langchain", "langgraph", "reranking", "reranker", "chunking", "vector search", "bm25", "sparse vector", "colbert", "graphrag", "sentence-transformers", "faiss", "hybrid search"],
+      "keywords": ["rag", "embedding", "embeddings", "qdrant", "reranking", "reranker", "chunking", "vector search", "sparse vector", "colbert", "graphrag", "sentence-transformers", "faiss", "hybrid search"],
       "skills": ["tech-research"],
       "optional": ["embedding-models"]
     },
@@ -65,7 +65,7 @@
       "optional": []
     },
     "agents": {
-      "keywords": ["агент", "agent", "multi-agent", "orchestration", "оркестрация", "self-rag", "research agent", "analytical agent", "мульти-агент", "adaptive rag", "deep research", "conversational", "чат с историей"],
+      "keywords": ["агент фреймворка", "agent orchestration", "self-rag", "research agent", "analytical agent", "adaptive rag", "deep research agent", "conversational agent", "чат с историей", "оркестрация агентов"],
       "skills": ["agent-orchestration"],
       "optional": []
     },
@@ -162,6 +162,36 @@
     "claude-code-admin": {
       "keywords": ["monitoring claude", "мониторинг claude", "opentelemetry claude", "otel claude", "security claude", "безопасность claude", "IAM claude", "access control claude", "costs claude", "затраты claude", "rate limit claude", "managed settings", "enterprise claude", "analytics claude", "аналитика claude", "credential management"],
       "skills": ["claude-code-admin"],
+      "optional": []
+    },
+    "langchain-agent": {
+      "keywords": ["create_agent", "@tool", "langchain agent", "middleware langchain", "structured output", "guardrails langchain", "init_chat_model", "before_model", "after_model", "model_call_limit"],
+      "skills": ["langchain-core"],
+      "optional": ["langchain-tutorials"]
+    },
+    "langgraph": {
+      "keywords": ["StateGraph", "add_node", "add_edge", "conditional_edges", "entrypoint", "@task", "langgraph", "Command langgraph", "Send langgraph", "interrupt langgraph", "subgraph langgraph", "time travel langgraph", "Pregel"],
+      "skills": ["langgraph-core"],
+      "optional": ["langgraph-memory-persistence", "langgraph-production"]
+    },
+    "langchain-rag": {
+      "keywords": ["vector store langchain", "embeddings langchain", "document loader", "text splitter", "retriever langchain", "RAG agent tutorial", "semantic search tutorial", "Chroma langchain", "FAISS langchain", "WebBaseLoader", "RecursiveCharacterTextSplitter", "CacheBackedEmbeddings"],
+      "skills": ["langchain-integrations"],
+      "optional": ["langchain-tutorials"]
+    },
+    "langchain-multiagent": {
+      "keywords": ["multi-agent langchain", "supervisor pattern", "handoff langchain", "agent handoff", "router pattern langchain", "skills pattern langchain", "координация агентов", "multi-agent workflow"],
+      "skills": ["langchain-multiagent"],
+      "optional": ["langchain-tutorials"]
+    },
+    "langchain-streaming": {
+      "keywords": ["streaming langchain", "stream_mode", "stream langgraph", "StreamWriter", "get_stream_writer", "useStream", "SSE langchain", "token streaming", "stream updates", "stream messages"],
+      "skills": ["langchain-streaming"],
+      "optional": []
+    },
+    "langchain-advanced": {
+      "keywords": ["deep agents", "deepagents", "MCP langchain", "MultiServerMCPClient", "langchain-mcp-adapters", "MCP transport", "MCP interceptor", "LangSmith", "langgraph deploy", "langgraph.json", "LangGraph Studio", "langgraph test", "checkpointer", "InMemorySaver", "PostgresSaver", "Store langgraph", "long-term memory langgraph"],
+      "skills": ["deep-agents", "langchain-mcp-tools", "langgraph-production", "langgraph-memory-persistence"],
       "optional": []
     }
   }

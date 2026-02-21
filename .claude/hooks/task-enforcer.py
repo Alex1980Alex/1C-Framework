@@ -42,6 +42,7 @@ MANDATORY_HOOKS = {
     "knowledge-cache-reminder-hook",
     "factory-enforcer-hook",
     "docs-change-tracker-hook",
+    "auto-git-save-hook",
 }
 
 
@@ -96,6 +97,7 @@ def main():
             "- Cache tasks: save research to skills cache\n"
             "- Factory tasks: update settings.json, registries, MEMORY.md\n"
             "- Docs tasks: update documentation and skills per docs-change-tracker\n"
+            "- Git tasks: commit uncommitted changes (auto-git-save)\n"
             "- After completing ALL tasks, you may stop."
         )
 
