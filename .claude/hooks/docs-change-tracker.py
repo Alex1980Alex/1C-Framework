@@ -14,7 +14,6 @@ Timeout: 5s
 
 import sys
 import os
-from datetime import datetime, timedelta
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
@@ -429,7 +428,14 @@ class DocsChangeTracker(BaseHook):
 
         path_norm = file_path.replace("\\", "/").lower()
 
-        # Skip docs/noise (avoid recursion)
+        # FIRST: check if this edit completes any pending tasks
+        # (e.g., Claude editing a doc/skill file that was requested)
+        completed = self._try_complete_tasks(path_norm)
+        if completed > 0:
+            # Claude is doing the requested update — don't create new tasks
+            return None
+
+        # Skip docs/noise (avoid creating NEW tasks for doc edits)
         for skip in _SKIP_PATTERNS:
             if skip.lower() in path_norm:
                 return None
@@ -445,20 +451,50 @@ class DocsChangeTracker(BaseHook):
 
         return self._remind(file_path, matches)
 
+    def _try_complete_tasks(self, path_norm: str) -> int:
+        """Auto-complete pending tasks when their target doc/skill is actually edited.
+
+        Mechanism: task description contains paths of docs and skill names.
+        When Claude edits one of those files — task is done.
+        """
+        is_doc = "docs/framework documentation/" in path_norm
+        is_skill = ".claude/skills/" in path_norm
+
+        if not is_doc and not is_skill:
+            return 0
+
+        pending = get_pending_tasks(created_by=HOOK_ID)
+        if not pending:
+            return 0
+
+        completed = 0
+        for task in pending:
+            desc_lower = task.get("description", "").replace("\\", "/").lower()
+
+            # Doc edit: check if the relative doc path is mentioned in the task
+            if is_doc:
+                idx = path_norm.find("docs/framework documentation/")
+                if idx >= 0:
+                    rel_path = path_norm[idx:]
+                    if rel_path in desc_lower:
+                        complete_task(task["content"], created_by=HOOK_ID)
+                        completed += 1
+                        continue
+
+            # Skill edit: check if the skill name is mentioned in the task
+            if is_skill:
+                parts = path_norm.split(".claude/skills/")
+                if len(parts) > 1:
+                    skill_name = parts[1].split("/")[0]
+                    if skill_name and skill_name in desc_lower:
+                        complete_task(task["content"], created_by=HOOK_ID)
+                        completed += 1
+                        continue
+
+        return completed
+
     def _remind(self, changed_file, matches):
         """Create task and return systemMessage with all affected docs+skills."""
-        # Auto-expire old tasks (> 30 min) — prevent accumulation
-        pending = get_pending_tasks(created_by=HOOK_ID)
-        cutoff = datetime.now() - timedelta(minutes=30)
-        for task in pending:
-            try:
-                created = datetime.fromisoformat(task.get("createdAt", ""))
-                if created < cutoff:
-                    complete_task(task["content"], created_by=HOOK_ID)
-            except (ValueError, TypeError):
-                pass
-
-        # Re-check after cleanup
         pending = get_pending_tasks(created_by=HOOK_ID)
         if len(pending) >= 20:
             return None
