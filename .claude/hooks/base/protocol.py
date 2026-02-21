@@ -135,7 +135,18 @@ class BaseHook(ABC):
             result = self.execute(inp)
             if result is not None:
                 result.emit()
-        except Exception:
+        except Exception as e:
+            # Log error before graceful degradation
+            try:
+                from pathlib import Path as _P
+                from datetime import datetime as _DT
+                _log = _P(__file__).resolve().parent.parent / "cache" / "hook-errors.log"
+                _log.parent.mkdir(parents=True, exist_ok=True)
+                with open(str(_log), "a", encoding="utf-8") as _f:
+                    _cls = type(self).__name__
+                    _f.write(f"{_DT.now().isoformat()} [{_cls}] {type(e).__name__}: {e}\n")
+            except Exception:
+                pass
             # Graceful degradation: never block on internal error
             sys.exit(0)
 
