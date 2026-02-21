@@ -212,6 +212,11 @@ class ResearchTaskDetector(BaseHook):
         if not prompt or len(prompt) < 5:
             return None
 
+        # TIER 2A: Skip IDE events (VS Code metadata, not user intent)
+        prompt_stripped = prompt.strip()
+        if prompt_stripped.startswith(("<ide_", "<ide_opened_file", "<ide_selection")):
+            return None
+
         prompt_lower = prompt.lower()
 
         # Skip small tasks

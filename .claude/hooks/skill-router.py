@@ -14,6 +14,7 @@ Complements research-task-detector.py:
 
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -85,9 +86,17 @@ def _load_config() -> dict | None:
 class SkillRouter(BaseHook):
     """Config-driven skill router via keyword bundle matching."""
 
+    # Regex to strip file paths from prompt (prevents false matches on paths)
+    _PATH_RE = re.compile(r'[a-zA-Z]:\\[^\s>]*|/[^\s>]*\.\w+')
+
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt
         if not prompt or len(prompt) < 3:
+            return None
+
+        # TIER 2A: Skip IDE events (VS Code metadata, not user intent)
+        prompt_stripped = prompt.strip()
+        if prompt_stripped.startswith(("<ide_", "<ide_opened_file", "<ide_selection")):
             return None
 
         # Load config
@@ -99,7 +108,9 @@ class SkillRouter(BaseHook):
         min_score = config.get("min_score", 1)
         max_bundles = config.get("max_bundles", 3)
 
-        prompt_lower = prompt.lower()
+        # TIER 2A: Strip file paths to prevent false matches
+        # (e.g. "d:\1с-framework\" triggering "1с" keyword)
+        prompt_lower = self._PATH_RE.sub('', prompt.lower())
 
         # Collect all single-word keywords for fuzzy matching
         all_keywords = []
@@ -110,9 +121,14 @@ class SkillRouter(BaseHook):
         scores: dict[str, int] = {}
         for name, bundle in bundles.items():
             score = 0
+            # Standard keywords: weight 1 (backward compatible)
             for kw in bundle.get("keywords", []):
                 if kw in prompt_lower:
                     score += 1
+            # TIER 2B: Weighted keywords (higher-value, specific terms)
+            for kw, weight in bundle.get("weighted_keywords", {}).items():
+                if kw.lower() in prompt_lower:
+                    score += weight
             scores[name] = score
 
         # --- Layer B: Fuzzy single-word matching ---
@@ -160,21 +176,122 @@ class SkillRouter(BaseHook):
         # Final dedup: remove from optional anything that ended up in required
         optional_skills = [s for s in optional_skills if s not in required_skills]
 
+        # --- TIER 3: Affinity injection ---
+        affinities = config.get("affinities", {})
+        affine_skills: list[str] = []
+        for skill in required_skills:
+            for related in affinities.get(skill, []):
+                if (related not in required_skills
+                        and related not in optional_skills
+                        and related not in affine_skills):
+                    affine_skills.append(related)
+        # Add affine skills to optional (free injection)
+        optional_skills.extend(affine_skills)
+
+        # --- TIER 3: Session deduplication ---
+        try:
+            from shared.session_state import (
+                get_already_recommended,
+                record_recommendation,
+            )
+            already = get_already_recommended()
+            new_required = [s for s in required_skills if s not in already]
+            new_optional = [s for s in optional_skills if s not in already]
+
+            # Record all recommendations (including already-recommended for stats)
+            all_to_record = required_skills + optional_skills
+            if all_to_record:
+                record_recommendation(all_to_record)
+
+            # If all skills already recommended this session, skip message
+            if not new_required and not new_optional:
+                return None
+
+            # Use filtered lists for the message
+            required_skills = new_required
+            optional_skills = new_optional
+        except Exception:
+            pass  # Session dedup is optional; graceful degradation
+
+        # --- TIER 4: Detect workflow type from matched bundles ---
+        detected_workflow = None
+        for name, _score in top_bundles:
+            wf = bundles[name].get("workflow")
+            if wf:
+                detected_workflow = wf
+                break  # First workflow bundle wins (highest score)
+
         # --- Log match ---
         _log_match(prompt_lower[:80], matched_bundle_names, required_skills)
 
         # --- Build systemMessage ---
+        # Separate domain bundles from workflow bundles for display
+        domain_bundle_names = [
+            n for n in matched_bundle_names
+            if "workflow" not in bundles.get(n, {})
+        ]
+
         parts = [
             f"[SKILL-ROUTER] Bundles: {', '.join(matched_bundle_names)}",
-            f"Рекомендованные скиллы: {', '.join(required_skills)}",
         ]
+
+        if required_skills:
+            parts.append(
+                f"Рекомендованные скиллы: {', '.join(required_skills)}"
+            )
 
         if optional_skills:
             parts.append(
                 f"Опционально (по контексту): {', '.join(optional_skills)}"
             )
 
+        if affine_skills:
+            parts.append(
+                f"Аффинные скиллы (связанные): {', '.join(affine_skills)}"
+            )
+
+        # TIER 4: Append workflow instruction if detected
+        if detected_workflow:
+            parts.append(self._workflow_instruction(detected_workflow))
+
         return HookOutput().system_message("\n".join(parts))
+
+
+    # --- Workflow instruction templates ---
+    _WORKFLOW_TEMPLATES = {
+        "research": (
+            "\n[WORKFLOW: RESEARCH] Задача на исследование.\n"
+            "Определи домен и используй соответствующий skill:\n"
+            "- 1С-платформа -> `1c-doc-research`\n"
+            "- RAG/ML/Python -> `tech-research`\n"
+            "- Архитектура -> `architecture-research`\n"
+            "Начни с проверки кеша соответствующего skill."
+        ),
+        "brainstorm": (
+            "\n[WORKFLOW: BRAINSTORM] Задача на генерацию идей.\n"
+            "Используй skill `task-evaluation` -- Brainstorm Workflow:\n"
+            "1. Формулировка проблемы (что, контекст, критерии)\n"
+            "2. Генерация 3-5 подходов\n"
+            "3. Evaluation matrix (таблица сравнения)\n"
+            "4. Рекомендация с обоснованием\n"
+            "5. Сохрани решение как ADR"
+        ),
+        "hybrid": (
+            "\n[WORKFLOW: HYBRID] Задача Research + Brainstorm.\n"
+            "Используй skill `task-evaluation` -- Hybrid Workflow:\n"
+            "ЧАСТЬ 1 (Research): domain skill -- фазы 0-5\n"
+            "ЧАСТЬ 2 (Brainstorm): task-evaluation -- фазы 1-5\n"
+            "  1. Формулировка проблемы\n"
+            "  2. Генерация 3-5 подходов\n"
+            "  3. Evaluation matrix\n"
+            "  4. Рекомендация\n"
+            "  5. Сохрани как ADR"
+        ),
+    }
+
+    def _workflow_instruction(self, workflow: str) -> str:
+        """Get workflow instruction template by type."""
+        return self._WORKFLOW_TEMPLATES.get(workflow, "")
 
 
 if __name__ == "__main__":

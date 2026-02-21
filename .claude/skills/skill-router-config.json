@@ -1,8 +1,26 @@
 {
-  "version": 2,
+  "version": 3,
   "cooldown_minutes": 3,
   "min_score": 1,
   "max_bundles": 3,
+  "affinities": {
+    "langchain-core": ["langgraph-core"],
+    "langgraph-core": ["langchain-core", "langgraph-memory-persistence"],
+    "langchain-multiagent": ["langgraph-core", "langchain-core"],
+    "langchain-streaming": ["langgraph-core"],
+    "langgraph-memory-persistence": ["langgraph-core"],
+    "langgraph-production": ["langgraph-core"],
+    "deep-agents": ["langchain-mcp-tools", "langchain-core"],
+    "langchain-mcp-tools": ["langchain-core"],
+    "1c-doc-research": ["pdf-knowledge"],
+    "tech-research": ["embedding-models"],
+    "architecture-research": ["task-evaluation"],
+    "indexing-pipeline": ["embedding-models", "qdrant-operations"],
+    "search-pipeline-debug": ["pdf-search"],
+    "hook-debugging": ["claude-code-hooks-bugs", "multi-level-hook-architecture"],
+    "create-hook": ["hooks-skills-mcp-triad"],
+    "triad-factory": ["hooks-skills-mcp-triad"]
+  },
   "bundles": {
     "search": {
       "keywords": ["поиск", "search", "найди", "найти", "запрос к базе", "hybrid", "bm25", "семантический поиск"],
@@ -11,6 +29,16 @@
     },
     "research-1c": {
       "keywords": ["1с", "1c", "справочник", "документ 1с", "регистр", "bsl", "конфигурация 1с", "платформа 1с", "проведение", "табличная часть", "реквизит", "подсистема"],
+      "weighted_keywords": {
+        "табличная часть": 4,
+        "план видов характеристик": 5,
+        "регистр сведений": 5,
+        "регистр накопления": 5,
+        "общий модуль": 4,
+        "http-сервис": 4,
+        "web-сервис": 4,
+        "регламентное задание": 4
+      },
       "skills": ["1c-doc-research"],
       "optional": []
     },
@@ -165,12 +193,38 @@
       "optional": []
     },
     "langchain-agent": {
-      "keywords": ["create_agent", "@tool", "langchain agent", "middleware langchain", "structured output", "guardrails langchain", "init_chat_model", "before_model", "after_model", "model_call_limit"],
+      "keywords": ["langchain agent", "langchain"],
+      "weighted_keywords": {
+        "create_agent": 5,
+        "@tool": 4,
+        "init_chat_model": 5,
+        "before_model": 4,
+        "after_model": 4,
+        "model_call_limit": 3,
+        "structured output langchain": 4,
+        "guardrails langchain": 4,
+        "middleware langchain": 3
+      },
       "skills": ["langchain-core"],
       "optional": ["langchain-tutorials"]
     },
     "langgraph": {
-      "keywords": ["StateGraph", "add_node", "add_edge", "conditional_edges", "entrypoint", "@task", "langgraph", "Command langgraph", "Send langgraph", "interrupt langgraph", "subgraph langgraph", "time travel langgraph", "Pregel"],
+      "keywords": ["langgraph"],
+      "weighted_keywords": {
+        "StateGraph": 5,
+        "add_node": 4,
+        "add_edge": 4,
+        "conditional_edges": 4,
+        "entrypoint": 3,
+        "@task langgraph": 3,
+        "Command langgraph": 4,
+        "Send langgraph": 4,
+        "interrupt langgraph": 4,
+        "subgraph langgraph": 3,
+        "time travel langgraph": 3,
+        "Pregel": 5,
+        "MessagesState": 4
+      },
       "skills": ["langgraph-core"],
       "optional": ["langgraph-memory-persistence", "langgraph-production"]
     },
@@ -218,6 +272,24 @@
       "keywords": ["архитектура хуков", "уровни хуков", "hook levels", "hook architecture", "трёхуровневая защита", "порядок хуков", "hook chain", "цепочка хуков", "какие хуки есть", "все хуки", "hook map", "карта хуков"],
       "skills": ["multi-level-hook-architecture"],
       "optional": ["hooks-skills-mcp-triad"]
+    },
+    "workflow-research": {
+      "keywords": ["расскажи про", "как работает", "что такое", "документация по", "объясни", "найди информацию", "исследуй", "сделай обзор", "проанализируй", "сравни", "how does", "what is", "explain", "research", "compare", "overview of", "describe", "tell me about"],
+      "workflow": "research",
+      "skills": [],
+      "optional": []
+    },
+    "workflow-brainstorm": {
+      "keywords": ["придумай", "предложи", "спроектируй", "разработай", "какой подход выбрать", "давай обсудим", "давай подумаем", "предложи решение", "предложи архитектуру", "suggest", "design", "propose", "come up with"],
+      "workflow": "brainstorm",
+      "skills": ["task-evaluation"],
+      "optional": []
+    },
+    "workflow-hybrid": {
+      "keywords": ["исследуй и предложи", "найди подходы и выбери", "найди и предложи", "сравни подходы и выбери", "как улучшить", "как оптимизировать", "как ускорить", "как исправить", "как решить", "можно ли улучшить", "как сделать лучше", "что можно улучшить", "research and suggest", "find and propose", "compare and choose"],
+      "workflow": "hybrid",
+      "skills": ["task-evaluation"],
+      "optional": []
     }
   }
 }
