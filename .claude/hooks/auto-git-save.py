@@ -103,6 +103,8 @@ WATCHED_PATHS = [
     "tests/",
     ".claude/skills/",
     ".claude/hooks/",
+    ".claude/settings.json",
+    "CLAUDE.md",
 ]
 
 
