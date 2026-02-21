@@ -214,3 +214,15 @@ See `.claude/skills/1c-doc-research/SKILL.md` for full research protocol.
 | `qdrant-operations` | Операционный | Named vectors, sparse, rebuild, migration |
 | `prompt-engineering` | Операционный | DSPy модули, MIPROv2, A/B testing |
 | `deployment` | Операционный | Docker, health checks, rate limiting, API |
+| `claude-code-vscode` | Среда | VS Code расширение: настройки, shortcuts, @-mentions, plugins UI, MCP, git worktrees |
+| `claude-code-terminal-ux` | Среда | Chrome интеграция, statusline, терминал, Vim mode, уведомления |
+| `langchain-core` | LangChain | create_agent, @tool, модели, сообщения, middleware, structured output, guardrails |
+| `langgraph-core` | LangChain | StateGraph, Functional API, nodes/edges, Command/Send, interrupts, time travel |
+| `langchain-integrations` | LangChain | Vector stores, embeddings, loaders, splitters, retrievers, chat models |
+| `langchain-multiagent` | LangChain | 5 паттернов: subagents, handoffs, skills, router, custom workflow |
+| `langchain-streaming` | LangChain | 5 stream modes, SSE, StreamWriter, React useStream, фронтенд |
+| `langgraph-memory-persistence` | LangChain | Checkpointers, Store, semantic search, trimming, encryption |
+| `deep-agents` | LangChain | Deep Agents CLI: tools, backends, middleware, субагенты, sandbox |
+| `langgraph-production` | LangChain | LangSmith, Studio, deploy, тестирование, app structure |
+| `langchain-mcp-tools` | LangChain | MCP в LangChain: MultiServerMCPClient, interceptors, sessions |
+| `langchain-tutorials` | LangChain | RAG/SQL/Voice agents, semantic search, multi-agent tutorials |
