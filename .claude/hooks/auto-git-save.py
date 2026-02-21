@@ -33,14 +33,28 @@ NOT ported (not needed):
 Hook feedback is treated as user instruction per CLAUDE.md.
 """
 
+import logging
 import os
 import subprocess
 import sys
 import time
+from datetime import datetime as _dt
 from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
+
+# Diagnostic logging to file (not stdout — stdout is for JSON protocol)
+_LOG_DIR = Path(_HOOK_DIR).parent / "cache"
+_LOG_DIR.mkdir(parents=True, exist_ok=True)
+_LOG_FILE = _LOG_DIR / "auto-git-save-debug.log"
+
+logging.basicConfig(
+    filename=str(_LOG_FILE),
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+log = logging.getLogger("auto-git-save")
 
 from base import BaseHook, HookInput, HookOutput
 from shared.task_master import (
@@ -176,42 +190,52 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
     if timeout is None:
         timeout = calculate_timeout(len(modified_files))
 
+    log.debug(f"perform_sync_commit files={modified_files} timeout={timeout}")
+
     try:
         # Step 1: Check git status
+        log.debug("step1: git status --porcelain")
         status = subprocess.run(
             ["git", "status", "--porcelain"],
             timeout=2, capture_output=True, text=True,
             cwd=str(PROJECT_ROOT),
         )
+        log.debug(f"step1: rc={status.returncode} stdout_len={len(status.stdout)}")
         if status.returncode != 0 or not status.stdout.strip():
+            log.debug("step1: FAIL no changes")
             return {"success": False, "error": "No changes to commit"}
 
         # Step 2: Stage specific files
         staged = 0
         for fp in modified_files:
             try:
+                log.debug(f"step2: git add -- {fp}")
                 r = subprocess.run(
                     ["git", "add", "--", fp],
-                    timeout=5, capture_output=True, text=True,
+                    timeout=3, capture_output=True, text=True,
                     cwd=str(PROJECT_ROOT),
                 )
+                log.debug(f"step2: rc={r.returncode} stderr={r.stderr[:100] if r.stderr else ''}")
                 if r.returncode == 0:
                     staged += 1
             except subprocess.TimeoutExpired:
-                pass
+                log.warning(f"step2: TIMEOUT git add {fp}")
 
         if staged == 0:
+            log.debug("step2: FAIL all git add failed")
             return {"success": False, "error": "git add failed for all files"}
 
         # Step 3: Commit with generic message
         count = len(modified_files)
         commit_msg = f"chore: auto-commit {count} file(s) changed"
 
+        log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
             ["git", "commit", "-m", commit_msg],
             timeout=timeout, capture_output=True, text=True,
             cwd=str(PROJECT_ROOT),
         )
+        log.debug(f"step3: rc={commit.returncode} duration={time.time()-start:.1f}s")
 
         if commit.returncode == 0:
             # Extract hash
@@ -244,8 +268,10 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             }
 
     except subprocess.TimeoutExpired:
+        log.error(f"TIMEOUT after {timeout}s total_elapsed={time.time()-start:.1f}s")
         return {"success": False, "error": f"Timeout after {timeout}s", "timeout": True}
     except Exception as e:
+        log.error(f"EXCEPTION {type(e).__name__}: {e}")
         return {"success": False, "error": str(e)[:200]}
 
 
@@ -269,15 +295,16 @@ def sync_pending_tasks_with_git() -> int:
 
         uncommitted_dirs = set()
         for line in result.stdout.strip().split("\n"):
-            if line.strip():
-                parts = line.strip().split()
-                if len(parts) >= 2:
-                    fp = parts[-1].replace("\\", "/")
-                    uncommitted.add(fp)
-                    uncommitted.add(Path(fp).name)
-                    # Track untracked directories (git shows "?? dir/" for new dirs)
-                    if fp.endswith("/"):
-                        uncommitted_dirs.add(fp)
+            if not line or len(line) < 3:
+                continue
+            # git status --porcelain format: "XY filename" (pos 0-1=status, 2=space, 3+=path)
+            fp = line[3:].strip().strip('"').replace("\\", "/")
+            if fp:
+                uncommitted.add(fp)
+                uncommitted.add(Path(fp).name)
+                # Track untracked directories (git shows "?? dir/" for new dirs)
+                if fp.endswith("/"):
+                    uncommitted_dirs.add(fp)
 
         # Check each pending task
         from shared.task_master import _read_todos, _write_todos
@@ -379,9 +406,11 @@ class AutoGitSave(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         tool_name = inp.tool_name or ""
         tool_input = inp.tool_input or {}
+        log.debug(f"ENTER execute() tool={tool_name}")
 
         # Always sync zombie tasks first
-        sync_pending_tasks_with_git()
+        cleaned = sync_pending_tasks_with_git()
+        log.debug(f"zombie sync cleaned={cleaned}")
 
         # --- Branch: Bash (detect git commit) ---
         if tool_name == "Bash":
@@ -404,12 +433,16 @@ class AutoGitSave(BaseHook):
 
         # --- Branch: Write|Edit (track files) ---
         file_path = tool_input.get("file_path", "")
+        log.debug(f"file_path={file_path}")
         if not file_path or not should_track_file(file_path):
+            log.debug(f"SKIP not tracked: {file_path}")
             return None
 
         rel_path = _get_relative_path(file_path)
         if rel_path is None:
+            log.debug(f"SKIP rel_path=None for {file_path}")
             return None
+        log.debug(f"rel_path={rel_path}")
 
         # Load tracked files
         modified_data = load_modified_files()
@@ -419,9 +452,12 @@ class AutoGitSave(BaseHook):
         file_count = len(modified_data["files"])
 
         # --- Threshold reached: SYNC COMMIT ---
+        log.debug(f"file_count={file_count} threshold={SYNC_COMMIT_THRESHOLD}")
         if file_count >= SYNC_COMMIT_THRESHOLD:
             timeout = calculate_timeout(file_count)
+            log.debug(f"THRESHOLD REACHED → sync commit timeout={timeout}")
             result = perform_sync_commit(modified_data["files"], timeout=timeout)
+            log.debug(f"commit result: {result}")
 
             if result.get("success") and result.get("committed"):
                 files_count = result.get("files_count", 0)
