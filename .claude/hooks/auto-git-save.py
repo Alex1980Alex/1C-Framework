@@ -83,47 +83,31 @@ SYNC_COMMIT_TIMEOUT_PER_FILE = int(os.environ.get("CLAUDE_COMMIT_TIMEOUT_PER_FIL
 # Cooldown: minutes after completion before creating new task
 COOLDOWN_BASE_MINUTES = int(os.environ.get("CLAUDE_COMMIT_COOLDOWN_BASE", "2"))
 
-# Tracked extensions
-TRACKED_EXTENSIONS = {
-    ".py", ".js", ".ts", ".tsx", ".jsx", ".bsl", ".bat", ".sh",
-    ".json", ".yaml", ".yml", ".toml", ".xml",
-    ".md",
-}
-
-# Paths to ignore
-IGNORE_PATHS = [
-    "temp/", "cache/", "__pycache__", "node_modules", ".git/",
-    "active-todos.json", "hook-todos.json",
-]
-
-# Watch these paths for changes
-WATCHED_PATHS = [
-    "src/",
-    "docs/",
-    "tests/",
-    ".claude/skills/",
-    ".claude/hooks/",
-    ".claude/settings.json",
-    "CLAUDE.md",
+# Gitignore-first approach: git status --porcelain already respects .gitignore.
+# Only these patterns are additionally excluded (hook internal state files
+# that may not be in .gitignore or change too frequently to commit).
+IGNORE_PATTERNS = [
+    "hook-todos.json",
+    "hook-todos.lock",
+    "active-todos.json",
+    "auto-git-save-state.json",
+    "auto-git-save-debug.log",
 ]
 
 
 # --- Helpers ---
 
 def should_track_file(file_path: str) -> bool:
-    """Check if file should be tracked for git commit."""
-    path_lower = file_path.lower().replace("\\", "/")
-    for ignore in IGNORE_PATHS:
-        if ignore in path_lower:
-            return False
-    ext = Path(file_path).suffix.lower()
-    if ext not in TRACKED_EXTENSIONS:
-        return False
-    # Check watched paths
+    """Check if file should be tracked for git commit.
+
+    Gitignore-first: any file visible to git is tracked, except
+    internal hook state files listed in IGNORE_PATTERNS.
+    """
     rel = _get_relative_path(file_path)
-    if rel and WATCHED_PATHS:
-        return any(rel.startswith(p) for p in WATCHED_PATHS)
-    return True
+    if rel is None:
+        return False
+    name = Path(rel).name
+    return name not in IGNORE_PATTERNS
 
 
 def _get_relative_path(file_path: str) -> str | None:
@@ -136,7 +120,11 @@ def _get_relative_path(file_path: str) -> str | None:
 
 
 def get_uncommitted_files() -> list[str]:
-    """Get uncommitted files in watched paths via git status."""
+    """Get all uncommitted files via git status.
+
+    Gitignore-first: returns everything git reports (respects .gitignore),
+    filtering only internal hook state via IGNORE_PATTERNS.
+    """
     try:
         result = subprocess.run(
             ["git", "status", "--porcelain"],
@@ -149,14 +137,12 @@ def get_uncommitted_files() -> list[str]:
         for line in result.stdout.strip().splitlines():
             if not line or len(line) < 2:
                 continue
-            # Git porcelain format: XY PATH (positions 0-1 = status, then space + path)
-            # Use line[2:].lstrip() to handle both staged "M  path" and modified " M path"
             filepath = line[2:].lstrip().strip('"').replace("\\", "/")
             if not filepath:
                 continue
-            if WATCHED_PATHS:
-                if not any(filepath.startswith(p) for p in WATCHED_PATHS):
-                    continue
+            name = Path(filepath).name
+            if name in IGNORE_PATTERNS:
+                continue
             files.append(filepath)
         return files
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):

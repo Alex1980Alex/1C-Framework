@@ -38,26 +38,14 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = Path(_HOOK_DIR).resolve().parent.parent
 
 # --- Configuration (same as auto-git-save.py) ---
-
-TRACKED_EXTENSIONS = {
-    ".py", ".js", ".ts", ".tsx", ".jsx", ".bsl", ".bat", ".sh",
-    ".json", ".yaml", ".yml", ".toml", ".xml",
-    ".md",
-}
-
-IGNORE_PATHS = [
-    "temp/", "cache/", "__pycache__", "node_modules", ".git/",
-    "active-todos.json", "hook-todos.json",
-]
-
-WATCHED_PATHS = [
-    "src/",
-    "docs/",
-    "tests/",
-    ".claude/skills/",
-    ".claude/hooks/",
-    ".claude/settings.json",
-    "CLAUDE.md",
+# Gitignore-first approach: git status --porcelain already respects .gitignore.
+# Only these patterns are additionally excluded (hook internal state files).
+IGNORE_PATTERNS = [
+    "hook-todos.json",
+    "hook-todos.lock",
+    "active-todos.json",
+    "auto-git-save-state.json",
+    "auto-git-save-debug.log",
 ]
 
 # Cooldown: seconds between auto-commits (prevent rapid commits)
@@ -98,17 +86,13 @@ def _is_in_cooldown() -> bool:
 
 
 def _should_track(filepath: str) -> bool:
-    """Check if file should be tracked (by extension and path)."""
-    fp = filepath.replace("\\", "/").lower()
-    for ignore in IGNORE_PATHS:
-        if ignore in fp:
-            return False
-    ext = Path(filepath).suffix.lower()
-    if ext not in TRACKED_EXTENSIONS:
-        return False
-    if WATCHED_PATHS:
-        return any(fp.startswith(p) for p in WATCHED_PATHS)
-    return True
+    """Check if file should be tracked.
+
+    Gitignore-first: any file visible to git is tracked, except
+    internal hook state files listed in IGNORE_PATTERNS.
+    """
+    name = Path(filepath).name
+    return name not in IGNORE_PATTERNS
 
 
 def _get_uncommitted_tracked_files() -> list[str]:
