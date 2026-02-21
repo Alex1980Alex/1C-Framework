@@ -94,7 +94,7 @@
           {
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\auto-git-save.py",
-            "timeout": 5
+            "timeout": 15
           },
           {
             "type": "command",
@@ -124,7 +124,7 @@
           {
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\auto-git-save.py",
-            "timeout": 5
+            "timeout": 15
           }
         ]
       }
@@ -146,7 +146,7 @@
           {
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\task-enforcer.py",
-            "timeout": 5
+            "timeout": 10
           }
         ]
       }

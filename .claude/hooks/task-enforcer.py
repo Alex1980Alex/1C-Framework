@@ -4,19 +4,23 @@ Hook: task-enforcer
 Event: Stop
 Matcher: (none — fires on every stop attempt)
 Purpose: Block Claude from stopping if mandatory hook tasks are pending.
+         v2.1: Added sync_git_tasks_with_status() — auto-complete git tasks
+         when git status is clean (fixes zombie tasks).
          Reads hook-todos.json directly (no shared/ imports for max reliability).
          Coexists with ralph_wiggum_stop.py (both run sequentially on Stop).
-Timeout: 5s
+Timeout: 10s
 
 Exit codes:
   0 = allow stop
   2 = block stop (mandatory tasks pending)
 
-Adapted from 1C-Enterprise_Framework stop/task-enforcer.py.
+Ported from 1C-Enterprise_Framework stop/task-enforcer.py v2.1.
 """
 
 import json
+import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Resolve cache path: core_paths if available, else fallback
@@ -36,6 +40,7 @@ def _find_cache_dir() -> Path:
 
 CACHE_DIR = _find_cache_dir()
 TODOS_FILE = CACHE_DIR / "hook-todos.json"
+PROJECT_ROOT = CACHE_DIR.parent.parent  # .claude/cache -> project root
 
 # Hook IDs whose pending tasks block stop
 MANDATORY_HOOKS = {
@@ -46,14 +51,92 @@ MANDATORY_HOOKS = {
 }
 
 
+def sync_git_tasks_with_status(data: dict) -> int:
+    """Auto-complete pending git tasks when git status is clean.
+
+    Ported from Enterprise task-enforcer.py v2.1.
+    Prevents zombie git tasks from blocking stop indefinitely.
+
+    Returns:
+        Number of tasks auto-completed
+    """
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True, text=True, timeout=3,
+        )
+        if result.returncode != 0:
+            return 0
+        # If there ARE uncommitted files — don't touch tasks
+        if result.stdout.strip():
+            return 0
+
+        # Git is clean — complete all pending git tasks
+        todos = data.get("todos", [])
+        completed = 0
+        now = datetime.now().isoformat()
+
+        for todo in todos:
+            if (todo.get("status") == "pending"
+                    and todo.get("createdBy") == "auto-git-save-hook"):
+                todo["status"] = "completed"
+                todo["completedAt"] = now
+                todo["note"] = "Auto-synced: git status clean at stop"
+                completed += 1
+
+        return completed
+    except Exception:
+        return 0  # Silent fail — don't block stop
+
+
+def sync_stats(data: dict) -> bool:
+    """Fix stats if they don't match actual todos. Returns True if fixed."""
+    todos = data.get("todos", [])
+    actual = {
+        "total": len(todos),
+        "pending": sum(1 for t in todos if t.get("status") == "pending"),
+        "in_progress": sum(1 for t in todos if t.get("status") == "in_progress"),
+        "completed": sum(1 for t in todos if t.get("status") == "completed"),
+    }
+    if data.get("stats", {}) != actual:
+        data["stats"] = actual
+        return True
+    return False
+
+
 def get_pending_mandatory_tasks() -> list:
-    """Get pending tasks from mandatory hooks."""
+    """Get pending tasks from mandatory hooks.
+
+    v2.1: Runs sync_git_tasks_with_status() and sync_stats() before checking.
+    Saves file if any changes were made.
+    """
     if not TODOS_FILE.exists():
         return []
 
     try:
         with open(TODOS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
+
+        needs_save = False
+
+        # v2.1: Auto-sync git tasks with git status
+        git_synced = sync_git_tasks_with_status(data)
+        if git_synced > 0:
+            needs_save = True
+
+        # Auto-fix stats
+        if sync_stats(data):
+            needs_save = True
+
+        # Save if changes were made
+        if needs_save:
+            try:
+                data["timestamp"] = datetime.now().isoformat()
+                with open(TODOS_FILE, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass  # Non-critical
 
         todos = data.get("todos", [])
         pending = []
