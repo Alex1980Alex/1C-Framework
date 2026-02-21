@@ -121,7 +121,9 @@
       "Bash(git checkout:*)",
       "Bash(PYTHONIOENCODING=utf-8 grep:*)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \":*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(PYTHONIOENCODING=utf-8 \"D:/1С-Framework/.venv/Scripts/python.exe\" -c:*)",
+      "Bash(done)"
     ]
   },
   "enableAllProjectMcpServers": true,
