@@ -1,15 +1,6 @@
 ---
 name: claude-code-vscode
-description: >
-  Claude Code в VS Code: расширение, настройки, shortcuts, @-mentions, plugins UI,
-  diff review, MCP интеграция, git worktrees, несколько бесед, CLI vs Extension.
-  Триггеры: 'VS Code', 'vscode', 'расширение claude', 'extension', 'vscode extension',
-  'Open in New Tab', '@-mention', '@-упоминание', 'Spark icon', 'permission mode',
-  'acceptEdits', 'bypassPermissions', 'selectedModel', 'useTerminal', 'autosave',
-  'preferredLocation', 'Cmd+Esc', 'Ctrl+Esc', 'Option+K', 'Alt+K', 'diff view',
-  'plan mode vscode', 'worktree', 'remote session', 'Claude.ai session'.
-  НЕ для CLI-команд терминала — используй claude-code-cli-interactive.
-  НЕ для settings.json scopes — используй claude-code-settings.
+description: "Claude Code в VS Code: расширение, настройки, shortcuts, @-mentions, plugins UI, diff review, MCP интеграция, git worktrees, несколько бесед, CLI vs Extension. Триггеры: 'VS Code', 'vscode', 'расширение claude', 'extension', 'vscode extension', 'Open in New Tab', '@-mention', '@-упоминание', 'Spark icon', 'permission mode', 'acceptEdits', 'bypassPermissions', 'selectedModel', 'useTerminal', 'autosave', 'preferredLocation', 'Cmd+Esc', 'Ctrl+Esc', 'Option+K', 'Alt+K', 'diff view', 'plan mode vscode', 'worktree', 'remote session', 'Claude.ai session'. НЕ для CLI-команд терминала — используй claude-code-cli-interactive. НЕ для settings.json scopes — используй claude-code-settings."
 ---
 
 # Claude Code в VS Code

@@ -1,12 +1,6 @@
 ---
 name: claude-code-subagents
-description: >
-  Подагенты Claude Code: создание, YAML конфигурация, инструменты, permissions,
-  модели, хуки подагентов, встроенные агенты (Explore, Plan, general-purpose).
-  Триггеры: 'subagent', 'подагент', 'создать агента', 'create agent', '/agents',
-  'Task tool', 'делегировать', 'delegate', 'agent YAML', 'agent frontmatter',
-  'permission mode', 'встроенные агенты', 'built-in agents'.
-  НЕ для LangGraph агентов фреймворка — используй agent-orchestration.
+description: "Подагенты Claude Code: создание, YAML конфигурация, инструменты, permissions, модели, хуки подагентов, встроенные агенты (Explore, Plan, general-purpose). Триггеры: 'subagent', 'подагент', 'создать агента', 'create agent', '/agents', 'Task tool', 'делегировать', 'delegate', 'agent YAML', 'agent frontmatter', 'permission mode', 'встроенные агенты', 'built-in agents'. НЕ для LangGraph агентов фреймворка — используй agent-orchestration."
 ---
 
 # Подагенты Claude Code

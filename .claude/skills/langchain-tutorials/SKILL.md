@@ -1,14 +1,6 @@
 ---
 name: langchain-tutorials
-description: >
-  Туториалы LangChain/LangGraph: RAG Agent, SQL Agent, Voice Agent, Semantic Search,
-  Multi-Agent (субагенты, handoffs, router, skills), Custom RAG/SQL с LangGraph.
-  Триггеры: 'tutorial langchain', 'туториал', 'RAG agent tutorial', 'SQL agent tutorial',
-  'voice agent', 'semantic search tutorial', 'multi-agent tutorial', 'пример агента',
-  'agent example', 'LangChain quickstart', 'быстрый старт langchain',
-  'как построить RAG', 'как построить SQL агента', 'custom RAG agent',
-  'custom SQL agent', 'пошаговый пример', 'step by step agent'.
-  НЕ для API reference — используй langchain-core/langgraph-core.
+description: "Туториалы LangChain/LangGraph: RAG Agent, SQL Agent, Voice Agent, Semantic Search, Multi-Agent (субагенты, handoffs, router, skills), Custom RAG/SQL с LangGraph. Триггеры: 'tutorial langchain', 'туториал', 'RAG agent tutorial', 'SQL agent tutorial', 'voice agent', 'semantic search tutorial', 'multi-agent tutorial', 'пример агента', 'agent example', 'LangChain quickstart', 'быстрый старт langchain', 'как построить RAG', 'как построить SQL агента', 'custom RAG agent', 'custom SQL agent', 'пошаговый пример', 'step by step agent'. НЕ для API reference — используй langchain-core/langgraph-core."
 ---
 
 # LangChain / LangGraph Tutorials

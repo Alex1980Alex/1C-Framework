@@ -1,15 +1,6 @@
 ---
 name: langchain-multiagent
-description: >
-  Многоагентные паттерны LangChain: субагенты (supervisor), передача прав (handoffs),
-  навыки (skills), маршрутизатор (router), настраиваемые рабочие процессы.
-  Триггеры: 'multi-agent', 'многоагентный', 'subagents langchain', 'supervisor pattern',
-  'handoff', 'передача прав', 'agent handoff', 'router pattern', 'маршрутизатор агентов',
-  'skills pattern', 'навыки агента', 'multi-agent workflow', 'координация агентов',
-  'agent coordination', 'dispatch agent', 'agent delegation', 'agent team',
-  'parallel agents', 'sequential agents', 'agent composition'.
-  НЕ для create_agent/@tool — используй langchain-core.
-  НЕ для StateGraph/edges — используй langgraph-core.
+description: "Многоагентные паттерны LangChain: субагенты (supervisor), передача прав (handoffs), навыки (skills), маршрутизатор (router), настраиваемые рабочие процессы. Триггеры: 'multi-agent', 'многоагентный', 'subagents langchain', 'supervisor pattern', 'handoff', 'передача прав', 'agent handoff', 'router pattern', 'маршрутизатор агентов', 'skills pattern', 'навыки агента', 'multi-agent workflow', 'координация агентов', 'agent coordination', 'dispatch agent', 'agent delegation', 'agent team', 'parallel agents', 'sequential agents', 'agent composition'. НЕ для create_agent/@tool — используй langchain-core. НЕ для StateGraph/edges — используй langgraph-core."
 ---
 
 # LangChain Multi-Agent Patterns

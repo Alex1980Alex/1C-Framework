@@ -1,14 +1,6 @@
 ---
 name: langchain-mcp-tools
-description: >
-  MCP (Model Context Protocol) в LangChain: MultiServerMCPClient, транспорты (stdio, HTTP, SSE),
-  tools/resources/prompts, interceptors, progress callbacks, elicitation, stateful sessions.
-  Триггеры: 'MCP langchain', 'langchain-mcp-adapters', 'MultiServerMCPClient',
-  'MCP tools langchain', 'MCP transport', 'stdio transport', 'streamable-http',
-  'MCP interceptor', 'tool interceptor', 'MCP resources', 'MCP prompts',
-  'MCP elicitation', 'MCP progress', 'MCP session', 'MCP client langchain'.
-  НЕ для MCP Server фреймворка — используй pdf-knowledge.
-  НЕ для Claude Code MCP — используй claude-code-cli-interactive.
+description: "MCP (Model Context Protocol) в LangChain: MultiServerMCPClient, транспорты (stdio, HTTP, SSE), tools/resources/prompts, interceptors, progress callbacks, elicitation, stateful sessions. Триггеры: 'MCP langchain', 'langchain-mcp-adapters', 'MultiServerMCPClient', 'MCP tools langchain', 'MCP transport', 'stdio transport', 'streamable-http', 'MCP interceptor', 'tool interceptor', 'MCP resources', 'MCP prompts', 'MCP elicitation', 'MCP progress', 'MCP session', 'MCP client langchain'. НЕ для MCP Server фреймворка — используй pdf-knowledge. НЕ для Claude Code MCP — используй claude-code-cli-interactive."
 ---
 
 # MCP (Model Context Protocol) в LangChain

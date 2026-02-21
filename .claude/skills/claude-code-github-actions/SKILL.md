@@ -1,11 +1,6 @@
 ---
 name: claude-code-github-actions
-description: >
-  Claude Code GitHub Actions: CI/CD интеграция, автоматизация PR, code review,
-  настройка workflow, trigger events, конфигурация action v1.0.
-  Триггеры: 'github actions', 'github action', 'CI/CD claude', 'PR automation',
-  'автоматизация PR', 'claude-code-action', 'code review CI', 'github workflow',
-  '@claude trigger', 'автоматический review'.
+description: "Claude Code GitHub Actions: CI/CD интеграция, автоматизация PR, code review, настройка workflow, trigger events, конфигурация action v1.0. Триггеры: 'github actions', 'github action', 'CI/CD claude', 'PR automation', 'автоматизация PR', 'claude-code-action', 'code review CI', 'github workflow', '@claude trigger', 'автоматический review'."
 ---
 
 # Claude Code GitHub Actions
