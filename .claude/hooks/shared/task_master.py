@@ -1,7 +1,7 @@
 """
 Task Master — cross-process-safe task management for hooks.
 
-Adapted from 1C-Enterprise_Framework shared/task_master.py v3.4.
+Ported from 1C-Enterprise_Framework shared/task_master.py v3.4.
 Manages hook-todos.json separately from Claude's TodoWrite (active-todos.json)
 to prevent race conditions.
 
@@ -11,6 +11,9 @@ Key features:
 - Stats self-validation (auto-correct on race condition artifacts)
 - Cooldown checks (prevent rapid task re-creation)
 - STRICT MODE: complete tasks instead of removing (audit trail)
+- complete_task_by_hook() — complete ALL pending tasks by hook ID
+- update_task_metadata() / get_task_with_metadata() — metadata support
+- auto_validate_git_tasks() / session_start_cleanup() — session init
 """
 
 import json
@@ -280,3 +283,168 @@ def cleanup_old_completed(max_age_hours: int = 24, max_count: int = 50) -> int:
         data["todos"] = keep
         _write_todos(data)
     return removed
+
+
+# --- Extended API (ported from Enterprise v3.4) ---
+
+def complete_task_by_hook(
+    hook_id: str,
+    task_type: Optional[str] = None,
+    note: str = "",
+) -> Dict[str, Any]:
+    """Complete ALL pending tasks created by a specific hook.
+
+    STRICT MODE: tasks are marked 'completed', NOT removed (audit trail).
+
+    Args:
+        hook_id: Hook identifier (e.g., "auto-git-save-hook")
+        task_type: Optional task type filter
+        note: Completion note (e.g., "Committed: abc1234")
+
+    Returns:
+        Dict with success, completed_count, message
+    """
+    data = _read_todos()
+    todos = data.get("todos", [])
+    completed_count = 0
+
+    for t in todos:
+        if t.get("createdBy") != hook_id:
+            continue
+        if task_type and t.get("taskType") != task_type:
+            continue
+        if t.get("status") != "pending":
+            continue
+        t["status"] = "completed"
+        t["completedAt"] = datetime.now().isoformat()
+        if note:
+            t["note"] = note
+        completed_count += 1
+
+    if completed_count > 0:
+        data["todos"] = todos
+        _write_todos(data)
+
+    return {
+        "success": True,
+        "completed_count": completed_count,
+        "message": f"Completed {completed_count} task(s) for {hook_id}",
+    }
+
+
+def update_task_metadata(
+    created_by: str,
+    metadata: Dict[str, Any],
+    merge: bool = True,
+) -> int:
+    """Update metadata for pending task(s) by hook ID.
+
+    Used by auto-git-save to store file lists in existing tasks.
+
+    Args:
+        created_by: Hook identifier to match tasks
+        metadata: New metadata to set/merge
+        merge: If True, merge with existing metadata; if False, replace
+
+    Returns:
+        Number of tasks updated
+    """
+    data = _read_todos()
+    todos = data.get("todos", [])
+    updated = 0
+
+    for t in todos:
+        if t.get("createdBy") != created_by or t.get("status") != "pending":
+            continue
+        if merge and "metadata" in t:
+            existing = t.get("metadata", {})
+            existing.update(metadata)
+            t["metadata"] = existing
+        else:
+            t["metadata"] = metadata
+        updated += 1
+
+    if updated > 0:
+        data["todos"] = todos
+        _write_todos(data)
+    return updated
+
+
+def get_task_with_metadata(created_by: str) -> Optional[Dict[str, Any]]:
+    """Get first pending task by hook ID with its metadata.
+
+    Returns:
+        Task dict with metadata, or None if not found
+    """
+    data = _read_todos()
+    for t in data.get("todos", []):
+        if t.get("createdBy") == created_by and t.get("status") == "pending":
+            return t
+    return None
+
+
+def auto_validate_git_tasks() -> int:
+    """Validate git-related tasks against git status.
+
+    Completes git-commit tasks if there are no uncommitted files.
+    Called at session start or hook startup.
+
+    Returns:
+        Number of tasks auto-completed
+    """
+    import subprocess
+
+    project_root = CACHE_DIR.parent  # .claude/cache -> project root is ../..
+    # Resolve properly: CACHE_DIR = .claude/cache, project = .claude/cache/../../
+    project_root = CACHE_DIR.parent.parent
+
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(project_root),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            return 0
+        if result.stdout.strip():
+            return 0  # Has uncommitted files — don't touch tasks
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return 0
+
+    # Git clean — complete all pending git tasks
+    data = _read_todos()
+    todos = data.get("todos", [])
+    completed = 0
+    now = datetime.now().isoformat()
+
+    for t in todos:
+        if (t.get("status") == "pending"
+                and t.get("createdBy") == "auto-git-save-hook"):
+            t["status"] = "completed"
+            t["completedAt"] = now
+            t["note"] = "Auto-validated: no uncommitted files"
+            completed += 1
+
+    if completed > 0:
+        data["todos"] = todos
+        _write_todos(data)
+    return completed
+
+
+def session_start_cleanup() -> Dict[str, Any]:
+    """Perform all cleanup and validation at session start.
+
+    1. cleanup_old_completed() — remove stale tasks (>24h)
+    2. auto_validate_git_tasks() — sync git tasks with reality
+
+    Returns:
+        Dict with cleanup results
+    """
+    removed = cleanup_old_completed(max_age_hours=24, max_count=50)
+    validated = auto_validate_git_tasks()
+    return {
+        "removed": removed,
+        "git_validated": validated,
+    }
