@@ -13,33 +13,133 @@ description: "Используй этот скилл для понимания �
 
 ## Текущая конфигурация
 
-### Hooks (8 шт.) — КОГДА
+### Hooks (16 шт.) — КОГДА
 
-| Hook | Event | Matcher | Назначение |
-|------|-------|---------|-----------|
-| `research-task-detector.py` | UserPromptSubmit | — | Детекция ВОПРОСОВ → роутинг: Architecture → `architecture-research`, 1С → `1c-doc-research`, Tech → `tech-research` |
-| `decision-to-triad.py` | UserPromptSubmit | — | Детекция РЕШЕНИЙ/ИДЕЙ → роутинг через Фабрику (`triad-factory`, Q1-Q6) |
-| `knowledge-cache-reminder.py` | PostToolUse | WebSearch\|WebFetch | Напоминание сохранить в кеш: Architecture, 1С или Tech |
-| `factory-enforcer.py` | PostToolUse | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация артефактов |
-| `search-optimizer.py` | PreToolUse | Bash | Оптимизация параметров Search API |
-| `task-enforcer.py` | Stop | — | Блокировка без выполнения mandatory задач |
-| `git-commit-enforcer.py` | Stop | — | Блокировка без коммита изменений в `.claude/` |
-| `ralph_wiggum_stop.py` | Stop | — | Контроль итеративного цикла Ralph |
+#### UserPromptSubmit (4)
 
-### Skills (8 шт.) — КАК / ЧТО
+| Hook | Назначение |
+|------|-----------|
+| `skill-router.py` | Config-driven маршрутизация: keyword matching → рекомендация скиллов (38 bundles) |
+| `research-task-detector.py` | Детекция ВОПРОСОВ → роутинг: Architecture, 1С, Tech |
+| `decision-to-triad.py` | Детекция РЕШЕНИЙ/ИДЕЙ → Фабрика (`triad-factory`, Q1-Q5) |
+| `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
+| `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
 
-| Skill | Тип | Домен | Назначение |
-|-------|-----|-------|-----------|
-| `architecture-research` | Доменный | Architecture | Архитектурные решения: cache/ (факты) + adr/ (решения, ADR формат) |
-| `1c-doc-research` | Доменный | 1С | Исследование 1С: 5 фаз, кеш знаний (8 категорий), атрибуция |
-| `tech-research` | Доменный | RAG/ML/Python | Исследование технологий: 5 фаз, кеш знаний (7 категорий) |
-| `doc-to-skill` | Процедурный | — | Конвертер документации в SKILL.md |
-| `pdf-knowledge` | Доменный | PDF | Работа с MCP-инструментами PDF |
-| `create-hook` | Процедурный | — | Создание новых хуков (шаблон, чеклист) |
-| `triad-factory` | Программа | — | Фабрика: универсальный алгоритм создания компонентов (ШАГ 1-5) |
-| `hooks-skills-mcp-triad` | Знание | — | Этот документ — реализация триады в проекте |
+#### PreToolUse (2)
 
-### MCP Server (1 сервер, 12 инструментов) — ЧЕМ
+| Hook | Matcher | Назначение |
+|------|---------|-----------|
+| `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
+| `search-optimizer.py` | Bash | Оптимизация параметров Search API |
+
+#### PostToolUse (7)
+
+| Hook | Matcher | Назначение |
+|------|---------|-----------|
+| `knowledge-cache-reminder.py` | WebSearch\|WebFetch | Напоминание сохранить в кеш: 1С, Tech, Architecture |
+| `factory-enforcer.py` | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация |
+| `docs-change-tracker.py` | Write\|Edit | Код изменился → напоминание обновить docs/ + skills/ |
+| `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
+| `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
+| `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
+
+#### Stop (3)
+
+| Hook | Назначение |
+|------|-----------|
+| `task-enforcer.py` | Блокировка без выполнения mandatory задач |
+| `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
+| `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
+
+### Skills (47 шт.) — КАК / ЧТО
+
+#### Доменные (5)
+
+| Skill | Домен | Назначение |
+|-------|-------|-----------|
+| `1c-doc-research` | 1С | 5 фаз, кеш знаний (8 категорий), атрибуция |
+| `tech-research` | RAG/ML/Python | 5 фаз, кеш знаний (7 категорий) |
+| `architecture-research` | Architecture | cache/ (факты) + adr/ (решения, ADR формат) |
+| `pdf-knowledge` | PDF | MCP-инструменты PDF search, indexing |
+| `task-evaluation` | Классификатор | Research vs Brainstorm vs Hybrid маршрутизация |
+
+#### Инфраструктурные (5)
+
+| Skill | Назначение |
+|-------|-----------|
+| `triad-factory` | Фабрика: алгоритм создания компонентов (ШАГ 1-5, Q1-Q5) |
+| `hooks-skills-mcp-triad` | Реализация триады в проекте (этот файл) |
+| `create-hook` | Шаблон + чеклист создания хуков |
+| `doc-to-skill` | Конвертер документации → SKILL.md |
+| `doc-to-cache` | Конвертер документации → knowledge cache |
+
+#### Операционные фреймворка (17)
+
+| Skill | Назначение |
+|-------|-----------|
+| `framework-quickstart` | Установка, первый запуск |
+| `framework-config` | Конфигурация .env |
+| `framework-cli` | CLI-команды |
+| `framework-api` | REST API endpoints |
+| `framework-mcp-ui` | MCP Server, Gradio, Python API |
+| `framework-troubleshooting` | Диагностика, ошибки, производительность |
+| `framework-caching` | 3-уровневое кеширование |
+| `audit-docs` | Аудит Code ↔ Docs ↔ Skills |
+| `indexing-pipeline` | PDF индексация pipeline |
+| `search-pipeline-debug` | 16 стратегий поиска, debug |
+| `evaluation-benchmark` | RAGAS, AutoRAG, метрики |
+| `embedding-models` | E5/Giga/BGE-M3, backends |
+| `qdrant-operations` | Named vectors, sparse, migration |
+| `prompt-engineering` | DSPy, MIPROv2 |
+| `deployment` | Docker, health checks, monitoring |
+| `agent-orchestration` | 6 типов RAG-агентов |
+| `graph-operations` | LightRAG, GraphRAG, entity extraction |
+
+#### LangChain / LangGraph (10)
+
+| Skill | Назначение |
+|-------|-----------|
+| `langchain-core` | Агенты, @tool, модели, middleware, structured output |
+| `langchain-integrations` | Vector stores, embeddings, loaders, retrievers |
+| `langchain-multiagent` | Субагенты, handoffs, router, skills pattern |
+| `langchain-streaming` | 5 режимов стриминга, SSE, useStream |
+| `langchain-mcp-tools` | MCP в LangChain, MultiServerMCPClient |
+| `langchain-tutorials` | RAG/SQL/Voice Agent туториалы |
+| `langgraph-core` | StateGraph, functional API, Command, Send |
+| `langgraph-memory-persistence` | Checkpointers, Store, long-term memory |
+| `langgraph-production` | LangSmith, Studio, deploy, тестирование |
+| `deep-agents` | Autonomous agents CLI, backends, middleware |
+
+#### Claude Code (9 + 1)
+
+| Skill | Назначение |
+|-------|-----------|
+| `claude-code-settings` | settings.json scopes, .env, CLAUDE.md |
+| `claude-code-cli-interactive` | CLI reference, hotkeys, Vim mode, checkpoints |
+| `claude-code-subagents` | Подагенты, YAML config, built-in agents |
+| `claude-code-plugins` | Плагины, manifest, marketplace |
+| `claude-code-github-actions` | CI/CD, PR automation, @claude trigger |
+| `claude-code-programmatic` | Headless mode, Agent SDK, Ralph Wiggum |
+| `claude-code-admin` | Monitoring, security, IAM, costs |
+| `claude-code-vscode` | VS Code extension, shortcuts, MCP |
+| `claude-code-terminal-ux` | Chrome, statusline, terminal setup |
+
+### Skill Router — МАРШРУТИЗАЦИЯ
+
+Config-driven маршрутизация промптов к скиллам через `skill-router-config.json`:
+
+```
+Промпт пользователя
+  → skill-router.py (UserPromptSubmit)
+    → keyword matching по 38 bundles
+      → systemMessage: "загрузи skill X, optional Y"
+        → Claude загружает через Skill tool
+          → skill-usage-metrics.py логирует → data/skill-usage.log
+```
+
+38 bundles сгруппированы по доменам: framework (12), langchain (6), claude-code (8), infra (5), other (7).
+
+### MCP Server (1 сервер, 14 инструментов) — ЧЕМ
 
 | Инструмент | Назначение |
 |-----------|-----------|
@@ -51,6 +151,8 @@ description: "Используй этот скилл для понимания �
 | `research` | Deep research с верификацией |
 | `web_search` | Поиск в интернете (Tavily/SerpAPI/DuckDuckGo) |
 | `search_with_fallback` | Локальный + веб с fusion |
+| `visual_search` | Поиск по визуальным страницам (таблицы, диаграммы) |
+| `visual_hybrid_search` | Гибридный visual + text (RRF fusion) |
 | `list_collections` | Список коллекций |
 | `list_documents` | Список документов |
 | `get_toc` | Оглавление документа |
@@ -179,34 +281,41 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 
 ```
 .claude/
-├── hooks/
+├── hooks/                         (16 хуков)
 │   ├── base/
-│   │   ├── __init__.py          (BaseHook, HookInput, HookOutput)
-│   │   └── protocol.py          (протокол stdin/stdout JSON)
+│   │   ├── __init__.py            (BaseHook, HookInput, HookOutput)
+│   │   └── protocol.py            (протокол stdin/stdout JSON)
 │   ├── shared/
-│   │   ├── __init__.py          (re-exports)
-│   │   ├── task_master.py       (задачи: add, complete, pending, cooldown)
-│   │   └── hook_lock.py         (межхуковая синхронизация)
-│   ├── research-task-detector.py   (ВОПРОСЫ → skill routing)
-│   ├── decision-to-triad.py       (РЕШЕНИЯ → triad-factory Q1-Q5)
-│   ├── knowledge-cache-reminder.py
-│   ├── factory-enforcer.py        (ШАГ 4-5 Фабрики: mandatory tasks)
-│   ├── task-enforcer.py
-│   ├── git-commit-enforcer.py   (Stop: блокировка без коммита)
-│   ├── search-optimizer.py
-│   └── ralph_wiggum_stop.py
-├── skills/
-│   ├── architecture-research/   (+ cache/ + adr/ — 3-tier: факты, решения, процедура)
-│   ├── 1c-doc-research/         (+ cache/ — 8 категорий, 1С-домен)
-│   ├── tech-research/           (+ cache/ — 7 категорий, RAG/ML/Python)
-│   ├── doc-to-skill/            (+ references/)
-│   ├── pdf-knowledge/
-│   ├── create-hook/
-│   ├── triad-factory/           (ПРОГРАММА: Фабрика ШАГ 1-6, Q1-Q6)
-│   └── hooks-skills-mcp-triad/  (ЗНАНИЕ: этот файл)
+│   │   ├── task_master.py         (задачи: add, complete, pending, cooldown)
+│   │   └── hook_lock.py           (межхуковая синхронизация)
+│   ├── skill-router.py            (Submit: keyword → skill bundles)
+│   ├── research-task-detector.py  (Submit: ВОПРОСЫ → skill routing)
+│   ├── decision-to-triad.py      (Submit: РЕШЕНИЯ → triad-factory)
+│   ├── ralph_activator.py         (Submit: активация Ralph)
+│   ├── document-persistence.py    (Submit: roadmap/plan → docs/)
+│   ├── root-clutter-guard.py      (PreTool: блокировка мусора в корне)
+│   ├── search-optimizer.py        (PreTool: параметры Search API)
+│   ├── knowledge-cache-reminder.py (PostTool: кеш знаний)
+│   ├── factory-enforcer.py        (PostTool: ШАГ 4-5 Фабрики)
+│   ├── docs-change-tracker.py     (PostTool: код → обнови доки)
+│   ├── auto-git-save.py           (PostTool: mandatory commit)
+│   ├── skill-usage-metrics.py     (PostTool: логирование скиллов)
+│   ├── bulk-action-guard.py       (PostTool: защита от bulk ops)
+│   ├── task-enforcer.py           (Stop: mandatory tasks)
+│   ├── git-commit-enforcer.py     (Stop: блокировка без коммита)
+│   └── ralph_wiggum_stop.py       (Stop: контроль Ralph)
+├── skills/                        (47 скиллов)
+│   ├── skill-router-config.json   (38 bundles → keyword routing)
+│   ├── 1c-doc-research/           (+ cache/ — 8 категорий)
+│   ├── tech-research/             (+ cache/ — 7 категорий)
+│   ├── architecture-research/     (+ cache/ + adr/)
+│   ├── langchain-core/            (LangChain ядро)
+│   ├── langgraph-core/            (LangGraph ядро)
+│   ├── ...                        (ещё 41 скилл)
+│   └── hooks-skills-mcp-triad/    (ЗНАНИЕ: этот файл)
 ├── cache/
-│   └── hook-todos.json          (задачи от хуков)
-├── settings.json                (регистрация хуков)
+│   └── hook-todos.json            (задачи от хуков)
+├── settings.json                  (регистрация хуков)
 └── commands/
     └── pdf-search.md
 ```
@@ -216,6 +325,10 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 Хуки общаются через `hook-todos.json`:
 - **knowledge-cache-reminder** создаёт задачу (кеш) → **task-enforcer** блокирует stop
 - **factory-enforcer** создаёт задачу (ШАГ 4-5) → **task-enforcer** блокирует stop
+- **auto-git-save** создаёт задачу (коммит) → **git-commit-enforcer** блокирует stop
+- **docs-change-tracker** создаёт задачу (обнови доки) → **task-enforcer** блокирует stop
+- **skill-usage-metrics** логирует → `data/skill-usage.log` (не через todos)
+- **skill-router** читает `skill-router-config.json` → systemMessage с рекомендациями
 - Файл защищён file lock (Windows msvcrt / Unix fcntl)
 - Atomic writes предотвращают corruption
 
