@@ -401,7 +401,9 @@ class TestSkillRouterWorkflow:
                 assert "HYBRID" in msg
 
     def test_36_hybrid_workflow_research_and_suggest(self, clean_session):
-        stdout, _ = run_hook(self.HOOK, {"prompt": "исследуй и предложи оптимизацию поиска"})
+        # Use a keyword exclusively from workflow-hybrid to avoid competition
+        # with workflow-research/brainstorm bundles for max_bundles=3 slots
+        stdout, _ = run_hook(self.HOOK, {"prompt": "как оптимизировать загрузку данных"})
         out = parse_hook_output(stdout)
         if out:
             msg = out.get("systemMessage", "")
