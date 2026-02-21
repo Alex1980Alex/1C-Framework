@@ -7,20 +7,26 @@ description: "Автоматический git commit из хука: sync commit
 
 ## Обзор
 
-Sync-commit система портированная из 1C-Enterprise_Framework v2.16. Хук `auto-git-save.py` отслеживает изменённые файлы, и при достижении порога (3 файла) автоматически выполняет `git add` + `git commit` прямо из хука. Для файлов ниже порога — создаёт mandatory pending задачу, которую `task-enforcer` проверяет при остановке.
+Sync-commit система портированная из 1C-Enterprise_Framework v2.16. Хук `auto-git-save.py` отслеживает изменённые файлы, и при достижении порога (по умолчанию 1 файл = мгновенный коммит) автоматически выполняет `git add` + `git commit` прямо из хука. При неудаче коммита — создаёт mandatory pending задачу, которую `task-enforcer` проверяет при остановке.
 
 ---
 
 ## Полный цикл
 
 ```
-Write файл #1 → задача pending + "Ещё 2 до автокоммита"
-Write файл #2 → metadata обновлён + "Ещё 1 до автокоммита"
-Write файл #3 → АВТОКОММИТ из хука → задача completed → systemMessage "[OK]"
-                                    ↓
-Stop попытка → task-enforcer → sync_git_tasks_with_status()
-                               → git clean? → allow stop
-                               → git dirty? → block stop
+Write/Edit файл → auto-git-save.py (PostToolUse)
+                  │
+                  ├─ should_track_file()? → НЕТ → выход
+                  ├─ sync_pending_tasks_with_git()  ← zombie prevention
+                  ├─ порог (1) достигнут? → ВСЕГДА ДА
+                  │   └─ perform_sync_commit()
+                  │       ├─ git add -- <файл>
+                  │       ├─ git commit -m "chore: auto-commit 1 file(s)"
+                  │       └─ → [AUTO-GIT-SAVE OK] hash: abc1234
+                  │
+                  └─ commit failed?
+                     └─ создать mandatory pending задачу
+                        └─ task-enforcer заблокирует Stop
 ```
 
 ---
@@ -29,7 +35,7 @@ Stop попытка → task-enforcer → sync_git_tasks_with_status()
 
 | Переменная | Default | Назначение |
 |-----------|---------|-----------|
-| `CLAUDE_COMMIT_THRESHOLD` | `3` | Файлов до автокоммита |
+| `CLAUDE_COMMIT_THRESHOLD` | `1` | Файлов до автокоммита (1 = мгновенный коммит) |
 | `CLAUDE_COMMIT_TIMEOUT_BASE` | `5` | Базовый timeout (сек) |
 | `CLAUDE_COMMIT_TIMEOUT_PER_FILE` | `1` | Timeout за файл (сек) |
 | `CLAUDE_COMMIT_COOLDOWN_BASE` | `2` | Cooldown после коммита (мин) |
