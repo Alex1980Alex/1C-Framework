@@ -1,6 +1,6 @@
 ---
 name: tech-research
-description: "Используй этот скилл когда пользователь спрашивает о технологиях RAG, embeddings, vector search, LLM, Python-библиотеках (LangChain, Qdrant, sentence-transformers), паттернах ML/AI, инструментах фреймворка. Триггеры: 'как работает RAG', 'что такое embeddings', 'документация по LangChain', 'reranking', 'chunking strategies', 'vector search', 'BM25', 'graph RAG', 'MCP', 'LangGraph', 'Qdrant API', 'sentence-transformers', 'ColBERT', 'FAISS', 'sparse vectors', 'hybrid search'. НЕ для 1С — для 1С используй 1c-doc-research."
+description: "Исследование технологий RAG/ML/Python: embeddings, vector search, reranking, chunking, Qdrant, sentence-transformers, ColBERT, sparse vectors. Триггеры: 'как работает RAG', 'что такое embeddings', 'reranking', 'chunking strategies', 'vector search', 'BM25', 'graph RAG', 'Qdrant API', 'sentence-transformers', 'ColBERT', 'FAISS', 'sparse vectors', 'hybrid search'. НЕ для 1С — используй 1c-doc-research. НЕ для LangChain API — используй langchain-core. НЕ для LangGraph — используй langgraph-core."
 ---
 
 # Tech Research — исследование технологий RAG/ML/Python
