@@ -1,16 +1,6 @@
 ---
 name: langgraph-production
-description: >
-  LangGraph в production: LangSmith (наблюдаемость, трейсинг), Studio (визуальный дебаг),
-  развёртывание (LangSmith Cloud, langgraph.json), тестирование, структура приложения,
-  Agent Chat UI.
-  Триггеры: 'LangSmith', 'langsmith', 'LangGraph Studio', 'studio', 'langgraph deploy',
-  'развёртывание langgraph', 'langgraph.json', 'tracing langsmith', 'трейсинг',
-  'observability langgraph', 'наблюдаемость', 'langgraph test', 'тестирование графа',
-  'app structure langgraph', 'структура приложения', 'Agent Chat', 'agentchat',
-  'LangSmith Cloud', 'LangGraph Server', 'langgraph-sdk', 'get_client'.
-  НЕ для StateGraph/edges — используй langgraph-core.
-  НЕ для памяти/checkpointers — используй langgraph-memory-persistence.
+description: "LangGraph в production: LangSmith (наблюдаемость, трейсинг), Studio (визуальный дебаг), развёртывание (LangSmith Cloud, langgraph.json), тестирование, структура приложения, Agent Chat UI. Триггеры: 'LangSmith', 'langsmith', 'LangGraph Studio', 'studio', 'langgraph deploy', 'развёртывание langgraph', 'langgraph.json', 'tracing langsmith', 'трейсинг', 'observability langgraph', 'наблюдаемость', 'langgraph test', 'тестирование графа', 'app structure langgraph', 'структура приложения', 'Agent Chat', 'agentchat', 'LangSmith Cloud', 'LangGraph Server', 'langgraph-sdk', 'get_client'. НЕ для StateGraph/edges — используй langgraph-core. НЕ для памяти/checkpointers — используй langgraph-memory-persistence."
 ---
 
 # LangGraph Production

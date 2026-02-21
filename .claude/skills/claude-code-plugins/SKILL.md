@@ -1,11 +1,6 @@
 ---
 name: claude-code-plugins
-description: >
-  Система плагинов Claude Code: создание, manifest, slash-команды, агенты, хуки, LSP,
-  маркетплейсы, установка, распространение. Триггеры: 'plugin', 'плагин', 'marketplace',
-  'маркетплейс', 'создать плагин', 'create plugin', 'manifest', 'slash command',
-  'распространить', 'distribute plugin', 'установить плагин', 'install plugin'.
-  НЕ для навыков (skills) — используй doc-to-skill. НЕ для хуков — используй create-hook.
+description: "Система плагинов Claude Code: создание, manifest, slash-команды, агенты, хуки, LSP, маркетплейсы, установка, распространение. Триггеры: 'plugin', 'плагин', 'marketplace', 'маркетплейс', 'создать плагин', 'create plugin', 'manifest', 'slash command', 'распространить', 'distribute plugin', 'установить плагин', 'install plugin'. НЕ для навыков (skills) — используй doc-to-skill. НЕ для хуков — используй create-hook."
 ---
 
 # Система плагинов Claude Code

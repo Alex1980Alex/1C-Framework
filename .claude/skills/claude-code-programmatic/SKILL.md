@@ -1,12 +1,6 @@
 ---
 name: claude-code-programmatic
-description: >
-  Программный запуск Claude Code: headless mode (-p), Agent SDK, structured output,
-  JSON schema, streaming, продолжение сессий, Ralph Wiggum автономные циклы.
-  Триггеры: 'headless', 'programmatic', 'программный запуск', 'agent sdk',
-  'structured output', 'json schema', '-p flag', 'print mode', 'автоматизация claude',
-  'ralph wiggum', 'автономный цикл', 'autonomous loop', 'stream-json',
-  'claude -p', 'скрипт с claude', 'CI pipeline claude'.
+description: "Программный запуск Claude Code: headless mode (-p), Agent SDK, structured output, JSON schema, streaming, продолжение сессий, Ralph Wiggum автономные циклы. Триггеры: 'headless', 'programmatic', 'программный запуск', 'agent sdk', 'structured output', 'json schema', '-p flag', 'print mode', 'автоматизация claude', 'ralph wiggum', 'автономный цикл', 'autonomous loop', 'stream-json', 'claude -p', 'скрипт с claude', 'CI pipeline claude'."
 ---
 
 # Программный запуск Claude Code
