@@ -193,6 +193,31 @@
       "keywords": ["deep agents", "deepagents", "MCP langchain", "MultiServerMCPClient", "langchain-mcp-adapters", "MCP transport", "MCP interceptor", "LangSmith", "langgraph deploy", "langgraph.json", "LangGraph Studio", "langgraph test", "checkpointer", "InMemorySaver", "PostgresSaver", "Store langgraph", "long-term memory langgraph"],
       "skills": ["deep-agents", "langchain-mcp-tools", "langgraph-production", "langgraph-memory-persistence"],
       "optional": []
+    },
+    "hook-debugging": {
+      "keywords": ["хук не работает", "hook not firing", "отладка хука", "debug hook", "хук не срабатывает", "hook debugging", "почему хук не запускается", "canary test", "hook не работает", "hook silent", "хук молчит"],
+      "skills": ["hook-debugging"],
+      "optional": ["claude-code-hooks-bugs"]
+    },
+    "hook-bugs": {
+      "keywords": ["баг хука", "hook bug", "#6305", "#10450", "PostToolUse не работает", "hooks not firing", "хуки не запускаются", "workaround hooks", "обходной путь хуков", "платформенные баги", "platform bugs hooks"],
+      "skills": ["claude-code-hooks-bugs"],
+      "optional": ["hook-debugging"]
+    },
+    "git-parsing": {
+      "keywords": ["git status parsing", "porcelain", "парсинг git status", "line[3:]", "git status python", "извлечь путь из git status", "staged files python", "git porcelain формат", "XY format git"],
+      "skills": ["git-porcelain-parsing"],
+      "optional": []
+    },
+    "hook-enforcer": {
+      "keywords": ["enforcer pattern", "паттерн принуждения", "блокирующий хук", "stop hook pattern", "exit 2", "block stop", "шаблон enforcer", "как заблокировать остановку", "stop hook шаблон", "enforcer хук"],
+      "skills": ["hook-enforcement-pattern"],
+      "optional": ["create-hook"]
+    },
+    "hook-architecture": {
+      "keywords": ["архитектура хуков", "уровни хуков", "hook levels", "hook architecture", "трёхуровневая защита", "порядок хуков", "hook chain", "цепочка хуков", "какие хуки есть", "все хуки", "hook map", "карта хуков"],
+      "skills": ["multi-level-hook-architecture"],
+      "optional": ["hooks-skills-mcp-triad"]
     }
   }
 }

@@ -60,7 +60,9 @@ def get_uncommitted_changes() -> list[str]:
 
             index_status = line[0]   # staged
             work_status = line[1]    # unstaged
-            filepath = line[3:].strip().strip('"')
+            # Use line[2:].lstrip() to handle both "M  path" and " M path"
+            # line[3:] would strip leading "." from ".claude/" paths
+            filepath = line[2:].lstrip().strip('"')
 
             # Include untracked files (new files should be committed too)
             is_untracked = index_status == "?" and work_status == "?"
