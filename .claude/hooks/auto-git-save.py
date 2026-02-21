@@ -6,7 +6,7 @@ Matcher: Write|Edit|Bash
 Purpose: Track changed files and auto-commit when threshold reached.
          Ported from 1C-Enterprise_Framework git-commit-reminder.py v2.16.
 
-Timeout: 15s (needs time for sync git commit)
+Timeout: 30s (needs time for sync git commit)
 
 Pattern: Sync Commit + Enforcer.
 
@@ -24,6 +24,7 @@ Key features (ported from Enterprise):
   - Adaptive timeout (based on file count)
   - Adaptive cooldown (prevent rapid re-creation)
   - File tracking in task metadata (single source of truth)
+  - Diagnostic logging to .claude/cache/auto-git-save-debug.log
 
 NOT ported (not needed):
   - Z.AI smart commit messages (not available)
