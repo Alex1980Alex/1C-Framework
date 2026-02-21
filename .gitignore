@@ -54,8 +54,6 @@ temp_*.txt
 /claude_*.html
 /skills_content*.txt
 
-# Hook shared state (regenerated at runtime)
-.claude/cache/hook-todos.json
-.claude/cache/hook-todos.lock
-.claude/cache/auto-git-save-state.json
+# Hook shared state (regenerated at runtime, never commit)
+.claude/cache/
 test_all_phases_results.json

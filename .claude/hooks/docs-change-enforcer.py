@@ -73,27 +73,31 @@ CODE_TO_DOMAIN = [
     ("src/workers/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
 ]
 
-# Skip these paths/patterns from staleness analysis
+# ═══════════════════════════════════════════════════════════════════════════
+# SKIP_PATTERNS: files that NEVER need documentation tracking.
+# Gitignore-first: .gitignore handles build artifacts, venvs, data/.
+# These patterns handle semantic exclusions git can't know about.
+# ═══════════════════════════════════════════════════════════════════════════
 SKIP_PATTERNS = [
+    # Documentation itself (editing docs doesn't require more docs)
+    "docs/",
+    "claude.md",
+    "memory.md",
+    "skill.md",
+    "readme.md",
+    "changelog.md",
+    # Internal hook/cache state
     "/cache/",
     "/__pycache__/",
-    "_index.json",
-    "/memory/",
-    "auto-git-save",
     "hook-todos",
     "active-todos",
-    "docs/framework documentation/",  # doc edits are not "code changes"
-    "docs/roadmap/",
-    "docs/analysis/",
-    # NOTE: .claude/hooks/ and .claude/skills/ are NOT skipped —
-    # infrastructure changes are checked by find_stale_infra().
-    "tests/",           # test changes don't require doc updates
-    "scripts/",
-    "temp/",
-    "node_modules/",
-    ".env",
-    "pyproject.toml",
+    "auto-git-save",
+    "_index.json",
+    ".lock",
+    # Git/env internals
+    ".gitignore",
     ".git/",
+    ".env",
 ]
 
 
@@ -210,6 +214,37 @@ def find_stale_infra(session_files: set) -> list:
     return []
 
 
+def find_unmapped_changes(session_files: set) -> list:
+    """Catch-all: files that passed skip check but don't match CODE_TO_DOMAIN or infra.
+
+    These are files the system can't auto-route (e.g., tests/, scripts/,
+    pyproject.toml, new top-level modules). Suggests /audit-docs skill.
+
+    Returns list of stale entries (same format as find_stale_domains).
+    """
+    unmapped = []
+    for fp in session_files:
+        if _should_skip(fp):
+            continue
+        if _is_infra_file(fp):
+            continue
+        fp_lower = fp.replace("\\", "/").lower()
+        matched = any(
+            fp_lower.startswith(prefix.lower())
+            for prefix, _, _ in CODE_TO_DOMAIN
+        )
+        if not matched:
+            unmapped.append(fp)
+
+    if unmapped:
+        return [{
+            "subdir": "UNMAPPED (используй /audit-docs)",
+            "skill": "audit-docs",
+            "files": unmapped,
+        }]
+    return []
+
+
 def find_stale_domains(session_files: set) -> list:
     """Find code domains where docs weren't updated in the same session.
 
@@ -278,6 +313,7 @@ def main():
 
         stale = find_stale_domains(session_files)
         stale += find_stale_infra(session_files)
+        stale += find_unmapped_changes(session_files)
         if not stale:
             sys.exit(0)
 
