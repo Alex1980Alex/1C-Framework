@@ -85,8 +85,8 @@ SKIP_PATTERNS = [
     "docs/framework documentation/",  # doc edits are not "code changes"
     "docs/roadmap/",
     "docs/analysis/",
-    ".claude/hooks/",   # hook edits are meta, not framework code
-    ".claude/skills/",  # skill edits are meta, not framework code
+    # NOTE: .claude/hooks/ and .claude/skills/ are NOT skipped —
+    # infrastructure changes are checked by find_stale_infra().
     "tests/",           # test changes don't require doc updates
     "scripts/",
     "temp/",
@@ -97,10 +97,36 @@ SKIP_PATTERNS = [
 ]
 
 
-def _should_skip(filepath: str) -> bool:
-    """Check if file should be skipped from docs staleness check."""
+def _is_infra_file(filepath: str) -> bool:
+    """Check if file is a hook, skill config, or settings file."""
     fp = filepath.replace("\\", "/").lower()
-    return any(s.lower() in fp for s in SKIP_PATTERNS)
+    if fp.startswith(".claude/hooks/") and fp.endswith(".py"):
+        # Skip cache, __pycache__ (framework internals)
+        if any(s in fp for s in ["/cache/", "/__pycache__/"]):
+            return False
+        return True
+    if fp == ".claude/settings.json":
+        return True
+    # Skill config files (not SKILL.md itself — that IS the doc)
+    if fp.startswith(".claude/skills/") and not fp.endswith("/skill.md"):
+        if fp.endswith((".json", ".py")):
+            return True
+    return False
+
+
+def _should_skip(filepath: str) -> bool:
+    """Check if file should be skipped from CODE_TO_DOMAIN staleness check.
+
+    Infrastructure files (.claude/hooks/, .claude/skills/) are skipped here
+    because they are handled separately by find_stale_infra().
+    """
+    fp = filepath.replace("\\", "/").lower()
+    if any(s.lower() in fp for s in SKIP_PATTERNS):
+        return True
+    # Infrastructure files handled by find_stale_infra()
+    if _is_infra_file(filepath):
+        return True
+    return False
 
 
 def _is_doc_file(filepath: str) -> bool:
@@ -154,6 +180,34 @@ def get_session_files() -> set:
         pass
 
     return files
+
+
+def find_stale_infra(session_files: set) -> list:
+    """Check if infrastructure changes (hooks/skills/settings) need CLAUDE.md update.
+
+    Infrastructure = .claude/hooks/*.py, .claude/settings.json,
+                     .claude/skills/*.(json|py)
+    Documentation = CLAUDE.md at project root
+
+    Returns list of stale entries (same format as find_stale_domains).
+    """
+    infra_changes = []
+    claude_md_updated = False
+
+    for fp in session_files:
+        fp_norm = fp.replace("\\", "/").lower()
+        if fp_norm == "claude.md" or fp_norm.endswith("/claude.md"):
+            claude_md_updated = True
+        if _is_infra_file(fp):
+            infra_changes.append(fp)
+
+    if infra_changes and not claude_md_updated:
+        return [{
+            "subdir": "CLAUDE.md (инфраструктура)",
+            "skill": "hooks-skills-mcp-triad",
+            "files": infra_changes,
+        }]
+    return []
 
 
 def find_stale_domains(session_files: set) -> list:
@@ -223,6 +277,7 @@ def main():
             sys.exit(0)
 
         stale = find_stale_domains(session_files)
+        stale += find_stale_infra(session_files)
         if not stale:
             sys.exit(0)
 

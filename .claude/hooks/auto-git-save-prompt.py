@@ -56,6 +56,8 @@ WATCHED_PATHS = [
     "tests/",
     ".claude/skills/",
     ".claude/hooks/",
+    ".claude/settings.json",
+    "CLAUDE.md",
 ]
 
 # Cooldown: seconds between auto-commits (prevent rapid commits)
