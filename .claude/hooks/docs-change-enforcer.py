@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+"""
+Hook: docs-change-enforcer
+Event: Stop
+Matcher: (none — fires on every stop attempt)
+Purpose: Block Claude from stopping if source code changed but corresponding
+         documentation wasn't updated in the same session.
+
+         Workaround for docs-change-tracker (PostToolUse) not firing
+         due to Claude Code bug #6305.
+
+         Maps code changes → documentation domains and checks for staleness.
+         Works alongside git-commit-enforcer (uncommitted files) and
+         task-enforcer (pending mandatory tasks).
+
+Timeout: 10s
+
+Exit codes:
+  0 = allow stop (docs up to date or no code changes)
+  2 = block stop (stale documentation detected)
+
+Pattern: Enforcer (поведенческий подпаттерн триады — Цикл принуждения).
+
+Flow:
+  1. Stop fires → hook runs
+  2. Collect all files changed in session (uncommitted + recent commits)
+  3. Separate code files from doc/skill files
+  4. For each code file, find matching domain via CODE_TO_DOMAIN mapping
+  5. Check if domain's docs or skills were also updated in the session
+  6. If code changed but docs/skills NOT updated → block stop with instructions
+  7. If all docs up to date → allow stop
+"""
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DOMAIN MAPPING: code prefix → (docs subdirectory, skill name)
+# Compact version of docs-change-tracker.py _CODE_TO_DOCS_SKILLS
+# Source of truth for fine-grained mapping: docs-change-tracker.py
+# ═══════════════════════════════════════════════════════════════════════════
+
+DOCS_BASE = "docs/framework documentation"
+
+CODE_TO_DOMAIN = [
+    # code_prefix                           docs_subdir              skill_name
+    ("src/pdf_framework/search/",           "04_ПОИСК",              "search-pipeline-debug"),
+    ("src/pdf_framework/agents/",           "05_RAG_АГЕНТЫ",         "agent-orchestration"),
+    ("src/pdf_framework/loaders/",          "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
+    ("src/pdf_framework/processing/",       "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
+    ("src/pdf_framework/indexing/",         "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
+    ("src/pdf_framework/graph_store/",      "03_ИНДЕКСАЦИЯ",         "graph-operations"),
+    ("src/pdf_framework/embeddings/",       "02_БЫСТРЫЙ_СТАРТ",     "embedding-models"),
+    ("src/pdf_framework/vector_store/",     "04_ПОИСК",              "qdrant-operations"),
+    ("src/pdf_framework/config/",           "02_БЫСТРЫЙ_СТАРТ",     "framework-config"),
+    ("src/pdf_framework/evaluation/",       "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
+    ("src/pdf_framework/feedback/",         "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
+    ("src/pdf_framework/optimization/",     "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
+    ("src/pdf_framework/callbacks/",        "07_КЭШИРОВАНИЕ",       "framework-caching"),
+    ("src/pdf_framework/multitenancy/",     "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/pdf_framework/observability/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/pdf_framework/guardrails/",       "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
+    ("src/api/routes/",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
+    ("src/api/middleware/",                 "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/api/app.py",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
+    ("src/cli/",                           "06_ИНТЕРФЕЙСЫ",         "framework-cli"),
+    ("src/mcp_server/",                    "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
+    ("src/ui/",                            "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
+    ("src/workers/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+]
+
+# Skip these paths/patterns from staleness analysis
+SKIP_PATTERNS = [
+    "/cache/",
+    "/__pycache__/",
+    "_index.json",
+    "/memory/",
+    "auto-git-save",
+    "hook-todos",
+    "active-todos",
+    "docs/framework documentation/",  # doc edits are not "code changes"
+    "docs/roadmap/",
+    "docs/analysis/",
+    ".claude/hooks/",   # hook edits are meta, not framework code
+    ".claude/skills/",  # skill edits are meta, not framework code
+    "tests/",           # test changes don't require doc updates
+    "scripts/",
+    "temp/",
+    "node_modules/",
+    ".env",
+    "pyproject.toml",
+    ".git/",
+]
+
+
+def _should_skip(filepath: str) -> bool:
+    """Check if file should be skipped from docs staleness check."""
+    fp = filepath.replace("\\", "/").lower()
+    return any(s.lower() in fp for s in SKIP_PATTERNS)
+
+
+def _is_doc_file(filepath: str) -> bool:
+    """Check if file is in docs/framework documentation/."""
+    return "docs/framework documentation/" in filepath.replace("\\", "/").lower()
+
+
+def _is_skill_file(filepath: str) -> bool:
+    """Check if file is a SKILL.md file."""
+    return ".claude/skills/" in filepath.replace("\\", "/").lower()
+
+
+def get_session_files() -> set:
+    """Get all files changed in this session (uncommitted + recent commits).
+
+    Uses 6-hour window to approximate session duration.
+    Combines working tree changes with recently committed files.
+    """
+    files = set()
+
+    # 1. Uncommitted changes (working tree + staged)
+    try:
+        r = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, timeout=3,
+            cwd=str(PROJECT_ROOT),
+        )
+        if r.returncode == 0:
+            for line in r.stdout.strip().splitlines():
+                if not line or len(line) < 2:
+                    continue
+                fp = line[2:].lstrip().strip('"').replace("\\", "/")
+                if fp:
+                    files.add(fp)
+    except Exception:
+        pass
+
+    # 2. Recently committed files (last 6 hours ≈ session window)
+    try:
+        r = subprocess.run(
+            ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
+            capture_output=True, text=True, timeout=5,
+            cwd=str(PROJECT_ROOT),
+        )
+        if r.returncode == 0:
+            for line in r.stdout.strip().splitlines():
+                fp = line.strip().replace("\\", "/")
+                if fp:
+                    files.add(fp)
+    except Exception:
+        pass
+
+    return files
+
+
+def find_stale_domains(session_files: set) -> list:
+    """Find code domains where docs weren't updated in the same session.
+
+    Logic:
+    - For each changed source code file, find its documentation domain
+    - Check if ANY doc or skill in that domain was also changed in the session
+    - If code changed but neither docs nor skills updated → domain is stale
+
+    Returns list of dicts: {"subdir", "skill", "files"}.
+    """
+    # Collect doc/skill files from session for fast lookup
+    doc_files = {f for f in session_files if _is_doc_file(f)}
+    skill_files = {f for f in session_files if _is_skill_file(f)}
+
+    # Track stale domains (deduped by doc_subdir)
+    stale = {}  # doc_subdir → {"subdir": str, "skill": str, "files": [str]}
+
+    for fp in session_files:
+        if _should_skip(fp):
+            continue
+
+        fp_lower = fp.replace("\\", "/").lower()
+
+        for code_prefix, doc_subdir, skill in CODE_TO_DOMAIN:
+            if fp_lower.startswith(code_prefix.lower()):
+                # Check if this domain's docs were also updated in session
+                doc_dir_prefix = f"{DOCS_BASE}/{doc_subdir}/".lower()
+                has_doc_update = any(
+                    d.replace("\\", "/").lower().startswith(doc_dir_prefix)
+                    for d in doc_files
+                )
+
+                # Also check if the matching skill was updated
+                skill_prefix = f".claude/skills/{skill}/".lower()
+                has_skill_update = any(
+                    s.replace("\\", "/").lower().startswith(skill_prefix)
+                    for s in skill_files
+                )
+
+                if not has_doc_update and not has_skill_update:
+                    if doc_subdir not in stale:
+                        stale[doc_subdir] = {
+                            "subdir": doc_subdir,
+                            "skill": skill,
+                            "files": [],
+                        }
+                    stale[doc_subdir]["files"].append(fp)
+
+                break  # Only match first domain per file
+
+    return list(stale.values())
+
+
+def main():
+    """Check for stale documentation. Block stop if found."""
+    try:
+        # Read stdin (required by Claude Code hook protocol)
+        try:
+            sys.stdin.buffer.read()
+        except Exception:
+            pass
+
+        session_files = get_session_files()
+        if not session_files:
+            sys.exit(0)
+
+        stale = find_stale_domains(session_files)
+        if not stale:
+            sys.exit(0)
+
+        # Build reason message
+        items = []
+        total_code_files = 0
+        for entry in stale[:8]:
+            doc_subdir = entry["subdir"]
+            skill = entry["skill"]
+            code_files = entry["files"]
+            total_code_files += len(code_files)
+
+            cf_names = ", ".join(Path(f).name for f in code_files[:3])
+            if len(code_files) > 3:
+                cf_names += f" (+{len(code_files) - 3})"
+
+            items.append(
+                f"  📄 {DOCS_BASE}/{doc_subdir}/\n"
+                f"     Skill: {skill}\n"
+                f"     Код: {cf_names}"
+            )
+
+        items_str = "\n".join(items)
+        extra = len(stale) - 8
+        if extra > 0:
+            items_str += f"\n  ... и ещё {extra} область(ей)"
+
+        reason = (
+            f"[DOCS-ENFORCER] Документация не обновлена для {len(stale)} области(ей)!\n"
+            f"Изменено {total_code_files} файл(ов) кода без обновления документации.\n\n"
+            f"{items_str}\n\n"
+            "Действия:\n"
+            "1. Используй скилл /audit-docs для автоматического обновления\n"
+            "2. Или вручную обнови документацию в указанных разделах\n"
+            "3. Обнови SKILL.md если изменился API/конфиг\n"
+            "4. После обновления можешь завершить."
+        )
+
+        output = {"decision": "block", "reason": reason}
+        out_bytes = json.dumps(output, ensure_ascii=False).encode("utf-8")
+        sys.stdout.buffer.write(out_bytes + b"\n")
+        sys.stdout.buffer.flush()
+        sys.exit(2)  # Block stop
+
+    except Exception:
+        # Graceful degradation: allow stop on any error
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

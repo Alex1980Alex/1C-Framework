@@ -6,7 +6,11 @@
       "Bash(\".venv\\\\Scripts\\\\python.exe\" build_bm25_index.py)",
       "WebSearch",
       "WebFetch",
-      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\":*)"
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\":*)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \":*)"
+    ],
+    "additionalDirectories": [
+      "d:\\1С-Framework\\.claude\\skills"
     ]
   },
   "hooks": {
@@ -148,6 +152,11 @@
             "type": "command",
             "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\git-commit-enforcer.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\docs-change-enforcer.py",
+            "timeout": 10
           },
           {
             "type": "command",

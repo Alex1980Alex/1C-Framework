@@ -210,29 +210,25 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             log.debug("step1: FAIL no changes")
             return {"success": False, "error": "No changes to commit"}
 
-        # Step 2: Stage specific files
-        staged = 0
-        for fp in modified_files:
-            try:
-                log.debug(f"step2: git add -- {fp}")
-                r = subprocess.run(
-                    ["git", "add", "--", fp],
-                    timeout=3, capture_output=True, text=True,
-                    cwd=str(PROJECT_ROOT),
-                )
-                log.debug(f"step2: rc={r.returncode} stderr={r.stderr[:100] if r.stderr else ''}")
-                if r.returncode == 0:
-                    staged += 1
-            except subprocess.TimeoutExpired:
-                log.warning(f"step2: TIMEOUT git add {fp}")
+        # Step 2: Stage files (batch git add for efficiency)
+        log.debug(f"step2: git add -- {len(modified_files)} files")
+        try:
+            r = subprocess.run(
+                ["git", "add", "--"] + modified_files,
+                timeout=10, capture_output=True, text=True,
+                cwd=str(PROJECT_ROOT),
+            )
+            log.debug(f"step2: rc={r.returncode} stderr={r.stderr[:200] if r.stderr else ''}")
+            if r.returncode != 0:
+                log.debug("step2: FAIL git add batch failed")
+                return {"success": False, "error": f"git add failed: {r.stderr[:200]}"}
+        except subprocess.TimeoutExpired:
+            log.warning("step2: TIMEOUT git add batch")
+            return {"success": False, "error": "git add timeout"}
 
-        if staged == 0:
-            log.debug("step2: FAIL all git add failed")
-            return {"success": False, "error": "git add failed for all files"}
-
-        # Step 3: Commit with generic message
+        # Step 3: Commit
         count = len(modified_files)
-        commit_msg = f"chore: auto-commit {count} file(s) changed"
+        commit_msg = f"chore: auto-save {count} file(s)"
 
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
@@ -460,9 +456,13 @@ class AutoGitSave(BaseHook):
         # --- Threshold reached: SYNC COMMIT ---
         log.debug(f"file_count={file_count} threshold={SYNC_COMMIT_THRESHOLD}")
         if file_count >= SYNC_COMMIT_THRESHOLD:
-            timeout = calculate_timeout(file_count)
-            log.debug(f"THRESHOLD REACHED → sync commit timeout={timeout}")
-            result = perform_sync_commit(modified_data["files"], timeout=timeout)
+            # Commit ALL uncommitted files in watched paths, not just tracked ones
+            all_uncommitted = get_uncommitted_files()
+            files_to_commit = all_uncommitted if all_uncommitted else modified_data["files"]
+            log.debug(f"all_uncommitted={len(all_uncommitted)} tracked={len(modified_data['files'])}")
+            timeout = calculate_timeout(len(files_to_commit))
+            log.debug(f"THRESHOLD REACHED → sync commit {len(files_to_commit)} files timeout={timeout}")
+            result = perform_sync_commit(files_to_commit, timeout=timeout)
             log.debug(f"commit result: {result}")
 
             if result.get("success") and result.get("committed"):
