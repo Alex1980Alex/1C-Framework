@@ -59,7 +59,7 @@ HOOK_ID = "auto-git-save-hook"
 # --- Configuration ---
 
 # Threshold: auto-commit when this many files are tracked
-SYNC_COMMIT_THRESHOLD = int(os.environ.get("CLAUDE_COMMIT_THRESHOLD", "3"))
+SYNC_COMMIT_THRESHOLD = int(os.environ.get("CLAUDE_COMMIT_THRESHOLD", "1"))
 
 # Timeout: base + per-file seconds
 SYNC_COMMIT_TIMEOUT_BASE = int(os.environ.get("CLAUDE_COMMIT_TIMEOUT_BASE", "5"))
@@ -267,6 +267,7 @@ def sync_pending_tasks_with_git() -> int:
         if result.returncode != 0:
             return 0
 
+        uncommitted_dirs = set()
         for line in result.stdout.strip().split("\n"):
             if line.strip():
                 parts = line.strip().split()
@@ -274,6 +275,9 @@ def sync_pending_tasks_with_git() -> int:
                     fp = parts[-1].replace("\\", "/")
                     uncommitted.add(fp)
                     uncommitted.add(Path(fp).name)
+                    # Track untracked directories (git shows "?? dir/" for new dirs)
+                    if fp.endswith("/"):
+                        uncommitted_dirs.add(fp)
 
         # Check each pending task
         from shared.task_master import _read_todos, _write_todos
@@ -304,8 +308,17 @@ def sync_pending_tasks_with_git() -> int:
             # Check if any task file is still uncommitted
             has_uncommitted = False
             for tf in task_files:
+                # Direct match: file path or filename in uncommitted set
                 if tf in uncommitted or Path(tf).name in uncommitted:
                     has_uncommitted = True
+                    break
+                # Directory match: file inside an untracked directory
+                # git shows "?? dir/" for new directories, not individual files
+                for udir in uncommitted_dirs:
+                    if tf.startswith(udir) or tf.startswith(udir.rstrip("/")):
+                        has_uncommitted = True
+                        break
+                if has_uncommitted:
                     break
 
             if task_files and not has_uncommitted:

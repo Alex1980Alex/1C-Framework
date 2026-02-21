@@ -123,7 +123,8 @@
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \":*)",
       "Bash(git commit:*)",
       "Bash(PYTHONIOENCODING=utf-8 \"D:/1С-Framework/.venv/Scripts/python.exe\" -c:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \".claude/hooks/todo-sync.py\")"
     ]
   },
   "enableAllProjectMcpServers": true,
