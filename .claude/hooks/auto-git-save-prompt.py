@@ -2,7 +2,7 @@
 """
 Hook: auto-git-save-prompt
 Event: UserPromptSubmit
-Matcher: (none — fires on every user message)
+Matcher: (none — fires on every user message, no matcher support for UserPromptSubmit)
 Purpose: Workaround for PostToolUse hooks not firing (Claude Code bug #6305, #10450).
          Checks for uncommitted tracked files on each user message and auto-commits.
 
@@ -122,10 +122,12 @@ def _get_uncommitted_tracked_files() -> list[str]:
 
         files = []
         for line in result.stdout.strip().splitlines():
-            if not line or len(line) < 3:
+            if not line or len(line) < 2:
                 continue
-            filepath = line[3:].strip().strip('"').replace("\\", "/")
-            if _should_track(filepath):
+            # Git porcelain format: XY PATH (positions 0-1 = status, then space + path)
+            # Use line[2:].lstrip() to handle both "M  path" and " M path" reliably
+            filepath = line[2:].lstrip().strip('"').replace("\\", "/")
+            if filepath and _should_track(filepath):
                 files.append(filepath)
         return files
     except Exception:

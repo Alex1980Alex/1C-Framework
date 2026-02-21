@@ -145,9 +145,13 @@ def get_uncommitted_files() -> list[str]:
             return []
         files = []
         for line in result.stdout.strip().splitlines():
-            if not line or len(line) < 3:
+            if not line or len(line) < 2:
                 continue
-            filepath = line[3:].strip().strip('"').replace("\\", "/")
+            # Git porcelain format: XY PATH (positions 0-1 = status, then space + path)
+            # Use line[2:].lstrip() to handle both staged "M  path" and modified " M path"
+            filepath = line[2:].lstrip().strip('"').replace("\\", "/")
+            if not filepath:
+                continue
             if WATCHED_PATHS:
                 if not any(filepath.startswith(p) for p in WATCHED_PATHS):
                     continue
@@ -296,10 +300,11 @@ def sync_pending_tasks_with_git() -> int:
 
         uncommitted_dirs = set()
         for line in result.stdout.strip().split("\n"):
-            if not line or len(line) < 3:
+            if not line or len(line) < 2:
                 continue
-            # git status --porcelain format: "XY filename" (pos 0-1=status, 2=space, 3+=path)
-            fp = line[3:].strip().strip('"').replace("\\", "/")
+            # git status --porcelain format: XY PATH (pos 0-1=status, then space + path)
+            # Use line[2:].lstrip() to handle both staged and unstaged reliably
+            fp = line[2:].lstrip().strip('"').replace("\\", "/")
             if fp:
                 uncommitted.add(fp)
                 uncommitted.add(Path(fp).name)
