@@ -44,7 +44,7 @@ def get_uncommitted_changes() -> list[str]:
     """
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             capture_output=True,
             text=True,
             timeout=5,

@@ -154,7 +154,7 @@ def get_session_files() -> set:
     # 1. Uncommitted changes (working tree + staged)
     try:
         r = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             capture_output=True, text=True, timeout=3,
             cwd=str(PROJECT_ROOT),
         )

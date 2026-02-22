@@ -127,7 +127,7 @@ def get_uncommitted_files() -> list[str]:
     """
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             capture_output=True, text=True, timeout=5,
             cwd=str(PROJECT_ROOT),
         )
@@ -189,7 +189,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         # Step 1: Check git status
         log.debug("step1: git status --porcelain")
         status = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             timeout=2, capture_output=True, text=True,
             cwd=str(PROJECT_ROOT),
         )
@@ -275,7 +275,7 @@ def sync_pending_tasks_with_git() -> int:
     try:
         uncommitted = set()
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             cwd=str(PROJECT_ROOT),
             capture_output=True, text=True, timeout=2,
         )
