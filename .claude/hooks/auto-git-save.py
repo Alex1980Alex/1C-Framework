@@ -92,6 +92,10 @@ IGNORE_PATTERNS = [
     "active-todos.json",
     "auto-git-save-state.json",
     "auto-git-save-debug.log",
+    # Ralph state files (prevent stop-hook infinite loop)
+    ".ralph_active",
+    ".ralph_criteria.json",
+    ".ralph_wiggum_count",
 ]
 
 
