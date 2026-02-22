@@ -142,13 +142,22 @@ class BaseHook(ABC):
         ...
 
     def run(self) -> None:
-        """Entry point: read stdin -> execute -> emit output."""
+        """Entry point: read stdin -> execute -> emit output -> log invocation."""
         inp = HookInput.from_stdin()
+        outcome = "allow"
+        error_msg = None
         try:
             result = self.execute(inp)
             if result is not None:
+                # Determine outcome from result data
+                if result._data.get("decision") == "block":
+                    outcome = "block"
+                elif result._data.get("systemMessage"):
+                    outcome = "message"
                 result.emit()
         except Exception as e:
+            outcome = "error"
+            error_msg = f"{type(e).__name__}: {e}"
             # Log error before graceful degradation
             try:
                 from pathlib import Path as _P
@@ -162,6 +171,21 @@ class BaseHook(ABC):
                 pass
             # Graceful degradation: never block on internal error
             sys.exit(0)
+        finally:
+            # Log invocation (always, even on error)
+            try:
+                from shared.invocation_logger import log_invocation
+                log_invocation(
+                    hook=type(self).__name__,
+                    event=inp.detected_event,
+                    tool=inp.tool_name or None,
+                    elapsed_ms=self.elapsed_ms,
+                    outcome=outcome,
+                    session_id=inp.session_id,
+                    error=error_msg,
+                )
+            except Exception:
+                pass  # Logging must never block
 
     @property
     def elapsed_ms(self) -> int:
