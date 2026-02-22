@@ -205,8 +205,8 @@ services:
     image: neo4j:5-community
     container_name: pdf-rag-neo4j
     ports:
-      - "7474:7474"  # Browser
-      - "7687:7687"  # Bolt
+      - "17474:7474"  # Browser (offset to avoid conflict with 1c-neo4j)
+      - "17687:7687"  # Bolt
     environment:
       - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
       - NEO4J_PLUGINS=["apoc"]

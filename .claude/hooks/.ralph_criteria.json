@@ -1,0 +1,9 @@
+{
+  "task_type": "multi_step",
+  "activated_at": "2026-02-22T18:30:15.139761+00:00",
+  "prompt_excerpt": "<ide_selection>The user selected the lines 17 to 18 from d:\\1С-Framework\\docs\\documentation\\Language Server Protocol (LSP)\\Протокол языкового сервера.md:\n7. [Hover и документация (3 метода)](#7-hover-",
+  "completion_criteria": [
+    "all listed items completed"
+  ],
+  "max_iterations": 10
+}
