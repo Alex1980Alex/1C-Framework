@@ -186,6 +186,33 @@ def get_activation_rate() -> float:
     return activated / recommended
 
 
+def get_session_metrics() -> Dict[str, Any]:
+    """Get full session metrics for dashboard and monitoring.
+
+    Returns dict with:
+      - session_started: ISO timestamp
+      - total_recommended: int
+      - total_activated: int
+      - activation_rate: float (0.0 - 1.0)
+      - unactivated: list of skill names recommended but not activated
+      - recommended_list: list of all recommended skill names
+      - activated_list: list of all activated skill names
+    """
+    data = _read_state()
+    recommended = data.get("recommended", {})
+    activated = data.get("activated", {})
+
+    return {
+        "session_started": data.get("started_at", ""),
+        "total_recommended": len(recommended),
+        "total_activated": len(activated),
+        "activation_rate": len(activated) / max(len(recommended), 1),
+        "unactivated": sorted(set(recommended.keys()) - set(activated.keys())),
+        "recommended_list": sorted(recommended.keys()),
+        "activated_list": sorted(activated.keys()),
+    }
+
+
 def reset_session() -> None:
     """Force reset session state (for testing or new session)."""
     _write_state(_empty_state())
