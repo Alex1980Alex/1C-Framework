@@ -41,7 +41,29 @@ export function activate(context: vscode.ExtensionContext) {
         terminal.sendText(ref, false);
     });
 
-    context.subscriptions.push(disposable);
+    // Code Action provider — shows in Ctrl+. lightbulb menu
+    const codeActionProvider = vscode.languages.registerCodeActionsProvider(
+        { scheme: 'file' },
+        {
+            provideCodeActions(document, range): vscode.CodeAction[] | undefined {
+                if (range.isEmpty) {
+                    return undefined;
+                }
+
+                const action = new vscode.CodeAction(
+                    'Claude: Send @file#lines to Terminal',
+                    vscode.CodeActionKind.Empty
+                );
+                action.command = {
+                    command: 'claudeSelect.sendToTerminal',
+                    title: 'Claude: Send @file#lines to Terminal',
+                };
+                return [action];
+            }
+        }
+    );
+
+    context.subscriptions.push(disposable, codeActionProvider);
 }
 
 export function deactivate() {}
