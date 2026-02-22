@@ -98,6 +98,8 @@ SKIP_PATTERNS = [
     ".gitignore",
     ".git/",
     ".env",
+    # Ralph state files (runtime, not code)
+    ".ralph_",
 ]
 
 
