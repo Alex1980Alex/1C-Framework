@@ -383,7 +383,7 @@ def format_sessions(session_metrics: dict) -> str:
         f"  SESSIONS ({len(session_metrics)} total)",
         f"{'-' * 62}",
         f"  {'Session':<14} {'Invoc':>6} {'Hooks':>6} {'Dur':>7} {'Err':>4}",
-        f"  {'─' * 40}",
+        f"  {'-' * 42}",
     ]
 
     for sid, m in sorted(session_metrics.items(), key=lambda x: x[1]["invocations"], reverse=True)[:10]:
