@@ -329,6 +329,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 - **factory-enforcer** создаёт задачу (ШАГ 4-5) → **task-enforcer** блокирует stop
 - **auto-git-save** создаёт задачу (коммит) → **git-commit-enforcer** блокирует stop
 - **docs-change-tracker** создаёт задачу (обнови доки) → **task-enforcer** блокирует stop
+- **docs-change-enforcer** (Stop) проверяет инфра-файлы (.claude/hooks/*.py, settings.json, settings.local.json) → требует обновить CLAUDE.md
 - **skill-usage-metrics** логирует → `data/skill-usage.log` (не через todos)
 - **skill-router** читает `skill-router-config.json` → systemMessage с рекомендациями
 - Файл защищён file lock (Windows msvcrt / Unix fcntl)
