@@ -239,6 +239,33 @@ cd ../project-feature-a && claude
   - Ручное одобрение вместо auto-accept
   - Проверка изменений перед принятием
 
+## Локальные расширения проекта
+
+### claude-select — Send Selection to Terminal
+
+Минимальное расширение для отправки `@file#lines` ссылки в терминал Claude CLI.
+
+**Расположение:** `.vscode-extensions/claude-select/`
+
+| Shortcut | Действие |
+|----------|----------|
+| `Ctrl+Shift+L` | Отправить `@relativePath#startLine-endLine` в активный терминал (без Enter) |
+
+**Логика:**
+1. Берёт выделение в активном редакторе → вычисляет относительный путь от workspace root
+2. Одна строка → `@path#line`, диапазон → `@path#startLine-endLine`
+3. `sendText(ref, false)` — текст вставляется в терминал без нажатия Enter, можно дописать вопрос
+
+**Установка / обновление:**
+```bash
+cd .vscode-extensions/claude-select
+npm install && npm run compile
+npx @vscode/vsce package --allow-missing-repository
+code --install-extension claude-select-0.1.0.vsix --force
+```
+
+После установки: "Developer: Reload Window" для активации.
+
 ## Troubleshooting
 
 | Проблема | Решение |
