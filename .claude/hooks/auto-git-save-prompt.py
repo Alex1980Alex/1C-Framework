@@ -181,26 +181,43 @@ def _auto_commit(files: list[str]) -> dict:
 
 # --- Main ---
 
+def _canary_log(msg: str) -> None:
+    """Write canary log to diagnose if hook is invoked at all."""
+    try:
+        canary = Path(_HOOK_DIR).parent / "cache" / "auto-git-save-prompt-canary.log"
+        canary.parent.mkdir(parents=True, exist_ok=True)
+        with open(canary, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}\n")
+    except Exception:
+        pass
+
+
 def main():
     """UserPromptSubmit hook: check and auto-commit uncommitted tracked files."""
+    _canary_log("ENTER main()")
     try:
         # Read stdin (required by protocol, but we don't use prompt content)
         try:
             raw = sys.stdin.buffer.read().decode("utf-8", errors="replace")
         except Exception:
             raw = ""
+        _canary_log(f"stdin read ok, len={len(raw)}")
 
         # Check cooldown
         if _is_in_cooldown():
+            _canary_log("SKIP cooldown")
             sys.exit(0)
 
         # Check for uncommitted tracked files
         files = _get_uncommitted_tracked_files()
+        _canary_log(f"files={len(files)}: {files[:5]}")
         if not files:
+            _canary_log("SKIP no files")
             sys.exit(0)
 
         # Auto-commit
         result = _auto_commit(files)
+        _canary_log(f"commit result: {result}")
 
         if result.get("success"):
             # Output systemMessage so Claude knows about the commit
@@ -215,10 +232,12 @@ def main():
             sys.stdout.buffer.flush()
 
         # Always exit 0 (never block user prompt)
+        _canary_log("EXIT 0")
         sys.exit(0)
 
-    except Exception:
+    except Exception as exc:
         # Graceful degradation: never block user prompt
+        _canary_log(f"EXCEPTION: {exc}")
         sys.exit(0)
 
 
