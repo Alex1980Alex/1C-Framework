@@ -19,7 +19,14 @@ Position: AFTER skill-router.py in the hook chain (reads its recommendations).
 """
 
 import json
+import os
 import sys
+
+_HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
+sys.path.insert(0, _HOOK_DIR)
 
 
 def main():
