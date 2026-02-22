@@ -36,6 +36,19 @@ class HookInput:
         # Common
         self.session_id = raw.get("session_id", "")
 
+    @property
+    def detected_event(self) -> str:
+        """Detect hook event type from input fields."""
+        if self.tool_name:
+            if self.tool_result:
+                return "PostToolUse"
+            return "PreToolUse"
+        if self.transcript or self.reason:
+            return "Stop"
+        if self.prompt:
+            return "UserPromptSubmit"
+        return "Unknown"
+
     @classmethod
     def from_stdin(cls) -> "HookInput":
         """Read and parse JSON from stdin (UTF-8 safe on Windows)."""
