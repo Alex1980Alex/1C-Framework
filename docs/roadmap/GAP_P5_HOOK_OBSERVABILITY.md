@@ -245,12 +245,6 @@ Phase 1 (P0) ✅ ──→ Phase 2 (P0) ✅ ──→ Phase 4 (P1) ✅ ──→
              └──→ Phase 3 (P1) ✅ ──→ Phase 5 (P2) 🔜 ──→ Phase 6 (P2) ──→ Phase 7 (P2)
 ```
 
-**Порядок выполнения:**
-```
-Phase 1 (P0) ──→ Phase 2 (P0) ──→ Phase 4 (P1) ──→ Phase 8 (P3)
-             └──→ Phase 3 (P1) ──→ Phase 5 (P2) ──→ Phase 6 (P2) ──→ Phase 7 (P2)
-```
-
 ---
 
 ## GitHub References (76+ проектов)
