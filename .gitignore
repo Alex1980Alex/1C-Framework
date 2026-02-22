@@ -62,4 +62,8 @@ temp_*.txt
 # Hook shared state (regenerated at runtime, never commit)
 .claude/cache/
 .claude/hooks/cache/
+
+# Ralph Wiggum state files (runtime, prevents stop-hook infinite loop)
+.claude/hooks/.ralph_*
+
 test_all_phases_results.json
