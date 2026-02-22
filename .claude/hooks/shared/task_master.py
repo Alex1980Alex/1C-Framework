@@ -400,7 +400,7 @@ def auto_validate_git_tasks() -> int:
 
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             cwd=str(project_root),
             capture_output=True,
             text=True,

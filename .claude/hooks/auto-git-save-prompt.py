@@ -99,7 +99,7 @@ def _get_uncommitted_tracked_files() -> list[str]:
     """Get uncommitted files that match our tracking criteria."""
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             capture_output=True, text=True, timeout=3,
             cwd=str(PROJECT_ROOT),
         )
@@ -112,6 +112,8 @@ def _get_uncommitted_tracked_files() -> list[str]:
                 continue
             # Git porcelain format: XY PATH (positions 0-1 = status, then space + path)
             # Use line[2:].lstrip() to handle both "M  path" and " M path" reliably
+            # With core.quotepath=false, git outputs raw UTF-8 paths
+            # (no octal \320\236 escapes that .replace("\\","/") would mangle)
             filepath = line[2:].lstrip().strip('"').replace("\\", "/")
             if filepath and _should_track(filepath):
                 files.append(filepath)
