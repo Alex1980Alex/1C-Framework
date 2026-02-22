@@ -18,7 +18,6 @@ Sections: summary, hooks, skills, errors, sessions (default: all)
 
 import argparse
 import json
-import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
