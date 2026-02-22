@@ -72,7 +72,23 @@ def main():
 
 
 if __name__ == "__main__":
+    _timer = None
+    try:
+        from shared.invocation_logger import InvocationTimer
+        _timer = InvocationTimer("skill-eval-enforcer-shell", event="UserPromptSubmit").start()
+    except Exception:
+        pass
+
     try:
         main()
+        if _timer:
+            _timer.log(outcome="message")
+    except SystemExit:
+        # main() calls sys.exit(0) for skipped prompts
+        if _timer:
+            _timer.log(outcome="allow")
+        raise
     except Exception:
+        if _timer:
+            _timer.log(outcome="error")
         sys.exit(0)  # Graceful degradation: never block
