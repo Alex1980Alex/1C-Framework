@@ -297,9 +297,9 @@ def format_hooks(hook_metrics: dict) -> str:
         return "  No hook invocations recorded.\n"
 
     lines = [
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  HOOK INVOCATIONS",
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  {'Hook':<30} {'Count':>6} {'p95ms':>6} {'Block':>6} {'Err':>4}",
         f"  {'─' * 52}",
     ]
@@ -319,9 +319,9 @@ def format_hooks(hook_metrics: dict) -> str:
 def format_skills(skill_metrics: dict) -> str:
     """Format skills section."""
     lines = [
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  SKILL ACTIVATION",
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  {'Skill':<30} {'Rec':>5} {'Act':>5} {'Rate':>6}",
         f"  {'─' * 48}",
     ]
@@ -354,12 +354,12 @@ def format_errors(invocations: list[dict]) -> str:
     """Format errors section."""
     errors = [inv for inv in invocations if inv.get("error")]
     if not errors:
-        return f"{'─' * 60}\n  ERRORS: None\n"
+        return f"{'-' * 62}\n  ERRORS: None\n"
 
     lines = [
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  ERRORS ({len(errors)} total)",
-        f"{'─' * 60}",
+        f"{'-' * 62}",
     ]
 
     # Show last 10 errors
@@ -376,12 +376,12 @@ def format_errors(invocations: list[dict]) -> str:
 def format_sessions(session_metrics: dict) -> str:
     """Format sessions section."""
     if not session_metrics:
-        return f"{'─' * 60}\n  SESSIONS: No data\n"
+        return f"{'-' * 62}\n  SESSIONS: No data\n"
 
     lines = [
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  SESSIONS ({len(session_metrics)} total)",
-        f"{'─' * 60}",
+        f"{'-' * 62}",
         f"  {'Session':<14} {'Invoc':>6} {'Hooks':>6} {'Dur':>7} {'Err':>4}",
         f"  {'─' * 40}",
     ]
