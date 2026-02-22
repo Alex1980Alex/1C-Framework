@@ -115,14 +115,20 @@ class HybridSearchStrategy:
         ]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-        qdrant_results = responses[0] if not isinstance(responses[0], Exception) else []
-        graph_response = responses[1] if not isinstance(responses[1], Exception) else None
-        graph_results = graph_response.results if graph_response else []
+        raw_qdrant = responses[0]
+        raw_graph = responses[1]
 
-        if isinstance(responses[0], Exception):
-            logger.warning("[HYBRID] Qdrant native BM25 failed: %s", responses[0])
-        if isinstance(responses[1], Exception):
-            logger.warning("[HYBRID] Graph search failed: %s", responses[1])
+        if isinstance(raw_qdrant, BaseException):
+            logger.warning("[HYBRID] Qdrant native BM25 failed: %s", raw_qdrant)
+            qdrant_results: list[SearchResult] = []
+        else:
+            qdrant_results = raw_qdrant
+
+        if isinstance(raw_graph, BaseException):
+            logger.warning("[HYBRID] Graph search failed: %s", raw_graph)
+            graph_results: list[SearchResult] = []
+        else:
+            graph_results = raw_graph.results
 
         # Merge Qdrant hybrid + graph via client-side RRF
         # Qdrant hybrid results already have dense+BM25 fused, so treat as one source
