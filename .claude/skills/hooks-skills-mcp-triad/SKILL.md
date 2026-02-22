@@ -304,6 +304,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── bulk-action-guard.py       (PostTool: защита от bulk ops)
 │   ├── task-enforcer.py           (Stop: mandatory tasks)
 │   ├── git-commit-enforcer.py     (Stop: блокировка без коммита)
+│   ├── docs-change-enforcer.py    (Stop: код изменён без обновления доков)
 │   └── ralph_wiggum_stop.py       (Stop: контроль Ralph)
 ├── skills/                        (47 скиллов)
 │   ├── skill-router-config.json   (38 bundles → keyword routing)
