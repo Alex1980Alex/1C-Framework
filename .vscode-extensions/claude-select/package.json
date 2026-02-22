@@ -1,0 +1,41 @@
+{
+  "name": "claude-select",
+  "displayName": "Claude Select — Send Selection to Terminal",
+  "description": "Send @file#lines reference to Claude CLI terminal via Ctrl+Shift+L",
+  "version": "0.1.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:claudeSelect.sendToTerminal"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudeSelect.sendToTerminal",
+        "title": "Claude Select: Send @file#lines to Terminal"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "claudeSelect.sendToTerminal",
+        "key": "ctrl+shift+l",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "@types/vscode": "^1.60.0",
+    "typescript": "^5.0.0"
+  }
+}
