@@ -211,6 +211,7 @@ See `.claude/skills/1c-doc-research/SKILL.md` for full research protocol.
 | `hook-debugging` | Знание | Диагностика хуков: canary-метод, file-based логирование |
 | `hook-enforcement-pattern` | Знание | Паттерн Enforcer для Stop-хуков: блокировка, exit 2, graceful degradation |
 | `claude-code-hooks-bugs` | Знание | Известные баги хуков: PostToolUse #6305, stdin Windows #10450 |
+| `windows-hooks-paths` | Знание | Windows: bash съедает `\` в путях хуков, диагностика, fix |
 | `git-porcelain-parsing` | Знание | Парсинг git status --porcelain: формат XY, кириллица, core.quotepath |
 | `search-pipeline-debug` | Операционный | 10 стратегий поиска, RRF, debug, reranking |
 | `indexing-pipeline` | Операционный | Hybrid loader, splitting, batch/resume, IDs |
