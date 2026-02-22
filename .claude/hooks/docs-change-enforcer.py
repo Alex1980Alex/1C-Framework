@@ -310,6 +310,13 @@ def find_stale_domains(session_files: set) -> list:
 
 def main():
     """Check for stale documentation. Block stop if found."""
+    # Invocation timer
+    try:
+        from shared.invocation_logger import InvocationTimer
+        timer = InvocationTimer("docs-change-enforcer", event="Stop").start()
+    except Exception:
+        timer = None
+
     try:
         # Read stdin (required by Claude Code hook protocol)
         try:
@@ -319,12 +326,16 @@ def main():
 
         session_files = get_session_files()
         if not session_files:
+            if timer:
+                timer.log(outcome="allow")
             sys.exit(0)
 
         stale = find_stale_domains(session_files)
         stale += find_stale_infra(session_files)
         stale += find_unmapped_changes(session_files)
         if not stale:
+            if timer:
+                timer.log(outcome="allow")
             sys.exit(0)
 
         # Build reason message
@@ -366,10 +377,14 @@ def main():
         out_bytes = json.dumps(output, ensure_ascii=False).encode("utf-8")
         sys.stdout.buffer.write(out_bytes + b"\n")
         sys.stdout.buffer.flush()
+        if timer:
+            timer.log(outcome="block")
         sys.exit(2)  # Block stop
 
-    except Exception:
+    except Exception as e:
         # Graceful degradation: allow stop on any error
+        if timer:
+            timer.log(outcome="error", error=f"{type(e).__name__}: {e}")
         sys.exit(0)
 
 
