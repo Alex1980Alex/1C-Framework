@@ -19,7 +19,6 @@ Based on task_master.py patterns: graceful degradation, never block.
 """
 
 import json
-import os
 import time
 from datetime import datetime
 from pathlib import Path
