@@ -97,6 +97,9 @@ class HybridSearchStrategy:
         filter: dict[str, Any] | None,
     ) -> list[SearchResult]:
         """Qdrant server-side dense+BM25 RRF, plus graph results merged client-side."""
+        assert self._embedding_engine is not None, "embedding_engine required for native BM25"
+        assert self._vector_store is not None, "vector_store required for native BM25"
+
         # Embed query for Qdrant hybrid
         query_embedding = await self._embedding_engine.embed_text(query)
 
