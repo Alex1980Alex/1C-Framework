@@ -126,7 +126,9 @@
       "Bash(done)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \".claude/hooks/todo-sync.py\")",
       "Bash(git -C \"D:/1С-Framework\" config --get core.quotepath)",
-      "Bash(git -C \"D:/1С-Framework\" config --local core.quotepath false)"
+      "Bash(git -C \"D:/1С-Framework\" config --local core.quotepath false)",
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe:*)",
+      "Bash(git -C \"D:/1С-Framework\" log --oneline -10 --name-only)"
     ]
   },
   "enableAllProjectMcpServers": true,
