@@ -69,7 +69,21 @@ function activate(context) {
         // false = do not press Enter, let the user append their question
         terminal.sendText(ref, false);
     });
-    context.subscriptions.push(disposable);
+    // Code Action provider — shows in Ctrl+. lightbulb menu
+    const codeActionProvider = vscode.languages.registerCodeActionsProvider({ scheme: 'file' }, {
+        provideCodeActions(document, range) {
+            if (range.isEmpty) {
+                return undefined;
+            }
+            const action = new vscode.CodeAction('Claude: Send @file#lines to Terminal', vscode.CodeActionKind.Empty);
+            action.command = {
+                command: 'claudeSelect.sendToTerminal',
+                title: 'Claude: Send @file#lines to Terminal',
+            };
+            return [action];
+        }
+    });
+    context.subscriptions.push(disposable, codeActionProvider);
 }
 function deactivate() { }
 //# sourceMappingURL=extension.js.map
