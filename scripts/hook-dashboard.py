@@ -323,7 +323,7 @@ def format_skills(skill_metrics: dict) -> str:
         f"  SKILL ACTIVATION",
         f"{'-' * 62}",
         f"  {'Skill':<30} {'Rec':>5} {'Act':>5} {'Rate':>6}",
-        f"  {'─' * 48}",
+        f"  {'-' * 50}",
     ]
 
     per_skill = skill_metrics.get("per_skill", {})
