@@ -75,14 +75,14 @@ function activate(context) {
             if (range.isEmpty) {
                 return undefined;
             }
-            const action = new vscode.CodeAction('Claude: Send @file#lines to Terminal', vscode.CodeActionKind.Empty);
+            const action = new vscode.CodeAction('Claude: Send @file#lines to Terminal', vscode.CodeActionKind.Refactor);
             action.command = {
                 command: 'claudeSelect.sendToTerminal',
                 title: 'Claude: Send @file#lines to Terminal',
             };
             return [action];
         }
-    });
+    }, { providedCodeActionKinds: [vscode.CodeActionKind.Refactor] });
     context.subscriptions.push(disposable, codeActionProvider);
 }
 function deactivate() { }
