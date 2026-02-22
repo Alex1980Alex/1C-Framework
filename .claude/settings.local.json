@@ -142,7 +142,12 @@
       "Bash(npx --yes @vscode/vsce:*)",
       "Bash(npx @vscode/vsce package --allow-missing-repository)",
       "Bash(code --install-extension:*)",
-      "Bash(del \"D:\\\\1С-Framework\\\\.vscode\\\\extensions.json\")"
+      "Bash(del \"D:\\\\1С-Framework\\\\.vscode\\\\extensions.json\")",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker volume:*)",
+      "Bash(docker run:*)",
+      "Bash(docker compose:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
