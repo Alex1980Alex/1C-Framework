@@ -101,6 +101,13 @@ def get_uncommitted_changes() -> list[str]:
 
 def main():
     """Check for uncommitted changes. Block stop if found."""
+    # Invocation timer
+    try:
+        from shared.invocation_logger import InvocationTimer
+        timer = InvocationTimer("git-commit-enforcer", event="Stop").start()
+    except Exception:
+        timer = None
+
     try:
         # Read stdin (required by Claude Code hook protocol)
         try:
@@ -112,6 +119,8 @@ def main():
 
         if not changes:
             # Working tree clean (or no changes in watched paths) — allow stop
+            if timer:
+                timer.log(outcome="allow")
             sys.exit(0)
 
         # Build reason message
@@ -138,10 +147,14 @@ def main():
         out_bytes = json.dumps(output, ensure_ascii=False).encode("utf-8")
         sys.stdout.buffer.write(out_bytes + b"\n")
         sys.stdout.buffer.flush()
+        if timer:
+            timer.log(outcome="block")
         sys.exit(2)  # Block stop
 
-    except Exception:
+    except Exception as e:
         # Graceful degradation: allow stop on any error
+        if timer:
+            timer.log(outcome="error", error=f"{type(e).__name__}: {e}")
         sys.exit(0)
 
 
