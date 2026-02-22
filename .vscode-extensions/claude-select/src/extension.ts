@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                 const action = new vscode.CodeAction(
                     'Claude: Send @file#lines to Terminal',
-                    vscode.CodeActionKind.Empty
+                    vscode.CodeActionKind.Refactor
                 );
                 action.command = {
                     command: 'claudeSelect.sendToTerminal',
@@ -60,7 +60,8 @@ export function activate(context: vscode.ExtensionContext) {
                 };
                 return [action];
             }
-        }
+        },
+        { providedCodeActionKinds: [vscode.CodeActionKind.Refactor] }
     );
 
     context.subscriptions.push(disposable, codeActionProvider);
