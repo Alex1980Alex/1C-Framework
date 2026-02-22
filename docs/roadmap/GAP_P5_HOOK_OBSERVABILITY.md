@@ -142,8 +142,22 @@
 Выводит: activation rate, dead skills, top hooks by latency, recent errors.
 
 ### Критерии успеха
-- [ ] `python scripts/hook-dashboard.py` выводит отчёт
-- [ ] Поддерживает `--period 7d` и `--json`
+- [x] `python scripts/hook-dashboard.py` выводит отчёт
+- [x] Поддерживает `--period 7d` и `--json`
+
+### Реализация
+- ✅ [hook-dashboard.py](scripts/hook-dashboard.py) — НОВЫЙ: CLI dashboard
+
+**Текущие метрики** (на 2026-02-22):
+```
+Total invocations:    98
+Unique hooks:          7 (включая 4 stop hooks)
+Total errors:          0
+Global p95 latency:  172ms
+Skills recommended:  175
+Skills activated:      3
+Activation rate:     1.7% (исторический — Phase 2 shell fix должен улучшить)
+```
 
 ---
 
