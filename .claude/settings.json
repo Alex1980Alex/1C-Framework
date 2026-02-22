@@ -163,7 +163,7 @@
           },
           {
             "type": "command",
-            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\task-enforcer.py",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-enforcer.py",
             "timeout": 10
           }
         ]
