@@ -241,3 +241,9 @@ if __name__ == "__main__":
         main()
     except Exception:
         sys.exit(0)  # Graceful degradation
+    finally:
+        try:
+            from shared.ralph_state import clear_stop_running
+            clear_stop_running()
+        except Exception:
+            pass
