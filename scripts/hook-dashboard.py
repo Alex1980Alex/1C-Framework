@@ -301,7 +301,7 @@ def format_hooks(hook_metrics: dict) -> str:
         f"  HOOK INVOCATIONS",
         f"{'-' * 62}",
         f"  {'Hook':<30} {'Count':>6} {'p95ms':>6} {'Block':>6} {'Err':>4}",
-        f"  {'─' * 52}",
+        f"  {'-' * 54}",
     ]
 
     # Sort by count descending
