@@ -1,0 +1,304 @@
+{
+  "_comment": "Test prompts for hook evaluation framework. Each suite tests specific hook behavior.",
+  "_version": "1.0.0",
+  "_created": "2026-02-22",
+
+  "suites": {
+    "skill-activation": {
+      "description": "Tests skill activation rate with shell-output enforcer (Phase 2)",
+      "expected_activation_rate": 0.8,
+      "timeout_seconds": 30,
+      "tests": [
+        {
+          "id": "sa-001",
+          "prompt": "How do I create a new 1C:Enterprise catalog object programmatically?",
+          "expected_skills": ["1c-catalogs"],
+          "expected_outcome": "skill_activated",
+          "description": "Direct catalog question should trigger 1c-catalogs skill"
+        },
+        {
+          "id": "sa-002",
+          "prompt": "I need to implement a document posting procedure with register movements",
+          "expected_skills": ["1c-document-posting", "1c-registers"],
+          "expected_outcome": "skill_activated",
+          "description": "Document posting should trigger multiple skills"
+        },
+        {
+          "id": "sa-003",
+          "prompt": "What is the syntax for SELECT queries in 1C:Enterprise?",
+          "expected_skills": ["1c-query-language"],
+          "expected_outcome": "skill_activated",
+          "description": "Query syntax question should trigger query language skill"
+        },
+        {
+          "id": "sa-004",
+          "prompt": "Help me design a managed form with a table and dynamic rows",
+          "expected_skills": ["1c-forms"],
+          "expected_outcome": "skill_activated",
+          "description": "Form design should trigger forms skill"
+        },
+        {
+          "id": "sa-005",
+          "prompt": "I need to create an HTTP service with JSON endpoints for external integration",
+          "expected_skills": ["1c-http-services"],
+          "expected_outcome": "skill_activated",
+          "description": "HTTP service question should trigger HTTP services skill"
+        },
+        {
+          "id": "sa-006",
+          "prompt": "How do I set up data exchange between two 1C databases using XML?",
+          "expected_skills": ["1c-exchange"],
+          "expected_outcome": "skill_activated",
+          "description": "Data exchange should trigger exchange skill"
+        },
+        {
+          "id": "sa-007",
+          "prompt": "Create a report using SKD with parameters and dynamic groupings",
+          "expected_skills": ["1c-skd"],
+          "expected_outcome": "skill_activated",
+          "description": "SKD report should trigger SKD skill"
+        },
+        {
+          "id": "sa-008",
+          "prompt": "I need to implement RLS restrictions for a specific user role",
+          "expected_skills": ["1c-roles-rls"],
+          "expected_outcome": "skill_activated",
+          "description": "RLS question should trigger roles skill"
+        },
+        {
+          "id": "sa-009",
+          "prompt": "How do I use temporary tables in a query with query builder?",
+          "expected_skills": ["1c-temp-tables", "1c-query-language"],
+          "expected_outcome": "skill_activated",
+          "description": "Temporary tables should trigger temp-tables skill"
+        },
+        {
+          "id": "sa-010",
+          "prompt": "I want to create a printable form with a table and company logo",
+          "expected_skills": ["1c-report-layouts"],
+          "expected_outcome": "skill_activated",
+          "description": "Printable form should trigger report layouts skill"
+        },
+        {
+          "id": "sa-011",
+          "prompt": "What is the difference between accumulation and accounting registers?",
+          "expected_skills": ["1c-registers"],
+          "expected_outcome": "skill_activated",
+          "description": "Register comparison should trigger registers skill"
+        },
+        {
+          "id": "sa-012",
+          "prompt": "I need to analyze a 1C task and create an implementation plan",
+          "expected_skills": ["analyze-1c-task"],
+          "expected_outcome": "skill_activated",
+          "description": "Task analysis should trigger analyze-1c-task skill"
+        },
+        {
+          "id": "sa-013",
+          "prompt": "Help me implement changes from ANALYSIS-REPORT.md",
+          "expected_skills": ["implement-1c-task"],
+          "expected_outcome": "skill_activated",
+          "description": "Implementation should trigger implement-1c-task skill"
+        },
+        {
+          "id": "sa-014",
+          "prompt": "I need to document a BSL module according to project standards",
+          "expected_skills": ["document-1c-module", "code-documentation-standard"],
+          "expected_outcome": "skill_activated",
+          "description": "Documentation should trigger documentation skills"
+        },
+        {
+          "id": "sa-015",
+          "prompt": "How do I review BSL code for best practices violations?",
+          "expected_skills": ["review-1c-code"],
+          "expected_outcome": "skill_activated",
+          "description": "Code review should trigger review skill"
+        },
+        {
+          "id": "sa-016",
+          "prompt": "I need to search for relevant rules before starting a task",
+          "expected_skills": ["proactive-rules", "semantic-search"],
+          "expected_outcome": "skill_activated",
+          "description": "Rule search should trigger proactive skills"
+        },
+        {
+          "id": "sa-017",
+          "prompt": "What is the active project and how do I activate it in Serena?",
+          "expected_skills": ["project-activation"],
+          "expected_outcome": "skill_activated",
+          "description": "Project activation should trigger activation skill"
+        },
+        {
+          "id": "sa-018",
+          "prompt": "I need to create a new slash command for Claude Code",
+          "expected_skills": ["create-slash-command"],
+          "expected_outcome": "skill_activated",
+          "description": "Slash command creation should trigger create skill"
+        },
+        {
+          "id": "sa-019",
+          "prompt": "Help me set up a hook for automatic documentation updates",
+          "expected_skills": ["create-hook", "hooks-skills-mcp-triad"],
+          "expected_outcome": "skill_activated",
+          "description": "Hook creation should trigger hook skills"
+        },
+        {
+          "id": "sa-020",
+          "prompt": "I need to debug a BSL module using the debugger",
+          "expected_skills": ["bsl-debugger", "bsl-lsp"],
+          "expected_outcome": "skill_activated",
+          "description": "Debugging should trigger debugger skill"
+        }
+      ]
+    },
+
+    "stop-hook-safety": {
+      "description": "Tests for infinite loop prevention (Phase 1)",
+      "expected_activation_rate": 1.0,
+      "timeout_seconds": 10,
+      "tests": [
+        {
+          "id": "shs-001",
+          "prompt": "Make a trivial change to a file",
+          "expected_outcome": "no_loop",
+          "description": "Single change should not trigger infinite git commits",
+          "max_iterations": 1
+        },
+        {
+          "id": "shs-002",
+          "prompt": "Create a new Python script with print statement",
+          "expected_outcome": "no_loop",
+          "description": "New file creation should not loop",
+          "max_iterations": 1
+        },
+        {
+          "id": "shs-003",
+          "prompt": "Update settings.json with a new configuration value",
+          "expected_outcome": "no_loop",
+          "description": "Settings change should not trigger repeated docs enforcement",
+          "max_iterations": 1
+        }
+      ]
+    },
+
+    "ide-filtering": {
+      "description": "Tests IDE event filtering in skill-router (Phase 1)",
+      "expected_activation_rate": 1.0,
+      "timeout_seconds": 5,
+      "tests": [
+        {
+          "id": "idf-001",
+          "prompt": "<ide_opened_file>/path/to/file.txt</ide_opened_file>",
+          "expected_outcome": "filtered",
+          "description": "IDE file open should be filtered by skill-router"
+        },
+        {
+          "id": "idf-002",
+          "prompt": "<ide_selection>/path/to/file.txt|10|20|selected text</ide_selection>",
+          "expected_outcome": "filtered",
+          "description": "IDE selection should be filtered"
+        },
+        {
+          "id": "idf-003",
+          "prompt": "<cursor>path/to/file.txt|42</cursor>",
+          "expected_outcome": "filtered",
+          "description": "IDE cursor event should be filtered"
+        },
+        {
+          "id": "idf-004",
+          "prompt": "<file_changed>src/example.bsl</file_changed>",
+          "expected_outcome": "filtered",
+          "description": "File change event should be filtered"
+        },
+        {
+          "id": "idf-005",
+          "prompt": "How do I create a catalog in 1C?",
+          "expected_outcome": "not_filtered",
+          "description": "Normal user prompt should NOT be filtered"
+        },
+        {
+          "id": "idf-006",
+          "prompt": "/show-tasks",
+          "expected_outcome": "filtered",
+          "description": "Slash commands should be filtered"
+        },
+        {
+          "id": "idf-007",
+          "prompt": "hi",
+          "expected_outcome": "filtered",
+          "description": "Very short prompts should be filtered"
+        },
+        {
+          "id": "idf-008",
+          "prompt": "ok",
+          "expected_outcome": "filtered",
+          "description": "Short confirmation should be filtered"
+        },
+        {
+          "id": "idf-009",
+          "prompt": "yes",
+          "expected_outcome": "filtered",
+          "description": "Short yes should be filtered"
+        },
+        {
+          "id": "idf-010",
+          "prompt": "I need help with 1C development",
+          "expected_outcome": "not_filtered",
+          "description": "Valid prompt should NOT be filtered"
+        }
+      ]
+    },
+
+    "git-commit-enforcement": {
+      "description": "Tests git-commit-enforcer hook behavior",
+      "expected_activation_rate": 1.0,
+      "timeout_seconds": 10,
+      "tests": [
+        {
+          "id": "gce-001",
+          "prompt": "Create a new file src/test.txt with content hello world",
+          "expected_outcome": "commit_suggested",
+          "description": "New file should suggest commit"
+        },
+        {
+          "id": "gce-002",
+          "prompt": "Modify an existing Python file",
+          "expected_outcome": "commit_suggested",
+          "description": "Modified file should suggest commit"
+        }
+      ]
+    },
+
+    "docs-change-enforcement": {
+      "description": "Tests docs-change-enforcer hook behavior",
+      "expected_activation_rate": 1.0,
+      "timeout_seconds": 10,
+      "tests": [
+        {
+          "id": "dce-001",
+          "prompt": "Create a new skill in .claude/skills/my-skill/SKILL.md",
+          "expected_outcome": "docs_required",
+          "description": "New skill should require documentation"
+        },
+        {
+          "id": "dce-002",
+          "prompt": "Update settings.json to add a new hook",
+          "expected_outcome": "docs_not_required",
+          "description": "Settings change should not require docs in SKIP_PATTERNS"
+        },
+        {
+          "id": "dce-003",
+          "prompt": "Modify .claude/hooks/.ralph_wiggum_count",
+          "expected_outcome": "docs_not_required",
+          "description": "Ralph file should be in SKIP_PATTERNS"
+        }
+      ]
+    }
+  },
+
+  "metadata": {
+    "total_tests": 40,
+    "suites_count": 5,
+    "reference": "GAP_P5_HOOK_OBSERVABILITY.md Phase 8"
+  }
+}

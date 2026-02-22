@@ -13,7 +13,9 @@ Used by:
 Entry format:
   {"ts":"ISO","hook":"SkillRouter","event":"UserPromptSubmit",
    "tool":null,"elapsed_ms":45,"outcome":"message",
-   "session":"abc123","error":null}
+   "session":"abc123","agent_id":"xyz789","error":null}
+
+Phase 7: Added agent_id for subagent monitoring.
 
 Based on task_master.py patterns: graceful degradation, never block.
 """
@@ -69,6 +71,7 @@ def log_invocation(
     outcome: str = "allow",
     session_id: str = "",
     error: Optional[str] = None,
+    agent_id: str = "",  # Phase 7: Subagent monitoring
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -80,6 +83,7 @@ def log_invocation(
         outcome: Result — one of: allow, block, message, error
         session_id: Claude Code session ID (from stdin JSON)
         error: Error message if outcome is "error"
+        agent_id: Subagent ID (for subagent monitoring, Phase 7)
     """
     try:
         filepath = _get_log_file()
@@ -95,6 +99,7 @@ def log_invocation(
             "outcome": outcome,
             "session": session_id or "",
             "error": error,
+            "agent_id": agent_id,  # Phase 7
         }
 
         line = json.dumps(entry, ensure_ascii=False) + "\n"
@@ -112,6 +117,8 @@ class InvocationTimer:
         timer.start()
         # ... hook logic ...
         timer.log(outcome="block", error=None)
+
+    Phase 7: Added agent_id for subagent monitoring.
     """
 
     def __init__(self, hook: str, event: Optional[str] = None):
@@ -119,6 +126,7 @@ class InvocationTimer:
         self.event = event
         self.tool: Optional[str] = None
         self.session_id: str = ""
+        self.agent_id: str = ""  # Phase 7
         self._start: float = 0.0
 
     def start(self) -> "InvocationTimer":
@@ -137,4 +145,5 @@ class InvocationTimer:
             outcome=outcome,
             session_id=self.session_id,
             error=error,
+            agent_id=self.agent_id,  # Phase 7
         )

@@ -1,0 +1,49 @@
+{
+  "_comment": "Subagent-safe settings (Phase 7). Reduced hook set to prevent infinite loops when subagents are running.",
+  "_version": "1.0.0",
+  "_reference": "GAP_P5_HOOK_OBSERVABILITY.md Phase 7",
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "name": "skill-router",
+        "command": [
+          "python",
+          "-u",
+          ".claude/hooks/skill-router.py"
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "name": "invocation-logger",
+        "command": [
+          "python",
+          "-u",
+          ".claude/hooks/base/invocation_logger_hook.py"
+        ]
+      }
+    ],
+    "PostToolUse": [],
+    "Stop": []
+  },
+
+  "agentMode": true,
+  "disableLoopingHooks": true,
+
+  "disabledHooks": [
+    "auto-git-save",
+    "auto-git-save-prompt",
+    "git-commit-enforcer",
+    "docs-change-enforcer",
+    "task-enforcer",
+    "ralph-wiggum-stop"
+  ],
+
+  "monitoring": {
+    "enabled": true,
+    "logAgentInvocations": true,
+    "agentPrefix": "agent:",
+    "trackAgentId": true
+  }
+}
