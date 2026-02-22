@@ -131,7 +131,9 @@
       "Bash(git -C \"D:/1С-Framework\" log --oneline -10 --name-only)",
       "Bash(git -C \"D:/1С-Framework\" diff --stat)",
       "Bash(git -C \"D:/1С-Framework\" show --stat db88959)",
-      "Bash(git -C \"D:/1С-Framework\" show --stat 039c8ff)"
+      "Bash(git -C \"D:/1С-Framework\" show --stat 039c8ff)",
+      "Bash(git -C \"D:/1С-Framework\" add \"docs/framework documentation/04_ПОИСК/04.2_Hybrid_Search.md\")",
+      "Bash(git -C \"D:/1С-Framework\" commit -m \"$\\(cat <<''EOF''\ndocs: add fault tolerance section to Hybrid Search documentation\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,

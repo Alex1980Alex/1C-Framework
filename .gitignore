@@ -56,4 +56,5 @@ temp_*.txt
 
 # Hook shared state (regenerated at runtime, never commit)
 .claude/cache/
+.claude/hooks/cache/
 test_all_phases_results.json
