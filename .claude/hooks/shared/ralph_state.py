@@ -134,6 +134,39 @@ def is_stale() -> bool:
         return False
 
 
+# ── Stop-lock: prevent cascade where ralph_wiggum_stop triggers
+#    auto-git-save → git-commit-enforcer → block → commit → ralph again ──
+
+def _stop_lock_file() -> Path:
+    return _get_state_dir() / ".ralph_stop_lock"
+
+
+def is_stop_running() -> bool:
+    """Check if stop hook is currently executing (prevent cascade)."""
+    lock = _stop_lock_file()
+    if not lock.exists():
+        return False
+    try:
+        import time
+        age = time.time() - lock.stat().st_mtime
+        return age < 30  # Stale after 30s
+    except OSError:
+        return False
+
+
+def set_stop_running() -> None:
+    """Mark stop hook as running."""
+    _stop_lock_file().write_text(str(os.getpid()), encoding="utf-8")
+
+
+def clear_stop_running() -> None:
+    """Clear stop hook running flag."""
+    try:
+        _stop_lock_file().unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def _atomic_write_json(path: Path, data: dict) -> None:
     """Write JSON atomically via temp file + rename."""
     path.parent.mkdir(parents=True, exist_ok=True)
