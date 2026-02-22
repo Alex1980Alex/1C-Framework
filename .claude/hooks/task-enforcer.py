@@ -64,7 +64,7 @@ def sync_git_tasks_with_status(data: dict) -> int:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             cwd=str(PROJECT_ROOT),
-            capture_output=True, text=True, timeout=3,
+            capture_output=True, text=True, encoding="utf-8", timeout=3,
         )
         if result.returncode != 0:
             return 0

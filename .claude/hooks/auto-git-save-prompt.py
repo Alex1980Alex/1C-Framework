@@ -105,7 +105,7 @@ def _get_uncommitted_tracked_files() -> list[str]:
     try:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, timeout=3,
+            capture_output=True, text=True, encoding="utf-8", timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode != 0:
@@ -137,7 +137,7 @@ def _auto_commit(files: list[str]) -> dict:
             try:
                 r = subprocess.run(
                     ["git", "add", "--", fp],
-                    timeout=3, capture_output=True, text=True,
+                    timeout=3, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(PROJECT_ROOT),
                 )
                 if r.returncode == 0:
@@ -152,7 +152,7 @@ def _auto_commit(files: list[str]) -> dict:
         msg = f"chore: auto-commit {staged} file(s) changed"
         commit = subprocess.run(
             ["git", "commit", "-m", msg],
-            timeout=10, capture_output=True, text=True,
+            timeout=10, capture_output=True, text=True, encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
 
