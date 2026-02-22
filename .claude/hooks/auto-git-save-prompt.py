@@ -35,6 +35,11 @@ import time
 from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
+sys.path.insert(0, _HOOK_DIR)
+
 PROJECT_ROOT = Path(_HOOK_DIR).resolve().parent.parent
 
 # --- Configuration (same as auto-git-save.py) ---
