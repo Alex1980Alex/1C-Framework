@@ -11,7 +11,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:claudeSelect.sendToTerminal"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
