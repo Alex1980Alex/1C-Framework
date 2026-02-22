@@ -143,8 +143,20 @@ def main():
         set_stop_running, clear_stop_running,
     )
 
+    # Invocation timer
+    try:
+        from shared.invocation_logger import InvocationTimer
+        timer = InvocationTimer("ralph-wiggum-stop", event="Stop").start()
+    except Exception:
+        timer = None
+
+    def _log(outcome, error=None):
+        if timer:
+            timer.log(outcome=outcome, error=error)
+
     # 1. Not active → allow stop
     if not is_active():
+        _log("allow")
         sys.exit(0)
 
     # Prevent cascade: signal other hooks that stop is running
