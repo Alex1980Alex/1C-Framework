@@ -23,6 +23,11 @@ data/
 *.swp
 *.swo
 
+# VS Code extensions build artifacts
+.vscode-extensions/*/node_modules/
+.vscode-extensions/*/*.vsix
+.vscode-extensions/*/package-lock.json
+
 # OS
 .DS_Store
 Thumbs.db
