@@ -279,3 +279,53 @@ Phase 1 (P0) ──→ Phase 2 (P0) ──→ Phase 4 (P1) ──→ Phase 8 (P3
 ### Stop Hook Loop Prevention
 - [severity1/claude-code-auto-memory](https://github.com/severity1/claude-code-auto-memory) — `stop_hook_active` flag
 - [Issue #10205](https://github.com/anthropics/claude-code/issues/10205) — `blocking?: false` default
+
+---
+
+## Следующие шаги (Next Steps)
+
+### 🔜 Phase 5: Streamlit Real-time Dashboard (P2)
+
+**Зависимости:** Phase 3, 4 ✅
+
+**Задачи:**
+1. `src/pdf_framework/observability/hook_metrics_db.py` — SQLite ingest из JSONL
+2. `src/ui/pages/hook_dashboard.py` — Streamlit страница с:
+   - Timeline invocations
+   - Activation gauge
+   - Latency charts
+   - Error log
+   - Session history
+
+**Команда запуска:** `streamlit run src/ui/pages/hook_dashboard.py`
+
+---
+
+### 🔜 Phase 8: Sandboxed Evaluation Framework (P3)
+
+**Зависимости:** Phase 2, 4 ✅
+
+**Задачи:**
+1. `scripts/eval-hooks.py` — eval runner с тестовыми сюитами:
+   - `skill-activation`: 20 промптов, измеряет % Skill() вызовов
+   - `stop-hook-safety`: симуляция ralph loop
+   - `ide-filtering`: 10 IDE events, проверка 0% false routing
+2. `tests/eval/hook_prompts.json` — фиксированные test prompts
+
+**Команда запуска:** `python scripts/eval-hooks.py --suite skill-activation`
+
+---
+
+### Мониторинг Activation Rate
+
+Для измерения эффективности Phase 2 (skill-eval-enforcer-shell):
+
+```bash
+# Текущий activation rate (исторический)
+python scripts/hook-dashboard.py --period all --section skills
+
+# Мониторинг новых сессий (через неделю после Phase 2)
+python scripts/hook-dashboard.py --period 7d
+```
+
+**Ожидаемый результат:** рост с 1.7% → 80%+ после недели использования shell-output версии.
