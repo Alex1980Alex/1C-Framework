@@ -43,12 +43,13 @@ description: "Используй этот скилл для понимания �
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
 
-#### Stop (3)
+#### Stop (4)
 
 | Hook | Назначение |
 |------|-----------|
 | `task-enforcer.py` | Блокировка без выполнения mandatory задач |
 | `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
+| `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
 
 ### Skills (47 шт.) — КАК / ЧТО
