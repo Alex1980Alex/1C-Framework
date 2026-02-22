@@ -1,0 +1,31 @@
+{
+  "todos": [
+    {
+      "id": "doc-eval-framework-1771788650",
+      "content": "ќбновить документацию Phase 8 (Eval Framework) в docs/claude/ или create README",
+      "status": "pending",
+      "activeForm": "ќбновл€ю документацию Eval Framework",
+      "createdAt": "2026-02-22T22:30:00",
+      "priority": "low",
+      "tags": [
+        "documentation",
+        "phase-8",
+        "observability"
+      ]
+    },
+    {
+      "id": "doc-streamlit-phase5-1771788873",
+      "content": "ќбновить документацию Phase 5 (Streamlit Dashboard) - добавить README или инструкции",
+      "status": "pending",
+      "activeForm": "ќбновл€ю документацию Streamlit Dashboard",
+      "createdAt": "2026-02-22T22:35:00",
+      "priority": "low",
+      "tags": [
+        "documentation",
+        "phase-5",
+        "streamlit",
+        "observability"
+      ]
+    }
+  ]
+}

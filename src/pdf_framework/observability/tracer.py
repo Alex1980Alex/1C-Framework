@@ -396,6 +396,158 @@ class NoOpTracer(BaseTracer):
         pass
 
 
+class HookTracer(BaseTracer):
+    """
+    Tracer for Claude Code hook observability (Phase 6).
+
+    Integrates with OpenTelemetry-compatible backends via OTLP exporter.
+    Provides distributed tracing for hook invocations with span hierarchy.
+
+    Usage:
+        from pdf_framework.observability.tracer import HookTracer
+
+        tracer = HookTracer(service_name="claude-hooks")
+
+        with tracer.span("SkillRouter", event="UserPromptSubmit"):
+            # ... hook logic ...
+            pass
+
+    Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 6
+    """
+
+    def __init__(
+        self,
+        service_name: str = "claude-hooks",
+        endpoint: str | None = None,
+        enabled: bool = True,
+    ):
+        """
+        Initialize hook tracer.
+
+        Args:
+            service_name: Service name for traces
+            endpoint: OTLP endpoint (auto-detected from env if None)
+            enabled: Whether tracing is active
+        """
+        self._service_name = service_name
+        self._enabled = enabled and self._check_dependencies()
+
+        # Lazy load OTLP exporter
+        self._exporter = None
+        self._endpoint = endpoint
+
+    def _check_dependencies(self) -> bool:
+        """Check if OTLP dependencies are available."""
+        try:
+            # Try to import OTLP exporter
+            import sys
+            from pathlib import Path
+
+            # Add hooks dir to path
+            hooks_dir = Path(__file__).resolve().parent.parent.parent.parent / ".claude" / "hooks"
+            if hooks_dir.exists():
+                sys.path.insert(0, str(hooks_dir))
+
+            from shared.otel_exporter import configure_exporter
+            return True
+        except ImportError:
+            logger.debug("[TRACE] OTLP exporter not available, hook tracing disabled")
+            return False
+
+    def _get_exporter(self):
+        """Lazy load OTLP exporter."""
+        if self._exporter is None and self._enabled:
+            import sys
+            from pathlib import Path
+
+            hooks_dir = Path(__file__).resolve().parent.parent.parent.parent / ".claude" / "hooks"
+            if hooks_dir.exists():
+                sys.path.insert(0, str(hooks_dir))
+
+            from shared.otel_exporter import configure_exporter
+            self._exporter = configure_exporter(
+                endpoint=self._endpoint,
+                service_name=self._service_name,
+            )
+
+        return self._exporter
+
+    def start_span(self, name: str, attributes: dict | None = None) -> Span:
+        """Start a new hook trace span."""
+        if not self._enabled:
+            return Span(name=name, attributes=attributes or {})
+
+        exporter = self._get_exporter()
+        if exporter is None:
+            return Span(name=name, attributes=attributes or {})
+
+        # Create span via OTLP exporter
+        return exporter.start_span(name, **(attributes or {}))
+
+    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+        """End a hook trace span and export it."""
+        if not self._enabled:
+            return
+
+        exporter = self._get_exporter()
+        if exporter is None:
+            return
+
+        # End span via OTLP exporter
+        exporter.end_span(
+            span,
+            status="error" if status == SpanStatus.ERROR else "ok",
+            error=error,
+        )
+
+    def flush(self) -> None:
+        """Flush pending traces."""
+        if self._enabled:
+            exporter = self._get_exporter()
+            if exporter:
+                exporter.shutdown()
+
+    def log_invocation(
+        self,
+        hook: str,
+        event: str | None = None,
+        tool: str | None = None,
+        elapsed_ms: int = 0,
+        outcome: str = "allow",
+        session_id: str = "",
+        error: str | None = None,
+    ) -> None:
+        """
+        Log hook invocation (compatible with invocation_logger API).
+
+        Usage:
+            tracer = HookTracer()
+            tracer.log_invocation(
+                hook="SkillRouter",
+                event="UserPromptSubmit",
+                elapsed_ms=45,
+                outcome="message",
+                session_id="abc123",
+            )
+        """
+        attributes = {
+            "hook.name": hook,
+            "hook.outcome": outcome,
+            "hook.elapsed_ms": elapsed_ms,
+        }
+
+        if event:
+            attributes["hook.event"] = event
+        if tool:
+            attributes["hook.tool"] = tool
+        if session_id:
+            attributes["session.id"] = session_id
+
+        with self.span(f"hook.{hook}", **attributes):
+            if error:
+                raise Exception(error)
+
+
 class MetricsCollector:
     """
     Lightweight metrics collector for dashboards.

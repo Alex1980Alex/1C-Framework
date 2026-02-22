@@ -1,0 +1,470 @@
+"""Hook Metrics SQLite Database - Phase 5 (Streamlit Dashboard).
+
+Ingests hook invocation JSONL logs into SQLite for real-time dashboard queries.
+
+Usage:
+    from src.pdf_framework.observability.hook_metrics_db import HookMetricsDB
+
+    db = HookMetricsDB()
+    db.ingest_from_logs()  # Load data from JSONL files
+
+    # Query APIs
+    recent = db.get_recent_invocations(limit=100)
+    metrics = db.get_hook_metrics(hours=24)
+    skills = db.get_skill_metrics(hours=24)
+
+Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 5
+"""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+import threading
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+# --- Path resolution ---
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
+DATA_DIR = PROJECT_ROOT / "data"
+DB_FILE = DATA_DIR / "hook-metrics.db"
+
+INVOCATIONS_LOG = DATA_DIR / "hook-invocations.jsonl"
+SKILL_ROUTER_LOG = DATA_DIR / "skill-router.log"
+SKILL_USAGE_LOG = DATA_DIR / "skill-usage.log"
+
+# --- Schema ---
+
+SCHEMA = """
+-- Hook invocations from hook-invocations.jsonl
+CREATE TABLE IF NOT EXISTS invocations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    hook TEXT NOT NULL,
+    event TEXT,
+    tool TEXT,
+    elapsed_ms INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    session TEXT,
+    error TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for time-series queries
+CREATE INDEX IF NOT EXISTS idx_invocations_timestamp ON invocations(timestamp);
+CREATE INDEX IF NOT EXISTS idx_invocations_hook ON invocations(hook);
+CREATE INDEX IF NOT EXISTS idx_invocations_session ON invocations(session);
+
+-- Skill recommendations from skill-router.log
+CREATE TABLE IF NOT EXISTS skill_recommendations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    skills TEXT NOT NULL,
+    session TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_skill_rec_timestamp ON skill_recommendations(timestamp);
+
+-- Skill activations from skill-usage.log
+CREATE TABLE IF NOT EXISTS skill_activations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    skill TEXT NOT NULL,
+    session TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_skill_act_timestamp ON skill_activations(timestamp);
+CREATE INDEX IF NOT EXISTS idx_skill_act_skill ON skill_activations(skill);
+"""
+
+
+class HookMetricsDB:
+    """SQLite database for hook metrics with thread-safe operations."""
+
+    def __init__(self, db_path: Path | None = None):
+        """Initialize database connection.
+
+        Args:
+            db_path: Custom database path (default: data/hook-metrics.db)
+        """
+        self._db_path = db_path or DB_FILE
+        self._local = threading.local()
+        self._init_db()
+
+    def _get_conn(self) -> sqlite3.Connection:
+        """Get thread-local database connection."""
+        if not hasattr(self._local, "conn"):
+            self._local.conn = sqlite3.connect(
+                self._db_path,
+                check_same_thread=False,
+            )
+            self._local.conn.row_factory = sqlite3.Row
+        return self._local.conn
+
+    def _init_db(self) -> None:
+        """Initialize database schema."""
+        conn = self._get_conn()
+        conn.executescript(SCHEMA)
+        conn.commit()
+
+    def ingest_from_logs(self) -> dict[str, int]:
+        """Ingest data from all JSONL/log files.
+
+        Returns:
+            Dict with counts of ingested records per source.
+        """
+        return {
+            "invocations": self._ingest_invocations(),
+            "recommendations": self._ingest_skill_router(),
+            "activations": self._ingest_skill_usage(),
+        }
+
+    def _ingest_invocations(self) -> int:
+        """Ingest hook-invocations.jsonl into database."""
+        if not INVOCATIONS_LOG.exists():
+            return 0
+
+        conn = self._get_conn()
+        cursor = conn.cursor()
+
+        # Get last timestamp to avoid re-ingesting
+        last_ts = cursor.execute(
+            "SELECT MAX(timestamp) FROM invocations"
+        ).fetchone()[0]
+
+        count = 0
+        try:
+            with open(INVOCATIONS_LOG, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    try:
+                        entry = json.loads(line)
+                        ts = entry.get("ts")
+
+                        # Skip if already ingested
+                        if last_ts and ts <= last_ts:
+                            continue
+
+                        cursor.execute(
+                            """INSERT INTO invocations
+                               (timestamp, hook, event, tool, elapsed_ms, outcome, session, error)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (
+                                ts,
+                                entry.get("hook"),
+                                entry.get("event"),
+                                entry.get("tool"),
+                                entry.get("elapsed_ms", 0),
+                                entry.get("outcome", "allow"),
+                                entry.get("session"),
+                                entry.get("error"),
+                            ),
+                        )
+                        count += 1
+                    except (json.JSONDecodeError, KeyError):
+                        continue
+        except OSError:
+            return 0
+
+        conn.commit()
+        return count
+
+    def _ingest_skill_router(self) -> int:
+        """Ingest skill-router.log (pipe-delimited)."""
+        if not SKILL_ROUTER_LOG.exists():
+            return 0
+
+        conn = self._get_conn()
+        cursor = conn.cursor()
+
+        last_ts = cursor.execute(
+            "SELECT MAX(timestamp) FROM skill_recommendations"
+        ).fetchone()[0]
+
+        count = 0
+        try:
+            with open(SKILL_ROUTER_LOG, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    try:
+                        parts = line.split(" | ")
+                        ts_str = parts[0].strip()
+                        ts = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").isoformat()
+
+                        if last_ts and ts <= last_ts:
+                            continue
+
+                        skills = ""
+                        session = ""
+                        for part in parts[1:]:
+                            if "=" in part:
+                                k, v = part.split("=", 1)
+                                if k.strip() == "skills":
+                                    skills = v.strip()
+                                elif k.strip() == "session":
+                                    session = v.strip()
+
+                        if skills:
+                            cursor.execute(
+                                """INSERT INTO skill_recommendations
+                                   (timestamp, skills, session)
+                                   VALUES (?, ?, ?)""",
+                                (ts, skills, session),
+                            )
+                            count += 1
+                    except (ValueError, IndexError):
+                        continue
+        except OSError:
+            return 0
+
+        conn.commit()
+        return count
+
+    def _ingest_skill_usage(self) -> int:
+        """Ingest skill-usage.log (pipe-delimited)."""
+        if not SKILL_USAGE_LOG.exists():
+            return 0
+
+        conn = self._get_conn()
+        cursor = conn.cursor()
+
+        last_ts = cursor.execute(
+            "SELECT MAX(timestamp) FROM skill_activations"
+        ).fetchone()[0]
+
+        count = 0
+        try:
+            with open(SKILL_USAGE_LOG, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    try:
+                        parts = line.split(" | ")
+                        ts_str = parts[0].strip()
+                        ts = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").isoformat()
+
+                        if last_ts and ts <= last_ts:
+                            continue
+
+                        skill = ""
+                        session = ""
+                        for part in parts[1:]:
+                            if "=" in part:
+                                k, v = part.split("=", 1)
+                                if k.strip() == "skill":
+                                    skill = v.strip()
+                                elif k.strip() == "session":
+                                    session = v.strip()
+
+                        if skill:
+                            cursor.execute(
+                                """INSERT INTO skill_activations
+                                   (timestamp, skill, session)
+                                   VALUES (?, ?, ?)""",
+                                (ts, skill, session),
+                            )
+                            count += 1
+                    except (ValueError, IndexError):
+                        continue
+        except OSError:
+            return 0
+
+        conn.commit()
+        return count
+
+    # --- Query APIs ---
+
+    def get_recent_invocations(self, limit: int = 100) -> list[dict[str, Any]]:
+        """Get recent hook invocations.
+
+        Args:
+            limit: Maximum number of records to return.
+
+        Returns:
+            List of invocation dicts.
+        """
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """SELECT * FROM invocations
+               ORDER BY timestamp DESC
+               LIMIT ?""",
+            (limit,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def get_hook_metrics(self, hours: int = 24) -> list[dict[str, Any]]:
+        """Get per-hook metrics for time period.
+
+        Args:
+            hours: Number of hours to look back.
+
+        Returns:
+            List of dicts with hook metrics.
+        """
+        cutoff = (datetime.now() - timedelta(hours=hours)).isoformat()
+
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """SELECT
+                   hook,
+                   COUNT(*) as count,
+                   AVG(elapsed_ms) as avg_ms,
+                   MAX(elapsed_ms) as max_ms,
+                   SUM(CASE WHEN outcome = 'block' THEN 1 ELSE 0 END) as blocks,
+                   SUM(CASE WHEN error IS NOT NULL THEN 1 ELSE 0 END) as errors
+               FROM invocations
+               WHERE timestamp >= ?
+               GROUP BY hook
+               ORDER BY count DESC""",
+            (cutoff,),
+        )
+
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                "hook": row["hook"],
+                "count": row["count"],
+                "avg_ms": round(row["avg_ms"] or 0, 1),
+                "max_ms": row["max_ms"] or 0,
+                "blocks": row["blocks"],
+                "errors": row["errors"],
+            })
+        return results
+
+    def get_skill_metrics(self, hours: int = 24) -> dict[str, Any]:
+        """Get skill activation metrics.
+
+        Args:
+            hours: Number of hours to look back.
+
+        Returns:
+            Dict with skill metrics including activation rate.
+        """
+        cutoff = (datetime.now() - timedelta(hours=hours)).isoformat()
+        cursor = self._get_conn().cursor()
+
+        # Count recommendations
+        cursor.execute(
+            """SELECT skills FROM skill_recommendations
+               WHERE timestamp >= ?""",
+            (cutoff,),
+        )
+        recommended = {}
+        for row in cursor.fetchall():
+            for skill in row["skills"].split(","):
+                skill = skill.strip()
+                if skill:
+                    recommended[skill] = recommended.get(skill, 0) + 1
+
+        # Count activations
+        cursor.execute(
+            """SELECT skill, COUNT(*) as count FROM skill_activations
+               WHERE timestamp >= ?
+               GROUP BY skill""",
+            (cutoff,),
+        )
+        activated = {row["skill"]: row["count"] for row in cursor.fetchall()}
+
+        total_recommended = sum(recommended.values())
+        total_activated = sum(activated.values())
+
+        return {
+            "total_recommended": total_recommended,
+            "total_activated": total_activated,
+            "activation_rate": (
+                (total_activated / total_recommended * 100) if total_recommended > 0 else 0.0
+            ),
+            "per_skill": {
+                skill: {
+                    "recommended": recommended.get(skill, 0),
+                    "activated": activated.get(skill, 0),
+                    "rate": (
+                        (activated.get(skill, 0) / recommended[skill] * 100)
+                        if skill in recommended and recommended[skill] > 0
+                        else 0.0
+                    ),
+                }
+                for skill in set(list(recommended.keys()) + list(activated.keys()))
+            },
+        }
+
+    def get_session_history(self, limit: int = 20) -> list[dict[str, Any]]:
+        """Get recent sessions with invocation counts.
+
+        Args:
+            limit: Maximum number of sessions.
+
+        Returns:
+            List of session dicts.
+        """
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """SELECT
+                   session,
+                   MIN(timestamp) as first_seen,
+                   MAX(timestamp) as last_seen,
+                   COUNT(*) as invocations,
+                   COUNT(DISTINCT hook) as hooks
+               FROM invocations
+               WHERE session IS NOT NULL AND session != ''
+               GROUP BY session
+               ORDER BY last_seen DESC
+               LIMIT ?""",
+            (limit,),
+        )
+
+        results = []
+        for row in cursor.fetchall():
+            # Calculate duration
+            try:
+                first = datetime.fromisoformat(row["first_seen"])
+                last = datetime.fromisoformat(row["last_seen"])
+                duration_min = round((last - first).total_seconds() / 60, 1)
+            except (ValueError, TypeError):
+                duration_min = 0
+
+            results.append({
+                "session": row["session"][:12] + "...",
+                "full_session": row["session"],
+                "invocations": row["invocations"],
+                "hooks": row["hooks"],
+                "duration_min": duration_min,
+            })
+        return results
+
+    def get_error_log(self, limit: int = 50) -> list[dict[str, Any]]:
+        """Get recent error entries.
+
+        Args:
+            limit: Maximum number of errors.
+
+        Returns:
+            List of error dicts.
+        """
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """SELECT * FROM invocations
+               WHERE error IS NOT NULL
+               ORDER BY timestamp DESC
+               LIMIT ?""",
+            (limit,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def close(self) -> None:
+        """Close database connection."""
+        if hasattr(self._local, "conn"):
+            self._local.conn.close()
+            delattr(self._local, "conn")
