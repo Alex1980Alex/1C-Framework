@@ -31,6 +31,13 @@ HOOKS_DIR = PROJECT_ROOT / ".claude" / "hooks"
 PYTHON = str(PROJECT_ROOT / ".venv" / "Scripts" / "python.exe")
 INVOCATIONS_LOG = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 
+# Fix console encoding on Windows (cp1251 can't handle emojis)
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # Colors for terminal output
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -392,6 +399,8 @@ def test_post_tool_use_empty_result(verbose: bool) -> TestResult:
     }
 
     r = run_hook("auto-git-save.py", stdin, timeout=15)
+    result.exit_code = r.exit_code
+    result.duration_ms = r.duration_ms
 
     if r.exit_code is not None and r.exit_code == 0:
         result.passed = True
