@@ -51,10 +51,11 @@
 
 ---
 
-## Phase 2: Skill Activation Fix (P0)
+## Phase 2: Skill Activation Fix (P0) ✅ COMPLETED
 
 **Цель:** Поднять activation rate с 6% до 80%+
 **Зависимости:** Phase 1
+**Дата завершения:** 2026-02-22
 
 ### Архитектурное решение
 
