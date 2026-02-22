@@ -228,16 +228,22 @@ Activation rate:     1.7% (исторический — Phase 2 shell fix дол
 
 ## Сводка
 
-| Фаза | Цель | Приоритет | Файлов |
-|------|------|-----------|--------|
-| **1** | Stop-loop fix, .gitignore, IDE filtering | **P0** | 7 modify |
-| **2** | Skill activation 6%→80%+ | **P0** | 2 new, 3 modify |
-| **3** | Hook invocation JSONL logging | **P1** | 1 new, 5 modify |
-| **4** | CLI activation dashboard | **P1** | 1 new |
-| **5** | Streamlit real-time dashboard | **P2** | 2 new |
-| **6** | OpenTelemetry / Langfuse tracing | **P2** | 1 new, 1 modify |
-| **7** | Subagent monitoring | **P2** | 2 new, 1 modify |
-| **8** | Sandboxed eval framework | **P3** | 2 new |
+| Фаза | Цель | Приоритет | Статус | Файлов |
+|------|------|-----------|--------|--------|
+| **1** | Stop-loop fix, .gitignore, IDE filtering | **P0** | ✅ | 7 modify |
+| **2** | Skill activation 6%→80%+ | **P0** | ✅ | 2 new, 3 modify |
+| **3** | Hook invocation JSONL logging | **P1** | ✅ | 1 new, 8 modify |
+| **4** | CLI activation dashboard | **P1** | ✅ | 1 new |
+| **5** | Streamlit real-time dashboard | **P2** | 🔜 | 2 new |
+| **6** | OpenTelemetry / Langfuse tracing | **P2** | — | 1 new, 1 modify |
+| **7** | Subagent monitoring | **P2** | — | 2 new, 1 modify |
+| **8** | Sandboxed eval framework | **P3** | — | 2 new |
+
+**Порядок выполнения:**
+```
+Phase 1 (P0) ✅ ──→ Phase 2 (P0) ✅ ──→ Phase 4 (P1) ✅ ──→ Phase 8 (P3) 🔜
+             └──→ Phase 3 (P1) ✅ ──→ Phase 5 (P2) 🔜 ──→ Phase 6 (P2) ──→ Phase 7 (P2)
+```
 
 **Порядок выполнения:**
 ```
