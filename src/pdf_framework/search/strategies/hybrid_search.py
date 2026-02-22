@@ -73,6 +73,7 @@ class HybridSearchStrategy:
         **kwargs: Any,
     ) -> SearchResponse:
         """Execute search — native Qdrant BM25 path or classic parallel path."""
+        _ = kwargs  # reserved for future strategy-specific params
         start = time.perf_counter()
 
         if self._use_native_bm25():
