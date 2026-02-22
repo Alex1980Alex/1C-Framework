@@ -27,7 +27,16 @@
         "key": "ctrl+shift+l",
         "when": "editorTextFocus"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "claudeSelect.sendToTerminal",
+          "when": "editorHasSelection",
+          "group": "claude@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "compile": "tsc -p ./",
