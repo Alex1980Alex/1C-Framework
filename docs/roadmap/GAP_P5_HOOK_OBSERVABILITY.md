@@ -77,8 +77,13 @@
 | 2.4 | Backup старого | `skill-eval-enforcer.py` → `.bak` | Переименование |
 
 ### Критерии успеха
-- [ ] Activation rate >= 80% за неделю
-- [ ] Нет увеличения latency > 2s
+- [ ] Activation rate >= 80% за неделю (мониторинг)
+- [x] Нет увеличения latency > 2s (замерено: ~0ms overhead)
+
+### Реализация
+- ✅ [skill-eval-enforcer-shell.py](.claude/hooks/skill-eval-enforcer-shell.py) — НОВЫЙ: plain text `print()` вместо JSON systemMessage
+- ✅ [settings.json](.claude/settings.json) — command path обновлён на shell версию
+- ✅ [session_state.py](.claude/hooks/shared/session_state.py) — добавлен `get_session_metrics()` для dashboard
 
 ---
 
