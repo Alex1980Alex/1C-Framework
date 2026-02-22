@@ -140,11 +140,15 @@ def main():
     from shared.ralph_state import (
         is_active, is_stale, deactivate,
         increment_iteration, get_max_iterations, get_criteria,
+        set_stop_running, clear_stop_running,
     )
 
     # 1. Not active → allow stop
     if not is_active():
         sys.exit(0)
+
+    # Prevent cascade: signal other hooks that stop is running
+    set_stop_running()
 
     # Read hook input
     try:
