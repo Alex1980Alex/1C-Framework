@@ -110,9 +110,19 @@
 | 3.3 | Logging в 4 stop hooks | ralph_wiggum_stop, git-commit-enforcer, docs-change-enforcer, task-enforcer |
 
 ### Критерии успеха
-- [ ] Все 20 хуков записывают invocations
-- [ ] Overhead < 5ms per invocation
-- [ ] Log rotation при 10MB
+- [x] Все 21 хук записывают invocations (15 BaseHook + 6 standalone)
+- [x] Overhead < 5ms per invocation (замерено: ~0-3ms)
+- [x] Log rotation при 10MB
+
+### Реализация
+- ✅ [invocation_logger.py](.claude/hooks/shared/invocation_logger.py) — НОВЫЙ: JSONL logger с 10MB rotation
+- ✅ [protocol.py](.claude/hooks/base/protocol.py) — `detected_event` property + auto-logging в `BaseHook.run()`
+- ✅ [git-commit-enforcer.py](.claude/hooks/git-commit-enforcer.py) — InvocationTimer
+- ✅ [docs-change-enforcer.py](.claude/hooks/docs-change-enforcer.py) — InvocationTimer
+- ✅ [task-enforcer.py](.claude/hooks/task-enforcer.py) — InvocationTimer
+- ✅ [ralph_wiggum_stop.py](.claude/hooks/ralph_wiggum_stop.py) — InvocationTimer (в `__main__`)
+- ✅ [auto-git-save-prompt.py](.claude/hooks/auto-git-save-prompt.py) — InvocationTimer
+- ✅ [skill-eval-enforcer-shell.py](.claude/hooks/skill-eval-enforcer-shell.py) — InvocationTimer
 
 ---
 
