@@ -148,7 +148,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\ralph_wiggum_stop.py",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/ralph_wiggum_stop.py",
             "timeout": 5
           },
           {
