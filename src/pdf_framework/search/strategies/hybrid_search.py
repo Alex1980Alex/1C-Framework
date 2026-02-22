@@ -174,14 +174,28 @@ class HybridSearchStrategy:
 
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-        vector_results = responses[0].results if not isinstance(responses[0], Exception) else []
-        graph_results = responses[1].results if not isinstance(responses[1], Exception) else []
-        bm25_results = []
+        raw_vector = responses[0]
+        raw_graph = responses[1]
+
+        if isinstance(raw_vector, BaseException):
+            logger.warning("[HYBRID] Vector search failed: %s", raw_vector)
+            vector_results: list[SearchResult] = []
+        else:
+            vector_results = raw_vector.results
+
+        if isinstance(raw_graph, BaseException):
+            logger.warning("[HYBRID] Graph search failed: %s", raw_graph)
+            graph_results: list[SearchResult] = []
+        else:
+            graph_results = raw_graph.results
+
+        bm25_results: list[SearchResult] = []
         if self._bm25 is not None and len(responses) > 2:
-            if not isinstance(responses[2], Exception):
-                bm25_results = responses[2].results
+            raw_bm25 = responses[2]
+            if isinstance(raw_bm25, BaseException):
+                logger.warning("[HYBRID] BM25 search failed: %s", raw_bm25)
             else:
-                logger.warning("[HYBRID] BM25 search failed: %s", responses[2])
+                bm25_results = raw_bm25.results
 
         return self._rrf_merge(
             vector_results=vector_results,
