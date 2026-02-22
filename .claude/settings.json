@@ -8,7 +8,7 @@
       "WebFetch",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\":*)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \":*)",
-      "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\" \"D:\\\\1С-Framework\\\\.claude\\\\hooks\\\\skill-router.py\")",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/skill-router.py\")",
       "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\":*)",
       "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\" -c \"from pathlib import Path; import json; p = Path\\(''D:/1С-Framework/.claude/cache/session-skills.json''\\); print\\(json.dumps\\(json.loads\\(p.read_text\\(''utf-8''\\)\\), indent=2, ensure_ascii=False\\)\\)\")"
     ],
