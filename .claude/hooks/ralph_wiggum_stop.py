@@ -237,13 +237,31 @@ def main():
 
 
 if __name__ == "__main__":
+    _timer = None
+    try:
+        from shared.invocation_logger import InvocationTimer
+        _timer = InvocationTimer("ralph-wiggum-stop", event="Stop").start()
+    except Exception:
+        pass
+
+    _exit_code = 0
     try:
         main()
+    except SystemExit as e:
+        _exit_code = e.code if e.code is not None else 0
     except Exception:
-        sys.exit(0)  # Graceful degradation
-    finally:
-        try:
-            from shared.ralph_state import clear_stop_running
-            clear_stop_running()
-        except Exception:
-            pass
+        _exit_code = 0
+
+    # Log invocation based on exit code
+    if _timer:
+        outcome = "block" if _exit_code == 2 else "allow"
+        _timer.log(outcome=outcome)
+
+    # Clean up stop lock
+    try:
+        from shared.ralph_state import clear_stop_running
+        clear_stop_running()
+    except Exception:
+        pass
+
+    sys.exit(_exit_code)
