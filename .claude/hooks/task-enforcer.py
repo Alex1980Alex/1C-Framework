@@ -157,11 +157,20 @@ def get_pending_mandatory_tasks() -> list:
 
 def main():
     """Check for pending mandatory tasks. Block stop if found."""
+    # Invocation timer
+    try:
+        from shared.invocation_logger import InvocationTimer
+        timer = InvocationTimer("task-enforcer", event="Stop").start()
+    except Exception:
+        timer = None
+
     try:
         pending = get_pending_mandatory_tasks()
 
         if not pending:
             # No mandatory tasks pending — allow stop
+            if timer:
+                timer.log(outcome="allow")
             sys.exit(0)
 
         # Build reason message listing pending tasks
@@ -188,10 +197,14 @@ def main():
         out_bytes = json.dumps(output, ensure_ascii=False).encode("utf-8")
         sys.stdout.buffer.write(out_bytes + b"\n")
         sys.stdout.buffer.flush()
+        if timer:
+            timer.log(outcome="block")
         sys.exit(2)  # Block stop
 
-    except Exception:
+    except Exception as e:
         # Graceful degradation: allow stop on any error
+        if timer:
+            timer.log(outcome="error", error=f"{type(e).__name__}: {e}")
         sys.exit(0)
 
 
