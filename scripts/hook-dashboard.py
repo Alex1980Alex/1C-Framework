@@ -335,7 +335,7 @@ def format_skills(skill_metrics: dict) -> str:
     # Sort by recommended count descending
     sorted_skills = sorted(per_skill.items(), key=lambda x: x[1]["recommended"], reverse=True)
     for skill, m in sorted_skills:
-        rate_str = f"{m['rate']:.0f}%" if m["recommended"] > 0 else "—"
+        rate_str = f"{m['rate']:.0f}%" if m["recommended"] > 0 else "-"
         lines.append(
             f"  {skill:<30} {m['recommended']:>5} {m['activated']:>5} {rate_str:>6}"
         )
