@@ -17,9 +17,17 @@ Pattern: Enforcer (поведенческий подпаттерн триады 
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+# Core path resolution for shared modules
+_HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
+sys.path.insert(0, _HOOK_DIR)
 
 # Project root (hooks/ -> .claude/ -> project/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
