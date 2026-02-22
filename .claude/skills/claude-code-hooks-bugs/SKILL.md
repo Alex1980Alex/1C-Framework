@@ -137,3 +137,4 @@ UserPromptSubmit (уровень 1) + Stop (уровень 2)
 | [create-hook](.claude/skills/create-hook/SKILL.md) | Создание нового хука (шаблон, чеклист) |
 | [multi-level-hook-architecture](.claude/skills/multi-level-hook-architecture/SKILL.md) | Архитектура трёхуровневой защиты |
 | [hook-enforcement-pattern](.claude/skills/hook-enforcement-pattern/SKILL.md) | Паттерн Enforcer для Stop-хуков |
+| [windows-hooks-paths](.claude/skills/windows-hooks-paths/SKILL.md) | Windows: bash съедает `\` в путях хуков |
