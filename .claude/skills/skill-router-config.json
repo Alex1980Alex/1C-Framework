@@ -18,6 +18,7 @@
     "indexing-pipeline": ["embedding-models", "qdrant-operations"],
     "search-pipeline-debug": ["pdf-search"],
     "hook-debugging": ["claude-code-hooks-bugs", "multi-level-hook-architecture"],
+    "windows-hooks-paths": ["claude-code-hooks-bugs", "hook-debugging"],
     "create-hook": ["hooks-skills-mcp-triad"],
     "triad-factory": ["hooks-skills-mcp-triad"]
   },
