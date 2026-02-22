@@ -271,10 +271,10 @@ def format_summary(
     p95_global = all_latencies[int(len(all_latencies) * 0.95)] if all_latencies else 0
 
     lines = [
-        f"{'=' * 60}",
+        f"{'=' * 62}",
         f"  HOOK & SKILL OBSERVABILITY DASHBOARD",
         f"  Period: {period}",
-        f"{'=' * 60}",
+        f"{'=' * 62}",
         "",
         f"  Total invocations:    {total_inv:>6}",
         f"  Unique hooks:         {len(hook_metrics):>6}",
