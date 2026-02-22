@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hook & Skill Observability Dashboard — CLI tool.
+"""Hook & Skill Observability Dashboard - CLI tool.
 
 Parses 3 log sources and displays activation metrics, latency, errors:
 1. data/hook-invocations.jsonl  → hook invocation counts, p95 latency, errors
