@@ -203,13 +203,13 @@ python -m src.cli.main index "documents/" --recursive --full-reindex --graph
 ### NetworkX → Neo4j
 
 ```bash
-# 1. Запустить Neo4j
-docker run -d --name neo4j -p 7474:7474 -p 7687:7687 \
+# 1. Запустить Neo4j (порты 17474/17687 чтобы не конфликтовать с 1c-neo4j)
+docker run -d --name neo4j -p 17474:7474 -p 17687:7687 \
     -e NEO4J_AUTH=neo4j/password neo4j:5.15
 
 # 2. Обновить .env
 GRAPH_STORE__PROVIDER=neo4j
-GRAPH_STORE__NEO4J_URI=bolt://localhost:7687
+GRAPH_STORE__NEO4J_URI=bolt://localhost:17687
 GRAPH_STORE__NEO4J_USER=neo4j
 GRAPH_STORE__NEO4J_PASSWORD=password
 
