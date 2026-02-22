@@ -36,10 +36,18 @@
 | 1.7 | Untrack .ralph_wiggum_count | `git rm --cached` | Однократно |
 
 ### Критерии успеха
-- [ ] 0 коммитов "ralph wiggum counter" за неделю
-- [ ] `.ralph_*` невидимы для `git status`
-- [ ] docs-change-enforcer не блокирует из-за ralph файлов
-- [ ] IDE events не появляются в skill-router.log
+- [x] 0 коммитов "ralph wiggum counter" за неделю
+- [x] `.ralph_*` невидимы для `git status`
+- [x] docs-change-enforcer не блокирует из-за ralph файлов
+- [x] IDE events не появляются в skill-router.log
+
+### Реализация
+- ✅ [.gitignore](.gitignore) — добавлен `.claude/hooks/.ralph_*`
+- ✅ [auto-git-save.py](.claude/hooks/auto-git-save.py) — IGNORE_PATTERNS: `.ralph_active`, `.ralph_criteria.json`, `.ralph_wiggum_count`
+- ✅ [docs-change-enforcer.py](.claude/hooks/docs-change-enforcer.py) — SKIP_PATTERNS: `.ralph_`
+- ✅ [ralph_state.py](.claude/hooks/shared/ralph_state.py) — `is/set/clear_stop_running()`
+- ✅ [ralph_wiggum_stop.py](.claude/hooks/ralph_wiggum_stop.py) — обёрнут в stop_lock
+- ✅ [skill-router.py](.claude/hooks/skill-router.py) — IDE filtering: `<file_>`, `<selection>`, `<cursor>`, XML heuristic
 
 ---
 
