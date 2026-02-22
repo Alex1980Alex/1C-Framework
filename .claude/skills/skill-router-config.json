@@ -257,7 +257,12 @@
     "hook-bugs": {
       "keywords": ["баг хука", "hook bug", "#6305", "#10450", "PostToolUse не работает", "hooks not firing", "хуки не запускаются", "workaround hooks", "обходной путь хуков", "платформенные баги", "platform bugs hooks"],
       "skills": ["claude-code-hooks-bugs"],
-      "optional": ["hook-debugging"]
+      "optional": ["hook-debugging", "windows-hooks-paths"]
+    },
+    "windows-paths": {
+      "keywords": ["command not found hook", "хук не находит python", "backslash hook", "обратные слеши хук", "путь хука Windows", "hook path windows", "слипшийся путь", "bash escape path", "обратный слеш", "backslash windows"],
+      "skills": ["windows-hooks-paths"],
+      "optional": ["claude-code-hooks-bugs"]
     },
     "git-parsing": {
       "keywords": ["git status parsing", "porcelain", "парсинг git status", "line[3:]", "git status python", "извлечь путь из git status", "staged files python", "git porcelain формат", "XY format git"],
