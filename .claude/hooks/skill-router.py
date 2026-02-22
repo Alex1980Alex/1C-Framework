@@ -96,7 +96,13 @@ class SkillRouter(BaseHook):
 
         # TIER 2A: Skip IDE events (VS Code metadata, not user intent)
         prompt_stripped = prompt.strip()
-        if prompt_stripped.startswith(("<ide_", "<ide_opened_file", "<ide_selection")):
+        if prompt_stripped.startswith((
+            "<ide_", "<ide_opened_file", "<ide_selection",
+            "<file_", "<selection", "<cursor",
+        )):
+            return None
+        # Skip prompts that are mostly XML tags (IDE metadata dumps)
+        if len(prompt_stripped) > 20 and prompt_stripped.count("<") > len(prompt_stripped) / 10:
             return None
 
         # Load config
