@@ -132,7 +132,7 @@ def get_uncommitted_files() -> list[str]:
     try:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True, text=True, encoding="utf-8", timeout=5,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode != 0:
@@ -194,7 +194,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         log.debug("step1: git status --porcelain")
         status = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            timeout=2, capture_output=True, text=True,
+            timeout=2, capture_output=True, text=True, encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
         log.debug(f"step1: rc={status.returncode} stdout_len={len(status.stdout)}")
@@ -207,7 +207,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         try:
             r = subprocess.run(
                 ["git", "add", "--"] + modified_files,
-                timeout=10, capture_output=True, text=True,
+                timeout=10, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(PROJECT_ROOT),
             )
             log.debug(f"step2: rc={r.returncode} stderr={r.stderr[:200] if r.stderr else ''}")
@@ -225,7 +225,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
             ["git", "commit", "-m", commit_msg],
-            timeout=timeout, capture_output=True, text=True,
+            timeout=timeout, capture_output=True, text=True, encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
         log.debug(f"step3: rc={commit.returncode} duration={time.time()-start:.1f}s")
@@ -281,7 +281,7 @@ def sync_pending_tasks_with_git() -> int:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             cwd=str(PROJECT_ROOT),
-            capture_output=True, text=True, timeout=2,
+            capture_output=True, text=True, encoding="utf-8", timeout=2,
         )
         if result.returncode != 0:
             return 0

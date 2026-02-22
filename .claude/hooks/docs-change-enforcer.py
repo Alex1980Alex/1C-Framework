@@ -165,7 +165,7 @@ def get_session_files() -> set:
     try:
         r = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, timeout=3,
+            capture_output=True, text=True, encoding="utf-8", timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:
@@ -182,7 +182,7 @@ def get_session_files() -> set:
     try:
         r = subprocess.run(
             ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True, text=True, encoding="utf-8", timeout=5,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:

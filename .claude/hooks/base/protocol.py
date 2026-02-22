@@ -40,7 +40,7 @@ class HookInput:
     def detected_event(self) -> str:
         """Detect hook event type from input fields."""
         if self.tool_name:
-            if self.tool_result:
+            if "tool_result" in self.raw:
                 return "PostToolUse"
             return "PreToolUse"
         if self.transcript or self.reason:

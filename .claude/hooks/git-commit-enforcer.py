@@ -55,6 +55,7 @@ def get_uncommitted_changes() -> list[str]:
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=5,
             cwd=str(PROJECT_ROOT),
         )

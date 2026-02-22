@@ -562,7 +562,7 @@ class DocsChangeTracker(BaseHook):
                 try:
                     result = subprocess.run(
                         ["git", "log", "-1", "--format=%cI", "--", target],
-                        capture_output=True, text=True, timeout=5,
+                        capture_output=True, text=True, encoding="utf-8", timeout=5,
                         cwd=os.environ.get("CLAUDE_PROJECT_DIR", "."),
                     )
                     if result.returncode != 0 or not result.stdout.strip():

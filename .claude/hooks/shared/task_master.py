@@ -404,6 +404,7 @@ def auto_validate_git_tasks() -> int:
             cwd=str(project_root),
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=5,
         )
         if result.returncode != 0:
