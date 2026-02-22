@@ -1,6 +1,6 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-02-20 22:03
+**Generated:** 2026-02-22 14:27
 
 ## Summary
 

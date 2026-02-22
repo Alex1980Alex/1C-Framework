@@ -201,10 +201,17 @@ See `.claude/skills/1c-doc-research/SKILL.md` for full research protocol.
 | `pdf-knowledge` | Доменный | MCP-инструменты для PDF search и indexing |
 | `architecture-research` | Доменный | Архитектурные решения: facts + ADR + procedure |
 | `doc-to-skill` | Процедурный | Конвертер документации → SKILL.md |
+| `doc-to-cache` | Процедурный | Конвертер сырой документации → структурированный кеш знаний |
 | `create-hook` | Процедурный | Шаблон + чеклист для создания хуков |
+| `audit-docs` | Процедурный | Аудит Code ↔ Documentation ↔ Skills покрытия (6 категорий) |
 | `task-evaluation` | Классификатор | Research / Brainstorm / Hybrid маршрутизация |
 | `triad-factory` | Программа | Фабрика: алгоритм создания компонентов (ШАГ 1-5, Q1-Q5) |
 | `hooks-skills-mcp-triad` | Знание | Реализация триады в проекте (таблицы, pipelines) |
+| `multi-level-hook-architecture` | Знание | 3-уровневая архитектура хуков: UserPromptSubmit → PostToolUse → Stop |
+| `hook-debugging` | Знание | Диагностика хуков: canary-метод, file-based логирование |
+| `hook-enforcement-pattern` | Знание | Паттерн Enforcer для Stop-хуков: блокировка, exit 2, graceful degradation |
+| `claude-code-hooks-bugs` | Знание | Известные баги хуков: PostToolUse #6305, stdin Windows #10450 |
+| `git-porcelain-parsing` | Знание | Парсинг git status --porcelain: формат XY, кириллица, core.quotepath |
 | `search-pipeline-debug` | Операционный | 10 стратегий поиска, RRF, debug, reranking |
 | `indexing-pipeline` | Операционный | Hybrid loader, splitting, batch/resume, IDs |
 | `evaluation-benchmark` | Операционный | RAGAS, AutoRAG, метрики, regression tests |
@@ -214,8 +221,20 @@ See `.claude/skills/1c-doc-research/SKILL.md` for full research protocol.
 | `qdrant-operations` | Операционный | Named vectors, sparse, rebuild, migration |
 | `prompt-engineering` | Операционный | DSPy модули, MIPROv2, A/B testing |
 | `deployment` | Операционный | Docker, health checks, rate limiting, API |
+| `framework-api` | Операционный | REST API endpoints, Swagger, OpenAI compatible |
+| `framework-cli` | Операционный | CLI-команды (Typer), pdf-framework |
+| `framework-config` | Операционный | Конфигурация через .env, профили |
+| `framework-troubleshooting` | Операционный | Устранение ошибок, оптимизация, миграция |
+| `auto-git-save` | Операционный | Автокоммит: sync commit при пороге файлов, zombie prevention |
 | `claude-code-vscode` | Среда | VS Code расширение: настройки, shortcuts, @-mentions, plugins UI, MCP, git worktrees |
 | `claude-code-terminal-ux` | Среда | Chrome интеграция, statusline, терминал, Vim mode, уведомления |
+| `claude-code-cli-interactive` | Среда | CLI справочник: 45+ флагов, горячие клавиши, Vim mode, checkpoints |
+| `claude-code-settings` | Среда | settings.json scopes, .env, CLAUDE.md, модели, стили вывода |
+| `claude-code-admin` | Среда | OpenTelemetry мониторинг, IAM, управление затратами |
+| `claude-code-programmatic` | Среда | Headless mode (-p), Agent SDK, structured output, Ralph Wiggum |
+| `claude-code-subagents` | Среда | Подагенты: YAML конфигурация, permissions, встроенные агенты |
+| `claude-code-plugins` | Среда | Система плагинов: manifest, slash-команды, маркетплейсы |
+| `claude-code-github-actions` | Среда | CI/CD: PR automation, code review, trigger events |
 | `langchain-core` | LangChain | create_agent, @tool, модели, сообщения, middleware, structured output, guardrails |
 | `langgraph-core` | LangChain | StateGraph, Functional API, nodes/edges, Command/Send, interrupts, time travel |
 | `langchain-integrations` | LangChain | Vector stores, embeddings, loaders, splitters, retrievers, chat models |
