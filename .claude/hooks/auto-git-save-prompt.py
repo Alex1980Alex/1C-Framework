@@ -199,6 +199,13 @@ def _canary_log(msg: str) -> None:
 
 def main():
     """UserPromptSubmit hook: check and auto-commit uncommitted tracked files."""
+    # Invocation timer
+    try:
+        from shared.invocation_logger import InvocationTimer
+        timer = InvocationTimer("auto-git-save-prompt", event="UserPromptSubmit").start()
+    except Exception:
+        timer = None
+
     _canary_log("ENTER main()")
     try:
         # Read stdin (required by protocol, but we don't use prompt content)
@@ -211,6 +218,8 @@ def main():
         # Check cooldown
         if _is_in_cooldown():
             _canary_log("SKIP cooldown")
+            if timer:
+                timer.log(outcome="allow")
             sys.exit(0)
 
         # Check for uncommitted tracked files
@@ -218,6 +227,8 @@ def main():
         _canary_log(f"files={len(files)}: {files[:5]}")
         if not files:
             _canary_log("SKIP no files")
+            if timer:
+                timer.log(outcome="allow")
             sys.exit(0)
 
         # Auto-commit
@@ -238,11 +249,15 @@ def main():
 
         # Always exit 0 (never block user prompt)
         _canary_log("EXIT 0")
+        if timer:
+            timer.log(outcome="message" if result.get("success") else "allow")
         sys.exit(0)
 
     except Exception as exc:
         # Graceful degradation: never block user prompt
         _canary_log(f"EXCEPTION: {exc}")
+        if timer:
+            timer.log(outcome="error", error=f"{type(exc).__name__}: {exc}")
         sys.exit(0)
 
 
