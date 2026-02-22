@@ -131,7 +131,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\bulk-action-guard.py",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/bulk-action-guard.py",
             "timeout": 3
           },
           {
