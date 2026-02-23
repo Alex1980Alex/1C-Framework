@@ -151,7 +151,8 @@
       "Bash(docker start:*)",
       "Bash(git:*)",
       "Bash(echo EXIT: $?:*)",
-      "Bash(docker info:*)"
+      "Bash(docker info:*)",
+      "Bash(sleep 12:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
