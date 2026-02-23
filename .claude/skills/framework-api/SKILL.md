@@ -174,7 +174,7 @@ curl -X POST http://localhost:8000/documents/rebuild-bm25
 2. Cache Statistics (embedding, LLM, document)
 3. Search Strategy Usage
 4. **Hook Invocations (24h)** — таблица: hook, count, avg_ms, p95, blocks, errors
-5. **Skill Activations (24h)** — activation rate cards + per-skill table
+5. **Skill Activations (24h)** — activation rate cards + Prompt Detection/PostToolUse cards + per-skill table with Source column
 6. **Enforcement & Errors** — blocks/rate cards + recent errors table
 7. **Try It** — interactive query box: Search (POST /search/) и Ask RAG (POST /search/ask) с выбором strategy/k
 
