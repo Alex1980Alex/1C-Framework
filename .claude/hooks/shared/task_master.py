@@ -37,6 +37,7 @@ MANDATORY_HOOKS = {
     "factory-enforcer-hook",
     "docs-change-tracker-hook",
     "auto-git-save-hook",
+    "code-skill-enforcer",
 }
 
 
