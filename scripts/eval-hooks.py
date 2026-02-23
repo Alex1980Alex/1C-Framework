@@ -581,6 +581,15 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
         action="store_true",
         help="Verbose output (show all test details)",
     )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Run live headless Claude Code sessions (skill-activation only)",
+    )
+    parser.add_argument(
+        "--filter", "-f",
+        help="Run only the test with this ID (e.g. sa-008)",
+    )
 
     args = parser.parse_args()
 
