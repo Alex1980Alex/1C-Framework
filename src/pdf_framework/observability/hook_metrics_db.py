@@ -495,6 +495,31 @@ class HookMetricsDB:
         )
         activated = {row["skill"]: row["count"] for row in cursor.fetchall()}
 
+        # Count activations by source
+        cursor.execute(
+            """SELECT COALESCE(source, 'post-tool-use') as src, COUNT(*) as count
+               FROM skill_activations
+               WHERE timestamp >= ?
+               GROUP BY src""",
+            (cutoff,),
+        )
+        by_source = {row["src"]: row["count"] for row in cursor.fetchall()}
+
+        # Per-skill source breakdown
+        cursor.execute(
+            """SELECT skill, COALESCE(source, 'post-tool-use') as src, COUNT(*) as count
+               FROM skill_activations
+               WHERE timestamp >= ?
+               GROUP BY skill, src""",
+            (cutoff,),
+        )
+        per_skill_source: dict[str, dict[str, int]] = {}
+        for row in cursor.fetchall():
+            skill_name = row["skill"]
+            if skill_name not in per_skill_source:
+                per_skill_source[skill_name] = {}
+            per_skill_source[skill_name][row["src"]] = row["count"]
+
         total_recommended = sum(recommended.values())
         total_activated = sum(activated.values())
 
@@ -504,6 +529,7 @@ class HookMetricsDB:
             "activation_rate": (
                 (total_activated / total_recommended * 100) if total_recommended > 0 else 0.0
             ),
+            "by_source": by_source,
             "per_skill": {
                 skill: {
                     "recommended": recommended.get(skill, 0),
@@ -513,6 +539,7 @@ class HookMetricsDB:
                         if skill in recommended and recommended[skill] > 0
                         else 0.0
                     ),
+                    "sources": per_skill_source.get(skill, {}),
                 }
                 for skill in set(list(recommended.keys()) + list(activated.keys()))
             },
