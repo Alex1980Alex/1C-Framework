@@ -405,6 +405,79 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
 
         // Update timestamp
         document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+        // Query box
+        const qInput = document.getElementById('queryInput');
+        const qResult = document.getElementById('queryResult');
+        const qMeta = document.getElementById('queryMeta');
+
+        qInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.shiftKey ? runAsk() : runSearch();
+            }
+        });
+
+        async function runSearch() {
+            const query = qInput.value.trim();
+            if (!query) return;
+            const strategy = document.getElementById('strategySelect').value;
+            const k = document.getElementById('kInput').value || 5;
+            qResult.textContent = 'Searching...';
+            qResult.classList.add('visible');
+            qMeta.textContent = '';
+            const t0 = performance.now();
+            try {
+                const resp = await fetch('/search/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query, strategy, k: parseInt(k)})
+                });
+                const data = await resp.json();
+                const ms = Math.round(performance.now() - t0);
+                const results = data.results || data;
+                if (Array.isArray(results) && results.length > 0) {
+                    qResult.textContent = results.map((r, i) =>
+                        `[${i+1}] score=${(r.score||0).toFixed(3)}  ${(r.section||r.metadata?.section||'').substring(0,40)}\n    ${(r.content||r.text||'').substring(0,200).replace(/\\n/g,' ')}...`
+                    ).join('\n\n');
+                } else {
+                    qResult.textContent = JSON.stringify(data, null, 2);
+                }
+                qMeta.innerHTML = `<span>${results.length || 0} results</span><span>${ms} ms</span><span>strategy: ${strategy}</span>`;
+            } catch(e) {
+                qResult.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        async function runAsk() {
+            const query = qInput.value.trim();
+            if (!query) return;
+            const strategy = document.getElementById('strategySelect').value;
+            qResult.textContent = 'Thinking...';
+            qResult.classList.add('visible');
+            qMeta.textContent = '';
+            const t0 = performance.now();
+            try {
+                const resp = await fetch('/search/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query, strategy})
+                });
+                const data = await resp.json();
+                const ms = Math.round(performance.now() - t0);
+                const answer = data.answer || data.response || JSON.stringify(data, null, 2);
+                const sources = data.sources || data.citations || [];
+                let text = answer;
+                if (sources.length > 0) {
+                    text += '\n\n--- Sources ---\n' + sources.map((s, i) =>
+                        `[${i+1}] ${s.section || s.title || ''} (score: ${(s.score||0).toFixed(3)})`
+                    ).join('\n');
+                }
+                qResult.textContent = text;
+                qMeta.innerHTML = `<span>${ms} ms</span><span>strategy: ${strategy}</span><span>${sources.length} sources</span>`;
+            } catch(e) {
+                qResult.textContent = 'Error: ' + e.message;
+            }
+        }
     </script>
 </body>
 </html>
