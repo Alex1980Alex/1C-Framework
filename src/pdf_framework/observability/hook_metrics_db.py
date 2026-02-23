@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS skill_activations (
     timestamp TEXT NOT NULL,
     skill TEXT NOT NULL,
     session TEXT,
+    source TEXT DEFAULT 'post-tool-use',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
