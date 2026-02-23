@@ -16,6 +16,8 @@ Usage:
     python scripts/eval-hooks.py --suite skill-activation     # Single suite
     python scripts/eval-hooks.py --suite ide-filtering --json # JSON output
     python scripts/eval-hooks.py --list-suites               # List available suites
+    python scripts/eval-hooks.py --suite skill-activation --live          # Live headless test
+    python scripts/eval-hooks.py --suite skill-activation --live -f sa-008  # Single live test
 
 Test Suites:
     - skill-activation:   Tests Phase 2 shell-output enforcer (20 prompts)
