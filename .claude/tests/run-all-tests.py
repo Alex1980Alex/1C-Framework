@@ -29,7 +29,7 @@ def run_test_file(test_file: str, name: str) -> bool:
     test_path = _TESTS_DIR / test_file
 
     if not test_path.exists():
-        print(f"❌ Test file not found: {test_path}")
+        print(f"[FAIL] Test file not found: {test_path}")
         return False
 
     print(f"\n{'=' * 60}")
@@ -64,7 +64,7 @@ def main():
     print("=" * 60)
 
     for name, passed in results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
+        status = "✅ PASSED" if passed else "[FAIL] FAILED"
         print(f"{status}: {name}")
 
     all_passed = all(results.values())
