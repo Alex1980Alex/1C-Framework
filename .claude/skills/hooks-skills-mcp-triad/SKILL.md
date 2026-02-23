@@ -166,6 +166,8 @@ skill-router.py          skill-usage-metrics.py
 - **Dashboard**: `python scripts/hook-dashboard.py --section accuracy`
 - **Метрики**: match rate, per-skill precision, recent misses
 - **SQLite**: таблица `skill_accuracy` в `hook_metrics_db.py` для Streamlit dashboard
+- **HookMetricsDB API**: `get_hook_metrics()` (incl. p95_ms), `get_skill_metrics()`, `get_accuracy_metrics()`, `get_enforcement_metrics()`, `get_error_log()`
+- **HTML Dashboard**: `/metrics/html` — unified view: hooks, skills, enforcement, errors (ingests from JSONL logs on each request)
 
 ### MCP Server (1 сервер, 14 инструментов) — ЧЕМ
 
