@@ -299,6 +299,14 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
                     <div class="card-title">Activated</div>
                     <div class="card-value">$total_activated</div>
                 </div>
+                <div class="card">
+                    <div class="card-title">Prompt Detection</div>
+                    <div class="card-value tag-green" style="font-size:28px;">$source_prompt_detection</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">PostToolUse</div>
+                    <div class="card-value tag-blue" style="font-size:28px;">$source_post_tool_use</div>
+                </div>
             </div>
             <table>
                 <thead>
@@ -306,6 +314,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
                         <th>Skill</th>
                         <th>Recommended</th>
                         <th>Activated</th>
+                        <th>Source</th>
                         <th>Rate</th>
                     </tr>
                 </thead>
