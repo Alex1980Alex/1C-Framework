@@ -709,6 +709,8 @@ async def get_metrics_html():
         activation_rate_class=activation_rate_class,
         total_recommended=skill_data.get("total_recommended", 0),
         total_activated=skill_data.get("total_activated", 0),
+        source_prompt_detection=skill_data.get("by_source", {}).get("prompt-detection", 0),
+        source_post_tool_use=skill_data.get("by_source", {}).get("post-tool-use", 0),
         enforcement_blocks=enforcement.get("total_blocks", 0),
         enforcement_block_rate=f"{enforcement.get('block_rate', 0):.1f}%",
     )
