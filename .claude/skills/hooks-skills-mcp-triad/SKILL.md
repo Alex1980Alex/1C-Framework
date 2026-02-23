@@ -25,18 +25,21 @@ description: "Используй этот скилл для понимания �
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
 
-#### PreToolUse (2)
+#### PreToolUse (3)
 
 | Hook | Matcher | Назначение |
 |------|---------|-----------|
+| `code-skill-enforcer.py` | Write\|Edit\|Bash | Skill-First: BLOCK если скилл не активирован (уровни A-C) |
 | `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
 | `search-optimizer.py` | Bash | Оптимизация параметров Search API |
 
-#### PostToolUse (7)
+#### PostToolUse (9)
 
 | Hook | Matcher | Назначение |
 |------|---------|-----------|
 | `knowledge-cache-reminder.py` | WebSearch\|WebFetch | Напоминание сохранить в кеш: 1С, Tech, Architecture |
+| `code-skill-enforcer.py` | WebSearch\|WebFetch | Research cache reminder (уровень D) |
+| `code-skill-enforcer.py` | Write\|Edit | Post-verification + LEARN phase (уровни E-F) |
 | `factory-enforcer.py` | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация |
 | `docs-change-tracker.py` | Write\|Edit | Код изменился → напоминание обновить docs/ + skills/ |
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
