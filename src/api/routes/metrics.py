@@ -556,6 +556,15 @@ async def get_metrics_html():
         doc_stale=doc["stale"],
         doc_total=doc["hits"] + doc["stale"],
         strategy_rows="".join(strategy_rows),
+        hook_rows="".join(hook_rows),
+        skill_rows="".join(skill_rows),
+        error_rows="".join(error_rows),
+        activation_rate=f"{act_rate:.1f}%",
+        activation_rate_class=activation_rate_class,
+        total_recommended=skill_data.get("total_recommended", 0),
+        total_activated=skill_data.get("total_activated", 0),
+        enforcement_blocks=enforcement.get("total_blocks", 0),
+        enforcement_block_rate=f"{enforcement.get('block_rate', 0):.1f}%",
     )
 
     return html
