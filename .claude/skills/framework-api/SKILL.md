@@ -164,7 +164,7 @@ curl -X POST http://localhost:8000/documents/rebuild-bm25
 **`GET /metrics` JSON response** включает:
 - `embedding_cache`, `llm_cache`, `document_cache` — cache stats
 - `hook_metrics` — per-hook: count, avg_ms, p95_ms, blocks, errors (24h)
-- `skill_metrics` — activation_rate, per_skill recommended/activated/rate
+- `skill_metrics` — activation_rate, `by_source` (prompt-detection/post-tool-use), per_skill recommended/activated/rate/sources
 - `accuracy` — prompt-level recommend→activate match_rate
 - `enforcement` — total_blocks, block_rate, per_hook outcome breakdown
 - `errors` — recent error log entries
