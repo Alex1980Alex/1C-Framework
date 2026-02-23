@@ -64,7 +64,7 @@ def main():
     print("=" * 60)
 
     for name, passed in results.items():
-        status = "✅ PASSED" if passed else "[FAIL] FAILED"
+        status = "[PASS] PASSED" if passed else "[FAIL] FAILED"
         print(f"{status}: {name}")
 
     all_passed = all(results.values())
