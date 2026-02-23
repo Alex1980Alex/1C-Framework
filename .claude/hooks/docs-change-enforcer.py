@@ -127,7 +127,9 @@ def _is_infra_file(filepath: str) -> bool:
         if any(s in fp for s in ["/cache/", "/__pycache__/"]):
             return False
         return True
-    if fp in (".claude/settings.json", ".claude/settings.local.json"):
+    # settings.json is project infra; settings.local.json is per-user
+    # runtime permissions that change on every permission grant — skip it
+    if fp == ".claude/settings.json":
         return True
     # Skill config files (not SKILL.md itself — that IS the doc)
     if fp.startswith(".claude/skills/") and not fp.endswith("/skill.md"):
