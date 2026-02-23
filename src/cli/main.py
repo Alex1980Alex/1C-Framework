@@ -774,6 +774,7 @@ def restart(
             return result.returncode == 0
         else:
             import os
+            import signal
 
             sig = signal.SIGKILL if forceful else signal.SIGTERM
             os.kill(pid, sig)
