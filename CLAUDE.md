@@ -91,7 +91,7 @@ src/
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
-  docs-change-enforcer.py   # Stop: documentation coverage check
+  docs-change-enforcer.py   # Stop: documentation coverage check (skips settings.local.json)
   task-enforcer.py          # Stop: task list completion check (incl. code-skill-enforcer)
   ralph_wiggum_stop.py      # Stop: Ralph iteration enforcement
 ```
