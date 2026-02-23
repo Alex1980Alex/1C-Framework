@@ -720,7 +720,6 @@ def restart(
         pdf-framework restart --port 9000
         pdf-framework restart --force
     """
-    import signal
     import socket
     import subprocess
     import sys
