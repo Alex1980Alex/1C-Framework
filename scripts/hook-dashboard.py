@@ -444,13 +444,24 @@ def format_hooks(hook_metrics: dict) -> str:
 
 def format_skills(skill_metrics: dict) -> str:
     """Format skills section."""
+    by_source = skill_metrics.get("by_source", {})
+    source_summary = ""
+    if by_source:
+        parts = [f"{src}: {cnt}" for src, cnt in sorted(by_source.items())]
+        source_summary = f"  Sources: {', '.join(parts)}"
+
     lines = [
-        f"{'-' * 62}",
+        f"{'-' * 74}",
         f"  SKILL ACTIVATION",
-        f"{'-' * 62}",
-        f"  {'Skill':<30} {'Rec':>5} {'Act':>5} {'Rate':>6}",
-        f"  {'-' * 50}",
+        f"{'-' * 74}",
     ]
+    if source_summary:
+        lines.append(source_summary)
+        lines.append("")
+    lines.extend([
+        f"  {'Skill':<28} {'Rec':>5} {'Act':>5} {'Rate':>6}  {'Source'}",
+        f"  {'-' * 68}",
+    ])
 
     per_skill = skill_metrics.get("per_skill", {})
     if not per_skill:
@@ -462,8 +473,14 @@ def format_skills(skill_metrics: dict) -> str:
     sorted_skills = sorted(per_skill.items(), key=lambda x: x[1]["recommended"], reverse=True)
     for skill, m in sorted_skills:
         rate_str = f"{m['rate']:.0f}%" if m["recommended"] > 0 else "-"
+        sources = m.get("sources", {})
+        if sources:
+            src_parts = [f"{s}:{c}" for s, c in sorted(sources.items())]
+            src_str = " ".join(src_parts)
+        else:
+            src_str = "-"
         lines.append(
-            f"  {skill:<30} {m['recommended']:>5} {m['activated']:>5} {rate_str:>6}"
+            f"  {skill:<28} {m['recommended']:>5} {m['activated']:>5} {rate_str:>6}  {src_str}"
         )
 
     if skill_metrics.get("dead_skills"):
