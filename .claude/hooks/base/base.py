@@ -235,11 +235,20 @@ class HookOutput:
         # Block message
         if self._should_block:
             block_msg = f"[BLOCK] {self._block_reason}"
-            print(block_msg)
+            try:
+                print(block_msg)
+            except UnicodeEncodeError:
+                sys.stdout.buffer.write(block_msg.encode("utf-8", errors="replace"))
+                sys.stdout.buffer.write(b"\n")
 
         # System message (JSON format for <system-reminder>)
         if self._system_message:
-            print(json.dumps({"systemMessage": self._system_message}, ensure_ascii=False))
+            msg = json.dumps({"systemMessage": self._system_message}, ensure_ascii=False)
+            try:
+                print(msg)
+            except UnicodeEncodeError:
+                sys.stdout.buffer.write(msg.encode("utf-8", errors="replace"))
+                sys.stdout.buffer.write(b"\n")
 
 
 class BaseHook:
