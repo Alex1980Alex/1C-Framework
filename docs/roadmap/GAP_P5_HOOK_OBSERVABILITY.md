@@ -375,7 +375,15 @@ grep '"hook": "agent:' data/hook-invocations.jsonl
 - ✅ [eval-hooks.py](scripts/eval-hooks.py) — 5 suite classes (skill-activation, stop-hook-safety, ide-filtering, git-commit-enforcement, docs-change-enforcement)
 - ✅ [hook_prompts.json](tests/eval/hook_prompts.json) — 40 тестов (20 skill activation, 3 stop-hook, 10 IDE filtering, 2 git-commit, 3 docs-change)
 
-**Текущие результаты** (на 2026-02-22):
+**v1.0 результаты** (2026-02-22): skill-activation 0/20 — промпты ссылались на несуществующие скиллы
+
+**v2.0 fix** (2026-02-23): Переписаны все 20 skill-activation промптов:
+- Каждый промпт привязан к **реальному** скиллу из `.claude/skills/`
+- Содержит **точные trigger words** из SKILL.md `description`
+- Добавлено поле `trigger_words` для прозрачности
+- Покрыто **16 уникальных скиллов**: 1c-doc-research, tech-research, create-hook, hooks-skills-mcp-triad, architecture-research, framework-config, framework-api, framework-cli, framework-troubleshooting, langchain-core, langgraph-core, doc-to-skill, task-evaluation, hook-debugging, multi-level-hook-architecture
+
+**Результаты v1.0** (2026-02-22, baseline):
 ```
 Total tests:       38
 Passed:            18
@@ -383,12 +391,15 @@ Failed:            20
 Overall rate:     47.4%
 
 Suite Performance:
-  skill-activation                    0     20   0.0%   (baseline - no activations in log)
+  skill-activation                    0     20   0.0%   (all prompts targeted non-existent skills)
   stop-hook-safety                    3      3 100.0%  (Phase 1 stop-lock working)
   ide-filtering                      10     10 100.0%  (Phase 1 filtering working)
   git-commit-enforcement              2      2 100.0%  (hook exists and configured)
   docs-change-enforcement             3      3 100.0%  (SKIP_PATTERNS working)
 ```
+
+**Ожидаемые результаты v2.0** (после живого эксперимента):
+- skill-activation: ≥16/20 (80%+) при shell-output enforcer
 
 ### Usage
 ```bash
