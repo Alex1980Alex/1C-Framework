@@ -58,10 +58,14 @@ SKILL_USAGE_LOG = DATA_DIR / "skill-usage.log"
 class TestSuite:
     """Base class for test suites."""
 
-    def __init__(self, name: str, config: dict):
+    def __init__(self, name: str, config: dict, *, live: bool = False, filter_id: str | None = None):
         self.name = name
         self.config = config
+        self.live = live
+        self.filter_id = filter_id
         self.tests = config.get("tests", [])
+        if self.filter_id:
+            self.tests = [t for t in self.tests if t.get("id") == self.filter_id]
         self.expected_rate = config.get("expected_activation_rate", 0.8)
 
     def run(self) -> dict:
