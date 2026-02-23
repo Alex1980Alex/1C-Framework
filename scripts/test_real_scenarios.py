@@ -66,13 +66,13 @@ SCENARIOS = [
     (
         "Write in .claude/hooks/",
         {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "D:/1C-Framework/.claude/hooks/my-hook.py", "content": "class MyHook: pass"}},
+         "tool_input": {"file_path": ".claude/hooks/my-hook.py", "content": "class MyHook: pass"}},
         2, "create-hook", "B directory"
     ),
     (
         "Write in .claude/skills/",
         {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "D:/1C-Framework/.claude/skills/new/SKILL.md", "content": "# My Skill\nSome content here for the skill file"}},
+         "tool_input": {"file_path": ".claude/skills/new/SKILL.md", "content": "# My Skill\nSome content here for the skill file"}},
         2, "create-skill", "B directory"
     ),
     (
