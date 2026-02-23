@@ -106,6 +106,8 @@ SKIP_PATTERNS = [
     ".gitignore",
     ".git/",
     ".env",
+    # Local permissions (per-user runtime, not project code)
+    "settings.local.json",
     # Ralph state files (runtime, not code)
     ".ralph_",
     # Scripts and tests (utility, not core product code)
