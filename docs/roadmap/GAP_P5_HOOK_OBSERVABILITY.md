@@ -497,11 +497,11 @@ streamlit run src/ui/pages/hook_dashboard.py
 
 ---
 
-### ✅ Phase 8: Sandboxed Evaluation Framework (P3) — COMPLETED (2026-02-22)
+### ✅ Phase 8: Sandboxed Evaluation Framework (P3) — COMPLETED (2026-02-22, prompts v2.0 2026-02-23)
 
 **Задачи выполнены:**
 1. ✅ `scripts/eval-hooks.py` — eval runner с 5 test suites
-2. ✅ `tests/eval/hook_prompts.json` — 40 тестов
+2. ✅ `tests/eval/hook_prompts.json` — v2.0: 40 тестов, 16 реальных скиллов с точными trigger words
 
 **Usage:**
 ```bash
