@@ -124,9 +124,23 @@ class HookMetricsDB:
         return self._local.conn
 
     def _init_db(self) -> None:
-        """Initialize database schema."""
+        """Initialize database schema and run migrations."""
         conn = self._get_conn()
         conn.executescript(SCHEMA)
+        conn.commit()
+        self._migrate(conn)
+
+    def _migrate(self, conn: sqlite3.Connection) -> None:
+        """Add columns missing from older schema versions."""
+        migrations = [
+            ("skill_activations", "source", "TEXT DEFAULT 'post-tool-use'"),
+            ("skill_accuracy", "source", "TEXT"),
+        ]
+        for table, column, col_type in migrations:
+            try:
+                conn.execute(f"SELECT {column} FROM {table} LIMIT 1")
+            except sqlite3.OperationalError:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
         conn.commit()
 
     def ingest_from_logs(self) -> dict[str, int]:
