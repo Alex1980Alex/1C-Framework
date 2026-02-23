@@ -141,6 +141,19 @@ PostToolUse (СЛОМАН):
   git-commit-enforcer.py → если что-то не закоммичено → блокировка
 ```
 
+### Skill Metrics: уровень 1 компенсирует уровень 2
+
+```
+PostToolUse (СЛОМАН):
+  skill-usage-metrics.py → НЕ срабатывает (баг #6305)
+
+Компенсация через UserPromptSubmit:
+  skill-router.py → _detect_skill_activations()
+  → парсит <command-name>skill</command-name> теги из предыдущего turn
+  → SessionState.add_activated_skill() + log activate (source=prompt-detection)
+  → корреляция через SessionState.get_prompt_id()
+```
+
 ### Документация: уровень 3 компенсирует уровень 2
 
 ```
