@@ -588,7 +588,7 @@ After researching, apply knowledge and write code following best practices.
 
         output = HookOutput()
         output.advise(
-            f"📚 LEARN PHASE: '{label}'\n"
+            f"[LEARN] LEARN PHASE: '{label}'\n"
             f"Created {len(tasks)} tasks to capture this knowledge.\n"
             f"Complete these tasks to add '{label}' to skill cache."
         )
