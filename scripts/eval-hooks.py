@@ -102,7 +102,14 @@ class TestSuite:
 
 
 class SkillActivationSuite(TestSuite):
-    """Test suite for skill activation (Phase 2)."""
+    """Test suite for skill activation (Phase 2).
+
+    Modes:
+        - Default (offline): reads global skill-usage.log, checks if expected
+          skills were ever activated. Fast but imprecise — no prompt↔skill binding.
+        - Live (--live): runs headless `claude -p` per prompt, checks that THIS
+          prompt activated the expected skill within its time window.
+    """
 
     def run_test(self, test: dict) -> dict:
         """Test if prompt activates expected skills."""
@@ -110,8 +117,12 @@ class SkillActivationSuite(TestSuite):
         prompt = test["prompt"]
         expected_skills = set(test.get("expected_skills", []))
 
-        # Check skill-usage.log for activations
-        activations = self._check_skill_activations(prompt)
+        # Choose activation source based on mode
+        if self.live:
+            activations, claude_output = self._run_live_test(prompt)
+        else:
+            activations = self._check_skill_activations(prompt)
+            claude_output = None
 
         # Determine if expected skills were activated
         activated_skills = set(activations)
@@ -126,7 +137,7 @@ class SkillActivationSuite(TestSuite):
         else:
             status = "fail"
 
-        return {
+        result = {
             "id": test_id,
             "prompt": prompt,
             "expected": list(expected_skills),
@@ -136,9 +147,70 @@ class SkillActivationSuite(TestSuite):
             "status": status,
             "description": test.get("description", ""),
         }
+        if self.live:
+            result["mode"] = "live"
+            if claude_output is not None:
+                result["claude_exit_code"] = claude_output.returncode
+        return result
+
+    # --- Live mode ---
+
+    def _run_live_test(self, prompt: str) -> tuple[list[str], subprocess.CompletedProcess | None]:
+        """Run headless Claude Code session and return skills activated in its time window."""
+        before = datetime.now()
+        try:
+            result = subprocess.run(
+                [
+                    "claude", "-p", prompt,
+                    "--output-format", "json",
+                    "--allowedTools", "Skill,Read,Glob,Grep",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=90,
+                cwd=str(PROJECT_ROOT),
+            )
+        except FileNotFoundError:
+            print(f"  ERROR: 'claude' not found in PATH — cannot run live tests")
+            return [], None
+        except subprocess.TimeoutExpired:
+            print(f"  TIMEOUT: prompt '{prompt[:50]}...' exceeded 90s")
+            after = datetime.now()
+            return self._get_activations_in_window(before, after), None
+
+        after = datetime.now()
+        activations = self._get_activations_in_window(before, after)
+        return activations, result
+
+    def _get_activations_in_window(self, before: datetime, after: datetime) -> list[str]:
+        """Parse skill-usage.log and return skills activated between before and after."""
+        if not SKILL_USAGE_LOG.exists():
+            return []
+
+        activations = []
+        try:
+            with open(SKILL_USAGE_LOG, "r", encoding="utf-8") as f:
+                for line in f:
+                    parts = line.split(" | ")
+                    if len(parts) >= 2:
+                        ts_str = parts[0].strip()
+                        try:
+                            ts = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
+                        except ValueError:
+                            continue
+                        if before <= ts <= after:
+                            skill_part = parts[1].strip()
+                            if skill_part.startswith("skill="):
+                                activations.append(skill_part[len("skill="):])
+        except OSError:
+            pass
+
+        return list(set(activations))
+
+    # --- Offline mode (original) ---
 
     def _check_skill_activations(self, prompt: str) -> list[str]:
-        """Check skill-usage.log for activations related to prompt."""
+        """Check skill-usage.log for activations related to prompt (offline mode)."""
         if not SKILL_USAGE_LOG.exists():
             return []
 
