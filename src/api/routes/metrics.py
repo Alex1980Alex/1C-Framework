@@ -623,16 +623,23 @@ async def get_metrics_html():
         s = per_skill[skill_name]
         rate = s.get("rate", 0)
         rate_class = "good" if rate >= 70 else "warning" if rate >= 40 else ""
+        sources = s.get("sources", {})
+        source_tags = []
+        for src, cnt in sorted(sources.items()):
+            tag_cls = "tag-green" if src == "prompt-detection" else "tag-blue"
+            source_tags.append(f'<span class="tag {tag_cls}">{src}: {cnt}</span>')
+        source_html = " ".join(source_tags) if source_tags else '<span style="color:#999;">—</span>'
         skill_rows.append(f"""
             <tr>
                 <td><strong>{skill_name}</strong></td>
                 <td>{s.get('recommended', 0)}</td>
                 <td>{s.get('activated', 0)}</td>
+                <td>{source_html}</td>
                 <td class="{rate_class}">{rate:.1f}%</td>
             </tr>
         """)
     if not skill_rows:
-        skill_rows.append('<tr><td colspan="4" style="text-align:center;color:#999;">No skill data yet</td></tr>')
+        skill_rows.append('<tr><td colspan="5" style="text-align:center;color:#999;">No skill data yet</td></tr>')
 
     # Build error rows
     error_rows = []
