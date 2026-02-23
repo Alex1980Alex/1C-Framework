@@ -705,6 +705,123 @@ def server(
 
 
 @app.command()
+def restart(
+    host: str = typer.Option("127.0.0.1", help="Server host"),
+    port: int = typer.Option(8000, help="Server port"),
+    force: bool = typer.Option(False, "--force", "-f", help="Kill without graceful shutdown"),
+):
+    """Restart the REST API server (stop + start).
+
+    Finds the running server process on the given port, stops it,
+    then starts a new instance in background.
+
+    Examples:
+        pdf-framework restart
+        pdf-framework restart --port 9000
+        pdf-framework restart --force
+    """
+    import signal
+    import socket
+    import subprocess
+    import sys
+    import time
+
+    _CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+    def _is_port_open(h: str, p: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            return s.connect_ex((h, p)) == 0
+
+    def _find_pid_on_port(p: int) -> int | None:
+        """Find PID listening on the given port (cross-platform)."""
+        import platform
+
+        if platform.system() == "Windows":
+            try:
+                result = subprocess.run(
+                    ["netstat", "-ano", "-p", "TCP"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                for line in result.stdout.splitlines():
+                    parts = line.split()
+                    if len(parts) >= 5 and f":{p}" in parts[1] and parts[3] == "LISTENING":
+                        return int(parts[4])
+            except Exception:
+                pass
+        else:
+            try:
+                result = subprocess.run(
+                    ["lsof", "-ti", f":{p}"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                if result.stdout.strip():
+                    return int(result.stdout.strip().splitlines()[0])
+            except Exception:
+                pass
+        return None
+
+    # --- Step 1: Stop existing server ---
+    if _is_port_open(host, port):
+        pid = _find_pid_on_port(port)
+        if pid:
+            console.print(f"[yellow]Stopping server (PID {pid}) on {host}:{port}...[/yellow]")
+            try:
+                if force:
+                    import os
+
+                    os.kill(pid, signal.SIGTERM)
+                else:
+                    # Graceful: SIGTERM, wait, then SIGKILL
+                    import os
+
+                    os.kill(pid, signal.SIGTERM)
+                    for _ in range(20):
+                        time.sleep(0.5)
+                        if not _is_port_open(host, port):
+                            break
+                    else:
+                        console.print("[yellow]Graceful stop timed out, forcing...[/yellow]")
+                        os.kill(pid, signal.SIGTERM)
+            except OSError as e:
+                console.print(f"[red]Failed to stop process: {e}[/red]")
+                raise typer.Exit(1)
+
+            # Wait for port to free
+            for _ in range(20):
+                time.sleep(0.5)
+                if not _is_port_open(host, port):
+                    console.print("[green]Server stopped[/green]")
+                    break
+            else:
+                console.print(f"[red]Port {port} still in use after 10s[/red]")
+                raise typer.Exit(1)
+        else:
+            console.print(f"[red]Port {port} in use but could not find PID[/red]")
+            raise typer.Exit(1)
+    else:
+        console.print(f"[dim]No server running on {host}:{port}[/dim]")
+
+    # --- Step 2: Start new server ---
+    console.print(f"[yellow]Starting API server on {host}:{port}...[/yellow]")
+    subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "src.api.app:create_app",
+         "--factory", "--host", host, "--port", str(port)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=_CREATE_NO_WINDOW,
+    )
+
+    for _ in range(30):
+        time.sleep(0.5)
+        if _is_port_open(host, port):
+            console.print(f"[green]Server restarted on {host}:{port}[/green]")
+            return
+    console.print(f"[red]Server failed to start within 15 seconds[/red]")
+    raise typer.Exit(1)
+
+
+@app.command()
 def dashboard(
     port: int = typer.Option(8000, help="Server port"),
     host: str = typer.Option("127.0.0.1", help="Server host"),
