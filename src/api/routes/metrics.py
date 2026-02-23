@@ -13,6 +13,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 from src.pdf_framework.observability.tracer import get_metrics_collector
+from src.pdf_framework.observability.hook_metrics_db import HookMetricsDB
 from src.pdf_framework.agents.cache import get_llm_cache
 from src.pdf_framework.embeddings.cache import get_embedding_cache
 from src.pdf_framework.processing.cache import get_document_cache
