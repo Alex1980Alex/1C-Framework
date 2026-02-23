@@ -213,12 +213,12 @@ def create_agent():
             framework.cleanup()
             return False
 
-        print(f"✅ [Hook] BLOCKED: {result['stdout'][:100]}...")
+        print(f"[PASS] [Hook] BLOCKED: {result['stdout'][:100]}...")
 
         # Step 5: Claude activates skill
         print("\n[Claude] Activating langgraph-core skill...")
         framework.activate_skill("langgraph-core")
-        print(f"✅ Activated skills: {framework.get_activated_skills()}")
+        print(f"[PASS] Activated skills: {framework.get_activated_skills()}")
 
         # Step 6: Claude retries Write
         print("\n[Claude] Retrying Write with skill activated...")
@@ -237,9 +237,9 @@ def create_agent():
             framework.cleanup()
             return False
 
-        print("✅ [Hook] ALLOWED: Write succeeded")
+        print("[PASS] [Hook] ALLOWED: Write succeeded")
 
-        print("\n✅ E2E SCENARIO 1 PASSED")
+        print("\n[PASS] E2E SCENARIO 1 PASSED")
         framework.cleanup()
         return True
 
@@ -318,7 +318,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             framework.cleanup()
             return False
 
-        print("✅ [Hook] ADVISE: Research protocol shown")
+        print("[PASS] [Hook] ADVISE: Research protocol shown")
 
         # Step 4: Claude researches (simulated)
         print("\n[Claude] Researching FastAPI WebSocket best practices...")
@@ -350,7 +350,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             framework.cleanup()
             return False
 
-        print("✅ [Hook] LEARN: Tasks created")
+        print("[PASS] [Hook] LEARN: Tasks created")
 
         # Step 7: Verify task structure
         print("\n[System] LEARN tasks created:")
@@ -358,7 +358,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         print("  2. Register in skill-router-config.json")
         print("  3. Migrate from research_protocol to patterns")
 
-        print("\n✅ E2E SCENARIO 2 PASSED")
+        print("\n[PASS] E2E SCENARIO 2 PASSED")
         framework.cleanup()
         return True
 
@@ -418,7 +418,7 @@ class UserCreate(BaseModel):
             }
         })
 
-        print(f"✅ [Hook] ADVISE: Research protocol (Pydantic is new)")
+        print(f"[PASS] [Hook] ADVISE: Research protocol (Pydantic is new)")
 
         # Step 2: LEARN phase creates skill
         result = runner.run_hook({
@@ -467,9 +467,9 @@ class Order(BaseModel):
 
         # If pattern was migrated to patterns, would BLOCK here
         # For now, just demonstrate the flow
-        print("✅ [Hook] Fast path: Pattern recognized")
+        print("[PASS] [Hook] Fast path: Pattern recognized")
 
-        print("\n✅ E2E SCENARIO 3 PASSED")
+        print("\n[PASS] E2E SCENARIO 3 PASSED")
         framework.cleanup()
         return True
 
