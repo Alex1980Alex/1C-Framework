@@ -27,6 +27,8 @@ python -m src.cli.main --help
 | RAG-вопрос | `python -m src.cli.main ask "вопрос?" --stream` |
 | Чат | `python -m src.cli.main chat --strategy hybrid` |
 | Запуск API сервера | `python -m src.cli.main server --port 8000` |
+| Перезапуск сервера | `python -m src.cli.main restart` |
+| Дашборд с авто-стартом | `python -m src.cli.main dashboard` |
 
 ---
 
