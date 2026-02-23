@@ -761,6 +761,25 @@ def restart(
                 pass
         return None
 
+    def _kill_pid(pid: int, forceful: bool) -> bool:
+        """Kill process by PID (cross-platform)."""
+        import platform
+
+        if platform.system() == "Windows":
+            # Windows: taskkill works reliably, os.kill often gets Access Denied
+            flag = "/F" if forceful else "/F"  # Windows taskkill needs /F for uvicorn
+            result = subprocess.run(
+                ["taskkill", "/PID", str(pid), flag, "/T"],
+                capture_output=True, text=True, timeout=10,
+            )
+            return result.returncode == 0
+        else:
+            import os
+
+            sig = signal.SIGKILL if forceful else signal.SIGTERM
+            os.kill(pid, sig)
+            return True
+
     # --- Step 1: Stop existing server ---
     if _is_port_open(host, port):
         pid = _find_pid_on_port(port)
@@ -768,22 +787,17 @@ def restart(
             console.print(f"[yellow]Stopping server (PID {pid}) on {host}:{port}...[/yellow]")
             try:
                 if force:
-                    import os
-
-                    os.kill(pid, signal.SIGTERM)
+                    _kill_pid(pid, forceful=True)
                 else:
-                    # Graceful: SIGTERM, wait, then SIGKILL
-                    import os
-
-                    os.kill(pid, signal.SIGTERM)
+                    _kill_pid(pid, forceful=False)
                     for _ in range(20):
                         time.sleep(0.5)
                         if not _is_port_open(host, port):
                             break
                     else:
                         console.print("[yellow]Graceful stop timed out, forcing...[/yellow]")
-                        os.kill(pid, signal.SIGTERM)
-            except OSError as e:
+                        _kill_pid(pid, forceful=True)
+            except (OSError, subprocess.SubprocessError) as e:
                 console.print(f"[red]Failed to stop process: {e}[/red]")
                 raise typer.Exit(1)
 
