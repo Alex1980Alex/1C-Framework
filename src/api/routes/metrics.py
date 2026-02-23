@@ -131,6 +131,33 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
             font-size: 12px;
             margin-top: 30px;
         }
+        .query-form { display: flex; gap: 10px; margin-bottom: 12px; }
+        .query-input {
+            flex: 1; padding: 10px 14px; font-size: 14px;
+            border: 1px solid #ddd; border-radius: 6px;
+            outline: none; transition: border 0.2s;
+        }
+        .query-input:focus { border-color: #3b82f6; }
+        .query-btn {
+            padding: 10px 20px; font-size: 14px; font-weight: 600;
+            border: none; border-radius: 6px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-search { background: #3b82f6; color: white; }
+        .btn-search:hover { background: #2563eb; }
+        .btn-ask { background: #8b5cf6; color: white; }
+        .btn-ask:hover { background: #7c3aed; }
+        .query-result {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 6px; padding: 14px; font-size: 13px;
+            white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+            display: none; color: #334155; font-family: monospace;
+        }
+        .query-result.visible { display: block; }
+        .query-meta {
+            display: flex; gap: 16px; margin-top: 8px;
+            font-size: 12px; color: #94a3b8;
+        }
     </style>
 </head>
 <body>
