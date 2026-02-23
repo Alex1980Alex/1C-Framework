@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS skill_accuracy (
     skills TEXT,
     skill TEXT,
     prompt TEXT,
+    source TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
