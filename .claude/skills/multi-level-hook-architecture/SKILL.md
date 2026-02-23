@@ -23,6 +23,7 @@ description: "Трёхуровневая архитектура хуков Claud
 │  Может блокировать: Нет (только additionalContext)│
 │                                                  │
 │  ├─ skill-router.py          → загрузка скиллов  │
+│  │   └─ _detect_skill_activations → workaround   │
 │  ├─ ralph_activator.py       → Ralph Wiggum loop │
 │  ├─ research-task-detector.py→ детекция research  │
 │  ├─ decision-to-triad.py     → триада из решений │
