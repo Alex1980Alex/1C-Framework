@@ -150,7 +150,7 @@ def test_pre_a_flow():
         hook_path = _HOOK_DIR / "code-skill-enforcer.py"
 
         if not hook_path.exists():
-            print(f"❌ Hook not found: {hook_path}")
+            print(f"[FAIL] Hook not found: {hook_path}")
             return False
 
         runner = IntegrationTestRunner(hook_path, session)
@@ -167,11 +167,11 @@ def test_pre_a_flow():
         })
 
         if result["exit_code"] != 2:
-            print(f"❌ Step 1 failed: Expected exit 2, got {result['exit_code']}")
+            print(f"[FAIL] Step 1 failed: Expected exit 2, got {result['exit_code']}")
             return False
 
         if "langgraph-core" not in result["stdout"]:
-            print(f"❌ Step 1 failed: Expected 'langgraph-core' in output")
+            print(f"[FAIL] Step 1 failed: Expected 'langgraph-core' in output")
             return False
 
         print("✅ Step 1: BLOCKED as expected")
@@ -193,11 +193,11 @@ def test_pre_a_flow():
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Step 3 failed: Expected exit 0, got {result['exit_code']}")
+            print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         if "SKILL REQUIRED" in result["stdout"]:
-            print(f"❌ Step 3 failed: Should not require skill after activation")
+            print(f"[FAIL] Step 3 failed: Should not require skill after activation")
             return False
 
         print("✅ Step 3: ALLOWED as expected")
@@ -223,7 +223,7 @@ def test_pre_b_flow():
         hook_path = _HOOK_DIR / "code-skill-enforcer.py"
 
         if not hook_path.exists():
-            print(f"❌ Hook not found: {hook_path}")
+            print(f"[FAIL] Hook not found: {hook_path}")
             return False
 
         runner = IntegrationTestRunner(hook_path, session)
@@ -240,11 +240,11 @@ def test_pre_b_flow():
         })
 
         if result["exit_code"] != 2:
-            print(f"❌ Step 1 failed: Expected exit 2, got {result['exit_code']}")
+            print(f"[FAIL] Step 1 failed: Expected exit 2, got {result['exit_code']}")
             return False
 
         if "create-hook" not in result["stdout"]:
-            print(f"❌ Step 1 failed: Expected 'create-hook' in output")
+            print(f"[FAIL] Step 1 failed: Expected 'create-hook' in output")
             return False
 
         print("✅ Step 1: BLOCKED as expected")
@@ -266,7 +266,7 @@ def test_pre_b_flow():
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Step 3 failed: Expected exit 0, got {result['exit_code']}")
+            print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         print("✅ Step 3: ALLOWED as expected")
@@ -292,7 +292,7 @@ def test_pre_c_flow():
         hook_path = _HOOK_DIR / "code-skill-enforcer.py"
 
         if not hook_path.exists():
-            print(f"❌ Hook not found: {hook_path}")
+            print(f"[FAIL] Hook not found: {hook_path}")
             return False
 
         runner = IntegrationTestRunner(hook_path, session)
@@ -308,11 +308,11 @@ def test_pre_c_flow():
         })
 
         if result["exit_code"] != 2:
-            print(f"❌ Step 1 failed: Expected exit 2, got {result['exit_code']}")
+            print(f"[FAIL] Step 1 failed: Expected exit 2, got {result['exit_code']}")
             return False
 
         if "deployment" not in result["stdout"]:
-            print(f"❌ Step 1 failed: Expected 'deployment' in output")
+            print(f"[FAIL] Step 1 failed: Expected 'deployment' in output")
             return False
 
         print("✅ Step 1: BLOCKED as expected")
@@ -333,7 +333,7 @@ def test_pre_c_flow():
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Step 3 failed: Expected exit 0, got {result['exit_code']}")
+            print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         print("✅ Step 3: ALLOWED as expected")
@@ -359,7 +359,7 @@ def test_research_flow():
         hook_path = _HOOK_DIR / "code-skill-enforcer.py"
 
         if not hook_path.exists():
-            print(f"❌ Hook not found: {hook_path}")
+            print(f"[FAIL] Hook not found: {hook_path}")
             return False
 
         runner = IntegrationTestRunner(hook_path, session)
@@ -376,11 +376,11 @@ def test_research_flow():
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Step 1 failed: Expected exit 0 (ADVISE), got {result['exit_code']}")
+            print(f"[FAIL] Step 1 failed: Expected exit 0 (ADVISE), got {result['exit_code']}")
             return False
 
         if "Research Protocol" not in result["stdout"]:
-            print(f"❌ Step 1 failed: Expected research protocol message")
+            print(f"[FAIL] Step 1 failed: Expected research protocol message")
             return False
 
         print("✅ Step 1: ADVISE shown as expected")
@@ -388,7 +388,7 @@ def test_research_flow():
         # Check pending_learn was set
         pending = session.get_pending_learn()
         if not pending or pending.get("label") != "FastAPI Framework":
-            print(f"❌ Step 1 failed: pending_learn not set correctly")
+            print(f"[FAIL] Step 1 failed: pending_learn not set correctly")
             return False
 
         print(f"✅ Step 1: pending_learn set: {pending['label']}")
@@ -419,7 +419,7 @@ def test_learn_flow():
         hook_path = _HOOK_DIR / "code-skill-enforcer.py"
 
         if not hook_path.exists():
-            print(f"❌ Hook not found: {hook_path}")
+            print(f"[FAIL] Hook not found: {hook_path}")
             return False
 
         runner = IntegrationTestRunner(hook_path, session)
@@ -436,12 +436,12 @@ def test_learn_flow():
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Step 1 failed: Expected exit 0, got {result['exit_code']}")
+            print(f"[FAIL] Step 1 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         pending = session.get_pending_learn()
         if not pending:
-            print(f"❌ Step 1 failed: pending_learn not set")
+            print(f"[FAIL] Step 1 failed: pending_learn not set")
             return False
 
         print(f"✅ Step 1: pending_learn set for '{pending['label']}'")
@@ -458,11 +458,11 @@ def test_learn_flow():
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Step 2 failed: Expected exit 0, got {result['exit_code']}")
+            print(f"[FAIL] Step 2 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         if "LEARN PHASE" not in result["stdout"]:
-            print(f"❌ Step 2 failed: Expected LEARN PHASE message")
+            print(f"[FAIL] Step 2 failed: Expected LEARN PHASE message")
             print(f"   stdout: {result['stdout']}")
             return False
 
@@ -472,7 +472,7 @@ def test_learn_flow():
         print("\n[Step 3] Verify pending_learn cleared...")
         pending = session.get_pending_learn()
         if pending is not None:
-            print(f"❌ Step 3 failed: pending_learn should be cleared")
+            print(f"[FAIL] Step 3 failed: pending_learn should be cleared")
             return False
 
         print("✅ Step 3: pending_learn cleared")
@@ -510,7 +510,7 @@ def run_integration_tests():
             else:
                 failed += 1
         except Exception as e:
-            print(f"\n❌ {name} failed with exception: {e}")
+            print(f"\n[FAIL] {name} failed with exception: {e}")
             import traceback
             traceback.print_exc()
             failed += 1
