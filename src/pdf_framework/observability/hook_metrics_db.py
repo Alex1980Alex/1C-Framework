@@ -418,6 +418,26 @@ class HookMetricsDB:
                 "blocks": row["blocks"],
                 "errors": row["errors"],
             })
+
+        # Compute p95 per hook
+        cursor.execute(
+            """SELECT hook, elapsed_ms FROM invocations
+               WHERE timestamp >= ?
+               ORDER BY hook, elapsed_ms""",
+            (cutoff,),
+        )
+        per_hook_times: dict[str, list[int]] = {}
+        for row in cursor.fetchall():
+            per_hook_times.setdefault(row["hook"], []).append(row["elapsed_ms"])
+
+        for result in results:
+            times = per_hook_times.get(result["hook"], [])
+            if times:
+                idx = min(int(len(times) * 0.95), len(times) - 1)
+                result["p95_ms"] = times[idx]
+            else:
+                result["p95_ms"] = 0
+
         return results
 
     def get_skill_metrics(self, hours: int = 24) -> dict[str, Any]:
