@@ -477,10 +477,15 @@ def list_suites() -> None:
 
 def format_suite_result(result: dict) -> str:
     """Format a single suite result."""
+    mode_label = f"  Mode: {result['mode']}" if result.get("mode") else ""
     lines = [
         f"{'=' * 70}",
         f"  Suite: {result['suite']}",
         f"  {result.get('description', '')}",
+    ]
+    if mode_label:
+        lines.append(mode_label)
+    lines += [
         f"{'=' * 70}",
         f"  Result: {result['passed']}/{result['total']} passed ({result['rate']:.1%})",
         "",
