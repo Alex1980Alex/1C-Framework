@@ -219,8 +219,13 @@ class HookOutput:
             >>> output.flush()
         """
         # Plain text output first (100% activation)
+        # UTF-8 safe output for Windows cp1251 consoles
         for text in self._print_output:
-            print(text)
+            try:
+                print(text)
+            except UnicodeEncodeError:
+                sys.stdout.buffer.write(text.encode("utf-8", errors="replace"))
+                sys.stdout.buffer.write(b"\n")
 
         # Block message
         if self._should_block:
