@@ -31,26 +31,16 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-# Path resolution
+# Path resolution (same pattern as all other hooks)
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
-_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
-_FRAMEWORK_HOOKS = os.path.join(os.path.dirname(_HOOK_DIR), "scripts", "claude-backend", ".claude", "hooks")
-
-# Add to path in priority order
-for hook_path in [_FRAMEWORK_HOOKS, _USER_HOOKS, _HOOK_DIR]:
-    shared_path = os.path.join(hook_path, "shared")
-    if os.path.isdir(shared_path):
-        sys.path.insert(0, shared_path)
-    base_path = os.path.join(hook_path, "base")
-    if os.path.isdir(base_path):
-        sys.path.insert(0, base_path)
+sys.path.insert(0, _HOOK_DIR)
 
 # Imports
 try:
-    from base import BaseHook, HookInput, HookOutput, HookEvent, HookOutcome
-    from session_state import SessionState
-    from trust_scorer import TrustScorer
-    from task_master import add_task, has_recent_completion
+    from base.base import BaseHook, HookInput, HookOutput, HookEvent, HookOutcome
+    from shared.session_state import SessionState
+    from shared.trust_scorer import TrustScorer
+    from shared.task_master import add_task, has_recent_completion
 except ImportError as e:
     # Graceful degradation: allow import errors
     _import_error = str(e)
