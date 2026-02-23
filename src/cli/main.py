@@ -710,18 +710,23 @@ def dashboard(
     host: str = typer.Option("127.0.0.1", help="Server host"),
     page: str = typer.Option("metrics/html", help="Dashboard page to open"),
     no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser"),
+    no_docker: bool = typer.Option(False, "--no-docker", help="Skip Docker/Qdrant auto-start"),
 ):
-    """Open metrics dashboard, auto-starting server if needed.
+    """Open metrics dashboard, auto-starting Docker, Qdrant and API server as needed.
 
-    Checks if the API server is already running. If not, starts it
-    in the background and opens the dashboard in your default browser.
+    Startup chain:
+      1. Docker Desktop (if not running)
+      2. Qdrant container (if not running)
+      3. API server (if not running)
+      4. Open browser
 
     Examples:
         pdf-framework dashboard
         pdf-framework dashboard --port 9000
-        pdf-framework dashboard --page docs
+        pdf-framework dashboard --no-docker
         pdf-framework dashboard --no-browser
     """
+    import shutil
     import socket
     import subprocess
     import sys
@@ -729,36 +734,117 @@ def dashboard(
     import webbrowser
 
     url = f"http://{host}:{port}/{page}"
+    _CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
     def _is_port_open(h: str, p: int) -> bool:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(1)
             return s.connect_ex((h, p)) == 0
 
+    # --- Step 1: Docker Desktop ---
+    if not no_docker and not _is_port_open("127.0.0.1", 6333):
+        docker_bin = shutil.which("docker")
+        if docker_bin is None:
+            console.print("[red]Docker not found in PATH[/red]")
+            raise typer.Exit(1)
+
+        # Check if Docker daemon is responsive
+        docker_ok = subprocess.run(
+            ["docker", "info"], capture_output=True, timeout=5,
+        ).returncode == 0 if docker_bin else False
+
+        if not docker_ok:
+            console.print("[yellow]Docker Desktop not running. Starting...[/yellow]")
+            docker_desktop = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
+            try:
+                subprocess.Popen(
+                    [docker_desktop],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=_CREATE_NO_WINDOW,
+                )
+            except FileNotFoundError:
+                console.print(f"[red]Docker Desktop not found at {docker_desktop}[/red]")
+                console.print("[dim]Server will start in degraded mode (no Qdrant)[/dim]")
+                docker_ok = False
+
+            if not docker_ok:
+                # Wait for Docker daemon to become ready
+                console.print("[dim]Waiting for Docker daemon...[/dim]")
+                for _ in range(60):
+                    time.sleep(2)
+                    result = subprocess.run(
+                        ["docker", "info"], capture_output=True, timeout=5,
+                    )
+                    if result.returncode == 0:
+                        docker_ok = True
+                        console.print("[green]Docker Desktop started[/green]")
+                        break
+                else:
+                    console.print("[yellow]Docker daemon not ready after 120s. Continuing without Qdrant.[/yellow]")
+
+        # --- Step 2: Qdrant container ---
+        if docker_ok and not _is_port_open("127.0.0.1", 6333):
+            # Check if container exists but stopped
+            result = subprocess.run(
+                ["docker", "ps", "-a", "--filter", "name=qdrant", "--format", "{{.Status}}"],
+                capture_output=True, text=True, timeout=10,
+            )
+            container_status = result.stdout.strip()
+
+            if container_status.startswith("Exited"):
+                console.print("[yellow]Qdrant container stopped. Restarting...[/yellow]")
+                subprocess.run(["docker", "start", "qdrant"], capture_output=True, timeout=15)
+            elif not container_status:
+                console.print("[yellow]Qdrant container not found. Creating...[/yellow]")
+                subprocess.run(
+                    ["docker", "run", "-d", "--name", "qdrant",
+                     "-p", "6333:6333", "-p", "6334:6334",
+                     "-v", "qdrant_storage:/qdrant/storage",
+                     "qdrant/qdrant"],
+                    capture_output=True, timeout=120,
+                )
+            else:
+                console.print(f"[dim]Qdrant container: {container_status}[/dim]")
+
+            # Wait for Qdrant to become ready
+            for _ in range(30):
+                time.sleep(1)
+                if _is_port_open("127.0.0.1", 6333):
+                    console.print("[green]Qdrant ready on port 6333[/green]")
+                    break
+            else:
+                console.print("[yellow]Qdrant not ready after 30s. Server will start in degraded mode.[/yellow]")
+    elif not no_docker and _is_port_open("127.0.0.1", 6333):
+        console.print("[green]Qdrant already running on port 6333[/green]")
+
+    # --- Step 3: API server ---
     if _is_port_open(host, port):
-        console.print(f"[green]Server already running on {host}:{port}[/green]")
+        console.print(f"[green]API server already running on {host}:{port}[/green]")
     else:
-        console.print(f"[yellow]Server not running. Starting on {host}:{port}...[/yellow]")
+        console.print(f"[yellow]Starting API server on {host}:{port}...[/yellow]")
         subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "src.api.app:create_app",
              "--factory", "--host", host, "--port", str(port)],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            creationflags=_CREATE_NO_WINDOW,
         )
-        # Wait for server to become ready
-        for i in range(30):
+        for _ in range(30):
             time.sleep(0.5)
             if _is_port_open(host, port):
-                console.print(f"[green]Server started successfully[/green]")
+                console.print(f"[green]API server started[/green]")
                 break
         else:
-            console.print(f"[red]Server failed to start within 15 seconds[/red]")
+            console.print(f"[red]API server failed to start within 15 seconds[/red]")
             raise typer.Exit(1)
 
+    # --- Step 4: Browser ---
     if not no_browser:
         console.print(f"[blue]Opening {url}[/blue]")
         webbrowser.open(url)
+    else:
+        console.print(f"[blue]Dashboard available at: {url}[/blue]")
     else:
         console.print(f"[blue]Dashboard available at: {url}[/blue]")
 
