@@ -98,7 +98,7 @@ src/
 
 Evaluation: `scripts/eval-hooks.py` + `tests/eval/hook_prompts.json` (40 тестов, 16 скиллов).
 Dashboard: `scripts/hook-dashboard.py` (CLI) + `scripts/skill-enforcement-dashboard.py` (enforcement) + `src/ui/pages/hook_dashboard.py` (Streamlit).
-Monitoring: `src/pdf_framework/observability/hook_metrics_db.py` (SQLite) + `tracer.py` (OTLP).
+Monitoring: `src/pdf_framework/observability/hook_metrics_db.py` (SQLite) + `tracer.py` (OTLP) + `/metrics/html` (unified dashboard).
 Migration: `scripts/skill-migration-advisor.py` (pattern coverage analysis).
 
 ## Research
