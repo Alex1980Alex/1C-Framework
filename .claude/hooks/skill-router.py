@@ -193,6 +193,9 @@ class SkillRouter(BaseHook):
         if not prompt or len(prompt) < 3:
             return None
 
+        # --- Detect skill activations from previous turn's <command-name> tags ---
+        _detect_skill_activations(prompt, inp.session_id)
+
         # TIER 2A: Skip IDE events (VS Code metadata, not user intent)
         prompt_stripped = prompt.strip()
         if prompt_stripped.startswith((
