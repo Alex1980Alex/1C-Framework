@@ -524,7 +524,8 @@ async def get_metrics():
         errors = hook_db.get_error_log(limit=20)
         enforcement = hook_db.get_enforcement_metrics()
         hook_db.close()
-    except Exception:
+    except Exception as e:
+        logger.error("HookMetricsDB failed: %s", e, exc_info=True)
         hook_metrics = []
         skill_metrics = {
             "total_recommended": 0,
