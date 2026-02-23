@@ -52,7 +52,7 @@ description: "Трёхуровневая архитектура хуков Claud
 │  └─ knowledge-cache-reminder.py → кеш знаний    │
 │                                                  │
 │  Skill:                                          │
-│  └─ skill-usage-metrics.py  → метрики скиллов    │
+│  └─ skill-usage-metrics.py  → метрики + accuracy │
 │                                                  │
 │  Write:                                          │
 │  └─ factory-enforcer.py     → проверка триады    │
@@ -101,7 +101,7 @@ description: "Трёхуровневая архитектура хуков Claud
 | [auto-git-save.py](.claude/hooks/auto-git-save.py) | Write\|Edit | 30s | Sync commit |
 | [docs-change-tracker.py](.claude/hooks/docs-change-tracker.py) | Write\|Edit | 5s | Напоминание обновить доки |
 | [knowledge-cache-reminder.py](.claude/hooks/knowledge-cache-reminder.py) | WebSearch\|WebFetch | 5s | Напоминание кешировать знания |
-| [skill-usage-metrics.py](.claude/hooks/skill-usage-metrics.py) | Skill | 3s | Метрики использования скиллов |
+| [skill-usage-metrics.py](.claude/hooks/skill-usage-metrics.py) | Skill | 3s | Метрики + accuracy (prompt_id корреляция) |
 | [factory-enforcer.py](.claude/hooks/factory-enforcer.py) | Write | 5s | Проверка артефактов триады |
 | [bulk-action-guard.py](.claude/hooks/bulk-action-guard.py) | Bash | 3s | Защита от массовых операций |
 | [auto-git-save.py](.claude/hooks/auto-git-save.py) | Bash | 30s | Sync commit после Bash |

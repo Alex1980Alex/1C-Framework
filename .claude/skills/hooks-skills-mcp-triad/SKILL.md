@@ -133,12 +133,36 @@ Config-driven маршрутизация промптов к скиллам че
 Промпт пользователя
   → skill-router.py (UserPromptSubmit)
     → keyword matching по 38 bundles
-      → systemMessage: "загрузи skill X, optional Y"
-        → Claude загружает через Skill tool
-          → skill-usage-metrics.py логирует → data/skill-usage.log
+      → генерирует prompt_id, пишет в session_state + skill-accuracy.jsonl (recommend)
+        → systemMessage: "загрузи skill X, optional Y"
+          → Claude загружает через Skill tool
+            → skill-usage-metrics.py логирует → data/skill-usage.log
+            → skill-usage-metrics.py читает prompt_id → skill-accuracy.jsonl (activate)
 ```
 
 38 bundles сгруппированы по доменам: framework (12), langchain (6), claude-code (8), infra (5), other (7).
+
+### Skill Accuracy — PER-PROMPT КОРРЕЛЯЦИЯ
+
+Непрерывный pipeline для измерения точности рекомендаций:
+
+```
+skill-router.py          skill-usage-metrics.py
+  (recommend)                   (activate)
+       │                            │
+       └──── skill-accuracy.jsonl ──┘
+                prompt_id связывает:
+                recommended=[X,Y] → activated=[X] → MATCH
+                recommended=[X,Y] → activated=[]  → MISS
+```
+
+- **Лог**: `data/skill-accuracy.jsonl` (JSONL, append-only)
+- **Формат**: `{ts, type:"recommend"|"activate", prompt_id, skills/skill, prompt}`
+- **Корреляция**: prompt_id = md5(timestamp + prompt[:80])[:8]
+- **Shared state**: `session_state.current_prompt_id` связывает recommend → activate
+- **Dashboard**: `python scripts/hook-dashboard.py --section accuracy`
+- **Метрики**: match rate, per-skill precision, recent misses
+- **SQLite**: таблица `skill_accuracy` в `hook_metrics_db.py` для Streamlit dashboard
 
 ### MCP Server (1 сервер, 14 инструментов) — ЧЕМ
 
@@ -332,6 +356,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 - **docs-change-enforcer** (Stop) проверяет инфра-файлы (.claude/hooks/*.py, settings.json, settings.local.json) → требует обновить CLAUDE.md
 - **skill-usage-metrics** логирует → `data/skill-usage.log` (не через todos)
 - **skill-router** читает `skill-router-config.json` → systemMessage с рекомендациями
+- **skill-router** + **skill-usage-metrics** пишут в `data/skill-accuracy.jsonl` (через shared prompt_id)
 - Файл защищён file lock (Windows msvcrt / Unix fcntl)
 - Atomic writes предотвращают corruption
 
