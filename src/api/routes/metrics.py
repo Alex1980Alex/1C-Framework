@@ -296,6 +296,38 @@ async def get_metrics():
     total_hits = llm_cache_stats["hits"] + emb_cache_stats.hits
     combined_hit_rate = total_hits / total_requests if total_requests > 0 else 0.0
 
+    # Hook/Skill metrics from HookMetricsDB
+    try:
+        hook_db = HookMetricsDB()
+        hook_db.ingest_from_logs()
+        hook_metrics = hook_db.get_hook_metrics()
+        skill_metrics = hook_db.get_skill_metrics()
+        accuracy = hook_db.get_accuracy_metrics()
+        errors = hook_db.get_error_log(limit=20)
+        enforcement = hook_db.get_enforcement_metrics()
+        hook_db.close()
+    except Exception:
+        hook_metrics = []
+        skill_metrics = {
+            "total_recommended": 0,
+            "total_activated": 0,
+            "activation_rate": 0.0,
+            "per_skill": {},
+        }
+        accuracy = {
+            "total_prompts": 0,
+            "matched_prompts": 0,
+            "missed_prompts": 0,
+            "match_rate": 0.0,
+        }
+        errors = []
+        enforcement = {
+            "total_blocks": 0,
+            "total_allows": 0,
+            "block_rate": 0.0,
+            "per_hook": {},
+        }
+
     return {
         **metrics,
         "embedding_cache": {
@@ -311,6 +343,11 @@ async def get_metrics():
             "stale": doc_cache_stats.get("stale", 0),
         },
         "combined_hit_rate": combined_hit_rate,
+        "hook_metrics": hook_metrics,
+        "skill_metrics": skill_metrics,
+        "accuracy": accuracy,
+        "errors": errors,
+        "enforcement": enforcement,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
