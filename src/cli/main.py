@@ -705,6 +705,65 @@ def server(
 
 
 @app.command()
+def dashboard(
+    port: int = typer.Option(8000, help="Server port"),
+    host: str = typer.Option("127.0.0.1", help="Server host"),
+    page: str = typer.Option("metrics/html", help="Dashboard page to open"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser"),
+):
+    """Open metrics dashboard, auto-starting server if needed.
+
+    Checks if the API server is already running. If not, starts it
+    in the background and opens the dashboard in your default browser.
+
+    Examples:
+        pdf-framework dashboard
+        pdf-framework dashboard --port 9000
+        pdf-framework dashboard --page docs
+        pdf-framework dashboard --no-browser
+    """
+    import socket
+    import subprocess
+    import sys
+    import time
+    import webbrowser
+
+    url = f"http://{host}:{port}/{page}"
+
+    def _is_port_open(h: str, p: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            return s.connect_ex((h, p)) == 0
+
+    if _is_port_open(host, port):
+        console.print(f"[green]Server already running on {host}:{port}[/green]")
+    else:
+        console.print(f"[yellow]Server not running. Starting on {host}:{port}...[/yellow]")
+        subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "src.api.app:create_app",
+             "--factory", "--host", host, "--port", str(port)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        # Wait for server to become ready
+        for i in range(30):
+            time.sleep(0.5)
+            if _is_port_open(host, port):
+                console.print(f"[green]Server started successfully[/green]")
+                break
+        else:
+            console.print(f"[red]Server failed to start within 15 seconds[/red]")
+            raise typer.Exit(1)
+
+    if not no_browser:
+        console.print(f"[blue]Opening {url}[/blue]")
+        webbrowser.open(url)
+    else:
+        console.print(f"[blue]Dashboard available at: {url}[/blue]")
+
+
+@app.command()
 def cache(
     action: str = typer.Argument(..., help="Action: stats, clear"),
     cache_type: str = typer.Option("all", "--type", "-t", help="Cache type: all/embedding/llm/document"),
