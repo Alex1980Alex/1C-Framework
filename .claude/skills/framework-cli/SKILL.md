@@ -185,7 +185,7 @@ python -m src.cli.main restart [ОПЦИИ]
 | `--port` | Server port | `8000` |
 | `--force`, `-f` | Kill без graceful shutdown | `false` |
 
-Находит процесс на порту (netstat/lsof), останавливает, запускает новый в фоне.
+Находит процесс на порту (netstat/lsof), останавливает, запускает новый в фоне. Windows: `taskkill /PID /F /T`; Unix: `SIGTERM` → `SIGKILL`.
 
 ```bash
 python -m src.cli.main restart
