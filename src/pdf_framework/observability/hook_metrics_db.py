@@ -301,20 +301,24 @@ class HookMetricsDB:
 
                         skill = ""
                         session = ""
+                        source = "post-tool-use"
                         for part in parts[1:]:
                             if "=" in part:
                                 k, v = part.split("=", 1)
-                                if k.strip() == "skill":
+                                k = k.strip()
+                                if k == "skill":
                                     skill = v.strip()
-                                elif k.strip() == "session":
+                                elif k == "session":
                                     session = v.strip()
+                                elif k == "source":
+                                    source = v.strip()
 
                         if skill:
                             cursor.execute(
                                 """INSERT INTO skill_activations
-                                   (timestamp, skill, session)
-                                   VALUES (?, ?, ?)""",
-                                (ts, skill, session),
+                                   (timestamp, skill, session, source)
+                                   VALUES (?, ?, ?, ?)""",
+                                (ts, skill, session, source),
                             )
                             count += 1
                     except (ValueError, IndexError):
