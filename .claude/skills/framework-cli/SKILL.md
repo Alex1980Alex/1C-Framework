@@ -171,6 +171,47 @@ python -m src.cli.main server [ОПЦИИ]
 | `--reload` | `false` |
 | `--workers` | `1` |
 
+### restart — Перезапуск API сервера
+
+```bash
+python -m src.cli.main restart [ОПЦИИ]
+```
+
+| Опция | Описание | Default |
+|-------|----------|---------|
+| `--host` | Server host | `127.0.0.1` |
+| `--port` | Server port | `8000` |
+| `--force`, `-f` | Kill без graceful shutdown | `false` |
+
+Находит процесс на порту (netstat/lsof), останавливает, запускает новый в фоне.
+
+```bash
+python -m src.cli.main restart
+python -m src.cli.main restart --port 9000
+python -m src.cli.main restart --force
+```
+
+### dashboard — Метрики с авто-стартом
+
+```bash
+python -m src.cli.main dashboard [ОПЦИИ]
+```
+
+| Опция | Описание | Default |
+|-------|----------|---------|
+| `--port` | Server port | `8000` |
+| `--host` | Server host | `127.0.0.1` |
+| `--page` | Dashboard page | `metrics/html` |
+| `--no-browser` | Не открывать браузер | `false` |
+| `--no-docker` | Пропустить Docker/Qdrant | `false` |
+
+Цепочка: Docker Desktop → Qdrant container → API server → браузер.
+
+```bash
+python -m src.cli.main dashboard
+python -m src.cli.main dashboard --no-docker --no-browser
+```
+
 ### ui — Запуск Web UI
 
 ```bash
