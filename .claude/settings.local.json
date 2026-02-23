@@ -148,7 +148,8 @@
       "Bash(docker volume:*)",
       "Bash(docker run:*)",
       "Bash(docker compose:*)",
-      "Bash(docker start:*)"
+      "Bash(docker start:*)",
+      "Bash(git:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
