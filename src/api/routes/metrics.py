@@ -455,6 +455,69 @@ async def get_metrics_html():
     if not strategy_rows:
         strategy_rows.append('<tr><td colspan="3" style="text-align:center;color:#999;">No data yet</td></tr>')
 
+    # Build hook invocation rows
+    hook_rows = []
+    for h in metrics_data.get("hook_metrics", []):
+        hook_name = h.get("hook", "unknown")
+        # Shorten hook name (remove .py suffix, trim path)
+        short_name = hook_name.rsplit("/", 1)[-1].replace(".py", "")
+        blocks_class = ' class="warning"' if h.get("blocks", 0) > 0 else ""
+        errors_class = ' class="error"' if h.get("errors", 0) > 0 else ""
+        hook_rows.append(f"""
+            <tr>
+                <td><strong>{short_name}</strong></td>
+                <td>{h.get('count', 0)}</td>
+                <td>{h.get('avg_ms', 0):.1f}</td>
+                <td>{h.get('p95_ms', 0)}</td>
+                <td{blocks_class}>{h.get('blocks', 0)}</td>
+                <td{errors_class}>{h.get('errors', 0)}</td>
+            </tr>
+        """)
+    if not hook_rows:
+        hook_rows.append('<tr><td colspan="6" style="text-align:center;color:#999;">No hook data yet</td></tr>')
+
+    # Build skill activation rows
+    skill_rows = []
+    skill_data = metrics_data.get("skill_metrics", {})
+    per_skill = skill_data.get("per_skill", {})
+    for skill_name in sorted(per_skill.keys()):
+        s = per_skill[skill_name]
+        rate = s.get("rate", 0)
+        rate_class = "good" if rate >= 70 else "warning" if rate >= 40 else ""
+        skill_rows.append(f"""
+            <tr>
+                <td><strong>{skill_name}</strong></td>
+                <td>{s.get('recommended', 0)}</td>
+                <td>{s.get('activated', 0)}</td>
+                <td class="{rate_class}">{rate:.1f}%</td>
+            </tr>
+        """)
+    if not skill_rows:
+        skill_rows.append('<tr><td colspan="4" style="text-align:center;color:#999;">No skill data yet</td></tr>')
+
+    # Build error rows
+    error_rows = []
+    for err in metrics_data.get("errors", [])[:10]:
+        ts = err.get("timestamp", "")[:19]
+        hook_name = (err.get("hook") or "unknown").rsplit("/", 1)[-1].replace(".py", "")
+        error_msg = (err.get("error") or "—")[:80]
+        error_rows.append(f"""
+            <tr>
+                <td style="white-space:nowrap;">{ts}</td>
+                <td>{hook_name}</td>
+                <td style="color:#ef4444;">{error_msg}</td>
+            </tr>
+        """)
+    if not error_rows:
+        error_rows.append('<tr><td colspan="3" style="text-align:center;color:#999;">No errors</td></tr>')
+
+    # Activation rate color
+    act_rate = skill_data.get("activation_rate", 0)
+    activation_rate_class = "good" if act_rate >= 70 else "warning" if act_rate >= 40 else ""
+
+    # Enforcement data
+    enforcement = metrics_data.get("enforcement", {})
+
     # Determine color classes
     cache_rate = metrics_data.get("cache_hit_rate", 0)
     cache_class = "good" if cache_rate > 0.5 else "warning" if cache_rate > 0.2 else ""
