@@ -412,6 +412,12 @@ def format_summary(
         f"  Skills activated:     {skill_metrics['total_activated']:>6}",
         f"  Activation rate:      {skill_metrics['activation_rate']:>5.1f}%",
         f"  Dead skills:          {len(skill_metrics['dead_skills']):>6}",
+    ]
+    by_source = skill_metrics.get("by_source", {})
+    if by_source:
+        for src, cnt in sorted(by_source.items()):
+            lines.append(f"    via {src}:  {cnt:>6}")
+    lines += [
         "",
     ]
     return "\n".join(lines)
