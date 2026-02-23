@@ -147,22 +147,28 @@ Config-driven маршрутизация промптов к скиллам че
 
 ### Skill Accuracy — PER-PROMPT КОРРЕЛЯЦИЯ
 
-Непрерывный pipeline для измерения точности рекомендаций:
+Непрерывный pipeline для измерения точности рекомендаций. Два источника активаций:
 
 ```
-skill-router.py          skill-usage-metrics.py
-  (recommend)                   (activate)
-       │                            │
-       └──── skill-accuracy.jsonl ──┘
+skill-router.py          skill-usage-metrics.py     skill-router.py
+  (recommend)              (activate via PostToolUse)  (activate via prompt-detection)
+       │                            │                        │
+       └──── skill-accuracy.jsonl ──┴────────────────────────┘
                 prompt_id связывает:
                 recommended=[X,Y] → activated=[X] → MATCH
                 recommended=[X,Y] → activated=[]  → MISS
 ```
 
+**Источники активаций**:
+1. **PostToolUse:Skill** (`skill-usage-metrics.py`) — прямой, но ненадёжный (баг #6305)
+2. **Prompt-detection** (`skill-router.py:_detect_skill_activations`) — workaround: при загрузке скилла через `Skill()` его содержимое попадает в следующий prompt как `<command-name>skill-name</command-name>` тег. `skill-router.py` парсит эти маркеры и логирует активацию с `source=prompt-detection`
+
 - **Лог**: `data/skill-accuracy.jsonl` (JSONL, append-only)
-- **Формат**: `{ts, type:"recommend"|"activate", prompt_id, skills/skill, prompt}`
+- **Формат**: `{ts, type:"recommend"|"activate", prompt_id, skills/skill, prompt, source?}`
+- **source**: `"prompt-detection"` (Level 1 workaround) или отсутствует (Level 2 PostToolUse)
 - **Корреляция**: prompt_id = md5(timestamp + prompt[:80])[:8]
-- **Shared state**: `session_state.current_prompt_id` связывает recommend → activate
+- **Shared state**: `SessionState.set_prompt_id()` / `SessionState.get_prompt_id()` связывает recommend → activate
+- **Dedup**: `SessionState.get_already_activated()` предотвращает двойной счёт
 - **Dashboard**: `python scripts/hook-dashboard.py --section accuracy`
 - **Метрики**: match rate, per-skill precision, recent misses
 - **SQLite**: таблица `skill_accuracy` в `hook_metrics_db.py` для Streamlit dashboard
