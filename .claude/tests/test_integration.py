@@ -174,12 +174,12 @@ def test_pre_a_flow():
             print(f"[FAIL] Step 1 failed: Expected 'langgraph-core' in output")
             return False
 
-        print("✅ Step 1: BLOCKED as expected")
+        print("[PASS] Step 1: BLOCKED as expected")
 
         # Step 2: Activate skill
         print("\n[Step 2] Activate langgraph-core skill...")
         session.activate_skill("langgraph-core")
-        print(f"✅ Step 2: Activated skills: {session.get_activated()}")
+        print(f"[PASS] Step 2: Activated skills: {session.get_activated()}")
 
         # Step 3: Retry same Write -> ALLOW
         print("\n[Step 3] Retry Write with activated skill...")
@@ -200,9 +200,9 @@ def test_pre_a_flow():
             print(f"[FAIL] Step 3 failed: Should not require skill after activation")
             return False
 
-        print("✅ Step 3: ALLOWED as expected")
+        print("[PASS] Step 3: ALLOWED as expected")
 
-        print("\n✅ PRE-A FLOW PASSED")
+        print("\n[PASS] PRE-A FLOW PASSED")
         session.cleanup()
         return True
 
@@ -247,12 +247,12 @@ def test_pre_b_flow():
             print(f"[FAIL] Step 1 failed: Expected 'create-hook' in output")
             return False
 
-        print("✅ Step 1: BLOCKED as expected")
+        print("[PASS] Step 1: BLOCKED as expected")
 
         # Step 2: Activate skill
         print("\n[Step 2] Activate create-hook skill...")
         session.activate_skill("create-hook")
-        print(f"✅ Step 2: Activated skills: {session.get_activated()}")
+        print(f"[PASS] Step 2: Activated skills: {session.get_activated()}")
 
         # Step 3: Retry same Write -> ALLOW
         print("\n[Step 3] Retry Write with activated skill...")
@@ -269,9 +269,9 @@ def test_pre_b_flow():
             print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
-        print("✅ Step 3: ALLOWED as expected")
+        print("[PASS] Step 3: ALLOWED as expected")
 
-        print("\n✅ PRE-B FLOW PASSED")
+        print("\n[PASS] PRE-B FLOW PASSED")
         session.cleanup()
         return True
 
@@ -315,12 +315,12 @@ def test_pre_c_flow():
             print(f"[FAIL] Step 1 failed: Expected 'deployment' in output")
             return False
 
-        print("✅ Step 1: BLOCKED as expected")
+        print("[PASS] Step 1: BLOCKED as expected")
 
         # Step 2: Activate skill
         print("\n[Step 2] Activate deployment skill...")
         session.activate_skill("deployment")
-        print(f"✅ Step 2: Activated skills: {session.get_activated()}")
+        print(f"[PASS] Step 2: Activated skills: {session.get_activated()}")
 
         # Step 3: Retry same Bash -> ALLOW
         print("\n[Step 3] Retry Bash with activated skill...")
@@ -336,9 +336,9 @@ def test_pre_c_flow():
             print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
-        print("✅ Step 3: ALLOWED as expected")
+        print("[PASS] Step 3: ALLOWED as expected")
 
-        print("\n✅ PRE-C FLOW PASSED")
+        print("\n[PASS] PRE-C FLOW PASSED")
         session.cleanup()
         return True
 
@@ -383,7 +383,7 @@ def test_research_flow():
             print(f"[FAIL] Step 1 failed: Expected research protocol message")
             return False
 
-        print("✅ Step 1: ADVISE shown as expected")
+        print("[PASS] Step 1: ADVISE shown as expected")
 
         # Check pending_learn was set
         pending = session.get_pending_learn()
@@ -391,14 +391,14 @@ def test_research_flow():
             print(f"[FAIL] Step 1 failed: pending_learn not set correctly")
             return False
 
-        print(f"✅ Step 1: pending_learn set: {pending['label']}")
+        print(f"[PASS] Step 1: pending_learn set: {pending['label']}")
 
         # Step 2: Clear pending (simulating LEARN phase completion)
         print("\n[Step 2] Clear pending_learn (simulating LEARN completion)...")
         session.clear_pending_learn()
-        print("✅ Step 2: pending_learn cleared")
+        print("[PASS] Step 2: pending_learn cleared")
 
-        print("\n✅ RESEARCH FLOW PASSED")
+        print("\n[PASS] RESEARCH FLOW PASSED")
         session.cleanup()
         return True
 
@@ -444,7 +444,7 @@ def test_learn_flow():
             print(f"[FAIL] Step 1 failed: pending_learn not set")
             return False
 
-        print(f"✅ Step 1: pending_learn set for '{pending['label']}'")
+        print(f"[PASS] Step 1: pending_learn set for '{pending['label']}'")
 
         # Step 2: POST - Same Write -> should create LEARN tasks
         print("\n[Step 2] POST: Write completed (should create LEARN tasks)...")
@@ -466,7 +466,7 @@ def test_learn_flow():
             print(f"   stdout: {result['stdout']}")
             return False
 
-        print("✅ Step 2: LEARN tasks created")
+        print("[PASS] Step 2: LEARN tasks created")
 
         # Step 3: Verify pending_learn was cleared
         print("\n[Step 3] Verify pending_learn cleared...")
@@ -475,9 +475,9 @@ def test_learn_flow():
             print(f"[FAIL] Step 3 failed: pending_learn should be cleared")
             return False
 
-        print("✅ Step 3: pending_learn cleared")
+        print("[PASS] Step 3: pending_learn cleared")
 
-        print("\n✅ LEARN FLOW PASSED")
+        print("\n[PASS] LEARN FLOW PASSED")
         session.cleanup()
         return True
 
