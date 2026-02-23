@@ -97,6 +97,78 @@ def _log_accuracy_recommend(prompt_id: str, skills: list[str], prompt_snippet: s
         pass  # Never block
 
 
+def _log_skill_usage_activation(skill_name: str, session_id: str) -> None:
+    """Append skill activation (detected from prompt markers) to data/skill-usage.log."""
+    try:
+        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+        log_path = os.path.join(project_dir, "data", "skill-usage.log")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sid = session_id[:16] if session_id else "unknown"
+        line = f"{ts} | skill={skill_name} | session={sid} | source=prompt-detection\n"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception:
+        pass  # Logging must never block
+
+
+def _log_accuracy_activate(prompt_id: str, skill_name: str) -> None:
+    """Write activate event to data/skill-accuracy.jsonl (from prompt detection)."""
+    try:
+        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+        log_path = os.path.join(project_dir, "data", "skill-accuracy.jsonl")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        entry = {
+            "ts": datetime.now().isoformat(),
+            "type": "activate",
+            "prompt_id": prompt_id,
+            "skill": skill_name,
+            "source": "prompt-detection",
+        }
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass  # Never block
+
+
+def _detect_skill_activations(prompt: str, session_id: str) -> None:
+    """
+    Detect skill activations from prompt markers.
+
+    When a skill is loaded via the Skill() tool, its content appears in the
+    next prompt as a <command-name>skill-name</command-name> tag. This function
+    parses those markers and records activations, working around the
+    PostToolUse:Skill bug (#6305).
+    """
+    try:
+        # Pattern: <command-name>skill-name</command-name>
+        markers = re.findall(r'<command-name>([^<]+)</command-name>', prompt)
+        if not markers:
+            return
+
+        from shared.session_state import SessionState
+
+        already = SessionState.get_already_activated()
+
+        for skill_name in markers:
+            skill_name = skill_name.strip()
+            if not skill_name or skill_name in already:
+                continue
+
+            # Record activation in session state
+            SessionState.add_activated_skill(skill_name)
+
+            # Log to skill-usage.log
+            _log_skill_usage_activation(skill_name, session_id)
+
+            # Correlate with prompt_id from prior recommendation
+            prompt_id = SessionState.get_prompt_id()
+            if prompt_id:
+                _log_accuracy_activate(prompt_id, skill_name)
+    except Exception:
+        pass  # Detection must never block the hook
+
+
 def _load_config() -> dict | None:
     """Load skill-router-config.json from known locations."""
     for path in _CONFIG_LOCATIONS:
