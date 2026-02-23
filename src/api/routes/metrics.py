@@ -342,6 +342,36 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
             </table>
         </div>
 
+        <!-- Try It — Query Box -->
+        <div class="section">
+            <div class="section-title">Try It</div>
+            <div class="query-form">
+                <input id="queryInput" class="query-input" type="text"
+                       placeholder="Введите запрос..." autocomplete="off" />
+                <button class="query-btn btn-search" onclick="runSearch()">Search</button>
+                <button class="query-btn btn-ask" onclick="runAsk()">Ask (RAG)</button>
+            </div>
+            <div class="query-form" style="gap:8px;flex-wrap:wrap;">
+                <label style="font-size:12px;color:#666;display:flex;align-items:center;gap:4px;">
+                    Strategy:
+                    <select id="strategySelect" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+                        <option value="hybrid" selected>hybrid</option>
+                        <option value="vector">vector</option>
+                        <option value="bm25">bm25</option>
+                        <option value="graph">graph</option>
+                        <option value="graphrag_local">graphrag_local</option>
+                    </select>
+                </label>
+                <label style="font-size:12px;color:#666;display:flex;align-items:center;gap:4px;">
+                    k:
+                    <input id="kInput" type="number" value="5" min="1" max="20"
+                           style="width:50px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;" />
+                </label>
+            </div>
+            <div id="queryResult" class="query-result"></div>
+            <div id="queryMeta" class="query-meta"></div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="section">
             <div class="section-title">Quick Actions</div>
