@@ -1,0 +1,337 @@
+{
+  "version": "1.0.0",
+  "description": "Skill-First Enforcement: Pattern to Skill mappings for PreToolUse and PostToolUse hooks",
+  "updated_at": "2026-02-23",
+  "patterns": {
+    "description": "Content patterns (regex) that map to specific skills. Checked in PRE mode Level A.",
+    "mappings": [
+      {
+        "pattern": "StateGraph|CompiledStateGraph|StateGraphCheckpoint",
+        "skill": "langgraph-core",
+        "label": "LangGraph StateGraph",
+        "domain": "tech"
+      },
+      {
+        "pattern": "QdrantClient|QdrantAsync\\s*\\(|AsyncQdrantClient",
+        "skill": "qdrant-operations",
+        "label": "Qdrant Vector Database",
+        "domain": "tech"
+      },
+      {
+        "pattern": "class\\s+\\w+Hook\\s*\\(.+\\):|def\\s+run_hook\\s*\\(",
+        "skill": "create-hook",
+        "label": "Hook Development",
+        "domain": "framework"
+      },
+      {
+        "pattern": "BaseHook|HookInput|HookOutput",
+        "skill": "create-hook",
+        "label": "Hook Development",
+        "domain": "framework"
+      },
+      {
+        "pattern": "Skill\\s*\\(|skill:\\s*\\w+",
+        "skill": "create-skill",
+        "label": "Skill Creation",
+        "domain": "framework"
+      },
+      {
+        "pattern": "mcp__\\w+__|@mcp_server|class\\s+\\w+MCP",
+        "skill": "mcp-development",
+        "label": "MCP Server Development",
+        "domain": "framework"
+      },
+      {
+        "pattern": "СправочникМенеджер\\.|ДокументыМенеджер\\.|РегистрыНакопления\\.|РегистрыСведений\\.",
+        "skill": "1c-object-map",
+        "label": "1C Objects API",
+        "domain": "1c"
+      },
+      {
+        "pattern": "ВЫБРАТЬ|СУММА|КОЛИЧЕСТВО|МАКСИМУМ|ЕСТЬNULL|ПОМЕСТИТЬ",
+        "skill": "1c-query-language",
+        "label": "1C Query Language",
+        "domain": "1c"
+      },
+      {
+        "pattern": "Новый\\s+(Запрос|ТаблицаЗначений|Структура|Соответствие)|СоздатьМенеджерКомпоновкиДанных",
+        "skill": "1c-development",
+        "label": "1C Development Core",
+        "domain": "1c"
+      },
+      {
+        "pattern": "ОбработкаПроведения|Движения\\.(Выполнить|Записать)|ПроводитьРасчеты",
+        "skill": "1c-document-posting",
+        "label": "1C Document Posting",
+        "domain": "1c"
+      },
+      {
+        "pattern": "Формат\\(|СтрШаблон\\(|СтрСоединить\\(|СтрНайти\\(",
+        "skill": "bsl-string-formatting",
+        "label": "BSL String Formatting",
+        "domain": "1c"
+      },
+      {
+        "pattern": "КонструкторОписанияТипов|КвалификаторыЧисла|КвалификаторыДаты",
+        "skill": "bsl-type-system",
+        "label": "BSL Type System",
+        "domain": "1c"
+      },
+      {
+        "pattern": "HTTPСервис|ВходящийJSON|HTTPОтвет|HTTPЗапрос",
+        "skill": "1c-http-services",
+        "label": "1C HTTP Services",
+        "domain": "1c"
+      },
+      {
+        "pattern": "СКД|СхемаКомпоновкиДанных|КомпоновщикНастроек|НастройкиКомпоновкиДанных",
+        "skill": "1c-skd",
+        "label": "1C SKD (Data Composition System)",
+        "domain": "1c"
+      }
+    ]
+  },
+  "directory_rules": {
+    "description": "Directory path patterns that map to skills. Checked in PRE mode Level B (before content patterns).",
+    "mappings": [
+      {
+        "directory_prefix": ".claude/hooks/",
+        "skill": "create-hook",
+        "label": "Hook Development",
+        "domain": "framework"
+      },
+      {
+        "directory_prefix": ".claude/commands/",
+        "skill": "create-slash-command",
+        "label": "Slash Command Creation",
+        "domain": "framework"
+      },
+      {
+        "directory_prefix": ".claude/skills/",
+        "skill": "create-skill",
+        "label": "Skill Creation",
+        "domain": "framework"
+      },
+      {
+        "directory_prefix": "src/agents/",
+        "skill": "langgraph-core",
+        "label": "LangGraph Agent Development",
+        "domain": "tech"
+      },
+      {
+        "directory_prefix": "src/graph_store/",
+        "skill": "graph-databases",
+        "label": "Graph Database Operations",
+        "domain": "tech"
+      },
+      {
+        "directory_prefix": "docker/",
+        "skill": "deployment",
+        "label": "Docker/Deployment",
+        "domain": "devops"
+      },
+      {
+        "directory_prefix": ".github/workflows/",
+        "skill": "ci-cd",
+        "label": "CI/CD Pipelines",
+        "domain": "devops"
+      },
+      {
+        "directory_prefix": "tests/",
+        "skill": "testing",
+        "label": "Testing & Test Infrastructure",
+        "domain": "testing"
+      },
+      {
+        "directory_prefix": "docs/adr/",
+        "skill": "adr",
+        "label": "Architecture Decision Records",
+        "domain": "documentation"
+      }
+    ]
+  },
+  "bash_rules": {
+    "description": "Bash command patterns that map to skills. Checked in PRE mode Level C.",
+    "mappings": [
+      {
+        "pattern": "docker\\s+(compose|build|push|tag)",
+        "skill": "deployment",
+        "label": "Docker Operations",
+        "domain": "devops"
+      },
+      {
+        "pattern": "kubectl|helm|kubectx",
+        "skill": "kubernetes",
+        "label": "Kubernetes Operations",
+        "domain": "devops"
+      },
+      {
+        "pattern": "pytest|coverage\\.py|tox",
+        "skill": "testing",
+        "label": "Python Testing",
+        "domain": "testing"
+      },
+      {
+        "pattern": "npm\\s+(publish|version|audit)|yarn\\s+(publish|version)",
+        "skill": "npm-publishing",
+        "label": "NPM Package Publishing",
+        "domain": "devops"
+      },
+      {
+        "pattern": "git\\s+(tag|push|release)",
+        "skill": "git-release",
+        "label": "Git Release Management",
+        "domain": "devops"
+      },
+      {
+        "pattern": "eslint|prettier|black\\s+\\.|ruff",
+        "skill": "code-quality",
+        "label": "Code Quality Tools",
+        "domain": "quality"
+      },
+      {
+        "pattern": "mypy|pyright|pylint|pylint",
+        "skill": "type-checking",
+        "label": "Type Checking & Linting",
+        "domain": "quality"
+      }
+    ]
+  },
+  "research_rules": {
+    "description": "Research topic patterns that map to skill cache directories. Checked in POST mode Level D.",
+    "mappings": [
+      {
+        "pattern": "qdrant|vector\\s+database|vector\\s+store|embedding\\s+database",
+        "skill": "tech-research",
+        "cache_path": ".claude/skills/tech-research/cache/",
+        "label": "Vector Database Research",
+        "domain": "tech"
+      },
+      {
+        "pattern": "langgraph|langchain|agent\\s+(framework|orchestrator)|llm\\s+agent",
+        "skill": "tech-research",
+        "cache_path": ".claude/skills/tech-research/cache/",
+        "label": "AI Agent Framework Research",
+        "domain": "tech"
+      },
+      {
+        "pattern": "redis|caching|cache\\s+strategy|memoization",
+        "skill": "tech-research",
+        "cache_path": ".claude/skills/tech-research/cache/",
+        "label": "Caching Research",
+        "domain": "tech"
+      },
+      {
+        "pattern": "sql\\s+optimization|query\\s+performance|index\\s+strategy",
+        "skill": "tech-research",
+        "cache_path": ".claude/skills/tech-research/cache/",
+        "label": "SQL/Database Research",
+        "domain": "tech"
+      }
+    ]
+  },
+  "research_protocol": {
+    "description": "Fallback patterns for topics without dedicated skills. Triggers research protocol in PRE mode.",
+    "patterns": [
+      {
+        "pattern": "FastAPI|APIRouter|from\\s+fastapi",
+        "label": "FastAPI Framework",
+        "domain": "tech",
+        "priority": "high"
+      },
+      {
+        "pattern": "Redis\\.|from\\s+redis|aioredis",
+        "label": "Redis Caching",
+        "domain": "tech",
+        "priority": "medium"
+      },
+      {
+        "pattern": "Справочник\\s+|Документ\\s+|Регистр\\s+(накопления|сведений)",
+        "label": "1C Metadata Objects",
+        "domain": "1c",
+        "priority": "high"
+      },
+      {
+        "pattern": "СКД|КомпоновкаДанных|СхемаКомпоновки",
+        "label": "1C SKD System",
+        "domain": "1c",
+        "priority": "medium"
+      },
+      {
+        "pattern": "Dockerfile|docker-compose\\.yml|FROM\\s+\\w+:",
+        "label": "Docker Configuration",
+        "domain": "devops",
+        "priority": "medium"
+      },
+      {
+        "pattern": "pytest\\.fixture|@pytest|conftest\\.py",
+        "label": "Pytest Framework",
+        "domain": "testing",
+        "priority": "medium"
+      }
+    ]
+  },
+  "post_verification": {
+    "description": "Post-write verification rules. Checked in POST mode Level E.",
+    "rules": [
+      {
+        "name": "langgraph-core",
+        "file_pattern": "src/agents/.*\\.py",
+        "must_contain": [
+          "from langgraph",
+          "StateGraph",
+          "invoke\\s*\\(",
+          "checkpointer\\s*="
+        ],
+        "must_not_contain": [
+          "StateGraph\\s*\\(\\s*\\)",
+          "node\\s*\\(\\s*\"\"",
+          "edge\\s*\\(\\s*\\)"
+        ],
+        "error_message": "LangGraph agent missing required patterns: checkpointer, proper StateGraph initialization, or node/edge definitions."
+      },
+      {
+        "name": "create-hook",
+        "file_pattern": "\\.claude/hooks/.*\\.py",
+        "must_contain": [
+          "class\\s+\\w+Hook",
+          "from.*BaseHook",
+          "def\\s+run_hook"
+        ],
+        "must_not_contain": [
+          "exit\\(1\\)",
+          "print\\s*\\([^)]*\\)",
+          "#\\s*TODO"
+        ],
+        "error_message": "Hook file missing required patterns: BaseHook inheritance, run_hook method, or contains anti-patterns (exit(1), print, TODO comments)."
+      },
+      {
+        "name": "qdrant-operations",
+        "file_pattern": "src/(vector_store|graph_store)/.*\\.py",
+        "must_contain": [
+          "QdrantClient",
+          "upsert|search|query",
+          "collection_name\\s*="
+        ],
+        "must_not_contain": [
+          "QdrantClient\\s*\\(\\s*\\)",
+          "'|\"collection'",
+          "async\\s+def.*await.*QdrantClient"
+        ],
+        "error_message": "Qdrant operations missing: client initialization, collection config, or has async/sync mixing issues."
+      }
+    ]
+  },
+  "metadata": {
+    "schema_version": "1.0",
+    "last_migration": "2026-02-23",
+    "stats": {
+      "total_patterns": 14,
+      "total_directory_rules": 9,
+      "total_bash_rules": 7,
+      "total_research_rules": 4,
+      "total_research_protocol": 6,
+      "total_post_verification": 3
+    }
+  }
+}

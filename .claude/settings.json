@@ -60,6 +60,16 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/code-skill-enforcer.py",
+            "timeout": 3
+          }
+        ]
+      },
+      {
         "matcher": "Write",
         "hooks": [
           {
@@ -88,6 +98,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/knowledge-cache-reminder.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/code-skill-enforcer.py",
+            "timeout": 3
           }
         ]
       },
@@ -113,6 +128,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/docs-change-tracker.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/code-skill-enforcer.py",
+            "timeout": 3
           }
         ]
       },
