@@ -25,7 +25,16 @@ async def lifespan(app: FastAPI):
     from src.api.routes.chat import init_chat
     from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
 
-    components = await get_components()
+    try:
+        components = await get_components()
+    except Exception as e:
+        logging.warning(
+            "Failed to initialize components (Qdrant/Neo4j may be offline): %s. "
+            "Server will start in degraded mode — metrics and health endpoints remain available.",
+            e,
+        )
+        yield
+        return
 
     # Phase 9: Initialize chat with streaming runner
     try:
