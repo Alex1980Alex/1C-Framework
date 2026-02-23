@@ -73,7 +73,7 @@ def main():
     if all_passed:
         print(">>> ALL TESTS PASSED")
     else:
-        print("⚠️ SOME TESTS FAILED")
+        print("[WARN] SOME TESTS FAILED")
     print("=" * 60)
 
     return 0 if all_passed else 1
