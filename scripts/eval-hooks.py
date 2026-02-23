@@ -31,14 +31,12 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 from collections import Counter
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 # --- Path resolution ---
 
