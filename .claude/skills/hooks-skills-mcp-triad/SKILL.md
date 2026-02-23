@@ -50,7 +50,7 @@ description: "Используй этот скилл для понимания �
 
 | Hook | Назначение |
 |------|-----------|
-| `task-enforcer.py` | Блокировка без выполнения mandatory задач |
+| `task-enforcer.py` | Блокировка без выполнения mandatory задач (incl. code-skill-enforcer) |
 | `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
 | `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
