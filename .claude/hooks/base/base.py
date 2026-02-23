@@ -83,10 +83,15 @@ class HookInput:
         except Exception:
             data = {}
 
+        # Ensure tool_input is always a dict (Claude Code may send string)
+        tool_input = data.get("tool_input", {})
+        if not isinstance(tool_input, dict):
+            tool_input = {"_raw": tool_input}
+
         return cls(
             detected_event=data.get("detected_event"),
             tool_name=data.get("tool_name"),
-            tool_input=data.get("tool_input", {}),
+            tool_input=tool_input,
             prompt=data.get("prompt"),
             invocation_id=data.get("invocation_id"),
             agent_id=data.get("agent_id"),
