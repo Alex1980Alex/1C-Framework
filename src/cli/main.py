@@ -766,7 +766,7 @@ def restart(
 
         if platform.system() == "Windows":
             result = subprocess.run(
-                ["tasklist", "//FI", f"PID eq {pid}"],
+                ["tasklist", "/FI", f"PID eq {pid}"],
                 capture_output=True, text=True, timeout=5,
             )
             return str(pid) in result.stdout
