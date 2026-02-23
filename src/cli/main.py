@@ -845,8 +845,6 @@ def dashboard(
         webbrowser.open(url)
     else:
         console.print(f"[blue]Dashboard available at: {url}[/blue]")
-    else:
-        console.print(f"[blue]Dashboard available at: {url}[/blue]")
 
 
 @app.command()
