@@ -620,7 +620,7 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
     all_results = []
     for suite_name, suite_config in suites_to_run.items():
         suite_class = SUITE_CLASSES.get(suite_name, TestSuite)
-        suite = suite_class(suite_name, suite_config)
+        suite = suite_class(suite_name, suite_config, live=args.live, filter_id=args.filter)
         result = suite.run()
         all_results.append(result)
 
