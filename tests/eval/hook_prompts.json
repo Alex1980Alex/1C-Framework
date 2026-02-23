@@ -1,153 +1,175 @@
 {
   "_comment": "Test prompts for hook evaluation framework. Each suite tests specific hook behavior.",
-  "_version": "1.0.0",
+  "_version": "2.0.0",
   "_created": "2026-02-22",
+  "_updated": "2026-02-23",
+  "_changelog": "v2.0: Rewrote skill-activation suite to match REAL skills with their REAL trigger words from SKILL.md descriptions",
 
   "suites": {
     "skill-activation": {
-      "description": "Tests skill activation rate with shell-output enforcer (Phase 2)",
+      "description": "Tests skill activation rate — prompts use exact trigger words from existing SKILL.md descriptions",
       "expected_activation_rate": 0.8,
       "timeout_seconds": 30,
       "tests": [
         {
           "id": "sa-001",
-          "prompt": "How do I create a new 1C:Enterprise catalog object programmatically?",
-          "expected_skills": ["1c-catalogs"],
+          "prompt": "Создай справочник Товары с реквизитами Наименование, Артикул и Цена",
+          "expected_skills": ["1c-doc-research"],
+          "trigger_words": ["справочник", "реквизит"],
           "expected_outcome": "skill_activated",
-          "description": "Direct catalog question should trigger 1c-catalogs skill"
+          "description": "Triggers: 'справочник' + 'реквизит' → 1c-doc-research"
         },
         {
           "id": "sa-002",
-          "prompt": "I need to implement a document posting procedure with register movements",
-          "expected_skills": ["1c-document-posting", "1c-registers"],
+          "prompt": "Как работает проведение документа 1С и движения по регистру накопления?",
+          "expected_skills": ["1c-doc-research"],
+          "trigger_words": ["проведение", "регистр", "1С"],
           "expected_outcome": "skill_activated",
-          "description": "Document posting should trigger multiple skills"
+          "description": "Triggers: 'проведение' + 'регистр' + '1С' → 1c-doc-research"
         },
         {
           "id": "sa-003",
-          "prompt": "What is the syntax for SELECT queries in 1C:Enterprise?",
-          "expected_skills": ["1c-query-language"],
+          "prompt": "Как создать управляемую форму документа с табличной частью?",
+          "expected_skills": ["1c-doc-research"],
+          "trigger_words": ["форма", "табличная часть"],
           "expected_outcome": "skill_activated",
-          "description": "Query syntax question should trigger query language skill"
+          "description": "Triggers: 'форма' + 'табличная часть' → 1c-doc-research"
         },
         {
           "id": "sa-004",
-          "prompt": "Help me design a managed form with a table and dynamic rows",
-          "expected_skills": ["1c-forms"],
+          "prompt": "Напиши BSL код в модуле менеджера для поиска дублей справочника",
+          "expected_skills": ["1c-doc-research"],
+          "trigger_words": ["BSL", "модуль", "справочник"],
           "expected_outcome": "skill_activated",
-          "description": "Form design should trigger forms skill"
+          "description": "Triggers: 'BSL' + 'модуль' + 'справочник' → 1c-doc-research"
         },
         {
           "id": "sa-005",
-          "prompt": "I need to create an HTTP service with JSON endpoints for external integration",
-          "expected_skills": ["1c-http-services"],
+          "prompt": "Как работает RAG и что такое embeddings?",
+          "expected_skills": ["tech-research"],
+          "trigger_words": ["как работает RAG", "embeddings"],
           "expected_outcome": "skill_activated",
-          "description": "HTTP service question should trigger HTTP services skill"
+          "description": "Triggers: 'как работает RAG' + 'embeddings' → tech-research"
         },
         {
           "id": "sa-006",
-          "prompt": "How do I set up data exchange between two 1C databases using XML?",
-          "expected_skills": ["1c-exchange"],
+          "prompt": "Какие chunking strategies лучше для vector search?",
+          "expected_skills": ["tech-research"],
+          "trigger_words": ["chunking strategies", "vector search"],
           "expected_outcome": "skill_activated",
-          "description": "Data exchange should trigger exchange skill"
+          "description": "Triggers: 'chunking strategies' + 'vector search' → tech-research"
         },
         {
           "id": "sa-007",
-          "prompt": "Create a report using SKD with parameters and dynamic groupings",
-          "expected_skills": ["1c-skd"],
+          "prompt": "Сравни reranking подходы: BM25 vs cross-encoder для hybrid search",
+          "expected_skills": ["tech-research"],
+          "trigger_words": ["reranking", "BM25", "hybrid search"],
           "expected_outcome": "skill_activated",
-          "description": "SKD report should trigger SKD skill"
+          "description": "Triggers: 'reranking' + 'BM25' + 'hybrid search' → tech-research"
         },
         {
           "id": "sa-008",
-          "prompt": "I need to implement RLS restrictions for a specific user role",
-          "expected_skills": ["1c-roles-rls"],
+          "prompt": "Создай hook для автоматической валидации коммитов",
+          "expected_skills": ["create-hook"],
+          "trigger_words": ["создай hook"],
           "expected_outcome": "skill_activated",
-          "description": "RLS question should trigger roles skill"
+          "description": "Triggers: 'создай hook' → create-hook"
         },
         {
           "id": "sa-009",
-          "prompt": "How do I use temporary tables in a query with query builder?",
-          "expected_skills": ["1c-temp-tables", "1c-query-language"],
+          "prompt": "Объясни как работает триада hooks skills mcp в проекте",
+          "expected_skills": ["hooks-skills-mcp-triad"],
+          "trigger_words": ["триада", "hooks skills mcp"],
           "expected_outcome": "skill_activated",
-          "description": "Temporary tables should trigger temp-tables skill"
+          "description": "Triggers: 'триада' + 'hooks skills mcp' → hooks-skills-mcp-triad"
         },
         {
           "id": "sa-010",
-          "prompt": "I want to create a printable form with a table and company logo",
-          "expected_skills": ["1c-report-layouts"],
+          "prompt": "Как лучше сделать архитектуру модуля кеширования?",
+          "expected_skills": ["architecture-research"],
+          "trigger_words": ["как лучше сделать", "архитектура"],
           "expected_outcome": "skill_activated",
-          "description": "Printable form should trigger report layouts skill"
+          "description": "Triggers: 'как лучше сделать' + 'архитектура' → architecture-research"
         },
         {
           "id": "sa-011",
-          "prompt": "What is the difference between accumulation and accounting registers?",
-          "expected_skills": ["1c-registers"],
+          "prompt": "Как настроить конфигурацию фреймворка через .env файл?",
+          "expected_skills": ["framework-config"],
+          "trigger_words": ["конфигурация", ".env"],
           "expected_outcome": "skill_activated",
-          "description": "Register comparison should trigger registers skill"
+          "description": "Triggers: 'конфигурация' + '.env' → framework-config"
         },
         {
           "id": "sa-012",
-          "prompt": "I need to analyze a 1C task and create an implementation plan",
-          "expected_skills": ["analyze-1c-task"],
+          "prompt": "Покажи все REST API endpoints для поиска документов",
+          "expected_skills": ["framework-api"],
+          "trigger_words": ["REST API", "endpoint"],
           "expected_outcome": "skill_activated",
-          "description": "Task analysis should trigger analyze-1c-task skill"
+          "description": "Triggers: 'REST API' + 'endpoint' → framework-api"
         },
         {
           "id": "sa-013",
-          "prompt": "Help me implement changes from ANALYSIS-REPORT.md",
-          "expected_skills": ["implement-1c-task"],
+          "prompt": "Какие CLI команды доступны для индексирования PDF?",
+          "expected_skills": ["framework-cli"],
+          "trigger_words": ["CLI", "команда"],
           "expected_outcome": "skill_activated",
-          "description": "Implementation should trigger implement-1c-task skill"
+          "description": "Triggers: 'CLI' + 'команда' → framework-cli"
         },
         {
           "id": "sa-014",
-          "prompt": "I need to document a BSL module according to project standards",
-          "expected_skills": ["document-1c-module", "code-documentation-standard"],
+          "prompt": "Поиск не работает, ошибка timeout при запросах к Qdrant",
+          "expected_skills": ["framework-troubleshooting"],
+          "trigger_words": ["не работает", "ошибка", "timeout"],
           "expected_outcome": "skill_activated",
-          "description": "Documentation should trigger documentation skills"
+          "description": "Triggers: 'не работает' + 'ошибка' + 'timeout' → framework-troubleshooting"
         },
         {
           "id": "sa-015",
-          "prompt": "How do I review BSL code for best practices violations?",
-          "expected_skills": ["review-1c-code"],
+          "prompt": "Как создать langchain agent с @tool decorator?",
+          "expected_skills": ["langchain-core"],
+          "trigger_words": ["langchain agent", "@tool decorator"],
           "expected_outcome": "skill_activated",
-          "description": "Code review should trigger review skill"
+          "description": "Triggers: 'langchain agent' + '@tool decorator' → langchain-core"
         },
         {
           "id": "sa-016",
-          "prompt": "I need to search for relevant rules before starting a task",
-          "expected_skills": ["proactive-rules", "semantic-search"],
+          "prompt": "Объясни StateGraph и add_node в langgraph",
+          "expected_skills": ["langgraph-core"],
+          "trigger_words": ["langgraph", "StateGraph", "add_node"],
           "expected_outcome": "skill_activated",
-          "description": "Rule search should trigger proactive skills"
+          "description": "Triggers: 'langgraph' + 'StateGraph' + 'add_node' → langgraph-core"
         },
         {
           "id": "sa-017",
-          "prompt": "What is the active project and how do I activate it in Serena?",
-          "expected_skills": ["project-activation"],
+          "prompt": "Сделай скилл из документации по деплою",
+          "expected_skills": ["doc-to-skill"],
+          "trigger_words": ["сделай скилл из"],
           "expected_outcome": "skill_activated",
-          "description": "Project activation should trigger activation skill"
+          "description": "Triggers: 'сделай скилл из' → doc-to-skill"
         },
         {
           "id": "sa-018",
-          "prompt": "I need to create a new slash command for Claude Code",
-          "expected_skills": ["create-slash-command"],
+          "prompt": "Определи тип задачи: это research или brainstorm?",
+          "expected_skills": ["task-evaluation"],
+          "trigger_words": ["research или brainstorm", "тип задачи"],
           "expected_outcome": "skill_activated",
-          "description": "Slash command creation should trigger create skill"
+          "description": "Triggers: 'research или brainstorm' + 'тип задачи' → task-evaluation"
         },
         {
           "id": "sa-019",
-          "prompt": "Help me set up a hook for automatic documentation updates",
-          "expected_skills": ["create-hook", "hooks-skills-mcp-triad"],
+          "prompt": "Хук не работает после обновления, нужна отладка хука",
+          "expected_skills": ["hook-debugging"],
+          "trigger_words": ["хук не работает", "отладка хука"],
           "expected_outcome": "skill_activated",
-          "description": "Hook creation should trigger hook skills"
+          "description": "Triggers: 'хук не работает' + 'отладка хука' → hook-debugging"
         },
         {
           "id": "sa-020",
-          "prompt": "I need to debug a BSL module using the debugger",
-          "expected_skills": ["bsl-debugger", "bsl-lsp"],
+          "prompt": "Покажи архитектуру хуков и уровни хуков в проекте",
+          "expected_skills": ["multi-level-hook-architecture"],
+          "trigger_words": ["архитектура хуков", "уровни хуков"],
           "expected_outcome": "skill_activated",
-          "description": "Debugging should trigger debugger skill"
+          "description": "Triggers: 'архитектура хуков' + 'уровни хуков' → multi-level-hook-architecture"
         }
       ]
     },
@@ -299,6 +321,26 @@
   "metadata": {
     "total_tests": 40,
     "suites_count": 5,
+    "skills_coverage": {
+      "total_unique_skills_tested": 16,
+      "skills": [
+        "1c-doc-research",
+        "tech-research",
+        "create-hook",
+        "hooks-skills-mcp-triad",
+        "architecture-research",
+        "framework-config",
+        "framework-api",
+        "framework-cli",
+        "framework-troubleshooting",
+        "langchain-core",
+        "langgraph-core",
+        "doc-to-skill",
+        "task-evaluation",
+        "hook-debugging",
+        "multi-level-hook-architecture"
+      ]
+    },
     "reference": "GAP_P5_HOOK_OBSERVABILITY.md Phase 8"
   }
 }
