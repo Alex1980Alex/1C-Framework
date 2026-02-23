@@ -156,8 +156,26 @@ curl -X POST http://localhost:8000/documents/rebuild-bm25
 
 | Method | Endpoint | Описание |
 |--------|----------|----------|
-| `GET` | `/metrics/` | HTML дашборд метрик |
-| `GET` | `/metrics/json` | JSON API метрик |
+| `GET` | `/metrics` | JSON: system + hook + skill + enforcement метрики |
+| `GET` | `/metrics/html` | Unified HTML dashboard (cache, hooks, skills, errors) |
+| `POST` | `/metrics/reset` | Reset daily counters |
+| `GET` | `/metrics/prometheus` | Prometheus exposition format |
+
+**`GET /metrics` JSON response** включает:
+- `embedding_cache`, `llm_cache`, `document_cache` — cache stats
+- `hook_metrics` — per-hook: count, avg_ms, p95_ms, blocks, errors (24h)
+- `skill_metrics` — activation_rate, per_skill recommended/activated/rate
+- `accuracy` — prompt-level recommend→activate match_rate
+- `enforcement` — total_blocks, block_rate, per_hook outcome breakdown
+- `errors` — recent error log entries
+
+**`GET /metrics/html`** — unified dashboard с секциями:
+1. Key Metrics (queries, latency, cache, error rate)
+2. Cache Statistics (embedding, LLM, document)
+3. Search Strategy Usage
+4. **Hook Invocations (24h)** — таблица: hook, count, avg_ms, p95, blocks, errors
+5. **Skill Activations (24h)** — activation rate cards + per-skill table
+6. **Enforcement & Errors** — blocks/rate cards + recent errors table
 
 ### Auth
 
