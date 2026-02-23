@@ -47,16 +47,22 @@ for hook_path in [_FRAMEWORK_HOOKS, _USER_HOOKS, _HOOK_DIR]:
 
 # Imports
 try:
-    from base.base import BaseHook, HookInput, HookOutput, HookEvent, HookOutcome
-    from shared.session_state import SessionState
-    from shared.trust_scorer import TrustScorer
-    from shared.task_master import add_task, has_recent_completion
+    from base import BaseHook, HookInput, HookOutput, HookEvent, HookOutcome
+    from session_state import SessionState
+    from trust_scorer import TrustScorer
+    from task_master import add_task, has_recent_completion
 except ImportError as e:
     # Graceful degradation: allow import errors
     _import_error = str(e)
     BaseHook = None
+    HookInput = None
+    HookOutput = None
+    HookEvent = None
+    HookOutcome = None
     SessionState = None
     TrustScorer = None
+    add_task = None
+    has_recent_completion = None
 
 
 # ============================================================================
