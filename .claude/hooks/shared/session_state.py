@@ -291,5 +291,18 @@ class SessionState:
         }
 
 
+# ===== MODULE-LEVEL CONVENIENCE FUNCTIONS =====
+# These match the import patterns: from shared.session_state import set_prompt_id
+
+def set_prompt_id(prompt_id: str) -> None:
+    """Module-level wrapper for SessionState.set_prompt_id()."""
+    SessionState.set_prompt_id(prompt_id)
+
+
+def get_prompt_id() -> Optional[str]:
+    """Module-level wrapper for SessionState.get_prompt_id()."""
+    return SessionState.get_prompt_id()
+
+
 # Export for use in hooks
-__all__ = ["SessionState"]
+__all__ = ["SessionState", "set_prompt_id", "get_prompt_id"]
