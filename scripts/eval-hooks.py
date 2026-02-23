@@ -75,6 +75,7 @@ class TestSuite:
         results = {
             "suite": self.name,
             "description": self.config.get("description", ""),
+            "mode": "live" if self.live else "offline",
             "total": len(self.tests),
             "passed": 0,
             "failed": 0,
@@ -83,13 +84,19 @@ class TestSuite:
             "tests": [],
         }
 
-        for test in self.tests:
+        for i, test in enumerate(self.tests, 1):
+            if self.live:
+                print(f"  [{i}/{len(self.tests)}] {test['id']}: {test['prompt'][:60]}...", flush=True)
             test_result = self.run_test(test)
             results["tests"].append(test_result)
             if test_result["status"] == "pass":
                 results["passed"] += 1
+                if self.live:
+                    print(f"    -> PASS (activated: {', '.join(test_result.get('activated', []))})")
             elif test_result["status"] == "fail":
                 results["failed"] += 1
+                if self.live:
+                    print(f"    -> FAIL (missing: {', '.join(test_result.get('missing', []))})")
             else:
                 results["skipped"] += 1
 
