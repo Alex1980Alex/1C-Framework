@@ -79,8 +79,15 @@ class SessionSimulator:
         self._save_state()
 
     def get_pending_learn(self) -> Dict[str, Any]:
-        """Get pending learn."""
+        """Get pending learn (re-reads from disk to pick up hook changes)."""
+        self._reload_state()
         return self._state.get("pending_learn")
+
+    def _reload_state(self):
+        """Reload state from disk."""
+        if self.state_file.exists():
+            with open(self.state_file, "r", encoding="utf-8") as f:
+                self._state = json.load(f)
 
     def cleanup(self):
         """Clean up temp files."""
