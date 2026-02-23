@@ -15,8 +15,12 @@ from datetime import datetime
 import threading
 
 
-# State file location
-STATE_DIR = Path(__file__).parent.parent.parent / "data"
+# State file location (overridable via SESSION_STATE_PATH env var for testing)
+_env_state_path = os.environ.get("SESSION_STATE_PATH")
+if _env_state_path:
+    STATE_DIR = Path(_env_state_path)
+else:
+    STATE_DIR = Path(__file__).parent.parent.parent / "data"
 STATE_FILE = STATE_DIR / "session-skills.json"
 
 
