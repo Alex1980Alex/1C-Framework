@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Hook & Skill Observability Dashboard - CLI tool.
 
-Parses 3 log sources and displays activation metrics, latency, errors:
+Parses 4 log sources and displays activation metrics, latency, errors, accuracy:
 1. data/hook-invocations.jsonl  → hook invocation counts, p95 latency, errors
 2. data/skill-router.log       → skill recommendations
 3. data/skill-usage.log        → skill activations
+4. data/skill-accuracy.jsonl   → per-prompt recommend→activate correlation
 
 Usage:
-    python scripts/hook-dashboard.py                  # last 24h
-    python scripts/hook-dashboard.py --period 7d      # last 7 days
-    python scripts/hook-dashboard.py --period all      # all time
-    python scripts/hook-dashboard.py --json            # JSON output
-    python scripts/hook-dashboard.py --section skills  # skills only
+    python scripts/hook-dashboard.py                    # last 24h
+    python scripts/hook-dashboard.py --period 7d        # last 7 days
+    python scripts/hook-dashboard.py --period all        # all time
+    python scripts/hook-dashboard.py --json              # JSON output
+    python scripts/hook-dashboard.py --section accuracy  # accuracy only
 
-Sections: summary, hooks, skills, errors, sessions (default: all)
+Sections: summary, hooks, skills, accuracy, errors, sessions (default: all)
 """
 
 import argparse
@@ -30,6 +31,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 INVOCATIONS_FILE = DATA_DIR / "hook-invocations.jsonl"
 SKILL_ROUTER_LOG = DATA_DIR / "skill-router.log"
 SKILL_USAGE_LOG = DATA_DIR / "skill-usage.log"
+SKILL_ACCURACY_LOG = DATA_DIR / "skill-accuracy.jsonl"
 
 
 # --- Period parsing ---
@@ -132,6 +134,31 @@ def parse_skill_usage_log(cutoff: datetime | None) -> list[dict]:
                             entry[k.strip()] = v.strip()
                     entries.append(entry)
                 except (ValueError, IndexError):
+                    continue
+    except OSError:
+        pass
+    return entries
+
+
+def parse_skill_accuracy_log(cutoff: datetime | None) -> list[dict]:
+    """Parse skill-accuracy.jsonl (JSONL with prompt_id correlation)."""
+    entries = []
+    if not SKILL_ACCURACY_LOG.exists():
+        return entries
+    try:
+        with open(SKILL_ACCURACY_LOG, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    if cutoff:
+                        ts = datetime.fromisoformat(entry["ts"])
+                        if ts < cutoff:
+                            continue
+                    entries.append(entry)
+                except (json.JSONDecodeError, KeyError, ValueError):
                     continue
     except OSError:
         pass
@@ -249,6 +276,98 @@ def compute_session_metrics(invocations: list[dict]) -> dict[str, Any]:
         }
 
     return sessions
+
+
+def compute_accuracy_metrics(accuracy_entries: list[dict]) -> dict[str, Any]:
+    """Compute per-prompt accuracy: recommended skills → activated skills.
+
+    Groups entries by prompt_id and computes match/miss rates.
+    """
+    # Group by prompt_id
+    by_prompt: dict[str, dict] = {}
+    for entry in accuracy_entries:
+        pid = entry.get("prompt_id", "")
+        if not pid:
+            continue
+
+        if pid not in by_prompt:
+            by_prompt[pid] = {
+                "recommended": [],
+                "activated": [],
+                "prompt": "",
+                "ts": entry.get("ts", ""),
+            }
+
+        etype = entry.get("type", "")
+        if etype == "recommend":
+            by_prompt[pid]["recommended"] = entry.get("skills", [])
+            by_prompt[pid]["prompt"] = entry.get("prompt", "")
+            if not by_prompt[pid]["ts"]:
+                by_prompt[pid]["ts"] = entry.get("ts", "")
+        elif etype == "activate":
+            skill = entry.get("skill", "")
+            if skill and skill not in by_prompt[pid]["activated"]:
+                by_prompt[pid]["activated"].append(skill)
+
+    if not by_prompt:
+        return {
+            "total_prompts": 0,
+            "matched_prompts": 0,
+            "missed_prompts": 0,
+            "match_rate": 0.0,
+            "per_skill_precision": {},
+            "recent_misses": [],
+        }
+
+    # Compute match/miss per prompt
+    matched = 0
+    missed = 0
+    # Per-skill: how many times recommended → activated
+    skill_rec_count: Counter = Counter()
+    skill_act_count: Counter = Counter()
+    recent_misses: list[dict] = []
+
+    for pid, data in by_prompt.items():
+        rec_set = set(data["recommended"])
+        act_set = set(data["activated"])
+
+        # Count per-skill precision
+        for s in rec_set:
+            skill_rec_count[s] += 1
+            if s in act_set:
+                skill_act_count[s] += 1
+
+        # Match = at least one recommended skill was activated
+        if rec_set & act_set:
+            matched += 1
+        else:
+            missed += 1
+            recent_misses.append({
+                "prompt_id": pid,
+                "ts": data["ts"][:19],
+                "prompt": data["prompt"][:60],
+                "recommended": data["recommended"],
+            })
+
+    total = matched + missed
+    per_skill_precision = {}
+    for skill in sorted(skill_rec_count.keys()):
+        rec = skill_rec_count[skill]
+        act = skill_act_count.get(skill, 0)
+        per_skill_precision[skill] = {
+            "recommended": rec,
+            "activated": act,
+            "precision": round(act / rec * 100, 1) if rec > 0 else 0.0,
+        }
+
+    return {
+        "total_prompts": total,
+        "matched_prompts": matched,
+        "missed_prompts": missed,
+        "match_rate": round(matched / total * 100, 1) if total > 0 else 0.0,
+        "per_skill_precision": per_skill_precision,
+        "recent_misses": recent_misses[-10:],  # Last 10 misses
+    }
 
 
 # --- Display formatters ---
@@ -396,6 +515,52 @@ def format_sessions(session_metrics: dict) -> str:
     return "\n".join(lines)
 
 
+def format_accuracy(accuracy_metrics: dict) -> str:
+    """Format accuracy section — per-prompt recommend→activate correlation."""
+    total = accuracy_metrics.get("total_prompts", 0)
+    if total == 0:
+        return f"{'-' * 62}\n  SKILL ACCURACY: No data (skill-accuracy.jsonl empty)\n"
+
+    matched = accuracy_metrics["matched_prompts"]
+    missed = accuracy_metrics["missed_prompts"]
+    rate = accuracy_metrics["match_rate"]
+
+    lines = [
+        f"{'-' * 62}",
+        f"  SKILL ACCURACY (per-prompt correlation)",
+        f"{'-' * 62}",
+        "",
+        f"  Total prompts:        {total:>6}",
+        f"  Matched (>=1 act):    {matched:>6}",
+        f"  Missed (0 act):       {missed:>6}",
+        f"  Match rate:           {rate:>5.1f}%",
+        "",
+        f"  {'Skill':<30} {'Rec':>5} {'Act':>5} {'Prec':>6}",
+        f"  {'-' * 50}",
+    ]
+
+    psp = accuracy_metrics.get("per_skill_precision", {})
+    sorted_skills = sorted(psp.items(), key=lambda x: x[1]["recommended"], reverse=True)
+    for skill, m in sorted_skills:
+        prec_str = f"{m['precision']:.0f}%"
+        lines.append(
+            f"  {skill:<30} {m['recommended']:>5} {m['activated']:>5} {prec_str:>6}"
+        )
+
+    misses = accuracy_metrics.get("recent_misses", [])
+    if misses:
+        lines.append("")
+        lines.append(f"  Recent misses ({len(misses)}):")
+        for miss in misses[-5:]:
+            skills_str = ",".join(miss["recommended"][:3])
+            lines.append(
+                f"    [{miss['ts']}] {miss['prompt'][:40]}... -> {skills_str}"
+            )
+
+    lines.append("")
+    return "\n".join(lines)
+
+
 # --- Main ---
 
 def main():
@@ -412,7 +577,7 @@ def main():
     )
     parser.add_argument(
         "--section", default="all",
-        choices=["all", "summary", "hooks", "skills", "errors", "sessions"],
+        choices=["all", "summary", "hooks", "skills", "accuracy", "errors", "sessions"],
         help="Show specific section only"
     )
     args = parser.parse_args()
@@ -423,11 +588,13 @@ def main():
     invocations = parse_invocations(cutoff)
     router_entries = parse_skill_router_log(cutoff)
     usage_entries = parse_skill_usage_log(cutoff)
+    accuracy_entries = parse_skill_accuracy_log(cutoff)
 
     # Compute metrics
     hook_metrics = compute_hook_metrics(invocations)
     skill_metrics = compute_skill_metrics(router_entries, usage_entries)
     session_metrics = compute_session_metrics(invocations)
+    accuracy_metrics = compute_accuracy_metrics(accuracy_entries)
 
     if args.json:
         output = {
@@ -435,6 +602,7 @@ def main():
             "cutoff": cutoff.isoformat() if cutoff else None,
             "hooks": hook_metrics,
             "skills": skill_metrics,
+            "accuracy": accuracy_metrics,
             "sessions": session_metrics,
             "total_invocations": len(invocations),
             "total_errors": sum(1 for i in invocations if i.get("error")),
@@ -452,6 +620,8 @@ def main():
         output_parts.append(format_hooks(hook_metrics))
     if section in ("all", "skills"):
         output_parts.append(format_skills(skill_metrics))
+    if section in ("all", "accuracy"):
+        output_parts.append(format_accuracy(accuracy_metrics))
     if section in ("all", "errors"):
         output_parts.append(format_errors(invocations))
     if section in ("all", "sessions"):

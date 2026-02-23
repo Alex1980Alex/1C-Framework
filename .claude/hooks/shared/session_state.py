@@ -142,6 +142,7 @@ def _empty_state() -> Dict[str, Any]:
         "started_at": datetime.now().isoformat(),
         "recommended": {},
         "activated": {},
+        "current_prompt_id": "",
     }
 
 
@@ -211,6 +212,19 @@ def get_session_metrics() -> Dict[str, Any]:
         "recommended_list": sorted(recommended.keys()),
         "activated_list": sorted(activated.keys()),
     }
+
+
+def set_prompt_id(prompt_id: str) -> None:
+    """Store the current prompt_id for cross-hook correlation."""
+    data = _read_state()
+    data["current_prompt_id"] = prompt_id
+    _write_state(data)
+
+
+def get_prompt_id() -> str:
+    """Get the current prompt_id set by skill-router."""
+    data = _read_state()
+    return data.get("current_prompt_id", "")
 
 
 def reset_session() -> None:

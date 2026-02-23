@@ -33,6 +33,24 @@ def _log_skill_usage(skill_name: str, session_id: str) -> None:
         pass  # Logging must never block
 
 
+def _log_accuracy_activate(prompt_id: str, skill_name: str) -> None:
+    """Write activate event to data/skill-accuracy.jsonl."""
+    try:
+        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+        log_path = os.path.join(project_dir, "data", "skill-accuracy.jsonl")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        entry = {
+            "ts": datetime.now().isoformat(),
+            "type": "activate",
+            "prompt_id": prompt_id,
+            "skill": skill_name,
+        }
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass  # Never block
+
+
 class SkillUsageMetrics(BaseHook):
     """Logs Skill tool invocations for usage analytics."""
 
@@ -55,6 +73,15 @@ class SkillUsageMetrics(BaseHook):
 
         if skill_name:
             _log_skill_usage(skill_name, inp.session_id)
+
+            # Accuracy tracking: correlate activation with prompt_id
+            try:
+                from shared.session_state import get_prompt_id
+                prompt_id = get_prompt_id()
+                if prompt_id:
+                    _log_accuracy_activate(prompt_id, skill_name)
+            except Exception:
+                pass  # Accuracy logging is optional
 
         # Pure logging — no system message, no blocking
         return None

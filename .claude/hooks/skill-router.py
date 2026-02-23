@@ -12,6 +12,7 @@ Complements research-task-detector.py:
   - research-task-detector → CODE-DRIVEN, says WHICH WORKFLOW to use
 """
 
+import hashlib
 import json
 import os
 import re
@@ -68,6 +69,32 @@ def _log_match(prompt_snippet: str, bundles: list[str], skills: list[str]) -> No
             f.write(line)
     except Exception:
         pass  # Logging must never block the hook
+
+
+def _generate_prompt_id(prompt: str) -> str:
+    """Generate short deterministic prompt_id from timestamp + prompt."""
+    ts = datetime.now().isoformat()
+    raw = f"{ts}|{prompt[:80]}"
+    return hashlib.md5(raw.encode("utf-8", errors="replace")).hexdigest()[:8]
+
+
+def _log_accuracy_recommend(prompt_id: str, skills: list[str], prompt_snippet: str) -> None:
+    """Write recommend event to data/skill-accuracy.jsonl."""
+    try:
+        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+        log_path = os.path.join(project_dir, "data", "skill-accuracy.jsonl")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        entry = {
+            "ts": datetime.now().isoformat(),
+            "type": "recommend",
+            "prompt_id": prompt_id,
+            "skills": skills,
+            "prompt": prompt_snippet[:120],
+        }
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass  # Never block
 
 
 def _load_config() -> dict | None:
@@ -229,6 +256,17 @@ class SkillRouter(BaseHook):
 
         # --- Log match ---
         _log_match(prompt_lower[:80], matched_bundle_names, required_skills)
+
+        # --- Accuracy tracking: generate prompt_id and log recommend event ---
+        all_recommended = list(required_skills) + list(optional_skills)
+        if all_recommended:
+            prompt_id = _generate_prompt_id(prompt)
+            try:
+                from shared.session_state import set_prompt_id
+                set_prompt_id(prompt_id)
+            except Exception:
+                pass
+            _log_accuracy_recommend(prompt_id, all_recommended, prompt_lower[:120])
 
         # --- Build systemMessage ---
         # Separate domain bundles from workflow bundles for display
