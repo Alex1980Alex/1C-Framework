@@ -484,7 +484,7 @@ After researching, apply knowledge and write code following best practices.
 
                     output = HookOutput()
                     output.advise(
-                        f"⚠️ POST-VERIFICATION FAILED\n"
+                        f"[WARN] POST-VERIFICATION FAILED\n"
                         f"Skill: {skill}\n"
                         f"File: {file_path}\n"
                         f"Issue: {error_msg}\n\n"
@@ -513,7 +513,7 @@ After researching, apply knowledge and write code following best practices.
 
                     output = HookOutput()
                     output.advise(
-                        f"⚠️ POST-VERIFICATION FAILED\n"
+                        f"[WARN] POST-VERIFICATION FAILED\n"
                         f"Skill: {skill}\n"
                         f"File: {file_path}\n"
                         f"Issue: {error_msg}\n\n"
