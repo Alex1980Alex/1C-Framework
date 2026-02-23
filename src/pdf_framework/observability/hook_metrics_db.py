@@ -133,12 +133,20 @@ class HookMetricsDB:
         Returns:
             Dict with counts of ingested records per source.
         """
-        return {
-            "invocations": self._ingest_invocations(),
-            "recommendations": self._ingest_skill_router(),
-            "activations": self._ingest_skill_usage(),
-            "accuracy": self._ingest_skill_accuracy(),
-        }
+        try:
+            return {
+                "invocations": self._ingest_invocations(),
+                "recommendations": self._ingest_skill_router(),
+                "activations": self._ingest_skill_usage(),
+                "accuracy": self._ingest_skill_accuracy(),
+            }
+        except Exception:
+            return {
+                "invocations": 0,
+                "recommendations": 0,
+                "activations": 0,
+                "accuracy": 0,
+            }
 
     def _ingest_invocations(self) -> int:
         """Ingest hook-invocations.jsonl into database."""
