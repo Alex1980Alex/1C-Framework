@@ -265,6 +265,16 @@ with tab2:
     ))
     st.plotly_chart(fig_gauge, use_container_width=True)
 
+    # Source breakdown
+    by_source = skill_metrics.get("by_source", {})
+    if by_source:
+        src_cols = st.columns(len(by_source) + 1)
+        src_cols[0].metric("Total Activated", skill_metrics["total_activated"])
+        for i, (src, cnt) in enumerate(sorted(by_source.items()), 1):
+            label = "Prompt Detection" if src == "prompt-detection" else "PostToolUse"
+            src_cols[i].metric(label, cnt)
+        st.markdown("---")
+
     # Per-skill breakdown
     per_skill = skill_metrics.get("per_skill", {})
     if per_skill:
@@ -273,6 +283,9 @@ with tab2:
                 "skill": skill,
                 "recommended": metrics["recommended"],
                 "activated": metrics["activated"],
+                "source": ", ".join(
+                    f"{s}:{c}" for s, c in sorted(metrics.get("sources", {}).items())
+                ) or "-",
                 "rate": metrics["rate"],
             }
             for skill, metrics in per_skill.items()
@@ -284,6 +297,7 @@ with tab2:
                 "skill": st.column_config.TextColumn("Skill", width="large"),
                 "recommended": st.column_config.NumberColumn("Recommended", width="small"),
                 "activated": st.column_config.NumberColumn("Activated", width="small"),
+                "source": st.column_config.TextColumn("Source", width="medium"),
                 "rate": st.column_config.ProgressColumn(
                     "Rate (%)",
                     width="medium",
