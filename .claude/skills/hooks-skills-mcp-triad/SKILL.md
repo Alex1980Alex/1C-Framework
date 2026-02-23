@@ -175,9 +175,12 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 - **Dedup**: `SessionState.get_already_activated()` предотвращает двойной счёт
 - **Dashboard**: `python scripts/hook-dashboard.py --section accuracy`
 - **Метрики**: match rate, per-skill precision, recent misses
-- **SQLite**: таблица `skill_accuracy` в `hook_metrics_db.py` для Streamlit dashboard
-- **HookMetricsDB API**: `get_hook_metrics()` (incl. p95_ms), `get_skill_metrics()`, `get_accuracy_metrics()`, `get_enforcement_metrics()`, `get_error_log()`
-- **HTML Dashboard**: `/metrics/html` — unified view: hooks, skills, enforcement, errors (ingests from JSONL logs on each request)
+- **SQLite**: таблицы `skill_activations` и `skill_accuracy` в `hook_metrics_db.py` (колонка `source TEXT`)
+- **Auto-migration**: `_migrate()` добавляет `source` колонку при первом запуске на старой схеме
+- **HookMetricsDB API**: `get_hook_metrics()` (incl. p95_ms), `get_skill_metrics()` (incl. `by_source`, per-skill `sources`), `get_accuracy_metrics()`, `get_enforcement_metrics()`, `get_error_log()`
+- **HTML Dashboard** (`/metrics/html`): карточки Prompt Detection / PostToolUse + колонка Source с цветными тегами в таблице скиллов
+- **CLI Dashboard** (`scripts/hook-dashboard.py`): `--section skills` показывает `Source` колонку (prompt-detection:N post-tool-use:N), summary показывает `via <source>: N`
+- **Streamlit Dashboard** (`src/ui/pages/hook_dashboard.py`): Tab 2 "Skill Activations" — метрики-карточки по source + колонка Source в таблице
 
 ### MCP Server (1 сервер, 14 инструментов) — ЧЕМ
 
