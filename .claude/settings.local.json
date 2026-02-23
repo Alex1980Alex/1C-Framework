@@ -149,7 +149,8 @@
       "Bash(docker run:*)",
       "Bash(docker compose:*)",
       "Bash(docker start:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(echo EXIT: $?:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

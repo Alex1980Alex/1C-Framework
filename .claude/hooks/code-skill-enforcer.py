@@ -431,7 +431,7 @@ After researching, apply knowledge and write code following best practices.
         # (Would need config extension for full implementation)
         output = HookOutput()
         output.advise(
-            "💡 RESEARCH CACHE REMINDER\n"
+            "[TIP] RESEARCH CACHE REMINDER\n"
             "Before using search results, check if information is cached:\n"
             "- .claude/skills/tech-research/cache/\n"
             "- 1c-docs-rag via mcp__1c-docs-rag__search_docs()\n"
