@@ -165,7 +165,7 @@ def test_e2e_full_pre_cycle():
         runner = E2ETestRunner(framework)
 
         if not runner.hook_path.exists():
-            print(f"❌ Hook not found: {runner.hook_path}")
+            print(f"[FAIL] Hook not found: {runner.hook_path}")
             return False
 
         # Step 1: User prompts "Create a LangGraph agent"
@@ -204,12 +204,12 @@ def create_agent():
 
         # Step 4: Hook BLOCKS
         if result["exit_code"] != 2:
-            print(f"❌ Expected BLOCK (exit 2), got {result['exit_code']}")
+            print(f"[FAIL] Expected BLOCK (exit 2), got {result['exit_code']}")
             framework.cleanup()
             return False
 
         if "langgraph-core" not in result["stdout"]:
-            print(f"❌ Expected 'langgraph-core' in block message")
+            print(f"[FAIL] Expected 'langgraph-core' in block message")
             framework.cleanup()
             return False
 
@@ -233,7 +233,7 @@ def create_agent():
 
         # Step 7: Hook ALLOWS
         if result["exit_code"] != 0:
-            print(f"❌ Expected ALLOW (exit 0), got {result['exit_code']}")
+            print(f"[FAIL] Expected ALLOW (exit 0), got {result['exit_code']}")
             framework.cleanup()
             return False
 
@@ -270,7 +270,7 @@ def test_e2e_full_learn_cycle():
         runner = E2ETestRunner(framework)
 
         if not runner.hook_path.exists():
-            print(f"❌ Hook not found: {runner.hook_path}")
+            print(f"[FAIL] Hook not found: {runner.hook_path}")
             return False
 
         # Step 1: User prompts
@@ -309,12 +309,12 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Expected ADVISE (exit 0), got {result['exit_code']}")
+            print(f"[FAIL] Expected ADVISE (exit 0), got {result['exit_code']}")
             framework.cleanup()
             return False
 
         if "Research Protocol" not in result["stdout"]:
-            print(f"❌ Expected research protocol message")
+            print(f"[FAIL] Expected research protocol message")
             framework.cleanup()
             return False
 
@@ -340,12 +340,12 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         })
 
         if result["exit_code"] != 0:
-            print(f"❌ Expected exit 0, got {result['exit_code']}")
+            print(f"[FAIL] Expected exit 0, got {result['exit_code']}")
             framework.cleanup()
             return False
 
         if "LEARN PHASE" not in result["stdout"]:
-            print(f"❌ Expected LEARN PHASE message")
+            print(f"[FAIL] Expected LEARN PHASE message")
             print(f"   stdout: {result['stdout'][:200]}")
             framework.cleanup()
             return False
@@ -389,7 +389,7 @@ def test_e2e_cross_session():
         runner = E2ETestRunner(framework)
 
         if not runner.hook_path.exists():
-            print(f"❌ Hook not found: {runner.hook_path}")
+            print(f"[FAIL] Hook not found: {runner.hook_path}")
             return False
 
         # Step 1: Write Pydantic code (triggers research protocol)
@@ -500,7 +500,7 @@ def run_e2e_tests():
             else:
                 failed += 1
         except Exception as e:
-            print(f"\n❌ {name} failed with exception: {e}")
+            print(f"\n[FAIL] {name} failed with exception: {e}")
             import traceback
             traceback.print_exc()
             failed += 1
