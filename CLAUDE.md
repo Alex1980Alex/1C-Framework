@@ -75,26 +75,31 @@ src/
 
 ```
 .claude/hooks/
+  base/base.py              # BaseHook — base class, HookInput/HookOutput, UTF-8 safe flush
   base/protocol.py          # BaseHook — abstract base, auto-logging
   shared/
     invocation_logger.py    # JSONL logger (data/hook-invocations.jsonl)
-    session_state.py        # Session metrics, activation tracking
+    session_state.py        # Session metrics, activation tracking, pending_learn
     ralph_state.py          # Ralph Wiggum state management
     otel_exporter.py        # OpenTelemetry OTLP exporter
     task_master.py          # Task management from hooks
+    code-skill-patterns.json # Pattern->Skill mappings (7 sections, 43 rules)
+    trust_scorer.py         # Trust scoring for sources (Context7/GitHub/SO/Infostart)
   skill-router.py           # UserPromptSubmit: skill recommendations
   skill-eval-enforcer-shell.py  # UserPromptSubmit: activation enforcement
+  code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F)
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
   docs-change-enforcer.py   # Stop: documentation coverage check
-  task-enforcer.py          # Stop: task list completion check
+  task-enforcer.py          # Stop: task list completion check (incl. code-skill-enforcer)
   ralph_wiggum_stop.py      # Stop: Ralph iteration enforcement
 ```
 
 Evaluation: `scripts/eval-hooks.py` + `tests/eval/hook_prompts.json` (40 тестов, 16 скиллов).
-Dashboard: `scripts/hook-dashboard.py` (CLI) + `src/ui/pages/hook_dashboard.py` (Streamlit).
+Dashboard: `scripts/hook-dashboard.py` (CLI) + `scripts/skill-enforcement-dashboard.py` (enforcement) + `src/ui/pages/hook_dashboard.py` (Streamlit).
 Monitoring: `src/pdf_framework/observability/hook_metrics_db.py` (SQLite) + `tracer.py` (OTLP).
+Migration: `scripts/skill-migration-advisor.py` (pattern coverage analysis).
 
 ## Research
 
