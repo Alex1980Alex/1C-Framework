@@ -236,6 +236,85 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
             </table>
         </div>
 
+        <!-- Hook Invocations -->
+        <div class="section">
+            <div class="section-title">Hook Invocations (24h)</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>Count</th>
+                        <th>Avg (ms)</th>
+                        <th>P95 (ms)</th>
+                        <th>Blocks</th>
+                        <th>Errors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    $hook_rows
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Skill Activations -->
+        <div class="section">
+            <div class="section-title">Skill Activations (24h)</div>
+            <div class="grid" style="margin-bottom: 15px;">
+                <div class="card">
+                    <div class="card-title">Activation Rate</div>
+                    <div class="card-value $activation_rate_class">$activation_rate</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Recommended</div>
+                    <div class="card-value">$total_recommended</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Activated</div>
+                    <div class="card-value">$total_activated</div>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Skill</th>
+                        <th>Recommended</th>
+                        <th>Activated</th>
+                        <th>Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    $skill_rows
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Enforcement & Errors -->
+        <div class="section">
+            <div class="section-title">Enforcement &amp; Errors</div>
+            <div class="grid" style="margin-bottom: 15px;">
+                <div class="card">
+                    <div class="card-title">Total Blocks</div>
+                    <div class="card-value warning">$enforcement_blocks</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Block Rate</div>
+                    <div class="card-value">$enforcement_block_rate</div>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Hook</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    $error_rows
+                </tbody>
+            </table>
+        </div>
+
         <!-- Quick Actions -->
         <div class="section">
             <div class="section-title">Quick Actions</div>
