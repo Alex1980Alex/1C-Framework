@@ -749,9 +749,12 @@ def dashboard(
             raise typer.Exit(1)
 
         # Check if Docker daemon is responsive
-        docker_ok = subprocess.run(
-            ["docker", "info"], capture_output=True, timeout=5,
-        ).returncode == 0 if docker_bin else False
+        try:
+            docker_ok = subprocess.run(
+                ["docker", "info"], capture_output=True, timeout=10,
+            ).returncode == 0 if docker_bin else False
+        except subprocess.TimeoutExpired:
+            docker_ok = False
 
         if not docker_ok:
             console.print("[yellow]Docker Desktop not running. Starting...[/yellow]")
@@ -766,22 +769,23 @@ def dashboard(
             except FileNotFoundError:
                 console.print(f"[red]Docker Desktop not found at {docker_desktop}[/red]")
                 console.print("[dim]Server will start in degraded mode (no Qdrant)[/dim]")
-                docker_ok = False
 
-            if not docker_ok:
-                # Wait for Docker daemon to become ready
-                console.print("[dim]Waiting for Docker daemon...[/dim]")
-                for _ in range(60):
-                    time.sleep(2)
+            # Wait for Docker daemon to become ready
+            console.print("[dim]Waiting for Docker daemon...[/dim]")
+            for _ in range(60):
+                time.sleep(2)
+                try:
                     result = subprocess.run(
-                        ["docker", "info"], capture_output=True, timeout=5,
+                        ["docker", "info"], capture_output=True, timeout=10,
                     )
                     if result.returncode == 0:
                         docker_ok = True
                         console.print("[green]Docker Desktop started[/green]")
                         break
-                else:
-                    console.print("[yellow]Docker daemon not ready after 120s. Continuing without Qdrant.[/yellow]")
+                except subprocess.TimeoutExpired:
+                    continue
+            else:
+                console.print("[yellow]Docker daemon not ready after 120s. Continuing without Qdrant.[/yellow]")
 
         # --- Step 2: Qdrant container ---
         if docker_ok and not _is_port_open("127.0.0.1", 6333):
