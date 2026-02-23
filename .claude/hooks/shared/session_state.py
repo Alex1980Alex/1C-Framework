@@ -196,6 +196,45 @@ class SessionState:
         state["pending_learn"] = None
         cls._save_state(state)
 
+    # ===== PROMPT ID METHODS (Accuracy Tracking) =====
+
+    @classmethod
+    def set_prompt_id(cls, prompt_id: str) -> None:
+        """
+        Store current prompt_id for accuracy correlation.
+
+        Called from skill-router.py after generating a recommendation.
+        The prompt_id links a recommend event to a subsequent activate event.
+
+        Args:
+            prompt_id: Short hash identifying the prompt (e.g. "abc12345")
+        """
+        state = cls._load_state()
+        state["current_prompt_id"] = prompt_id
+        cls._save_state(state)
+
+    @classmethod
+    def get_prompt_id(cls) -> Optional[str]:
+        """
+        Get current prompt_id for accuracy correlation.
+
+        Called from skill-usage-metrics.py (PostToolUse:Skill) and
+        skill-router.py (_detect_skill_activations) to correlate
+        activations with prior recommendations.
+
+        Returns:
+            prompt_id string, or None if not set
+        """
+        state = cls._load_state()
+        return state.get("current_prompt_id")
+
+    @classmethod
+    def clear_prompt_id(cls) -> None:
+        """Clear prompt_id after activation is recorded."""
+        state = cls._load_state()
+        state.pop("current_prompt_id", None)
+        cls._save_state(state)
+
     # ===== METADATA METHODS =====
 
     @classmethod
