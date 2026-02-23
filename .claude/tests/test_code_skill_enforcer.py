@@ -156,7 +156,7 @@ def run_unit_tests():
     if runner.assert_exit_code(result, 2, "A.1") and \
        runner.assert_contains(result, "SKILL REQUIRED", "A.1") and \
        runner.assert_contains(result, "langgraph-core", "A.1"):
-        print("✅ A.1 PASSED: Blocks StateGraph without skill")
+        print("[PASS] A.1 PASSED: Blocks StateGraph without skill")
         passed += 1
     else:
         failed += 1
@@ -170,7 +170,7 @@ def run_unit_tests():
     ))
     if runner.assert_exit_code(result, 0, "A.2") and \
        runner.assert_not_contains(result, "SKILL REQUIRED", "A.2"):
-        print("✅ A.2 PASSED: Allows simple code")
+        print("[PASS] A.2 PASSED: Allows simple code")
         passed += 1
     else:
         failed += 1
@@ -184,7 +184,7 @@ def run_unit_tests():
     ))
     if runner.assert_exit_code(result, 0, "A.3") and \
        runner.assert_contains(result, "Research Protocol", "A.3"):
-        print("✅ A.3 PASSED: Shows research protocol for FastAPI")
+        print("[PASS] A.3 PASSED: Shows research protocol for FastAPI")
         passed += 1
     else:
         failed += 1
@@ -202,7 +202,7 @@ def run_unit_tests():
     ))
     if runner.assert_exit_code(result, 2, "B.1") and \
        runner.assert_contains(result, "create-hook", "B.1"):
-        print("✅ B.1 PASSED: Blocks hooks/ without create-hook skill")
+        print("[PASS] B.1 PASSED: Blocks hooks/ without create-hook skill")
         passed += 1
     else:
         failed += 1
@@ -215,7 +215,7 @@ def run_unit_tests():
         {"file_path": "D:/1С-Framework/src/utils/helpers.py", "content": "def helper(): pass"}
     ))
     if runner.assert_exit_code(result, 0, "B.2"):
-        print("✅ B.2 PASSED: Allows src/utils/")
+        print("[PASS] B.2 PASSED: Allows src/utils/")
         passed += 1
     else:
         failed += 1
@@ -233,7 +233,7 @@ def run_unit_tests():
     ))
     if runner.assert_exit_code(result, 2, "C.1") and \
        runner.assert_contains(result, "deployment", "C.1"):
-        print("✅ C.1 PASSED: Blocks docker compose without deployment skill")
+        print("[PASS] C.1 PASSED: Blocks docker compose without deployment skill")
         passed += 1
     else:
         failed += 1
@@ -246,7 +246,7 @@ def run_unit_tests():
         {"command": "ls -la"}
     ))
     if runner.assert_exit_code(result, 0, "C.2"):
-        print("✅ C.2 PASSED: Allows simple ls")
+        print("[PASS] C.2 PASSED: Allows simple ls")
         passed += 1
     else:
         failed += 1
@@ -264,7 +264,7 @@ def run_unit_tests():
     ))
     if runner.assert_exit_code(result, 0, "D.1") and \
        runner.assert_contains(result, "RESEARCH CACHE", "D.1"):
-        print("✅ D.1 PASSED: Shows cache reminder for WebSearch")
+        print("[PASS] D.1 PASSED: Shows cache reminder for WebSearch")
         passed += 1
     else:
         failed += 1
@@ -282,7 +282,7 @@ def run_unit_tests():
     ))
     # Without activated skill, should just pass
     if runner.assert_exit_code(result, 0, "E.1"):
-        print("✅ E.1 PASSED: Basic write passes")
+        print("[PASS] E.1 PASSED: Basic write passes")
         passed += 1
     else:
         failed += 1
@@ -299,7 +299,7 @@ def run_unit_tests():
         "tool_input": {"file_path": "test.py"}
     })
     if runner.assert_exit_code(result, 0, "Edge.1"):
-        print("✅ Edge.1 PASSED: Ignores Read tool")
+        print("[PASS] Edge.1 PASSED: Ignores Read tool")
         passed += 1
     else:
         failed += 1
@@ -312,7 +312,7 @@ def run_unit_tests():
         {"file_path": "test.py", "content": ""}
     ))
     if runner.assert_exit_code(result, 0, "Edge.2"):
-        print("✅ Edge.2 PASSED: Ignores empty content")
+        print("[PASS] Edge.2 PASSED: Ignores empty content")
         passed += 1
     else:
         failed += 1
@@ -325,7 +325,7 @@ def run_unit_tests():
         {"file_path": "test.py", "content": "x = 1"}
     ))
     if runner.assert_exit_code(result, 0, "Edge.3"):
-        print("✅ Edge.3 PASSED: Ignores short content")
+        print("[PASS] Edge.3 PASSED: Ignores short content")
         passed += 1
     else:
         failed += 1
@@ -335,7 +335,7 @@ def run_unit_tests():
     result = runner.run_hook("invalid json{{{")
     # Should exit 0 with graceful degradation
     if result["exit_code"] == 0:
-        print("✅ Edge.4 PASSED: Graceful degradation for malformed JSON")
+        print("[PASS] Edge.4 PASSED: Graceful degradation for malformed JSON")
         passed += 1
     else:
         print(f"[FAIL] Edge.4 FAILED: Expected 0, got {result['exit_code']}")
@@ -348,7 +348,7 @@ def run_unit_tests():
         "tool_input": {}
     })
     if runner.assert_exit_code(result, 0, "Edge.5"):
-        print("✅ Edge.5 PASSED: Handles missing tool_name")
+        print("[PASS] Edge.5 PASSED: Handles missing tool_name")
         passed += 1
     else:
         failed += 1
