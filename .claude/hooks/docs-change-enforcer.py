@@ -108,6 +108,12 @@ SKIP_PATTERNS = [
     ".env",
     # Ralph state files (runtime, not code)
     ".ralph_",
+    # Scripts and tests (utility, not core product code)
+    "scripts/",
+    "tests/",
+    # Agent configs and subagent settings
+    ".claude/agents/",
+    ".claude/settings-subagent",
 ]
 
 
