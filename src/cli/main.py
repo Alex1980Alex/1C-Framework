@@ -786,7 +786,7 @@ def restart(
         if platform.system() == "Windows":
             # Windows: taskkill /F /T kills process tree reliably
             result = subprocess.run(
-                ["taskkill", "//PID", str(pid), "//F", "//T"],
+                ["taskkill", "/PID", str(pid), "/F", "/T"],
                 capture_output=True, text=True, timeout=10,
             )
             return result.returncode == 0
