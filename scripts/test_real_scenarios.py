@@ -154,11 +154,11 @@ SCENARIOS = [
         0, "RESEARCH CACHE", "D cache"
     ),
     (
-        "Write enforcer itself (exclude_files)",
+        "Write enforcer itself (hooks dir -> create-hook required)",
         {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "D:/1C-Framework/.claude/hooks/code-skill-enforcer.py",
+         "tool_input": {"file_path": ".claude/hooks/code-skill-enforcer.py",
                         "content": "class CodeSkillEnforcer(BaseHook): pass"}},
-        0, None, "exclude_files"
+        2, "create-hook", "B directory"
     ),
     (
         "Write < 20 chars",
