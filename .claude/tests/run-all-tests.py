@@ -71,7 +71,7 @@ def main():
 
     print("\n" + "=" * 60)
     if all_passed:
-        print("🎉 ALL TESTS PASSED")
+        print(">>> ALL TESTS PASSED")
     else:
         print("⚠️ SOME TESTS FAILED")
     print("=" * 60)
