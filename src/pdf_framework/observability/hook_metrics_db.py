@@ -645,6 +645,42 @@ class HookMetricsDB:
         )
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_enforcement_metrics(self, hours: int = 24) -> dict[str, Any]:
+        """Get enforcement breakdown by outcome per hook.
+
+        Args:
+            hours: Number of hours to look back.
+
+        Returns:
+            Dict with total blocks/allows, block rate, and per-hook breakdown.
+        """
+        cutoff = (datetime.now() - timedelta(hours=hours)).isoformat()
+        cursor = self._get_conn().cursor()
+
+        cursor.execute(
+            """SELECT hook, outcome, COUNT(*) as count
+               FROM invocations
+               WHERE timestamp >= ?
+               GROUP BY hook, outcome
+               ORDER BY hook, outcome""",
+            (cutoff,),
+        )
+
+        per_hook: dict[str, dict[str, int]] = {}
+        for row in cursor.fetchall():
+            per_hook.setdefault(row["hook"], {})[row["outcome"]] = row["count"]
+
+        total_blocks = sum(c.get("block", 0) for c in per_hook.values())
+        total_allows = sum(c.get("allow", 0) for c in per_hook.values())
+        total = total_blocks + total_allows
+
+        return {
+            "total_blocks": total_blocks,
+            "total_allows": total_allows,
+            "block_rate": round(total_blocks / total * 100, 1) if total > 0 else 0.0,
+            "per_hook": per_hook,
+        }
+
     def close(self) -> None:
         """Close database connection."""
         if hasattr(self._local, "conn"):
