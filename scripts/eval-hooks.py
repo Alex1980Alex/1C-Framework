@@ -560,6 +560,9 @@ Examples:
   python scripts/eval-hooks.py --suite skill-activation     # Single suite
   python scripts/eval-hooks.py --suite ide-filtering --json # JSON output
   python scripts/eval-hooks.py --list-suites               # List suites
+  python scripts/eval-hooks.py -s skill-activation --live            # Live mode
+  python scripts/eval-hooks.py -s skill-activation --live -f sa-008  # Single test
+  python scripts/eval-hooks.py -s skill-activation --live --json     # JSON for CI
 
 Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
         """,
