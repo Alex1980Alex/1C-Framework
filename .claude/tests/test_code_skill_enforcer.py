@@ -77,7 +77,7 @@ class TestRunner:
     def assert_exit_code(self, result: Dict[str, Any], expected: int, test_name: str):
         """Assert exit code matches expected."""
         if result["exit_code"] != expected:
-            print(f"❌ {test_name}: Expected exit {expected}, got {result['exit_code']}")
+            print(f"[FAIL] {test_name}: Expected exit {expected}, got {result['exit_code']}")
             print(f"   stdout: {result['stdout'][:200]}")
             print(f"   stderr: {result['stderr'][:200]}")
             return False
@@ -86,7 +86,7 @@ class TestRunner:
     def assert_contains(self, result: Dict[str, Any], text: str, test_name: str):
         """Assert stdout contains text."""
         if text not in result["stdout"]:
-            print(f"❌ {test_name}: Expected '{text}' in stdout")
+            print(f"[FAIL] {test_name}: Expected '{text}' in stdout")
             print(f"   stdout: {result['stdout'][:200]}")
             return False
         return True
@@ -94,7 +94,7 @@ class TestRunner:
     def assert_not_contains(self, result: Dict[str, Any], text: str, test_name: str):
         """Assert stdout does NOT contain text."""
         if text in result["stdout"]:
-            print(f"❌ {test_name}: Did NOT expect '{text}' in stdout")
+            print(f"[FAIL] {test_name}: Did NOT expect '{text}' in stdout")
             print(f"   stdout: {result['stdout'][:200]}")
             return False
         return True
@@ -131,7 +131,7 @@ def run_unit_tests():
     hook_path = _HOOK_DIR / "code-skill-enforcer.py"
 
     if not hook_path.exists():
-        print(f"❌ Hook not found: {hook_path}")
+        print(f"[FAIL] Hook not found: {hook_path}")
         return False
 
     runner = TestRunner(hook_path)
@@ -338,7 +338,7 @@ def run_unit_tests():
         print("✅ Edge.4 PASSED: Graceful degradation for malformed JSON")
         passed += 1
     else:
-        print(f"❌ Edge.4 FAILED: Expected 0, got {result['exit_code']}")
+        print(f"[FAIL] Edge.4 FAILED: Expected 0, got {result['exit_code']}")
         failed += 1
 
     # Test Edge 5: No tool_name
