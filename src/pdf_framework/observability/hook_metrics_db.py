@@ -27,7 +27,7 @@ from typing import Any
 
 # --- Path resolution ---
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 DB_FILE = DATA_DIR / "hook-metrics.db"
 
