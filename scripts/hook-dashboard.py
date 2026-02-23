@@ -212,10 +212,15 @@ def compute_skill_metrics(
 
     # Count activations (from skill-usage.log)
     activated: Counter = Counter()
+    by_source: Counter = Counter()
+    per_skill_source: dict[str, Counter] = defaultdict(Counter)
     for entry in usage_entries:
         skill = entry.get("skill", "").strip()
+        source = entry.get("source", "post-tool-use").strip()
         if skill:
             activated[skill] += 1
+            by_source[source] += 1
+            per_skill_source[skill][source] += 1
 
     total_recommended = sum(recommended.values())
     total_activated = sum(activated.values())
@@ -230,6 +235,7 @@ def compute_skill_metrics(
             "recommended": rec,
             "activated": act,
             "rate": (act / rec * 100) if rec > 0 else 0.0,
+            "sources": dict(per_skill_source.get(skill, {})),
         }
 
     # Dead skills: recommended but never activated
@@ -239,6 +245,7 @@ def compute_skill_metrics(
         "total_recommended": total_recommended,
         "total_activated": total_activated,
         "activation_rate": (total_activated / total_recommended * 100) if total_recommended > 0 else 0.0,
+        "by_source": dict(by_source),
         "per_skill": per_skill,
         "dead_skills": sorted(dead),
         "unique_recommended": len(recommended),
