@@ -365,12 +365,13 @@ class HookMetricsDB:
                         skills = ",".join(entry["skills"]) if etype == "recommend" else None
                         skill = entry.get("skill") if etype == "activate" else None
                         prompt = entry.get("prompt")
+                        source = entry.get("source")
 
                         cursor.execute(
                             """INSERT INTO skill_accuracy
-                               (timestamp, type, prompt_id, skills, skill, prompt)
-                               VALUES (?, ?, ?, ?, ?, ?)""",
-                            (ts, etype, prompt_id, skills, skill, prompt),
+                               (timestamp, type, prompt_id, skills, skill, prompt, source)
+                               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                            (ts, etype, prompt_id, skills, skill, prompt, source),
                         )
                         count += 1
                     except (json.JSONDecodeError, KeyError):
