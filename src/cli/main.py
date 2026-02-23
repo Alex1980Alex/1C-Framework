@@ -760,15 +760,33 @@ def restart(
                 pass
         return None
 
+    def _is_pid_alive(pid: int) -> bool:
+        """Check if a process with given PID is still running."""
+        import platform
+
+        if platform.system() == "Windows":
+            result = subprocess.run(
+                ["tasklist", "//FI", f"PID eq {pid}"],
+                capture_output=True, text=True, timeout=5,
+            )
+            return str(pid) in result.stdout
+        else:
+            import os
+
+            try:
+                os.kill(pid, 0)  # signal 0 = just check existence
+                return True
+            except OSError:
+                return False
+
     def _kill_pid(pid: int, forceful: bool) -> bool:
         """Kill process by PID (cross-platform)."""
         import platform
 
         if platform.system() == "Windows":
-            # Windows: taskkill works reliably, os.kill often gets Access Denied
-            flag = "/F" if forceful else "/F"  # Windows taskkill needs /F for uvicorn
+            # Windows: taskkill /F /T kills process tree reliably
             result = subprocess.run(
-                ["taskkill", "/PID", str(pid), flag, "/T"],
+                ["taskkill", "//PID", str(pid), "//F", "//T"],
                 capture_output=True, text=True, timeout=10,
             )
             return result.returncode == 0
@@ -786,29 +804,28 @@ def restart(
         if pid:
             console.print(f"[yellow]Stopping server (PID {pid}) on {host}:{port}...[/yellow]")
             try:
-                if force:
-                    _kill_pid(pid, forceful=True)
+                _kill_pid(pid, forceful=force)
+
+                # Wait for process to die (not port — port can linger after process death)
+                for i in range(20):
+                    time.sleep(0.5)
+                    if not _is_pid_alive(pid):
+                        console.print("[green]Server stopped[/green]")
+                        break
                 else:
-                    _kill_pid(pid, forceful=False)
-                    for _ in range(20):
-                        time.sleep(0.5)
-                        if not _is_port_open(host, port):
-                            break
-                    else:
+                    # Process still alive after 10s — force kill
+                    if not force:
                         console.print("[yellow]Graceful stop timed out, forcing...[/yellow]")
                         _kill_pid(pid, forceful=True)
+                        time.sleep(1)
+
+                # Wait for port to actually free (may take a few more seconds on Windows)
+                for _ in range(10):
+                    if not _is_port_open(host, port):
+                        break
+                    time.sleep(0.5)
             except (OSError, subprocess.SubprocessError) as e:
                 console.print(f"[red]Failed to stop process: {e}[/red]")
-                raise typer.Exit(1)
-
-            # Wait for port to free
-            for _ in range(20):
-                time.sleep(0.5)
-                if not _is_port_open(host, port):
-                    console.print("[green]Server stopped[/green]")
-                    break
-            else:
-                console.print(f"[red]Port {port} still in use after 10s[/red]")
                 raise typer.Exit(1)
         else:
             console.print(f"[red]Port {port} in use but could not find PID[/red]")
