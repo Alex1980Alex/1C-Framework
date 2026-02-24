@@ -16,8 +16,9 @@ description: "Цикл обучения: SEARCH → FETCH → EXECUTE → VERIFY
 | Фаза | Действие | Инструменты |
 |------|----------|-------------|
 | SEARCH | Найти существующий скилл | Grep по skills/, skill-router-config.json |
-| FETCH | Собрать знания | WebSearch, WebFetch, MCP Context7 |
-| EXECUTE | Выполнить задачу | Skill-Delegated Subagent (Task tool) |
+| FETCH | Собрать знания (ротация источников) | Context7, WebSearch, WebFetch |
+| EXECUTE | Выполнить задачу с атрибуцией | Skill-Delegated Subagent (Task tool) |
+| VERIFY | Проверить соответствие knowledge | Grep + ревьюер-субагент (обязательный) |
 | CREATE | Создать скилл | doc-to-skill, skill-router-config.json |
 
 ---
