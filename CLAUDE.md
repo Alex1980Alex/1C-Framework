@@ -87,7 +87,7 @@ src/
     trust_scorer.py         # Trust scoring for sources (Context7/GitHub/SO/Infostart)
   skill-router.py           # UserPromptSubmit: skill recommendations
   skill-eval-enforcer-shell.py  # UserPromptSubmit: activation enforcement
-  code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F)
+  code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F, protocol.py base)
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
