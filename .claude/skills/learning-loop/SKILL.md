@@ -1,6 +1,6 @@
 ---
 name: learning-loop
-description: "Цикл обучения: SEARCH skill → FETCH knowledge → EXECUTE task → CREATE skill. Триггеры: 'нет скилла', 'найди информацию и сделай', 'learning loop', 'научись делать', 'создай скилл из опыта', 'fetch and learn'. НЕ для существующих скиллов — используй skill-router."
+description: "Цикл обучения: SEARCH → FETCH → EXECUTE → VERIFY → CREATE. Триггеры: 'нет скилла', 'найди информацию и сделай', 'learning loop', 'научись делать', 'создай скилл из опыта', 'fetch and learn'. НЕ для существующих скиллов — используй skill-router."
 ---
 
 # Learning Loop — самообучающийся цикл Claude Code
