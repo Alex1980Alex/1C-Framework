@@ -54,6 +54,18 @@
       "last_verified": "2026-02-12",
       "sources_count": 3,
       "github_repos_count": 0
+    },
+    {
+      "file": "skill-delegated-subagent-pattern.md",
+      "title": "Skill-Delegated Subagent — передача знаний через prompt",
+      "keywords": [
+        "subagent", "skill", "delegation", "orchestration", "PostToolUse",
+        "bug-6305", "context-passing", "prompt-injection", "parallel",
+        "mediator-pattern", "worker-pattern", "skill-bypass"
+      ],
+      "last_verified": "2026-02-24",
+      "sources_count": 4,
+      "github_repos_count": 1
     }
   ]
 }
