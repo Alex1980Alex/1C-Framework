@@ -3,54 +3,52 @@
 Code Skill Enforcer — Skill-First Enforcement Hook
 
 Event: PreToolUse | PostToolUse
-Matcher: Write|Edit|Bash|WebSearch|WebFetch
+Matcher: Write|Edit|Bash (PRE), Write|Edit|WebSearch|WebFetch (POST)
 Purpose: Enforce skill usage before/after code operations
 Timeout: 3s
 
 Principle:
   PRE (before)  -> Check skill cache -> BLOCK if missing -> ACTIVATE -> retry
-  POST (after)  -> Verify vs skill -> CREATE LEARN tasks if needed
+  POST (after)  -> Verify vs skill -> advisory messages
 
 Levels:
   A: Content patterns (StateGraph -> langgraph-core)
   B: Directory rules (.claude/hooks/ -> create-hook)
   C: Bash commands (docker compose -> deployment)
-  D: Research cache reminder (WebSearch "qdrant" -> check cache)
+  D: Research cache reminder (WebSearch -> check cache)
   E: Post-verification (must_contain, must_not_contain checks)
   F: LEARN phase (create skill tasks)
 
 Author: Claude Code
-Version: 1.0.0
+Version: 2.0.0
 Created: 2026-02-23
+Updated: 2026-02-24 (Migrated to protocol.py base class — fixed event detection)
 """
 
 import json
 import os
 import re
 import sys
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 # Path resolution (same pattern as all other hooks)
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+_USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
+if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
+    sys.path.insert(0, _USER_HOOKS)
 sys.path.insert(0, _HOOK_DIR)
 
-# Imports
+from base import BaseHook, HookInput, HookOutput
+
+# Optional imports (graceful degradation)
 try:
-    from base.base import BaseHook, HookInput, HookOutput, HookEvent, HookOutcome
     from shared.session_state import SessionState
-    from shared.trust_scorer import TrustScorer
-    from shared.task_master import add_task, has_recent_completion
-except ImportError as e:
-    # Graceful degradation: allow import errors
-    _import_error = str(e)
-    BaseHook = None
-    HookInput = None
-    HookOutput = None
-    HookEvent = None
-    HookOutcome = None
+except ImportError:
     SessionState = None
-    TrustScorer = None
+
+try:
+    from shared.task_master import add_task, has_recent_completion
+except ImportError:
     add_task = None
     has_recent_completion = None
 
@@ -62,174 +60,167 @@ except ImportError as e:
 class PatternConfig:
     """Lazy-loaded pattern configuration with caching."""
 
-    _instance: Optional["PatternConfig"] = None
-    _config: Dict[str, Any] = None
-    _compiled_patterns: Dict[str, re.Pattern] = {}
+    _instance = None
+    _config = None
+    _compiled_patterns = {}
 
     CONFIG_PATH = os.path.join(_HOOK_DIR, "shared", "code-skill-patterns.json")
 
     @classmethod
-    def get(cls) -> "PatternConfig":
-        """Get singleton instance."""
+    def get(cls):
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     def __init__(self):
-        """Initialize with lazy config loading."""
         if self._config is None:
             self._load_config()
 
-    def _load_config(self) -> None:
-        """Load configuration from JSON file."""
+    def _load_config(self):
         self._config = {
             "patterns": {"mappings": []},
             "directory_rules": {"mappings": []},
             "bash_rules": {"mappings": []},
-            "research_rules": {"mappings": []},
             "research_protocol": {"patterns": []},
             "post_verification": {"rules": []}
         }
-
         try:
             if os.path.exists(self.CONFIG_PATH):
                 with open(self.CONFIG_PATH, "r", encoding="utf-8") as f:
-                    loaded = json.load(f)
-                    self._config.update(loaded)
+                    self._config.update(json.load(f))
         except (json.JSONDecodeError, IOError):
-            pass  # Use default config
-
-        # Pre-compile regex patterns for performance
+            pass
         self._compile_patterns()
 
-    def _compile_patterns(self) -> None:
-        """Pre-compile all regex patterns."""
-        # Content patterns
-        for mapping in self._config.get("patterns", {}).get("mappings", []):
-            pattern = mapping.get("pattern", "")
-            key = f"pattern_{pattern[:20]}"
-            try:
-                self._compiled_patterns[key] = re.compile(pattern, re.IGNORECASE)
-            except re.error:
-                pass
+    def _compile_patterns(self):
+        for section, key_prefix in [
+            ("patterns", "pattern_"),
+            ("bash_rules", "bash_"),
+            ("research_protocol", "research_"),
+        ]:
+            items = self._config.get(section, {})
+            item_list = items.get("mappings", []) or items.get("patterns", [])
+            for item in item_list:
+                pattern = item.get("pattern", "")
+                key = f"{key_prefix}{pattern[:30]}"
+                try:
+                    self._compiled_patterns[key] = re.compile(pattern, re.IGNORECASE)
+                except re.error:
+                    pass
 
-        # Bash rules
-        for mapping in self._config.get("bash_rules", {}).get("mappings", []):
-            pattern = mapping.get("pattern", "")
-            key = f"bash_{pattern[:20]}"
-            try:
-                self._compiled_patterns[key] = re.compile(pattern, re.IGNORECASE)
-            except re.error:
-                pass
-
-        # Research protocol
-        for item in self._config.get("research_protocol", {}).get("patterns", []):
-            pattern = item.get("pattern", "")
-            key = f"research_{pattern[:20]}"
-            try:
-                self._compiled_patterns[key] = re.compile(pattern, re.IGNORECASE)
-            except re.error:
-                pass
-
-    def get_patterns(self) -> List[Dict[str, Any]]:
-        """Get content pattern mappings."""
+    def get_patterns(self):
         return self._config.get("patterns", {}).get("mappings", [])
 
-    def get_directory_rules(self) -> List[Dict[str, Any]]:
-        """Get directory rule mappings."""
+    def get_directory_rules(self):
         return self._config.get("directory_rules", {}).get("mappings", [])
 
-    def get_bash_rules(self) -> List[Dict[str, Any]]:
-        """Get bash rule mappings."""
+    def get_bash_rules(self):
         return self._config.get("bash_rules", {}).get("mappings", [])
 
-    def get_research_protocol(self) -> List[Dict[str, Any]]:
-        """Get research protocol patterns."""
+    def get_research_protocol(self):
         return self._config.get("research_protocol", {}).get("patterns", [])
 
-    def get_post_verification(self) -> List[Dict[str, Any]]:
-        """Get post-verification rules."""
+    def get_post_verification(self):
         return self._config.get("post_verification", {}).get("rules", [])
 
-    def match_pattern(self, content: str) -> Optional[Dict[str, Any]]:
-        """Match content against patterns, return first match."""
+    def match_pattern(self, content):
         for mapping in self.get_patterns():
             pattern = mapping.get("pattern", "")
-            key = f"pattern_{pattern[:20]}"
+            key = f"pattern_{pattern[:30]}"
             compiled = self._compiled_patterns.get(key)
-
             if compiled and compiled.search(content):
                 return mapping
-
         return None
 
-    def match_bash(self, command: str) -> Optional[Dict[str, Any]]:
-        """Match bash command against rules."""
+    def match_bash(self, command):
         for mapping in self.get_bash_rules():
             pattern = mapping.get("pattern", "")
-            key = f"bash_{pattern[:20]}"
+            key = f"bash_{pattern[:30]}"
             compiled = self._compiled_patterns.get(key)
-
             if compiled and compiled.search(command):
                 return mapping
-
-        return None
-
-    def match_research_protocol(self, content: str) -> Optional[Dict[str, Any]]:
-        """Match content against research protocol."""
-        for item in self.get_research_protocol():
-            pattern = item.get("pattern", "")
-            key = f"research_{pattern[:20]}"
-            compiled = self._compiled_patterns.get(key)
-
-            if compiled and compiled.search(content):
-                return item
-
         return None
 
 
 # ============================================================================
-# Code Skill Enforcer Hook
+# Code Skill Enforcer Hook (protocol.py base class)
 # ============================================================================
 
 class CodeSkillEnforcer(BaseHook):
     """
-    Main hook for Skill-First Enforcement.
+    Skill-First Enforcement via PreToolUse and PostToolUse events.
 
-    PRE Mode:
-    - Level A: Content patterns (StateGraph -> langgraph-core)
-    - Level B: Directory rules (.claude/hooks/ -> create-hook)
-    - Level C: Bash commands (docker compose -> deployment)
-    - Fallback: Research protocol for unknown patterns
+    PRE Mode (blocks until skill activated):
+      Level B: Directory rules (.claude/hooks/ -> create-hook)
+      Level A: Content patterns (StateGraph -> langgraph-core)
+      Level C: Bash commands (docker compose -> deployment)
 
-    POST Mode:
-    - Level D: Research cache reminder
-    - Level E: Post-verification (must_contain, must_not_contain)
-    - Level F: LEARN phase (create skill tasks)
+    POST Mode (advisory only, never blocks):
+      Level F: LEARN phase (create skill tasks)
+      Level E: Post-verification (must_contain, must_not_contain)
+      Level D: Research cache reminder
     """
-
-    HOOK_NAME = "CodeSkillEnforcer"
-    HOOK_VERSION = "1.0.0"
 
     def __init__(self):
         super().__init__()
         self.config = PatternConfig.get()
 
+    def execute(self, inp: HookInput) -> Optional[HookOutput]:
+        event = inp.detected_event
+
+        if event == "PreToolUse":
+            return self._handle_pre(inp)
+        elif event == "PostToolUse":
+            return self._handle_post(inp)
+
+        return None
+
     # -------------------------------------------------------------------------
-    # PRE Mode: Content Patterns (Level A)
+    # PRE Mode
     # -------------------------------------------------------------------------
 
-    def _check_content_patterns(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        Check content patterns (Level A).
+    def _handle_pre(self, inp):
+        # Level B: Directory rules (checked FIRST — most specific)
+        result = self._check_directory_rules(inp)
+        if result:
+            return result
 
-        Returns HookOutput.block() if skill not activated.
-        """
+        # Level A: Content patterns
+        result = self._check_content_patterns(inp)
+        if result:
+            return result
+
+        # Level C: Bash commands
+        result = self._check_bash_commands(inp)
+        if result:
+            return result
+
+        return None
+
+    def _extract_content(self, inp):
+        """Extract content from Write or Edit tool input."""
+        if inp.tool_name == "Write":
+            return inp.tool_input.get("content", "")
+        elif inp.tool_name == "Edit":
+            return inp.tool_input.get("new_string", "")
+        return ""
+
+    def _normalize_path(self, file_path):
+        """Normalize file path for directory rule matching."""
+        normalized = file_path.replace("\\", "/")
+        # Remove absolute path prefixes
+        for prefix in ["D:/1C-Enterprise_Framework/", "D:/1\u0421-Framework/", "C:/Users/"]:
+            if normalized.startswith(prefix):
+                normalized = normalized[len(prefix):]
+                break
+        return normalized
+
+    def _check_content_patterns(self, inp):
+        """Level A: Check content against code-skill-patterns.json mappings."""
         content = self._extract_content(inp)
         if not content or len(content) < 20:
             return None
 
-        # Match against patterns
         match = self.config.match_pattern(content)
         if not match:
             return None
@@ -237,98 +228,47 @@ class CodeSkillEnforcer(BaseHook):
         skill = match.get("skill")
         label = match.get("label", skill)
 
-        # Check if skill is activated
         if SessionState and SessionState.is_skill_activated(skill):
             return None
 
-        # Skill not activated - BLOCK
-        output = HookOutput()
-        output.block(
+        return HookOutput().block(
             f"SKILL REQUIRED: '{label}' ({skill})\n"
             f"Detected pattern: {match.get('pattern', '')[:50]}...\n\n"
             f"ACTIVATE THIS SKILL:\n"
-            f"  Skill('skill:{skill}')\n\n"
-            f"Then retry your action.",
-            exit_code=2
+            f"  Skill('{skill}')\n\n"
+            f"Then retry your action."
         )
-        return output
 
-    def _extract_content(self, inp: HookInput) -> Optional[str]:
-        """Extract content from Write or Edit tool input."""
-        if inp.tool_name == "Write":
-            return inp.tool_input.get("content", "")
-        elif inp.tool_name == "Edit":
-            return inp.tool_input.get("new_string", "")
-        return None
-
-    # -------------------------------------------------------------------------
-    # PRE Mode: Directory Rules (Level B)
-    # -------------------------------------------------------------------------
-
-    def _check_directory_rules(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        Check directory rules (Level B).
-
-        Returns HookOutput.block() if skill not activated.
-        Directory rules are checked BEFORE content patterns.
-        """
+    def _check_directory_rules(self, inp):
+        """Level B: Check file path against directory rules."""
         file_path = inp.tool_input.get("file_path", "")
         if not file_path:
             return None
 
-        # Normalize path
         normalized = self._normalize_path(file_path)
 
-        # Match against directory rules
         for rule in self.config.get_directory_rules():
             prefix = rule.get("directory_prefix", "")
             if normalized.startswith(prefix):
                 skill = rule.get("skill")
                 label = rule.get("label", skill)
 
-                # Check if skill is activated
                 if SessionState and SessionState.is_skill_activated(skill):
                     return None
 
-                # Skill not activated - BLOCK
-                output = HookOutput()
-                output.block(
+                return HookOutput().block(
                     f"SKILL REQUIRED: '{label}' ({skill})\n"
                     f"Directory: {prefix}\n"
                     f"File: {normalized}\n\n"
                     f"ACTIVATE THIS SKILL:\n"
-                    f"  Skill('skill:{skill}')\n\n"
-                    f"Then retry your action.",
-                    exit_code=2
+                    f"  Skill('{skill}')\n\n"
+                    f"Then retry your action."
                 )
-                return output
 
         return None
 
-    def _normalize_path(self, file_path: str) -> str:
-        """Normalize file path for matching."""
-        # Convert to forward slashes
-        normalized = file_path.replace("\\", "/")
-
-        # Remove absolute path prefixes
-        # Try common project roots
-        for prefix in ["D:/1C-Enterprise_Framework/", "D:/1С-Framework/", "C:/Users/"]:
-            if normalized.startswith(prefix):
-                normalized = normalized[len(prefix):]
-                break
-
-        return normalized
-
-    # -------------------------------------------------------------------------
-    # PRE Mode: Bash Commands (Level C)
-    # -------------------------------------------------------------------------
-
-    def _check_bash_commands(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        Check bash commands (Level C).
-
-        Returns HookOutput.block() if skill not activated.
-        """
+    def _check_bash_commands(self, inp):
+        """Level C: Check bash command against rules."""
         if inp.tool_name != "Bash":
             return None
 
@@ -336,7 +276,6 @@ class CodeSkillEnforcer(BaseHook):
         if not command:
             return None
 
-        # Match against bash rules
         match = self.config.match_bash(command)
         if not match:
             return None
@@ -344,311 +283,128 @@ class CodeSkillEnforcer(BaseHook):
         skill = match.get("skill")
         label = match.get("label", skill)
 
-        # Check if skill is activated
         if SessionState and SessionState.is_skill_activated(skill):
             return None
 
-        # Skill not activated - BLOCK
-        output = HookOutput()
-        output.block(
+        return HookOutput().block(
             f"SKILL REQUIRED: '{label}' ({skill})\n"
             f"Command: {command[:100]}...\n\n"
             f"ACTIVATE THIS SKILL:\n"
-            f"  Skill('skill:{skill}')\n\n"
-            f"Then retry your action.",
-            exit_code=2
+            f"  Skill('{skill}')\n\n"
+            f"Then retry your action."
         )
-        return output
 
     # -------------------------------------------------------------------------
-    # PRE Mode: Research Protocol (Fallback)
+    # POST Mode (advisory only — PostToolUse cannot block)
     # -------------------------------------------------------------------------
 
-    def _check_research_protocol(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        Check research protocol (fallback for unknown patterns).
+    def _handle_post(self, inp):
+        # Level F: LEARN phase
+        result = self._check_learn_phase(inp)
+        if result:
+            return result
 
-        Returns HookOutput with advisory message.
-        """
-        content = self._extract_content(inp)
-        if not content or len(content) < 20:
-            return None
+        # Level E: Post-verification
+        result = self._check_post_verification(inp)
+        if result:
+            return result
 
-        # Match against research protocol
-        match = self.config.match_research_protocol(content)
-        if not match:
-            return None
+        # Level D: Research cache reminder
+        if inp.tool_name in ("WebSearch", "WebFetch"):
+            return HookOutput().system_message(
+                "[TIP] Check research cache before using search results: "
+                ".claude/skills/tech-research/cache/"
+            )
 
-        label = match.get("label")
-        domain = match.get("domain", "tech")
+        return None
 
-        # Generate research protocol message
-        if TrustScorer:
-            protocol = TrustScorer.get_research_protocol(domain, label)
-        else:
-            protocol = f"""## Research Protocol: {label}
-
-You are about to implement code for **{label}**.
-Before writing any code, consult trusted sources:
-- Official documentation
-- Community resources (StackOverflow, GitHub)
-- Best practices guides
-
-After researching, apply knowledge and write code following best practices.
-"""
-
-        # Set pending learn for LEARN phase
-        if SessionState:
-            SessionState.set_pending_learn({
-                "label": label,
-                "domain": domain,
-                "pattern": match.get("pattern", "")
-            })
-
-        # ADVISE (not block)
-        output = HookOutput()
-        output.advise(protocol)
-        return output
-
-    # -------------------------------------------------------------------------
-    # POST Mode: Research Cache Reminder (Level D)
-    # -------------------------------------------------------------------------
-
-    def _check_research_cache(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        Check research cache (Level D).
-
-        Returns HookOutput with cache reminder for WebSearch/WebFetch.
-        """
-        if inp.tool_name not in ("WebSearch", "WebFetch"):
-            return None
-
-        query = inp.tool_input.get("query", "") or inp.tool_input.get("url", "")
-        if not query:
-            return None
-
-        # Check if query matches research rules
-        # (Would need config extension for full implementation)
-        output = HookOutput()
-        output.advise(
-            "[TIP] RESEARCH CACHE REMINDER\n"
-            "Before using search results, check if information is cached:\n"
-            "- .claude/skills/tech-research/cache/\n"
-            "- 1c-docs-rag via mcp__1c-docs-rag__search_docs()\n"
-            "- bsl-semantic-search for BSL patterns"
-        )
-        return output
-
-    # -------------------------------------------------------------------------
-    # POST Mode: Post-Verification (Level E)
-    # -------------------------------------------------------------------------
-
-    def _check_post_verification(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        Post-write verification (Level E).
-
-        Returns HookOutput with advisory + creates task if verification fails.
-        """
+    def _check_post_verification(self, inp):
+        """Level E: Verify written code against skill rules (advisory)."""
         if inp.tool_name not in ("Write", "Edit"):
             return None
 
         file_path = inp.tool_input.get("file_path", "")
         content = self._extract_content(inp)
-
         if not file_path or not content:
             return None
 
-        # Get activated skills
         if not SessionState:
             return None
         activated = SessionState.get_already_activated()
 
-        # Check each post-verification rule
         for rule in self.config.get_post_verification():
             skill = rule.get("name", "")
             if skill not in activated:
                 continue
 
-            # Check file pattern
             file_pattern = rule.get("file_pattern", "")
             if not re.search(file_pattern, file_path, re.IGNORECASE):
                 continue
 
             # Check must_contain
-            must_contain = rule.get("must_contain", [])
-            for pattern in must_contain:
+            for pattern in rule.get("must_contain", []):
                 if not re.search(pattern, content):
-                    # Verification failed
-                    error_msg = rule.get("error_message",
-                        f"Post-verification failed: missing pattern '{pattern}'")
-
-                    output = HookOutput()
-                    output.advise(
-                        f"[WARN] POST-VERIFICATION FAILED\n"
-                        f"Skill: {skill}\n"
-                        f"File: {file_path}\n"
-                        f"Issue: {error_msg}\n\n"
-                        f"Please fix and retry."
+                    msg = rule.get("error_message",
+                        f"Missing pattern '{pattern}'")
+                    return HookOutput().system_message(
+                        f"[WARN] POST-VERIFICATION: {skill}\n{msg}"
                     )
-
-                    # Create mandatory task
-                    try:
-                        add_task(
-                            content=f"[MANDATORY] Fix post-verification failure: {skill}",
-                            created_by="code-skill-enforcer",
-                            priority="mandatory"
-                        )
-                    except Exception:
-                        pass
-
-                    return output
 
             # Check must_not_contain
-            must_not_contain = rule.get("must_not_contain", [])
-            for pattern in must_not_contain:
+            for pattern in rule.get("must_not_contain", []):
                 if re.search(pattern, content):
-                    # Verification failed
-                    error_msg = rule.get("error_message",
-                        f"Post-verification failed: found anti-pattern '{pattern}'")
-
-                    output = HookOutput()
-                    output.advise(
-                        f"[WARN] POST-VERIFICATION FAILED\n"
-                        f"Skill: {skill}\n"
-                        f"File: {file_path}\n"
-                        f"Issue: {error_msg}\n\n"
-                        f"Please fix and retry."
+                    msg = rule.get("error_message",
+                        f"Found anti-pattern '{pattern}'")
+                    return HookOutput().system_message(
+                        f"[WARN] POST-VERIFICATION: {skill}\n{msg}"
                     )
-
-                    # Create mandatory task
-                    try:
-                        add_task(
-                            content=f"[MANDATORY] Fix post-verification failure: {skill}",
-                            created_by="code-skill-enforcer",
-                            priority="mandatory"
-                        )
-                    except Exception:
-                        pass
-
-                    return output
 
         return None
 
-    # -------------------------------------------------------------------------
-    # POST Mode: LEARN Phase (Level F)
-    # -------------------------------------------------------------------------
-
-    def _check_learn_phase(self, inp: HookInput) -> Optional[HookOutput]:
-        """
-        LEARN phase (Level F).
-
-        Creates tasks for skill creation after research protocol was triggered.
-        """
+    def _check_learn_phase(self, inp):
+        """Level F: Create tasks for skill creation after research protocol."""
         if inp.tool_name not in ("Write", "Edit"):
             return None
 
         if not SessionState:
             return None
 
-        # Check for pending learn
         pending = SessionState.get_pending_learn()
         if not pending:
             return None
 
-        # Check cooldown to prevent spam
         try:
-            if has_recent_completion("code-skill-enforcer", cooldown_minutes=10):
+            if has_recent_completion and has_recent_completion(
+                "code-skill-enforcer", cooldown_minutes=10
+            ):
                 SessionState.clear_pending_learn()
                 return None
         except Exception:
             pass
 
         label = pending.get("label", "unknown")
-        domain = pending.get("domain", "tech")
 
-        # Create 3 LEARN tasks
         tasks = [
-            f"[LEARN] Create skill for '{label}' using doc-to-skill pattern",
+            f"[LEARN] Create skill for '{label}'",
             f"[LEARN] Register '{label}' in skill-router-config.json",
-            f"[LEARN] Migrate '{label}' from research_protocol to patterns section"
         ]
 
         for task in tasks:
             try:
-                add_task(
-                    content=task,
-                    created_by="code-skill-enforcer",
-                    priority="mandatory"
-                )
+                if add_task:
+                    add_task(
+                        content=task,
+                        created_by="code-skill-enforcer",
+                        priority="mandatory"
+                    )
             except Exception:
                 pass
 
-        # Clear pending learn
         SessionState.clear_pending_learn()
 
-        output = HookOutput()
-        output.advise(
-            f"[LEARN] LEARN PHASE: '{label}'\n"
-            f"Created {len(tasks)} tasks to capture this knowledge.\n"
-            f"Complete these tasks to add '{label}' to skill cache."
+        return HookOutput().system_message(
+            f"[LEARN] Created {len(tasks)} tasks for '{label}'."
         )
-        return output
-
-    # -------------------------------------------------------------------------
-    # Main Hook Logic
-    # -------------------------------------------------------------------------
-
-    def run(self, inp: HookInput) -> HookOutput:
-        """
-        Main hook execution.
-
-        Routes to appropriate handler based on event type.
-        """
-        # Skip non-tool events
-        if not inp.is_pre_tool_use() and not inp.is_post_tool_use():
-            return HookOutput()
-
-        # PRE Mode checks
-        if inp.is_pre_tool_use():
-            # Level B: Directory rules (checked FIRST)
-            dir_output = self._check_directory_rules(inp)
-            if dir_output:
-                return dir_output
-
-            # Level A: Content patterns
-            content_output = self._check_content_patterns(inp)
-            if content_output:
-                return content_output
-
-            # Level C: Bash commands
-            bash_output = self._check_bash_commands(inp)
-            if bash_output:
-                return bash_output
-
-            # Research protocol (fallback)
-            research_output = self._check_research_protocol(inp)
-            if research_output:
-                return research_output
-
-        # POST Mode checks
-        elif inp.is_post_tool_use():
-            # Level F: LEARN phase (checked FIRST)
-            learn_output = self._check_learn_phase(inp)
-            if learn_output:
-                return learn_output
-
-            # Level E: Post-verification
-            verify_output = self._check_post_verification(inp)
-            if verify_output:
-                return verify_output
-
-            # Level D: Research cache reminder
-            cache_output = self._check_research_cache(inp)
-            if cache_output:
-                return cache_output
-
-        # Default: allow
-        return HookOutput()
 
 
 # ============================================================================
@@ -656,8 +412,4 @@ After researching, apply knowledge and write code following best practices.
 # ============================================================================
 
 if __name__ == "__main__":
-    if BaseHook is None:
-        # Graceful degradation
-        sys.exit(0)
-
-    CodeSkillEnforcer.main()
+    CodeSkillEnforcer().run()
