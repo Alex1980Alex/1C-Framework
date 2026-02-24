@@ -8,106 +8,226 @@
 
 Запрос: «рекомендации некорректные — нужно делать правильные рекомендации, и если рекомендация последовала — использовать скиллы»
 
-## Изменения
+---
+
+## Часть 1: Анализ механизмов принуждения
+
+### Почему нельзя заставить Claude активировать скилл на 100%
+
+Claude — языковая модель, не детерминированная программа. Все механизмы работают как **инструкции**, а не как принуждение.
+
+#### Каналы доставки рекомендаций
+
+| Канал | Механизм | Activation Rate | Ограничение |
+|-------|----------|----------------|-------------|
+| `systemMessage` (JSON) | `<system-reminder>` тег | ~55% | Claude трактует как совет |
+| stdout (plain text) | Прямая инъекция в контекст | ~100% оценки | Claude может решить "не релевантно" |
+| Stop + `exit 2` | Блокирует завершение | Формально 100% | Скилл вызовется постфактум — бесполезно |
+| PostToolUse:Skill | Мониторинг вызовов | — | Сломан (баг #6305) |
+
+Источник: исследование Scott Spence (650+ trials) — JSON systemMessage 55%, shell stdout 100%.
+
+#### Почему `exit 2` не решает проблему скиллов
+
+```
+1. UserPromptSubmit  →  skill-router рекомендует скилл
+2. Claude думает     →  решает вызвать Skill() или нет
+3. Claude отвечает   →  код уже написан
+4. Stop              →  хук проверяет: скилл не вызван → exit 2 → блок
+5. Claude получает   →  "вы не активировали скилл X"
+6. Claude вызывает   →  Skill() ПОСТФАКТУМ — ответ уже дан без знаний скилла
+```
+
+Результат: скилл формально активирован, но **бесполезен** — знания из него не повлияли на ответ.
+
+#### Единственный рабочий момент — UserPromptSubmit
+
+Скилл полезен только **до** того как Claude начал отвечать. Enforcement через stdout — единственный реальный рычаг. Работает на уровне "настоятельно попросить", а не "заставить".
+
+---
+
+## Часть 2: Проблема с 1С-скиллами при программировании
+
+### Текущая ситуация
+
+```
+Пользователь: "добавь обработку проведения в документ Заказ"
+    │
+    ▼
+skill-router → ловит "проведение" → рекомендует 1c-doc-research
+enforcer → "MANDATORY SKILL EVALUATION"
+    │
+    ▼
+Claude → видит рекомендацию, но...
+  → уже "знает" как написать проведение из training data
+  → решает: "скилл не нужен, я и так могу"
+  → пишет код из памяти (может быть устаревший синтаксис 8.3.25)
+```
+
+**Проблема**: Claude **уверен** в своих знаниях по 1С, поэтому считает скилл нерелевантным. Training data — версии до 8.3.25, актуальная — 8.3.27.
+
+### Цепочка событий при программировании
+
+```
+Пользователь: "реализуй endpoint для загрузки PDF"
+    │
+    ▼
+UserPromptSubmit хуки (ЕДИНСТВЕННАЯ точка влияния)
+    ├── skill-router.py       → [SKILL-ROUTER] Рекомендуется: framework-api
+    ├── enforcer-shell.py     → MANDATORY SKILL EVALUATION
+    │
+    ▼
+Claude получает: промпт + рекомендации + enforcement
+    │
+    ▼
+Claude программирует (может быть 20+ tool calls):
+  1. Skill("framework-api")     ← активирует скилл (если решит)
+  2. Read(файл1)
+  3. Edit(файл1)
+  4. Bash("pytest")
+  ...
+```
+
+Рекомендация приходит **один раз в начале**. Между tool calls хуки не вмешиваются в выбор скиллов.
+
+### 3 уровня решения для 1С-скиллов
+
+#### Уровень 1: CLAUDE.md — жёсткое правило (самый простой, ~70%)
+
+Добавить в `CLAUDE.md`:
+
+```markdown
+## 1С Программирование — ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА
+
+При ЛЮБОЙ работе с кодом 1С (BSL, модули, формы, обработки):
+1. СНАЧАЛА активируй skill `1c-doc-research`
+2. Проверь кеш: `.claude/skills/1c-doc-research/cache/`
+3. Только ПОСЛЕ проверки документации — пиши код
+4. НИКОГДА не полагайся на свои знания по API 1С — они могут быть устаревшими
+
+Твои training data по 1С — версии до 8.3.25. Актуальная — 8.3.27.
+Разница критична: изменены API, добавлены новые методы, deprecated старые.
+```
+
+Claude следует инструкциям из CLAUDE.md с высоким приоритетом — это project rules.
+
+#### Уровень 2: Отдельный 1C-enforcer хук (stdout, ~95%)
+
+Файл: `.claude/hooks/1c-code-enforcer.py` (UserPromptSubmit)
+
+```python
+_1C_MARKERS = [
+    "1с", "1c", "bsl", "проведение", "регистр", "справочник",
+    "документ 1с", "табличная часть", "реквизит", "модуль объекта",
+    "модуль менеджера", "общий модуль", "подсистема",
+]
+
+def main():
+    prompt = get_prompt()
+    prompt_lower = prompt.lower()
+
+    if not any(m in prompt_lower for m in _1C_MARKERS):
+        sys.exit(0)  # Не 1С — пропускаем
+
+    # stdout = прямая инъекция в контекст (100% видимость)
+    print(
+        "CRITICAL: Обнаружен контекст 1С-программирования.\n"
+        "ПЕРЕД написанием любого кода 1С ты ОБЯЗАН:\n"
+        "1. Вызвать Skill('1c-doc-research') — загрузить документацию 8.3.27\n"
+        "2. Проверить кеш: Read('.claude/skills/1c-doc-research/cache/')\n"
+        "3. Найти точный API метод/объект в документации\n"
+        "4. Только потом писать код, ссылаясь на найденную документацию\n"
+        "НЕ ИСПОЛЬЗУЙ знания из training data по API 1С — они УСТАРЕВШИЕ."
+    )
+```
+
+Сильнее generic enforcer-а, потому что **конкретно** указывает что делать для 1С.
+
+#### Уровень 3: Кеш с шаблонами кода (максимальный эффект)
+
+Наполнить `.claude/skills/1c-doc-research/cache/` готовыми шаблонами:
+
+```
+cache/
+  проведение-документа.md      ← правильный шаблон с API 8.3.27
+  регистр-сведений-запись.md   ← примеры записи в регистр
+  http-сервис-шаблон.md        ← шаблон HTTP-сервиса
+  запрос-к-базе.md             ← синтаксис запросов
+```
+
+Claude предпочитает использовать конкретные примеры из контекста, а не генерировать из памяти. Кеш наполняется итеративно — каждый раз когда пишется 1С-код, правильный шаблон сохраняется.
+
+#### Сравнение уровней
+
+| Подход | Эффективность | Сложность |
+|--------|--------------|-----------|
+| Правило в CLAUDE.md | ~70% | 5 минут |
+| 1C-enforcer хук (stdout) | ~95% оценки | 30 мин |
+| Кеш с шаблонами кода | Максимум | Зависит от объёма 1С-объектов |
+| **Все три вместе** | **Близко к 100%** | — |
+
+---
+
+## Часть 3: Технические изменения (план реализации)
 
 ### 1. `session_state.py` — добавить недостающие функции
 
-Файл: [`.claude/hooks/shared/session_state.py`](.claude/hooks/shared/session_state.py)
+Файл: `.claude/hooks/shared/session_state.py`
 
 Добавить в класс `SessionState`:
-- `record_recommendation(skills: list[str])` — записывает рекомендованные скиллы в `state["recommended_skills"]` (list, dedup)
+- `record_recommendation(skills: list[str])` — записывает в `state["recommended_skills"]` (dedup)
 - `get_already_recommended() -> list[str]` — возвращает уже рекомендованные
 
-Добавить module-level обёртки (по аналогии с `set_prompt_id` / `get_prompt_id`):
-```python
-def record_recommendation(skills: list[str]) -> None:
-    SessionState.record_recommendation(skills)
-
-def get_already_recommended() -> list[str]:
-    return SessionState.get_already_recommended()
-```
-
-Обновить `__all__`, `_empty_state()` (добавить `"recommended_skills": []`), `reset_session()`.
+Добавить module-level обёртки + обновить `__all__`, `_empty_state()`, `reset_session()`.
 
 ### 2. `skill-router-config.json` — поднять пороги, убрать generic keywords
 
-Файл: [`.claude/skills/skill-router-config.json`](.claude/skills/skill-router-config.json)
+Файл: `.claude/skills/skill-router-config.json`
 
 | Параметр | Было | Станет | Почему |
 |----------|------|--------|--------|
 | `min_score` | 1 | 2 | Одно keyword-совпадение — слишком шумно |
 | `max_bundles` | 3 | 2 | Меньше шума, точнее рекомендации |
 
-Очистка generic keywords из бандлов (срабатывают на обычных промптах):
-- `framework-config`: убрать `"настройка"`, `"settings"` (слишком общие)
-- `framework-troubleshooting`: убрать `"ошибка"`, `"error"`, `"проблема"` (срабатывают на любом баге)
-- `search`: убрать `"найди"`, `"найти"` (срабатывает на любом поиске по коду)
-- `infrastructure`: убрать `"hook"`, `"skill"`, `"mcp"`, `"хук"`, `"навык"` (срабатывают при любом обсуждении хуков)
-- `workflow-research`: убрать `"как работает"`, `"что такое"`, `"объясни"`, `"explain"`, `"research"` (срабатывают на любом вопросе)
+Очистка generic keywords:
+- `framework-config`: убрать `"настройка"`, `"settings"`
+- `framework-troubleshooting`: убрать `"ошибка"`, `"error"`, `"проблема"`
+- `search`: убрать `"найди"`, `"найти"`
+- `infrastructure`: убрать `"hook"`, `"skill"`, `"mcp"`, `"хук"`, `"навык"`
+- `workflow-research`: убрать `"как работает"`, `"что такое"`, `"объясни"`, `"explain"`, `"research"`
 
-Стратегия: оставить только **конкретные** ключевые слова. Для generic-бандлов (`workflow-research`, `infrastructure`) — перевести в weighted_keywords с весом 1 и добавить конкретные фразы с весом 3+.
+Стратегия: generic keywords → weighted_keywords (вес 1), конкретные фразы → вес 3+.
 
 ### 3. `skill-router.py` — intent classification + confidence
 
-Файл: [`.claude/hooks/skill-router.py`](.claude/hooks/skill-router.py)
+Файл: `.claude/hooks/skill-router.py`
 
-**3a. Intent classification** (в начале `execute()`, после IDE-skip):
-
-```python
-def _classify_intent(prompt: str) -> str:
-    """Classify prompt intent: action | informational | system."""
-    p = prompt.strip().lower()
-    # System: slash-commands, very short
-    if p.startswith("/") or len(p) < 15:
-        return "system"
-    # Informational markers
-    info_patterns = [
-        r"^(что такое|как работает|объясни|расскажи|почему|зачем|what is|how does|explain|describe|tell me)",
-        r"^(покажи|где находится|найди файл|прочитай|открой|read |show |where is|find file)",
-        r"\?$",  # Questions ending with ?
-    ]
-    for pat in info_patterns:
-        if re.search(pat, p):
-            return "informational"
-    return "action"
-```
-
-**3b. Intent-dependent min_score**:
-- `action` → `min_score` из конфига (2)
-- `informational` → `min_score + 1` (3) — строже, потому что info-промпты редко нуждаются в скиллах
-- `system` → skip (return None)
-
-**3c. Confidence levels** в output:
-- HIGH (score >= 4): `"ОБЯЗАТЕЛЬНО: {skill}"`
-- MEDIUM (score 3): `"Рекомендуется: {skill}"`
-- LOW (score 2): `"Опционально: {skill}"`
+- `_classify_intent(prompt)` → `action | informational | system`
+- Intent-dependent min_score: action=2, informational=3, system=skip
+- Confidence levels: HIGH (>=4) / MEDIUM (3) / LOW (2)
 
 ### 4. `skill-eval-enforcer-shell.py` — conditional enforcement
 
-Файл: [`.claude/hooks/skill-eval-enforcer-shell.py`](.claude/hooks/skill-eval-enforcer-shell.py)
+Файл: `.claude/hooks/skill-eval-enforcer-shell.py`
 
-Сейчас: MANDATORY на **каждый** промпт > 15 chars — создаёт шум.
+Skip enforcement для `informational` и `system` промптов.
 
-Изменение: применять _classify_intent() — если `informational`, не выводить MANDATORY instruction.
+### 5. `1c-code-enforcer.py` — специализированный 1С-enforcer (НОВЫЙ)
 
-```python
-# Import intent classifier
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from skill_router import _classify_intent  # Reuse
+Файл: `.claude/hooks/1c-code-enforcer.py`
 
-intent = _classify_intent(prompt)
-if intent != "action":
-    sys.exit(0)  # No enforcement for informational/system prompts
-```
+UserPromptSubmit хук, stdout-инъекция при обнаружении 1С-маркеров.
 
 ## Файлы
 
 | Файл | Действие |
 |------|----------|
-| `.claude/hooks/shared/session_state.py` | +`record_recommendation()`, +`get_already_recommended()`, обновить state |
+| `.claude/hooks/shared/session_state.py` | +`record_recommendation()`, +`get_already_recommended()` |
 | `.claude/skills/skill-router-config.json` | `min_score: 2`, `max_bundles: 2`, очистить generic keywords |
-| `.claude/hooks/skill-router.py` | +`_classify_intent()`, intent-dependent thresholds, confidence levels |
-| `.claude/hooks/skill-eval-enforcer-shell.py` | Conditional enforcement (skip for informational) |
+| `.claude/hooks/skill-router.py` | +`_classify_intent()`, intent-dependent thresholds, confidence |
+| `.claude/hooks/skill-eval-enforcer-shell.py` | Conditional enforcement (skip informational) |
+| `.claude/hooks/1c-code-enforcer.py` | **НОВЫЙ** — 1С-специализированный enforcer |
+| `CLAUDE.md` | Добавить секцию "1С Программирование — ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА" |
 
 ## Verification
 
@@ -131,12 +251,12 @@ print(_classify_intent('/help'))                     # -> system
 
 # 3. Проверить min_score=2 (одно keyword не проходит)
 echo '{"prompt":"найди файл config.py"}' | python .claude/hooks/skill-router.py
-# Ожидание: НЕТ рекомендаций (score=1 для search, ниже порога)
+# Ожидание: НЕТ рекомендаций (score=1 < min_score=2)
 
-# 4. Проверить enforcer conditional
-echo '{"prompt":"что такое embeddings?"}' | python .claude/hooks/skill-eval-enforcer-shell.py
-# Ожидание: пустой вывод (informational -> skip)
+# 4. Проверить 1C-enforcer
+echo '{"prompt":"добавь обработку проведения в документ"}' | python .claude/hooks/1c-code-enforcer.py
+# Ожидание: CRITICAL инструкция с требованием загрузить 1c-doc-research
 
-# 5. Dashboard — перезапустить сервер и проверить метрики
+# 5. Dashboard
 curl http://127.0.0.1:8000/metrics | python -c "import sys,json; print(json.load(sys.stdin)['skill_metrics'])"
 ```
