@@ -129,6 +129,35 @@ class SessionState:
         state["activated_skills"] = []
         cls._save_state(state)
 
+    # ===== RECOMMENDATION TRACKING (Session Dedup) =====
+
+    @classmethod
+    def record_recommendation(cls, skills: List[str]) -> None:
+        """
+        Record that skills were recommended in this session (for dedup).
+
+        Args:
+            skills: List of skill names that were recommended
+        """
+        state = cls._load_state()
+        existing = state.get("recommended_skills", [])
+        for skill in skills:
+            if skill not in existing:
+                existing.append(skill)
+        state["recommended_skills"] = existing
+        cls._save_state(state)
+
+    @classmethod
+    def get_already_recommended(cls) -> List[str]:
+        """
+        Get list of skills already recommended in this session.
+
+        Returns:
+            List of skill names
+        """
+        state = cls._load_state()
+        return state.get("recommended_skills", [])
+
     # ===== PENDING LEARN METHODS (Milestone 1.3) =====
 
     @classmethod
