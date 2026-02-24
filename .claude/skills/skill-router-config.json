@@ -279,6 +279,16 @@
       "skills": ["multi-level-hook-architecture"],
       "optional": ["hooks-skills-mcp-triad"]
     },
+    "tenacity-retry": {
+      "keywords": ["retry", "tenacity", "backoff", "exponential backoff", "jitter", "retry decorator", "повторные попытки", "rate limit retry", "retry_llm_call", "retry_db_operation", "wait_exponential"],
+      "skills": ["tenacity-retry"],
+      "optional": ["framework-troubleshooting"]
+    },
+    "learning-loop": {
+      "keywords": ["learning loop", "нет скилла", "найди информацию и сделай", "научись делать", "создай скилл из опыта", "fetch and learn", "цикл обучения"],
+      "skills": ["learning-loop"],
+      "optional": ["doc-to-skill", "triad-factory"]
+    },
     "workflow-research": {
       "keywords": ["расскажи про", "как работает", "что такое", "документация по", "объясни", "найди информацию", "исследуй", "сделай обзор", "проанализируй", "сравни", "how does", "what is", "explain", "research", "compare", "overview of", "describe", "tell me about"],
       "workflow": "research",
