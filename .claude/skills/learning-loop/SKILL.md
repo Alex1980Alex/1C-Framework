@@ -60,7 +60,7 @@ description: "Цикл обучения: SEARCH → FETCH → EXECUTE → VERIFY
   │ Уровень 3: решение оркестратора (PASS/PARTIAL/FAIL)
   │
   ├─ PASS/PARTIAL → продолжить
-  └─ FAIL → повторный EXECUTE с фидбеком (макс 1 retry)
+  └─ FAIL → Ralph Wiggum Loop (итеративный retry, макс 3)
       │
       ▼
 ФАЗА 5: CREATE — создание скилла из опыта
