@@ -67,7 +67,7 @@ description: "Используй этот скилл для понимания �
 | `pdf-knowledge` | PDF | MCP-инструменты PDF search, indexing |
 | `task-evaluation` | Классификатор | Research vs Brainstorm vs Hybrid маршрутизация |
 
-#### Инфраструктурные (5)
+#### Инфраструктурные (7)
 
 | Skill | Назначение |
 |-------|-----------|
@@ -76,6 +76,8 @@ description: "Используй этот скилл для понимания �
 | `create-hook` | Шаблон + чеклист создания хуков |
 | `doc-to-skill` | Конвертер документации → SKILL.md |
 | `doc-to-cache` | Конвертер документации → knowledge cache |
+| `learning-loop` | Цикл обучения: SEARCH → FETCH → EXECUTE → CREATE skill |
+| `tenacity-retry` | Retry с tenacity: декораторы, backoff, jitter, async |
 
 #### Операционные фреймворка (17)
 
