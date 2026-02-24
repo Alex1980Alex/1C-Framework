@@ -30,7 +30,7 @@ For custom retry logic::
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable
 
 from tenacity import (
     RetryCallState,
