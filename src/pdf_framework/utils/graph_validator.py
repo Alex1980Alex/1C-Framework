@@ -99,7 +99,7 @@ def validate_graph(
     user_conditional_targets: dict[str, set[str]] = {n: set() for n in node_ids}
     try:
         for source, branches in graph.builder.branches.items():
-            for _name, branch_spec in branches.items():
+            for _, branch_spec in branches.items():
                 if branch_spec.ends:
                     for target in branch_spec.ends.values():
                         user_conditional_targets[source].add(target)
