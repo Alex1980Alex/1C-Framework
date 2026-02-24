@@ -229,7 +229,130 @@ UserPromptSubmit хук, stdout-инъекция при обнаружении 1
 | `.claude/hooks/1c-code-enforcer.py` | **НОВЫЙ** — 1С-специализированный enforcer |
 | `CLAUDE.md` | Добавить секцию "1С Программирование — ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА" |
 
-## Verification
+---
+
+## Часть 4: Исследование — баг #6305 и PreToolUse как альтернатива
+
+### Статус бага #6305
+
+**Проверено 2026-02-24**: GitHub issue [#6305](https://github.com/anthropics/claude-code/issues/6305) — **OPEN**, не починен.
+
+Заголовок: "Post/PreToolUse Hooks Not Executing in Claude Code"
+
+Ключевые факты из обсуждения:
+- Проблема подтверждена множеством пользователей (fwends, Dmdv, tytung2020, Xopher00)
+- Не проблема конфигурации — хуки работают при ручном запуске, но не вызываются автоматически
+- Затрагивает версии 1.0.38+
+- **Stop, SubagentStop, UserPromptSubmit — работают**
+- **PreToolUse, PostToolUse — заявлены как сломанные**
+
+### Но! Наши данные противоречат issue
+
+Анализ `data/hook-invocations.jsonl` показывает **другую картину**:
+
+| Событие | Tool | Статус | Количество срабатываний |
+|---------|------|--------|------------------------|
+| PreToolUse | Edit | **Работает** | Сотни записей |
+| PreToolUse | Write | **Работает** | Десятки записей |
+| PreToolUse | Bash | **Работает** | Десятки записей |
+| PostToolUse | Edit | **Работает** | Десятки записей |
+| PostToolUse | Bash | **Работает** | Записи есть |
+| **PreToolUse** | **Skill** | **Почти не работает** | **1 запись за всю историю** |
+| **PostToolUse** | **Skill** | **Не работает** | **0 записей** |
+
+**Вывод**: баг #6305 **специфичен для tool=Skill**, а не для всех PreToolUse/PostToolUse. Хуки на Edit/Write/Bash работают стабильно.
+
+Единственное срабатывание PreToolUse:Skill:
+```json
+{"ts": "2026-02-23T03:48:19", "hook": "SkillUsageMetrics", "event": "PreToolUse", "tool": "Skill"}
+```
+
+### CodeSkillEnforcer — уже существует и работает
+
+Файл: `.claude/hooks/code-skill-enforcer.py`
+Событие: `PreToolUse: Write|Edit|Bash`
+
+Этот хук уже работает на каждый Edit/Write/Bash и проверяет паттерны:
+- **Level A**: Content patterns (StateGraph → langgraph-core)
+- **Level B**: Directory rules (.claude/hooks/ → create-hook)
+- **Level C**: Bash commands (docker compose → deployment)
+- **Level D**: Research cache reminder
+- **Level E**: Post-verification
+- **Level F**: LEARN phase
+
+В логах: `outcome: "block"` — хук реально блокирует операции когда скилл не загружен.
+
+### Решение: PreToolUse:Edit как Level 2 enforcement для 1С
+
+Поскольку PreToolUse:Edit работает стабильно, можно добавить **1С-паттерны** в `code-skill-patterns.json`:
+
+```json
+{
+  "1c-bsl": {
+    "patterns": [
+      "Процедура.*Проведение",
+      "РегистрСведений",
+      "РегистрНакопления",
+      "СправочникМенеджер",
+      "ДокументМенеджер",
+      "ОбщийМодуль",
+      "ТабличнаяЧасть",
+      "ПланВидовХарактеристик"
+    ],
+    "required_skill": "1c-doc-research",
+    "block_message": "Обнаружен код 1С (BSL). Загрузи skill `1c-doc-research` и проверь кеш документации 8.3.27 перед редактированием."
+  }
+}
+```
+
+Цепочка:
+```
+Claude пишет Edit с кодом 1С
+    │
+    ▼
+PreToolUse:Edit → code-skill-enforcer
+    │  видит паттерн "РегистрСведений" в содержимом Edit
+    │  проверяет: skill 1c-doc-research активирован?
+    │
+    ├── Да → allow (пропускает Edit)
+    └── Нет → block! "Загрузи 1c-doc-research сначала"
+              │
+              ▼
+         Claude загружает скилл → повторяет Edit
+```
+
+**Преимущество перед UserPromptSubmit**: ловит момент когда Claude **уже пишет код**, но **ещё не записал**. Работает даже если Claude проигнорировал рекомендацию на UserPromptSubmit.
+
+### Обновлённая таблица уровней enforcement
+
+| Уровень | Хук | Событие | Надёжность | Момент |
+|---------|-----|---------|------------|--------|
+| 0 | CLAUDE.md | — | ~70% | Всегда в контексте |
+| 1 | skill-router.py | UserPromptSubmit | ~55% (systemMessage) | До начала работы |
+| 1+ | enforcer-shell.py | UserPromptSubmit | ~95% (stdout) | До начала работы |
+| 1++ | 1c-code-enforcer.py | UserPromptSubmit | ~95% (stdout, 1С-specific) | До начала работы |
+| **2** | **code-skill-enforcer.py** | **PreToolUse:Edit** | **Блок (exit 2)** | **В момент записи кода** |
+| 3 (broken) | skill-usage-metrics.py | PostToolUse:Skill | ~0% | После вызова Skill() |
+
+Level 2 (PreToolUse:Edit) — **единственный механизм блокировки** для скиллов, который реально работает.
+
+---
+
+## Часть 5: Итоговый план изменений
+
+### Файлы
+
+| Файл | Действие |
+|------|----------|
+| `.claude/hooks/shared/session_state.py` | +`record_recommendation()`, +`get_already_recommended()` |
+| `.claude/skills/skill-router-config.json` | `min_score: 2`, `max_bundles: 2`, очистить generic keywords |
+| `.claude/hooks/skill-router.py` | +`_classify_intent()`, intent-dependent thresholds, confidence |
+| `.claude/hooks/skill-eval-enforcer-shell.py` | Conditional enforcement (skip informational) |
+| `.claude/hooks/1c-code-enforcer.py` | **НОВЫЙ** — 1С-специализированный enforcer (UserPromptSubmit) |
+| `.claude/hooks/shared/code-skill-patterns.json` | +1С-паттерны для PreToolUse:Edit блокировки |
+| `CLAUDE.md` | Добавить секцию "1С Программирование — ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА" |
+
+### Verification
 
 ```bash
 # 1. Проверить session dedup
@@ -253,10 +376,13 @@ print(_classify_intent('/help'))                     # -> system
 echo '{"prompt":"найди файл config.py"}' | python .claude/hooks/skill-router.py
 # Ожидание: НЕТ рекомендаций (score=1 < min_score=2)
 
-# 4. Проверить 1C-enforcer
+# 4. Проверить 1C-enforcer (UserPromptSubmit)
 echo '{"prompt":"добавь обработку проведения в документ"}' | python .claude/hooks/1c-code-enforcer.py
 # Ожидание: CRITICAL инструкция с требованием загрузить 1c-doc-research
 
-# 5. Dashboard
+# 5. Проверить PreToolUse:Edit блокировку на 1С-паттерн
+# (через code-skill-enforcer с паттерном "РегистрСведений" в содержимом)
+
+# 6. Dashboard
 curl http://127.0.0.1:8000/metrics | python -c "import sys,json; print(json.load(sys.stdin)['skill_metrics'])"
 ```
