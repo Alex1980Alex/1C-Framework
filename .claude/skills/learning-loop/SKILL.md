@@ -413,7 +413,7 @@ Learning Loop использует существующие компоненты
 
 ---
 
-## Пример: полный цикл
+## Пример: полный цикл (5 фаз)
 
 ```
 Задача: "Добавь retry с exponential backoff для API вызовов"
@@ -422,22 +422,35 @@ SEARCH:
   grep -ri "retry\|tenacity\|backoff" .claude/skills/*/SKILL.md
   → НЕ НАЙДЕНО
 
-FETCH:
-  WebSearch("tenacity python retry best practices 2026")
-  WebSearch("tenacity async retry decorator examples")
-  WebFetch(tenacity readthedocs)
-  → Собрано: API, декораторы, async поддержка, jitter
+FETCH (домен: tech-python):
+  1. Context7: resolve-library-id("tenacity") → structured docs
+  2. WebSearch("site:stackoverflow.com tenacity common mistakes")
+     → accepted answer: "всегда используй reraise=True"
+  3. WebSearch("site:github.com tenacity production stars:>100")
+     → github.com/jd/tenacity (13K stars, MIT)
+  4. WebFetch(tenacity.readthedocs.io)
+  → KB: API + маркеры: wait_exponential_jitter, reraise=True, stop_after_attempt|stop_after_delay
 
-EXECUTE:
+EXECUTE (с атрибуцией):
   Task(general-purpose):
-    Контекст: framework-config SKILL + tenacity KB
-    Задача: создать src/pdf_framework/utils/retry.py
-  → Реализован модуль с retry декоратором
+    Промпт: framework-config SKILL + tenacity KB + задача
+    Требование: "Source: [секция] для каждой функции"
+  → retry.py с 4 декораторами + Source: атрибуции
+
+VERIFY:
+  Уровень 1 (структурная):
+    grep "wait_exponential_jitter" → найдено ✓
+    grep "reraise=True" → найдено ✓
+    grep "^@retry$" → не найдено ✓ (антипаттерн отсутствует)
+  Уровень 2 (ревьюер-субагент):
+    Task(general-purpose, prompt=KB + код + инструкция проверки)
+    → PASS: все 4 функции соответствуют knowledge_block
+  Уровень 3: PASS → переходим к CREATE
 
 CREATE:
   .claude/skills/tenacity-retry/SKILL.md
   skill-router-config.json → "tenacity-retry" bundle
-  → Скилл готов к использованию в будущих сессиях
+  → Скилл готов к использованию + верифицирован
 ```
 
 ---
@@ -447,7 +460,9 @@ CREATE:
 | Плохо | Почему | Как правильно |
 |-------|--------|---------------|
 | Сразу писать код без SEARCH | Может быть скилл с готовыми паттернами | Всегда начинай с поиска скилла |
-| FETCH без критериев достаточности | Неполные знания → плохой код | Проверяй 5 критериев достаточности |
+| FETCH без критериев достаточности | Неполные знания → плохой код | Минимум 3 источника, trust scoring |
+| Пропустить VERIFY | Субагент мог использовать training данные | VERIFY обязательна (ревьюер-субагент) |
+| EXECUTE без атрибуции | Нельзя проверить соответствие knowledge | Всегда требуй Source: в промпте |
 | Не создавать скилл после задачи | Следующая сессия повторит FETCH | ВСЕГДА создавай скилл (CREATE обязательна) |
 | Скилл без антипаттернов | Claude повторит ошибки | Минимум 3 антипаттерна из опыта |
 | Копировать всю документацию | Скилл > 500 строк, бесполезен | Извлечь только actionable знания |
