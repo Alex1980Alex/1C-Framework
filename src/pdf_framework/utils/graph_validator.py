@@ -72,23 +72,42 @@ def validate_graph(
     warnings: list[str] = []
 
     # ------------------------------------------------------------------
-    # Extract topology from the drawable graph representation.
-    # drawable.nodes is dict[str, Node], drawable.edges is list[Edge].
-    # Each Edge has: source, target, data, conditional.
+    # Extract topology from builder (authoritative source) and drawable
+    # graph (for reachability / dangling checks including auto-edges).
+    #
+    # builder.edges: set of (source, target) tuples — user-defined static
+    # builder.branches: dict[source -> dict[name -> BranchSpec]] — user-
+    #   defined conditional edges.  BranchSpec.ends maps labels to targets.
+    #
+    # drawable graph includes auto-generated edges (e.g. runtime adds a
+    # conditional __end__ edge to cycles for recursion-limit safety).
+    # We use it for full adjacency but distinguish user-conditional from
+    # auto-generated edges when analysing cycles.
     # ------------------------------------------------------------------
     drawable = graph.get_graph()
 
     node_ids: set[str] = set(drawable.nodes.keys())
     edges = drawable.edges
 
-    # Build adjacency list and conditional-target tracking
+    # Full adjacency (includes auto-generated edges)
     adjacency: dict[str, list[str]] = {n: [] for n in node_ids}
-    conditional_targets: dict[str, set[str]] = {n: set() for n in node_ids}
-
     for edge in edges:
         adjacency[edge.source].append(edge.target)
-        if edge.conditional:
-            conditional_targets[edge.source].add(edge.target)
+
+    # User-defined conditional targets — from builder.branches only
+    # (excludes runtime auto-generated conditional __end__ edges)
+    user_conditional_targets: dict[str, set[str]] = {n: set() for n in node_ids}
+    try:
+        for source, branches in graph.builder.branches.items():
+            for _name, branch_spec in branches.items():
+                if branch_spec.ends:
+                    for target in branch_spec.ends.values():
+                        user_conditional_targets[source].add(target)
+    except AttributeError:
+        # Fallback: use drawable conditional edges if builder API changed
+        for edge in edges:
+            if edge.conditional:
+                user_conditional_targets[edge.source].add(edge.target)
 
     edge_count = len(edges)
     # User-visible nodes (exclude virtual __start__ / __end__)
