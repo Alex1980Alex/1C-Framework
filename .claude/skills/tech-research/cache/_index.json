@@ -61,6 +61,23 @@
         "gap analysis"
       ],
       "summary": "Implementation analysis of P1 Search Quality (Phases 47-50). Overall ~30%. Q3 Streaming 80% (SSE works, WebSocket missing). Q1 Embedding 40% (E5+Giga exist, Jina missing). Q2 Late Chunking 0% (blocked by Q1). Q4 Contextual Retrieval 0% (independent). Recommended order: Q3→Q4→Q1→Q2. Total 6-9 days."
+    },
+    "posttooluse-skill-activation-bug": {
+      "file": "posttooluse-skill-activation-bug.md",
+      "domain": "tools",
+      "category": "analysis",
+      "created": "2026-02-24",
+      "keywords": [
+        "PostToolUse",
+        "Skill",
+        "bug #6305",
+        "activation tracking",
+        "same-turn detection",
+        "hooks",
+        "inter-hook communication",
+        "session state"
+      ],
+      "summary": "PostToolUse:Skill never fires (bug #6305). Research of 25+ sources, 10+ repos. 5 established patterns: UserPromptSubmit parse (100% reliable, 1-turn delay), File-system IPC, Forced-eval (80-84%), Stop transcript verification, PreToolUse block (~95%). Current combo A+E works with 1-turn delay. Recommended A+E+D combo for ~99% coverage."
     }
   }
 }
