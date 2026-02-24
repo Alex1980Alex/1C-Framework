@@ -386,3 +386,94 @@ echo '{"prompt":"добавь обработку проведения в док�
 # 6. Dashboard
 curl http://127.0.0.1:8000/metrics | python -c "import sys,json; print(json.load(sys.stdin)['skill_metrics'])"
 ```
+
+---
+
+## Часть 6: PreToolUse — справочник по matcher-ам и входным данным
+
+### Что такое PreToolUse
+
+`PreToolUse` — событие хука Claude Code, которое срабатывает **перед** тем как Claude выполнит инструмент. Название расшифровывается: "Pre" (до) + "ToolUse" (использования инструмента) + ":Matcher" (для какого инструмента).
+
+**Matcher** задаётся в `settings.json` и определяет для каких инструментов хук срабатывает.
+
+### Текущая конфигурация PreToolUse (`.claude/settings.json`)
+
+```json
+"PreToolUse": [
+  {
+    "matcher": "Write|Edit|Bash",
+    "hooks": [{ "command": "code-skill-enforcer.py", "timeout": 3 }]
+  },
+  {
+    "matcher": "Write",
+    "hooks": [{ "command": "root-clutter-guard.py", "timeout": 3 }]
+  },
+  {
+    "matcher": "Bash",
+    "hooks": [{ "command": "search-optimizer.py", "timeout": 3 }]
+  }
+]
+```
+
+### Доступные matcher-ы
+
+Matcher может быть **любым инструментом** Claude Code. Regex OR через `|`.
+
+| Matcher | Когда срабатывает | tool_input содержит |
+|---------|-------------------|---------------------|
+| `Edit` | Перед редактированием файла | `file_path`, `old_string`, `new_string` |
+| `Write` | Перед созданием/перезаписью файла | `file_path`, `content` |
+| `Bash` | Перед выполнением команды | `command`, `description` |
+| `Read` | Перед чтением файла | `file_path` |
+| `Skill` | Перед вызовом скилла | `skill`, `args` — **сломан (баг #6305)** |
+| `WebSearch` | Перед веб-поиском | `query` |
+| `WebFetch` | Перед загрузкой URL | `url`, `prompt` |
+| `Glob` | Перед поиском файлов | `pattern`, `path` |
+| `Grep` | Перед поиском в содержимом | `pattern`, `path` |
+| `Task` | Перед запуском подагента | `prompt`, `subagent_type` |
+| `Write\|Edit\|Bash` | Перед любым из трёх | Зависит от конкретного tool |
+
+### Что хук получает на вход (stdin JSON)
+
+```json
+{
+  "session_id": "abc123...",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/path/to/file.bsl",
+    "old_string": "Процедура ОбработкаПроведения()",
+    "new_string": "Процедура ОбработкаПроведения(Отказ)\n  РегистрСведений.Записать();"
+  }
+}
+```
+
+Для `code-skill-enforcer.py` ключевое поле — `tool_input.new_string`. В нём видно **что именно** Claude собирается записать. Хук может:
+- Проверить содержимое на паттерны (1С-код, LangChain, etc.)
+- Проверить активирован ли нужный скилл (`SessionState.is_skill_activated()`)
+- Заблокировать запись (`exit 2`) если скилл не загружен
+
+### Что хук может вернуть
+
+| Действие | Как | Результат |
+|----------|-----|-----------|
+| Пропустить | `exit 0` | Edit выполняется |
+| Заблокировать | `exit 2` + stdout сообщение | Edit НЕ выполняется, Claude видит сообщение |
+| Добавить контекст | stdout текст + `exit 0` | Edit выполняется + Claude видит дополнительную информацию |
+
+### Почему PreToolUse:Edit — ключевой механизм для 1С-скиллов
+
+```
+UserPromptSubmit (Level 1)          PreToolUse:Edit (Level 2)
+─────────────────────────           ────────────────────────────
+Момент: до начала работы            Момент: в момент записи кода
+Механизм: рекомендация (совет)      Механизм: блокировка (exit 2)
+Claude может проигнорировать        Claude ОБЯЗАН подчиниться
+Не видит код                        Видит СОДЕРЖИМОЕ кода (new_string)
+```
+
+Level 2 (PreToolUse:Edit) — **единственный механизм**, который одновременно:
+1. Работает стабильно (сотни срабатываний в логах)
+2. Может **блокировать** операцию (`exit 2`)
+3. Видит **содержимое** того что Claude пишет
+4. Срабатывает **до** записи в файл
