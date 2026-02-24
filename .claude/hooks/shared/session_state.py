@@ -40,6 +40,7 @@ class SessionState:
         """Return initial empty state structure."""
         return {
             "activated_skills": [],
+            "recommended_skills": [],
             "pending_learn": None,
             "session_id": None,
             "created_at": None,
