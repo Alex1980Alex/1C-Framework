@@ -79,6 +79,7 @@ CODE_TO_DOMAIN = [
     ("src/mcp_server/",                    "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
     ("src/ui/",                            "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
     ("src/workers/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/pdf_framework/utils/",           "01_ОБЗОР",              "pdf-knowledge"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
