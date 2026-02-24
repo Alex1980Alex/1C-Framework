@@ -193,7 +193,7 @@ def create_retry(
     max_wait: float = 60.0,
     jitter: float = 1.0,
     retry_on: tuple[type[BaseException], ...] = (TimeoutError, ConnectionError, OSError),
-) -> retry:
+) -> Any:
     """Create a custom retry decorator.
 
     Args:
