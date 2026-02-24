@@ -103,43 +103,116 @@ grep -i "keyword" .claude/skills/skill-router-config.json
 
 ---
 
-## Фаза 2: FETCH — сбор знаний
+## Фаза 2: FETCH — сбор знаний (ротация источников)
 
-### Стратегия поиска (приоритет источников)
+**Ключевой принцип:** Источники ротируются в порядке убывания доверия (trust score).
+Модуль оценки: `.claude/hooks/shared/trust_scorer.py` (TrustScorer).
+
+### Определение домена
+
+| Домен | Когда | Примеры |
+|-------|-------|---------|
+| **tech-python** | Python-библиотеки, RAG/ML фреймворки | tenacity, LangChain, FastAPI, Qdrant |
+| **tech-other** | Другие языки и технологии | React, Go, Rust, Docker, K8s, TypeScript |
+| **1c** | Платформа 1С:Предприятие | BSL, регистры, справочники, отчёты |
+
+### Ротация источников по доменам
+
+#### Домен: tech-python (Python-библиотеки)
+
+| Приоритет | Источник | Trust | Инструмент | Что искать |
+|-----------|----------|-------|------------|------------|
+| 1 | **MCP Context7** | 1.0 | resolve-library-id + get-library-docs | Structured official docs |
+| 2 | **StackOverflow** | rubric | WebSearch site:stackoverflow.com | Edge cases, pitfalls, accepted answers |
+| 3 | **GitHub Repos** | rubric | WebSearch site:github.com stars:>100 | Production patterns, real examples |
+| 4 | **Official Docs** | high | WebFetch readthedocs/pypi | API reference, installation |
+| 5 | **Comparison** | medium | WebSearch "{lib} vs {alt}" | Benchmarks, trade-offs |
+
+#### Домен: tech-other (другие языки и технологии)
+
+| Приоритет | Источник | Trust | Инструмент | Что искать |
+|-----------|----------|-------|------------|------------|
+| 1 | **MCP Context7** | 1.0 | resolve-library-id (если есть в Context7) | Structured docs для React, Vue, Express и т.д. |
+| 2 | **Official Docs** | high | WebFetch (docs.docker.com, go.dev, и т.д.) | API reference, getting started |
+| 3 | **StackOverflow** | rubric | WebSearch site:stackoverflow.com [{tag}] | Common issues, best practices |
+| 4 | **GitHub Repos** | rubric | WebSearch site:github.com stars:>100 | Templates, boilerplates, examples |
+| 5 | **Awesome Lists** | medium | WebSearch "awesome-{tech} github" | Curated resource lists |
+
+#### Домен: 1С Предприятие
+
+| Приоритет | Источник | Trust | Инструмент | Что искать |
+|-----------|----------|-------|------------|------------|
+| 1 | **Infostart.ru** | rubric | WebSearch site:infostart.ru | Публикации с рейтингом >= 4.0 |
+| 2 | **its.1c.ru** | high | WebSearch site:its.1c.ru | Официальная документация |
+| 3 | **GitHub** | rubric | WebSearch site:github.com 1C BSL | Открытые проекты, конфигурации |
+| 4 | **StackOverflow** | rubric | WebSearch site:stackoverflow.com [1c] | Ответы сообщества |
+
+### MCP Context7 — первоисточник для tech-доменов
+
+Context7 предоставляет structured documentation для 1000+ библиотек.
+
+**Алгоритм использования:**
+```
+1. Вызвать resolve-library-id с именем библиотеки/технологии
+   → Если resolves → получить context7_id
+   → Если НЕ resolves → пропустить, перейти к приоритету 2
+
+2. Вызвать get-library-docs с context7_id и topic
+   → Получить актуальную документацию
+   → Trust = 1.0 (всегда доверяем)
+
+Примеры библиотек в Context7:
+  Python: FastAPI, LangChain, Pydantic, SQLAlchemy, tenacity, httpx
+  JS/TS: React, Next.js, Express, Prisma, Drizzle
+  Go: Gin, Echo, GORM
+  Rust: Actix, Tokio, Serde
+```
+
+### StackOverflow — edge cases и антипаттерны
 
 ```
-1. Official docs (readthedocs, pypi, github README)    ← PRIMARY
-2. GitHub examples (stars > 50, recent activity)         ← PATTERNS
-3. Stack Overflow / Discussions (top-voted answers)      ← EDGE CASES
-4. Blog posts от maintainers                             ← BEST PRACTICES
-5. MCP Context7 (если доступен — structured docs)       ← STRUCTURED
+WebSearch: "site:stackoverflow.com {library} {problem} [{language}]"
+WebSearch: "site:stackoverflow.com {library} common mistakes pitfalls"
+
+Критерии качества ответа (trust_scorer.py):
+  - is_accepted: True (вес 40%)
+  - score >= 3 upvotes (вес 30%)
+  - recency_days <= 365 (вес 30%)
 ```
 
-### Шаблон поисковых запросов
+### GitHub Repos — production patterns
 
 ```
-WebSearch: "{library} python documentation official"
-WebSearch: "{library} python best practices examples 2025 2026"
-WebSearch: "{library} vs {alternative} comparison"
-WebSearch: "site:github.com {library} production usage"
-WebFetch: <URL из результатов WebSearch>
+WebSearch: "site:github.com {library} production stars:>100"
+WebSearch: "{library} {language} real-world example github"
+
+Критерии качества repo (trust_scorer.py):
+  - stars >= 100 (вес 30%)
+  - last_commit_days <= 90 (вес 25%)
+  - has_docs: yes (вес 25%)
+  - license: MIT/Apache/BSD/ISC (вес 20%)
 ```
 
-### MCP Context7 (если доступен)
+### Trust Score рубрика
 
-```
-1. context7_resolve_library("{library}") → получить context7_id
-2. context7_get_library_docs(context7_id, topic="{specific topic}") → документация
-```
+| Источник | Trust | Критерии |
+|----------|-------|----------|
+| **Context7** | 1.0 (всегда) | Structured official docs, всегда актуальны |
+| **GitHub** | 0.0-1.0 | stars 30%, recency 25%, docs 25%, license 20% |
+| **StackOverflow** | 0.0-1.0 | accepted 40%, score 30%, recency 30% |
+| **Infostart** | 0.0-1.0 | rating 35%, downloads 35%, recency 30% |
 
 ### Критерии достаточности
 
-Знания считаются достаточными когда собраны:
-- [ ] Установка и зависимости
+Знания считаются достаточными когда собраны **ИЗ МИНИМУМ 3 РАЗНЫХ ИСТОЧНИКОВ**:
+
+- [ ] Context7 docs ИЛИ official docs (если Context7 недоступен)
+- [ ] Минимум 1 StackOverflow ответ (accepted или score >= 3)
+- [ ] Минимум 1 GitHub repo (stars >= 50, last commit < 90 days)
 - [ ] Core API (3+ основных функций/классов)
-- [ ] Минимум 2 рабочих примера
-- [ ] Минимум 3 антипаттерна / частых ошибки
-- [ ] Интеграция с нашим стеком (async, Pydantic, FastAPI)
+- [ ] Минимум 2 рабочих примера (из разных источников)
+- [ ] Минимум 3 антипаттерна / частых ошибки (преимущественно из SO)
+- [ ] Интеграция с целевым стеком проекта
 
 ---
 
