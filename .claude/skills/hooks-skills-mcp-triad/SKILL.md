@@ -328,7 +328,8 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 ├── hooks/                         (16 хуков)
 │   ├── base/
 │   │   ├── __init__.py            (BaseHook, HookInput, HookOutput)
-│   │   └── protocol.py            (протокол stdin/stdout JSON)
+│   │   ├── protocol.py            (протокол stdin/stdout JSON — РАБОЧАЯ база для всех хуков)
+│   │   └── base.py                (альт. dataclass-версия с auto-detect event)
 │   ├── shared/
 │   │   ├── session_state.py       (SessionState: activated/recommended skills dedup, prompt_id, pending_learn)
 │   │   ├── task_master.py         (задачи: add, complete, pending, cooldown)
