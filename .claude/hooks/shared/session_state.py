@@ -334,5 +334,19 @@ def get_prompt_id() -> Optional[str]:
     return SessionState.get_prompt_id()
 
 
+def record_recommendation(skills: List[str]) -> None:
+    """Module-level wrapper for SessionState.record_recommendation()."""
+    SessionState.record_recommendation(skills)
+
+
+def get_already_recommended() -> List[str]:
+    """Module-level wrapper for SessionState.get_already_recommended()."""
+    return SessionState.get_already_recommended()
+
+
 # Export for use in hooks
-__all__ = ["SessionState", "set_prompt_id", "get_prompt_id"]
+__all__ = [
+    "SessionState",
+    "set_prompt_id", "get_prompt_id",
+    "record_recommendation", "get_already_recommended",
+]
