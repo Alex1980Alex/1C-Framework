@@ -139,7 +139,7 @@ def validate_graph(
         cycle_set = set(cycle)
         has_conditional_exit = False
         for node in cycle:
-            for target in conditional_targets.get(node, set()):
+            for target in user_conditional_targets.get(node, set()):
                 if target not in cycle_set:
                     has_conditional_exit = True
                     break
