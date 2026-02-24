@@ -329,7 +329,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   │   ├── __init__.py            (BaseHook, HookInput, HookOutput)
 │   │   └── protocol.py            (протокол stdin/stdout JSON)
 │   ├── shared/
-│   │   ├── session_state.py       (SessionState: activated skills, prompt_id, pending_learn)
+│   │   ├── session_state.py       (SessionState: activated/recommended skills dedup, prompt_id, pending_learn)
 │   │   ├── task_master.py         (задачи: add, complete, pending, cooldown)
 │   │   └── hook_lock.py           (межхуковая синхронизация)
 │   ├── skill-router.py            (Submit: keyword → skill bundles)
