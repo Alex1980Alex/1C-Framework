@@ -138,6 +138,9 @@ def _is_infra_file(filepath: str) -> bool:
     if fp.startswith(".claude/skills/") and not fp.endswith("/skill.md"):
         if fp.endswith((".json", ".py")):
             return True
+        # ADR and cache .md files are internal knowledge, not user-facing docs
+        if "/adr/" in fp or "/cache/" in fp:
+            return True
     return False
 
 
