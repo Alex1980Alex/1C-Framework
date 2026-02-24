@@ -172,7 +172,8 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 - **source**: `"prompt-detection"` (Level 1 workaround) или отсутствует (Level 2 PostToolUse)
 - **Корреляция**: prompt_id = md5(timestamp + prompt[:80])[:8]
 - **Shared state**: `SessionState.set_prompt_id()` / `SessionState.get_prompt_id()` связывает recommend → activate
-- **Dedup**: `SessionState.get_already_activated()` предотвращает двойной счёт
+- **Dedup (activations)**: `SessionState.get_already_activated()` предотвращает двойной счёт
+- **Dedup (recommendations)**: `SessionState.record_recommendation()` / `get_already_recommended()` — skill-router не рекомендует один скилл дважды за сессию
 - **Dashboard**: `python scripts/hook-dashboard.py --section accuracy`
 - **Метрики**: match rate, per-skill precision, recent misses
 - **SQLite**: таблицы `skill_activations` и `skill_accuracy` в `hook_metrics_db.py` (колонка `source TEXT`)
