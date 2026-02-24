@@ -88,9 +88,21 @@ class HookInput:
         if not isinstance(tool_input, dict):
             tool_input = {"_raw": tool_input}
 
+        # Auto-detect event type from fields (Claude Code doesn't send
+        # "detected_event" — we infer it the same way as protocol.py)
+        detected_event = data.get("detected_event")
+        tool_name = data.get("tool_name")
+        if not detected_event:
+            if tool_name:
+                detected_event = "PostToolUse" if "tool_result" in data else "PreToolUse"
+            elif data.get("prompt") or data.get("content"):
+                detected_event = "UserPromptSubmit"
+            elif data.get("transcript") or data.get("reason"):
+                detected_event = "Stop"
+
         return cls(
-            detected_event=data.get("detected_event"),
-            tool_name=data.get("tool_name"),
+            detected_event=detected_event,
+            tool_name=tool_name,
             tool_input=tool_input,
             prompt=data.get("prompt"),
             invocation_id=data.get("invocation_id"),
