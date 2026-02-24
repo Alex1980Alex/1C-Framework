@@ -66,6 +66,19 @@
       "last_verified": "2026-02-24",
       "sources_count": 4,
       "github_repos_count": 1
+    },
+    {
+      "file": "universal-code-verification.md",
+      "title": "Universal Code Verification — VERIFY как универсальный паттерн",
+      "keywords": [
+        "verify", "code-review", "verification", "code-verify",
+        "reviewer", "subagent-reviewer", "quality-review",
+        "knowledge-compliance", "behavior-preservation", "bug-fix-validation",
+        "enforcement", "universal-verify", "ralph-wiggum"
+      ],
+      "last_verified": "2026-02-25",
+      "sources_count": 0,
+      "github_repos_count": 0
     }
   ]
 }
