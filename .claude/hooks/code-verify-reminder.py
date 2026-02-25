@@ -14,7 +14,7 @@ Cycle:
   → Skill(code-verify) fires → complete_task_by_hook() → stop allowed
 
 Author: Claude Code
-Version: 2.0.0
+Version: 2.1.0
 Created: 2026-02-25
 """
 
