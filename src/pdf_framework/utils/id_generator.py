@@ -1,4 +1,4 @@
-"""Deterministic ID generation for documents and chunks (E2E test).
+"""Deterministic ID generation for documents and chunks.
 
 Replaces uuid4()-based IDs with SHA-256 hashes so that the same input
 always produces the same ID.  This is critical for:
