@@ -129,6 +129,7 @@ class CodeVerifyReminder(BaseHook):
             return HookOutput().system_message(
                 "[CODE-VERIFY] Mandatory task создана. "
                 "После завершения изменений запусти: Skill(code-verify). "
+                "Если скилл недоступен — используй Skill(learning-loop). "
                 "Task-enforcer заблокирует stop до выполнения."
             )
 
