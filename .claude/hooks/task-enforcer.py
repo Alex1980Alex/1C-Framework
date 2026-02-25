@@ -192,6 +192,7 @@ def main():
             "- Factory tasks: update settings.json, registries, MEMORY.md\n"
             "- Docs tasks: update documentation and skills per docs-change-tracker\n"
             "- Git tasks: commit uncommitted changes (auto-git-save)\n"
+            "- Code-verify tasks: run Skill(code-verify) to verify changed code\n"
             "- After completing ALL tasks, you may stop."
         )
 
