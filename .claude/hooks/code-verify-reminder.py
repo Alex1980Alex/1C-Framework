@@ -62,10 +62,15 @@ class CodeVerifyReminder(BaseHook):
         # --- PostToolUse Write|Edit: create mandatory task ---
         return self._handle_code_change(inp)
 
+    # Skills that satisfy code verification requirement:
+    # - code-verify: primary (dedicated verification skill)
+    # - learning-loop: fallback (SEARCH→FETCH→EXECUTE→VERIFY→CREATE when skill missing)
+    VERIFY_SKILLS = {"code-verify", "learning-loop"}
+
     def _handle_skill(self, inp: HookInput) -> HookOutput | None:
-        """Auto-complete pending code-verify task when skill is activated."""
+        """Auto-complete pending code-verify task when verification skill is activated."""
         skill = inp.tool_input.get("skill", "") if isinstance(inp.tool_input, dict) else ""
-        if skill != "code-verify":
+        if skill not in self.VERIFY_SKILLS:
             return None
 
         if complete_task_by_hook is None:
