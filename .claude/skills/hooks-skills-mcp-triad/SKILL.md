@@ -68,7 +68,7 @@ description: "Используй этот скилл для понимания �
 | `pdf-knowledge` | PDF | MCP-инструменты PDF search, indexing |
 | `task-evaluation` | Классификатор | Research vs Brainstorm vs Hybrid маршрутизация |
 
-#### Инфраструктурные (7)
+#### Инфраструктурные (8)
 
 | Skill | Назначение |
 |-------|-----------|
