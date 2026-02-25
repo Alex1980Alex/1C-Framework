@@ -329,7 +329,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 
 ```
 .claude/
-├── hooks/                         (16 хуков)
+├── hooks/                         (17 хуков)
 │   ├── base/
 │   │   ├── __init__.py            (BaseHook, HookInput, HookOutput)
 │   │   ├── protocol.py            (протокол stdin/stdout JSON — РАБОЧАЯ база для всех хуков)
