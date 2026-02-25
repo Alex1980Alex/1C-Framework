@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
-Code Verify Reminder — advisory reminder after code changes.
+Code Verify Reminder — mandatory task after code changes.
 
 Event: PostToolUse
-Matcher: Write|Edit
+Matcher: Write|Edit (create task) + Skill (auto-complete on code-verify)
 Timeout: 3s
-Purpose: After code file changes, remind about code-verify skill.
 
-NON-BLOCKING: advisory only, never creates mandatory tasks.
-Uses 15-minute cooldown to avoid spam.
+MANDATORY: creates task in hook-todos.json → task-enforcer blocks stop.
+Auto-completes when skill code-verify is activated.
+
+Cycle:
+  Edit .py → add_task() → task-enforcer blocks stop → Claude runs code-verify
+  → Skill(code-verify) fires → complete_task_by_hook() → stop allowed
 
 Author: Claude Code
-Version: 1.0.0
+Version: 2.0.0
 Created: 2026-02-25
 """
 
@@ -29,19 +32,60 @@ from base import BaseHook, HookInput, HookOutput
 
 # Optional imports (graceful degradation)
 try:
-    from shared.task_master import has_recent_completion
+    from shared.task_master import add_task, complete_task_by_hook
 except ImportError:
-    has_recent_completion = None
+    add_task = None
+    complete_task_by_hook = None
 
 
 CODE_EXTENSIONS = {".py", ".ts", ".js", ".go", ".rs", ".java", ".jsx", ".tsx"}
 SKIP_DIRS = {"docs/", "data/", ".claude/cache/", "node_modules/", "__pycache__/"}
 
+HOOK_ID = "code-verify-reminder"
+TASK_TITLE = "Запустить code-verify для изменённого кода"
+
 
 class CodeVerifyReminder(BaseHook):
-    """Advisory reminder to run code-verify after code changes."""
+    """Mandatory code verification after code changes.
+
+    - PostToolUse Write|Edit: creates mandatory task
+    - PostToolUse Skill: auto-completes task when code-verify is used
+    """
 
     def execute(self, inp: HookInput) -> HookOutput | None:
+        tool_name = inp.tool_name
+
+        # --- PostToolUse Skill: auto-complete task on code-verify ---
+        if tool_name == "Skill":
+            return self._handle_skill(inp)
+
+        # --- PostToolUse Write|Edit: create mandatory task ---
+        return self._handle_code_change(inp)
+
+    def _handle_skill(self, inp: HookInput) -> HookOutput | None:
+        """Auto-complete pending code-verify task when skill is activated."""
+        skill = inp.tool_input.get("skill", "") if isinstance(inp.tool_input, dict) else ""
+        if skill != "code-verify":
+            return None
+
+        if complete_task_by_hook is None:
+            return None
+
+        try:
+            result = complete_task_by_hook(HOOK_ID)
+            count = result.get("completed_count", 0)
+            if count > 0:
+                return HookOutput().system_message(
+                    f"[CODE-VERIFY] Task completed ({count}). "
+                    "Верификация запущена — задача закрыта."
+                )
+        except Exception:
+            pass  # Graceful degradation
+
+        return None
+
+    def _handle_code_change(self, inp: HookInput) -> HookOutput | None:
+        """Create mandatory task when code file is changed."""
         file_path = inp.tool_input.get("file_path", "")
 
         # Skip non-code files
@@ -55,19 +99,36 @@ class CodeVerifyReminder(BaseHook):
         if any(skip in normalized for skip in SKIP_DIRS):
             return None
 
-        # Cooldown check (15 minutes)
-        if has_recent_completion is not None:
-            try:
-                if has_recent_completion("code-verify-reminder", cooldown_minutes=15):
-                    return None
-            except Exception:
-                pass  # Graceful degradation
+        if add_task is None:
+            # Fallback: advisory systemMessage if task_master unavailable
+            return HookOutput().system_message(
+                "[CODE-VERIFY] Код изменён. Запусти code-verify после завершения."
+            )
 
-        return HookOutput().system_message(
-            "[CODE-VERIFY] Код изменён. После завершения изменений — "
-            "запусти code-verify (режим: quality-review или knowledge-compliance). "
-            "Skill: code-verify"
-        )
+        try:
+            filename = os.path.basename(file_path)
+            added = add_task(
+                title=TASK_TITLE,
+                priority="high",
+                created_by=HOOK_ID,
+                description=(
+                    f"Код изменён: {filename}\n"
+                    "Запусти skill code-verify (режим: quality-review или knowledge-compliance).\n"
+                    "Задача авто-завершится при активации скилла code-verify."
+                ),
+            )
+        except Exception:
+            added = False
+
+        if added:
+            return HookOutput().system_message(
+                "[CODE-VERIFY] Mandatory task создана. "
+                "После завершения изменений запусти: Skill(code-verify). "
+                "Task-enforcer заблокирует stop до выполнения."
+            )
+
+        # Task already exists (duplicate pending) — silent
+        return None
 
 
 if __name__ == "__main__":
