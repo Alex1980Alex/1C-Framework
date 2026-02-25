@@ -327,7 +327,7 @@ Learning Loop использует существующие компоненты
 | Context7/WebSearch/WebFetch | FETCH: сбор знаний (ротация источников) |
 | trust_scorer.py | FETCH: оценка качества источников |
 | Skill-Delegated Subagent | EXECUTE: делегирование с контекстом + атрибуция |
-| Ревьюер-субагент | VERIFY: обязательная проверка соответствия knowledge |
+| code-verify (knowledge-compliance) | VERIFY: обязательная проверка соответствия knowledge |
 | doc-to-skill | CREATE: конвертация знаний в скилл |
 | triad-factory | CREATE: Q1-Q6 если нужны hook/enforcer |
 
