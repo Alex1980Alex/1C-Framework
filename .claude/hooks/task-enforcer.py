@@ -49,6 +49,7 @@ MANDATORY_HOOKS = {
     "docs-change-tracker-hook",
     "auto-git-save-hook",
     "code-skill-enforcer",
+    "code-verify-reminder",
 }
 
 
