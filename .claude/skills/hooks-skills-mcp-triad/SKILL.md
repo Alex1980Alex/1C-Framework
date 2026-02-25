@@ -45,6 +45,7 @@ description: "Используй этот скилл для понимания �
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
+| `code-verify-reminder.py` | Write\|Edit | Advisory напоминание запустить code-verify (15 мин cooldown) |
 
 #### Stop (4)
 
