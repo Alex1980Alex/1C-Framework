@@ -33,7 +33,7 @@ description: "Используй этот скилл для понимания �
 | `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
 | `search-optimizer.py` | Bash | Оптимизация параметров Search API |
 
-#### PostToolUse (9)
+#### PostToolUse (10)
 
 | Hook | Matcher | Назначение |
 |------|---------|-----------|
