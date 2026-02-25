@@ -357,15 +357,9 @@ EXECUTE (с атрибуцией):
     Требование: "Source: [секция] для каждой функции"
   → retry.py с 4 декораторами + Source: атрибуции
 
-VERIFY:
-  Уровень 1 (структурная):
-    grep "wait_exponential_jitter" → найдено ✓
-    grep "reraise=True" → найдено ✓
-    grep "^@retry$" → не найдено ✓ (антипаттерн отсутствует)
-  Уровень 2 (ревьюер-субагент):
-    Task(general-purpose, prompt=KB + код + инструкция проверки)
-    → PASS: все 4 функции соответствуют knowledge_block
-  Уровень 3: PASS → переходим к CREATE
+VERIFY (code-verify, режим knowledge-compliance):
+  reference=KB, code=retry.py, markers=[wait_exponential_jitter, reraise=True]
+  → PASS: все 4 функции соответствуют knowledge_block → переходим к CREATE
 
 CREATE:
   .claude/skills/tenacity-retry/SKILL.md
