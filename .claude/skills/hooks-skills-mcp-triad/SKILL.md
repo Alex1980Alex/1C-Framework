@@ -78,6 +78,7 @@ description: "Используй этот скилл для понимания �
 | `doc-to-skill` | Конвертер документации → SKILL.md |
 | `doc-to-cache` | Конвертер документации → knowledge cache |
 | `learning-loop` | Цикл обучения: SEARCH → FETCH → EXECUTE → CREATE skill |
+| `code-verify` | Верификация кода: 3 уровня, 4 режима (knowledge/behavior/bugfix/quality) |
 | `tenacity-retry` | Retry с tenacity: декораторы, backoff, jitter, async |
 
 #### Операционные фреймворка (17)
