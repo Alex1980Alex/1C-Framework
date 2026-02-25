@@ -88,7 +88,7 @@ src/
   skill-router.py           # UserPromptSubmit: skill recommendations
   skill-eval-enforcer-shell.py  # UserPromptSubmit: activation enforcement
   code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F, protocol.py base)
-  code-verify-reminder.py   # PostToolUse: mandatory code verification (v2.1: code-verify + learning-loop fallback)
+  code-verify-reminder.py   # PostToolUse: mandatory code verification (v2.2: PASS-marker completion via Task result)
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
