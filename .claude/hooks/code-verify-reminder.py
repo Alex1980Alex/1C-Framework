@@ -51,43 +51,65 @@ class CodeVerifyReminder(BaseHook):
     """Mandatory code verification after code changes.
 
     - PostToolUse Write|Edit: creates mandatory task
-    - PostToolUse Skill: auto-completes task when code-verify is used
+    - PostToolUse Skill: signals verification started (task stays pending)
+    - PostToolUse Task: completes task when subagent returns PASS marker
     """
 
-    def execute(self, inp: HookInput) -> HookOutput | None:
-        tool_name = inp.tool_name
-
-        # --- PostToolUse Skill: auto-complete task on code-verify ---
-        if tool_name == "Skill":
-            return self._handle_skill(inp)
-
-        # --- PostToolUse Write|Edit: create mandatory task ---
-        return self._handle_code_change(inp)
+    PASS_MARKER = "[CODE-VERIFY-PASS]"
+    FAIL_MARKER = "[CODE-VERIFY-FAIL]"
 
     # Skills that satisfy code verification requirement:
     # - code-verify: primary (dedicated verification skill)
     # - learning-loop: fallback (SEARCH→FETCH→EXECUTE→VERIFY→CREATE when skill missing)
     VERIFY_SKILLS = {"code-verify", "learning-loop"}
 
+    def execute(self, inp: HookInput) -> HookOutput | None:
+        tool_name = inp.tool_name
+
+        # --- PostToolUse Skill: signal verification started (task stays pending) ---
+        if tool_name == "Skill":
+            return self._handle_skill(inp)
+
+        # --- PostToolUse Task: complete task on PASS marker from subagent ---
+        if tool_name == "Task":
+            return self._handle_task_result(inp)
+
+        # --- PostToolUse Write|Edit: create mandatory task ---
+        return self._handle_code_change(inp)
+
     def _handle_skill(self, inp: HookInput) -> HookOutput | None:
-        """Auto-complete pending code-verify task when verification skill is activated."""
+        """Signal that verification has started (task stays pending)."""
         skill = inp.tool_input.get("skill", "") if isinstance(inp.tool_input, dict) else ""
         if skill not in self.VERIFY_SKILLS:
             return None
 
-        if complete_task_by_hook is None:
-            return None
+        # DON'T complete — just acknowledge that verification is launched
+        return HookOutput().system_message(
+            "[CODE-VERIFY] Верификация запущена. "
+            "Задача завершится автоматически после вердикта PASS от субагента. "
+            "Субагент ОБЯЗАН включить маркер [CODE-VERIFY-PASS] или [CODE-VERIFY-FAIL] в output."
+        )
 
-        try:
-            result = complete_task_by_hook(HOOK_ID)
-            count = result.get("completed_count", 0)
-            if count > 0:
-                return HookOutput().system_message(
-                    f"[CODE-VERIFY] Task completed ({count}). "
-                    "Верификация запущена — задача закрыта."
-                )
-        except Exception:
-            pass  # Graceful degradation
+    def _handle_task_result(self, inp: HookInput) -> HookOutput | None:
+        """Complete task when subagent returns PASS verdict."""
+        result = inp.tool_result if isinstance(inp.tool_result, str) else str(inp.tool_result)
+
+        if self.PASS_MARKER in result:
+            if complete_task_by_hook is None:
+                return None
+            try:
+                completed = complete_task_by_hook(HOOK_ID)
+                count = completed.get("completed_count", 0)
+                if count > 0:
+                    return HookOutput().system_message(
+                        f"[CODE-VERIFY] Субагент: PASS. Task completed ({count})."
+                    )
+            except Exception:
+                pass  # Graceful degradation
+        elif self.FAIL_MARKER in result:
+            return HookOutput().system_message(
+                "[CODE-VERIFY] Субагент: FAIL. Задача pending — исправь код и запусти verify повторно."
+            )
 
         return None
 
