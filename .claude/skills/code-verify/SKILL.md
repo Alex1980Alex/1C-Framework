@@ -94,6 +94,10 @@ Task(
 
     ## Рекомендации (если FAIL/PARTIAL)
     Конкретные исправления.
+
+    ## Маркер (ОБЯЗАТЕЛЬНО в последней строке output)
+    Если PASS: [CODE-VERIFY-PASS]
+    Если PARTIAL или FAIL: [CODE-VERIFY-FAIL]
   """
 )
 ```
