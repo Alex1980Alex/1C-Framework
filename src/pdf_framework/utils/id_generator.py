@@ -39,6 +39,10 @@ def generate_chunk_id(
 
     Returns:
         16-char hex string.
+
+    Example:
+        >>> generate_chunk_id("abc123", 0, "Hello world")
+        'e5c1e2f3...'
     """
     raw = f"{document_id}:{chunk_index}:{content_prefix[:100]}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
