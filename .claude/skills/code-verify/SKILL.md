@@ -155,6 +155,10 @@ Task(
 
     ## Вердикт: PASS | PARTIAL | FAIL
     ## Рекомендации
+
+    ## Маркер (ОБЯЗАТЕЛЬНО в последней строке output)
+    Если PASS: [CODE-VERIFY-PASS]
+    Если PARTIAL или FAIL: [CODE-VERIFY-FAIL]
   """
 )
 ```
