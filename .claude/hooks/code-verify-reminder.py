@@ -3,18 +3,20 @@
 Code Verify Reminder — mandatory task after code changes.
 
 Event: PostToolUse
-Matcher: Write|Edit (create task) + Skill (auto-complete on code-verify)
+Matcher: Write|Edit (create task) + Skill (signal start) + Task (complete on PASS)
 Timeout: 3s
 
 MANDATORY: creates task in hook-todos.json → task-enforcer blocks stop.
-Auto-completes when skill code-verify is activated.
+Task completes ONLY when subagent returns [CODE-VERIFY-PASS] marker.
 
 Cycle:
   Edit .py → add_task() → task-enforcer blocks stop → Claude runs code-verify
-  → Skill(code-verify) fires → complete_task_by_hook() → stop allowed
+  → Skill(code-verify) fires → systemMessage "верификация запущена" (task stays pending)
+  → Task(субагент) returns [CODE-VERIFY-PASS] → complete_task_by_hook() → stop allowed
+  → Task(субагент) returns [CODE-VERIFY-FAIL] → task stays pending → fix and retry
 
 Author: Claude Code
-Version: 2.1.0
+Version: 2.2.0
 Created: 2026-02-25
 """
 
