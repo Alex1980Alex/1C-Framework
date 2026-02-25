@@ -284,10 +284,19 @@
       "skills": ["tenacity-retry"],
       "optional": ["framework-troubleshooting"]
     },
+    "code-verify": {
+      "keywords": [
+        "проверь код", "verify code", "code review", "верификация",
+        "review", "ревью кода", "проверка кода", "code-verify",
+        "качество кода", "code quality"
+      ],
+      "skills": ["code-verify"],
+      "optional": []
+    },
     "learning-loop": {
       "keywords": ["learning loop", "нет скилла", "найди информацию и сделай", "научись делать", "создай скилл из опыта", "fetch and learn", "цикл обучения"],
       "skills": ["learning-loop"],
-      "optional": ["doc-to-skill", "triad-factory"]
+      "optional": ["doc-to-skill", "triad-factory", "code-verify"]
     },
     "workflow-research": {
       "keywords": ["расскажи про", "как работает", "что такое", "документация по", "объясни", "найди информацию", "исследуй", "сделай обзор", "проанализируй", "сравни", "how does", "what is", "explain", "research", "compare", "overview of", "describe", "tell me about"],
