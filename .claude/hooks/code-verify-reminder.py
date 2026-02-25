@@ -143,7 +143,7 @@ class CodeVerifyReminder(BaseHook):
                 description=(
                     f"Код изменён: {filename}\n"
                     "Запусти skill code-verify (режим: quality-review или knowledge-compliance).\n"
-                    "Задача авто-завершится при активации скилла code-verify."
+                    "Задача завершится после вердикта PASS от субагента-ревьюера."
                 ),
             )
         except Exception:
