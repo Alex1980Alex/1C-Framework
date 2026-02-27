@@ -188,6 +188,25 @@ class SkillRouter(BaseHook):
     # Regex to strip file paths from prompt (prevents false matches on paths)
     _PATH_RE = re.compile(r'[a-zA-Z]:\\[^\s>]*|/[^\s>]*\.\w+')
 
+    # Intent classification markers
+    _INFO_MARKERS = [
+        "что такое", "как работает", "объясни", "расскажи",
+        "what is", "how does", "explain", "describe", "tell me about",
+        "где находится", "where is", "покажи", "show me", "зачем",
+        "в чем разница", "what's the difference",
+    ]
+    _SYSTEM_PREFIXES = ("/", "!!", "git ", "cd ")
+
+    @staticmethod
+    def _classify_intent(prompt: str) -> str:
+        """Classify prompt intent: system | informational | action."""
+        stripped = prompt.strip().lower()
+        if any(stripped.startswith(p) for p in SkillRouter._SYSTEM_PREFIXES):
+            return "system"
+        if any(m in stripped for m in SkillRouter._INFO_MARKERS):
+            return "informational"
+        return "action"
+
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt
         if not prompt or len(prompt) < 3:
