@@ -1,422 +1,328 @@
-# Дорожная карта: Intelligent Skill Router
+# Дорожная карта: Intelligent Skill Router v2
 
 **Дата создания:** 2026-02-12
-**Статус:** PDF Framework DONE (Фазы 0, 1, 7, 8, 9, 10). 1C-Enterprise Pending (Фазы 2-6)
+**Дата обновления:** 2026-02-27
+**Статус:** Фазы 0-1, 7-9 DONE. Эволюция: Keyword → Hybrid → Semantic
 **Проекты:** PDF Framework + 1C-Enterprise (shared pattern)
 
-## Проблема
+---
 
-При росте количества скиллов (>15-20) все загружаются в контекст LLM одновременно, создавая token bloat и снижая точность выбора. Нужна система маршрутизации: анализ промпта → загрузка только 2-5 релевантных скиллов.
+## Текущее состояние (аудит 2026-02-27)
 
-**Текущее состояние:**
-- PDF Framework: 12 скиллов (~4800 токенов, 2.4%) — приемлемо
-- 1C-Enterprise: 29 скиллов (~12000 токенов, 6%) — нужен роутер
-
-**Архитектура решения:** 3-уровневая
+### Архитектура
 
 ```
-Level 0: Hook (UserPromptSubmit)       ~0 tokens в контексте
-  │  Детектирует объект/область → определяет bundle
-Level 1: Meta-Skill "object-map"       ~300 tokens
-  │  Таблица маршрутизации: объект → скиллы
-Level 2: Domain Skills (по запросу)    ~400-800 tokens × 3-5
-  │  Загружаются ТОЛЬКО нужные
-  ↓ Итого: 300 + 2000 = ~2300 tokens (1.2%)
+UserPromptSubmit
+  │
+  ├── skill-router.py (Layer A: keyword match + Layer B: fuzzy/lemma)
+  │     ↓ systemMessage: "[SKILL-ROUTER] Bundles: X, Y"
+  │
+  └── skill-eval-enforcer-shell.py (stdout: "MANDATORY SKILL EVALUATION")
+        ↓ plain text → 100% injection rate (vs 55% для JSON systemMessage)
+
+PreToolUse / PostToolUse
+  └── code-skill-enforcer.py (Level A-F: pattern→skill blocking)
+```
+
+### Метрики (из data/*.jsonl, 227 routing events)
+
+| Метрика | Значение | Оценка |
+|---------|----------|--------|
+| Routing events | 227 | — |
+| Recommend events | 57 | — |
+| Activate events | 12 | — |
+| **Activation rate** | **8.8%** | КРИТИЧНО НИЗКО |
+| Уникальных prompt→activate | 5 из 57 | — |
+| Top bundle | research-1c (19.4%) | — |
+| Кол-во бандлов в конфиге | 42 | Избыточно |
+| Кол-во keywords | ~350+ | Ручное кураторство |
+| False positives | Не измеряется | Нет ground truth |
+
+### TOP-5 бандлов по частоте срабатывания
+
+| # | Bundle | % от всех events |
+|---|--------|-------------------|
+| 1 | research-1c | 19.4% |
+| 2 | infrastructure | 15.0% |
+| 3 | langchain-agent | 14.5% |
+| 4 | framework-cli | 11.0% |
+| 5 | search | 8.4% |
+
+### Диагноз
+
+**Главная проблема:** Роутер *рекомендует* скиллы, но Claude *не активирует* их в 91.2% случаев.
+
+**Корневые причины:**
+1. **systemMessage игнорируется** — JSON `{"systemMessage": "..."}` имеет 55% activation rate (исследование Scott Spence, 650+ trials). Shell stdout — 100%, но skill-router.py использует `HookOutput().system_message()` (= JSON), а не stdout
+2. **Нет принуждения** — skill-eval-enforcer-shell.py выводит generic "MANDATORY SKILL EVALUATION", но без конкретных скиллов
+3. **Слишком много бандлов** (42) — шум забивает сигнал
+4. **Нет semantic understanding** — keyword matching не ловит парафразы
+5. **Нет feedback loop** — recommend/activate логи есть, но нет автоматической коррекции
+
+---
+
+## Исследование: подходы к роутингу (web + GitHub, 2025-2026)
+
+### Сравнительная таблица подходов
+
+| Подход | Accuracy (GQR-Bench) | Latency | Стоимость | Ловит парафразы | Нужны данные |
+|--------|----------------------|---------|-----------|-----------------|--------------|
+| Naive keyword/substring | ~40-60% | <1ms | $0 | Нет | Нет |
+| **TF-IDF + WideMLP** | **~88%** | <4ms | $0 | Частично | Да (labeled) |
+| Embedding similarity (MiniLM) | ~58% | <1ms | $0 | Да | Нет (примеры) |
+| **Embedding + SVM/RF** | **~83%** | <5ms | $0 | Да | Да (labeled) |
+| Embedding + centroid (curated) | ~80-90% | <1ms | $0 | Да | Нет (примеры) |
+| LLM function calling | ~91% | 62-669ms | $0.01+ | Да | Нет |
+
+*Источник: GQR-Bench (arXiv 2505.14524), RouteLLM (ICLR 2025)*
+
+### Ключевые GitHub-проекты
+
+| Проект | Stars | Суть | URL |
+|--------|-------|------|-----|
+| **semantic-router** (aurelio-labs) | ~3,200 | Embedding-based route matching | [GitHub](https://github.com/aurelio-labs/semantic-router) |
+| **RouteLLM** (lm-sys) | ~4,500 | Model routing via preference data | [GitHub](https://github.com/lm-sys/RouteLLM) |
+| **LLMRouter** (UIUC) | ~1,000 | 16+ routing algorithms unified | [GitHub](https://github.com/ulab-uiuc/LLMRouter) |
+| awesome-ai-model-routing | 158 | Curated list of approaches | [GitHub](https://github.com/Not-Diamond/awesome-ai-model-routing) |
+| awesome-claude-code | — | Community hooks/skills collection | [GitHub](https://github.com/hesreallyhim/awesome-claude-code) |
+
+### Ключевой инсайт
+
+> Pure embedding-similarity routing (Semantic Router + MiniLM) = **58% accuracy** (GQR-Bench).
+> TF-IDF + классификатор = **88%**.
+> Embedding + обученный RF/SVM = **83%**.
+> Ваш keyword + fuzzy = вероятно **50-70%** (нет ground truth).
+
+**Вывод:** Переход на «чистые embeddings» без классификатора — шаг НАЗАД. Нужен hybrid: keyword + embedding + lightweight classifier.
+
+---
+
+## ДОРОЖНАЯ КАРТА УЛУЧШЕНИЙ
+
+### Фаза 11: FIX — Критическое исправление activation rate
+
+**Приоритет:** P0 — без этого остальные фазы бессмысленны
+**Цель:** Activation rate 8.8% → 70%+
+
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 11.1 | Мигрировать skill-router.py с `systemMessage` на `stdout` | skill-router.py | Как skill-eval-enforcer-shell.py: `print()` вместо `HookOutput().system_message()`. Исследование Scott Spence: stdout = 100% injection vs 55% для JSON |
+| 11.2 | Объединить skill-router + eval-enforcer в один stdout output | Один hook или chain | Сейчас: generic "MANDATORY SKILL EVALUATION" + отдельный `[SKILL-ROUTER] Bundles:`. Нужно: один stdout с конкретными скиллами + императивной инструкцией |
+| 11.3 | Конкретизировать инструкцию | Шаблон stdout | `"ОБЯЗАТЕЛЬНО: Skill('X'), Skill('Y'). НЕ ПРОДОЛЖАЙ без активации."` вместо generic "evaluate skill relevance" |
+| 11.4 | A/B тест: замерить activation rate до/после | data/skill-accuracy.jsonl | 50 промптов до, 50 после. Метрика: % recommend→activate |
+| 11.5 | Добавить негативный маркер при не-активации | skill-eval-enforcer | Если скиллы рекомендованы, но в следующем промпте нет `<command-name>` — логировать miss |
+
+**Ожидаемый результат:** activation rate 70-85% (уровень best practices для forced-evaluation pattern)
+
+---
+
+### Фаза 12: MEASURE — Ground Truth и метрики качества
+
+**Приоритет:** P0 — без метрик невозможно оптимизировать
+**Цель:** Автоматический расчёт precision/recall/F1
+
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 12.1 | Создать ground truth dataset | data/skill-router-ground-truth.jsonl | 100+ prompt→skills пар, размеченных вручную. Формат: `{"prompt": "...", "expected_skills": ["X", "Y"], "expected_bundles": ["Z"]}` |
+| 12.2 | Скрипт оценки offline | scripts/eval-skill-router.py | Прогоняет ground truth через роутер, считает precision/recall/F1 по skill и по bundle |
+| 12.3 | Интеграция в CI | .github/workflows/ | Запускать eval при изменении config или router code. FAIL если F1 < threshold |
+| 12.4 | Dashboard метрик | scripts/skill-router-dashboard.py | Визуализация: activation rate, precision, recall, confusion matrix по бандлам |
+| 12.5 | False positive tracking | data/skill-router-fp.jsonl | Ручная пометка ненужных рекомендаций через feedback hook |
+
+**Ожидаемый результат:** Возможность объективно сравнивать подходы и итерировать
+
+---
+
+### Фаза 13: PRUNE — Оптимизация конфигурации
+
+**Приоритет:** P1 — снизить noise, повысить precision
+**Цель:** Сократить бандлы с 42 до 15-20, повысить precision
+
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 13.1 | Анализ бандлов по usage | Отчёт | 42 бандла, но 50% трафика = top-5. Мертвые бандлы (0 срабатываний за 30 дней) → кандидаты на удаление |
+| 13.2 | Мержить мелкие бандлы | skill-router-config.json | `hook-debugging` + `hook-bugs` + `windows-paths` + `hook-enforcer` + `hook-architecture` → один `hooks-debug` bundle |
+| 13.3 | Мержить claude-code-* | skill-router-config.json | 7 claude-code-* бандлов → 2-3: `claude-code-dev` (plugins, subagents, programmatic), `claude-code-config` (settings, cli, terminal-ux), `claude-code-ops` (admin, github-actions) |
+| 13.4 | Мержить langchain-* | skill-router-config.json | 5 langchain-* бандлов → 2: `langchain-core` (core, integrations, multiagent), `langchain-infra` (streaming, mcp, memory, production) |
+| 13.5 | Мержить framework-* | skill-router-config.json | 7 framework-* бандлов → 3: `framework-use` (cli, api, quickstart), `framework-ops` (config, troubleshooting, caching), `framework-ui` (mcp-ui) |
+| 13.6 | Убрать overlap keywords | Скрипт анализа | Ключевое слово "langchain" матчит `langchain-agent` И `langchain-rag` — нужна disambiguation |
+| 13.7 | Hierarchical routing | 2-level config | Level 1: domain (1c, framework, claude-code, langchain). Level 2: sub-skill. Как NVIDIA blueprint с 77→10 groups |
+
+**Ожидаемый результат:** 15-20 бандлов, precision +15-20%, меньше noise
+
+---
+
+### Фаза 14: EMBED — Semantic scoring layer
+
+**Приоритет:** P1 — ключевое улучшение качества
+**Цель:** Ловить парафразы и novel phrasings
+
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 14.1 | Выбрать embedding модель | ADR | Кандидаты: `all-MiniLM-L6-v2` (22MB, <1ms), `nomic-embed-text` (130MB, ~3ms), `BGE-M3` (multilingual). Критерий: latency <50ms (hook timeout 5s), русский язык |
+| 14.2 | Pre-compute route embeddings | data/route-embeddings.npz | Для каждого бандла: 5-10 примеров промптов → embed → средний вектор (centroid). Offline, при изменении конфига |
+| 14.3 | Скрипт генерации embeddings | scripts/build-route-embeddings.py | `python scripts/build-route-embeddings.py` → читает config + примеры → генерирует .npz |
+| 14.4 | Добавить примеры промптов в конфиг | skill-router-config.json | Новое поле `"utterances"`: 5-10 примеров на бандл. Пример: `{"query": {"utterances": ["напиши запрос", "сделай выборку", "помоги с SQL"]}}` |
+| 14.5 | Layer C: Embedding scoring в skill-router.py | skill-router.py | `score_total = keyword_score * 0.4 + fuzzy_score * 0.2 + embedding_score * 0.4`. Embedding score = cosine_similarity(prompt_embed, bundle_centroid) |
+| 14.6 | Lazy-load embeddings | skill-router.py | Первый вызов: load .npz + model (~200ms). Последующие: <10ms. В пределах 5s timeout |
+| 14.7 | Benchmark: keyword vs hybrid | scripts/benchmark-router.py | Прогнать ground truth через оба подхода, сравнить F1. Ожидание: +10-20% recall |
+| 14.8 | Fallback при отсутствии модели | skill-router.py | Если embedding model не установлена — graceful degradation на keyword-only |
+
+**Ожидаемый результат:** Recall +15-25% за счёт семантического понимания
+
+**Архитектура:**
+```
+prompt → [Layer A: keyword match]     → score_kw
+       → [Layer B: fuzzy/lemma match] → score_fuzzy
+       → [Layer C: embedding cosine]  → score_embed
+       → weighted_sum → ranked bundles → top-N skills
 ```
 
 ---
 
-## Фаза 0: Подготовка и проектирование
+### Фаза 15: LEARN — Автоматическая коррекция из логов
 
-| # | Задача | Артефакт | Зависимости |
-|---|--------|----------|-------------|
-| 0.1 | Спроектировать JSON-схему конфига роутера | `skill-router-config.schema.json` | — |
-| 0.2 | Определить формат systemMessage (шаблон) | Шаблон в коде хука | — |
-| 0.3 | Определить стратегию scoring (keyword match + fuzzy) | ADR документ | — |
-| 0.4 | Определить fallback при отсутствии совпадений | Решение: pass-through | — |
-| 0.5 | Определить приоритет при пересечении bundles | Решение: top-2 по score | — |
-| 0.6 | Ревизия существующих хуков — конфликты | Список конфликтов | 0.1 |
+**Приоритет:** P2 — самооптимизация
+**Цель:** Автоматическое улучшение конфига на основе usage data
 
----
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 15.1 | Собирать feedback: useful/not-useful | data/skill-router-feedback.jsonl | После активации скилла — был ли он полезен? Маркер: если скилл активирован И задача завершена без ошибок → useful |
+| 15.2 | Скрипт: keyword mining из логов | scripts/mine-keywords.py | Анализ промптов из data/skill-accuracy.jsonl, где activate произошёл. Извлечь n-grams, которые коррелируют с конкретными скиллами |
+| 15.3 | Скрипт: auto-suggest config changes | scripts/suggest-config-updates.py | На основе missed activations: "Добавить keyword 'парсинг git' в бандл 'git-parsing'" |
+| 15.4 | Weekly cron: accuracy report | scripts/weekly-router-report.py | Еженедельный отчёт: activation rate, top misses, suggested keywords |
+| 15.5 | Train lightweight classifier (Phase 2 of LEARN) | models/skill-classifier.pkl | Когда накопится 200+ labeled pairs: TF-IDF + SVM/RF. Benchmark: ~83-88% accuracy (GQR-Bench data) |
+| 15.6 | Layer D: Classifier scoring | skill-router.py | `score_total = kw*0.3 + fuzzy*0.1 + embed*0.3 + clf*0.3`. Classifier = trained model, fastest and most accurate |
 
-## Фаза 1: Universal Skill Router Engine
-
-**Проект:** Shared (используется обоими проектами)
-**Файл:** `.claude/hooks/skill-router.py`
-
-| # | Задача | Детали | Строк |
-|---|--------|--------|-------|
-| 1.1 | Создать `skill-router.py` — каркас | BaseHook, чтение конфига, stdin parse | ~30 |
-| 1.2 | Реализовать загрузку конфига | `skill-router-config.json` из текущего проекта | ~15 |
-| 1.3 | Реализовать keyword matching | Lowercase prompt → scan bundles → score | ~25 |
-| 1.4 | Добавить fuzzy matching (опционально) | Reuse `shared/fuzzy_match.py`, pymorphy3 лемматизация | ~20 |
-| 1.5 | Реализовать bundle scoring & ranking | Score = count of matched keywords, sort desc | ~15 |
-| 1.6 | Реализовать multi-bundle detection | Если 2+ bundles matched → объединить skills (dedup) | ~15 |
-| 1.7 | Реализовать optional skills logic | Добавлять optional если доп. keywords совпали | ~10 |
-| 1.8 | Генерация systemMessage | Шаблон: `[SKILL-ROUTER: {bundles}] Загрузи: {skills}` | ~15 |
-| 1.9 | Cooldown (не спамить при каждом промпте) | `has_recent_completion()`, 3 мин | ~10 |
-| 1.10 | Тест: keyword matching | echo prompt → проверить output | — |
-| 1.11 | Тест: multi-bundle | "запрос для отчёта" → query + report | — |
-| 1.12 | Тест: no match → pass-through | "привет" → exit 0, no output | — |
-| 1.13 | Тест: fuzzy matching | "запросик" → лемма "запрос" → match | — |
-
-**Итого:** ~155 строк кода, 4 теста
+**Ожидаемый результат:** Self-improving router, accuracy растёт с каждой неделей
 
 ---
 
-## Фаза 2: 1C-Enterprise — Meta-Skill (карта маршрутизации)
+### Фаза 16: SCALE — Hierarchical routing для 50+ скиллов
 
-**Проект:** `D:\1C-Enterprise_Framework`
+**Приоритет:** P2 — масштабирование
+**Цель:** Поддержка 50-100 скиллов без деградации
 
-| # | Задача | Файл | Токены |
-|---|--------|------|--------|
-| 2.1 | Создать `1c-object-map/SKILL.md` | `.claude/skills/1c-object-map/SKILL.md` | ~300 |
-| 2.2 | YAML frontmatter: triggers, description | Triggers: "1С", "конфигурация", "объект" | — |
-| 2.3 | Таблица маршрутизации (объект → скиллы) | 9 строк: query, report, document, catalog, register, form, exchange, http, roles | — |
-| 2.4 | Правило загрузки (инструкция для Claude) | "Загрузи ОБЯЗАТЕЛЬНЫЕ, по необходимости — optional" | — |
-| 2.5 | Тест: Claude видит meta-skill при 1С вопросе | Manual test | — |
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 16.1 | 2-level routing | skill-router-config.json v4 | Level 1: domain classification (6 доменов). Level 2: skill selection внутри домена. Как NVIDIA blueprint |
+| 16.2 | Domain definitions | config | `domains: {1c: [...], framework: [...], claude-code: [...], langchain: [...], research: [...], infra: [...]}` |
+| 16.3 | Per-domain config files | skills/<domain>/router-config.json | Каждый домен — свой конфиг с бандлами. Загружается только при match на Level 1 |
+| 16.4 | Token budget enforcement | skill-router.py | Max N skills × avg_tokens ≤ budget. Если budget exceeded — приоритизировать по score |
+| 16.5 | Skill description index | data/skill-descriptions.json | Автоматически собирать description из YAML frontmatter всех SKILL.md |
+| 16.6 | Dynamic skill discovery | skill-router.py | Новые SKILL.md автоматически добавляются в routing без ручного обновления конфига |
 
----
-
-## Фаза 3: 1C-Enterprise — Domain Skills, приоритет 1 (топ-3)
-
-Самые частые задачи: запросы, отчёты, формы.
-
-### 3.1 Skill: `1c-query-language` (~600 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 3.1.1 | YAML frontmatter | triggers: "запрос", "выбрать", "query" |
-| 3.1.2 | Синтаксис ВЫБРАТЬ | SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY |
-| 3.1.3 | Соединения | INNER/LEFT/RIGHT/FULL JOIN, синтаксис ON |
-| 3.1.4 | Функции | СУММА, КОЛИЧЕСТВО, МАКСИМУМ, ВЫРАЗИТЬ, ЕСТЬNULL |
-| 3.1.5 | Параметры | &Параметр, синтаксис В ИЕРАРХИИ, В |
-| 3.1.6 | Подзапросы | Вложенные, В (ВЫБРАТЬ...) |
-| 3.1.7 | Примеры (2-3 реальных) | Типичные запросы к регистрам/справочникам |
-| 3.1.8 | Anti-patterns | N+1, отсутствие индексов, звёздочка |
-
-### 3.2 Skill: `1c-skd` (~700 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 3.2.1 | YAML frontmatter | triggers: "скд", "компоновка", "отчёт" |
-| 3.2.2 | Наборы данных | Запрос, Объект, Объединение |
-| 3.2.3 | Поля и ресурсы | Доступные поля, вычисляемые, ресурсы |
-| 3.2.4 | Параметры СКД | Параметры данных, функциональные опции |
-| 3.2.5 | Группировки и иерархия | Детальные/итоговые, иерархические |
-| 3.2.6 | Условное оформление | Оформление, отборы, цвета |
-| 3.2.7 | Вывод результата | ТабличныйДокумент, макеты, области |
-| 3.2.8 | Программное управление | КомпоновщикНастроекКомпоновкиДанных |
-| 3.2.9 | Примеры (2 реальных) | Отчёт по продажам, оборотная ведомость |
-
-### 3.3 Skill: `1c-forms` (~600 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 3.3.1 | YAML frontmatter | triggers: "форма", "управляемая форма", "команда" |
-| 3.3.2 | Архитектура управляемых форм | Клиент-сервер, директивы компиляции |
-| 3.3.3 | Реквизиты формы | Основной, добавленные, привязка к данным |
-| 3.3.4 | Команды формы | Стандартные, пользовательские, действие |
-| 3.3.5 | Обработчики событий | ПриСозданииНаСервере, ПриОткрытии, ПередЗаписью |
-| 3.3.6 | Директивы компиляции | &НаКлиенте, &НаСервере, &НаСервереБезКонтекста |
-| 3.3.7 | Таблица формы | ДинамическийСписок, ТаблицаЗначений |
-| 3.3.8 | Примеры (2 реальных) | Форма документа, форма обработки |
-
-### Тесты Фазы 3
-
-| # | Тест | Ввод | Ожидание |
-|---|------|------|----------|
-| 3.T1 | Загрузка query skill | "написать запрос" | `Skill("1c-query-language")` |
-| 3.T2 | Загрузка skd skill | "создать отчёт с СКД" | `Skill("1c-skd")` + `Skill("1c-query-language")` |
-| 3.T3 | Загрузка forms skill | "добавить команду на форму" | `Skill("1c-forms")` |
-| 3.T4 | Multi-bundle | "запрос в форме отчёта" | query + skd + forms |
-
----
-
-## Фаза 4: 1C-Enterprise — Domain Skills, приоритет 2
-
-Работа с объектами конфигурации.
-
-### 4.1 Skill: `1c-document-posting` (~500 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 4.1.1 | Модуль объекта документа | ОбработкаПроведения, ОбработкаЗаполнения |
-| 4.1.2 | Движения по регистрам | Движения.ИмяРегистра.Добавить() |
-| 4.1.3 | Контроль остатков | Блокировка, проверка, откат |
-| 4.1.4 | Перепроведение и отмена | УдалениеДвижений, ДополнительныеСвойства |
-| 4.1.5 | Примеры: проведение реализации | Полный пример с движениями |
-
-### 4.2 Skill: `1c-registers` (~500 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 4.2.1 | Регистры накопления | Остатки vs Обороты, измерения/ресурсы |
-| 4.2.2 | Регистры сведений | Периодичность, уникальность, срезы |
-| 4.2.3 | Регистры бухгалтерии | Счета, субконто, корреспонденции |
-| 4.2.4 | Регистры расчёта | Виды расчёта, базовые/вытесняющие |
-| 4.2.5 | Запись в регистры | МенеджерЗаписи, НаборЗаписей |
-
-### 4.3 Skill: `1c-catalogs` (~400 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 4.3.1 | Структура справочника | Реквизиты, ТЧ, иерархия, владельцы |
-| 4.3.2 | Предопределённые элементы | ПолучитьПредопределённый, ссылки |
-| 4.3.3 | Модуль менеджера | ОбработкаПолученияДанных, формы |
-| 4.3.4 | Модуль объекта | ПередЗаписью, ПриЗаписи |
-
-### 4.4 Skill: `1c-virtual-tables` (~500 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 4.4.1 | Остатки | Параметры VT: Период, Условие |
-| 4.4.2 | Обороты | Параметры: НачалоПериода, КонецПериода |
-| 4.4.3 | ОстаткиИОбороты | Комбинированная VT |
-| 4.4.4 | СрезПоследних/СрезПервых | Для регистров сведений |
-| 4.4.5 | Оптимизация | Передача отборов В параметры VT |
-
-### 4.5 Skill: `1c-temp-tables` (~400 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 4.5.1 | ПОМЕСТИТЬ | Синтаксис, именование |
-| 4.5.2 | Пакетные запросы | Менеджер временных таблиц |
-| 4.5.3 | Индексирование | ИНДЕКСИРОВАТЬ ПО |
-| 4.5.4 | Уничтожение | Автоматическое, явное |
-| 4.5.5 | Паттерны использования | Промежуточные данные, порционная обработка |
-
-### Тесты Фазы 4
-
-| # | Тест | Ввод | Ожидание |
-|---|------|------|----------|
-| 4.T1 | Document posting | "проведение документа реализации" | document-posting + registers |
-| 4.T2 | Registers | "регистр накопления остатки" | registers + virtual-tables |
-| 4.T3 | Catalogs | "добавить реквизит в справочник" | catalogs |
-| 4.T4 | Virtual tables | "виртуальная таблица остатков" | virtual-tables |
-| 4.T5 | Temp tables | "пакетный запрос с временными таблицами" | query + temp-tables |
-
----
-
-## Фаза 5: 1C-Enterprise — Domain Skills, приоритет 3
-
-Специализированные области.
-
-### 5.1 Skill: `1c-roles-rls` (~400 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 5.1.1 | Роли и права | ОбъектМетаданных → Право (Чтение, Изменение, ...) |
-| 5.1.2 | RLS шаблоны | Ограничение на уровне записей |
-| 5.1.3 | Шаблоны ограничений | #ПоЗначениюПараметраСеанса, #ПоОбъекту |
-| 5.1.4 | Проверка прав | ПравоДоступа(), РольДоступна() |
-
-### 5.2 Skill: `1c-exchange` (~500 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 5.2.1 | Планы обмена | Состав, регистрация изменений |
-| 5.2.2 | Механизм регистрации | ОбменДанными.Загрузка, Отправители |
-| 5.2.3 | XDTO | Пакеты, фабрика, сериализация |
-| 5.2.4 | Конвертация данных | Правила конвертации 3.0 |
-
-### 5.3 Skill: `1c-http-services` (~400 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 5.3.1 | HTTP-сервисы | Шаблоны URL, методы (GET/POST/PUT/DELETE) |
-| 5.3.2 | Обработчики | Входящий запрос, заголовки, тело |
-| 5.3.3 | JSON (де)сериализация | ЗаписьJSON, ЧтениеJSON, СериализаторXDTO |
-| 5.3.4 | OData | Стандартный интерфейс, настройка |
-
-### 5.4 Skill: `1c-common-modules` (~400 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 5.4.1 | Типы модулей | Серверный, клиентский, серверный с повторным использованием |
-| 5.4.2 | Глобальный/неглобальный | Видимость, привилегированный |
-| 5.4.3 | Паттерны API | Именование, параметры, возвращаемые значения |
-| 5.4.4 | Серверные вызовы | Минимизация вызовов сервера |
-
-### 5.5 Skill: `1c-report-layouts` (~400 токенов)
-
-| # | Задача | Содержание |
-|---|--------|-----------|
-| 5.5.1 | Макеты | Типы: ТабличныйДокумент, ActiveDocument |
-| 5.5.2 | Области макета | Именованные области, параметры |
-| 5.5.3 | Вывод в документ | ВывестиГоризонтальнуюКоллекцию, Вывести |
-| 5.5.4 | Печатные формы | Подключаемые, формирование |
-
----
-
-## Фаза 6: 1C-Enterprise — Конфигурация и интеграция
-
-| # | Задача | Файл | Детали |
-|---|--------|------|--------|
-| 6.1 | Создать `skill-router-config.json` | `.claude/skills/skill-router-config.json` | 9 bundles, ~50 keywords |
-| 6.2 | Скопировать `skill-router.py` из shared | `.claude/hooks/skill-router.py` | Или symlink |
-| 6.3 | Регистрация хука в settings.json | `.claude/settings.json` | UserPromptSubmit, timeout 5s |
-| 6.4 | Интеграция с `1c-task-detector.py` | Решить: merge или chain | Chain: detector → router |
-| 6.5 | Приоритет хуков | detector first (task type), router second (skills) | Порядок в массиве hooks |
-| 6.6 | End-to-end тест: простой запрос | "напиши запрос" | 1c-query-language loaded |
-| 6.7 | End-to-end тест: сложная задача | "отчёт с пакетным запросом и VT" | skd + query + temp-tables + virtual-tables |
-| 6.8 | End-to-end тест: документ с проведением | "проведение ПоступлениеТоваров" | document-posting + registers + forms |
-| 6.9 | Замер token overhead | До и после router | Ожидание: с 12K → 2-3K |
-
----
-
-## Фаза 7: PDF Framework — Конфигурация роутера
-
-**Проект:** `D:\1С-Framework`
-
-| # | Задача | Файл | Детали |
-|---|--------|------|--------|
-| 7.1 | Создать `skill-router-config.json` | `.claude/skills/skill-router-config.json` | 7 bundles для текущих 12 скиллов |
-| 7.2 | Bundle: search | keywords: поиск, search, найди, hybrid, bm25 → pdf-search | — |
-| 7.3 | Bundle: research-1c | keywords: 1С, справочник, документ, регистр → 1c-doc-research | — |
-| 7.4 | Bundle: research-tech | keywords: rag, embedding, qdrant, langchain → tech-research | — |
-| 7.5 | Bundle: architecture | keywords: архитектура, подход, паттерн → architecture-research | — |
-| 7.6 | Bundle: infrastructure | keywords: hook, skill, mcp, триада → hooks-skills-mcp-triad, triad-factory | — |
-| 7.7 | Bundle: creation | keywords: создай hook, новый скилл → create-hook, doc-to-skill | — |
-| 7.8 | Bundle: evaluation | keywords: brainstorm, оценка, подходы → task-evaluation | — |
-| 7.9 | Скопировать `skill-router.py` | `.claude/hooks/skill-router.py` | Из shared или создать |
-| 7.10 | Регистрация хука в settings.json | `.claude/settings.json` → UserPromptSubmit | +1 hook |
-| 7.11 | Проверить конфликт с `research-task-detector` | Оба на UserPromptSubmit | Chain: detector → router |
-| 7.12 | Тест: "поиск по справочникам" | → pdf-search + 1c-doc-research | — |
-| 7.13 | Тест: "создай hook для кеширования" | → create-hook + hooks-skills-mcp-triad | — |
-
----
-
-## Фаза 8: PDF Framework — Domain Skills ✅ DONE
-
-9 доменных скиллов созданы и зарегистрированы в `skill-router-config.json` (16 бандлов).
-
-| # | Skill | SKILL.md | Bundle в router |
-|---|-------|----------|----------------|
-| 8.1 | `search-pipeline-debug` | ✅ 10 стратегий, RRF, debug | `search-debug` |
-| 8.2 | `indexing-pipeline` | ✅ Hybrid loader, 4 levels, batch | `indexing` |
-| 8.3 | `graph-operations` | ✅ LightRAG, GraphRAG, extraction | `graph` |
-| 8.4 | `evaluation-benchmark` | ✅ RAGAS, AutoRAG, regression | `eval-benchmark` |
-| 8.5 | `embedding-models` | ✅ E5, Giga, BGE-M3, ONNX | `embedding` |
-| 8.6 | `qdrant-operations` | ✅ Named vectors, sparse, rebuild | `qdrant-ops` |
-| 8.7 | `agent-orchestration` | ✅ RAG, Multi, Analytical, Research | `agents` |
-| 8.8 | `prompt-engineering` | ✅ DSPy, MIPROv2, metrics | `prompt-opt` |
-| 8.9 | `deployment` | ✅ Docker, health, rate limit | `deploy` |
-
----
-
-## Фаза 9: MCP Per-Project (параллельно)
-
-| # | Задача | Проект | Детали |
-|---|--------|--------|--------|
-| 9.1 | Создать `.mcp.json` | PDF Framework | 2 сервера: brave-search, context7 |
-| 9.2 | Создать `.mcp.json` | 1C-Enterprise | 7 серверов: 1c-*, serena, jira, etc. |
-| 9.3 | User-level MCP | `~/.claude.json` | 2-3 утилиты: github, memory |
-| 9.4 | Миграция паролей в env vars | PowerShell | JIRA_PASSWORD, NEO4J_PASSWORD, MCP_ONEC_PASSWORD |
-| 9.5 | Удалить избыточные серверы из Desktop | `claude_desktop_config.json` | 10 серверов (ripgrep, grep, clipboard, zip, ...) |
-| 9.6 | Добавить permissions в settings.json | Оба проекта | `MCP(server:*)` allow/deny rules |
-| 9.7 | Тест: Claude Code видит только нужные MCP | Оба проекта | `claude mcp list` в каждом |
-
----
-
-## Фаза 10: Мониторинг и оптимизация (частично ✅)
-
-| # | Задача | Как | Когда | Статус |
-|---|--------|-----|-------|--------|
-| 10.1 | Логирование skill-router | Hook пишет в `data/skill-router.log` | С Фазы 1 | **DONE** |
-| 10.2 | Статистика: какие bundles срабатывают чаще | Парсинг лога | Через 2 недели | Pending |
-| 10.3 | Анализ: false positives (лишние скиллы) | Ручная проверка | Через 2 недели | Pending |
-| 10.4 | Анализ: false negatives (нужный скилл не загружен) | User feedback | Итеративно | Pending |
-| 10.5 | Оптимизация keywords | Добавить/убрать по статистике | Итеративно | Pending |
-| 10.6 | Оптимизация bundles | Разделить/объединить | Итеративно | Pending |
-| 10.7 | Token budget report | Подсчёт tokens per session | Ежемесячно | Pending |
-
----
-
-## Сводка по фазам
-
-| Фаза | Что | Проект | Усилия | Приоритет | Статус |
-|------|-----|--------|--------|-----------|--------|
-| **0** | Проектирование | Оба | 1-2 часа | P0 | **DONE** |
-| **1** | Universal Router Engine | Shared | 3-4 часа | P0 | **DONE** (skill-router.py) |
-| **2** | 1C Meta-Skill | 1C-Enterprise | 30 мин | P0 | Pending |
-| **3** | 1C Top-3 Skills (query, skd, forms) | 1C-Enterprise | 4-6 часов | P1 | Pending |
-| **4** | 1C Priority-2 Skills (5 шт) | 1C-Enterprise | 5-7 часов | P1 | Pending |
-| **5** | 1C Priority-3 Skills (5 шт) | 1C-Enterprise | 4-5 часов | P2 | Pending |
-| **6** | 1C Integration & Testing | 1C-Enterprise | 2-3 часа | P1 | Pending |
-| **7** | PDF Config & Testing | PDF Framework | 2-3 часа | P1 | **DONE** (16 bundles, 8 tests) |
-| **8** | PDF Domain Skills (9 шт) | PDF Framework | 2-3 часа | P1 | **DONE** (9 SKILL.md + router) |
-| **9** | MCP Per-Project | Оба | 2-3 часа | P1 | **DONE** (PDF .mcp.json) |
-| **10** | Мониторинг | Оба | Итеративно | P2 | **10.1 DONE** (logging) |
-
-## Порядок выполнения
-
+**Архитектура Level 1→2:**
 ```
-Фаза 0 → Фаза 1 → ┬── Фаза 2 → Фаза 3 → Фаза 4 → Фаза 6
-                    │                                    ↓
-                    ├── Фаза 7 (PDF config)         Фаза 5
-                    │                                    ↓
-                    └── Фаза 9 (MCP, параллельно)   Фаза 10
+prompt → [Domain Classifier] → "langchain"
+                                    ↓
+              [LangChain Sub-Router] → langchain-core, langgraph-core
 ```
 
-**Минимальный viable набор:** Фазы 0+1+2+3+6+7
+---
 
-## Пример конфига для 1С (skill-router-config.json)
+### Фаза 17: OBSERVE — Production observability
 
-```json
-{
-  "bundles": {
-    "query": {
-      "keywords": ["запрос", "query", "выбрать", "соединение", "where", "группировка"],
-      "skills": ["1c-query-language", "1c-temp-tables"],
-      "optional": ["1c-virtual-tables"]
-    },
-    "report": {
-      "keywords": ["отчёт", "report", "скд", "компоновка", "макет отчёта"],
-      "skills": ["1c-skd", "1c-query-language"],
-      "optional": ["1c-report-layouts"]
-    },
-    "document": {
-      "keywords": ["документ", "проведение", "движения", "document"],
-      "skills": ["1c-document-posting", "1c-registers"],
-      "optional": ["1c-forms"]
-    },
-    "catalog": {
-      "keywords": ["справочник", "catalog", "иерархия", "реквизит справочника"],
-      "skills": ["1c-catalogs"],
-      "optional": ["1c-forms"]
-    },
-    "register": {
-      "keywords": ["регистр", "накопления", "сведений", "бухгалтерии"],
-      "skills": ["1c-registers"],
-      "optional": ["1c-virtual-tables"]
-    },
-    "form": {
-      "keywords": ["форма", "команда формы", "реквизит формы", "обработчик"],
-      "skills": ["1c-forms"],
-      "optional": []
-    },
-    "exchange": {
-      "keywords": ["обмен", "синхронизация", "xdto", "план обмена"],
-      "skills": ["1c-exchange"],
-      "optional": []
-    },
-    "http": {
-      "keywords": ["http", "rest", "odata", "web-сервис", "api"],
-      "skills": ["1c-http-services"],
-      "optional": []
-    },
-    "roles": {
-      "keywords": ["роль", "право", "rls", "доступ"],
-      "skills": ["1c-roles-rls"],
-      "optional": []
-    }
-  }
-}
+**Приоритет:** P2 — мониторинг и алерты
+**Цель:** Real-time visibility в работу роутера
+
+| # | Задача | Артефакт | Детали |
+|---|--------|----------|--------|
+| 17.1 | SQLite metrics store | src/pdf_framework/observability/router_metrics_db.py | Структурированные метрики вместо JSONL. Таблицы: events, recommendations, activations, feedback |
+| 17.2 | Streamlit dashboard page | src/ui/pages/skill_router_dashboard.py | Real-time: activation rate, bundle heatmap, accuracy trend, confusion matrix |
+| 17.3 | OpenTelemetry spans | skill-router.py | Трейсинг: время каждого layer (keyword, fuzzy, embed), общее время роутинга |
+| 17.4 | Alerting | scripts/router-alert.py | Если activation rate падает ниже 50% за последние 24ч — уведомление |
+| 17.5 | A/B testing framework | skill-router.py | Флаг `"experiment": "embed_v1"` в конфиге. 50% промптов → старый алгоритм, 50% → новый. Сравнение activation rate |
+
+---
+
+## Сводка по фазам v2
+
+| Фаза | Что | Приоритет | Зависимости | Ключевая метрика |
+|------|-----|-----------|-------------|------------------|
+| **11** | FIX activation rate | **P0** | — | 8.8% → 70%+ |
+| **12** | Ground truth + metrics | **P0** | — | precision/recall/F1 |
+| **13** | Prune bundles 42→15-20 | P1 | 12 | precision +15-20% |
+| **14** | Embedding scoring layer | P1 | 12 | recall +15-25% |
+| **15** | Auto-learn from logs | P2 | 12, 14 | Self-improving accuracy |
+| **16** | Hierarchical routing | P2 | 13 | Support 50-100 skills |
+| **17** | Observability | P2 | 12 | Real-time monitoring |
+
+### Порядок выполнения
+
+```
+Фаза 11 (FIX) ──→ Фаза 12 (MEASURE) ──┬──→ Фаза 13 (PRUNE) ──→ Фаза 16 (SCALE)
+                                         │
+                                         ├──→ Фаза 14 (EMBED) ──→ Фаза 15 (LEARN)
+                                         │
+                                         └──→ Фаза 17 (OBSERVE)
 ```
 
-## Актуальный конфиг PDF Framework
+**Минимальный viable набор:** Фазы 11 + 12 + 13
 
-См. `.claude/skills/skill-router-config.json` — **v2, 16 бандлов, 18 скиллов**.
+---
 
-7 базовых + 9 доменных бандлов. Логирование в `data/skill-router.log`.
+## Источники исследования
+
+### Бенчмарки и статьи
+- [GQR-Bench: Guarded Query Routing](https://arxiv.org/html/2505.14524v1) — TF-IDF + WideMLP = 88%, embedding similarity = 58%
+- [RouteLLM (ICLR 2025)](https://arxiv.org/abs/2406.18665) — Matrix factorization router, 85%+ cost reduction
+- [RouterXBench: Fair Evaluation](https://arxiv.org/html/2602.11877v1) — 16 routing algorithms compared
+- [Agent Skills for LLMs](https://arxiv.org/html/2602.12430) — Skill selection patterns
+
+### GitHub-проекты
+- [aurelio-labs/semantic-router](https://github.com/aurelio-labs/semantic-router) (~3,200 ★) — Embedding-based route matching
+- [lm-sys/RouteLLM](https://github.com/lm-sys/RouteLLM) (~4,500 ★) — Model routing via preference data
+- [ulab-uiuc/LLMRouter](https://github.com/ulab-uiuc/LLMRouter) (~1,000 ★) — 16+ algorithms unified
+- [NVIDIA-AI-Blueprints/llm-router](https://github.com/NVIDIA-AI-Blueprints/llm-router) — Hierarchical intent routing
+- [Not-Diamond/awesome-ai-model-routing](https://github.com/Not-Diamond/awesome-ai-model-routing) (158 ★)
+
+### Claude Code hooks community
+- [Scott Spence: Skill Activation Rate Research](https://scottspence.com/posts/how-to-make-claude-code-skills-activate-reliably) — stdout = 100%, JSON systemMessage = 55%
+- [claude-code-hooks-mastery](https://github.com/disler/claude-code-hooks-mastery) — All 13 hook events
+- [awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) — Community collection
+- [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks) — Official docs
+
+### Паттерны роутинга
+- [Arize AI: Best Practices for Agent Routing](https://arize.com/blog/best-practices-for-building-an-ai-agent-router/)
+- [Patronus AI: AI Agent Routing](https://www.patronus.ai/ai-agent-development/ai-agent-routing)
+- [Short Primer on LLM Routing](https://kleiber.me/blog/2025/08/10/llm-router-primer/)
+- [Intent Classification in <1ms with Embeddings](https://medium.com/@durgeshrathod.777/intent-classification-in-1ms-how-we-built-a-lightning-fast-classifier-with-embeddings-db76bfb6d964)
+
+---
+
+## Архив: Фазы 0-10 (DONE)
+
+<details>
+<summary>Фазы 0-10 (оригинальный roadmap, выполнены)</summary>
+
+### Фаза 0: Подготовка и проектирование ✅
+- Спроектирована JSON-схема конфига роутера
+- Определён формат systemMessage
+- Стратегия scoring: keyword match + fuzzy
+- Fallback: pass-through при отсутствии совпадений
+- Приоритет при пересечении: top-N по score
+
+### Фаза 1: Universal Skill Router Engine ✅
+- `skill-router.py` — BaseHook, keyword + fuzzy matching
+- Загрузка конфига из skill-router-config.json
+- Multi-bundle detection, optional skills, session dedup
+- Affinity injection
+
+### Фазы 2-6: 1C-Enterprise ⏳ Pending
+- Meta-skill, domain skills, config, testing
+
+### Фаза 7: PDF Framework Config ✅
+- 16 бандлов, 8 тестов, skill-router-config.json v3
+
+### Фаза 8: PDF Domain Skills ✅
+- 9 доменных скиллов: search-pipeline-debug, indexing-pipeline, graph-operations, evaluation-benchmark, embedding-models, qdrant-operations, agent-orchestration, prompt-engineering, deployment
+
+### Фаза 9: MCP Per-Project ✅
+- .mcp.json для PDF Framework
+
+### Фаза 10: Мониторинг ✅ (частично)
+- 10.1 DONE: logging в data/skill-router.log
+- 10.2-10.7: pending → заменены Фазой 17
+
+</details>
