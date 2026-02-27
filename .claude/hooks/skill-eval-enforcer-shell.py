@@ -54,8 +54,20 @@ def main():
     if prompt_stripped.startswith("/"):
         sys.exit(0)
 
-    # Plain text output (NOT JSON systemMessage!)
-    # This is the key: plain text stdout = 100% activation rate
+    # --- Phase 11.2: Check if skill-router already output specific recommendations ---
+    # If router fired with concrete Skill() calls, skip generic enforcement (reduces noise)
+    try:
+        sys.path.insert(0, _HOOK_DIR)
+        from shared.session_state import SessionState
+        if SessionState.was_router_fired_recently(seconds=10):
+            # Router already gave specific "ACTIVATE SKILLS: Skill('X')" instruction
+            # No need for generic "MANDATORY SKILL EVALUATION" on top of it
+            sys.exit(0)
+    except Exception:
+        pass  # Fallback: output generic instruction
+
+    # Generic instruction (ONLY when skill-router didn't match any bundles)
+    # Plain text stdout = 100% injection rate (vs 55% for JSON systemMessage)
     print(
         "INSTRUCTION: MANDATORY SKILL EVALUATION\n"
         "Before responding to this prompt, you MUST evaluate skill relevance:\n"
