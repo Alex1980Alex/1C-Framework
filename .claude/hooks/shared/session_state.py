@@ -226,6 +226,28 @@ class SessionState:
         state["pending_learn"] = None
         cls._save_state(state)
 
+    # ===== ROUTER FIRED MARKER (Phase 11: enforcer coordination) =====
+
+    @classmethod
+    def set_router_fired(cls) -> None:
+        """Mark that skill-router output recommendations this prompt."""
+        state = cls._load_state()
+        state["router_fired_at"] = datetime.now().isoformat()
+        cls._save_state(state)
+
+    @classmethod
+    def was_router_fired_recently(cls, seconds: int = 10) -> bool:
+        """Check if skill-router fired within last N seconds (for enforcer dedup)."""
+        state = cls._load_state()
+        fired_at = state.get("router_fired_at")
+        if not fired_at:
+            return False
+        try:
+            fired = datetime.fromisoformat(fired_at)
+            return (datetime.now() - fired).total_seconds() < seconds
+        except (ValueError, TypeError):
+            return False
+
     # ===== PROMPT ID METHODS (Accuracy Tracking) =====
 
     @classmethod
