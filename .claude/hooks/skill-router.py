@@ -362,13 +362,41 @@ class SkillRouter(BaseHook):
                 pass
             _log_accuracy_recommend(prompt_id, all_recommended, prompt_lower[:120])
 
-        # --- Build systemMessage ---
-        # Separate domain bundles from workflow bundles for display
-        domain_bundle_names = [
-            n for n in matched_bundle_names
-            if "workflow" not in bundles.get(n, {})
-        ]
+        # --- Phase 11: Intent-aware thresholds ---
+        intent = self._classify_intent(prompt)
+        if intent == "system":
+            return None  # Skip slash commands, git, etc.
 
+        # Informational prompts need higher confidence
+        effective_min_score = min_score
+        if intent == "informational":
+            effective_min_score = max(min_score, 3)
+
+        # Re-filter with intent-aware threshold
+        if effective_min_score > min_score:
+            matched = {
+                name: score for name, score in matched.items()
+                if score >= effective_min_score
+            }
+            if not matched:
+                return None
+            ranked = sorted(matched.items(), key=lambda x: x[1], reverse=True)
+            top_bundles = ranked[:max_bundles]
+            # Rebuild skill lists
+            required_skills = []
+            optional_skills = []
+            matched_bundle_names = []
+            for name, _s in top_bundles:
+                matched_bundle_names.append(name)
+                bundle = bundles[name]
+                for skill in bundle.get("skills", []):
+                    if skill not in required_skills:
+                        required_skills.append(skill)
+                for skill in bundle.get("optional", []):
+                    if skill not in optional_skills and skill not in required_skills:
+                        optional_skills.append(skill)
+
+        # --- Build stdout output (Phase 11: stdout instead of systemMessage) ---
         parts = [
             f"[SKILL-ROUTER] Bundles: {', '.join(matched_bundle_names)}",
         ]
@@ -392,7 +420,35 @@ class SkillRouter(BaseHook):
         if detected_workflow:
             parts.append(self._workflow_instruction(detected_workflow))
 
-        return HookOutput().system_message("\n".join(parts))
+        # --- Phase 11.3: Concrete enforcement with specific Skill() calls ---
+        if required_skills:
+            skill_calls = ", ".join(f"Skill('{s}')" for s in required_skills)
+            # Confidence level based on top score
+            top_score = top_bundles[0][1] if top_bundles else 0
+            if top_score >= 4:
+                confidence = "HIGH"
+            elif top_score >= 3:
+                confidence = "MEDIUM"
+            else:
+                confidence = "LOW"
+
+            parts.append(
+                f"\nACTIVATE SKILLS [{confidence}]: {skill_calls}"
+                f"\nYou MUST call {skill_calls} BEFORE writing any code or response."
+                f"\nDo NOT skip — these skills contain critical project-specific knowledge."
+            )
+
+        # Output via stdout (100% injection rate vs 55% for systemMessage)
+        print("\n".join(parts))
+
+        # Mark that router fired (for enforcer dedup)
+        try:
+            from shared.session_state import SessionState
+            SessionState.set_router_fired()
+        except Exception:
+            pass
+
+        return None  # stdout already delivered, no systemMessage needed
 
 
     # --- Workflow instruction templates ---
