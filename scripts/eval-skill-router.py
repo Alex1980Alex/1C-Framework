@@ -28,8 +28,8 @@ def run_router(prompt):
             [str(PYTHON), str(ROUTER_SCRIPT)],
             input=input_data, capture_output=True, text=True, timeout=10,
             cwd=str(PROJECT_DIR),
-            env={**os.environ, "SESSION_STATE_PATH": str(PROJECT_DIR / "data" / "eval-temp")},
-            encoding="utf-8",
+            env={**os.environ, "SESSION_STATE_PATH": str(PROJECT_DIR / "data" / "eval-temp"), "PYTHONIOENCODING": "utf-8"},
+            encoding="utf-8", errors="replace",
         )
         stdout = result.stdout.strip()
         if not stdout:
