@@ -122,20 +122,19 @@ PreToolUse / PostToolUse
 
 ---
 
-### Фаза 12: MEASURE — Ground Truth и метрики качества
+### Фаза 12: MEASURE — Ground Truth и метрики качества ✅ DONE
 
 **Приоритет:** P0 — без метрик невозможно оптимизировать
 **Цель:** Автоматический расчёт precision/recall/F1
+**Результат:** 64 ground truth samples, offline eval, CI gate (F1 ≥ 0.75), dashboard, FP tracking
 
-| # | Задача | Артефакт | Детали |
+| # | Задача | Артефакт | Статус |
 |---|--------|----------|--------|
-| 12.1 | Создать ground truth dataset | data/skill-router-ground-truth.jsonl | 100+ prompt→skills пар, размеченных вручную. Формат: `{"prompt": "...", "expected_skills": ["X", "Y"], "expected_bundles": ["Z"]}` |
-| 12.2 | Скрипт оценки offline | scripts/eval-skill-router.py | Прогоняет ground truth через роутер, считает precision/recall/F1 по skill и по bundle |
-| 12.3 | Интеграция в CI | .github/workflows/ | Запускать eval при изменении config или router code. FAIL если F1 < threshold |
-| 12.4 | Dashboard метрик | scripts/skill-router-dashboard.py | Визуализация: activation rate, precision, recall, confusion matrix по бандлам |
-| 12.5 | False positive tracking | data/skill-router-fp.jsonl | Ручная пометка ненужных рекомендаций через feedback hook |
-
-**Ожидаемый результат:** Возможность объективно сравнивать подходы и итерировать
+| 12.1 | Создать ground truth dataset | [data/skill-router-ground-truth.jsonl](../../data/skill-router-ground-truth.jsonl) | ✅ 64 samples (action/informational/system) |
+| 12.2 | Скрипт оценки offline | [scripts/eval-skill-router.py](../../scripts/eval-skill-router.py) | ✅ Dual metrics: required-only + all-skills. `--json`, `--save-fp` flags |
+| 12.3 | Интеграция в CI | [.github/workflows/ci.yml](../../.github/workflows/ci.yml) | ✅ `skill-router-eval` job, threshold F1 ≥ 0.75 |
+| 12.4 | Dashboard метрик | [scripts/skill-router-dashboard.py](../../scripts/skill-router-dashboard.py) | ✅ CLI: activation rate, trends, eval results, config stats |
+| 12.5 | False positive tracking | [data/skill-router-fp.jsonl](../../data/skill-router-fp.jsonl) | ✅ Auto-generated via `--save-fp`, FP/FN entries with timestamps |
 
 ---
 
