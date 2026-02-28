@@ -359,7 +359,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── docs-change-enforcer.py    (Stop: код изменён без обновления доков)
 │   └── ralph_wiggum_stop.py       (Stop: контроль Ralph)
 ├── skills/                        (47 скиллов)
-│   ├── skill-router-config.json   (25 bundles, v5 → keyword routing)
+│   ├── skill-router-config.json   (25 bundles, v6 → keyword + fuzzy + TF-IDF routing)
 │   ├── 1c-doc-research/           (+ cache/ — 8 категорий)
 │   ├── tech-research/             (+ cache/ — 7 категорий)
 │   ├── architecture-research/     (+ cache/ + adr/)
