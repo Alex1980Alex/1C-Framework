@@ -21,6 +21,8 @@ if not PYTHON.exists():
     PYTHON = Path(sys.executable)
 
 _SKILL_RE = re.compile(r"Skill\('([^']+)'\)")
+_OPTIONAL_RE = re.compile(r"Опционально \(по контексту\): (.+)")
+_RECOMMENDED_RE = re.compile(r"Рекомендованные скиллы: (.+)")
 
 def run_router(prompt):
     input_data = json.dumps({"prompt": prompt}, ensure_ascii=False)
@@ -40,9 +42,24 @@ def run_router(prompt):
             if line.startswith("[SKILL-ROUTER] Bundles:"):
                 raw = line.replace("[SKILL-ROUTER] Bundles:", "").strip()
                 bundles = [b.strip() for b in raw.split(",") if b.strip()]
+            # Capture required skills from Skill('X') calls
             found = _SKILL_RE.findall(line)
             if found:
                 skills.extend(found)
+            # Capture recommended skills line
+            m = _RECOMMENDED_RE.search(line)
+            if m:
+                for s in m.group(1).split(","):
+                    s = s.strip()
+                    if s and s not in skills:
+                        skills.append(s)
+            # Capture optional skills line
+            m = _OPTIONAL_RE.search(line)
+            if m:
+                for s in m.group(1).split(","):
+                    s = s.strip()
+                    if s and s not in skills:
+                        skills.append(s)
         return {"bundles": bundles, "skills": skills}
     except Exception as e:
         return {"bundles": [], "skills": [], "error": str(e)}
