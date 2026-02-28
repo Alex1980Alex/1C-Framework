@@ -436,18 +436,59 @@ def auto_validate_git_tasks() -> int:
     return completed
 
 
+def auto_validate_code_verify_tasks(max_age_hours: float = 1.0) -> int:
+    """Auto-complete stale code-verify-reminder tasks.
+
+    Tasks older than max_age_hours are considered stale (from previous sessions).
+    Prevents cross-session zombie tasks from blocking stop indefinitely.
+
+    Returns:
+        Number of tasks auto-completed
+    """
+    data = _read_todos()
+    todos = data.get("todos", [])
+    completed = 0
+    now = datetime.now()
+    cutoff = now - timedelta(hours=max_age_hours)
+
+    for t in todos:
+        if (t.get("status") == "pending"
+                and t.get("createdBy") == "code-verify-reminder"):
+            created_at_str = t.get("createdAt", "")
+            if not created_at_str:
+                continue
+            try:
+                created_at = datetime.fromisoformat(created_at_str)
+                if created_at < cutoff:
+                    t["status"] = "completed"
+                    t["completedAt"] = now.isoformat()
+                    age_h = (now - created_at).total_seconds() / 3600
+                    t["note"] = f"Session cleanup: stale task ({age_h:.1f}h old)"
+                    completed += 1
+            except (ValueError, TypeError):
+                continue
+
+    if completed > 0:
+        data["todos"] = todos
+        _write_todos(data)
+    return completed
+
+
 def session_start_cleanup() -> Dict[str, Any]:
     """Perform all cleanup and validation at session start.
 
     1. cleanup_old_completed() — remove stale tasks (>24h)
     2. auto_validate_git_tasks() — sync git tasks with reality
+    3. auto_validate_code_verify_tasks() — clean stale code-verify tasks
 
     Returns:
         Dict with cleanup results
     """
     removed = cleanup_old_completed(max_age_hours=24, max_count=50)
     validated = auto_validate_git_tasks()
+    cv_cleaned = auto_validate_code_verify_tasks()
     return {
         "removed": removed,
         "git_validated": validated,
+        "code_verify_cleaned": cv_cleaned,
     }
