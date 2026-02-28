@@ -431,4 +431,6 @@ __all__ = [
     "SessionState",
     "set_prompt_id", "get_prompt_id",
     "record_recommendation", "get_already_recommended",
+    "record_decomposition", "get_task_protocol",
+    "reset_task_protocol", "set_task_classified",
 ]
