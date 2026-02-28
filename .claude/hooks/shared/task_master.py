@@ -440,11 +440,15 @@ def auto_validate_git_tasks() -> int:
     return completed
 
 
-def auto_validate_code_verify_tasks(max_age_hours: float = 1.0) -> int:
+def auto_validate_code_verify_tasks(
+    max_age_hours: float = 1.0,
+    current_session_id: str = "",
+) -> int:
     """Auto-complete stale code-verify-reminder tasks.
 
-    Tasks older than max_age_hours are considered stale (from previous sessions).
-    Prevents cross-session zombie tasks from blocking stop indefinitely.
+    Dual-strategy cleanup:
+      1. Session-based (deterministic): task.sessionId != current_session_id
+      2. Age-based (fallback): tasks without sessionId older than max_age_hours
 
     Returns:
         Number of tasks auto-completed
@@ -456,8 +460,22 @@ def auto_validate_code_verify_tasks(max_age_hours: float = 1.0) -> int:
     cutoff = now - timedelta(hours=max_age_hours)
 
     for t in todos:
-        if (t.get("status") == "pending"
-                and t.get("createdBy") == "code-verify-reminder"):
+        if (t.get("status") != "pending"
+                or t.get("createdBy") != "code-verify-reminder"):
+            continue
+
+        task_session = t.get("sessionId", "")
+
+        # Strategy 1: session mismatch → deterministic cleanup
+        if current_session_id and task_session and task_session != current_session_id:
+            t["status"] = "completed"
+            t["completedAt"] = now.isoformat()
+            t["note"] = f"Session cleanup: different session ({task_session[:8]}… vs {current_session_id[:8]}…)"
+            completed += 1
+            continue
+
+        # Strategy 2: age-based fallback (tasks without sessionId)
+        if not task_session:
             created_at_str = t.get("createdAt", "")
             if not created_at_str:
                 continue
@@ -467,7 +485,7 @@ def auto_validate_code_verify_tasks(max_age_hours: float = 1.0) -> int:
                     t["status"] = "completed"
                     t["completedAt"] = now.isoformat()
                     age_h = (now - created_at).total_seconds() / 3600
-                    t["note"] = f"Session cleanup: stale task ({age_h:.1f}h old)"
+                    t["note"] = f"Session cleanup: stale task ({age_h:.1f}h old, no sessionId)"
                     completed += 1
             except (ValueError, TypeError):
                 continue
