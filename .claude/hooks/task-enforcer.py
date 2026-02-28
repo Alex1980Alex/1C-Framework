@@ -160,10 +160,11 @@ def sync_stats(data: dict) -> bool:
     return False
 
 
-def get_pending_mandatory_tasks() -> list:
+def get_pending_mandatory_tasks(current_session_id: str = "") -> list:
     """Get pending tasks from mandatory hooks.
 
     v2.1: Runs sync_git_tasks_with_status() and sync_stats() before checking.
+    v2.3: Session-based cleanup via current_session_id.
     Saves file if any changes were made.
     """
     if not TODOS_FILE.exists():
@@ -175,8 +176,8 @@ def get_pending_mandatory_tasks() -> list:
 
         needs_save = False
 
-        # v2.2: Auto-clean stale code-verify tasks from previous sessions
-        cv_cleaned = sync_stale_code_verify_tasks(data)
+        # v2.3: Auto-clean stale code-verify tasks (session-based + age fallback)
+        cv_cleaned = sync_stale_code_verify_tasks(data, current_session_id=current_session_id)
         if cv_cleaned > 0:
             needs_save = True
 
