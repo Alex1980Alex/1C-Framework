@@ -287,6 +287,20 @@ class SessionState:
         state["task_protocol"] = cls._default_task_protocol()
         cls._save_state(state)
 
+    @classmethod
+    def record_skill_checked(cls) -> None:
+        """Called from task-protocol-observer on Skill() call.
+
+        Sets phase to 'skill_checked'. This is the only phase that
+        allows Write/Edit through the enforcer gate.
+        """
+        state = cls._load_state()
+        protocol = state.get("task_protocol", cls._default_task_protocol())
+        protocol["phase"] = "skill_checked"
+        protocol["skill_checked_at"] = datetime.now().isoformat()
+        state["task_protocol"] = protocol
+        cls._save_state(state)
+
     # ===== ROUTER FIRED MARKER (Phase 11: enforcer coordination) =====
 
     @classmethod
