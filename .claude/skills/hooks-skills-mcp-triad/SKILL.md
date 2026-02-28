@@ -141,7 +141,7 @@ Config-driven маршрутизация промптов к скиллам че
   → skill-router.py (UserPromptSubmit)
     → _detect_skill_activations(): парсит <command-name> теги из предыдущего turn
       → если найден → SessionState.add_activated_skill() + log activate (source=prompt-detection)
-    → keyword matching по 38 bundles
+    → keyword matching по 25 bundles (config v5)
       → генерирует prompt_id, пишет в SessionState.set_prompt_id() + skill-accuracy.jsonl (recommend)
         → systemMessage: "загрузи skill X, optional Y"
           → Claude загружает через Skill tool
