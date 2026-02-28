@@ -387,4 +387,14 @@ prompt → [Domain Classifier] → "langchain"
 - 13.6 DONE: keyword overlap analysis — 2 minor overlaps
 - 13.7 DONE: hierarchical routing metadata — 6 domains в config
 
+### Фаза 14: EMBED ✅
+- 14.1 DONE: ADR — TF-IDF char_wb n-grams (sklearn build, numpy runtime)
+- 14.2 DONE: Pre-computed centroids in data/route-tfidf/ (841 texts, 9317 vocab, 25 bundles)
+- 14.3 DONE: scripts/build-route-embeddings.py — offline artifact generation
+- 14.4 DONE: ~280 utterances (EN+RU) added to config v6
+- 14.5 DONE: Layer C in skill-router.py — cosine similarity, +1 bonus max, top-K=2
+- 14.6 DONE: shared/tfidf_scorer.py — pure numpy, lazy-load, ~75ms
+- 14.7 DONE: scripts/benchmark-router.py — ablation A+B vs A+B+C, F1 delta +0.5%
+- 14.8 DONE: Graceful degradation — SKILL_ROUTER_NO_TFIDF env var, missing artifacts skip
+
 </details>
