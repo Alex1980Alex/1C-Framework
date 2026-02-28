@@ -341,7 +341,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   │   ├── task_master.py         (задачи: add, complete, pending, cooldown)
 │   │   ├── tfidf_scorer.py        (TF-IDF scoring: pure numpy, utterance-based corpus, Layer C)
 │   │   └── hook_lock.py           (межхуковая синхронизация)
-│   ├── skill-router.py            (Submit: keyword → skill bundles)
+│   ├── skill-router.py            (Submit: Layer A+B+C → skill bundles)
 │   ├── research-task-detector.py  (Submit: ВОПРОСЫ → skill routing)
 │   ├── decision-to-triad.py      (Submit: РЕШЕНИЯ → triad-factory)
 │   ├── ralph_activator.py         (Submit: активация Ralph)
