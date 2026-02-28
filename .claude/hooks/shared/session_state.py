@@ -226,6 +226,66 @@ class SessionState:
         state["pending_learn"] = None
         cls._save_state(state)
 
+    # ===== TASK PROTOCOL STATE (Mandatory Execution Algorithm) =====
+
+    @classmethod
+    def _default_task_protocol(cls) -> Dict[str, Any]:
+        """Default task protocol state."""
+        return {
+            "phase": "idle",        # idle | classified | decomposed
+            "complexity": None,     # trivial | medium | complex
+            "subtask_count": 0,
+            "decomposed_at": None,
+        }
+
+    @classmethod
+    def record_decomposition(cls) -> None:
+        """Called from task-protocol-observer on TaskCreate.
+
+        Sets phase to 'decomposed' and increments subtask_count.
+        """
+        state = cls._load_state()
+        protocol = state.get("task_protocol", cls._default_task_protocol())
+        protocol["phase"] = "decomposed"
+        protocol["subtask_count"] = protocol.get("subtask_count", 0) + 1
+        protocol["decomposed_at"] = datetime.now().isoformat()
+        state["task_protocol"] = protocol
+        cls._save_state(state)
+
+    @classmethod
+    def set_task_classified(cls, complexity: str) -> None:
+        """Called from UserPromptSubmit hook for auto-classification.
+
+        Args:
+            complexity: 'trivial', 'medium', or 'complex'
+        """
+        state = cls._load_state()
+        protocol = state.get("task_protocol", cls._default_task_protocol())
+        # Don't downgrade from 'decomposed'
+        if protocol.get("phase") != "decomposed":
+            protocol["phase"] = "classified"
+        protocol["complexity"] = complexity
+        state["task_protocol"] = protocol
+        cls._save_state(state)
+
+    @classmethod
+    def get_task_protocol(cls) -> Dict[str, Any]:
+        """Get current task protocol state.
+
+        Returns:
+            Dict with phase, complexity, subtask_count, decomposed_at.
+            Always returns valid dict even if not initialized.
+        """
+        state = cls._load_state()
+        return state.get("task_protocol", cls._default_task_protocol())
+
+    @classmethod
+    def reset_task_protocol(cls) -> None:
+        """Reset task protocol on new prompt (UserPromptSubmit)."""
+        state = cls._load_state()
+        state["task_protocol"] = cls._default_task_protocol()
+        cls._save_state(state)
+
     # ===== ROUTER FIRED MARKER (Phase 11: enforcer coordination) =====
 
     @classmethod
