@@ -166,6 +166,14 @@ def main():
             "total_fp": sum(m["fp"] for m in skill_all),
             "total_fn": sum(m["fn"] for m in skill_all),
         },
+        "skill_required_metrics": {
+            "precision": round(avg(skill_req_all, "precision"), 4),
+            "recall": round(avg(skill_req_all, "recall"), 4),
+            "f1": round(avg(skill_req_all, "f1"), 4),
+            "total_tp": sum(m["tp"] for m in skill_req_all),
+            "total_fp": sum(m["fp"] for m in skill_req_all),
+            "total_fn": sum(m["fn"] for m in skill_req_all),
+        },
         "bundle_metrics": {
             "precision": round(avg(bundle_all, "precision"), 4),
             "recall": round(avg(bundle_all, "recall"), 4),
