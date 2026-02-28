@@ -283,7 +283,7 @@ prompt → [Domain Classifier] → "langchain"
 | **11** | FIX activation rate | **P0** | — | 8.8% → 100% (stdout) | ✅ DONE |
 | **12** | Ground truth + metrics | **P0** | — | 64 samples, F1=0.81 | ✅ DONE |
 | **13** | Prune bundles 46→25 | P1 | 12 | Bundle F1 0.68→0.89 | ✅ DONE |
-| **14** | Embedding scoring layer | P1 | 12 | recall +15-25% | ⏳ NEXT |
+| **14** | TF-IDF semantic scoring | P1 | 12 | F1 +0.5% (booster) | ✅ DONE |
 | **15** | Auto-learn from logs | P2 | 12, 14 | Self-improving accuracy | — |
 | **16** | Hierarchical routing | P2 | 13 | Support 50-100 skills | ⏳ Partial (domains defined) |
 | **17** | Observability | P2 | 12 | Real-time monitoring | — |
