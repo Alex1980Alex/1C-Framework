@@ -98,6 +98,7 @@ src/
 ```
 
 Evaluation: `scripts/eval-hooks.py` + `tests/eval/hook_prompts.json` (40 тестов, 16 скиллов).
+Skill Router Eval: `scripts/eval-skill-router.py` (64 ground truth, F1/precision/recall) + `scripts/skill-router-dashboard.py` (CLI dashboard) + CI gate в `.github/workflows/ci.yml`.
 Dashboard: `scripts/hook-dashboard.py` (CLI) + `scripts/skill-enforcement-dashboard.py` (enforcement) + `src/ui/pages/hook_dashboard.py` (Streamlit).
 Monitoring: `src/pdf_framework/observability/hook_metrics_db.py` (SQLite) + `tracer.py` (OTLP) + `/metrics/html` (unified dashboard).
 Migration: `scripts/skill-migration-advisor.py` (pattern coverage analysis).
