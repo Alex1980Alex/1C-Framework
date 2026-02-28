@@ -293,9 +293,9 @@ prompt → [Domain Classifier] → "langchain"
 ```
 Фаза 11 (FIX) ✅ ──→ Фаза 12 (MEASURE) ✅ ──┬──→ Фаза 13 (PRUNE) ✅ ──→ Фаза 16 (SCALE) ⏳
                                                │
-                                               ├──→ Фаза 14 (EMBED) ← NEXT
+                                               ├──→ Фаза 14 (EMBED) ✅
                                                │        ↓
-                                               │    Фаза 15 (LEARN)
+                                               │    Фаза 15 (LEARN) ← NEXT
                                                │
                                                └──→ Фаза 17 (OBSERVE)
 ```
