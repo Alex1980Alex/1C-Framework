@@ -208,7 +208,13 @@ def main():
         print("=" * 60)
         sm = report["skill_metrics"]
         bm = report["bundle_metrics"]
-        print(f"\nSkill Metrics (avg over {len(samples)} samples):")
+        srm = report["skill_required_metrics"]
+        print(f"\nSkill Metrics — Required Only (avg over {len(samples)} samples):")
+        print(f"  Precision: {srm['precision']:.4f}")
+        print(f"  Recall:    {srm['recall']:.4f}")
+        print(f"  F1:        {srm['f1']:.4f}")
+        print(f"  TP={srm['total_tp']} FP={srm['total_fp']} FN={srm['total_fn']}")
+        print(f"\nSkill Metrics — All (required + optional + affinity):")
         print(f"  Precision: {sm['precision']:.4f}")
         print(f"  Recall:    {sm['recall']:.4f}")
         print(f"  F1:        {sm['f1']:.4f}")
