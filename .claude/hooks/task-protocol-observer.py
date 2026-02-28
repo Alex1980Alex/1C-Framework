@@ -2,13 +2,16 @@
 """
 Hook: task-protocol-observer
 Event: PostToolUse
-Matcher: TaskCreate
-Purpose: Record decomposition fact in session state when TaskCreate is called.
+Matcher: TaskCreate|Skill
+Purpose: Track task protocol phases via tool usage.
 Timeout: 3s
 
 Part of Task Protocol enforcement system.
-When Claude creates subtasks via TaskCreate, this observer records the fact
-in SessionState so that task-protocol-enforcer can allow Write/Edit.
+Observes two events:
+  - TaskCreate → records decomposition (phase=decomposed)
+  - Skill      → records skill check (phase=skill_checked)
+
+skill_checked is the ONLY phase that allows Write/Edit through the enforcer gate.
 
 Silent observer: returns None (no output), never blocks.
 """
@@ -24,16 +27,21 @@ from typing import Optional  # noqa: E402
 
 
 class TaskProtocolObserver(BaseHook):
-    """PostToolUse:TaskCreate → records decomposition in session state."""
+    """PostToolUse observer for TaskCreate and Skill events."""
 
     def execute(self, inp: HookInput) -> Optional[HookOutput]:
-        # Only act on TaskCreate
-        if inp.tool_name != "TaskCreate":
-            return None
-
         try:
             from shared.session_state import SessionState
-            SessionState.record_decomposition()
+
+            if inp.tool_name == "TaskCreate":
+                SessionState.record_decomposition()
+
+            elif inp.tool_name == "Skill":
+                SessionState.record_skill_checked()
+
+            else:
+                return None
+
         except Exception:
             pass  # Graceful degradation: never fail
 
