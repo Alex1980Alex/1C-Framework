@@ -774,10 +774,12 @@
         "github action claude"
       ],
       "weighted_keywords": {
+        "opentelemetry": 3,
         "opentelemetry claude": 4,
         "monitoring claude": 3,
         "github actions": 3,
-        "github actions claude": 4
+        "github actions claude": 4,
+        "monitoring": 2
       },
       "skills": [
         "claude-code-admin"
