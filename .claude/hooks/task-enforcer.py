@@ -159,6 +159,11 @@ def get_pending_mandatory_tasks() -> list:
 
         needs_save = False
 
+        # v2.2: Auto-clean stale code-verify tasks from previous sessions
+        cv_cleaned = sync_stale_code_verify_tasks(data)
+        if cv_cleaned > 0:
+            needs_save = True
+
         # v2.1: Auto-sync git tasks with git status
         git_synced = sync_git_tasks_with_status(data)
         if git_synced > 0:
