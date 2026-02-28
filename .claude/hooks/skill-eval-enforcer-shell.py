@@ -116,11 +116,12 @@ def main():
         "1. CLASSIFY: trivial (<1 file) | medium (1-3 files) | complex (4+)\n"
         "   Auto-classified as: {complexity}\n"
         "2. IF NOT trivial: DECOMPOSE via TaskCreate\n"
-        "3. Per subtask: search skills → Skill() or Skill('learning-loop')\n"
+        "3. SKILL CHECK (ALL tasks including trivial!):\n"
+        "   Search skills → activate via Skill() or Skill('learning-loop')\n"
+        "   Write/Edit is BLOCKED until Skill() is called.\n"
         "4. Execute → TaskUpdate completed\n"
         "5. VERIFY: Skill('code-verify') after code changes\n"
-        "CRITICAL: Mentioning a skill without activating it via Skill() is useless.\n"
-        "Multiple skills can and should be activated when applicable.".format(
+        "CRITICAL: Skill() call is REQUIRED before any Write/Edit.".format(
             complexity=complexity
         )
     )
