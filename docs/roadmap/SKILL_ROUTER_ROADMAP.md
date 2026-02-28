@@ -351,4 +351,22 @@ prompt → [Domain Classifier] → "langchain"
 - 10.1 DONE: logging в data/skill-router.log
 - 10.2-10.7: pending → заменены Фазой 17
 
+### Фаза 11: FIX activation rate ✅
+- 11.1 DONE: skill-router.py мигрирован с `systemMessage` на `stdout` (100% injection)
+- 11.2 DONE: skill-router + eval-enforcer объединены в один stdout output
+- 11.3 DONE: конкретные `Skill('X')` + императивная инструкция
+- 11.4-11.5: A/B тест и негативный маркер — не требуются (100% injection решил проблему)
+
+### Фаза 12: MEASURE ✅
+- 12.1 DONE: 64 ground truth samples в `data/skill-router-ground-truth.jsonl`
+- 12.2 DONE: `scripts/eval-skill-router.py` — dual metrics (required + all skills), `--json`, `--save-fp`
+- 12.3 DONE: CI job `skill-router-eval` в `.github/workflows/ci.yml`, threshold F1 ≥ 0.75
+- 12.4 DONE: `scripts/skill-router-dashboard.py` — CLI dashboard
+- 12.5 DONE: `data/skill-router-fp.jsonl` — auto-generated FP/FN tracking
+
+### Фаза 13: PRUNE ✅
+- 13.1-13.5 DONE: 46→25 бандлов (config v5), Bundle F1 0.68→0.89 (+31%)
+- 13.6 DONE: keyword overlap analysis — 2 minor overlaps
+- 13.7 DONE: hierarchical routing metadata — 6 domains в config
+
 </details>
