@@ -339,6 +339,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── shared/
 │   │   ├── session_state.py       (SessionState: activated/recommended skills dedup, prompt_id, pending_learn)
 │   │   ├── task_master.py         (задачи: add, complete, pending, cooldown)
+│   │   ├── tfidf_scorer.py        (TF-IDF scoring: pure numpy, utterance-based corpus, Layer C)
 │   │   └── hook_lock.py           (межхуковая синхронизация)
 │   ├── skill-router.py            (Submit: keyword → skill bundles)
 │   ├── research-task-detector.py  (Submit: ВОПРОСЫ → skill routing)
