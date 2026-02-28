@@ -97,7 +97,9 @@ Full algorithm: `Skill('task-protocol')`.
     code-skill-patterns.json # Pattern->Skill mappings (7 sections, 43 rules)
     trust_scorer.py         # Trust scoring for sources (Context7/GitHub/SO/Infostart)
   skill-router.py           # UserPromptSubmit: skill recommendations
-  skill-eval-enforcer-shell.py  # UserPromptSubmit: activation enforcement
+  skill-eval-enforcer-shell.py  # UserPromptSubmit: task protocol + activation enforcement
+  task-protocol-observer.py # PostToolUse:TaskCreate: records decomposition in session state
+  task-protocol-enforcer.py # PreToolUse:Write|Edit: blocks if protocol phase is idle
   code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F, protocol.py base)
   code-verify-reminder.py   # PostToolUse: mandatory code verification (v2.2: PASS-marker completion via Task result)
   auto-git-save.py          # Stop: auto-commit on threshold
