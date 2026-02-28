@@ -260,27 +260,31 @@ prompt → [Domain Classifier] → "langchain"
 
 ## Сводка по фазам v2
 
-| Фаза | Что | Приоритет | Зависимости | Ключевая метрика |
-|------|-----|-----------|-------------|------------------|
-| **11** | FIX activation rate | **P0** | — | 8.8% → 70%+ |
-| **12** | Ground truth + metrics | **P0** | — | precision/recall/F1 |
-| **13** | Prune bundles 42→15-20 | P1 | 12 | precision +15-20% |
-| **14** | Embedding scoring layer | P1 | 12 | recall +15-25% |
-| **15** | Auto-learn from logs | P2 | 12, 14 | Self-improving accuracy |
-| **16** | Hierarchical routing | P2 | 13 | Support 50-100 skills |
-| **17** | Observability | P2 | 12 | Real-time monitoring |
+| Фаза | Что | Приоритет | Зависимости | Ключевая метрика | Статус |
+|------|-----|-----------|-------------|------------------|--------|
+| **11** | FIX activation rate | **P0** | — | 8.8% → 100% (stdout) | ✅ DONE |
+| **12** | Ground truth + metrics | **P0** | — | 64 samples, F1=0.81 | ✅ DONE |
+| **13** | Prune bundles 46→25 | P1 | 12 | Bundle F1 0.68→0.89 | ✅ DONE |
+| **14** | Embedding scoring layer | P1 | 12 | recall +15-25% | ⏳ NEXT |
+| **15** | Auto-learn from logs | P2 | 12, 14 | Self-improving accuracy | — |
+| **16** | Hierarchical routing | P2 | 13 | Support 50-100 skills | ⏳ Partial (domains defined) |
+| **17** | Observability | P2 | 12 | Real-time monitoring | — |
 
 ### Порядок выполнения
 
 ```
-Фаза 11 (FIX) ──→ Фаза 12 (MEASURE) ──┬──→ Фаза 13 (PRUNE) ──→ Фаза 16 (SCALE)
-                                         │
-                                         ├──→ Фаза 14 (EMBED) ──→ Фаза 15 (LEARN)
-                                         │
-                                         └──→ Фаза 17 (OBSERVE)
+Фаза 11 (FIX) ✅ ──→ Фаза 12 (MEASURE) ✅ ──┬──→ Фаза 13 (PRUNE) ✅ ──→ Фаза 16 (SCALE) ⏳
+                                               │
+                                               ├──→ Фаза 14 (EMBED) ← NEXT
+                                               │        ↓
+                                               │    Фаза 15 (LEARN)
+                                               │
+                                               └──→ Фаза 17 (OBSERVE)
 ```
 
-**Минимальный viable набор:** Фазы 11 + 12 + 13
+**Минимальный viable набор:** Фазы 11 + 12 + 13 ← **ВЫПОЛНЕН**
+
+**Следующий приоритет:** Фаза 14 (EMBED) — семантический scoring для повышения recall на парафразах
 
 ---
 
