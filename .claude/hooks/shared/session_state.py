@@ -232,10 +232,11 @@ class SessionState:
     def _default_task_protocol(cls) -> Dict[str, Any]:
         """Default task protocol state."""
         return {
-            "phase": "idle",        # idle | classified | decomposed
+            "phase": "idle",        # idle | classified | decomposed | skill_checked
             "complexity": None,     # trivial | medium | complex
             "subtask_count": 0,
             "decomposed_at": None,
+            "skill_checked_at": None,
         }
 
     @classmethod
