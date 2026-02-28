@@ -19,7 +19,7 @@ description: "Используй этот скилл для понимания �
 
 | Hook | Назначение |
 |------|-----------|
-| `skill-router.py` | Config-driven маршрутизация: keyword matching → рекомендация скиллов (38 bundles) |
+| `skill-router.py` | Config-driven маршрутизация: keyword matching → рекомендация скиллов (25 bundles, config v5) |
 | `research-task-detector.py` | Детекция ВОПРОСОВ → роутинг: Architecture, 1С, Tech |
 | `decision-to-triad.py` | Детекция РЕШЕНИЙ/ИДЕЙ → Фабрика (`triad-factory`, Q1-Q5) |
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
