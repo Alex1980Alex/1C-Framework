@@ -37,7 +37,7 @@ def run_router(prompt):
         stdout = result.stdout.strip()
         if not stdout:
             return {"bundles": [], "skills": []}
-        bundles, skills = [], []
+        bundles, required_skills, all_skills = [], [], []
         for line in stdout.split("\n"):
             if line.startswith("[SKILL-ROUTER] Bundles:"):
                 raw = line.replace("[SKILL-ROUTER] Bundles:", "").strip()
@@ -45,22 +45,23 @@ def run_router(prompt):
             # Capture required skills from Skill('X') calls
             found = _SKILL_RE.findall(line)
             if found:
-                skills.extend(found)
+                required_skills.extend(found)
+                all_skills.extend(found)
             # Capture recommended skills line
             m = _RECOMMENDED_RE.search(line)
             if m:
                 for s in m.group(1).split(","):
                     s = s.strip()
-                    if s and s not in skills:
-                        skills.append(s)
+                    if s and s not in all_skills:
+                        all_skills.append(s)
             # Capture optional skills line
             m = _OPTIONAL_RE.search(line)
             if m:
                 for s in m.group(1).split(","):
                     s = s.strip()
-                    if s and s not in skills:
-                        skills.append(s)
-        return {"bundles": bundles, "skills": skills}
+                    if s and s not in all_skills:
+                        all_skills.append(s)
+        return {"bundles": bundles, "skills": all_skills, "required_skills": required_skills}
     except Exception as e:
         return {"bundles": [], "skills": [], "error": str(e)}
 
