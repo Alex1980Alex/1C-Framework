@@ -1,13 +1,13 @@
 ---
 name: task-protocol
-description: "Task Protocol: обязательный алгоритм выполнения задач. Classify → Decompose → Skill Search → Execute → Verify. Триггеры: 'задача', 'implement', 'реализовать', 'new feature', 'добавь', 'сделай', 'создай функцию'. НЕ для trivial (typo fix, 1 строка) — они авто-классифицируются."
+description: "Task Protocol: обязательный алгоритм выполнения задач. Classify → Skill Check → (Decompose) → Execute → Verify. Skill() ОБЯЗАТЕЛЕН для всех задач включая trivial. Триггеры: 'задача', 'implement', 'реализовать', 'new feature', 'добавь', 'сделай', 'создай функцию'."
 ---
 
 # task-protocol — Mandatory Execution Algorithm
 
 ## Overview
 
-Every non-trivial task MUST follow this protocol. Enforcement via hooks blocks Write/Edit until protocol is satisfied.
+**ALL tasks** (включая trivial) требуют проверки скиллов через `Skill()` перед Write/Edit. Enforcement через хуки блокирует Write/Edit пока `Skill()` не вызван.
 
 ---
 
@@ -17,24 +17,59 @@ Every non-trivial task MUST follow this protocol. Enforcement via hooks blocks W
 USER PROMPT
   │
   ▼
-CLASSIFY complexity
-  ├── trivial  (< 1 file, < 30 words) → auto-allow → EXECUTE directly
-  ├── medium   (1-3 files)            → DECOMPOSE → per-subtask flow
-  └── complex  (4+ files)             → DECOMPOSE → per-subtask flow
-                                         │
-                                         ▼
-                                    TaskCreate (subtasks)
-                                         │
-                                         ▼
-                                    FOR EACH subtask:
-                                      1. SKILL SEARCH (check available skills)
-                                      2. Skill() activate OR Skill('learning-loop')
-                                      3. EXECUTE (Write/Edit code)
-                                      4. TaskUpdate(completed)
-                                         │
-                                         ▼
-                                    VERIFY (code-verify)
+CLASSIFY complexity (auto)
+  │
+  ├── trivial  (< 30 words, no multi-file markers)
+  │     │
+  │     ▼
+  │   SKILL CHECK ← обязательно!
+  │   Skill('relevant') or Skill('learning-loop')
+  │     │
+  │     ▼
+  │   EXECUTE (Write/Edit) ← разблокировано
+  │
+  ├── medium (1-3 files)
+  │     │
+  │     ▼
+  │   DECOMPOSE → TaskCreate (subtasks)
+  │     │
+  │     ▼
+  │   FOR EACH subtask:
+  │     SKILL CHECK → Skill() or Skill('learning-loop')
+  │     EXECUTE → TaskUpdate(completed)
+  │     │
+  │     ▼
+  │   VERIFY → Skill('code-verify')
+  │
+  └── complex (4+ files)
+        │
+        ▼
+      DECOMPOSE → TaskCreate (full decomposition)
+        │
+        ▼
+      FOR EACH subtask:
+        SKILL CHECK → Skill() or Skill('learning-loop')
+        EXECUTE → TaskUpdate(completed)
+        │
+        ▼
+      VERIFY → Skill('code-verify')
 ```
+
+---
+
+## Phase Machine
+
+```
+idle → classified → skill_checked → ALLOW Write/Edit
+idle → classified → decomposed → skill_checked → ALLOW Write/Edit
+```
+
+| Phase | Что произошло | Write/Edit |
+|-------|--------------|------------|
+| `idle` | Ничего | BLOCKED |
+| `classified` | Промпт классифицирован | BLOCKED |
+| `decomposed` | TaskCreate вызван | BLOCKED |
+| `skill_checked` | Skill() вызван | ALLOWED |
 
 ---
 
@@ -42,9 +77,9 @@ CLASSIFY complexity
 
 | Complexity | Criteria | Action |
 |------------|----------|--------|
-| **trivial** | < 30 words in prompt, single file, no multi-file indicators | Auto-classified, Write/Edit allowed immediately |
-| **medium** | 1-3 files affected, 30-100 words | Must TaskCreate at least 1 subtask |
-| **complex** | 4+ files, 100+ words, architectural changes | Must TaskCreate with full decomposition |
+| **trivial** | < 30 words, no multi-file indicators | Skill check → Write |
+| **medium** | 30-100 words, 1-3 files | TaskCreate → Skill check → Write |
+| **complex** | 100+ words or 4+ files | Full TaskCreate → Skill check → Write |
 
 **Multi-file indicators** (force non-trivial): 'и также', 'а также', 'плюс', 'additionally', 'across', 'multiple files', 'refactor', 'все файлы', 'each file'.
 
@@ -54,31 +89,31 @@ CLASSIFY complexity
 
 ### 1. CLASSIFY
 
-State the complexity explicitly:
+Автоматически через `skill-eval-enforcer-shell`. Можно уточнить:
 ```
 This is a MEDIUM task (2 files affected).
 ```
 
 ### 2. DECOMPOSE (if not trivial)
 
-Use TaskCreate for each logical subtask:
 ```
 TaskCreate: "Add validation to UserInput schema"
 TaskCreate: "Update API endpoint to use new schema"
-TaskCreate: "Add tests for validation"
 ```
 
-### 3. SKILL SEARCH (per subtask)
+### 3. SKILL CHECK (MANDATORY for ALL tasks)
 
-Before implementing, check if a skill exists:
-- Review `<available_skills>` in context
-- Check `[SKILL-ROUTER]` recommendations
-- If relevant skill found → `Skill('skill-name')`
-- If no skill but need to learn → `Skill('learning-loop')`
+**Перед любым Write/Edit** — проверить скиллы:
+- Проверить `<available_skills>` в контексте
+- Проверить рекомендации `[SKILL-ROUTER]`
+- Если найден релевантный скилл → `Skill('skill-name')`
+- Если скилла нет → `Skill('learning-loop')` (поиск + создание)
+
+**Write/Edit будет ЗАБЛОКИРОВАН пока Skill() не вызван.**
 
 ### 4. EXECUTE
 
-Write code following skill guidance. Mark subtask:
+Код пишется с учётом знаний из скилла:
 ```
 TaskUpdate(taskId, status="in_progress")
 ... write code ...
@@ -87,9 +122,8 @@ TaskUpdate(taskId, status="completed")
 
 ### 5. VERIFY
 
-After all code changes, run verification:
-- Skill('code-verify') for code review
-- Run tests if applicable
+После всех изменений:
+- `Skill('code-verify')` для ревью кода
 
 ---
 
@@ -97,20 +131,20 @@ After all code changes, run verification:
 
 | Antipattern | Correct Approach |
 |------------|-----------------|
-| Jump straight to Write/Edit | Classify first, then decompose |
-| Skip skill search | Always check available skills before coding |
+| Jump to Write/Edit without Skill() | Always call Skill() first — enforcer blocks otherwise |
+| Skip skill search for "trivial" | ALL tasks require Skill() — even trivial |
+| Mention skill without Skill() call | Only Skill() tool call counts, not text mention |
 | One giant TaskCreate | Break into logical subtasks (1 per concern) |
-| Forget TaskUpdate | Mark each subtask completed as you go |
-| Skip verify on "simple" changes | Always verify code changes |
-| Classify everything as trivial | Only truly trivial: typo fix, 1-line change, config tweak |
+| Skip verify | Always Skill('code-verify') after code changes |
+| No skill exists → skip | Use Skill('learning-loop') to search and create |
 
 ---
 
 ## Enforcement
 
-- **task-protocol-enforcer** (PreToolUse:Write|Edit) blocks code changes if phase == "idle"
-- **task-protocol-observer** (PostToolUse:TaskCreate) records decomposition in session state
-- **skill-eval-enforcer-shell** (UserPromptSubmit) auto-classifies prompt complexity
+- **task-protocol-enforcer** (PreToolUse:Write|Edit) — blocks unless phase == `skill_checked`
+- **task-protocol-observer** (PostToolUse:TaskCreate|Skill) — records decomposition and skill check
+- **skill-eval-enforcer-shell** (UserPromptSubmit) — auto-classifies, resets protocol
 - Exempt files: `.claude/`, `docs/`, `data/`, config files (`.json`, `.toml`, `.yml`, `.env`)
 
 ---
@@ -120,32 +154,29 @@ After all code changes, run verification:
 ### Trivial Task
 ```
 User: "Fix typo in README"
-→ Auto-classified as trivial (< 30 words, single file)
-→ Write/Edit allowed immediately
-→ No TaskCreate needed
+→ Auto-classified as trivial
+→ Check skills → Skill('pdf-knowledge') or no relevant skill
+→ If no skill: Skill('learning-loop') — or any Skill() call
+→ Write/Edit UNBLOCKED
+→ Fix typo
 ```
 
 ### Medium Task
 ```
 User: "Add input validation to the search endpoint"
-→ Classify: MEDIUM (2 files: schema + endpoint)
+→ Classify: MEDIUM (2 files)
 → TaskCreate: "Add SearchQuery validation schema"
-→ TaskCreate: "Update search endpoint to validate input"
+→ TaskCreate: "Update search endpoint"
 → Skill('pdf-knowledge') for search context
-→ Execute each subtask
+→ Execute each subtask → Write/Edit allowed
 → Skill('code-verify')
 ```
 
 ### Complex Task
 ```
 User: "Implement multi-tenant support for vector store"
-→ Classify: COMPLEX (5+ files, architectural change)
-→ TaskCreate: "Design tenant isolation schema"
-→ TaskCreate: "Add tenant_id to VectorStore base class"
-→ TaskCreate: "Update Qdrant provider with tenant filtering"
-→ TaskCreate: "Update ChromaDB provider with tenant filtering"
-→ TaskCreate: "Add tenant middleware to API"
-→ TaskCreate: "Add tests for multi-tenant isolation"
+→ Classify: COMPLEX (5+ files)
+→ TaskCreate: full decomposition (6 subtasks)
 → Skill('architecture-research') for design
 → Execute each subtask with relevant skills
 → Skill('code-verify')
