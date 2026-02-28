@@ -4,6 +4,8 @@ Hook: task-enforcer
 Event: Stop
 Matcher: (none — fires on every stop attempt)
 Purpose: Block Claude from stopping if mandatory hook tasks are pending.
+         v2.2: Added sync_stale_code_verify_tasks() — auto-complete code-verify
+         tasks older than 1h (fixes cross-session zombie tasks).
          v2.1: Added sync_git_tasks_with_status() — auto-complete git tasks
          when git status is clean (fixes zombie tasks).
          Reads hook-todos.json directly (no shared/ imports for max reliability).
