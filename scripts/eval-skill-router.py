@@ -81,9 +81,9 @@ def main():
             if line:
                 samples.append(json.loads(line))
 
-    print(f"Loaded {len(samples)} ground truth samples")
-    print(f"Router: {ROUTER_SCRIPT}")
-    print()
+    print(f"Loaded {len(samples)} ground truth samples", file=sys.stderr)
+    print(f"Router: {ROUTER_SCRIPT}", file=sys.stderr)
+    print(file=sys.stderr)
 
     eval_state_dir = PROJECT_DIR / "data" / "eval-temp"
     eval_state_dir.mkdir(parents=True, exist_ok=True)
