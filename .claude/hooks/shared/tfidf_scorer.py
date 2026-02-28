@@ -143,7 +143,6 @@ class TfidfScorer:
         if not self._load():
             return {}
 
-        np = _get_numpy()
         vec = self._text_to_tfidf_vector(text)
 
         # Cosine similarity: dot product with L2-normalized centroids
