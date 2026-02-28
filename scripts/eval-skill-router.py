@@ -127,7 +127,7 @@ def main():
 
         if args.verbose:
             status = "OK" if sm["f1"] == 1.0 or (not exp_skills and not pred_skills) else "MISS"
-            print(f"  [{i+1:3d}] {status:4s} | P={sm['precision']:.2f} R={sm['recall']:.2f} F1={sm['f1']:.2f} | {prompt[:50]}")
+            print(f"  [{i+1:3d}] {status:4s} | P={sm['precision']:.2f} R={sm['recall']:.2f} F1={sm['f1']:.2f} | {prompt[:50]}", file=sys.stderr)
 
     def avg(ml, k):
         v = [m[k] for m in ml]
