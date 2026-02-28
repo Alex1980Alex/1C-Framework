@@ -73,9 +73,9 @@ PreToolUse / PostToolUse
 4. ~~Нет ground truth~~ → **FIXED** (Фаза 12): 64 samples, eval script, CI gate
 
 **Оставшиеся проблемы:**
-4. **Нет semantic understanding** — keyword matching не ловит парафразы → Фаза 14
+4. ~~Нет semantic understanding~~ → **FIXED** (Фаза 14): TF-IDF char n-gram Layer C, +0.5% F1, paraphrase rescue
 5. **Нет feedback loop** — recommend/activate логи есть, но нет автоматической коррекции → Фаза 15
-6. **FP noise** — 38 false positives (optional/affinity skills) → нужна calibration → Фаза 14-15
+6. **FP noise** — 39 false positives (optional/affinity skills) → нужна calibration → Фаза 15
 
 ---
 
