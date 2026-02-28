@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "cooldown_minutes": 3,
   "min_score": 2,
   "max_bundles": 2,
@@ -8,28 +8,10 @@
       "langgraph-core"
     ],
     "langgraph-core": [
-      "langchain-core",
-      "langgraph-memory-persistence"
+      "langchain-core"
     ],
     "langchain-multiagent": [
-      "langgraph-core",
-      "langchain-core"
-    ],
-    "langchain-streaming": [
       "langgraph-core"
-    ],
-    "langgraph-memory-persistence": [
-      "langgraph-core"
-    ],
-    "langgraph-production": [
-      "langgraph-core"
-    ],
-    "deep-agents": [
-      "langchain-mcp-tools",
-      "langchain-core"
-    ],
-    "langchain-mcp-tools": [
-      "langchain-core"
     ],
     "1c-doc-research": [
       "pdf-knowledge"
@@ -48,47 +30,16 @@
       "pdf-search"
     ],
     "hook-debugging": [
-      "claude-code-hooks-bugs",
-      "multi-level-hook-architecture"
-    ],
-    "windows-hooks-paths": [
-      "claude-code-hooks-bugs",
-      "hook-debugging"
+      "claude-code-hooks-bugs"
     ],
     "create-hook": [
       "hooks-skills-mcp-triad"
     ],
-    "triad-factory": [
-      "hooks-skills-mcp-triad"
-    ],
     "doc-to-skill": [
       "hooks-skills-mcp-triad"
-    ],
-    "claude-code-vscode": [
-      "claude-code-terminal-ux"
     ]
   },
   "bundles": {
-    "search": {
-      "keywords": [
-        "поиск документов",
-        "search documents",
-        "запрос к базе",
-        "pdf search",
-        "поиск по pdf"
-      ],
-      "skills": [
-        "pdf-search"
-      ],
-      "optional": [
-        "search-pipeline-debug"
-      ],
-      "weighted_keywords": {
-        "bm25": 3,
-        "семантический поиск": 3,
-        "hybrid search": 3
-      }
-    },
     "research-1c": {
       "keywords": [
         "модуль объекта",
@@ -140,9 +91,7 @@
       "skills": [
         "tech-research"
       ],
-      "optional": [
-        "embedding-models"
-      ],
+      "optional": [],
       "weighted_keywords": {
         "reranking": 3,
         "chunking": 3,
@@ -169,24 +118,41 @@
         "как реализовать": 2
       }
     },
-    "infrastructure": {
+    "workflow": {
       "keywords": [
-        "триада hook skill mcp",
-        "triad pattern",
-        "фабрика триады",
-        "hooks skills mcp",
-        "triad factory"
+        "brainstorm",
+        "оценка подходов",
+        "сравни варианты",
+        "предложи подход",
+        "какой вариант лучше",
+        "давай обсудим варианты",
+        "разработай",
+        "какой подход выбрать",
+        "давай обсудим",
+        "давай подумаем",
+        "предложи решение",
+        "предложи архитектуру",
+        "найди подходы и выбери",
+        "найди и предложи",
+        "сравни подходы и выбери",
+        "можно ли улучшить",
+        "как сделать лучше",
+        "что можно улучшить",
+        "research and suggest",
+        "compare and choose"
       ],
+      "workflow": "hybrid",
       "skills": [
-        "hooks-skills-mcp-triad"
+        "task-evaluation"
       ],
-      "optional": [
-        "triad-factory",
-        "create-hook"
-      ],
+      "optional": [],
       "weighted_keywords": {
-        "триада": 3,
-        "triad": 3
+        "придумай": 2,
+        "предложи": 2,
+        "спроектируй": 3,
+        "исследуй и предложи": 4,
+        "как улучшить": 2,
+        "как оптимизировать": 3
       }
     },
     "creation": {
@@ -196,13 +162,20 @@
         "создать хук",
         "новый скилл",
         "создать hook",
-        "новый навык"
+        "новый навык",
+        "триада hook skill mcp",
+        "triad pattern",
+        "фабрика триады",
+        "hooks skills mcp",
+        "triad factory"
       ],
       "skills": [
-        "create-hook"
+        "create-hook",
+        "hooks-skills-mcp-triad"
       ],
       "optional": [
-        "doc-to-skill"
+        "doc-to-skill",
+        "triad-factory"
       ],
       "weighted_keywords": {
         "создай hook": 4,
@@ -210,32 +183,23 @@
         "новый хук": 3,
         "create hook": 4,
         "new hook": 3,
-        "новый hook": 3
+        "новый hook": 3,
+        "триада": 3,
+        "triad": 3
       }
     },
-    "evaluation": {
+    "search": {
       "keywords": [
-        "brainstorm",
-        "оценка подходов",
-        "сравни варианты",
-        "предложи подход",
-        "какой вариант лучше",
-        "давай обсудим варианты"
-      ],
-      "skills": [
-        "task-evaluation"
-      ],
-      "optional": []
-    },
-    "search-debug": {
-      "keywords": [
+        "поиск документов",
+        "search documents",
+        "запрос к базе",
+        "pdf search",
+        "поиск по pdf",
         "pipeline debug",
         "search strategy",
         "rrf",
         "score threshold",
         "search config",
-        "турбо поиск",
-        "turbo search",
         "section-first",
         "какую стратегию",
         "выбор стратегии",
@@ -243,18 +207,16 @@
         "two_stage",
         "adaptive search",
         "graphrag_light",
-        "graphrag_auto",
-        "web_search strategy",
-        "visual search strategy",
         "плохие результаты поиска"
       ],
       "skills": [
-        "search-pipeline-debug"
-      ],
-      "optional": [
         "pdf-search"
       ],
+      "optional": [
+        "search-pipeline-debug"
+      ],
       "weighted_keywords": {
+        "семантический поиск": 3,
         "отладка поиска": 4,
         "debug search": 4,
         "нерелевантные результаты": 4,
@@ -306,9 +268,7 @@
         "autorag",
         "rag triad",
         "ndcg",
-        "mrr",
-        "feedback",
-        "обратная связь"
+        "mrr"
       ],
       "skills": [
         "evaluation-benchmark"
@@ -349,31 +309,23 @@
         "adaptive rag",
         "conversational agent",
         "чат с историей",
-        "оркестрация агентов"
-      ],
-      "skills": [
-        "agent-orchestration"
-      ],
-      "optional": [],
-      "weighted_keywords": {
-        "research agent": 4,
-        "deep research agent": 5,
-        "analytical agent": 4,
-        "agent orchestration": 4
-      }
-    },
-    "prompt-opt": {
-      "keywords": [
+        "оркестрация агентов",
         "miprov2",
         "a/b testing",
         "dspy module",
         "dspy metric"
       ],
       "skills": [
+        "agent-orchestration"
+      ],
+      "optional": [
         "prompt-engineering"
       ],
-      "optional": [],
       "weighted_keywords": {
+        "research agent": 4,
+        "deep research agent": 5,
+        "analytical agent": 4,
+        "agent orchestration": 4,
         "dspy": 3,
         "prompt optimization": 3,
         "оптимизация промптов": 3
@@ -392,7 +344,6 @@
         "tenant",
         "jwt",
         "авторизация",
-        "мониторинг",
         "langfuse",
         "prometheus",
         "grafana",
@@ -409,67 +360,131 @@
       "optional": [],
       "weighted_keywords": {
         "docker compose": 3,
-        "docker": 2,
-        "production": 2
+        "docker": 2
       }
     },
-    "framework-config": {
+    "framework-use": {
       "keywords": [
-        "cache",
-        "конфигурация фреймворка",
-        "cache stats",
-        "environment variable",
-        "cache clear",
-        "профиль конфигурации",
-        "очистить кеш",
-        "configure framework",
-        ".env файл",
-        "кэш"
+        "консоль",
+        "терминал",
+        "pdf-framework",
+        "как запустить",
+        "curl",
+        "Swagger",
+        "OpenAI compatible",
+        "/search/",
+        "/documents/",
+        "websocket",
+        "Components API",
+        "системные требования",
+        "getting started",
+        "установка",
+        "первый запуск",
+        "QuickRAG",
+        "веб-интерфейс"
       ],
       "skills": [
-        "framework-config",
-        "framework-caching"
+        "framework-cli"
       ],
-      "optional": [],
+      "optional": [
+        "framework-api",
+        "framework-quickstart",
+        "framework-mcp-ui"
+      ],
       "weighted_keywords": {
-        ".env": 3,
-        "env файл": 3,
-        "переменная окружения": 3,
-        "семантический кеш": 4,
-        "semantic cache": 4,
-        "TTL": 2,
-        "кеш": 2
+        "CLI команда": 3,
+        "python -m src.cli": 5,
+        "REST API": 3,
+        "endpoint": 2,
+        "quickstart": 3,
+        "установить фреймворк": 4,
+        "install framework": 3,
+        "как установить": 3,
+        "MCP server фреймворк": 3,
+        "Gradio": 3,
+        "Streamlit фреймворк": 2
       }
     },
-    "framework-troubleshooting": {
+    "framework-ops": {
       "keywords": [
+        "конфигурация фреймворка",
+        "environment variable",
+        "профиль конфигурации",
+        "configure framework",
+        ".env файл",
         "troubleshoot фреймворк",
         "не работает фреймворк",
         "slow query",
         "миграция фреймворка",
         "migration",
         "performance фреймворк",
-        "timeout api",
         "guardrails",
         "pii",
-        "injection",
         "content filter"
       ],
       "skills": [
-        "framework-troubleshooting"
+        "framework-config"
       ],
-      "optional": [],
+      "optional": [
+        "framework-troubleshooting",
+        "framework-caching"
+      ],
       "weighted_keywords": {
-        "timeout": 2,
+        ".env": 3,
+        "env файл": 3,
+        "переменная окружения": 3,
+        "семантический кеш": 4,
+        "semantic cache": 4,
         "ошибка фреймворка": 3,
-        "performance": 2,
         "не работает сервер": 3,
-        "ошибка при запуске": 3
+        "ошибка при запуске": 3,
+        "timeout": 2
       }
     },
-    "langchain-agent": {
+    "data-stores": {
       "keywords": [
-        "langchain agent"
+        "e5 model",
+        "jina embeddings",
+        "onnx",
+        "openvino",
+        "backend embedding",
+        "giga embedding",
+        "qdrant config",
+        "uuid conversion",
+        "rebuild sparse",
+        "миграция qdrant",
+        "qdrant docker",
+        "named vectors",
+        "snapshot"
+      ],
+      "weighted_keywords": {
+        "colpali": 3,
+        "visual embeddings": 4,
+        "bge-m3": 4,
+        "embedding model": 3,
+        "qdrant collection": 4,
+        "sparse vectors": 4
+      },
+      "skills": [
+        "embedding-models"
+      ],
+      "optional": [
+        "qdrant-operations"
+      ]
+    },
+    "langchain-core": {
+      "keywords": [
+        "langchain agent",
+        "multi-agent langchain",
+        "multi-agent workflow",
+        "координация агентов",
+        "agent handoff",
+        "handoff langchain",
+        "skills pattern langchain",
+        "router pattern langchain",
+        "langchain-mcp-adapters",
+        "MCP interceptor",
+        "MCP transport"
       ],
       "weighted_keywords": {
         "create_agent": 5,
@@ -481,40 +496,335 @@
         "structured output langchain": 4,
         "guardrails langchain": 4,
         "middleware langchain": 3,
-        "langchain": 2
+        "langchain": 2,
+        "supervisor pattern": 4,
+        "multi-agent": 3,
+        "handoff": 3,
+        "MCP langchain": 4,
+        "MultiServerMCPClient": 5,
+        "MCP сервер langchain": 4
       },
       "skills": [
         "langchain-core"
       ],
       "optional": [
+        "langchain-multiagent",
+        "langchain-mcp-tools",
         "langchain-tutorials"
       ]
     },
-    "langgraph": {
-      "keywords": [],
+    "langchain-infra": {
+      "keywords": [
+        "streaming langchain",
+        "SSE langgraph",
+        "stream_mode",
+        "StreamWriter",
+        "stream langgraph",
+        "token streaming",
+        "get_stream_writer",
+        "useStream",
+        "CacheBackedEmbeddings",
+        "LangGraph Studio",
+        "langgraph.json",
+        "langgraph deploy",
+        "langgraph test",
+        "deepagents",
+        "document loader",
+        "text splitter",
+        "retriever langchain",
+        "vector store langchain",
+        "WebBaseLoader",
+        "RecursiveCharacterTextSplitter",
+        "long-term memory langgraph",
+        "Store langgraph",
+        "state snapshots"
+      ],
       "weighted_keywords": {
         "StateGraph": 5,
         "add_node": 4,
         "add_edge": 4,
         "conditional_edges": 4,
         "entrypoint": 3,
-        "@task langgraph": 3,
         "Command langgraph": 4,
         "Send langgraph": 4,
         "interrupt langgraph": 4,
-        "subgraph langgraph": 3,
-        "time travel langgraph": 3,
         "Pregel": 5,
         "MessagesState": 4,
-        "langgraph": 3
+        "langgraph": 3,
+        "streaming": 2,
+        "SSE": 3,
+        "checkpointer": 3,
+        "InMemorySaver": 4,
+        "PostgresSaver": 4,
+        "SqliteSaver": 4,
+        "persistence langgraph": 3,
+        "LangSmith": 3,
+        "deep agents": 4,
+        "langgraph memory": 4
       },
       "skills": [
         "langgraph-core"
       ],
       "optional": [
+        "langchain-streaming",
+        "langchain-integrations",
         "langgraph-memory-persistence",
-        "langgraph-production"
+        "langgraph-production",
+        "deep-agents"
       ]
+    },
+    "hooks": {
+      "keywords": [
+        "command not found hook",
+        "hooks not firing",
+        "canary test",
+        "обратные слеши хук",
+        "обратный слеш",
+        "путь хука Windows",
+        "хук не срабатывает",
+        "hook не работает",
+        "hook silent",
+        "hook path windows",
+        "отладка хука",
+        "debug hook",
+        "почему хук не запускается",
+        "workaround hooks",
+        "слипшийся путь",
+        "#10450",
+        "hook debugging",
+        "хук молчит",
+        "обходной путь хуков",
+        "платформенные баги",
+        "hook bug",
+        "баг хука",
+        "backslash hook",
+        "bash escape path",
+        "хуки не запускаются",
+        "#6305",
+        "карта хуков",
+        "паттерн принуждения",
+        "stop hook pattern",
+        "какие хуки есть",
+        "hook levels",
+        "enforcer хук",
+        "все хуки",
+        "трёхуровневая защита",
+        "как заблокировать остановку",
+        "блокирующий хук",
+        "уровни хуков",
+        "порядок хуков",
+        "exit 2",
+        "hook map",
+        "block stop",
+        "шаблон enforcer",
+        "hook chain",
+        "цепочка хуков"
+      ],
+      "skills": [
+        "hook-debugging",
+        "claude-code-hooks-bugs"
+      ],
+      "optional": [
+        "windows-hooks-paths",
+        "hook-enforcement-pattern",
+        "multi-level-hook-architecture"
+      ],
+      "weighted_keywords": {
+        "хук не работает": 4,
+        "hook not firing": 4,
+        "PostToolUse не работает": 5,
+        "хук не находит python": 4,
+        "обратные слеши": 4,
+        "enforcer pattern": 4,
+        "архитектура хуков": 4,
+        "hook architecture": 4
+      }
+    },
+    "claude-code-dev": {
+      "keywords": [
+        "create agent claude",
+        "headless claude",
+        "-p flag",
+        "distribute plugin",
+        "создать агента claude",
+        "agent sdk",
+        "manifest",
+        "stream-json",
+        "автоматизация claude",
+        "print mode",
+        "agent YAML",
+        "marketplace",
+        "permission mode",
+        "structured output claude",
+        "создать плагин",
+        "маркетплейс",
+        "LSP server plugin",
+        "built-in agents",
+        "claude -p",
+        "Task tool",
+        "agent frontmatter",
+        "встроенные агенты",
+        "делегировать",
+        "slash command",
+        "программный запуск",
+        "install plugin",
+        "установить плагин",
+        "create plugin",
+        "json schema claude",
+        "delegate"
+      ],
+      "skills": [
+        "claude-code-plugins",
+        "claude-code-subagents",
+        "claude-code-programmatic"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "plugin": 2,
+        "плагин": 2,
+        "subagent": 3,
+        "подагент": 3,
+        "headless": 3
+      }
+    },
+    "claude-code-config": {
+      "keywords": [
+        "параметры claude code",
+        "настройки claude code",
+        "claude code config",
+        "scopes",
+        "области конфигурации",
+        "project rules",
+        "enterprise claude",
+        "memory management claude",
+        "managed settings",
+        "стиль вывода",
+        "output style",
+        "cli reference claude",
+        "справочник cli claude",
+        "cli flags claude",
+        "флаги cli",
+        "интерактивный режим",
+        "interactive mode",
+        "фоновые задачи claude",
+        "контрольные точки",
+        "checkpoints",
+        "отмотать",
+        "rewind",
+        "slash commands",
+        "chrome integration",
+        "интеграция с chrome",
+        "строка состояния",
+        "автоматизация браузера",
+        "vscode extension",
+        "расширение claude",
+        "Open in New Tab",
+        "@-mention",
+        "diff review",
+        "несколько бесед"
+      ],
+      "weighted_keywords": {
+        "settings.json claude": 4,
+        "CLAUDE.md": 3,
+        "settings.json": 3,
+        "vim mode": 3,
+        "горячие клавиши": 3,
+        "keyboard shortcuts": 3,
+        "hotkeys": 3,
+        "statusline": 3,
+        "VS Code extension": 4,
+        "vscode": 2,
+        "VS Code": 2
+      },
+      "skills": [
+        "claude-code-settings"
+      ],
+      "optional": [
+        "claude-code-cli-interactive",
+        "claude-code-terminal-ux",
+        "claude-code-vscode"
+      ]
+    },
+    "claude-code-ops": {
+      "keywords": [
+        "otel claude",
+        "access control claude",
+        "безопасность claude",
+        "security claude",
+        "IAM claude",
+        "rate limit claude",
+        "затраты claude",
+        "costs claude",
+        "аналитика claude",
+        "analytics claude",
+        "credential management",
+        "мониторинг claude",
+        "model config claude",
+        "environment variables claude",
+        "code review CI",
+        "CI/CD claude",
+        "@claude trigger",
+        "github workflow claude",
+        "PR automation",
+        "автоматизация PR",
+        "claude-code-action",
+        "автоматический review",
+        "github action claude"
+      ],
+      "weighted_keywords": {
+        "opentelemetry claude": 4,
+        "monitoring claude": 3,
+        "github actions": 3,
+        "github actions claude": 4
+      },
+      "skills": [
+        "claude-code-admin"
+      ],
+      "optional": [
+        "claude-code-github-actions"
+      ]
+    },
+    "docs": {
+      "keywords": [
+        "документация в кеш",
+        "актуализировать документацию",
+        "аудит",
+        "process documentation",
+        "загрузить доки в кеш",
+        "doc coverage",
+        "check docs",
+        "обработать документацию",
+        "docs to cache",
+        "convert docs to cache",
+        "создать знания из файлов",
+        "обновить доки",
+        "audit-docs",
+        "оформи как скилл",
+        "превратить в скилл",
+        "конвертировать в SKILL.md",
+        "make a skill from",
+        "convert to skill"
+      ],
+      "skills": [
+        "audit-docs"
+      ],
+      "optional": [
+        "doc-to-cache",
+        "doc-to-skill"
+      ],
+      "weighted_keywords": {
+        "аудит документации": 4,
+        "audit docs": 4,
+        "проверить покрытие": 3,
+        "doc-to-cache": 4,
+        "конвертировать документацию": 4,
+        "покрытие документации": 4,
+        "документацию в кеш": 4,
+        "конвертируй документацию": 4,
+        "сделай скилл из": 4,
+        "doc-to-skill": 4,
+        "скилл из документации": 4
+      }
     },
     "git-parsing": {
       "keywords": [
@@ -537,7 +847,6 @@
     },
     "tenacity-retry": {
       "keywords": [
-        "retry",
         "tenacity",
         "backoff",
         "exponential backoff",
@@ -552,14 +861,14 @@
       "skills": [
         "tenacity-retry"
       ],
-      "optional": [
-        "framework-troubleshooting"
-      ]
+      "optional": [],
+      "weighted_keywords": {
+        "retry": 2
+      }
     },
     "code-verify": {
       "keywords": [
         "верификация",
-        "review",
         "ревью кода",
         "проверка кода",
         "code-verify",
@@ -589,642 +898,12 @@
       ],
       "optional": [
         "doc-to-skill",
-        "triad-factory",
-        "code-verify"
+        "triad-factory"
       ],
       "weighted_keywords": {
         "learning loop": 4,
         "цикл обучения": 4
       }
-    },
-    "workflow-brainstorm": {
-      "keywords": [
-        "разработай",
-        "какой подход выбрать",
-        "давай обсудим",
-        "давай подумаем",
-        "предложи решение",
-        "предложи архитектуру",
-        "suggest",
-        "design",
-        "propose",
-        "come up with"
-      ],
-      "workflow": "brainstorm",
-      "skills": [
-        "task-evaluation"
-      ],
-      "optional": [],
-      "weighted_keywords": {
-        "придумай": 2,
-        "предложи": 2,
-        "спроектируй": 3
-      }
-    },
-    "workflow-hybrid": {
-      "keywords": [
-        "найди подходы и выбери",
-        "найди и предложи",
-        "сравни подходы и выбери",
-        "как ускорить",
-        "как исправить",
-        "как решить",
-        "можно ли улучшить",
-        "как сделать лучше",
-        "что можно улучшить",
-        "research and suggest",
-        "find and propose",
-        "compare and choose"
-      ],
-      "workflow": "hybrid",
-      "skills": [
-        "task-evaluation"
-      ],
-      "optional": [],
-      "weighted_keywords": {
-        "исследуй и предложи": 4,
-        "как улучшить": 2,
-        "как оптимизировать": 3
-      }
-    },
-    "hooks-debug": {
-      "keywords": [
-        "command not found hook",
-        "hooks not firing",
-        "backslash windows",
-        "canary test",
-        "обратные слеши хук",
-        "обратный слеш",
-        "путь хука Windows",
-        "хук не срабатывает",
-        "hook не работает",
-        "hook silent",
-        "hook path windows",
-        "отладка хука",
-        "debug hook",
-        "почему хук не запускается",
-        "workaround hooks",
-        "слипшийся путь",
-        "#10450",
-        "platform bugs hooks",
-        "hook debugging",
-        "хук молчит",
-        "обходной путь хуков",
-        "платформенные баги",
-        "hook bug",
-        "баг хука",
-        "backslash hook",
-        "bash escape path",
-        "хуки не запускаются",
-        "#6305"
-      ],
-      "skills": [
-        "hook-debugging",
-        "claude-code-hooks-bugs",
-        "windows-hooks-paths"
-      ],
-      "optional": [],
-      "weighted_keywords": {
-        "хук не работает": 4,
-        "hook not firing": 4,
-        "PostToolUse не работает": 5,
-        "хук не находит python": 4,
-        "windows": 2,
-        "обратные слеши": 4,
-        "python на Windows": 4
-      }
-    },
-    "hooks-dev": {
-      "keywords": [
-        "карта хуков",
-        "паттерн принуждения",
-        "stop hook pattern",
-        "какие хуки есть",
-        "hook levels",
-        "enforcer хук",
-        "все хуки",
-        "трёхуровневая защита",
-        "как заблокировать остановку",
-        "блокирующий хук",
-        "stop hook шаблон",
-        "уровни хуков",
-        "порядок хуков",
-        "exit 2",
-        "hook map",
-        "block stop",
-        "шаблон enforcer",
-        "hook chain",
-        "цепочка хуков"
-      ],
-      "skills": [
-        "hook-enforcement-pattern",
-        "multi-level-hook-architecture"
-      ],
-      "optional": [
-        "create-hook",
-        "hooks-skills-mcp-triad"
-      ],
-      "weighted_keywords": {
-        "enforcer pattern": 4,
-        "архитектура хуков": 4,
-        "hook architecture": 4
-      }
-    },
-    "claude-code-dev": {
-      "keywords": [
-        "create agent claude",
-        "скрипт с claude",
-        "headless claude",
-        "-p flag",
-        "distribute plugin",
-        "создать агента claude",
-        "agent sdk",
-        "ralph wiggum",
-        "автономный цикл",
-        "manifest",
-        "stream-json",
-        "автоматизация claude",
-        "CI pipeline claude",
-        "print mode",
-        "agent YAML",
-        "marketplace",
-        "permission mode",
-        "autonomous loop",
-        "Explore agent",
-        "structured output claude",
-        "создать плагин",
-        "маркетплейс",
-        "LSP server plugin",
-        "built-in agents",
-        "Plan agent",
-        "claude -p",
-        "Task tool",
-        "agent frontmatter",
-        "встроенные агенты",
-        "делегировать",
-        "slash command",
-        "programmatic claude",
-        "программный запуск",
-        "install plugin",
-        "установить плагин",
-        "create plugin",
-        "json schema claude",
-        "delegate"
-      ],
-      "skills": [
-        "claude-code-plugins",
-        "claude-code-subagents",
-        "claude-code-programmatic"
-      ],
-      "optional": [],
-      "weighted_keywords": {
-        "plugin": 2,
-        "плагин": 2,
-        "subagent": 3,
-        "подагент": 3,
-        "headless": 3
-      }
-    },
-    "docs-tools": {
-      "keywords": [
-        "audit",
-        "документация в кеш",
-        "актуализировать документацию",
-        "аудит",
-        "process documentation",
-        "загрузить доки в кеш",
-        "doc coverage",
-        "check docs",
-        "обработать документацию",
-        "docs to cache",
-        "convert docs to cache",
-        "создать знания из файлов",
-        "обновить доки",
-        "audit-docs"
-      ],
-      "skills": [
-        "audit-docs",
-        "doc-to-cache"
-      ],
-      "optional": [],
-      "weighted_keywords": {
-        "аудит документации": 4,
-        "audit docs": 4,
-        "проверить покрытие": 3,
-        "doc-to-cache": 4,
-        "конвертировать документацию": 4,
-        "покрытие документации": 4,
-        "doc coverage": 3,
-        "documentation coverage": 3,
-        "документацию в кеш": 4,
-        "конвертируй документацию": 4
-      }
-    },
-    "embedding": {
-      "keywords": [
-        "e5 model",
-        "jina embeddings",
-        "onnx",
-        "openvino",
-        "backend embedding",
-        "giga embedding"
-      ],
-      "weighted_keywords": {
-        "colpali": 3,
-        "visual embeddings": 4,
-        "bge-m3": 4,
-        "embedding model": 3
-      },
-      "skills": [
-        "embedding-models"
-      ],
-      "optional": []
-    },
-    "qdrant-ops": {
-      "keywords": [
-        "qdrant config",
-        "uuid conversion",
-        "rebuild sparse",
-        "миграция qdrant",
-        "qdrant docker",
-        "named vectors",
-        "snapshot"
-      ],
-      "weighted_keywords": {
-        "qdrant collection": 4,
-        "sparse vectors": 4
-      },
-      "skills": [
-        "qdrant-operations"
-      ],
-      "optional": []
-    },
-    "langchain-streaming": {
-      "keywords": [
-        "streaming langchain",
-        "SSE langgraph",
-        "stream_mode",
-        "stream updates",
-        "StreamWriter",
-        "stream langgraph",
-        "token streaming",
-        "stream messages",
-        "get_stream_writer",
-        "useStream"
-      ],
-      "weighted_keywords": {
-        "streaming": 2,
-        "SSE": 3,
-        "streaming langchain": 4,
-        "SSE langchain": 4
-      },
-      "skills": [
-        "langchain-streaming"
-      ],
-      "optional": [
-        "langgraph-core"
-      ]
-    },
-    "langchain-multiagent": {
-      "keywords": [
-        "multi-agent langchain",
-        "multi-agent workflow",
-        "координация агентов",
-        "agent handoff",
-        "handoff langchain",
-        "skills pattern langchain",
-        "router pattern langchain"
-      ],
-      "weighted_keywords": {
-        "supervisor pattern": 4,
-        "multi-agent": 3,
-        "handoff": 3
-      },
-      "skills": [
-        "langchain-multiagent"
-      ],
-      "optional": [
-        "langchain-core"
-      ]
-    },
-    "langchain-mcp": {
-      "keywords": [
-        "langchain-mcp-adapters",
-        "MCP interceptor",
-        "MCP transport"
-      ],
-      "weighted_keywords": {
-        "MCP langchain": 4,
-        "MultiServerMCPClient": 5,
-        "MCP сервер langchain": 4,
-        "MCP server langchain": 4,
-        "MCP сервер": 3
-      },
-      "skills": [
-        "langchain-mcp-tools"
-      ],
-      "optional": [
-        "langchain-core"
-      ]
-    },
-    "langchain-advanced": {
-      "keywords": [
-        "CacheBackedEmbeddings",
-        "LangGraph Studio",
-        "langgraph.json",
-        "langgraph deploy",
-        "langgraph test",
-        "deepagents",
-        "document loader",
-        "text splitter",
-        "retriever langchain",
-        "vector store langchain",
-        "FAISS langchain",
-        "Chroma langchain",
-        "embeddings langchain",
-        "WebBaseLoader",
-        "RecursiveCharacterTextSplitter",
-        "RAG agent tutorial",
-        "semantic search tutorial"
-      ],
-      "weighted_keywords": {
-        "checkpointer langgraph": 4,
-        "persistence langgraph": 3,
-        "LangSmith": 3,
-        "deep agents": 4
-      },
-      "skills": [
-        "langchain-integrations"
-      ],
-      "optional": [
-        "langgraph-memory-persistence",
-        "langgraph-production",
-        "langchain-tutorials",
-        "deep-agents"
-      ]
-    },
-    "claude-code-settings": {
-      "keywords": [
-        "параметры claude code",
-        "настройки claude code",
-        "claude code config",
-        "scopes",
-        "области конфигурации",
-        "project rules",
-        "enterprise claude",
-        "memory management claude",
-        "managed settings",
-        "стиль вывода",
-        "output style"
-      ],
-      "weighted_keywords": {
-        "settings.json claude": 4,
-        "CLAUDE.md": 3,
-        "settings.json": 3
-      },
-      "skills": [
-        "claude-code-settings"
-      ],
-      "optional": []
-    },
-    "claude-code-cli": {
-      "keywords": [
-        "cli reference claude",
-        "справочник cli claude",
-        "cli flags claude",
-        "флаги cli",
-        "bash mode",
-        "интерактивный режим",
-        "interactive mode",
-        "фоновые задачи claude",
-        "background tasks claude",
-        "контрольные точки",
-        "checkpoints",
-        "отмотать",
-        "rewind",
-        "slash commands"
-      ],
-      "weighted_keywords": {
-        "vim mode": 3,
-        "горячие клавиши": 3,
-        "keyboard shortcuts": 3,
-        "hotkeys": 3
-      },
-      "skills": [
-        "claude-code-cli-interactive"
-      ],
-      "optional": [
-        "claude-code-terminal-ux"
-      ]
-    },
-    "claude-code-github-actions": {
-      "keywords": [
-        "code review CI",
-        "CI/CD claude",
-        "@claude trigger",
-        "github workflow claude",
-        "PR automation",
-        "автоматизация PR",
-        "claude-code-action",
-        "автоматический review",
-        "github action claude"
-      ],
-      "weighted_keywords": {
-        "github actions": 3,
-        "github actions claude": 4,
-        "github actions claude code": 4
-      },
-      "skills": [
-        "claude-code-github-actions"
-      ],
-      "optional": []
-    },
-    "claude-code-admin": {
-      "keywords": [
-        "otel claude",
-        "access control claude",
-        "безопасность claude",
-        "security claude",
-        "IAM claude",
-        "rate limit claude",
-        "затраты claude",
-        "costs claude",
-        "аналитика claude",
-        "analytics claude",
-        "credential management",
-        "мониторинг claude",
-        "model config claude",
-        "environment variables claude"
-      ],
-      "weighted_keywords": {
-        "opentelemetry": 3,
-        "opentelemetry claude": 4,
-        "monitoring claude": 3,
-        "monitoring": 2
-      },
-      "skills": [
-        "claude-code-admin"
-      ],
-      "optional": []
-    },
-    "framework-cli": {
-      "keywords": [
-        "консоль",
-        "терминал",
-        "pdf-framework",
-        "command",
-        "как запустить"
-      ],
-      "weighted_keywords": {
-        "CLI команда": 3,
-        "python -m src.cli": 5,
-        "CLI": 2
-      },
-      "skills": [
-        "framework-cli"
-      ],
-      "optional": []
-    },
-    "framework-api": {
-      "keywords": [
-        "curl",
-        "Swagger",
-        "HTTP",
-        "OpenAI compatible",
-        "Python API",
-        "/search/",
-        "/documents/",
-        "websocket",
-        "Python API",
-        "Components API"
-      ],
-      "weighted_keywords": {
-        "REST API": 3,
-        "endpoint": 2
-      },
-      "skills": [
-        "framework-api"
-      ],
-      "optional": []
-    },
-    "framework-quickstart": {
-      "keywords": [
-        "системные требования",
-        "начать",
-        "getting started",
-        "install",
-        "установка",
-        "первый запуск",
-        "QuickRAG",
-        "развернуть"
-      ],
-      "weighted_keywords": {
-        "quickstart": 3,
-        "установить фреймворк": 4,
-        "install framework": 3,
-        "как установить": 3,
-        "с нуля": 2
-      },
-      "skills": [
-        "framework-quickstart"
-      ],
-      "optional": [
-        "framework-config"
-      ]
-    },
-    "framework-mcp-ui": {
-      "keywords": [
-        "веб-интерфейс",
-        "веб-интерфейс"
-      ],
-      "weighted_keywords": {
-        "MCP server": 3,
-        "Gradio": 3,
-        "Web UI": 2,
-        "Streamlit": 2
-      },
-      "skills": [
-        "framework-mcp-ui"
-      ],
-      "optional": []
-    },
-    "claude-code-ux": {
-      "keywords": [
-        "chrome integration",
-        "интеграция с chrome",
-        "строка состояния",
-        "автоматизация браузера",
-        "browser automation"
-      ],
-      "weighted_keywords": {
-        "statusline": 3,
-        "chrome": 2,
-        "chrome integration": 3
-      },
-      "skills": [
-        "claude-code-terminal-ux"
-      ],
-      "optional": [
-        "claude-code-vscode"
-      ]
-    },
-    "langgraph-memory": {
-      "keywords": [
-        "long-term memory langgraph",
-        "Store langgraph",
-        "state snapshots"
-      ],
-      "weighted_keywords": {
-        "checkpointer": 3,
-        "InMemorySaver": 4,
-        "PostgresSaver": 4,
-        "SqliteSaver": 4,
-        "persistence": 2,
-        "langgraph memory": 4
-      },
-      "skills": [
-        "langgraph-memory-persistence"
-      ],
-      "optional": [
-        "langgraph-core"
-      ]
-    },
-    "claude-code-vscode": {
-      "keywords": [
-        "vscode extension",
-        "расширение claude",
-        "Open in New Tab",
-        "@-mention",
-        "diff review",
-        "несколько бесед"
-      ],
-      "weighted_keywords": {
-        "VS Code extension": 4,
-        "vscode": 2,
-        "VS Code": 2
-      },
-      "skills": [
-        "claude-code-vscode"
-      ],
-      "optional": []
-    },
-    "doc-to-skill": {
-      "keywords": [
-        "оформи как скилл",
-        "превратить в скилл",
-        "конвертировать в SKILL.md",
-        "make a skill from",
-        "convert to skill"
-      ],
-      "weighted_keywords": {
-        "сделай скилл из": 4,
-        "doc-to-skill": 4,
-        "скилл из документации": 4
-      },
-      "skills": [
-        "doc-to-skill"
-      ],
-      "optional": []
     }
   },
   "min_score_gap": 2
