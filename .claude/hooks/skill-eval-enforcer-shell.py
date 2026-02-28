@@ -3,12 +3,14 @@
 Hook: skill-eval-enforcer (shell-output version)
 Event: UserPromptSubmit
 Matcher: (none — fires on every user prompt)
-Purpose: Force Claude to evaluate and activate relevant skills before responding.
+Purpose: Task Protocol enforcement + skill evaluation on every user prompt.
 Timeout: 3s
 
-KEY DIFFERENCE from skill-eval-enforcer.py:
-  - Old: HookOutput.system_message() → JSON {"systemMessage": "..."} → <system-reminder> tag
-  - New: print() → plain text stdout → direct context injection
+Responsibilities:
+  1. Reset task protocol state on each new prompt
+  2. Auto-classify prompt complexity (trivial/medium/complex)
+  3. Set SessionState.set_task_classified() for trivial prompts (auto-allow)
+  4. Output Task Protocol instruction (replaces generic skill eval)
 
 Research basis (Scott Spence, 650+ trials):
   - JSON systemMessage: 55% activation (NO improvement vs baseline!)
