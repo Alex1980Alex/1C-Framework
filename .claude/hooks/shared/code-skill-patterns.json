@@ -132,7 +132,7 @@
       },
       {
         "directory_prefix": ".github/workflows/",
-        "skill": "ci-cd",
+        "skill": "claude-code-github-actions",
         "label": "CI/CD Pipelines",
         "domain": "devops"
       },
