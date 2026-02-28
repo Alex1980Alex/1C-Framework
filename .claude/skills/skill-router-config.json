@@ -626,11 +626,11 @@
   },
   "min_score_gap": 2,
   "tfidf_thresholds": {
-    "strong": 0.50,
-    "moderate": 0.30,
-    "weak": 0.15,
-    "strong_bonus": 3,
-    "moderate_bonus": 2,
+    "strong": 0.55,
+    "moderate": 0.40,
+    "weak": 0.25,
+    "strong_bonus": 2,
+    "moderate_bonus": 1,
     "weak_bonus": 1
   }
 }
