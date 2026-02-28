@@ -1270,12 +1270,12 @@
   },
   "min_score_gap": 2,
   "tfidf_thresholds": {
-    "strong": 0.35,
-    "moderate": 0.2,
-    "weak": 0.12,
-    "strong_bonus": 3,
-    "moderate_bonus": 2,
-    "weak_bonus": 1,
-    "top_k": 3
+    "strong": 0.40,
+    "moderate": 0.25,
+    "weak": 0.99,
+    "strong_bonus": 1,
+    "moderate_bonus": 1,
+    "weak_bonus": 0,
+    "top_k": 2
   }
 }
