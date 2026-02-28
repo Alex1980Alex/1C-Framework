@@ -127,7 +127,8 @@ Timeout вычисляется: `max(15, min(base + files * per_file, 120))`.
 | `has_recent_completion(hook_id, minutes)` | Cooldown check |
 | `cleanup_old_completed(max_age_hours, max_count)` | Удалить старые completed задачи |
 | `auto_validate_git_tasks()` | Sync git tasks при старте |
-| `session_start_cleanup()` | Cleanup old + validate git |
+| `auto_validate_code_verify_tasks(current_session_id)` | Cleanup stale code-verify tasks (session + age fallback) |
+| `session_start_cleanup(current_session_id)` | Cleanup old + validate git + code-verify |
 
 ---
 
