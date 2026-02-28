@@ -92,7 +92,7 @@ def _extract_file_path(tool_input: dict) -> str:
 
 
 class TaskProtocolEnforcer(BaseHook):
-    """PreToolUse:Write|Edit → blocks if protocol phase is 'idle'."""
+    """PreToolUse:Write|Edit → blocks unless phase is 'skill_checked'."""
 
     def execute(self, inp: HookInput) -> Optional[HookOutput]:
         # Only act on Write/Edit
@@ -113,18 +113,39 @@ class TaskProtocolEnforcer(BaseHook):
 
         phase = protocol.get("phase", "idle")
 
-        # Allow if classified (trivial) or decomposed
-        if phase in ("classified", "decomposed"):
+        # Only skill_checked allows Write/Edit
+        if phase == "skill_checked":
             return None
 
-        # Block: protocol phase is "idle"
+        # Build context-aware block message
+        if phase == "idle":
+            hint = (
+                "1. CLASSIFY complexity (trivial/medium/complex)\n"
+                "2. Search skills → activate via Skill()\n"
+                "3. IF NOT trivial: TaskCreate subtasks\n"
+                "4. Then retry Write/Edit."
+            )
+        elif phase == "classified":
+            hint = (
+                "Skills not checked yet!\n"
+                "1. Search available skills for this task\n"
+                "2. Activate via Skill() — or Skill('learning-loop') if none found\n"
+                "3. Then retry Write/Edit."
+            )
+        elif phase == "decomposed":
+            hint = (
+                "Decomposed but skills not checked!\n"
+                "1. Search skills for current subtask\n"
+                "2. Activate via Skill() — or Skill('learning-loop') if none found\n"
+                "3. Then retry Write/Edit."
+            )
+        else:
+            hint = "Activate a skill via Skill() before writing code."
+
         return HookOutput().block(
-            "TASK PROTOCOL: Decompose before writing code.\n"
-            "1. CLASSIFY: trivial (<1 file) | medium (1-3 files) | complex (4+)\n"
-            "2. IF NOT trivial: TaskCreate subtasks\n"
-            "3. Search skills, activate via Skill()\n"
-            "4. Then retry Write/Edit.\n"
-            "Full algorithm: Skill('task-protocol')"
+            f"TASK PROTOCOL: Check skills before writing code.\n"
+            f"{hint}\n"
+            f"Full algorithm: Skill('task-protocol')"
         )
 
 
