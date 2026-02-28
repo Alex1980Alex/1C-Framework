@@ -461,6 +461,11 @@ def set_task_classified(complexity: str) -> None:
     SessionState.set_task_classified(complexity)
 
 
+def record_skill_checked() -> None:
+    """Module-level wrapper for SessionState.record_skill_checked()."""
+    SessionState.record_skill_checked()
+
+
 # Export for use in hooks
 __all__ = [
     "SessionState",
