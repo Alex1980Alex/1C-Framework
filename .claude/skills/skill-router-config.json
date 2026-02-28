@@ -392,7 +392,8 @@
         "framework-mcp-ui"
       ],
       "weighted_keywords": {
-        "CLI команда": 3,
+        "CLI команд": 3,
+        "cli команд": 3,
         "python -m src.cli": 5,
         "REST API": 3,
         "endpoint": 2,
@@ -402,7 +403,8 @@
         "как установить": 3,
         "MCP server фреймворк": 3,
         "Gradio": 3,
-        "Streamlit фреймворк": 2
+        "Streamlit фреймворк": 2,
+        "CLI": 2
       }
     },
     "framework-ops": {
