@@ -58,12 +58,12 @@ MANDATORY_HOOKS = {
 STALE_TASK_MAX_AGE_HOURS = 1  # Tasks older than this are considered stale (cross-session)
 
 
-def sync_stale_code_verify_tasks(data: dict) -> int:
+def sync_stale_code_verify_tasks(data: dict, current_session_id: str = "") -> int:
     """Auto-complete stale code-verify-reminder tasks from previous sessions.
 
-    Tasks older than STALE_TASK_MAX_AGE_HOURS are considered stale because
-    they were created in a previous session and the session boundary
-    invalidates their relevance.
+    Dual-strategy cleanup:
+      1. Session-based (deterministic): task.sessionId != current_session_id
+      2. Age-based (fallback): tasks without sessionId older than STALE_TASK_MAX_AGE_HOURS
 
     Returns:
         Number of tasks auto-completed
@@ -73,8 +73,22 @@ def sync_stale_code_verify_tasks(data: dict) -> int:
     now = datetime.now()
 
     for todo in todos:
-        if (todo.get("status") == "pending"
-                and todo.get("createdBy") == "code-verify-reminder"):
+        if (todo.get("status") != "pending"
+                or todo.get("createdBy") != "code-verify-reminder"):
+            continue
+
+        task_session = todo.get("sessionId", "")
+
+        # Strategy 1: session mismatch → deterministic cleanup
+        if current_session_id and task_session and task_session != current_session_id:
+            todo["status"] = "completed"
+            todo["completedAt"] = now.isoformat()
+            todo["note"] = f"Auto-cleaned: different session ({task_session[:8]}… vs {current_session_id[:8]}…)"
+            completed += 1
+            continue
+
+        # Strategy 2: age-based fallback (tasks without sessionId)
+        if not task_session:
             created_at_str = todo.get("createdAt", "")
             if not created_at_str:
                 continue
@@ -84,7 +98,7 @@ def sync_stale_code_verify_tasks(data: dict) -> int:
                 if age_hours > STALE_TASK_MAX_AGE_HOURS:
                     todo["status"] = "completed"
                     todo["completedAt"] = now.isoformat()
-                    todo["note"] = f"Auto-cleaned: stale task ({age_hours:.1f}h old, threshold={STALE_TASK_MAX_AGE_HOURS}h)"
+                    todo["note"] = f"Auto-cleaned: stale task ({age_hours:.1f}h old, no sessionId)"
                     completed += 1
             except (ValueError, TypeError):
                 continue
