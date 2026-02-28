@@ -48,8 +48,8 @@ class TfidfScorer:
         self._dir = artifacts_dir
         self._loaded = False
         self._vocab: Dict[str, int] = {}
-        self._idf: Optional[object] = None  # numpy array
-        self._centroids: Optional[object] = None  # numpy array
+        self._idf = None  # numpy ndarray, loaded lazily
+        self._centroids = None  # numpy ndarray, loaded lazily
         self._bundle_names: list[str] = []
         self._ngram_range = (2, 4)  # char_wb n-gram range (matches sklearn build)
 
