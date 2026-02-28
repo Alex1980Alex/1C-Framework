@@ -227,8 +227,8 @@ prompt → [Layer A: keyword match]     → score_kw
 
 | # | Задача | Артефакт | Детали |
 |---|--------|----------|--------|
-| 16.1 | 2-level routing | skill-router-config.json v4 | Level 1: domain classification (6 доменов). Level 2: skill selection внутри домена. Как NVIDIA blueprint |
-| 16.2 | Domain definitions | config | `domains: {1c: [...], framework: [...], claude-code: [...], langchain: [...], research: [...], infra: [...]}` |
+| 16.1 | 2-level routing | skill-router-config.json v5 | Level 1: domain classification (6 доменов). Level 2: skill selection внутри домена. Как NVIDIA blueprint |
+| 16.2 | Domain definitions | config | ✅ Частично (Фаза 13.7): `domains` field в config v5 с 6 доменами. Осталось: runtime domain classifier в skill-router.py |
 | 16.3 | Per-domain config files | skills/<domain>/router-config.json | Каждый домен — свой конфиг с бандлами. Загружается только при match на Level 1 |
 | 16.4 | Token budget enforcement | skill-router.py | Max N skills × avg_tokens ≤ budget. Если budget exceeded — приоритизировать по score |
 | 16.5 | Skill description index | data/skill-descriptions.json | Автоматически собирать description из YAML frontmatter всех SKILL.md |
