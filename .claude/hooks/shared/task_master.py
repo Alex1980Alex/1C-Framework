@@ -496,7 +496,7 @@ def auto_validate_code_verify_tasks(
     return completed
 
 
-def session_start_cleanup() -> Dict[str, Any]:
+def session_start_cleanup(current_session_id: str = "") -> Dict[str, Any]:
     """Perform all cleanup and validation at session start.
 
     1. cleanup_old_completed() — remove stale tasks (>24h)
@@ -508,7 +508,7 @@ def session_start_cleanup() -> Dict[str, Any]:
     """
     removed = cleanup_old_completed(max_age_hours=24, max_count=50)
     validated = auto_validate_git_tasks()
-    cv_cleaned = auto_validate_code_verify_tasks()
+    cv_cleaned = auto_validate_code_verify_tasks(current_session_id=current_session_id)
     return {
         "removed": removed,
         "git_validated": validated,
