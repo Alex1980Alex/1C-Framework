@@ -203,6 +203,16 @@ def get_pending_mandatory_tasks() -> list:
 
 def main():
     """Check for pending mandatory tasks. Block stop if found."""
+    # Parse session_id from stdin (Stop event JSON)
+    current_session_id = ""
+    try:
+        raw = sys.stdin.read()
+        if raw.strip():
+            stdin_data = json.loads(raw)
+            current_session_id = stdin_data.get("session_id", "")
+    except Exception:
+        pass  # Graceful: empty string → age-based fallback
+
     # Invocation timer
     try:
         from shared.invocation_logger import InvocationTimer
@@ -211,7 +221,7 @@ def main():
         timer = None
 
     try:
-        pending = get_pending_mandatory_tasks()
+        pending = get_pending_mandatory_tasks(current_session_id=current_session_id)
 
         if not pending:
             # No mandatory tasks pending — allow stop
