@@ -58,14 +58,16 @@ src/
 
 ## Task Protocol (MANDATORY)
 
-Every task: classify → decompose (TaskCreate) → per-subtask skill search → execute → verify.
-Enforcement: `task-protocol-enforcer` blocks Write/Edit before decomposition.
+Every task: classify → (decompose) → **Skill() check** → execute → verify.
+Enforcement: `task-protocol-enforcer` blocks Write/Edit until `Skill()` is called.
 Full algorithm: `Skill('task-protocol')`.
 
-- **trivial** (< 1 file, < 30 words): auto-allowed, no TaskCreate needed
-- **medium** (1-3 files): must TaskCreate subtasks before Write/Edit
-- **complex** (4+ files): must TaskCreate with full decomposition
-- Exempt: `.claude/`, `docs/`, `data/`, config files
+- **ALL tasks** (including trivial) require `Skill()` before Write/Edit
+- **trivial** (< 1 file, < 30 words): Skill() → Write/Edit
+- **medium** (1-3 files): TaskCreate → Skill() → Write/Edit
+- **complex** (4+ files): TaskCreate (full decomposition) → Skill() → Write/Edit
+- Phase machine: `idle → classified → [decomposed] → skill_checked → ALLOW Write/Edit`
+- Exempt: `.claude/`, `docs/`, `data/`, config files (.json, .toml, .yml, .env)
 
 ## Output Rules
 
