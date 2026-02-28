@@ -119,6 +119,8 @@ SKIP_PATTERNS = [
     ".claude/settings-subagent",
     # Hook configs (documented in CLAUDE.md Hooks Infrastructure)
     "code-skill-patterns.json",
+    # CI/CD workflows (documented in CLAUDE.md Skill Router Eval)
+    ".github/",
 ]
 
 
