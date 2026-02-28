@@ -1267,6 +1267,48 @@
         "разберись в теме и сохрани знания",
         "научись этой новой возможности самостоятельно"
       ]
+    },
+    "task-protocol": {
+      "keywords": [
+        "implement",
+        "реализовать",
+        "new feature",
+        "добавь функцию",
+        "создай функцию",
+        "сделай функцию",
+        "добавь фичу",
+        "новая фича",
+        "декомпозиция",
+        "decompose task"
+      ],
+      "skills": [
+        "task-protocol"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "задача": 2,
+        "implement": 2,
+        "реализуй": 3,
+        "добавь": 2,
+        "сделай": 2,
+        "создай": 2,
+        "new feature": 3,
+        "новая фича": 3,
+        "декомпозиция": 4,
+        "task protocol": 5
+      },
+      "utterances": [
+        "implement a new feature for the system",
+        "add a new capability to the framework",
+        "build this multi-step functionality",
+        "create a new module with several components",
+        "develop this feature end to end",
+        "реализуй новую функциональность для системы",
+        "добавь новую возможность во фреймворк",
+        "создай новый модуль с несколькими компонентами",
+        "разработай эту фичу от начала до конца",
+        "сделай эту многошаговую задачу"
+      ]
     }
   },
   "min_score_gap": 2,
