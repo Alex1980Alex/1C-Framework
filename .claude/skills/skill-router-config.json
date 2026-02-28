@@ -3,6 +3,14 @@
   "cooldown_minutes": 3,
   "min_score": 2,
   "max_bundles": 2,
+  "domains": {
+    "1c": ["research-1c"],
+    "framework": ["search", "indexing", "eval-benchmark", "graph", "agents", "data-stores", "deploy", "framework-use", "framework-ops"],
+    "claude-code": ["claude-code-dev", "claude-code-config", "claude-code-ops", "hooks", "creation", "docs"],
+    "langchain": ["langchain-core", "langchain-infra"],
+    "research": ["research-tech", "architecture", "workflow"],
+    "tools": ["git-parsing", "tenacity-retry", "code-verify", "learning-loop"]
+  },
   "affinities": {
     "langchain-core": [
       "langgraph-core"
