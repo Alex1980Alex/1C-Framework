@@ -7,7 +7,7 @@
 
 ---
 
-## Текущее состояние (аудит 2026-02-27)
+## Текущее состояние (аудит 2026-02-28)
 
 ### Архитектура
 
@@ -15,49 +15,55 @@
 UserPromptSubmit
   │
   ├── skill-router.py (Layer A: keyword match + Layer B: fuzzy/lemma)
-  │     ↓ systemMessage: "[SKILL-ROUTER] Bundles: X, Y"
+  │     ↓ stdout: "[SKILL-ROUTER] Bundles: X, Y" + "ОБЯЗАТЕЛЬНО: Skill('X')"
+  │     ↓ 100% injection rate (stdout approach)
   │
   └── skill-eval-enforcer-shell.py (stdout: "MANDATORY SKILL EVALUATION")
-        ↓ plain text → 100% injection rate (vs 55% для JSON systemMessage)
+        ↓ plain text → 100% injection rate
 
 PreToolUse / PostToolUse
   └── code-skill-enforcer.py (Level A-F: pattern→skill blocking)
 ```
 
-### Метрики (из data/*.jsonl, 227 routing events)
+### Метрики (eval-skill-router.py, 64 ground truth samples)
 
-| Метрика | Значение | Оценка |
-|---------|----------|--------|
-| Routing events | 227 | — |
-| Recommend events | 57 | — |
-| Activate events | 12 | — |
-| **Activation rate** | **8.8%** | КРИТИЧНО НИЗКО |
-| Уникальных prompt→activate | 5 из 57 | — |
-| Top bundle | research-1c (19.4%) | — |
-| Кол-во бандлов в конфиге | 42 | Избыточно |
-| Кол-во keywords | ~350+ | Ручное кураторство |
-| False positives | Не измеряется | Нет ground truth |
+| Метрика | v4 (46 bundles) | v5 (25 bundles) | Δ |
+|---------|----------------|----------------|---|
+| **Bundle F1** | 0.68 | **0.89** | +31% |
+| **Required Skill Precision** | 0.79 | **0.88** | +12% |
+| **Required Skill F1** | 0.83 | **0.81** | -2% |
+| **All Skill Recall** | 1.00 | **1.00** | — |
+| **Action Intent Accuracy** | 98% | **100%** | +2% |
+| **Informational Intent** | — | **100%** | — |
+| Кол-во бандлов | 46 | **25** | -46% |
+| Кол-во keywords | ~649 | ~649 | — |
+| Ground truth samples | 64 | 64 | — |
+| FP count | — | 38 | tracked |
+| FN count | — | 0 | — |
 
-### TOP-5 бандлов по частоте срабатывания
+### Домены (Level 1 hierarchical routing)
 
-| # | Bundle | % от всех events |
-|---|--------|-------------------|
-| 1 | research-1c | 19.4% |
-| 2 | infrastructure | 15.0% |
-| 3 | langchain-agent | 14.5% |
-| 4 | framework-cli | 11.0% |
-| 5 | search | 8.4% |
+| Домен | Бандлы |
+|-------|--------|
+| 1c | research-1c |
+| framework | search, indexing, eval-benchmark, graph, agents, data-stores, deploy, framework-use, framework-ops |
+| claude-code | claude-code-dev, claude-code-config, claude-code-ops, hooks, creation, docs |
+| langchain | langchain-core, langchain-infra |
+| research | research-tech, architecture, workflow |
+| tools | git-parsing, tenacity-retry, code-verify, learning-loop |
 
-### Диагноз
+### Прогресс
 
-**Главная проблема:** Роутер *рекомендует* скиллы, но Claude *не активирует* их в 91.2% случаев.
+**Решённые проблемы:**
+1. ~~systemMessage игнорируется~~ → **FIXED** (Фаза 11): stdout approach = 100% injection
+2. ~~Нет принуждения~~ → **FIXED** (Фаза 11): конкретные `Skill('X')` + императивная инструкция
+3. ~~Слишком много бандлов (42)~~ → **FIXED** (Фаза 13): 46→25 бандлов, F1 bundle 0.68→0.89
+4. ~~Нет ground truth~~ → **FIXED** (Фаза 12): 64 samples, eval script, CI gate
 
-**Корневые причины:**
-1. **systemMessage игнорируется** — JSON `{"systemMessage": "..."}` имеет 55% activation rate (исследование Scott Spence, 650+ trials). Shell stdout — 100%, но skill-router.py использует `HookOutput().system_message()` (= JSON), а не stdout
-2. **Нет принуждения** — skill-eval-enforcer-shell.py выводит generic "MANDATORY SKILL EVALUATION", но без конкретных скиллов
-3. **Слишком много бандлов** (42) — шум забивает сигнал
-4. **Нет semantic understanding** — keyword matching не ловит парафразы
-5. **Нет feedback loop** — recommend/activate логи есть, но нет автоматической коррекции
+**Оставшиеся проблемы:**
+4. **Нет semantic understanding** — keyword matching не ловит парафразы → Фаза 14
+5. **Нет feedback loop** — recommend/activate логи есть, но нет автоматической коррекции → Фаза 15
+6. **FP noise** — 38 false positives (optional/affinity skills) → нужна calibration → Фаза 14-15
 
 ---
 
