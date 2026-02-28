@@ -316,6 +316,16 @@ class SkillRouter(BaseHook):
                         if matched_kw not in prompt_lower:
                             scores[name] = scores.get(name, 0) + 1
 
+        # --- Layer C: TF-IDF semantic scoring (Phase 14) ---
+        tfidf = _get_tfidf_scorer()
+        if tfidf is not None:
+            tfidf_thresholds = config.get("tfidf_thresholds", {})
+            tfidf_scores = tfidf.score(prompt_lower)
+            for name, sim in tfidf_scores.items():
+                bonus = _sim_to_bonus(sim, tfidf_thresholds)
+                if bonus > 0:
+                    scores[name] = scores.get(name, 0) + bonus
+
         # --- Filter bundles above min_score ---
         matched = {
             name: score for name, score in scores.items()
