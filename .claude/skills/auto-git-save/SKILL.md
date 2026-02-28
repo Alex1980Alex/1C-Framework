@@ -118,7 +118,7 @@ Timeout вычисляется: `max(15, min(base + files * per_file, 120))`.
 
 | Функция | Назначение |
 |---------|-----------|
-| `add_task()` | Создать pending задачу |
+| `add_task(session_id="")` | Создать pending задачу (session_id для cross-session tracking) |
 | `complete_task(title, created_by)` | Завершить конкретную задачу по title |
 | `complete_task_by_hook(hook_id)` | Завершить ВСЕ pending задачи хука |
 | `get_pending_tasks(created_by)` | Получить pending задачи (опционально по creator) |
