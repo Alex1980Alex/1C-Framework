@@ -138,22 +138,39 @@ PreToolUse / PostToolUse
 
 ---
 
-### Фаза 13: PRUNE — Оптимизация конфигурации
+### Фаза 13: PRUNE — Оптимизация конфигурации ✅ DONE
 
 **Приоритет:** P1 — снизить noise, повысить precision
 **Цель:** Сократить бандлы с 42 до 15-20, повысить precision
+**Результат:** 46→25 бандлов, Bundle F1 0.68→0.89 (+31%), 6 доменов, 2 keyword overlaps
 
-| # | Задача | Артефакт | Детали |
+| # | Задача | Артефакт | Статус |
 |---|--------|----------|--------|
-| 13.1 | Анализ бандлов по usage | Отчёт | 42 бандла, но 50% трафика = top-5. Мертвые бандлы (0 срабатываний за 30 дней) → кандидаты на удаление |
-| 13.2 | Мержить мелкие бандлы | skill-router-config.json | `hook-debugging` + `hook-bugs` + `windows-paths` + `hook-enforcer` + `hook-architecture` → один `hooks-debug` bundle |
-| 13.3 | Мержить claude-code-* | skill-router-config.json | 7 claude-code-* бандлов → 2-3: `claude-code-dev` (plugins, subagents, programmatic), `claude-code-config` (settings, cli, terminal-ux), `claude-code-ops` (admin, github-actions) |
-| 13.4 | Мержить langchain-* | skill-router-config.json | 5 langchain-* бандлов → 2: `langchain-core` (core, integrations, multiagent), `langchain-infra` (streaming, mcp, memory, production) |
-| 13.5 | Мержить framework-* | skill-router-config.json | 7 framework-* бандлов → 3: `framework-use` (cli, api, quickstart), `framework-ops` (config, troubleshooting, caching), `framework-ui` (mcp-ui) |
-| 13.6 | Убрать overlap keywords | Скрипт анализа | Ключевое слово "langchain" матчит `langchain-agent` И `langchain-rag` — нужна disambiguation |
-| 13.7 | Hierarchical routing | 2-level config | Level 1: domain (1c, framework, claude-code, langchain). Level 2: sub-skill. Как NVIDIA blueprint с 77→10 groups |
+| 13.1 | Анализ бандлов по usage | Отчёт | ✅ Top-5 = 50%+ трафика, мёртвые бандлы идентифицированы |
+| 13.2 | Мержить мелкие бандлы | [skill-router-config.json](../../.claude/skills/skill-router-config.json) v5 | ✅ hooks-* (5→1 `hooks`), search-* (2→1 `search`) |
+| 13.3 | Мержить claude-code-* | skill-router-config.json v5 | ✅ 7→3: `claude-code-dev`, `claude-code-config`, `claude-code-ops` |
+| 13.4 | Мержить langchain-* | skill-router-config.json v5 | ✅ 7→2: `langchain-core`, `langchain-infra` |
+| 13.5 | Мержить framework-* | skill-router-config.json v5 | ✅ 6→2: `framework-use`, `framework-ops` (framework-ui merged into framework-use) |
+| 13.6 | Убрать overlap keywords | Анализ | ✅ 2 minor overlaps: `framework-use` dup, shared "граф знаний" |
+| 13.7 | Hierarchical routing | `domains` field in config | ✅ 6 domains: 1c, framework, claude-code, langchain, research, tools |
 
-**Ожидаемый результат:** 15-20 бандлов, precision +15-20%, меньше noise
+**Мерж-карта v4→v5:**
+
+| v4 бандлы | → | v5 бандл |
+|-----------|---|---------|
+| hook-debugging, claude-code-hooks-bugs, windows-hooks-paths, hook-enforcement-pattern, multi-level-hook-architecture | → | `hooks` |
+| claude-code-plugins, claude-code-subagents, claude-code-programmatic | → | `claude-code-dev` |
+| claude-code-settings, claude-code-cli-interactive, claude-code-terminal-ux, claude-code-vscode | → | `claude-code-config` |
+| claude-code-admin, claude-code-github-actions | → | `claude-code-ops` |
+| langchain-core, langchain-multiagent, langchain-tutorials, langchain-integrations | → | `langchain-core` |
+| langgraph-core, langchain-streaming, langchain-mcp-tools, langgraph-memory-persistence, langgraph-production, deep-agents | → | `langchain-infra` |
+| framework-cli, framework-api, framework-quickstart, framework-mcp-ui | → | `framework-use` |
+| framework-config, framework-troubleshooting, framework-caching | → | `framework-ops` |
+| create-hook, hooks-skills-mcp-triad, triad-factory, create-skill, doc-to-skill | → | `creation` |
+| audit-docs, doc-to-cache | → | `docs` |
+| search-pipeline-debug, pdf-search | → | `search` |
+| embedding-models, qdrant-operations | → | `data-stores` |
+| task-evaluation, architecture-research | → | `workflow` |
 
 ---
 
