@@ -145,6 +145,7 @@ class CodeVerifyReminder(BaseHook):
                     "Запусти skill code-verify (режим: quality-review или knowledge-compliance).\n"
                     "Задача завершится после вердикта PASS от субагента-ревьюера."
                 ),
+                session_id=inp.session_id,
             )
         except Exception:
             added = False
