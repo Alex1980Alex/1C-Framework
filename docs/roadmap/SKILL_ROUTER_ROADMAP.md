@@ -186,31 +186,37 @@ PreToolUse / PostToolUse
 
 ---
 
-### Фаза 14: EMBED — Semantic scoring layer
+### Фаза 14: EMBED — Semantic scoring layer ✅ DONE
 
-**Приоритет:** P1 — ключевое улучшение качества
+**Приоритет:** P1
 **Цель:** Ловить парафразы и novel phrasings
+**Результат:** TF-IDF char n-grams (не neural embeddings). F1 delta +0.5%, paraphrase rescue confirmed, graceful degradation verified.
 
-| # | Задача | Артефакт | Детали |
+**ADR:** TF-IDF char_wb n-grams вместо neural embeddings. sentence-transformers cold import 14s превышает 5s hook timeout. sklearn at build time, pure numpy at runtime (75ms). ~280 utterances (EN+RU).
+
+| # | Задача | Артефакт | Статус |
 |---|--------|----------|--------|
-| 14.1 | Выбрать embedding модель | ADR | Кандидаты: `all-MiniLM-L6-v2` (22MB, <1ms), `nomic-embed-text` (130MB, ~3ms), `BGE-M3` (multilingual). Критерий: latency <50ms (hook timeout 5s), русский язык |
-| 14.2 | Pre-compute route embeddings | data/route-embeddings.npz | Для каждого бандла: 5-10 примеров промптов → embed → средний вектор (centroid). Offline, при изменении конфига |
-| 14.3 | Скрипт генерации embeddings | scripts/build-route-embeddings.py | `python scripts/build-route-embeddings.py` → читает config + примеры → генерирует .npz |
-| 14.4 | Добавить примеры промптов в конфиг | skill-router-config.json | Новое поле `"utterances"`: 5-10 примеров на бандл. Пример: `{"query": {"utterances": ["напиши запрос", "сделай выборку", "помоги с SQL"]}}` |
-| 14.5 | Layer C: Embedding scoring в skill-router.py | skill-router.py | `score_total = keyword_score * 0.4 + fuzzy_score * 0.2 + embedding_score * 0.4`. Embedding score = cosine_similarity(prompt_embed, bundle_centroid) |
-| 14.6 | Lazy-load embeddings | skill-router.py | Первый вызов: load .npz + model (~200ms). Последующие: <10ms. В пределах 5s timeout |
-| 14.7 | Benchmark: keyword vs hybrid | scripts/benchmark-router.py | Прогнать ground truth через оба подхода, сравнить F1. Ожидание: +10-20% recall |
-| 14.8 | Fallback при отсутствии модели | skill-router.py | Если embedding model не установлена — graceful degradation на keyword-only |
-
-**Ожидаемый результат:** Recall +15-25% за счёт семантического понимания
+| 14.1 | Определить подход | ADR: TF-IDF char_wb n-grams | ✅ sklearn build, numpy runtime |
+| 14.2 | Pre-compute TF-IDF centroids | data/route-tfidf/ | ✅ vocabulary.json, idf_weights.npy, centroids_normalized.npy, metadata.json |
+| 14.3 | Скрипт генерации | scripts/build-route-embeddings.py | ✅ sklearn TfidfVectorizer, 4 artifact files, sanity check |
+| 14.4 | Utterances в конфиг | skill-router-config.json v6 | ✅ ~280 utterances (EN+RU), 5-10 per bundle |
+| 14.5 | Layer C: TF-IDF scoring | skill-router.py | ✅ Cosine similarity, integer bonus (+1 max), top-K=2 filter |
+| 14.6 | Lazy-load scorer | shared/tfidf_scorer.py | ✅ Pure numpy, ~75ms first load |
+| 14.7 | Benchmark ablation | scripts/benchmark-router.py | ✅ A+B vs A+B+C, --ablation flag, latency stats |
+| 14.8 | Graceful degradation | skill-router.py | ✅ SKILL_ROUTER_NO_TFIDF env var, missing artifacts skipped silently |
 
 **Архитектура:**
 ```
-prompt → [Layer A: keyword match]     → score_kw
-       → [Layer B: fuzzy/lemma match] → score_fuzzy
-       → [Layer C: embedding cosine]  → score_embed
-       → weighted_sum → ranked bundles → top-N skills
+prompt -> [Layer A: keyword match]           -> +2 per keyword hit
+       -> [Layer B: fuzzy/lemma match]       -> +1 per fuzzy hit
+       -> [Layer C: TF-IDF cosine, top-K=2]  -> +1 per bundle above threshold
+       -> sum >= min_score(2) -> ranked bundles -> top-N skills
 ```
+
+**Thresholds (conservative booster-only):**
+strong=0.40/+1, moderate=0.25/+1, weak=disabled, top_k=2
+
+**Key insight:** Layer C as booster (max +1) not trigger. Prevents false positives while catching paraphrases that also have partial keyword overlap.
 
 ---
 
