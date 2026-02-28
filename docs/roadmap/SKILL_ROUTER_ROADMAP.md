@@ -2,7 +2,7 @@
 
 **Дата создания:** 2026-02-12
 **Дата обновления:** 2026-02-28
-**Статус:** Фазы 0-1, 7-13 DONE. Эволюция: Keyword → Hybrid → Semantic
+**Статус:** Фазы 0-1, 7-14 DONE. Эволюция: Keyword → Hybrid → Semantic (TF-IDF)
 **Проекты:** PDF Framework + 1C-Enterprise (shared pattern)
 
 ---
