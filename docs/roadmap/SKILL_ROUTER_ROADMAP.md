@@ -25,21 +25,33 @@ PreToolUse / PostToolUse
   └── code-skill-enforcer.py (Level A-F: pattern→skill blocking)
 ```
 
-### Метрики (eval-skill-router.py, 64 ground truth samples)
+### Метрики (eval-skill-router.py, 73 ground truth samples)
 
-| Метрика | v4 (46 bundles) | v5 (25 bundles) | Δ |
-|---------|----------------|----------------|---|
-| **Bundle F1** | 0.68 | **0.89** | +31% |
-| **Required Skill Precision** | 0.79 | **0.88** | +12% |
-| **Required Skill F1** | 0.83 | **0.81** | -2% |
-| **All Skill Recall** | 1.00 | **1.00** | — |
-| **Action Intent Accuracy** | 98% | **100%** | +2% |
-| **Informational Intent** | — | **100%** | — |
-| Кол-во бандлов | 46 | **25** | -46% |
-| Кол-во keywords | ~649 | ~649 | — |
-| Ground truth samples | 64 | 64 | — |
-| FP count | — | 38 | tracked |
-| FN count | — | 0 | — |
+| Метрика | v4 (46 bundles) | v5 (25 bundles) | v6 (25 + TF-IDF) | Δ v5→v6 |
+|---------|----------------|----------------|------------------|---------|
+| **Bundle F1** | 0.68 | 0.89 | **0.80** | -10%* |
+| **Required Skill Precision** | 0.79 | 0.88 | **0.90** | +2% |
+| **Required Skill F1** | 0.83 | 0.81 | **0.74** | -9%* |
+| **All Skill Recall** | 1.00 | 1.00 | **0.89** | -11%* |
+| **Action Intent Accuracy** | 98% | 100% | **87%** | -13%* |
+| **Informational Intent** | — | 100% | **89%** | -11%* |
+| Кол-во бандлов | 46 | 25 | 25 | — |
+| Кол-во keywords | ~649 | ~649 | ~649 | — |
+| Кол-во utterances | — | — | ~280 | new |
+| Ground truth samples | 64 | 64 | **73** | +9 |
+| FP count | — | 38 | 39 | +1 |
+| FN count | — | 0 | 8 | +8* |
+
+*\* Drops due to 9 new paraphrase samples (65-73) which test TF-IDF-only matching. On the original 64 samples, metrics are equivalent to v5.*
+
+### Ablation: Layer C effect (A+B vs A+B+C)
+
+| Метрика | A+B (no TF-IDF) | A+B+C (with TF-IDF) | Delta |
+|---------|-----------------|---------------------|-------|
+| Precision | 0.9247 | 0.9041 | -0.02 |
+| Recall | 0.7169 | 0.7306 | +0.01 |
+| **F1** | 0.7365 | **0.7411** | **+0.005** |
+| Latency p50 | 184ms | 254ms | +70ms |
 
 ### Домены (Level 1 hierarchical routing)
 
