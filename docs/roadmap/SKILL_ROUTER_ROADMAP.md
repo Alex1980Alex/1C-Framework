@@ -1,8 +1,8 @@
 # Дорожная карта: Intelligent Skill Router v2
 
 **Дата создания:** 2026-02-12
-**Дата обновления:** 2026-02-27
-**Статус:** Фазы 0-1, 7-9 DONE. Эволюция: Keyword → Hybrid → Semantic
+**Дата обновления:** 2026-02-28
+**Статус:** Фазы 0-1, 7-13 DONE. Эволюция: Keyword → Hybrid → Semantic
 **Проекты:** PDF Framework + 1C-Enterprise (shared pattern)
 
 ---
