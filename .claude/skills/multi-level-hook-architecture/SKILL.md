@@ -121,7 +121,7 @@ description: "Трёхуровневая архитектура хуков Claud
 | [ralph_wiggum_stop.py](.claude/hooks/ralph_wiggum_stop.py) | 5s | Да | Контроль автономного цикла |
 | [git-commit-enforcer.py](.claude/hooks/git-commit-enforcer.py) | 5s | Да | Незакоммиченные файлы |
 | [docs-change-enforcer.py](.claude/hooks/docs-change-enforcer.py) | 10s | Да | Устаревшая документация |
-| [task-enforcer.py](.claude/hooks/task-enforcer.py) | 10s | Да | Невыполненные задачи |
+| [task-enforcer.py](.claude/hooks/task-enforcer.py) | 10s | Да | Невыполненные задачи (v2.2: auto-clean stale code-verify) |
 
 ---
 
