@@ -424,11 +424,11 @@ class SkillRouter(BaseHook):
             return None  # Skip slash commands, git, etc.
 
         # Informational prompts need higher confidence
-        # Raised to 5 (Phase 14): TF-IDF Layer C can add +3 alone,
-        # so informational filtering needs both keyword AND semantic match
+        # Raised to 6 (Phase 14): TF-IDF Layer C can add +3 alone,
+        # so informational filtering needs keyword + semantic match combined
         effective_min_score = min_score
         if intent == "informational":
-            effective_min_score = max(min_score, 5)
+            effective_min_score = max(min_score, 6)
 
         # Re-filter with intent-aware threshold
         if effective_min_score > min_score:
