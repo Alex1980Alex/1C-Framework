@@ -321,7 +321,10 @@ class SkillRouter(BaseHook):
         if tfidf is not None:
             tfidf_thresholds = config.get("tfidf_thresholds", {})
             tfidf_scores = tfidf.score(prompt_lower)
-            for name, sim in tfidf_scores.items():
+            # Top-K filter: only apply bonus to top K bundles by similarity
+            top_k = tfidf_thresholds.get("top_k", 3)
+            top_tfidf = sorted(tfidf_scores.items(), key=lambda x: -x[1])[:top_k]
+            for name, sim in top_tfidf:
                 bonus = _sim_to_bonus(sim, tfidf_thresholds)
                 if bonus > 0:
                     scores[name] = scores.get(name, 0) + bonus
