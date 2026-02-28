@@ -111,7 +111,7 @@ def main():
     if state_file.exists():
         state_file.unlink()
 
-    skill_all, bundle_all = [], []
+    skill_all, skill_req_all, bundle_all = [], [], []
     intent_results = defaultdict(lambda: {"correct": 0, "total": 0})
     fps_list, fns_list = [], []
 
@@ -125,11 +125,14 @@ def main():
 
         result = run_router(prompt)
         pred_skills = result.get("skills", [])
+        pred_req_skills = result.get("required_skills", [])
         pred_bundles = result.get("bundles", [])
 
         sm = compute_metrics(exp_skills, pred_skills)
+        sm_req = compute_metrics(exp_skills, pred_req_skills)
         bm = compute_metrics(exp_bundles, pred_bundles)
         skill_all.append(sm)
+        skill_req_all.append(sm_req)
         bundle_all.append(bm)
 
         if intent in ("informational", "system"):
