@@ -90,7 +90,7 @@ Full algorithm: `Skill('task-protocol')`.
   base/base.py              # Alt dataclass-based HookInput with auto-detect event
   shared/
     invocation_logger.py    # JSONL logger (data/hook-invocations.jsonl)
-    session_state.py        # Session: activated/recommended skills dedup, prompt_id, pending_learn
+    session_state.py        # Session: activated/recommended skills dedup, prompt_id, pending_learn, task_protocol
     ralph_state.py          # Ralph Wiggum state management
     otel_exporter.py        # OpenTelemetry OTLP exporter
     task_master.py          # Task management from hooks (session_start_cleanup: git + code-verify)
