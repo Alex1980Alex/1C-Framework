@@ -35,6 +35,52 @@ _CONFIG_LOCATIONS = [
 
 # Lazy-load fuzzy matcher
 _fuzzy_matcher = None
+# Lazy-load TF-IDF scorer (Layer C)
+_tfidf_scorer = None
+
+
+def _get_tfidf_scorer():
+    """Lazy-load TfidfScorer from pre-computed artifacts.
+
+    Returns TfidfScorer instance or None if unavailable.
+    Graceful degradation: if numpy missing or artifacts not built -> None.
+    Respects SKILL_ROUTER_NO_TFIDF env var for ablation testing.
+    """
+    global _tfidf_scorer
+    if _tfidf_scorer is None:
+        if os.environ.get("SKILL_ROUTER_NO_TFIDF"):
+            _tfidf_scorer = False
+        else:
+            try:
+                from shared.tfidf_scorer import TfidfScorer
+                project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+                artifacts_dir = os.path.join(project_dir, "data", "route-tfidf")
+                scorer = TfidfScorer(artifacts_dir)
+                if scorer.available:
+                    _tfidf_scorer = scorer
+                else:
+                    _tfidf_scorer = False
+            except Exception:
+                _tfidf_scorer = False
+    return _tfidf_scorer if _tfidf_scorer is not False else None
+
+
+def _sim_to_bonus(sim: float, thresholds: dict) -> int:
+    """Convert cosine similarity to integer bonus score.
+
+    Thresholds from config['tfidf_thresholds']:
+      sim >= strong  (0.50) -> strong_bonus  (3)
+      sim >= moderate (0.30) -> moderate_bonus (2)
+      sim >= weak    (0.15) -> weak_bonus    (1)
+      sim < weak     -> 0
+    """
+    if sim >= thresholds.get("strong", 0.50):
+        return thresholds.get("strong_bonus", 3)
+    if sim >= thresholds.get("moderate", 0.30):
+        return thresholds.get("moderate_bonus", 2)
+    if sim >= thresholds.get("weak", 0.15):
+        return thresholds.get("weak_bonus", 1)
+    return 0
 
 
 def _get_fuzzy_matcher(all_keywords: list[str]):
