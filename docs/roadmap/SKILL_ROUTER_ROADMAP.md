@@ -14,7 +14,7 @@
 ```
 UserPromptSubmit
   │
-  ├── skill-router.py (Layer A: keyword match + Layer B: fuzzy/lemma)
+  ├── skill-router.py (Layer A: keyword + Layer B: fuzzy/lemma + Layer C: TF-IDF semantic)
   │     ↓ stdout: "[SKILL-ROUTER] Bundles: X, Y" + "ОБЯЗАТЕЛЬНО: Skill('X')"
   │     ↓ 100% injection rate (stdout approach)
   │
