@@ -22,6 +22,7 @@ Position: AFTER skill-router.py in the hook chain (reads its recommendations).
 
 import json
 import os
+import re
 import sys
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -29,6 +30,33 @@ _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
 if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
     sys.path.insert(0, _USER_HOOKS)
 sys.path.insert(0, _HOOK_DIR)
+
+# Multi-file indicators that force non-trivial classification
+_MULTI_FILE_MARKERS = re.compile(
+    r"и также|а также|плюс|additionally|across|multiple files|"
+    r"refactor|все файлы|each file|several|несколько файлов|"
+    r"во всех|all files|every file",
+    re.IGNORECASE,
+)
+
+
+def _classify_complexity(prompt: str) -> str:
+    """Auto-classify prompt complexity.
+
+    Returns: 'trivial', 'medium', or 'complex'.
+    """
+    word_count = len(prompt.split())
+
+    # Multi-file markers always force non-trivial
+    if _MULTI_FILE_MARKERS.search(prompt):
+        return "complex" if word_count > 100 else "medium"
+
+    if word_count < 30:
+        return "trivial"
+    elif word_count < 100:
+        return "medium"
+    else:
+        return "complex"
 
 
 def main():
@@ -56,32 +84,45 @@ def main():
     if prompt_stripped.startswith("/"):
         sys.exit(0)
 
+    # --- Task Protocol: reset and auto-classify on each new prompt ---
+    complexity = _classify_complexity(prompt_stripped)
+    try:
+        from shared.session_state import SessionState
+
+        # Reset protocol state for new prompt
+        SessionState.reset_task_protocol()
+
+        # Auto-classify: trivial prompts get immediate "classified" phase
+        # This prevents false blocking by task-protocol-enforcer
+        SessionState.set_task_classified(complexity)
+    except Exception:
+        pass  # Graceful degradation
+
     # --- Phase 11.2: Check if skill-router already output specific recommendations ---
     # If router fired with concrete Skill() calls, skip generic enforcement (reduces noise)
     try:
-        sys.path.insert(0, _HOOK_DIR)
         from shared.session_state import SessionState
         if SessionState.was_router_fired_recently(seconds=10):
             # Router already gave specific "ACTIVATE SKILLS: Skill('X')" instruction
-            # No need for generic "MANDATORY SKILL EVALUATION" on top of it
+            # No need for generic instruction on top of it
             sys.exit(0)
     except Exception:
-        pass  # Fallback: output generic instruction
+        pass  # Fallback: output instruction
 
-    # Generic instruction (ONLY when skill-router didn't match any bundles)
+    # Task Protocol instruction (replaces generic MANDATORY SKILL EVALUATION)
     # Plain text stdout = 100% injection rate (vs 55% for JSON systemMessage)
     print(
-        "INSTRUCTION: MANDATORY SKILL EVALUATION\n"
-        "Before responding to this prompt, you MUST evaluate skill relevance:\n"
-        "1. Check [SKILL-ROUTER] recommendations above (if any)\n"
-        "2. Check <available_skills> in system context\n"
-        "3. IF any skills are relevant to this prompt:\n"
-        "   - State which skills and why (1 line each)\n"
-        "   - Activate ALL relevant skills via Skill() tool\n"
-        "   - Then proceed with implementation using skill knowledge\n"
-        "4. IF no skills are relevant: Proceed directly (no statement needed)\n"
+        "INSTRUCTION: TASK PROTOCOL (MANDATORY)\n"
+        "1. CLASSIFY: trivial (<1 file) | medium (1-3 files) | complex (4+)\n"
+        "   Auto-classified as: {complexity}\n"
+        "2. IF NOT trivial: DECOMPOSE via TaskCreate\n"
+        "3. Per subtask: search skills → Skill() or Skill('learning-loop')\n"
+        "4. Execute → TaskUpdate completed\n"
+        "5. VERIFY: Skill('code-verify') after code changes\n"
         "CRITICAL: Mentioning a skill without activating it via Skill() is useless.\n"
-        "Multiple skills can and should be activated when applicable."
+        "Multiple skills can and should be activated when applicable.".format(
+            complexity=complexity
+        )
     )
 
 
