@@ -22,12 +22,20 @@ Usage:
 """
 
 import argparse
+import io
 import json
+import os
 import subprocess
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+
+# Fix Windows console encoding for Cyrillic
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 ACCURACY_LOG = PROJECT_DIR / "data" / "skill-accuracy.jsonl"
