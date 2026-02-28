@@ -53,6 +53,43 @@ MANDATORY_HOOKS = {
 }
 
 
+STALE_TASK_MAX_AGE_HOURS = 1  # Tasks older than this are considered stale (cross-session)
+
+
+def sync_stale_code_verify_tasks(data: dict) -> int:
+    """Auto-complete stale code-verify-reminder tasks from previous sessions.
+
+    Tasks older than STALE_TASK_MAX_AGE_HOURS are considered stale because
+    they were created in a previous session and the session boundary
+    invalidates their relevance.
+
+    Returns:
+        Number of tasks auto-completed
+    """
+    todos = data.get("todos", [])
+    completed = 0
+    now = datetime.now()
+
+    for todo in todos:
+        if (todo.get("status") == "pending"
+                and todo.get("createdBy") == "code-verify-reminder"):
+            created_at_str = todo.get("createdAt", "")
+            if not created_at_str:
+                continue
+            try:
+                created_at = datetime.fromisoformat(created_at_str)
+                age_hours = (now - created_at).total_seconds() / 3600
+                if age_hours > STALE_TASK_MAX_AGE_HOURS:
+                    todo["status"] = "completed"
+                    todo["completedAt"] = now.isoformat()
+                    todo["note"] = f"Auto-cleaned: stale task ({age_hours:.1f}h old, threshold={STALE_TASK_MAX_AGE_HOURS}h)"
+                    completed += 1
+            except (ValueError, TypeError):
+                continue
+
+    return completed
+
+
 def sync_git_tasks_with_status(data: dict) -> int:
     """Auto-complete pending git tasks when git status is clean.
 
