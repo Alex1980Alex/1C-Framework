@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Skill Router Dashboard — CLI visualization of routing metrics.
+# -*- coding: utf-8 -*-
 
 Reads from:
   - data/skill-accuracy.jsonl (recommend/activate events)
