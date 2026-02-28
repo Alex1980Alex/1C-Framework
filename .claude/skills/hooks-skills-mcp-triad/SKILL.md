@@ -151,7 +151,7 @@ Config-driven маршрутизация промптов к скиллам че
             → skill-router._detect_skill_activations() → activate (source=prompt-detection)
 ```
 
-38 bundles сгруппированы по доменам: framework (12), langchain (6), claude-code (8), infra (5), other (7).
+25 bundles сгруппированы по 6 доменам: framework (9), claude-code (6), langchain (2), research (3), tools (4), 1c (1).
 
 ### Skill Accuracy — PER-PROMPT КОРРЕЛЯЦИЯ
 
