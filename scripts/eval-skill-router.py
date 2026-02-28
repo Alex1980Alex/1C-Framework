@@ -67,6 +67,7 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--ground-truth", type=str, default=str(GROUND_TRUTH))
+    parser.add_argument("--save-fp", action="store_true", help="Save FP/FN details to data/skill-router-fp.jsonl")
     args = parser.parse_args()
 
     gt_path = Path(args.ground_truth)
