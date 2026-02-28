@@ -82,7 +82,7 @@ src/
     session_state.py        # Session: activated/recommended skills dedup, prompt_id, pending_learn
     ralph_state.py          # Ralph Wiggum state management
     otel_exporter.py        # OpenTelemetry OTLP exporter
-    task_master.py          # Task management from hooks
+    task_master.py          # Task management from hooks (session_start_cleanup: git + code-verify)
     code-skill-patterns.json # Pattern->Skill mappings (7 sections, 43 rules)
     trust_scorer.py         # Trust scoring for sources (Context7/GitHub/SO/Infostart)
   skill-router.py           # UserPromptSubmit: skill recommendations
