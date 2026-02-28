@@ -473,4 +473,5 @@ __all__ = [
     "record_recommendation", "get_already_recommended",
     "record_decomposition", "get_task_protocol",
     "reset_task_protocol", "set_task_classified",
+    "record_skill_checked",
 ]
