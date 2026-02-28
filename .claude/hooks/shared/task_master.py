@@ -177,6 +177,7 @@ def add_task(
     priority: str = "normal",
     created_by: str = "unknown-hook",
     description: str = "",
+    session_id: str = "",
 ) -> bool:
     """Add a new pending task. Returns True if added, False if duplicate."""
     data = _read_todos()
@@ -189,7 +190,7 @@ def add_task(
                 and t.get("status") == "pending"):
             return False
 
-    todos.append({
+    task = {
         "content": title,
         "description": description,
         "status": "pending",
@@ -197,7 +198,10 @@ def add_task(
         "createdBy": created_by,
         "createdAt": datetime.now().isoformat(),
         "completedAt": None,
-    })
+    }
+    if session_id:
+        task["sessionId"] = session_id
+    todos.append(task)
     data["todos"] = todos
     _write_todos(data)
     return True
