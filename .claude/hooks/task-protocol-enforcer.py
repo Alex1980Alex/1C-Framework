@@ -3,11 +3,12 @@
 Hook: task-protocol-enforcer
 Event: PreToolUse
 Matcher: Write|Edit
-Purpose: Block Write/Edit if task protocol phase is "idle" (no classification/decomposition).
+Purpose: Block Write/Edit until skills are checked (phase must be "skill_checked").
 Timeout: 3s
 
 Part of Task Protocol enforcement system.
-Ensures Claude follows: classify → decompose → skill search → execute → verify.
+Ensures Claude follows: classify → (decompose) → skill search → execute → verify.
+Only phase="skill_checked" allows Write/Edit. Skill() call sets this phase.
 
 Exempt files (always allowed):
 - .claude/ directory (hooks, skills, settings)
