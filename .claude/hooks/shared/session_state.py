@@ -426,6 +426,26 @@ def get_already_recommended() -> List[str]:
     return SessionState.get_already_recommended()
 
 
+def record_decomposition() -> None:
+    """Module-level wrapper for SessionState.record_decomposition()."""
+    SessionState.record_decomposition()
+
+
+def get_task_protocol() -> Dict[str, Any]:
+    """Module-level wrapper for SessionState.get_task_protocol()."""
+    return SessionState.get_task_protocol()
+
+
+def reset_task_protocol() -> None:
+    """Module-level wrapper for SessionState.reset_task_protocol()."""
+    SessionState.reset_task_protocol()
+
+
+def set_task_classified(complexity: str) -> None:
+    """Module-level wrapper for SessionState.set_task_classified()."""
+    SessionState.set_task_classified(complexity)
+
+
 # Export for use in hooks
 __all__ = [
     "SessionState",
