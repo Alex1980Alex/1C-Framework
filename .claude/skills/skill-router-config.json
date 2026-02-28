@@ -39,7 +39,8 @@
       "git-parsing",
       "tenacity-retry",
       "code-verify",
-      "learning-loop"
+      "learning-loop",
+      "task-protocol"
     ]
   },
   "affinities": {
