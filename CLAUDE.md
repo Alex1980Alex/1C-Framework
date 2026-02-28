@@ -56,6 +56,17 @@ src/
 - Configuration via `pydantic-settings` (`.env` file)
 - Provider pattern: swap Vector/Graph/Embedding providers without changing logic
 
+## Task Protocol (MANDATORY)
+
+Every task: classify → decompose (TaskCreate) → per-subtask skill search → execute → verify.
+Enforcement: `task-protocol-enforcer` blocks Write/Edit before decomposition.
+Full algorithm: `Skill('task-protocol')`.
+
+- **trivial** (< 1 file, < 30 words): auto-allowed, no TaskCreate needed
+- **medium** (1-3 files): must TaskCreate subtasks before Write/Edit
+- **complex** (4+ files): must TaskCreate with full decomposition
+- Exempt: `.claude/`, `docs/`, `data/`, config files
+
 ## Output Rules
 
 - File references in responses must be clickable markdown: `[file.py](.claude/hooks/file.py)` or `[file.py:42](.claude/hooks/file.py#L42)`
