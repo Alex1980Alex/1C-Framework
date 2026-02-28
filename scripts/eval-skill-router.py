@@ -157,6 +157,19 @@ def main():
         "top_fps": fps_list[:5], "top_fns": fns_list[:5],
     }
 
+    # Save FP/FN tracking file
+    if args.save_fp and (fps_list or fns_list):
+        fp_path = PROJECT_DIR / "data" / "skill-router-fp.jsonl"
+        with open(fp_path, "w", encoding="utf-8") as f:
+            ts = datetime.now().isoformat()
+            for fp in fps_list:
+                entry = {"ts": ts, "type": "fp", "prompt": fp["prompt"], "extra_skills": fp["fp_skills"]}
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            for fn in fns_list:
+                entry = {"ts": ts, "type": "fn", "prompt": fn["prompt"], "missed_skills": fn["fn_skills"]}
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        print(f"Saved {len(fps_list)} FP + {len(fns_list)} FN to {fp_path}", file=sys.stderr)
+
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
