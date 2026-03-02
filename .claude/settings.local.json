@@ -183,7 +183,12 @@
       "Bash(cd \"D:/1С-Framework\" && \"D:/1С-Framework/.venv/Scripts/python.exe\" -c \"\nimport json\nwith open\\('.claude/cache/hook-todos.json','r',encoding='utf-8'\\) as f:\n    data = json.load\\(f\\)\nfor i, t in enumerate\\(data.get\\('todos',[]\\)\\):\n    if t.get\\('status'\\) != 'completed':\n        print\\(f'[{i}] {t[\\\\\"status\\\\\"]:12s} | {t[\\\\\"createdBy\\\\\"]:30s} | {t[\\\\\"content\\\\\"][:80]}'\\)\n\" 2>&1)",
       "Bash(cd \"D:/1С-Framework\" && \"D:/1С-Framework/.venv/Scripts/python.exe\" -c \"\nimport json\nwith open\\('.claude/cache/hook-todos.json','r',encoding='utf-8'\\) as f:\n    data = json.load\\(f\\)\nfor i, t in enumerate\\(data.get\\('todos',[]\\)\\):\n    if t.get\\('status'\\) == 'pending' or t.get\\('status'\\) == 'in_progress':\n        print\\(f'[{i}] {t[\\\\\"priority\\\\\"]:8s} | {t[\\\\\"createdBy\\\\\"]:30s} | {t[\\\\\"content\\\\\"]}'\\)\n        if t.get\\('description'\\):\n            for line in t['description'].split\\(chr\\(10\\)\\)[:3]:\n                print\\(f'     {line}'\\)\n        print\\(\\)\n\" 2>&1)",
       "Bash(PYTHONIOENCODING=utf-8 python3:*)",
-      "Bash(docker system:*)"
+      "Bash(docker system:*)",
+      "Bash(uv cache:*)",
+      "Bash(npm cache:*)",
+      "Bash(pip cache:*)",
+      "Bash(huggingface-cli delete-cache:*)",
+      "Bash(PYTHONUTF8=1 hf cache delete --all 2>&1 || PYTHONIOENCODING=utf-8 python -c \"import shutil; import os; p=os.path.expanduser\\('~/.cache/huggingface'\\); s=sum\\(f.stat\\(\\).st_size for f in __import__\\('pathlib'\\).Path\\(p\\).rglob\\('*'\\) if f.is_file\\(\\)\\)/1e9; print\\(f'{s:.2f} GB in {p}'\\); shutil.rmtree\\(p\\); print\\('Deleted'\\)\" 2>&1)"
     ]
   },
   "enableAllProjectMcpServers": true,
