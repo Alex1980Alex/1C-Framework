@@ -46,11 +46,7 @@ try:
 except ImportError:
     SessionState = None
 
-try:
-    from shared.task_master import add_task, has_recent_completion
-except ImportError:
-    add_task = None
-    has_recent_completion = None
+# task_master no longer needed — Level F is advisory only (no task creation)
 
 
 # ============================================================================
