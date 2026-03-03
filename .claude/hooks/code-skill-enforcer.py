@@ -201,8 +201,10 @@ class CodeSkillEnforcer(BaseHook):
             return result
 
         # Level A.1: Research protocol (topics WITHOUT dedicated skills)
-        # Sets pending_learn for Level F to create skill tasks later
-        self._check_research_protocol(inp)
+        # BLOCKS and instructs Skill('learning-loop')
+        result = self._check_research_protocol(inp)
+        if result:
+            return result
 
         # Level C: Bash commands
         result = self._check_bash_commands(inp)
