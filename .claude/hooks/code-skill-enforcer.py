@@ -22,7 +22,7 @@ Levels:
 Author: Claude Code
 Version: 2.1.0
 Created: 2026-02-23
-Updated: 2026-03-03 (Added Level A.1: research_protocol → set_pending_learn trigger)
+Updated: 2026-03-03 (Level A.1: BLOCKING research_protocol → Skill('learning-loop'); Level F: advisory backup)
 """
 
 import json
