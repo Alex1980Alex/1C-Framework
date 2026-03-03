@@ -284,39 +284,59 @@ class CodeSkillEnforcer(BaseHook):
         return None
 
     def _check_research_protocol(self, inp):
-        """Level A.1: Detect research_protocol patterns and set pending_learn.
+        """Level A.1: Detect research_protocol patterns → BLOCK with learning-loop instruction.
 
-        For topics WITHOUT dedicated skills (e.g. FastAPI, Redis, pytest).
-        Does NOT block — just sets pending_learn so Level F can create
-        LEARN tasks on the next PostToolUse:Write|Edit.
+        For topics WITHOUT dedicated skills (FastAPI, Redis, pytest, etc.).
+        BLOCKS the write and instructs Claude to run Skill('learning-loop'),
+        which triggers immediate subagent-based skill creation.
         """
         if inp.tool_name not in ("Write", "Edit"):
-            return
+            return None
 
         content = self._extract_content(inp)
         if not content or len(content) < 30:
-            return
-
-        if not SessionState:
-            return
-
-        # Skip if pending_learn already set (avoid overwriting)
-        if SessionState.has_pending_learn():
-            return
+            return None
 
         match = self.config.match_research_protocol(content)
         if not match:
-            return
+            return None
+
+        if not SessionState:
+            return None
 
         label = match.get("label", "unknown")
         domain = match.get("domain", "tech")
         pattern = match.get("pattern", "")
+        label_key = label.lower().replace(" ", "-")
 
-        SessionState.set_pending_learn({
-            "label": label,
-            "domain": domain,
-            "pattern": pattern,
-        })
+        # Dedup: skip if already triggered in this session
+        if SessionState.is_skill_activated(f"learn:{label_key}"):
+            return None
+
+        # Mark as triggered (prevents repeated blocking)
+        SessionState.add_activated_skill(f"learn:{label_key}")
+
+        # Set pending_learn as backup for Level F
+        if not SessionState.has_pending_learn():
+            SessionState.set_pending_learn({
+                "label": label,
+                "domain": domain,
+                "pattern": pattern,
+            })
+
+        return HookOutput().block(
+            f"LEARNING REQUIRED: '{label}' — no dedicated skill exists.\n"
+            f"Detected: {pattern[:60]}...\n"
+            f"Domain: {domain}\n\n"
+            f"ACTIVATE: Skill('learning-loop')\n\n"
+            f"The learning-loop will:\n"
+            f"1. SEARCH existing skills\n"
+            f"2. FETCH knowledge from trusted sources\n"
+            f"3. EXECUTE task via subagent with collected knowledge\n"
+            f"4. VERIFY result against sources\n"
+            f"5. CREATE new skill for future use\n\n"
+            f"Then retry your Write/Edit."
+        )
 
     def _check_bash_commands(self, inp):
         """Level C: Check bash command against rules."""
