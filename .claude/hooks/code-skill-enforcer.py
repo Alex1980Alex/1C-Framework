@@ -20,9 +20,9 @@ Levels:
   F: LEARN phase (create skill tasks)
 
 Author: Claude Code
-Version: 2.0.0
+Version: 2.1.0
 Created: 2026-02-23
-Updated: 2026-02-24 (Migrated to protocol.py base class — fixed event detection)
+Updated: 2026-03-03 (Added Level A.1: research_protocol → set_pending_learn trigger)
 """
 
 import json
@@ -141,6 +141,16 @@ class PatternConfig:
                 return mapping
         return None
 
+    def match_research_protocol(self, content):
+        """Match content against research_protocol patterns (topics without skills)."""
+        for item in self.get_research_protocol():
+            pattern = item.get("pattern", "")
+            key = f"research_{pattern[:30]}"
+            compiled = self._compiled_patterns.get(key)
+            if compiled and compiled.search(content):
+                return item
+        return None
+
 
 # ============================================================================
 # Code Skill Enforcer Hook (protocol.py base class)
@@ -185,10 +195,14 @@ class CodeSkillEnforcer(BaseHook):
         if result:
             return result
 
-        # Level A: Content patterns
+        # Level A: Content patterns (topics WITH dedicated skills)
         result = self._check_content_patterns(inp)
         if result:
             return result
+
+        # Level A.1: Research protocol (topics WITHOUT dedicated skills)
+        # Sets pending_learn for Level F to create skill tasks later
+        self._check_research_protocol(inp)
 
         # Level C: Bash commands
         result = self._check_bash_commands(inp)
@@ -266,6 +280,41 @@ class CodeSkillEnforcer(BaseHook):
                 )
 
         return None
+
+    def _check_research_protocol(self, inp):
+        """Level A.1: Detect research_protocol patterns and set pending_learn.
+
+        For topics WITHOUT dedicated skills (e.g. FastAPI, Redis, pytest).
+        Does NOT block — just sets pending_learn so Level F can create
+        LEARN tasks on the next PostToolUse:Write|Edit.
+        """
+        if inp.tool_name not in ("Write", "Edit"):
+            return
+
+        content = self._extract_content(inp)
+        if not content or len(content) < 30:
+            return
+
+        if not SessionState:
+            return
+
+        # Skip if pending_learn already set (avoid overwriting)
+        if SessionState.has_pending_learn():
+            return
+
+        match = self.config.match_research_protocol(content)
+        if not match:
+            return
+
+        label = match.get("label", "unknown")
+        domain = match.get("domain", "tech")
+        pattern = match.get("pattern", "")
+
+        SessionState.set_pending_learn({
+            "label": label,
+            "domain": domain,
+            "pattern": pattern,
+        })
 
     def _check_bash_commands(self, inp):
         """Level C: Check bash command against rules."""
