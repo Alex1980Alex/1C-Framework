@@ -433,7 +433,11 @@ class CodeSkillEnforcer(BaseHook):
         return None
 
     def _check_learn_phase(self, inp):
-        """Level F: Create tasks for skill creation after research protocol."""
+        """Level F: Advisory reminder to run learning-loop if pending_learn exists.
+
+        Backup mechanism: if Level A.1 block was bypassed somehow,
+        this provides an advisory system_message reminder.
+        """
         if inp.tool_name not in ("Write", "Edit"):
             return None
 
@@ -444,37 +448,18 @@ class CodeSkillEnforcer(BaseHook):
         if not pending:
             return None
 
-        try:
-            if has_recent_completion and has_recent_completion(
-                "code-skill-enforcer", cooldown_minutes=10
-            ):
-                SessionState.clear_pending_learn()
-                return None
-        except Exception:
-            pass
-
         label = pending.get("label", "unknown")
+        label_key = label.lower().replace(" ", "-")
 
-        tasks = [
-            f"[LEARN] Create skill for '{label}'",
-            f"[LEARN] Register '{label}' in skill-router-config.json",
-        ]
+        # If learning-loop was already triggered (via A.1 block), clear and skip
+        if SessionState.is_skill_activated(f"learn:{label_key}"):
+            SessionState.clear_pending_learn()
+            return None
 
-        for task in tasks:
-            try:
-                if add_task:
-                    add_task(
-                        content=task,
-                        created_by="code-skill-enforcer",
-                        priority="mandatory"
-                    )
-            except Exception:
-                pass
-
-        SessionState.clear_pending_learn()
-
+        # Advisory backup (in case A.1 block was bypassed)
         return HookOutput().system_message(
-            f"[LEARN] Created {len(tasks)} tasks for '{label}'."
+            f"[LEARN] No dedicated skill for '{label}'. "
+            f"Run Skill('learning-loop') to create one."
         )
 
 
