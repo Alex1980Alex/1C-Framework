@@ -162,7 +162,7 @@ class CodeSkillEnforcer(BaseHook):
       Level C: Bash commands (docker compose -> deployment)
 
     POST Mode (advisory only, never blocks):
-      Level F: LEARN phase (create skill tasks)
+      Level F: LEARN phase (advisory backup for learning-loop)
       Level E: Post-verification (must_contain, must_not_contain)
       Level D: Research cache reminder
     """
