@@ -17,7 +17,7 @@ Levels:
   C: Bash commands (docker compose -> deployment)
   D: Research cache reminder (WebSearch -> check cache)
   E: Post-verification (must_contain, must_not_contain checks)
-  F: LEARN phase (create skill tasks)
+  F: LEARN phase (advisory backup for learning-loop)
 
 Author: Claude Code
 Version: 2.1.0
