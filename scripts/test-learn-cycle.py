@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end tests for LEARN cycle: research_protocol -> pending_learn -> Level F."""
+"""End-to-end tests for LEARN cycle: Level A.1 BLOCK → Skill('learning-loop') → dedup."""
 import json
 import os
 import shutil
@@ -62,9 +62,17 @@ def is_json_block(result):
     return '"decision": "block"' in stdout or '"continue": false' in stdout
 
 
+def parse_stdout(result):
+    """Parse JSON stdout from hook."""
+    try:
+        return json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        return {}
+
+
 # =========================================================================
 print("=" * 60)
-print("TEST 1: FastAPI code triggers research_protocol")
+print("TEST 1: FastAPI code triggers BLOCK with learning-loop instruction")
 print("=" * 60)
 
 tmp, env = fresh_env()
@@ -80,20 +88,28 @@ result = run_hook({
     }
 }, env)
 state = read_state(tmp)
-pending = state.get("pending_learn")
-test("pending_learn is set", pending is not None)
-test("label = FastAPI Framework", pending and pending.get("label") == "FastAPI Framework")
-test("domain = tech", pending and pending.get("domain") == "tech")
+blocked = is_json_block(result)
+out = parse_stdout(result)
+activated = state.get("activated_skills", [])
+test("BLOCK output", blocked,
+     f"stdout={result.stdout[:200] if result.stdout else 'empty'}")
+test("reason mentions learning-loop", "learning-loop" in out.get("reason", ""),
+     f"reason={out.get('reason', '')[:100]}")
+test("activated_skills contains learn:fastapi-framework",
+     "learn:fastapi-framework" in activated,
+     f"activated={activated}")
+test("pending_learn is set as backup",
+     state.get("pending_learn") is not None)
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 2: Level F fires on PostToolUse after pending_learn")
+print("TEST 2: Level F advisory after A.1 block (clears pending_learn)")
 print("=" * 60)
 
 tmp, env = fresh_env()
-# Step 1: PRE — set pending_learn
+# Step 1: PRE — A.1 blocks and sets learn:fastapi-framework + pending_learn
 run_hook({
     "tool_name": "Write",
     "tool_input": {
@@ -102,9 +118,11 @@ run_hook({
     }
 }, env)
 state1 = read_state(tmp)
-test("pending_learn set after PRE", state1.get("pending_learn") is not None)
+test("pending_learn set after PRE block", state1.get("pending_learn") is not None)
+test("learn:fastapi-framework in activated",
+     "learn:fastapi-framework" in state1.get("activated_skills", []))
 
-# Step 2: POST — Level F should detect pending_learn
+# Step 2: POST — Level F should detect pending_learn + learn:X activated → clear
 result2 = run_hook({
     "tool_name": "Write",
     "tool_input": {
@@ -114,15 +132,15 @@ result2 = run_hook({
     "tool_result": "File written successfully",
 }, env)
 state2 = read_state(tmp)
-stdout2 = result2.stdout or ""
-test("Level F output contains LEARN", "LEARN" in stdout2, f"stdout={stdout2[:200]}")
-test("pending_learn cleared after Level F", state2.get("pending_learn") is None)
+test("pending_learn cleared by Level F (learn:X was activated)",
+     state2.get("pending_learn") is None,
+     f"pending_learn={state2.get('pending_learn')}")
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 3: Redis code triggers research_protocol")
+print("TEST 3: Redis code triggers BLOCK")
 print("=" * 60)
 
 tmp, env = fresh_env()
@@ -140,16 +158,21 @@ result = run_hook({
     }
 }, env)
 state = read_state(tmp)
-pending = state.get("pending_learn")
-test("pending_learn is set", pending is not None)
-test("label = Redis Caching", pending and pending.get("label") == "Redis Caching")
-test("domain = tech", pending and pending.get("domain") == "tech")
+blocked = is_json_block(result)
+activated = state.get("activated_skills", [])
+test("BLOCK output", blocked,
+     f"stdout={result.stdout[:200] if result.stdout else 'empty'}")
+test("activated_skills contains learn:redis-caching",
+     "learn:redis-caching" in activated,
+     f"activated={activated}")
+test("pending_learn label = Redis Caching",
+     state.get("pending_learn", {}).get("label") == "Redis Caching")
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 4: 1C Metadata triggers research_protocol (1c domain)")
+print("TEST 4: 1C Metadata triggers BLOCK (1c domain)")
 print("=" * 60)
 
 # Content must match research_protocol pattern (Справочник\s+) but NOT
@@ -181,16 +204,22 @@ result = run_hook({
     }
 }, env)
 state = read_state(tmp)
-pending = state.get("pending_learn")
-test("pending_learn is set", pending is not None)
-test("domain = 1c", pending and pending.get("domain") == "1c",
-     f"got: {pending}")
+blocked = is_json_block(result)
+out = parse_stdout(result)
+test("BLOCK output", blocked,
+     f"stdout={result.stdout[:200] if result.stdout else 'empty'}")
+test("reason mentions domain 1c",
+     "1c" in out.get("reason", "").lower(),
+     f"reason={out.get('reason', '')[:100]}")
+test("pending_learn domain = 1c",
+     state.get("pending_learn", {}).get("domain") == "1c",
+     f"got: {state.get('pending_learn')}")
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 5: Level A pattern should NOT trigger research_protocol")
+print("TEST 5: Level A pattern blocks FIRST (no A.1 trigger)")
 print("=" * 60)
 
 tmp, env = fresh_env()
@@ -207,17 +236,21 @@ result = run_hook({
 }, env)
 state = read_state(tmp)
 pending = state.get("pending_learn")
-# protocol.py outputs JSON {"continue": false, "decision": "block"} with exit code 0
+# Level A blocks with SKILL REQUIRED, not LEARNING REQUIRED
 blocked = is_json_block(result)
+out = parse_stdout(result)
 test("Level A blocks (JSON block)", blocked,
      f"exit={result.returncode}, stdout={result.stdout[:200] if result.stdout else 'empty'}")
+test("Block reason mentions SKILL REQUIRED (Level A, not A.1)",
+     "SKILL REQUIRED" in out.get("reason", ""),
+     f"reason={out.get('reason', '')[:100]}")
 test("No pending_learn set", pending is None, f"got: {pending}")
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 6: Short content ignored (< 30 chars)")
+print("TEST 6: Short content ignored (< 30 chars) — no BLOCK")
 print("=" * 60)
 
 tmp, env = fresh_env()
@@ -229,14 +262,15 @@ result = run_hook({
     }
 }, env)
 state = read_state(tmp)
-pending = state.get("pending_learn")
-test("No pending_learn for short content", pending is None)
+blocked = is_json_block(result)
+test("No BLOCK for short content", not blocked)
+test("No pending_learn for short content", state.get("pending_learn") is None)
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 7: Pytest pattern triggers research_protocol")
+print("TEST 7: Pytest pattern triggers BLOCK")
 print("=" * 60)
 
 tmp, env = fresh_env()
@@ -255,20 +289,53 @@ result = run_hook({
     }
 }, env)
 state = read_state(tmp)
-pending = state.get("pending_learn")
-test("pending_learn is set", pending is not None)
-test("label = Pytest Framework", pending and pending.get("label") == "Pytest Framework",
-     f"got: {pending}")
+blocked = is_json_block(result)
+out = parse_stdout(result)
+test("BLOCK output", blocked,
+     f"stdout={result.stdout[:200] if result.stdout else 'empty'}")
+test("reason mentions learning-loop", "learning-loop" in out.get("reason", ""),
+     f"reason={out.get('reason', '')[:100]}")
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
 print()
 print("=" * 60)
-print("TEST 8: Duplicate pending_learn not overwritten")
+print("TEST 8: Dedup — second call with SAME pattern NOT blocked")
 print("=" * 60)
 
 tmp, env = fresh_env()
-# Set first pending_learn (FastAPI)
+# First call — FastAPI — should BLOCK
+result1 = run_hook({
+    "tool_name": "Write",
+    "tool_input": {
+        "file_path": "D:/1C-Framework/src/api/app.py",
+        "content": "from fastapi import FastAPI, APIRouter\napp = FastAPI(title='test')",
+    }
+}, env)
+blocked1 = is_json_block(result1)
+test("First FastAPI call BLOCKED", blocked1)
+
+# Second call — same FastAPI pattern — should NOT block (dedup)
+result2 = run_hook({
+    "tool_name": "Write",
+    "tool_input": {
+        "file_path": "D:/1C-Framework/src/api/v2.py",
+        "content": "from fastapi import FastAPI\napp = FastAPI(title='v2')",
+    }
+}, env)
+blocked2 = is_json_block(result2)
+test("Second FastAPI call NOT blocked (dedup)", not blocked2,
+     f"stdout={result2.stdout[:200] if result2.stdout else 'empty'}")
+shutil.rmtree(tmp, ignore_errors=True)
+
+# =========================================================================
+print()
+print("=" * 60)
+print("TEST 9: Dedup — different pattern still blocks")
+print("=" * 60)
+
+tmp, env = fresh_env()
+# First call — FastAPI — BLOCK
 run_hook({
     "tool_name": "Write",
     "tool_input": {
@@ -276,22 +343,62 @@ run_hook({
         "content": "from fastapi import FastAPI, APIRouter\napp = FastAPI(title='test')",
     }
 }, env)
-state1 = read_state(tmp)
-label1 = state1.get("pending_learn", {}).get("label")
 
-# Try to set second pending_learn (Redis) — should NOT overwrite
-run_hook({
+# Second call — Redis (different pattern) — should still BLOCK
+result2 = run_hook({
     "tool_name": "Write",
     "tool_input": {
         "file_path": "D:/1C-Framework/src/cache/r.py",
         "content": "from redis import Redis\nclient = Redis.from_url('redis://localhost')",
     }
 }, env)
-state2 = read_state(tmp)
-label2 = state2.get("pending_learn", {}).get("label")
+blocked2 = is_json_block(result2)
+state = read_state(tmp)
+activated = state.get("activated_skills", [])
+test("Redis BLOCKED (different pattern from FastAPI)", blocked2,
+     f"stdout={result2.stdout[:200] if result2.stdout else 'empty'}")
+test("Both learn keys in activated_skills",
+     "learn:fastapi-framework" in activated and "learn:redis-caching" in activated,
+     f"activated={activated}")
+shutil.rmtree(tmp, ignore_errors=True)
 
-test("First pending_learn was FastAPI", label1 == "FastAPI Framework", f"got: {label1}")
-test("Second write did not overwrite", label2 == "FastAPI Framework", f"got: {label2}")
+# =========================================================================
+print()
+print("=" * 60)
+print("TEST 10: Level F clears pending_learn when learn:X activated")
+print("=" * 60)
+
+tmp, env = fresh_env()
+# Step 1: PRE — A.1 blocks, sets pending_learn + learn:fastapi-framework
+run_hook({
+    "tool_name": "Write",
+    "tool_input": {
+        "file_path": "D:/1C-Framework/src/api/routes.py",
+        "content": "from fastapi import FastAPI, APIRouter\napp = FastAPI()",
+    }
+}, env)
+state1 = read_state(tmp)
+test("pending_learn exists after A.1 block",
+     state1.get("pending_learn") is not None)
+
+# Step 2: POST — Level F detects pending_learn, sees learn:X activated → clears
+result2 = run_hook({
+    "tool_name": "Write",
+    "tool_input": {
+        "file_path": "D:/1C-Framework/src/api/routes.py",
+        "content": "from fastapi import FastAPI",
+    },
+    "tool_result": "File written successfully",
+}, env)
+state2 = read_state(tmp)
+stdout2 = result2.stdout or ""
+test("Level F clears pending_learn (learn:X was activated)",
+     state2.get("pending_learn") is None,
+     f"pending_learn={state2.get('pending_learn')}")
+# Level F returns None (skip) when learn:X activated — no system_message
+test("No LEARN advisory (already handled by A.1)",
+     "LEARN" not in stdout2 or '"systemMessage"' not in stdout2,
+     f"stdout={stdout2[:200]}")
 shutil.rmtree(tmp, ignore_errors=True)
 
 # =========================================================================
