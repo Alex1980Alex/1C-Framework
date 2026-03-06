@@ -110,6 +110,7 @@ Full algorithm: `Skill('task-protocol')`.
   docs-change-enforcer.py   # Stop: documentation coverage check (skips settings.local.json)
   task-enforcer.py          # Stop: task list completion check (v2.2: auto-clean stale code-verify tasks)
   ralph_wiggum_stop.py      # Stop: Ralph iteration enforcement
+  bsl-tool-router.py        # UserPromptSubmit: routes BSL/1C queries to bsl-development skill
 ```
 
 Evaluation: `scripts/eval-hooks.py` + `tests/eval/hook_prompts.json` (40 тестов, 16 скиллов).
