@@ -1,18 +1,18 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-02-22 14:27
+**Generated:** 2026-03-06 22:17
 
 ## Summary
 
 | Category | In Code | Doc Gaps | Skill Gaps | Doc Coverage | Skill Coverage |
 |----------|---------|----------|------------|-------------|----------------|
 | Agent Types | 5 | **0** | **0** | 100.0% | 100.0% |
-| CLI Commands | 15 | **0** | **0** | 100.0% | 100.0% |
+| CLI Commands | 17 | **0** | **0** | 100.0% | 100.0% |
 | Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
 | REST API Endpoints | 92 | **0** | **0** | 100.0% | 100.0% |
 | MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
 | Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
-| **TOTAL** | **439** | **0** | **0** | | |
+| **TOTAL** | **441** | **0** | **0** | | |
 
 ## Action Items
 
@@ -30,7 +30,7 @@
 - `research_v2` — `src\pdf_framework\agents\research_v2\agent.py`
 - `multi` — `src\pdf_framework\agents\multi\orchestrator.py`
 
-### CLI Commands (15)
+### CLI Commands (17)
 
 - `index` — `src/cli/main.py`
 - `search` — `src/cli/main.py`
@@ -38,6 +38,8 @@
 - `chat` — `src/cli/main.py`
 - `stats` — `src/cli/main.py`
 - `server` — `src/cli/main.py`
+- `restart` — `src/cli/main.py`
+- `dashboard` — `src/cli/main.py`
 - `cache` — `src/cli/main.py`
 - `tenant` — `src/cli/main.py`
 - `auth` — `src/cli/main.py`
