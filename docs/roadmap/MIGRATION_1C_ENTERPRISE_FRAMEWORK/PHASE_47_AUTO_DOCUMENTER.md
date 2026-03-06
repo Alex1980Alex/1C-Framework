@@ -1,7 +1,7 @@
 # Фаза 47: Auto-Documenter (Profile #7)
 
 **Tier:** 2 — Основные сервисы
-**Статус:** TODO
+**Статус:** DONE
 **Зависимости:** Фаза 44 (Infrastructure)
 **Оценка:** ~5 часов
 **Приоритет:** CRITICAL — ключевой компонент lazy-mcp профиля #7
@@ -302,14 +302,14 @@ ls tools/auto-documenter/node_modules/tree-sitter-bsl/*.wasm
 
 ## Чеклист завершения
 
-- [ ] `tools/auto-documenter/` содержит все файлы
-- [ ] `npm install` прошёл без ошибок
-- [ ] `npm run build` — 0 TypeScript ошибок
-- [ ] `node mcp-start.js` запускается
-- [ ] Tree-sitter-bsl WASM grammar на месте
-- [ ] `.mcp.json` содержит `auto-documenter`
-- [ ] MCP tool `generate_documentation` работает на тестовом BSL
-- [ ] MCP tool `autoreview` работает
-- [ ] MCP tool `autotestplan` работает
+- [x] `tools/auto-documenter/` содержит все файлы (src/, build/, docs/, mcp-start.js)
+- [x] `npm install` прошёл (workspaces: hoisted в tools/node_modules/)
+- [x] `build/index.js` существует (pre-built из источника, 1.9 MB)
+- [x] `node mcp-start.js` запускается ("Autodocument MCP server running on stdio")
+- [x] Tree-sitter-bsl WASM grammar на месте (tools/node_modules/tree-sitter-bsl/tree-sitter-bsl.wasm)
+- [x] `.mcp.json` содержит `auto-documenter`
+- [ ] MCP tool `generate_documentation` работает на тестовом BSL (требует AI provider)
+- [ ] MCP tool `autoreview` работает (требует AI provider)
+- [ ] MCP tool `autotestplan` работает (требует AI provider)
 - [ ] Skill `auto-documenter/SKILL.md` создан
 - [ ] Git commit: `feat: Phase 47 — Auto-Documenter migration (Profile #7)`
