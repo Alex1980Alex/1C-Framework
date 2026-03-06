@@ -331,10 +331,10 @@
 
 ### Улучшения
 
-1. **Serena обновился** — [oraios/serena](https://github.com/oraios/serena) (~21K stars, MIT) — уже не просто форк, а зрелый продукт. Microsoft-backed. Не нужно копировать старую версию из 1C-Enterprise_Framework — лучше установить актуальную версию напрямую.
-2. **Альтернатива: mcp-language-server** — [isaacphi/mcp-language-server](https://github.com/isaacphi/mcp-language-server) (~858 stars) — легковесный Go bridge LSP->MCP. Проще чем Serena, но поддерживает любой stdio LSP сервер.
-3. **BSL через bsl-language-server** — подключить bsl-language-server (Java) как stdio LSP к Serena/mcp-language-server. Получим BSL code intelligence "бесплатно".
-4. **Рекомендация:** Установить свежую Serena (pip install), подключить bsl-language-server как BSL backend.
+1. **Копировать кастомную версию** — Serena в `1C-Enterprise_Framework` была **доработана под BSL/1C**: добавлен `bsl_language_server.py`, зарегистрирован Language ID `bsl`, настроены capabilities (symbols, definitions, references) для `.bsl` файлов. Upstream [oraios/serena](https://github.com/oraios/serena) (~21K stars) **не поддерживает BSL нативно** — использовать upstream нельзя без потери BSL-кастомизаций.
+2. **Стратегия: fork + upstream merge** — скопировать кастомную версию, но отслеживать upstream (oraios/serena) для общих обновлений (новые языки, багфиксы). BSL-специфичный код поддерживать отдельно.
+3. **Альтернатива для не-BSL кода: mcp-language-server** — [isaacphi/mcp-language-server](https://github.com/isaacphi/mcp-language-server) (~858 stars) — легковесный Go bridge LSP->MCP. Может работать параллельно с кастомной Serena для Python/TS файлов фреймворка.
+4. **Рекомендация:** Копировать кастомную Serena с BSL-расширениями. Периодически мержить обновления из upstream oraios/serena. Рассмотреть PR BSL-поддержки в upstream.
 
 ### Лучшие решения GitHub
 
