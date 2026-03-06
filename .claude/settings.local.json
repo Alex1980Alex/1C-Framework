@@ -190,7 +190,11 @@
       "Bash(huggingface-cli delete-cache:*)",
       "Bash(PYTHONUTF8=1 hf cache delete --all 2>&1 || PYTHONIOENCODING=utf-8 python -c \"import shutil; import os; p=os.path.expanduser\\('~/.cache/huggingface'\\); s=sum\\(f.stat\\(\\).st_size for f in __import__\\('pathlib'\\).Path\\(p\\).rglob\\('*'\\) if f.is_file\\(\\)\\)/1e9; print\\(f'{s:.2f} GB in {p}'\\); shutil.rmtree\\(p\\); print\\('Deleted'\\)\" 2>&1)",
       "Bash(java:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(node:*)",
+      "Bash(DEEP_REASONING_API_KEY=\"96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9\" DEEP_REASONING_BASE_URL=\"https://api.z.ai/api/anthropic\" DEEP_REASONING_MODEL=\"glm-5\" node:*)",
+      "Bash(DEEP_REASONING_API_KEY=\"96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9\" DEEP_REASONING_BASE_URL=\"https://api.z.ai/api/anthropic\" DEEP_REASONING_MODEL=\"glm-5\" AUTODOC_PRIMARY_PROVIDER=\"deepreasoning\" node:*)",
+      "Bash(cp:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
