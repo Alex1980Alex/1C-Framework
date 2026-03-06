@@ -505,7 +505,7 @@ Skills (57)           <->  Skills (+6 BSL)         Расширение
 
 2. **Mem0** заменяет 4 системы памяти (Phase 49). Одна библиотека с Qdrant backend (уже используется) вместо Memory Orchestrator + AI Memory + Vector Memory + Skill Learning.
 
-3. **Свежие upstream versions** для Serena (Phase 52), ast-grep-mcp (Phase 54), lazy-mcp (Phase 54). `pip install` / `npm install` вместо копирования устаревших форков.
+3. **Upstream versions** для ast-grep-mcp (Phase 54), lazy-mcp (Phase 54). Serena — копировать BSL-кастомизированную версию (содержит `bsl_language_server.py` и BSL-расширения, отсутствующие в upstream).
 
 ### 3 ключевых унификации (улучшают архитектуру)
 
