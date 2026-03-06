@@ -1,0 +1,68 @@
+{
+  "name": "autodocument",
+  "version": "2.4.0",
+  "description": "MCP server for automatic code documentation with native BSL/1C:Enterprise support",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "autodocument": "build/index.js",
+    "autodoc": "build/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755'); if(require('fs').existsSync('build/cli/index.js')) require('fs').chmodSync('build/cli/index.js', '755');\"",
+    "start": "node build/index.js",
+    "cli": "node build/cli/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+  },
+  "keywords": [
+    "documentation",
+    "mcp",
+    "1c",
+    "bsl",
+    "1c-enterprise",
+    "tree-sitter",
+    "ast",
+    "code-analysis",
+    "openrouter",
+    "gemini",
+    "groq",
+    "ollama",
+    "llm",
+    "ai-documentation",
+    "russian",
+    "test-generation",
+    "code-review"
+  ],
+  "author": "United States Department of Energy",
+  "license": "CC0-1.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "@types/js-yaml": "^4.0.9",
+    "axios": "^1.6.0",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2",
+    "diff": "^7.0.0",
+    "ignore": "^6.0.2",
+    "js-yaml": "^4.1.1",
+    "minimatch": "^10.1.1",
+    "openai": "^4.17.0",
+    "tree-sitter": "0.21.1",
+    "tree-sitter-bsl": "^0.1.5",
+    "web-tree-sitter": "^0.25.10",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/diff": "^6.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/minimatch": "^5.1.2",
+    "@types/node": "^20.8.9",
+    "@types/xml2js": "^0.4.14",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}

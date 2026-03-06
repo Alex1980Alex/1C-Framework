@@ -1,0 +1,48 @@
+{
+  "name": "mcp-bsl-debugger-full",
+  "version": "1.0.0",
+  "description": "Full-featured BSL debugger for Claude Code via MCP - independent implementation without DAP dependency",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "test": "node --test tests/",
+    "test:parser": "node --test tests/parser.test.js",
+    "test:engine": "node --test tests/engine.test.js"
+  },
+  "keywords": [
+    "mcp",
+    "bsl",
+    "1c",
+    "onescript",
+    "debugger",
+    "claude-code",
+    "anthropic"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/mcp-bsl-debugger-full"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "bin": {
+    "mcp-bsl-debugger": "./dist/index.js"
+  }
+}

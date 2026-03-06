@@ -189,7 +189,8 @@
       "Bash(pip cache:*)",
       "Bash(huggingface-cli delete-cache:*)",
       "Bash(PYTHONUTF8=1 hf cache delete --all 2>&1 || PYTHONIOENCODING=utf-8 python -c \"import shutil; import os; p=os.path.expanduser\\('~/.cache/huggingface'\\); s=sum\\(f.stat\\(\\).st_size for f in __import__\\('pathlib'\\).Path\\(p\\).rglob\\('*'\\) if f.is_file\\(\\)\\)/1e9; print\\(f'{s:.2f} GB in {p}'\\); shutil.rmtree\\(p\\); print\\('Deleted'\\)\" 2>&1)",
-      "Bash(java:*)"
+      "Bash(java:*)",
+      "Bash(npm ls:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
