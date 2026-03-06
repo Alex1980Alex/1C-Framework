@@ -641,25 +641,150 @@ class BSLSearchSettings:
 }
 ```
 
-### 6.2 Lazy MCP профили
+### 6.2 Launcher script (аналог scripts\claude.bat)
 
+Создать `scripts\claude.bat` в 1С-Framework с поддержкой профилей:
+
+```bat
+@echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+:menu
+cls
+echo +======================================================+
+echo |           Claude Code - Выбор профиля MCP             |
+echo +======================================================+
+echo |  1. pdf      - PDF RAG (~15k токенов)                 |
+echo |  2. bsl      - 1С разработка (~25k токенов)           |
+echo |  3. full     - PDF + BSL + Memory (~45k токенов)      |
+echo |  4. lazy-mcp - Авто-выбор (~5k токенов)               |
+echo +------------------------------------------------------+
+echo |  c. Продолжить последнюю сессию (--continue)          |
+echo |  r. Возобновить сессию (--resume)                     |
+echo |  0. Выход                                             |
+echo +======================================================+
+echo.
+
+set /p choice="Выберите профиль [1-4, c, r, 0]: "
+
+if "%choice%"=="1" set "profile=pdf"
+if "%choice%"=="2" set "profile=bsl"
+if "%choice%"=="3" set "profile=full"
+if "%choice%"=="4" set "profile=lazy-mcp"
+if "%choice%"=="0" exit /b 0
+
+if "%choice%"=="c" (
+    set /p cprofile="Какой профиль продолжить [1-4]: "
+    if "!cprofile!"=="1" set "profile=pdf"
+    if "!cprofile!"=="2" set "profile=bsl"
+    if "!cprofile!"=="3" set "profile=full"
+    if "!cprofile!"=="4" set "profile=lazy-mcp"
+    set "extra=--continue"
+    goto run
+)
+
+if "%choice%"=="r" (
+    set /p rprofile="Какой профиль возобновить [1-4]: "
+    if "!rprofile!"=="1" set "profile=pdf"
+    if "!rprofile!"=="2" set "profile=bsl"
+    if "!rprofile!"=="3" set "profile=full"
+    if "!rprofile!"=="4" set "profile=lazy-mcp"
+    set "extra=--resume"
+    goto run
+)
+
+if not defined profile (
+    echo Неверный выбор.
+    timeout /t 2 >nul
+    goto menu
+)
+
+:run
+echo.
+echo Запуск Claude Code с профилем: %profile%
+claude --strict-mcp-config --mcp-config "D:\1С-Framework\.mcp\%profile%.json" %extra% %*
+```
+
+### 6.3 Lazy MCP профили
+
+**Структура `.mcp/`:**
+
+```
+.mcp/
+├── pdf.json        # Только pdf-vector-graph (12 tools)
+├── bsl.json        # BSL серверы: auto-documenter, bsl-semantic-search,
+│                   #   bsl-debugger, bsl-platform-context, serena, ast-grep-mcp
+├── full.json       # pdf + bsl + memory + reasoning
+└── lazy-mcp.json   # Lazy proxy: 15 native + 20+ on-demand (из источника)
+```
+
+**Профиль pdf.json:**
 ```json
 {
-  "profiles": {
-    "pdf": {
-      "description": "PDF документация и RAG",
-      "servers": ["pdf-vector-graph"]
-    },
-    "bsl": {
-      "description": "BSL/1C разработка",
-      "servers": ["auto-documenter", "bsl-semantic-search", "bsl-debugger", "bsl-platform-context", "serena", "ast-grep-mcp"]
-    },
-    "full": {
-      "description": "Все серверы",
-      "servers": ["pdf-vector-graph", "auto-documenter", "bsl-semantic-search", "bsl-debugger", "bsl-platform-context", "serena", "ast-grep-mcp"]
+  "mcpServers": {
+    "pdf-vector-graph": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "D:\\1С-Framework"
     }
   }
 }
+```
+
+**Профиль bsl.json:**
+```json
+{
+  "mcpServers": {
+    "auto-documenter": {
+      "command": "node",
+      "args": ["mcp-start.js"],
+      "cwd": "D:\\1С-Framework\\tools\\auto-documenter",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DEEP_REASONING_API_KEY": "${DEEP_REASONING_API_KEY}",
+        "DEEP_REASONING_BASE_URL": "https://api.z.ai/api/anthropic",
+        "DEEP_REASONING_MODEL": "glm-5"
+      },
+      "timeout": 180000
+    },
+    "bsl-semantic-search": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.bsl.semantic_search.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": { "PYTHONIOENCODING": "utf-8" },
+      "timeout": 60000
+    },
+    "bsl-debugger": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
+      "env": { "NODE_ENV": "production" },
+      "timeout": 60000
+    },
+    "bsl-platform-context": {
+      "command": "java",
+      "args": ["-Dfile.encoding=UTF-8", "-jar", "D:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
+               "--platform-path", "C:\\Program Files\\1cv8\\8.3.27.1859", "--verbose"],
+      "env": { "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17" },
+      "timeout": 30000
+    },
+    "serena": {
+      "command": "D:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
+      "args": ["start-mcp-server", "--context", "ide-assistant"],
+      "cwd": "D:\\1С-Framework\\tools\\serena",
+      "timeout": 180000
+    },
+    "ast-grep-mcp": {
+      "command": "D:\\1С-Framework\\tools\\ast-grep-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["main.py"],
+      "cwd": "D:\\1С-Framework\\tools\\ast-grep-mcp",
+      "env": { "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1" },
+      "timeout": 60000
+    }
+  }
+}
+```
 ```
 
 ### 6.3 Новые зависимости в `pyproject.toml`
