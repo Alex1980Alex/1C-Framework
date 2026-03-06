@@ -80,6 +80,10 @@ CODE_TO_DOMAIN = [
     ("src/ui/",                            "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
     ("src/workers/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
     ("src/pdf_framework/utils/",           "01_ОБЗОР",              "pdf-knowledge"),
+    # BSL (1C Enterprise) modules
+    ("src/bsl/",                           "06_ИНТЕРФЕЙСЫ",         "bsl-development"),
+    ("src/shared/",                        "01_ОБЗОР",              "pdf-knowledge"),
+    ("src/memory/",                        "01_ОБЗОР",              "pdf-knowledge"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
