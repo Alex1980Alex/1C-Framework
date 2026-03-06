@@ -456,7 +456,7 @@
 | 49 | Mem0 вместо 4 кастомных систем памяти | **CRITICAL** | Замена |
 | 50 | LiteLLM вместо кастомной ротации | **CRITICAL** | Замена |
 | 51 | Pipeline agents -> существующие LangGraph agents | HIGH | Унификация |
-| 52 | Установить свежую Serena вместо копирования | HIGH | Обновление |
+| 52 | Копировать BSL-кастомизированную Serena + отслеживать upstream | HIGH | Миграция + Merge |
 | 53 | Unsloth вместо кастомного training pipeline | HIGH | Замена |
 | 54 | Upstream versions для всех 4 компонентов | HIGH | Обновление |
 | 55 | ruff/mypy для всего фреймворка | MEDIUM | Стандартизация |
