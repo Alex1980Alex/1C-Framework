@@ -486,7 +486,7 @@ Skills (57)           <->  Skills (+6 BSL)         Расширение
 |---|---------|-------|----------|--------|
 | 1 | [BerriAI/litellm](https://github.com/BerriAI/litellm) | ~38K | LLM Rotation (Phase 50) + Auto-Documenter providers (Phase 47) + Z.AI proxy | **CRITICAL** — унификация всех LLM-вызовов |
 | 2 | [mem0ai/mem0](https://github.com/mem0ai/mem0) | ~41K | 4 системы памяти (Phase 49) | **CRITICAL** — замена 4 кастомных систем одной |
-| 3 | [oraios/serena](https://github.com/oraios/serena) | ~21K | Старая копия Serena (Phase 52) | **HIGH** — свежая версия vs outdated fork |
+| 3 | [oraios/serena](https://github.com/oraios/serena) | ~21K | Upstream для BSL-кастомизированной Serena (Phase 52) | **HIGH** — мержить обновления в BSL-форк |
 | 4 | [unslothai/unsloth](https://github.com/unslothai/unsloth) | ~53K | Кастомный training pipeline (Phase 53) | **HIGH** — стандарт индустрии |
 | 5 | [eyaltoledano/claude-task-master](https://github.com/eyaltoledano/claude-task-master) | ~25K | Task Pipeline (Phase 51) | **HIGH** — уже в roadmap |
 | 6 | [NirDiamant/RAG_Techniques](https://github.com/NirDiamant/RAG_Techniques) | ~24.5K | Референс для BSL RAG (Phase 45) | **MEDIUM** — cookbook новых техник |
