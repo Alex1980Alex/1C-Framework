@@ -23,6 +23,9 @@ data/
 *.swp
 *.swo
 
+# Node.js
+node_modules/
+
 # VS Code extensions build artifacts
 .vscode-extensions/*/node_modules/
 .vscode-extensions/*/*.vsix
