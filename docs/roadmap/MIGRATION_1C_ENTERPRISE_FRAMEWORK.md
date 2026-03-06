@@ -891,25 +891,50 @@ Tier 5                               │
 
 ## 9. Приложения
 
-### 9.1 Полный список MCP серверов для миграции
+### 9.1 Полный список MCP серверов (34 total)
 
-| # | Сервер | Тип | Приоритет | Фаза |
-|---|--------|-----|-----------|------|
-| 1 | serena | Python (LSP) | HIGH | 52 |
-| 2 | ast-grep-mcp | Node.js | MEDIUM | 54 |
-| 3 | bsl-platform-context | Python | CRITICAL | 46 |
-| 4 | 1c-docs-rag | Python | CRITICAL | 45 |
-| 5 | memory-ai | Python | HIGH | 49 |
-| 6 | bsl-semantic-search | Python | CRITICAL | 45 |
-| 7 | **auto-documenter** | Node.js | **CRITICAL** | **47** |
-| 8 | ripgrep | Binary | LOW | 54 |
-| 9 | deep-code-reasoning | Python | MEDIUM | 51 |
-| 10 | conversation-memory | Python | HIGH | 49 |
-| 11 | task-master-ai | Node.js | HIGH | 51 |
-| 12 | markitdown | Python | LOW | - |
-| 13 | vector-memory | Python | MEDIUM | 49 |
-| 14 | skill-learning | Python | MEDIUM | 49 |
-| 15 | lazy-mcp | Python (proxy) | MEDIUM | 54 |
+#### Native серверы (15) — из `.mcp\lazy-mcp.json`
+
+| # | Сервер | Runtime | Приоритет | Фаза | Особенности |
+|---|--------|---------|-----------|------|-------------|
+| 1 | `serena` | Python venv (serena.exe) | HIGH | 52 | LSP, 30+ языков, BSL через bsl_language_server.py |
+| 2 | `ast-grep-mcp` | Python venv | HIGH | 54 | Tree-sitter AST, 100% точность BSL парсинга |
+| 3 | `bsl-platform-context` | **Java** (Zulu-17, JAR) | CRITICAL | 46 | API 1С:8.3.27.1859, UTF-8 fix |
+| 4 | `1c-docs-rag` | Python | CRITICAL | 45 | 863+ docs, timeout 7200s для индексации |
+| 5 | `memory-ai` | Python 3.13 | HIGH | 49 | EPISODIC память, приоритеты |
+| 6 | `bsl-semantic-search` | Python (FastMCP) | CRITICAL | 45 | 3,908 BSL модулей, Qdrant bsl_code_v2 |
+| 7 | **`auto-documenter`** | **Node.js** | **CRITICAL** | **47** | **5 tools, tree-sitter-bsl, z.ai GLM-5, 5 AI-провайдеров** |
+| 8 | `ripgrep` | Node.js (wrapper.cjs) | LOW | 54 | mcp-ripgrep-fixed для Windows |
+| 9 | `deep-code-reasoning` | Node.js | MEDIUM | 51 | z.ai GLM-5, 10 tools глубокого анализа |
+| 10 | `conversation-memory` | Python 3.13 | HIGH | 49 | История сессий, EPISODIC |
+| 11 | `task-master-ai` | npx (task-master-ai) | HIGH | 51 | z.ai, 38 tools, AI-декомпозиция задач |
+| 12 | `markitdown` | npx (markitdown-mcp-npx) | LOW | — | 29+ formats → Markdown, Microsoft |
+| 13 | `vector-memory` | Python venv | MEDIUM | 49 | Qdrant + Google Gemini embeddings, mutable confidence |
+| 14 | `skill-learning` | Python venv | MEDIUM | 49 | PostToolUse hook → skill capture |
+| 15 | `lazy-mcp` | Python venv | MEDIUM | 54 | Proxy: `recommend_tools`, `get_tools_in_category`, `execute_tool` |
+
+#### On-demand серверы (20+) — из `lazy-mcp/config/registry.yaml`
+
+| Категория | Сервер | Runtime | Приоритет | Фаза | Описание |
+|-----------|--------|---------|-----------|------|----------|
+| `/1c-development` | `bsl-debugger` | Node.js | CRITICAL | 48 | 10 debug tools (breakpoints, step, variables) |
+| `/1c-development` | `bsl-semantic-diff` | Python | MEDIUM | 54 | Семантическое сравнение BSL кода |
+| `/memory` | `unified-memory` | Python venv | HIGH | 49 | Orchestrator v2.2.0, 46+ tools, UnifiedID |
+| `/memory` | `mcp-memory-libsql` | npx | LOW | — | LibSQL альтернативная память |
+| `/memory` | `vector-memory-mcp` | Python 3.13 | MEDIUM | 49 | Qdrant + ONNX embeddings |
+| `/learning` | `skill-learning-mcp` | Python 3.13 | MEDIUM | 49 | Захват паттернов |
+| `/file-operations` | `filesystem` | npx (@mcp/server-filesystem) | LOW | — | Read/write/edit/tree |
+| `/reasoning` | `sequential-thinking` | npx (@mcp/server-sequential-thinking) | LOW | — | Пошаговое мышление |
+| `/reasoning` | `reasoner` | Node.js | LOW | — | Beam Search + MCTS |
+| `/web` | `brave` | npx (@mcp/server-brave-search) | LOW | — | Brave Web Search API |
+| `/web` | `puppeteer` | npx (@mcp/server-puppeteer) | LOW | — | Браузерная автоматизация |
+| `/utils` | `github` | npx (@mcp/server-github) | LOW | — | GitHub API |
+| `/utils` | `filesystem-extended` | npx (@mcp/server-filesystem) | LOW | — | Filesystem operations |
+| `/utils` | `clipboard` | Node.js | LOW | — | Буфер обмена |
+| `/routing` | `mcp-llm-router` | Python | MEDIUM | 50 | Z.AI (60%) / Claude (15%) / Hybrid (25%) |
+| `/browser` | `playwright` | npx | LOW | — | Playwright автоматизация |
+| `/browser` | `chrome-devtools` | npx | LOW | — | Chrome DevTools Protocol |
+| `/bridges` | `mcpo` | Python (mcpo) | MEDIUM | 54 | MCP-to-OpenAPI proxy, port 8765 |
 
 ### 9.2 Env-переменные для миграции
 
