@@ -133,6 +133,8 @@ SKIP_PATTERNS = [
     "pyproject.toml",
     ".env.example",
     "mcp-server.log",
+    # Empty module markers (no logic to document)
+    "__init__.py",
 ]
 
 
