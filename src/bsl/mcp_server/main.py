@@ -46,7 +46,7 @@ def create_parser() -> argparse.ArgumentParser:
   python -m src.bsl.mcp_server http --port 8000
 
   # Запуск с конфигурацией из .env файла
-  python -m src.py_server --env-file .env
+  python -m src.bsl.mcp_server --env-file .env
 
 Переменные окружения:
   MCP_ONEC_URL           - URL базы 1С (обязательно)
