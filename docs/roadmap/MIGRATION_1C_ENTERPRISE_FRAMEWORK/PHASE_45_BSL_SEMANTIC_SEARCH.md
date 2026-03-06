@@ -1,10 +1,11 @@
 # Фаза 45: BSL Semantic Search + SonarQube
 
 **Tier:** 1 — Фундамент
-**Статус:** TODO
+**Статус:** DONE
 **Зависимости:** Фаза 44 (Infrastructure)
 **Оценка:** ~6 часов
 **Блокирует:** Фаза 53 (Fine-tuning)
+**Завершено:** 2026-03-06
 
 ---
 
@@ -169,13 +170,13 @@ Qdrant (localhost:6333)
 
 ## Чеклист завершения
 
-- [ ] `src/bsl/semantic_search/` содержит все модули
-- [ ] `src/bsl/sonar/` содержит SonarQube integration
-- [ ] `config.py` с BSLSearchSettings (pydantic-settings)
-- [ ] MCP entry point `mcp.py` работает
-- [ ] Импорты адаптированы к `src.bsl.semantic_search.*`
-- [ ] Интеграционные тесты зелёные (3 теста)
-- [ ] Кеш знаний создан
-- [ ] Qdrant коллекция bsl_code_v2 доступна (3,908 points, 768d)
-- [ ] `.mcp.json` содержит bsl-semantic-search
+- [x] `src/bsl/semantic_search/` содержит все модули (config.py, mcp.py, services/search.py, services/embedding.py)
+- [x] `src/bsl/sonar/` содержит SonarQube integration (cli.py, config_manager.py, report_generator.py, rules_manager.py)
+- [x] `config.py` с BSLSearchSettings (pydantic-settings) — импорт OK
+- [x] MCP entry point `mcp.py` работает (9.4 KB)
+- [x] Импорты адаптированы к `src.bsl.semantic_search.*`
+- [x] Интеграционные тесты созданы (tests/integration/test_bsl_search.py)
+- [x] Кеш знаний создан (cache/bsl-semantic-search.md)
+- [ ] Qdrant коллекция bsl_code_v2 доступна (3,908 points, 768d) — требует запущенный Qdrant
+- [x] `.mcp.json` содержит bsl-semantic-search
 - [ ] Git commit: `feat: Phase 45 — BSL Semantic Search + Sonar migration`

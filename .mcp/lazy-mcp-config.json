@@ -1,0 +1,124 @@
+{
+  "version": "1.0.0",
+  "description": "Lazy MCP Server Configuration - On-demand loading",
+  "categories": {
+    "1c-development": {
+      "description": "1C/BSL Development tools",
+      "servers": ["bsl-semantic-search", "bsl-platform-context", "serena", "ast-grep-mcp"],
+      "keywords": ["BSL", "1С", "модуль", "процедура", "конфигурация", "справочник", "документ"]
+    },
+    "documentation": {
+      "description": "Documentation generation tools",
+      "servers": ["auto-documenter", "markitdown"],
+      "keywords": ["документация", "documentation", "описание", "README"]
+    },
+    "memory": {
+      "description": "Memory and context systems",
+      "servers": ["memory-ai", "vector-memory", "conversation-memory"],
+      "keywords": ["память", "memory", "контекст", "запомнить"]
+    },
+    "learning": {
+      "description": "Skill learning and improvement",
+      "servers": ["skill-learning"],
+      "keywords": ["обучение", "learning", "skill", "улучшить"]
+    },
+    "file-operations": {
+      "description": "File system operations",
+      "servers": ["filesystem", "ripgrep"],
+      "keywords": ["файл", "file", "найти", "search", "grep"]
+    },
+    "reasoning": {
+      "description": "Deep reasoning and analysis",
+      "servers": ["deep-code-reasoning"],
+      "keywords": ["анализ", "reasoning", "deep", "сложный"]
+    },
+    "web": {
+      "description": "Web and HTTP operations",
+      "servers": ["http-client", "web-reader"],
+      "keywords": ["web", "http", "url", "сайт"]
+    },
+    "utils": {
+      "description": "Utility tools",
+      "servers": ["calculator", "datetime"],
+      "keywords": ["калькулятор", "дата", "время"]
+    },
+    "routing": {
+      "description": "Request routing and optimization",
+      "servers": ["zai-router"],
+      "keywords": ["router", "routing", "оптимизация"]
+    }
+  },
+  "serverDefinitions": {
+    "bsl-semantic-search": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.bsl.semantic_search.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "timeout": 60000
+    },
+    "bsl-platform-context": {
+      "command": "java",
+      "args": ["-Dfile.encoding=UTF-8", "-jar", "D:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar", "--platform-path", "C:\\Program Files\\1cv8\\8.3.27.1859", "--verbose"],
+      "env": {"JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"},
+      "timeout": 30000
+    },
+    "serena": {
+      "command": "D:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
+      "args": ["start-mcp-server", "--context", "ide-assistant"],
+      "cwd": "D:\\1С-Framework\\tools\\serena",
+      "timeout": 180000
+    },
+    "ast-grep-mcp": {
+      "command": "D:\\1С-Framework\\tools\\ast-grep-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["main.py"],
+      "cwd": "D:\\1С-Framework\\tools\\ast-grep-mcp",
+      "env": {"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"},
+      "timeout": 60000
+    },
+    "auto-documenter": {
+      "command": "node",
+      "args": ["mcp-start.js"],
+      "cwd": "D:\\1С-Framework\\tools\\auto-documenter",
+      "env": {"NODE_OPTIONS": "--max-old-space-size=4096"},
+      "timeout": 180000
+    },
+    "memory-ai": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.ai_memory.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "timeout": 60000
+    },
+    "vector-memory": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.vector_memory.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "timeout": 60000
+    },
+    "conversation-memory": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.conversation_memory.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "timeout": 60000
+    },
+    "deep-code-reasoning": {
+      "command": "node",
+      "args": ["index.js"],
+      "cwd": "D:\\1С-Framework\\tools\\deep-code-reasoning",
+      "env": {"NODE_OPTIONS": "--max-old-space-size=4096"},
+      "timeout": 180000
+    },
+    "ripgrep": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/ripgrep-mcp"],
+      "timeout": 30000
+    },
+    "markitdown": {
+      "command": "npx",
+      "args": ["-y", "markitdown-mcp"],
+      "timeout": 120000
+    }
+  }
+}

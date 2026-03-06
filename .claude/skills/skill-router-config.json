@@ -5,7 +5,8 @@
   "max_bundles": 2,
   "domains": {
     "1c": [
-      "research-1c"
+      "research-1c",
+      "bsl-dev"
     ],
     "framework": [
       "search",
@@ -126,6 +127,55 @@
         "1c-doc-research"
       ],
       "optional": []
+    },
+    "bsl-dev": {
+      "keywords": [
+        "BSL",
+        "1С код",
+        "модуль 1С",
+        "процедура BSL",
+        "функция BSL",
+        "конфигурация 1С",
+        "справочник 1С",
+        "документ 1С",
+        "регистр 1С",
+        "модуль объекта",
+        "модуль формы",
+        "общий модуль",
+        "отладка BSL",
+        "debug 1С",
+        "semantic search BSL",
+        "автодокументация BSL"
+      ],
+      "weighted_keywords": {
+        "bsl-semantic-search": 5,
+        "auto-documenter": 4,
+        "bsl-debugger": 5,
+        "bsl-platform-context": 4,
+        "serena": 3,
+        "ast-grep": 4,
+        "процедура": 2,
+        "функция": 2,
+        "модуль": 2,
+        "bsl код": 4,
+        "1с код": 3
+      },
+      "utterances": [
+        "найди похожий код в базе BSL",
+        "сгенерируй документацию для модуля 1С",
+        "отладь процедуру проведения",
+        "покажи API платформы 1С",
+        "проанализируй BSL код",
+        "найди символы в модуле",
+        "search for similar BSL code",
+        "debug 1C procedure"
+      ],
+      "skills": [
+        "bsl-development"
+      ],
+      "optional": [
+        "1c-doc-research"
+      ]
     },
     "research-tech": {
       "keywords": [

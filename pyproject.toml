@@ -79,10 +79,29 @@ langsmith = ["langsmith>=0.2"]
 langfuse = ["langfuse>=2.0"]
 # All optional dependencies
 all = [
-    "pdf-vector-graph-framework[faiss,qdrant,neo4j,unstructured,docling,voyage,nlp,deep,langsmith,langfuse,queue]",
+    "pdf-vector-graph-framework[faiss,qdrant,neo4j,unstructured,docling,voyage,nlp,deep,langsmith,langfuse,queue,bsl,memory,llm-rotation]",
 ]
 # Phase 59: Async Processing Queue (ARQ + Redis)
 queue = ["arq>=0.26"]
+# === BSL Development (Phase 44: Migration from 1C-Enterprise_Framework) ===
+bsl = [
+    "qdrant-client>=1.12",
+    "neo4j>=5.25",
+    "fastmcp>=0.1",
+    "nomic[local]>=3.0",
+]
+memory = [
+    "qdrant-client>=1.12",
+    "google-generativeai>=0.8",
+]
+llm-rotation = [
+    "mistralai>=1.0",
+    "openai>=1.0",
+    "google-generativeai>=0.8",
+]
+all-bsl = [
+    "pdf-vector-graph-framework[bsl,memory,llm-rotation]",
+]
 # Development
 dev = [
     "pre-commit>=4.0",
