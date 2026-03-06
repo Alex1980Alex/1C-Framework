@@ -137,11 +137,12 @@ java -jar tools/mcp-jars/mcp-bsl-context-0.3.1.jar --help
 
 ## Чеклист завершения
 
-- [ ] `src/bsl/mcp_integration/` содержит фреймворк
-- [ ] `src/bsl/mcp_server/` содержит сервер
-- [ ] `tools/mcp-jars/mcp-bsl-context-0.3.1.jar` скопирован
-- [ ] Java Zulu-17 проверена: `java -version`
-- [ ] `.mcp.json` содержит `bsl-platform-context`
-- [ ] MCP tool возвращает метаданные 1С
+- [x] `src/bsl/mcp_integration/` содержит фреймворк (1c_ext + build/MCP_Сервер.cfe + README.md)
+- [x] `src/bsl/mcp_server/` содержит сервер (10 .py файлов: config, main, mcp_server, onec_client, stdio_server, http_server, auth/oauth2)
+- [x] `tools/mcp-jars/mcp-bsl-context-0.3.1.jar` скопирован (41 MB)
+- [x] Java Zulu-17 проверена: `java -version` → 17.0.13
+- [x] `.mcp.json` содержит `bsl-platform-context`
+- [x] Импорты работают: `from src.bsl.mcp_server import Config, MCPProxy, OneCClient`
+- [ ] MCP tool возвращает метаданные 1С (требует запущенную 1С)
 - [ ] `docs/api/bsl-mcp.md` создан
 - [ ] Git commit: `feat: Phase 46 — MCP 1C Integration + Server`
