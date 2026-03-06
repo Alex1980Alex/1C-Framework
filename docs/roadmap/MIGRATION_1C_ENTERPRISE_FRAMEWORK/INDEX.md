@@ -33,11 +33,15 @@
 | **4** | [54](PHASE_54_INFRASTRUCTURE_TOOLS.md) | PHASE_54_INFRASTRUCTURE_TOOLS.md | TODO | Lazy MCP + Docker + AST Grep |
 | **5** | [55](PHASE_55_INTEGRATION_CLEANUP.md) | PHASE_55_INTEGRATION_CLEANUP.md | TODO | E2E тесты, docs, cleanup |
 
+## Аналитика
+
+- [TECHNOLOGY_COMPARISON.md](TECHNOLOGY_COMPARISON.md) — Сравнение технологий: миграция vs текущий фреймворк + лучшие GitHub решения (ТОП-10)
+
 ## Сводка
 
 - **Компоненты:** 18 модулей
 - **MCP серверы:** 15 native + 20+ on-demand = 34 total
-- **Трудозатраты:** ~57 часов (5 недель при параллельной работе)
+- **Трудозатраты:** ~57 часов → **~44 часов** (с учётом замен на готовые решения)
 - **Основной документ:** [MIGRATION_1C_ENTERPRISE_FRAMEWORK.md](MIGRATION_1C_ENTERPRISE_FRAMEWORK.md)
 
 ## Граф зависимостей
