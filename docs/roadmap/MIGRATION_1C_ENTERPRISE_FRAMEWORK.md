@@ -1,9 +1,10 @@
 # Дорожная карта миграции: 1C-Enterprise_Framework -> 1С-Framework
 
 **Дата создания:** 2026-03-06
-**Источник:** `D:\1C-Enterprise_Framework` (профиль lazy-mcp #7 — auto-documenter)
+**Источник:** `D:\1C-Enterprise_Framework` (запуск: `scripts\claude.bat`, профиль #7 lazy-mcp)
 **Целевой проект:** `D:\1С-Framework` (PDF Vector & Graph Framework, v0.33+)
 **Статус:** ПЛАНИРОВАНИЕ
+**Launcher:** `claude --strict-mcp-config --mcp-config "D:\1C-Enterprise_Framework\.mcp\lazy-mcp.json"`
 
 ---
 
