@@ -325,6 +325,39 @@ services:
     networks:
       - pdf-rag-network
 
+  # TimescaleDB for AI Memory (Phase 44/49: Migration from 1C-Enterprise_Framework)
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: pdf-rag-timescaledb
+    ports:
+      - "5433:5432"  # Different port to avoid conflict with pgvector
+    environment:
+      POSTGRES_DB: ai_memory
+      POSTGRES_USER: memory
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:-memory_pass}
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memory -d ai_memory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "30m"
+        max-file: "3"
+    networks:
+      - pdf-rag-network
+    profiles:
+      - memory  # Activate: docker compose --profile memory up
+
 volumes:
   postgres_data:
   qdrant_data:
@@ -333,6 +366,7 @@ volumes:
   neo4j_logs:
   prometheus_data:
   grafana_data:
+  timescaledb_data:
 
 networks:
   pdf-rag-network:

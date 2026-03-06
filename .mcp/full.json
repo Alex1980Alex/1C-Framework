@@ -1,0 +1,115 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/.mcp.schema.json",
+  "mcpServers": {
+    "pdf-vector-graph": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "D:\\1С-Framework",
+      "env": {},
+      "timeout": 60000
+    },
+    "auto-documenter": {
+      "command": "node",
+      "args": ["mcp-start.js"],
+      "cwd": "D:\\1С-Framework\\tools\\auto-documenter",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DEEP_REASONING_API_KEY": "${DEEP_REASONING_API_KEY}",
+        "DEEP_REASONING_BASE_URL": "https://api.z.ai/api/anthropic",
+        "DEEP_REASONING_MODEL": "glm-5"
+      },
+      "timeout": 180000
+    },
+    "bsl-semantic-search": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.bsl.semantic_search.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "bsl-debugger": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "timeout": 60000
+    },
+    "bsl-platform-context": {
+      "command": "java",
+      "args": [
+        "-Dfile.encoding=UTF-8",
+        "-jar",
+        "D:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
+        "--platform-path",
+        "C:\\Program Files\\1cv8\\8.3.27.1859",
+        "--verbose"
+      ],
+      "env": {
+        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
+      },
+      "timeout": 30000
+    },
+    "serena": {
+      "command": "D:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
+      "args": ["start-mcp-server", "--context", "ide-assistant"],
+      "cwd": "D:\\1С-Framework\\tools\\serena",
+      "timeout": 180000
+    },
+    "ast-grep-mcp": {
+      "command": "D:\\1С-Framework\\tools\\ast-grep-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["main.py"],
+      "cwd": "D:\\1С-Framework\\tools\\ast-grep-mcp",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUTF8": "1"
+      },
+      "timeout": 60000
+    },
+    "memory-ai": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.ai_memory.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "vector-memory": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.vector_memory.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "conversation-memory": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.conversation_memory.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "task-master-ai": {
+      "command": "npx",
+      "args": ["-y", "task-master-ai"],
+      "cwd": "D:\\1С-Framework",
+      "timeout": 180000
+    },
+    "deep-code-reasoning": {
+      "command": "node",
+      "args": ["index.js"],
+      "cwd": "D:\\1С-Framework\\tools\\deep-code-reasoning",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      },
+      "timeout": 180000
+    }
+  }
+}
