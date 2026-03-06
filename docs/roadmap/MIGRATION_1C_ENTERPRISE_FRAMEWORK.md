@@ -34,16 +34,87 @@
 
 Объединить BSL/1C-инструментарий из 1C-Enterprise_Framework в единую платформу 1С-Framework, используя существующую инфраструктуру (hooks, skills, MCP, Qdrant, LangChain/LangGraph).
 
+### Профиль #7: lazy-mcp (полная карта)
+
+**Launcher:** `D:\1C-Enterprise_Framework\scripts\claude.bat` → выбор `7`
+**Команда:** `claude --strict-mcp-config --mcp-config "D:\1C-Enterprise_Framework\.mcp\lazy-mcp.json"`
+**Конфиг:** `.mcp\lazy-mcp.json` v2.7.0
+**Архитектура:** 15 native серверов + lazy-mcp proxy (3 meta-tools → 20+ on-demand серверов)
+**Экономия:** ~5k токенов вместо ~372k (полный профиль) = **95% экономия**
+
+#### 15 Native серверов (всегда загружены)
+
+| # | Сервер | Runtime | Timeout | Назначение |
+|---|--------|---------|---------|-----------|
+| 1 | `serena` | Python (venv) | 180s | LSP для Python/JS/TS — символы, рефакторинг |
+| 2 | `ast-grep-mcp` | Python (venv) | 60s | AST-анализ BSL кода (100% надёжность) |
+| 3 | `bsl-platform-context` | Java (Zulu-17) | 30s | API платформы 1С:8.3.27 — типы, методы, свойства |
+| 4 | `1c-docs-rag` | Python | 7200s | RAG поиск по документации (863+ docs) |
+| 5 | `memory-ai` | Python 3.13 | 60s | Важные сообщения с приоритетами (EPISODIC) |
+| 6 | `bsl-semantic-search` | Python | 60s | Семантический поиск по BSL коду |
+| 7 | **`auto-documenter`** | **Node.js** | **180s** | **Автогенерация документации (z.ai GLM-5)** |
+| 8 | `ripgrep` | Node.js | 30s | Поиск по файлам (rg) с regex |
+| 9 | `deep-code-reasoning` | Node.js | 180s | Глубокий анализ кода с z.ai GLM-5 (10 tools) |
+| 10 | `conversation-memory` | Python 3.13 | 60s | История сессий (EPISODIC) |
+| 11 | `task-master-ai` | npx | 180s | AI-powered управление задачами (z.ai, 38 tools) |
+| 12 | `markitdown` | npx | 120s | Конвертация документов в Markdown (29+ formats) |
+| 13 | `vector-memory` | Python (venv) | 60s | SEMANTIC память — паттерны (Qdrant + Google Gemini) |
+| 14 | `skill-learning` | Python (venv) | 60s | Захват паттернов из PostToolUse hook |
+| 15 | `lazy-mcp` | Python (venv) | 30s | Proxy → 20 серверов: `recommend_tools`, `get_tools_in_category`, `execute_tool` |
+
+#### Lazy-MCP on-demand категории (9 категорий, 20+ серверов)
+
+| Категория | Серверы | Описание |
+|-----------|---------|----------|
+| `/1c-development` | `bsl-debugger`, `bsl-semantic-diff` + 3 NATIVE | Инструменты разработки 1С |
+| `/documentation` | `1c-docs-rag` (NATIVE) | Поиск по документации |
+| `/memory` | `unified-memory`, `mcp-memory-libsql`, `vector-memory-mcp` + 2 NATIVE | Системы памяти (46+ tools) |
+| `/learning` | `skill-learning-mcp` | Самообучающиеся навыки |
+| `/file-operations` | `ripgrep`, `filesystem` | Файловые операции |
+| `/reasoning` | `sequential-thinking`, `reasoner` | Рассуждения и мышление |
+| `/web` | `brave`, `puppeteer` | Веб-поиск, автоматизация |
+| `/utils` | `github`, `filesystem-extended`, `clipboard`, `slack`, `google-maps` | Утилиты |
+| `/routing` | `mcp-llm-router` | Маршрутизация Z.AI/Claude |
+| `/browser` | `playwright`, `chrome-devtools` | Браузерная автоматизация |
+| `/bridges` | `mcpo` | MCP-to-OpenAPI proxy для Z.AI |
+
+#### Ключевые env-переменные (из lazy-mcp.json)
+
+```bash
+# Z.AI (GLM-5) — auto-documenter, deep-code-reasoning, task-master, mcp-llm-router
+DEEP_REASONING_API_KEY=96aa27...ef8094.IgeitgoaFMpg5If9
+DEEP_REASONING_BASE_URL=https://api.z.ai/api/anthropic
+DEEP_REASONING_MODEL=glm-5
+
+# Google Gemini Embeddings — vector-memory, unified-memory
+GOOGLE_API_KEY=AIzaSyAf...9oSN78o
+GOOGLE_EMBEDDING_MODEL=text-embedding-004
+
+# Qdrant — vector-memory, unified-memory
+QDRANT_URL=http://localhost:6333
+LEARNING_COLLECTION_NAME=learned_patterns
+
+# Java — bsl-platform-context
+JAVA_HOME=C:\Program Files\Zulu\zulu-17
+
+# Brave Search
+BRAVE_API_KEY=BSAf2bf7...8nw81MAjZqc
+
+# GitHub
+GITHUB_PERSONAL_ACCESS_TOKEN=ghp_pOOS...3C781H
+```
+
 ### Масштаб
 
 | Метрика | Значение |
 |---------|----------|
 | Компонентов к миграции | 18 основных модулей |
-| MCP-серверов к интеграции | 15 native + 20 on-demand |
+| MCP-серверов к интеграции | 15 native + 20+ on-demand (34 total) |
 | BSL-модулей проиндексировано | 3,908 |
 | Сущностей в графе знаний | 3,166 entities, 3,528 edges |
-| Фаз миграции | 5 Tier-ов, 18 шагов |
+| Фаз миграции | 5 Tier-ов, 12 фаз (44-55) |
 | Fine-tuning датасет | 10,000 BSL примеров |
+| Экономия токенов | 95% (~5k vs ~372k) |
 
 ---
 
