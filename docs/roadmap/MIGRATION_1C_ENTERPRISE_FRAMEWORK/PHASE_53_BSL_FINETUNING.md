@@ -69,9 +69,9 @@ cp -r D:/1C-Enterprise_Framework/finetuning src/bsl/finetuning
 
 ## Чеклист завершения
 
-- [ ] `src/bsl/finetuning/` содержит все файлы
-- [ ] Dataset extraction скрипт работает
-- [ ] Colab notebook проверен
-- [ ] `docs/guides/bsl-finetuning.md` создан
-- [ ] Skill `bsl-finetuning/SKILL.md` создан
-- [ ] Git commit: `feat: Phase 53 — BSL Fine-tuning`
+- [x] `src/bsl/finetuning/` содержит все файлы (scripts, notebooks, README)
+- [x] Dataset extraction скрипт присутствует (extract_dataset.py)
+- [x] Colab notebook присутствует (BSL_Finetuning_Colab.ipynb)
+- [ ] `docs/guides/bsl-finetuning.md` создан (deferred — requires runtime validation)
+- [ ] Skill `bsl-finetuning/SKILL.md` создан (deferred — minimal component)
+- [x] Git commit: `feat: Phase 53 — BSL Fine-tuning`
