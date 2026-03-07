@@ -206,7 +206,8 @@ class TestLLMRotationService:
     @pytest.mark.asyncio
     async def test_complete_no_providers(self):
         """Should raise if no providers available."""
-        service = LLMRotationService(providers=[])
+        settings = LLMRotationSettings(max_retries=1)
+        service = LLMRotationService(providers=[], settings=settings)
         with pytest.raises(RuntimeError, match="No available LLM providers"):
             await service.complete("test prompt")
 
