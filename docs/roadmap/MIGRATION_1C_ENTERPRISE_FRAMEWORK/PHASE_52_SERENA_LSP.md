@@ -1,7 +1,7 @@
 # Фаза 52: Serena LSP Integration
 
 **Tier:** 4 — Расширения
-**Статус:** TODO
+**Статус:** DONE
 **Зависимости:** Фаза 44 (Infrastructure)
 **Оценка:** ~4 часа
 
