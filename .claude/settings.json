@@ -240,6 +240,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-enforcer.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/memory-sync.py",
+            "timeout": 5
           }
         ]
       }
