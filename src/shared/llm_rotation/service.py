@@ -362,7 +362,7 @@ class LLMRotationService:
                 }
 
             except Exception as e:
-                elapsed = time.monotonic() - start if 'start' in dir() else 0
+                elapsed = time.monotonic() - start
                 error_msg = str(e)[:200]
                 state.record_error(
                     error_msg,
