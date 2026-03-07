@@ -195,15 +195,14 @@ async def save_important_message(args: dict) -> list[TextContent]:
     msg_id = str(uuid4())
     now = datetime.now().isoformat()
 
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO important_messages (id, content, importance, category, tags, created_at, updated_at, metadata) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (msg_id, content, importance, category, json.dumps(tags), now, now, json.dumps({})),
-    )
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO important_messages (id, content, importance, category, tags, created_at, updated_at, metadata) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (msg_id, content, importance, category, json.dumps(tags), now, now, json.dumps({})),
+        )
+        conn.commit()
 
     logger.info(f"Saved message {msg_id} with importance {importance}")
     return [TextContent(type="text", text=json.dumps({"success": True, "id": msg_id, "importance": importance, "category": category}, ensure_ascii=False))]
