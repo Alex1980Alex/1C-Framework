@@ -50,6 +50,34 @@
         "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
       },
       "timeout": 30000
+    },
+    "memory-ai": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.ai_memory.server"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "vector-memory": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.vector_memory.server"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "QDRANT_URL": "http://localhost:6333"
+      },
+      "timeout": 60000
+    },
+    "skill-learning": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.skill_learning.server"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
     }
   }
 }
