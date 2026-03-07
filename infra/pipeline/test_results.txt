@@ -1,0 +1,370 @@
+..........FF....F............F............FF.......................F..F. [  6%]
+........F.........F.F.......................................F.F..F.F.F.. [ 12%]
+.....................................................F..F.......F..F.... [ 18%]
+FF...................................................................... [ 24%]
+...........F................................F.F......................... [ 30%]
+.........F..........................F....F......F.....FF..........F..... [ 36%]
+.........................................F.............................. [ 42%]
+..................FFFFFFFFFFF.FFFFFFFFFFF....FFFFFFFFFFFFFFFFFF..FFFFFFF [ 48%]
+FFFFFFFFFFFFFEEEF.FFFFFFFFFFFFFFFFFFFFFFFF............FFF............... [ 54%]
+........................................................................ [ 60%]
+..................F..................................................... [ 66%]
+..FF.....................FF.FFFFF.F.FF.FFF.FFF...FFFFFFFFFFFFFEEEEEEEEEE [ 72%]
+EEEEEEE....F....................FFFFFFFFEEEEEEEEEEEEEE.................. [ 78%]
+........................................................................ [ 84%]
+......................................................................EE [ 90%]
+EEEEEFFFFFEFEEEEFFFEFFEEEEEEEEFF.............................F.......... [ 96%]
+.......F.........EEEE.EEEFF........F......F..                            [100%]
+============================== warnings summary ===============================
+agents\qa\models.py:42
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:42: PytestCollectionWarning: cannot collect test class 'TestCase' because it has a __init__ constructor (from: agents/qa/test_generator.py)
+    @dataclass
+
+agents\qa\models.py:13
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:13: PytestCollectionWarning: cannot collect test class 'TestType' because it has a __init__ constructor (from: agents/qa/test_generator.py)
+    class TestType(Enum):
+
+agents\qa\models.py:249
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:249: PytestCollectionWarning: cannot collect test class 'TestSuite' because it has a __init__ constructor (from: agents/qa/test_generator.py)
+    @dataclass
+
+agents\qa\test_generator.py:16
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\test_generator.py:16: PytestCollectionWarning: cannot collect test class 'TestCategory' because it has a __init__ constructor (from: agents/qa/test_generator.py)
+    class TestCategory(Enum):
+
+agents\qa\test_generator.py:42
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\test_generator.py:42: PytestCollectionWarning: cannot collect test class 'TestGenerator' because it has a __init__ constructor (from: agents/qa/test_generator.py)
+    class TestGenerator:
+
+agents\qa\models.py:42
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:42: PytestCollectionWarning: cannot collect test class 'TestCase' because it has a __init__ constructor (from: agents/qa/test_runner.py)
+    @dataclass
+
+agents\qa\models.py:117
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:117: PytestCollectionWarning: cannot collect test class 'TestResult' because it has a __init__ constructor (from: agents/qa/test_runner.py)
+    @dataclass
+
+agents\qa\models.py:24
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:24: PytestCollectionWarning: cannot collect test class 'TestStatus' because it has a __init__ constructor (from: agents/qa/test_runner.py)
+    class TestStatus(Enum):
+
+agents\qa\models.py:249
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:249: PytestCollectionWarning: cannot collect test class 'TestSuite' because it has a __init__ constructor (from: agents/qa/test_runner.py)
+    @dataclass
+
+agents\qa\models.py:13
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:13: PytestCollectionWarning: cannot collect test class 'TestType' because it has a __init__ constructor (from: agents/qa/test_runner.py)
+    class TestType(Enum):
+
+agents\qa\test_runner.py:81
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\test_runner.py:81: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: agents/qa/test_runner.py)
+    class TestRunner:
+
+agents\qa\test_generator.py:42
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\test_generator.py:42: PytestCollectionWarning: cannot collect test class 'TestGenerator' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    class TestGenerator:
+
+agents\qa\test_runner.py:81
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\test_runner.py:81: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    class TestRunner:
+
+agents\qa\models.py:42
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:42: PytestCollectionWarning: cannot collect test class 'TestCase' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    @dataclass
+
+agents\qa\models.py:117
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:117: PytestCollectionWarning: cannot collect test class 'TestResult' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    @dataclass
+
+agents\qa\models.py:24
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:24: PytestCollectionWarning: cannot collect test class 'TestStatus' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    class TestStatus(Enum):
+
+agents\qa\models.py:13
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:13: PytestCollectionWarning: cannot collect test class 'TestType' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    class TestType(Enum):
+
+agents\qa\models.py:249
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\models.py:249: PytestCollectionWarning: cannot collect test class 'TestSuite' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    @dataclass
+
+agents\qa\test_generator.py:16
+  D:\1C-Enterprise_Framework\shared\pipeline\agents\qa\test_generator.py:16: PytestCollectionWarning: cannot collect test class 'TestCategory' because it has a __init__ constructor (from: tests/test_qa_agent.py)
+    class TestCategory(Enum):
+
+memory/tests/test_pattern_saver.py::TestPatternSaver::test_record_pattern_success
+  D:\1C-Enterprise_Framework\shared\pipeline\memory\tests\test_pattern_saver.py:266: RuntimeWarning: coroutine 'PatternSaver.record_success' was never awaited
+    pattern_saver.record_success("pat_1")
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+memory/tests/test_pattern_saver.py::TestPatternSaver::test_record_pattern_failure
+  D:\1C-Enterprise_Framework\shared\pipeline\memory\tests\test_pattern_saver.py:274: RuntimeWarning: coroutine 'PatternSaver.record_failure' was never awaited
+    pattern_saver.record_failure("pat_2", "Did not work")
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+memory/tests/test_pattern_saver.py::TestPatternSaver::test_get_pattern_stats
+  D:\1C-Enterprise_Framework\shared\pipeline\memory\tests\test_pattern_saver.py:281: RuntimeWarning: coroutine 'PatternSaver.record_success' was never awaited
+    pattern_saver.record_success("pat_3")
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+memory/tests/test_pattern_saver.py::TestPatternSaver::test_get_pattern_stats
+  D:\1C-Enterprise_Framework\shared\pipeline\memory\tests\test_pattern_saver.py:282: RuntimeWarning: coroutine 'PatternSaver.record_success' was never awaited
+    pattern_saver.record_success("pat_3")
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+memory/tests/test_pattern_saver.py::TestPatternSaver::test_get_pattern_stats
+  D:\1C-Enterprise_Framework\shared\pipeline\memory\tests\test_pattern_saver.py:283: RuntimeWarning: coroutine 'PatternSaver.record_failure' was never awaited
+    pattern_saver.record_failure("pat_3", "once failed")
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED agents/initializer/tests/test_agent.py::TestInitializerAgent::test_run_from_input
+FAILED agents/initializer/tests/test_agent.py::TestInitializerAgent::test_run_from_input_failure
+FAILED agents/initializer/tests/test_agent.py::TestContextReportGeneration::test_report_contains_structure
+FAILED agents/initializer/tests/test_agent.py::TestCacheIntegration::test_multiple_projects_cached
+FAILED agents/initializer/tests/test_codebase_scanner.py::TestModuleExtraction::test_extract_common_module
+FAILED agents/initializer/tests/test_codebase_scanner.py::TestPatternDetection::test_detect_naming_prefix
+FAILED agents/initializer/tests/test_context_cache.py::TestConvenienceFunctions::test_get_cache_returns_singleton
+FAILED agents/initializer/tests/test_context_cache.py::TestDirectoryHash::test_compute_hash_empty_directory
+FAILED agents/initializer/tests/test_context_generator.py::TestStructureSection::test_structure_groups_by_type
+FAILED agents/initializer/tests/test_context_generator.py::TestDependenciesSection::test_dependencies_includes_dependency_list
+FAILED agents/initializer/tests/test_context_generator.py::TestPatternsSection::test_patterns_included
+FAILED agents/initializer/tests/test_models.py::TestProjectType::test_ru_name
+FAILED agents/initializer/tests/test_models.py::TestObjectType::test_from_directory_unknown
+FAILED agents/initializer/tests/test_models.py::TestFileInfo::test_is_metadata
+FAILED agents/initializer/tests/test_models.py::TestProjectStructure::test_total_files
+FAILED agents/initializer/tests/test_models.py::TestRelevantFile::test_relevance_category
+FAILED agents/reviewer/tests/test_arch_checker.py::TestArchChecker::test_check_all_implemented
+FAILED agents/reviewer/tests/test_arch_checker.py::TestArchChecker::test_detect_circular_dependencies
+FAILED agents/reviewer/tests/test_arch_checker.py::TestDetectComponentType::test_detect_common_module
+FAILED agents/reviewer/tests/test_arch_checker.py::TestConvenienceFunctions::test_check_architecture
+FAILED agents/reviewer/tests/test_arch_checker.py::TestEdgeCases::test_optional_component
+FAILED agents/reviewer/tests/test_arch_checker.py::TestEdgeCases::test_partial_name_matching
+FAILED agents/reviewer/tests/test_report_generator.py::TestStandardChecks::test_sql_injection_detected
+FAILED agents/reviewer/tests/test_style_checker.py::TestStyleChecker::test_check_multi_variable
+FAILED agents/reviewer/tests/test_style_checker.py::TestStyleChecker::test_check_export_without_comment
+FAILED cli/tests/test_commands.py::TestRunCommand::test_run_command_dry_run
+FAILED cli/tests/test_config.py::TestCLIConfig::test_to_dict - AssertionError...
+FAILED cli/tests/test_config.py::TestCLIConfig::test_merge - AssertionError: ...
+FAILED cli/tests/test_config.py::TestProjectConfig::test_project_to_dict - As...
+FAILED cli/tests/test_config.py::TestConfigManager::test_save_and_load_cli_config
+FAILED cli/tests/test_config.py::TestConfigManager::test_register_project - A...
+FAILED cli/tests/test_config.py::TestConfigIntegration::test_config_persistence
+FAILED cli/tests/test_main.py::TestCLIErrorHandling::test_missing_required_arg
+FAILED memory/tests/test_error_learner.py::TestErrorCategory::test_all_categories
+FAILED memory/tests/test_error_learner.py::TestErrorCategory::test_category_values
+FAILED memory/tests/test_error_learner.py::TestErrorSignature::test_create_signature
+FAILED memory/tests/test_error_learner.py::TestErrorSignature::test_signature_matching
+FAILED memory/tests/test_error_learner.py::TestErrorSignature::test_signature_no_match
+FAILED memory/tests/test_error_learner.py::TestPreventionRule::test_create_rule
+FAILED memory/tests/test_error_learner.py::TestPreventionRule::test_rule_application_count
+FAILED memory/tests/test_error_learner.py::TestErrorAnalysis::test_create_analysis
+FAILED memory/tests/test_error_learner.py::TestErrorAnalysis::test_analysis_with_similar_errors
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_learn_from_error
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_learn_with_fix
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_record_fix_success
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_get_prevention_hints
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_categorize_error_syntax
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_categorize_error_null_reference
+FAILED memory/tests/test_error_learner.py::TestErrorLearner::test_categorize_error_type
+FAILED memory/tests/test_error_learner.py::TestErrorAnalyzer::test_analyze_error
+FAILED memory/tests/test_error_learner.py::TestErrorAnalyzer::test_analyze_with_context
+FAILED memory/tests/test_error_learner.py::TestErrorAnalyzer::test_find_similar_errors
+FAILED memory/tests/test_error_learner.py::TestErrorAnalyzer::test_extract_fixes_from_similar
+FAILED memory/tests/test_error_learner.py::TestErrorLearnerIntegration::test_learn_and_recall_error
+FAILED memory/tests/test_error_learner.py::TestErrorLearnerIntegration::test_prevention_rule_generation
+FAILED memory/tests/test_models.py::TestPattern::test_create_pattern - TypeEr...
+FAILED memory/tests/test_models.py::TestPattern::test_pattern_success_rate - ...
+FAILED memory/tests/test_models.py::TestPattern::test_pattern_success_rate_no_uses
+FAILED memory/tests/test_models.py::TestPattern::test_pattern_confidence_score
+FAILED memory/tests/test_models.py::TestPattern::test_pattern_to_dict - TypeE...
+FAILED memory/tests/test_models.py::TestPattern::test_pattern_from_dict - Key...
+FAILED memory/tests/test_models.py::TestPattern::test_pattern_to_memory_entry
+FAILED memory/tests/test_models.py::TestErrorRecord::test_create_error_record
+FAILED memory/tests/test_models.py::TestErrorRecord::test_error_with_resolution
+FAILED memory/tests/test_models.py::TestErrorRecord::test_error_resolution_time
+FAILED memory/tests/test_models.py::TestErrorRecord::test_error_to_dict - Typ...
+FAILED memory/tests/test_models.py::TestErrorRecord::test_error_from_dict - K...
+FAILED memory/tests/test_models.py::TestErrorRecord::test_error_to_memory_entry
+FAILED memory/tests/test_models.py::TestRecommendation::test_create_recommendation
+FAILED memory/tests/test_models.py::TestRecommendation::test_recommendation_acceptance
+FAILED memory/tests/test_models.py::TestRecommendation::test_recommendation_to_dict
+FAILED memory/tests/test_models.py::TestRecommendation::test_recommendation_from_dict
+FAILED memory/tests/test_models.py::TestRecommendation::test_recommendation_to_memory_entry
+FAILED memory/tests/test_models.py::TestLearningContext::test_context_to_dict
+FAILED memory/tests/test_models.py::TestLearningContext::test_context_from_dict
+FAILED memory/tests/test_pattern_saver.py::TestPatternCandidate::test_create_candidate
+FAILED memory/tests/test_pattern_saver.py::TestPatternCandidate::test_candidate_with_tags
+FAILED memory/tests/test_pattern_saver.py::TestPatternCandidate::test_candidate_to_pattern
+FAILED memory/tests/test_pattern_saver.py::TestMatchResult::test_create_match_result
+FAILED memory/tests/test_pattern_saver.py::TestMatchResult::test_match_result_with_reason
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_save_pattern
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_save_from_candidate
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_extract_patterns_from_code_bsl
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_extract_patterns_query
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_extract_export_pattern
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_record_pattern_success
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_record_pattern_failure
+FAILED memory/tests/test_pattern_saver.py::TestPatternSaver::test_get_pattern_stats
+FAILED memory/tests/test_pattern_saver.py::TestPatternMatcher::test_find_matching_patterns
+FAILED memory/tests/test_pattern_saver.py::TestPatternMatcher::test_find_patterns_with_min_score
+FAILED memory/tests/test_pattern_saver.py::TestPatternMatcher::test_find_patterns_by_type
+FAILED memory/tests/test_pattern_saver.py::TestPatternExtractionStrategy::test_all_strategies
+FAILED memory/tests/test_pattern_saver.py::TestPatternExtractionStrategy::test_strategy_values
+FAILED memory/tests/test_recommender.py::TestRecommendationSource::test_all_sources
+FAILED memory/tests/test_recommender.py::TestRecommendationContext::test_create_context
+FAILED memory/tests/test_recommender.py::TestRecommendationContext::test_context_with_code
+FAILED memory/tests/test_recommender.py::TestRecommendationContext::test_context_with_history
+FAILED memory/tests/test_recommender.py::TestScoredRecommendation::test_create_scored
+FAILED memory/tests/test_recommender.py::TestScoredRecommendation::test_scored_with_explanation
+FAILED memory/tests/test_recommender.py::TestScoredRecommendation::test_scored_comparison
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_recommendations_basic
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_recommendations_with_file
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_recommendations_with_code
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_recommendations_for_architect
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_recommendations_for_qa
+FAILED memory/tests/test_recommender.py::TestRecommender::test_accept_recommendation
+FAILED memory/tests/test_recommender.py::TestRecommender::test_reject_recommendation
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_acceptance_rate
+FAILED memory/tests/test_recommender.py::TestRecommender::test_get_helpfulness_rate
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_generate_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_pattern_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_error_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_history_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_context_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_dedup_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommendationEngine::test_rank_recommendations
+FAILED memory/tests/test_recommender.py::TestRecommenderIntegration::test_full_recommendation_flow
+FAILED memory/tests/test_recommender.py::TestRecommenderIntegration::test_recommendations_improve_with_feedback
+FAILED memory/tests/test_unified_memory_client.py::TestUnifiedMemoryClient::test_save_pattern
+FAILED memory/tests/test_unified_memory_client.py::TestUnifiedMemoryClient::test_save_error
+FAILED memory/tests/test_unified_memory_client.py::TestUnifiedMemoryClient::test_save_recommendation
+FAILED orchestrator/observability/tests/test_metrics.py::TestHistogram::test_histogram_buckets
+FAILED orchestrator/observability/tests/test_tracer.py::TestTraceDecorator::test_trace_decorator_async
+FAILED orchestrator/observability/tests/test_tracer.py::TestTraceDecorator::test_trace_decorator_exception
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackType::test_all_types_exist
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackStrategy::test_basic_creation
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackStrategy::test_to_dict
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackResult::test_success_result
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackResult::test_failed_result
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackChain::test_add_strategy
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackChain::test_execute_first_success
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackChain::test_execute_all_fail
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackChain::test_disabled_strategy_skipped
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackRegistry::test_register_chain
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackRegistry::test_register_default
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestFallbackRegistry::test_list_operations
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestCachedFallback::test_cache_and_retrieve
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestCachedFallback::test_cache_expiration
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestCachedFallback::test_max_entries
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestCachedFallback::test_clear
+FAILED orchestrator/resilience/tests/test_fallback_strategy.py::TestWithFallbackDecorator::test_decorator_with_chain
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryStrategy::test_all_strategies_exist
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryAction::test_all_actions_exist
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryStep::test_basic_creation
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryStep::test_with_parameters
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryStep::test_to_dict
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryStep::test_from_dict
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryPlan::test_basic_creation
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryPlan::test_steps_sorted_by_order
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryPlan::test_to_dict
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryResult::test_success_result
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryResult::test_partial_result
+FAILED orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryResult::test_to_dict
+FAILED orchestrator/resilience/tests/test_retry_handler.py::TestRetryConfig::test_fibonacci_delay
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestCheckpointType::test_all_types_exist
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestPipelinePhase::test_all_phases_exist
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestCheckpointMetadata::test_basic_creation
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestCheckpointMetadata::test_to_dict
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestCheckpointMetadata::test_from_dict
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestStateCheckpoint::test_basic_creation
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestStateCheckpoint::test_to_dict
+FAILED orchestrator/resilience/tests/test_state_manager.py::TestStateCheckpoint::test_from_dict
+FAILED tests/test_architect_verifier.py::TestArchitectVerifierReview::test_verify_complete_review
+FAILED tests/test_architect_verifier.py::TestArchitectVerifierReview::test_verify_incomplete_review
+FAILED tests/test_architect_verifier.py::TestArchitectVerifierEdgeCases::test_unsupported_artifact_type
+FAILED tests/test_architect_verifier.py::TestArchitectVerifierEdgeCases::test_empty_design
+FAILED tests/test_architect_verifier.py::TestArchitectVerifierEdgeCases::test_design_without_bsl
+FAILED tests/test_implementer_verifier.py::TestImplementerVerifier::test_verify_incomplete_result
+FAILED tests/test_implementer_verifier.py::TestImplementerVerifierQAReport::test_verify_complete_qa_report
+FAILED tests/test_implementer_verifier.py::TestImplementerVerifierQAReport::test_verify_incomplete_qa_report
+FAILED tests/test_implementer_verifier.py::TestImplementerVerifierEdgeCases::test_result_without_code
+FAILED tests/test_implementer_verifier.py::TestImplementerVerifierEdgeCases::test_empty_result
+FAILED tests/test_implementer_verifier.py::TestImplementerVerifierEdgeCases::test_unsupported_artifact_type
+FAILED tests/test_pm_spec_verifier.py::TestPMSpecVerifierEdgeCases::test_empty_content
+FAILED tests/test_pm_spec_verifier.py::TestPMSpecVerifierEdgeCases::test_minimal_valid_content
+FAILED tests/test_qa_agent.py::TestReportGenerator::test_report_to_markdown
+FAILED tests/test_qa_agent.py::TestModels::test_test_suite_operations - Attri...
+FAILED tests/test_revision_handler.py::TestRevisionHandlerEdgeCases::test_custom_max_attempts
+FAILED tests/test_revision_handler.py::TestRevisionHandlerEdgeCases::test_multiple_projects
+FAILED tests/test_revision_limiter.py::TestRevisionLimiter::test_generate_escalation_message
+FAILED tests/test_revision_limiter.py::TestEscalationEvent::test_to_dict - As...
+ERROR memory/tests/test_pattern_saver.py::TestPatternDeduplication::test_is_duplicate_exact_match
+ERROR memory/tests/test_pattern_saver.py::TestPatternDeduplication::test_is_duplicate_similar
+ERROR memory/tests/test_pattern_saver.py::TestPatternDeduplication::test_is_not_duplicate
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_select_strategy_low
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_select_strategy_high
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_select_strategy_critical
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_create_plan
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_create_plan_has_log_step
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_execute_plan_success
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_execute_plan_marks_completed
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_recover_full_flow
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_register_action_handler
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_custom_action_handler_called
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_get_recovery_history
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_recovery_adds_to_history
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_multiple_recoveries_tracked
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_clear_history
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_abort_strategy_terminates
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_strategy_for_category
+ERROR orchestrator/resilience/tests/test_recovery_handler.py::TestRecoveryHandler::test_recovery_with_context
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_initial_state
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_create_checkpoint
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_phase_transition
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_add_artifact
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_record_step
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_auto_checkpoint
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_restore_checkpoint
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_get_latest_checkpoint
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_save_and_load
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_cleanup_old_checkpoints
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_get_checkpoints_by_type
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_get_checkpoints_by_phase
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_is_phase_complete
+ERROR orchestrator/resilience/tests/test_state_manager.py::TestStateManager::test_get_state_summary
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_verify_complete_design
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_verify_incomplete_design
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_architectural_decisions_check
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_change_plan_check
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_risks_section_check
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_bsl_considerations_check
+ERROR tests/test_architect_verifier.py::TestArchitectVerifier::test_traceability_to_spec
+ERROR tests/test_implementer_verifier.py::TestImplementerVerifier::test_verify_complete_result
+ERROR tests/test_implementer_verifier.py::TestImplementerVerifier::test_changed_files_check
+ERROR tests/test_implementer_verifier.py::TestImplementerVerifier::test_code_implementation_check
+ERROR tests/test_implementer_verifier.py::TestImplementerVerifier::test_requirements_fulfillment_check
+ERROR tests/test_implementer_verifier.py::TestImplementerVerifier::test_testing_evidence_check
+ERROR tests/test_implementer_verifier.py::TestImplementerVerifierEdgeCases::test_result_with_bsl_code
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_verify_complete_context
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_verify_incomplete_context
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_verify_complete_spec
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_verify_incomplete_spec
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_check_types_present
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_summary_generated
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_extract_requirements_from_spec
+ERROR tests/test_pm_spec_verifier.py::TestPMSpecVerifier::test_traceability_check
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_handle_approved_result
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_handle_revision_needed_first_attempt
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_handle_revision_needed_escalation
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_revision_prompt_generation
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_history_tracking
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_history_reset
+ERROR tests/test_revision_handler.py::TestRevisionHandler::test_statistics - ...
+181 failed, 954 passed, 24 warnings, 62 errors in 22.71s

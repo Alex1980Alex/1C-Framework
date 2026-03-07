@@ -1,0 +1,24 @@
+{
+  "project_root": "D:\\1C-Enterprise_Framework\\development-pipeline",
+  "artifacts_dir": "artifacts",
+  "logs_dir": "logs",
+  "config_file": ".pipeline\\config.json",
+  "output_format": "text",
+  "verbosity": 1,
+  "color_enabled": true,
+  "unicode_enabled": true,
+  "default_project": null,
+  "max_parallel_tasks": 8,
+  "timeout_seconds": 3600,
+  "auto_commit": false,
+  "enabled_agents": [
+    "initializer",
+    "pm-spec",
+    "architect",
+    "implementer",
+    "qa",
+    "reviewer"
+  ],
+  "memory_backend": "unified-memory",
+  "observability_enabled": true
+}

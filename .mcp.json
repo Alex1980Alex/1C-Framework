@@ -87,6 +87,17 @@
         "PYTHONIOENCODING": "utf-8"
       },
       "timeout": 60000
+    },
+    "task-master-ai": {
+      "command": "npx",
+      "args": ["-y", "--package=task-master-ai", "task-master-ai"],
+      "cwd": "D:\\1С-Framework\\infra\\task-master",
+      "env": {
+        "ANTHROPIC_API_KEY": "${DEEP_REASONING_API_KEY}",
+        "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+        "TASKMASTER_PROJECT_ROOT": "D:/1С-Framework/infra/task-master"
+      },
+      "timeout": 180000
     }
   }
 }

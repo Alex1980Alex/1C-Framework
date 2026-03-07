@@ -1,0 +1,73 @@
+# Task ID: 102
+# Title: Task Master Gateway Integration
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Integrate Task Master with premium gateway services for enhanced testing and git workflow capabilities
+# Details:
+Add gateway integration to Task Master (open source) that enables users to access premium AI-powered test generation, TDD orchestration, and smart git workflows through API key authentication. Maintains local file operations while leveraging remote AI intelligence.
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Add gateway integration foundation [pending]
+### Dependencies: None
+### Description: Create base infrastructure for connecting to premium gateway services
+### Details:
+Implement configuration management for API keys, endpoint URLs, and feature flags. Create HTTP client wrapper with authentication, error handling, and retry logic.
+
+## 2. Implement test-gen command [pending]
+### Dependencies: None
+### Description: Add test generation command that uses gateway API
+### Details:
+Create command that gathers local context (code, tasks, patterns), sends to gateway API for intelligent test generation, then writes generated tests to local filesystem with proper structure.
+
+## 3. Create TDD workflow command [pending]
+### Dependencies: None
+### Description: Implement TDD orchestration for red-green-refactor cycle
+### Details:
+Build TDD state machine that manages test phases, integrates with test watchers, and provides real-time feedback during development cycles.
+
+## 4. Add git-flow command [pending]
+### Dependencies: None
+### Description: Implement automated git workflow with smart commits
+### Details:
+Create git workflow automation including branch management, smart commit message generation via gateway API, and PR creation with comprehensive descriptions.
+
+## 5. Enhance task structure for testing metadata [pending]
+### Dependencies: None
+### Description: Extend task schema to support test and git information
+### Details:
+Add fields for test files, coverage data, git branches, commit history, and TDD phase tracking to task structure.
+
+## 6. Add MCP tools for test-gen and TDD commands [pending]
+### Dependencies: None
+### Description: Create MCP tool interfaces for IDE integration
+### Details:
+Implement MCP tools that expose test generation and TDD workflow commands to IDEs like Cursor, enabling seamless integration with development environment.
+
+## 7. Create test pattern detection for existing codebase [pending]
+### Dependencies: None
+### Description: Analyze existing tests to learn project patterns
+### Details:
+Implement pattern detection that analyzes existing test files to understand project conventions, naming patterns, and testing approaches for consistency.
+
+## 8. Add coverage analysis integration [pending]
+### Dependencies: None
+### Description: Integrate with coverage tools and provide insights
+### Details:
+Connect with Jest, NYC, and other coverage tools to analyze test coverage, identify gaps, and suggest improvements through gateway API.
+
+## 9. Implement test watcher with phase transitions [pending]
+### Dependencies: None
+### Description: Create intelligent test watcher for TDD automation
+### Details:
+Build test watcher that monitors test results and automatically transitions between TDD phases (red/green/refactor) based on test outcomes.
+
+## 10. Add fallback mode when gateway is unavailable [pending]
+### Dependencies: None
+### Description: Ensure Task Master works without gateway access
+### Details:
+Implement graceful degradation when gateway API is unavailable, falling back to local AI models or basic functionality while maintaining core Task Master features.
+

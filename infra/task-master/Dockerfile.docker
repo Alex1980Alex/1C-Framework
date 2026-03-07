@@ -1,0 +1,36 @@
+# Task Master AI MCP Server - Docker Image
+# Build context: claude-task-master/ directory
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install build tools for native modules (keytar, etc.)
+RUN apk add --no-cache python3 make g++ libsecret-dev
+
+# Copy package files first for better caching
+COPY package.json package-lock.json ./
+
+# Install production dependencies ONLY, skip prepare script (chmod fails on alpine)
+RUN npm ci --ignore-scripts --omit=dev 2>/dev/null || npm install --ignore-scripts --omit=dev --no-audit --no-fund
+
+# Copy required source files (only what's needed for MCP server)
+COPY src/ ./src/
+COPY mcp-server/ ./mcp-server/
+COPY scripts/ ./scripts/
+COPY bin/ ./bin/
+COPY index.js ./
+
+# Copy optional files if they exist
+COPY assets/ ./assets/ 2>/dev/null || true
+COPY .cursor/ ./.cursor/ 2>/dev/null || true
+
+# Create .taskmaster directories for runtime
+RUN mkdir -p .taskmaster/tasks .taskmaster/docs .taskmaster/reports .taskmaster/templates
+
+# Set environment
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV TASKMASTER_PROJECT_ROOT=/app
+
+# Run the MCP server
+CMD ["node", "mcp-server/server.js"]

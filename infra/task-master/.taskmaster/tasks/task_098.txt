@@ -1,0 +1,392 @@
+# Task ID: 98
+# Title: Implement Standalone 'research' CLI Command for AI-Powered Queries
+# Status: done
+# Dependencies: 2, 4, 16
+# Priority: medium
+# Description: Develop a new 'task-master research' (alias 'tm research') CLI command for fast, context-aware AI research queries using the ai-services-unified.js infrastructure.
+# Details:
+- Add a new CLI command 'research' to commands.js, following established CLI patterns and conventions.
+- Command should accept a research query as the main parameter, with optional flags for task IDs (--tasks), file paths (--files), custom context (--context), output detail level (--detail), and result saving (--save).
+- Integrate with ai-services-unified.js, invoking its research mode to process the query and context, leveraging project file tree and task context as needed.
+- Implement logic to gather and inject relevant context from specified tasks, files, or custom input, and generate a project file tree snapshot if required.
+- Ensure output is formatted for terminal readability, including citations and references where available.
+- Support saving research results to a specified file if --save is provided.
+- Provide both brief and comprehensive output modes, controlled by a flag.
+- Ensure the command is non-interactive (one-shot execution) and complements the existing 'explore' command.
+- Update help documentation and usage examples for the new command.
+<info added on 2025-06-13T16:09:57.347Z>
+Add research findings on interactive CLI best practices to inform implementation decisions for the research command and potential future interactive features:
+
+**Interactive CLI Best Practices Research Results:**
+
+Key findings for Node.js CLI development include empathic user-friendly design (prompting for missing arguments rather than failing), stateful context-aware interactions using XDG Base Directory Specification for config storage, and conversation threading with libraries like Inquirer.js for chaining prompts based on previous answers.
+
+Implementation recommendations: Use Inquirer.js for interactive flows, implement state management for user preferences across sessions, structure commands to support multi-step context-aware conversations, enhance output with color formatting using chalk, and design keyboard-friendly navigation without mouse requirements.
+
+Specific patterns include branching conversations where follow-up prompts are triggered based on user selections, persistent context storage between CLI runs through file-based serialization, and rich UI elements like lists and checkboxes for improved accessibility.
+
+Consider applying these patterns to enhance the research command with optional interactive modes for query refinement and result exploration, while maintaining the primary non-interactive one-shot execution design.
+</info added on 2025-06-13T16:09:57.347Z>
+<info added on 2025-06-13T16:46:28.375Z>
+Testing append functionality: The research command implementation is progressing well. Successfully integrated enhanced follow-up functionality with conversation threading and save-to-task capabilities.
+</info added on 2025-06-13T16:46:28.375Z>
+<info added on 2025-06-14T10:15:00.000Z>
+Regular update test: Add information about the successful implementation of the append mode functionality which allows timestamped updates to tasks. This functionality enables research results to be appended to existing task details with proper timestamps, maintaining a chronological record of research activities and findings. The append mode integrates seamlessly with the existing task update mechanisms and follows the established patterns for task modification and file regeneration.
+</info added on 2025-06-14T10:15:00.000Z>
+
+# Test Strategy:
+- Write unit and integration tests to verify correct parsing of command-line arguments and flags.
+- Test that the command invokes ai-services-unified.js in research mode with the correct parameters and context.
+- Validate that context from tasks, files, and custom input is correctly gathered and passed to the research engine.
+- Confirm that output is properly formatted, includes citations, and is displayed in the terminal as expected.
+- Test saving results to files and handling of file system errors.
+- Ensure the command works in both brief and comprehensive modes.
+- Verify that the command does not enter interactive mode and exits cleanly after execution.
+- Check help output and usage documentation for accuracy and completeness.
+- Test the append mode functionality for timestamped updates to task details.
+- Validate that research-to-task linking works correctly with proper task file updates.
+
+# Subtasks:
+## 1. Command Registration [done]
+### Dependencies: None
+### Description: Register the 'research' command with the CLI framework, ensuring it appears in the list of available commands and supports standard CLI conventions.
+### Details:
+Integrate the new command into the CLI's command registry. Ensure it is discoverable via the CLI's help system and follows established naming and grouping conventions.
+
+## 2. Parameter and Flag Handling [done]
+### Dependencies: 98.1
+### Description: Define and implement parsing for all arguments, flags, and options accepted by the 'research' command, including validation and default values.
+### Details:
+Use a command-line parsing framework to handle parameters. Ensure support for optional and required arguments, order-independence, and clear error messages for invalid input.
+<info added on 2025-05-25T06:00:42.350Z>
+✅ **Parameter and Flag Handling Implementation Complete**
+
+Successfully implemented comprehensive parameter validation and processing for the research command:
+
+**✅ Implemented Features:**
+1. **Comprehensive Parameter Validation:**
+   - Prompt validation (required, non-empty string)
+   - Detail level validation (low, medium, high)
+   - Task ID format validation (supports "15" and "15.2" formats)
+   - File path validation (comma-separated, existence checks)
+   - Save target validation (security checks for path traversal)
+
+2. **Advanced Parameter Processing:**
+   - Comma-separated value parsing for task IDs and file paths
+   - Whitespace trimming and normalization
+   - Project root detection using `findProjectRoot()`
+   - Relative/absolute path handling for files
+   - Default value application
+
+3. **Informative Error Messages:**
+   - Specific error messages for each validation failure
+   - Clear examples of correct usage
+   - Helpful suggestions for fixing errors
+   - Much more informative than basic Commander.js errors
+
+4. **Structured Output:**
+   - Creates validated parameters object with all processed values
+   - Proper type conversion and normalization
+   - Ready for consumption by core research function
+
+**✅ Validation Examples Tested:**
+- Missing prompt: Shows Commander.js error (expected behavior)
+- Invalid detail level: "Error: Detail level must be one of: low, medium, high"
+- Invalid task ID format: "Error parsing task IDs: Invalid task ID format: "invalid_format". Expected format: "15" or "15.2""
+- Valid parameters: Successfully processes and creates structured parameter object
+
+**✅ Security Features:**
+- Path traversal protection for save targets
+- File existence validation
+- Input sanitization and trimming
+
+The parameter validation is now production-ready and follows the same patterns used throughout the Task Master codebase. Ready to proceed to subtask 94.3 (Context Gathering Utility).
+</info added on 2025-05-25T06:00:42.350Z>
+
+## 3. Context Gathering [done]
+### Dependencies: 98.2
+### Description: Implement logic to gather necessary context for the research operation, such as reading from files, stdin, or other sources as specified by the user.
+### Details:
+Support reading input from files or stdin using '-' as a convention. Validate and preprocess the gathered context to ensure it is suitable for AI processing.
+<info added on 2025-05-25T05:24:58.107Z>
+Create a comprehensive, reusable context gathering utility `utils/contextGatherer.js` that can be shared between the research command and explore REPL functionality.
+
+**Core Features:**
+
+**Task/Subtask Context Extraction:**
+- Parse task IDs and subtask IDs (formats: "15", "15.2", "16,17.1")
+- Extract task titles, descriptions, details, and dependencies from the task system
+- Include parent task context automatically for subtasks
+- Format task data optimally for AI consumption
+
+**File Path Context Processing:**
+- Handle single or comma-separated file paths
+- Implement safe file reading with comprehensive error handling
+- Support multiple file types (JavaScript, markdown, text, JSON, etc.)
+- Include file metadata (path, size, type, last modified)
+
+**Project File Tree Generation:**
+- Create structured project overview with configurable depth
+- Filter out irrelevant directories (.git, node_modules, .env files)
+- Include file counts and directory statistics
+- Support custom filtering patterns
+
+**Custom Context Integration:**
+- Accept and merge custom context strings
+- Maintain clear context hierarchy and organization
+- Preserve context source attribution
+
+**Unified API Design:**
+```javascript
+const contextGatherer = new ContextGatherer(projectRoot);
+const context = await contextGatherer.gather({
+  tasks: ["15", "16.2"],
+  files: ["src/main.js", "README.md"],
+  customContext: "Additional context...",
+  includeProjectTree: true,
+  format: "research" // or "chat", "system-prompt"
+});
+```
+
+**Output Formatting:**
+- Support multiple output formats (research, chat, system-prompt)
+- Ensure consistent context structure across different use cases
+- Optimize for AI model consumption and token efficiency
+
+This utility will eliminate code duplication between task 51 (explore REPL) and task 94 (research command) while providing a robust, extensible foundation for context gathering operations.
+</info added on 2025-05-25T05:24:58.107Z>
+<info added on 2025-05-25T06:13:19.991Z>
+✅ **Context Gathering Implementation Complete**
+
+Successfully implemented the comprehensive ContextGatherer utility in `scripts/modules/utils/contextGatherer.js`:
+
+**✅ Core Features Implemented:**
+
+1. **Task/Subtask Context Extraction:**
+   - ✅ Parse task IDs and subtask IDs (formats: "15", "15.2", "16,17.1")
+   - ✅ Extract task titles, descriptions, details, and dependencies from the task system
+   - ✅ Include parent task context automatically for subtasks
+   - ✅ Format task data optimally for AI consumption
+   - ✅ Proper integration with existing `findTaskById` utility function
+
+2. **File Path Context Processing:**
+   - ✅ Handle single or comma-separated file paths
+   - ✅ Implement safe file reading with comprehensive error handling
+   - ✅ Support multiple file types (JavaScript, markdown, text, JSON, etc.)
+   - ✅ Include file metadata (path, size, type, last modified)
+   - ✅ File size limits (50KB max) to prevent context explosion
+
+3. **Project File Tree Generation:**
+   - ✅ Create structured project overview with configurable depth (max 3 levels)
+   - ✅ Filter out irrelevant directories (.git, node_modules, .env files)
+   - ✅ Include file counts and directory statistics
+   - ✅ Support custom filtering patterns
+
+4. **Custom Context Integration:**
+   - ✅ Accept and merge custom context strings
+   - ✅ Maintain clear context hierarchy and organization
+   - ✅ Preserve context source attribution
+
+5. **Unified API Design:**
+   - ✅ Clean class-based API with factory function
+   - ✅ Flexible options object for configuration
+   - ✅ Multiple output formats (research, chat, system-prompt)
+   - ✅ Proper error handling and graceful degradation
+
+**✅ Output Formatting:**
+- ✅ Support for 'research', 'chat', and 'system-prompt' formats
+- ✅ Consistent context structure across different use cases
+- ✅ Optimized for AI model consumption and token efficiency
+
+**✅ Testing:**
+- ✅ Successfully tested with real task data (Task 94 and subtask 94.1)
+- ✅ Verified task context extraction works correctly
+- ✅ Confirmed proper formatting and structure
+
+**✅ Integration Ready:**
+- ✅ Designed to be shared between task 51 (explore REPL) and task 94 (research command)
+- ✅ Follows existing codebase patterns and utilities
+- ✅ Proper ES6 module exports for easy importing
+
+The ContextGatherer utility is now ready for integration into the core research function (subtask 94.4).
+</info added on 2025-05-25T06:13:19.991Z>
+
+## 4. Core Function Implementation [done]
+### Dependencies: 98.2, 98.3
+### Description: Implement the core research function in scripts/modules/task-manager/ following the add-task.js pattern
+### Details:
+Create a new core function (e.g., research.js) in scripts/modules/task-manager/ that:
+- Accepts parameters: query, context options (task IDs, file paths, custom context), project tree flag, detail level
+- Implements context gathering using the contextGatherer utility from subtask 94.3
+- Integrates with ai-services-unified.js using research role
+- Handles both CLI and MCP output formats
+- Returns structured results with telemetry data
+- Follows the same parameter validation and error handling patterns as add-task.js
+<info added on 2025-05-25T06:29:01.194Z>
+✅ COMPLETED: Added loading spinner to research command
+
+**Implementation Details:**
+- Imported `startLoadingIndicator` and `stopLoadingIndicator` from ui.js
+- Added loading indicator that shows "Researching with AI..." during AI service calls
+- Properly wrapped AI service call in try/catch/finally blocks to ensure spinner stops on both success and error
+- Loading indicator only shows in CLI mode (outputFormat === 'text'), not in MCP mode
+- Follows the same pattern as add-task.js for consistent user experience
+
+**Testing:**
+- Tested with `node bin/task-master.js research "What is TypeScript?" --detail=low`
+- Confirmed spinner appears during AI processing and disappears when complete
+- Telemetry display works correctly after spinner stops
+
+The research command now provides the same polished user experience as other AI-powered commands in the system.
+</info added on 2025-05-25T06:29:01.194Z>
+
+## 5. Direct Function Implementation [done]
+### Dependencies: 98.4
+### Description: Create the MCP direct function wrapper in mcp-server/src/core/direct-functions/ following the add-task pattern
+### Details:
+Create a new direct function (e.g., research.js) in mcp-server/src/core/direct-functions/ that:
+- Follows the addTaskDirect pattern for parameter handling and error management
+- Uses enableSilentMode/disableSilentMode to prevent console output interference
+- Creates logger wrapper using createLogWrapper utility
+- Validates required parameters (query, projectRoot)
+- Calls the core research function with proper context (session, mcpLog, projectRoot)
+- Returns standardized result object with success/error structure
+- Handles telemetry data propagation
+- Export and register in task-master-core.js
+
+## 6. MCP Tool Implementation [done]
+### Dependencies: 98.5
+### Description: Create the MCP tool in mcp-server/src/tools/ following the add-task tool pattern
+### Details:
+Create a new MCP tool (e.g., research.js) in mcp-server/src/tools/ that:
+- Defines zod schema for all research command parameters (query, id, files, context, project-tree, save, detail)
+- Uses withNormalizedProjectRoot HOF to handle project path normalization
+- Calls findTasksJsonPath to locate tasks.json file
+- Invokes the direct function with proper parameter mapping
+- Uses handleApiResult for standardized response formatting
+- Registers the tool as 'research' (snake_case) in the MCP server
+- Handles errors with createErrorResponse
+- Register in mcp-server/src/tools/index.js
+- Update .cursor/mcp.json with tool definition
+
+## 7. Add research save-to-file functionality [done]
+### Dependencies: None
+### Description: Implement functionality to save research results to /research/ folder with optional interactive prompts
+### Details:
+Add capability to save research results to files in a /research/ directory at project root. For CLI mode, use inquirer to prompt user if they want to save the research. For MCP mode, accept a saveToFile parameter.
+
+Key implementation details:
+- Create /research/ directory if it doesn't exist (similar to how tasks/ is handled)
+- Generate meaningful filenames based on query and timestamp
+- Support both CLI interactive mode (inquirer prompts) and MCP parameter mode
+- Follow project root detection pattern from add-task.js stack
+- Handle file writing with proper error handling
+- Return saved file path in response for confirmation
+
+File structure:
+- /research/YYYY-MM-DD_query-summary.md (markdown format)
+- Include query, timestamp, context used, and full AI response
+- Add metadata header with query details and context sources
+<info added on 2025-06-13T17:20:09.162Z>
+Implementation approach confirmed with detailed plan:
+
+**Modified handleFollowUpQuestions:**
+- Added "Save to file" option to inquirer prompt choices
+- Option triggers new handleSaveToFile function when selected
+
+**New handleSaveToFile function:**
+- Manages complete file-saving workflow
+- Creates .taskmaster/docs/research/ directory structure (following project patterns)
+- Generates slugified filenames: YYYY-MM-DD_query-summary.md format
+- Formats full conversation history into comprehensive Markdown with metadata header
+- Handles file writing with proper error handling
+- Returns confirmation message with saved file path
+
+**Enhanced performResearch for MCP integration:**
+- Added saveToFile boolean parameter to options object
+- Non-interactive mode (MCP) bypasses user prompts when saveToFile=true
+- Direct invocation of handleSaveToFile logic for programmatic saves
+- Updated main action in commands.js to support new saveToFile option parameter
+
+This maintains consistency with existing project patterns while supporting both interactive CLI and programmatic MCP usage modes.
+</info added on 2025-06-13T17:20:09.162Z>
+<info added on 2025-06-13T19:52:28.153Z>
+**IMPLEMENTATION COMPLETED SUCCESSFULLY**
+
+✅ **Save-to-file functionality implemented and working:**
+
+1. **Core Function Enhanced**: Modified `handleFollowUpQuestions` in `research.js` to add "Save to file" option
+2. **New Handler Created**: Added `handleSaveToFile` function that:
+   - Creates `.taskmaster/docs/research/` directory if needed
+   - Generates timestamped, slugified filenames (e.g., `2025-01-13_what-is-typescript.md`)
+   - Formats research as comprehensive Markdown with metadata header
+   - Saves conversation history with proper formatting
+3. **CLI Integration**: Added `--save-file` flag to research command (consistent with existing `--save` and `--save-to` flags)
+4. **MCP Integration**: Added `saveToFile` parameter to MCP research tool
+5. **Output Cleanup**: Fixed duplicate information in saved files by removing redundant header section
+
+**Testing Results:**
+- CLI command `task-master research "What is TypeScript?" --save-file --detail=low` works perfectly
+- File saved to `.taskmaster/docs/research/2025-01-13_what-is-typescript.md` with clean formatting
+- MCP tool has correct `saveToFile` parameter
+
+**🔧 CRITICAL BUG FIXED: Tag Corruption in MCP Tools**
+
+**Root Cause Identified**: Several MCP direct functions were calling `readJSON()` without the `projectRoot` parameter, causing tag resolution to fail and corrupting the tagged task structure.
+
+**Key Fixes Applied**:
+1. **Fixed `readJSON()` calls**: Added missing `projectRoot` parameter to all `readJSON()` calls in direct functions
+2. **Updated MCP tool parameter passing**: Ensured `projectRoot` is passed from MCP tools to direct functions
+3. **Context parameter clarification**: Only functions that perform AI operations actually need the `context = {}` parameter for session access (API keys)
+
+**Functions Fixed**:
+- `list-tasks.js` - Now passes `projectRoot` in context to core function
+- `next-task.js` - Now calls `readJSON(tasksJsonPath, projectRoot)`
+- `set-task-status.js` - Now passes `projectRoot` to `nextTaskDirect`
+- `show-task.js` - Now calls `readJSON(tasksJsonPath, projectRoot)`
+- `remove-task.js` - Now calls `readJSON(tasksJsonPath, projectRoot)`
+- `expand-task.js` - Now calls `readJSON(tasksPath, projectRoot)` in both locations
+
+**Verification**: Tag preservation now works correctly - tested with `set_task_status` MCP tool and tag remained as "master" instead of being corrupted.
+
+**Architecture Insight**: The `context = {}` parameter is only needed for AI operations that require `session` for API keys. Simple CRUD operations only need `projectRoot` passed correctly to maintain tag context.
+</info added on 2025-06-13T19:52:28.153Z>
+
+## 8. Add research-to-task linking functionality [done]
+### Dependencies: None
+### Description: Implement functionality to link saved research to specific tasks with interactive task selection
+### Details:
+Add capability to link research results to specific tasks by updating task details with research references. For CLI mode, use inquirer to prompt user if they want to link research to tasks and provide task selection. For MCP mode, accept linkToTasks parameter.
+
+Key implementation details:
+- Prompt user if they want to link research to existing tasks (CLI mode)
+- Provide task selection interface using inquirer with task list (ID, title, status)
+- Support multiple task selection (checkbox interface)
+- Update selected tasks' details section with research reference
+- Add timestamped research link in format: "Research: [Query Title](file:///path/to/research.md) - YYYY-MM-DD"
+- Follow add-task.js pattern for task file updates and regeneration
+- Handle task.json reading/writing with proper error handling
+- Support both single and multiple task linking
+- Return list of updated task IDs in response
+
+Research link format in task details:
+```
+## Research References
+- [How to implement authentication](file:///research/2024-01-15_authentication-research.md) - 2024-01-15
+```
+
+## 9. Enhance append mode functionality for research integration [done]
+### Dependencies: 98.8
+### Description: Leverage the successfully implemented append mode functionality to enable seamless integration of research results into task details
+### Details:
+Build upon the existing append mode functionality to enhance research-to-task integration:
+
+- Utilize the timestamped update mechanism for appending research findings to task details
+- Ensure research results maintain chronological order when appended to tasks
+- Integrate with the existing task modification and file regeneration patterns
+- Support both direct research appending and research reference linking
+- Maintain consistency with the established append mode formatting and timestamp patterns
+- Test integration with the existing task update workflows
+
+This subtask leverages the already-implemented append mode infrastructure to provide a robust foundation for research result integration into the task management system.
+
