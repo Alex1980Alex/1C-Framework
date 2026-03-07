@@ -37,25 +37,24 @@ DB_PATH = _PROJECT_ROOT / "data" / "memory_ai.db"
 def ensure_db():
     """Ensure database and tables exist."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS important_messages (
-            id TEXT PRIMARY KEY,
-            content TEXT NOT NULL,
-            importance REAL DEFAULT 0.5,
-            category TEXT DEFAULT 'general',
-            tags TEXT,
-            created_at TEXT,
-            updated_at TEXT,
-            metadata TEXT
-        )
-    """)
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_importance ON important_messages(importance DESC)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON important_messages(category)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_created ON important_messages(created_at DESC)")
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS important_messages (
+                id TEXT PRIMARY KEY,
+                content TEXT NOT NULL,
+                importance REAL DEFAULT 0.5,
+                category TEXT DEFAULT 'general',
+                tags TEXT,
+                created_at TEXT,
+                updated_at TEXT,
+                metadata TEXT
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_importance ON important_messages(importance DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON important_messages(category)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_created ON important_messages(created_at DESC)")
+        conn.commit()
     logger.info(f"Database initialized: {DB_PATH}")
 
 
