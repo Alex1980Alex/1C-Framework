@@ -195,9 +195,11 @@ class LLMRotationService:
             available.append(state)
         return sorted(available, key=lambda s: s.config.priority)
 
-    def get_best_provider(self) -> Optional[ProviderState]:
-        """Select the best available provider."""
+    def get_best_provider(self, exclude: Optional[List[str]] = None) -> Optional[ProviderState]:
+        """Select the best available provider, optionally excluding names."""
         available = self.get_available_providers()
+        if exclude:
+            available = [s for s in available if s.config.name not in exclude]
         if not available:
             return None
 
