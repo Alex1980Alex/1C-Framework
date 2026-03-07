@@ -1363,6 +1363,40 @@
         "проверь статус систем памяти"
       ]
     },
+    "llm-rotation": {
+      "keywords": [
+        "llm rotation",
+        "llm fallback",
+        "provider rotation",
+        "multi-provider",
+        "llm_complete",
+        "zai proxy",
+        "z.ai",
+        "glm-5",
+        "provider cooldown",
+        "provider health",
+        "llm provider"
+      ],
+      "skills": [
+        "llm-rotation"
+      ],
+      "weighted_keywords": {
+        "llm rotation": 5,
+        "provider fallback": 4,
+        "zai proxy": 4,
+        "multi-provider llm": 5,
+        "provider cooldown": 3
+      },
+      "utterances": [
+        "send prompt to LLM with rotation",
+        "check LLM provider status",
+        "reset LLM provider",
+        "test available LLM providers",
+        "отправь запрос через ротацию LLM",
+        "проверь статус LLM провайдеров",
+        "сбрось провайдер LLM"
+      ]
+    },
     "task-protocol": {
       "keywords": [
         "implement",
