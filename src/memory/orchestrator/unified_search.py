@@ -28,7 +28,6 @@ class SearchOptions:
     search_type: str = "hybrid"
     timeout_ms: int = 5000
     dedup_enabled: bool = True
-    dedup_threshold: float = 0.85
     boost_recent: bool = True
     boost_high_confidence: bool = True
     diversity_enabled: bool = True
