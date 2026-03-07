@@ -39,6 +39,9 @@
     "memory": [
       "memory"
     ],
+    "llm": [
+      "llm-rotation"
+    ],
     "tools": [
       "git-parsing",
       "tenacity-retry",
