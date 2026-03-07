@@ -36,6 +36,9 @@
       "architecture",
       "workflow"
     ],
+    "memory": [
+      "memory"
+    ],
     "tools": [
       "git-parsing",
       "tenacity-retry",
