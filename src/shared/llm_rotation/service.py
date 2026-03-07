@@ -5,10 +5,8 @@ Migrated from D:\\1C-Enterprise_Framework\\shared\\llm_rotation_service.py
 Adapted: pydantic-settings config, project-local imports, async-first.
 """
 
-import asyncio
 import logging
 import os
-import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
