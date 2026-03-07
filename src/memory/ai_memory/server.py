@@ -251,14 +251,13 @@ async def delete_message(args: dict) -> list[TextContent]:
 
 
 async def get_categories(args: dict) -> list[TextContent]:
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT category, COUNT(*) as count, AVG(importance) as avg_importance "
-        "FROM important_messages GROUP BY category ORDER BY count DESC"
-    )
-    rows = cursor.fetchall()
-    conn.close()
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT category, COUNT(*) as count, AVG(importance) as avg_importance "
+            "FROM important_messages GROUP BY category ORDER BY count DESC"
+        )
+        rows = cursor.fetchall()
 
     categories = [{"category": row[0], "count": row[1], "avg_importance": round(row[2], 2)} for row in rows]
     return [TextContent(type="text", text=json.dumps({"categories": categories}, ensure_ascii=False, indent=2))]
