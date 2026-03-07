@@ -148,26 +148,25 @@ async def get_important_messages(args: dict) -> list[TextContent]:
     min_importance = args.get("min_importance", 0.5)
     category = args.get("category")
 
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        cursor = conn.cursor()
 
-    if category:
-        cursor.execute(
-            "SELECT id, content, importance, category, tags, created_at, metadata "
-            "FROM important_messages WHERE importance >= ? AND category = ? "
-            "ORDER BY importance DESC, created_at DESC LIMIT ?",
-            (min_importance, category, limit),
-        )
-    else:
-        cursor.execute(
-            "SELECT id, content, importance, category, tags, created_at, metadata "
-            "FROM important_messages WHERE importance >= ? "
-            "ORDER BY importance DESC, created_at DESC LIMIT ?",
-            (min_importance, limit),
-        )
+        if category:
+            cursor.execute(
+                "SELECT id, content, importance, category, tags, created_at, metadata "
+                "FROM important_messages WHERE importance >= ? AND category = ? "
+                "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                (min_importance, category, limit),
+            )
+        else:
+            cursor.execute(
+                "SELECT id, content, importance, category, tags, created_at, metadata "
+                "FROM important_messages WHERE importance >= ? "
+                "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                (min_importance, limit),
+            )
 
-    rows = cursor.fetchall()
-    conn.close()
+        rows = cursor.fetchall()
 
     messages = []
     for row in rows:
