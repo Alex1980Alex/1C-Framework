@@ -195,7 +195,8 @@
       "Bash(DEEP_REASONING_API_KEY=\"96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9\" DEEP_REASONING_BASE_URL=\"https://api.z.ai/api/anthropic\" DEEP_REASONING_MODEL=\"glm-5\" node:*)",
       "Bash(DEEP_REASONING_API_KEY=\"96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9\" DEEP_REASONING_BASE_URL=\"https://api.z.ai/api/anthropic\" DEEP_REASONING_MODEL=\"glm-5\" AUTODOC_PRIMARY_PROVIDER=\"deepreasoning\" node:*)",
       "Bash(cp:*)",
-      "Bash(PYTHONIOENCODING=utf-8 python:*)"
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(python3:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
