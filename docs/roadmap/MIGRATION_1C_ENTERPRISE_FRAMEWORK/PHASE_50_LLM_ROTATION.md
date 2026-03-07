@@ -1,7 +1,7 @@
 # Фаза 50: LLM Rotation Service
 
 **Tier:** 3 — Memory и AI-сервисы
-**Статус:** TODO
+**Статус:** DONE
 **Зависимости:** Фаза 44 (Infrastructure)
 **Оценка:** ~4 часа
 
