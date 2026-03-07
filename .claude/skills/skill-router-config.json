@@ -1321,6 +1321,48 @@
         "научись этой новой возможности самостоятельно"
       ]
     },
+    "memory": {
+      "keywords": [
+        "unified memory",
+        "memory orchestrator",
+        "unified id",
+        "link registry",
+        "federated search",
+        "pattern learning",
+        "confidence decay",
+        "memory-ai",
+        "vector-memory",
+        "skill-learning",
+        "cross-system memory"
+      ],
+      "skills": [
+        "memory-unified"
+      ],
+      "optional": [
+        "qdrant-operations"
+      ],
+      "weighted_keywords": {
+        "memory system": 3,
+        "unified id": 4,
+        "link registry": 4,
+        "federated search": 4,
+        "pattern confidence": 3,
+        "memory orchestrator": 5,
+        "episodic memory": 3,
+        "semantic memory": 3
+      },
+      "utterances": [
+        "search across all memory systems",
+        "save a pattern with confidence score",
+        "link entities across memory systems",
+        "check memory health status",
+        "decay old pattern confidence",
+        "найди по всем системам памяти",
+        "сохрани паттерн с уровнем уверенности",
+        "свяжи сущности между системами памяти",
+        "проверь статус систем памяти"
+      ]
+    },
     "task-protocol": {
       "keywords": [
         "implement",
