@@ -212,16 +212,15 @@ async def search_messages(args: dict) -> list[TextContent]:
     query = args.get("query", "")
     limit = args.get("limit", 10)
 
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, content, importance, category, tags, created_at "
-        "FROM important_messages WHERE content LIKE ? OR tags LIKE ? "
-        "ORDER BY importance DESC, created_at DESC LIMIT ?",
-        (f"%{query}%", f"%{query}%", limit),
-    )
-    rows = cursor.fetchall()
-    conn.close()
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, content, importance, category, tags, created_at "
+            "FROM important_messages WHERE content LIKE ? OR tags LIKE ? "
+            "ORDER BY importance DESC, created_at DESC LIMIT ?",
+            (f"%{query}%", f"%{query}%", limit),
+        )
+        rows = cursor.fetchall()
 
     messages = []
     for row in rows:
