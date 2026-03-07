@@ -1,0 +1,2128 @@
+# Task ID: 101
+# Title: Implement GitHub Issue Export Feature with Bidirectional Linking
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Add a 'github-export' command that creates GitHub issues from Task Master tasks and establishes bidirectional linking between tasks and issues. This complements the import feature by enabling full GitHub integration workflow.
+# Details:
+## Core Problem Statement
+
+Users need the ability to export Task Master tasks to GitHub issues to:
+
+1. **Share Tasks with Team**: Convert internal tasks to GitHub issues for team collaboration
+2. **Track Progress Publicly**: Make task progress visible in GitHub project boards
+3. **Integrate with GitHub Workflow**: Connect Task Master planning with GitHub development workflow
+4. **Maintain Synchronization**: Keep tasks and issues linked for status updates
+5. **Enable Hybrid Workflow**: Allow teams to work with both Task Master and GitHub seamlessly
+
+## Core Requirements
+
+### 1. GitHub Export Command
+- **Command**: `task-master github-export --id=<taskId> --repo=<owner/repo> [options]`
+- **Functionality**: Create GitHub issue from Task Master task
+- **Authentication**: Use GitHub Personal Access Token or OAuth
+- **Repository Target**: Support any accessible GitHub repository
+
+### 2. Bidirectional Linking System
+- **Task → Issue**: Store GitHub issue URL in task metadata
+- **Issue → Task**: Include Task Master reference in GitHub issue description
+- **Link Validation**: Verify links remain valid and accessible
+- **Link Display**: Show GitHub links in task views and vice versa
+
+### 3. Content Mapping and Formatting
+- **Title Mapping**: Task title → GitHub issue title
+- **Description Mapping**: Task description → GitHub issue description
+- **Details Conversion**: Convert Task Master details to GitHub markdown
+- **Metadata Preservation**: Include Task Master ID, priority, status in issue
+- **Subtask Handling**: Convert subtasks to GitHub issue checklist or separate issues
+
+### 4. Advanced Export Options
+- **Selective Export**: Choose which task fields to include
+- **Template Customization**: Custom GitHub issue templates
+- **Label Management**: Map Task Master priorities/tags to GitHub labels
+- **Assignee Mapping**: Map Task Master assignments to GitHub assignees
+- **Milestone Integration**: Connect tasks to GitHub milestones
+
+## Technical Implementation Requirements
+
+### 1. GitHub API Integration
+```javascript
+// Core export service
+class GitHubExportService {
+  constructor(token, baseURL = 'https://api.github.com') {
+    this.token = token;
+    this.baseURL = baseURL;
+    this.rateLimiter = new RateLimiter();
+  }
+  
+  async exportTask(task, repoOwner, repoName, options = {}) {
+    // Validate repository access
+    // Format task content for GitHub
+    // Create GitHub issue via API
+    // Update task with GitHub link
+    // Return export result
+  }
+  
+  async updateTaskWithGitHubLink(taskId, issueUrl) {
+    // Add GitHub link to task metadata
+    // Update task file with link reference
+    // Regenerate task files if needed
+  }
+}
+```
+
+### 2. Content Formatting System
+```javascript
+class TaskToGitHubFormatter {
+  formatIssueTitle(task) {
+    return `[Task ${task.id}] ${task.title}`;
+  }
+  
+  formatIssueDescription(task) {
+    let description = `# ${task.title}\n\n`;
+    description += `**Task Master ID**: ${task.id}\n`;
+    description += `**Priority**: ${task.priority}\n`;
+    description += `**Status**: ${task.status}\n\n`;
+    
+    if (task.description) {
+      description += `## Description\n${task.description}\n\n`;
+    }
+    
+    if (task.details) {
+      description += `## Implementation Details\n${task.details}\n\n`;
+    }
+    
+    if (task.subtasks && task.subtasks.length > 0) {
+      description += `## Subtasks\n`;
+      task.subtasks.forEach(subtask => {
+        const checked = subtask.status === 'done' ? 'x' : ' ';
+        description += `- [${checked}] ${subtask.title}\n`;
+      });
+    }
+    
+    description += `\n---\n*Exported from Task Master*`;
+    return description;
+  }
+}
+```
+
+### 3. Bidirectional Link Management
+```javascript
+class LinkManager {
+  async addGitHubLinkToTask(taskId, issueUrl, issueNumber) {
+    const task = await getTask(taskId);
+    
+    if (!task.metadata) task.metadata = {};
+    task.metadata.githubIssue = {
+      url: issueUrl,
+      number: issueNumber,
+      exportedAt: new Date().toISOString(),
+      repository: this.extractRepoFromUrl(issueUrl)
+    };
+    
+    await updateTask(taskId, task);
+    await regenerateTaskFiles();
+  }
+  
+  async validateGitHubLink(issueUrl) {
+    // Check if GitHub issue still exists
+    // Verify access permissions
+    // Return link status
+  }
+  
+  generateTaskMasterReference(taskId, projectName) {
+    return `\n\n---\n**Task Master Reference**: Task #${taskId} in project "${projectName}"`;
+  }
+}
+```
+
+### 4. Command Line Interface
+```javascript
+// In commands.js
+program
+  .command('github-export')
+  .description('Export Task Master task to GitHub issue')
+  .requiredOption('-i, --id <taskId>', 'Task ID to export')
+  .requiredOption('-r, --repo <owner/repo>', 'Target GitHub repository')
+  .option('-t, --token <token>', 'GitHub Personal Access Token (or use GITHUB_TOKEN env var)')
+  .option('--title <title>', 'Override issue title')
+  .option('--labels <labels>', 'Comma-separated list of GitHub labels')
+  .option('--assignees <assignees>', 'Comma-separated list of GitHub usernames')
+  .option('--milestone <milestone>', 'GitHub milestone number or title')
+  .option('--template <template>', 'Custom issue template file')
+  .option('--include-subtasks', 'Export subtasks as checklist items')
+  .option('--separate-subtasks', 'Create separate issues for subtasks')
+  .option('--dry-run', 'Preview the issue content without creating it')
+  .option('--force', 'Overwrite existing GitHub link if present')
+  .action(async (options) => {
+    await handleGitHubExport(options);
+  });
+```
+
+### 5. MCP Tool Integration
+```javascript
+// MCP tool for github-export
+export function registerGitHubExportTool(server) {
+  server.addTool({
+    name: "github_export_task",
+    description: "Export a Task Master task to GitHub issue with bidirectional linking",
+    parameters: {
+      type: "object",
+      properties: {
+        taskId: { type: "string", description: "Task ID to export" },
+        repository: { type: "string", description: "GitHub repository (owner/repo)" },
+        token: { type: "string", description: "GitHub Personal Access Token" },
+        options: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Override issue title" },
+            labels: { type: "array", items: { type: "string" } },
+            assignees: { type: "array", items: { type: "string" } },
+            milestone: { type: "string", description: "Milestone number or title" },
+            includeSubtasks: { type: "boolean", description: "Include subtasks as checklist" },
+            separateSubtasks: { type: "boolean", description: "Create separate issues for subtasks" },
+            dryRun: { type: "boolean", description: "Preview without creating" }
+          }
+        }
+      },
+      required: ["taskId", "repository"]
+    },
+    execute: async (args) => {
+      return await gitHubExportDirect(args);
+    }
+  });
+}
+```
+
+## Advanced Features
+
+### 1. Batch Export
+- Export multiple tasks at once
+- Maintain relationships between exported issues
+- Progress tracking for bulk operations
+- Rollback capability for failed exports
+
+### 2. Synchronization Features
+- **Status Sync**: Update Task Master when GitHub issue status changes
+- **Comment Sync**: Sync comments between Task Master and GitHub
+- **Webhook Integration**: Real-time updates via GitHub webhooks
+- **Conflict Resolution**: Handle conflicting updates gracefully
+
+### 3. Template System
+```javascript
+// Custom export templates
+const issueTemplates = {
+  bug: {
+    title: "[BUG] {task.title}",
+    labels: ["bug", "task-master"],
+    body: `## Bug Description\n{task.description}\n\n## Steps to Reproduce\n{task.details}`
+  },
+  feature: {
+    title: "[FEATURE] {task.title}",
+    labels: ["enhancement", "task-master"],
+    body: `## Feature Request\n{task.description}\n\n## Implementation Details\n{task.details}`
+  }
+};
+```
+
+### 4. Integration with GitHub Projects
+- Automatically add exported issues to GitHub project boards
+- Map Task Master status to GitHub project columns
+- Sync priority levels with GitHub project priorities
+
+## Error Handling and Edge Cases
+
+### 1. Authentication Issues
+- Invalid or expired GitHub tokens
+- Insufficient repository permissions
+- Rate limiting and quota management
+
+### 2. Repository Issues
+- Non-existent repositories
+- Private repository access
+- Repository permission changes
+
+### 3. Content Issues
+- Task content too large for GitHub issue
+- Invalid characters in titles or descriptions
+- Markdown formatting conflicts
+
+### 4. Link Management Issues
+- Broken or invalid GitHub links
+- Deleted GitHub issues
+- Repository transfers or renames
+
+## Testing Strategy
+
+### 1. Unit Tests
+- GitHub API client functionality
+- Content formatting and conversion
+- Link management operations
+- Error handling scenarios
+
+### 2. Integration Tests
+- End-to-end export workflow
+- Bidirectional linking verification
+- GitHub API integration
+- Authentication flow testing
+
+### 3. Performance Tests
+- Bulk export operations
+- Rate limiting compliance
+- Large task content handling
+- Concurrent export operations
+
+## Security Considerations
+
+### 1. Token Management
+- Secure storage of GitHub tokens
+- Token validation and refresh
+- Scope limitation and permissions
+- Environment variable protection
+
+### 2. Data Privacy
+- Sensitive information filtering
+- Private repository handling
+- User consent for public exports
+- Audit logging for exports
+
+## Documentation Requirements
+
+### 1. User Guide
+- Setup and authentication instructions
+- Export workflow examples
+- Troubleshooting common issues
+- Best practices for GitHub integration
+
+### 2. API Documentation
+- MCP tool reference
+- CLI command documentation
+- Configuration options
+- Integration examples
+
+### 3. Developer Guide
+- Extension points for custom templates
+- Webhook setup instructions
+- Advanced configuration options
+- Contributing guidelines
+<info added on 2025-06-14T21:18:58.143Z>
+## Library Recommendations and Technical Stack
+
+### Primary GitHub API Library: PyGithub
+
+Based on research conducted on 6/14/2025, **PyGithub** is the recommended library for implementing the GitHub export functionality. This is the most widely used and well-documented Python library for accessing the GitHub REST API v3.
+
+#### Key Benefits:
+- **Clean Object-Oriented Interface**: Simplifies repository, issue, and user management
+- **Built-in Authentication**: Easy personal access token integration
+- **Automatic Pagination & Rate Limiting**: Handles API complexities automatically
+- **Comprehensive Issue Management**: Full support for creating, updating, and linking issues
+- **Active Maintenance**: Well-supported with excellent documentation
+
+#### Installation:
+```bash
+pip install PyGithub
+```
+
+#### Integration Example:
+```python
+from github import Github, Auth
+
+class GitHubExportService:
+    def __init__(self, token):
+        auth = Auth.Token(token)
+        self.github = Github(auth=auth)
+    
+    async def export_task_to_issue(self, task, repo_name):
+        repo = self.github.get_repo(repo_name)
+        
+        # Create issue with formatted content
+        issue = repo.create_issue(
+            title=f"[Task {task.id}] {task.title}",
+            body=self.format_task_for_github(task),
+            labels=self.map_task_labels(task)
+        )
+        
+        # Establish bidirectional link
+        await self.add_github_link_to_task(task.id, issue.html_url)
+        
+        return issue
+    
+    def format_task_for_github(self, task):
+        body = f"**Task Master ID**: {task.id}\n"
+        body += f"**Priority**: {task.priority}\n"
+        body += f"**Status**: {task.status}\n\n"
+        
+        if task.description:
+            body += f"## Description\n{task.description}\n\n"
+        
+        if task.details:
+            body += f"## Implementation Details\n{task.details}\n\n"
+        
+        body += "\n---\n*Exported from Task Master*"
+        return body
+```
+
+### Alternative Considerations
+
+While raw `requests` library could be used for direct API calls, PyGithub is strongly preferred because it:
+- Eliminates boilerplate authentication and error handling code
+- Provides built-in pagination support
+- Offers better maintainability and readability
+- Reduces likelihood of API integration bugs
+
+### Security and Token Management
+
+When implementing with PyGithub:
+- Store GitHub tokens in environment variables
+- Use token scoping to limit permissions
+- Implement token validation and refresh logic
+- Add audit logging for all GitHub operations
+
+This library choice aligns with the project's need for reliable, maintainable GitHub integration while minimizing implementation complexity.
+</info added on 2025-06-14T21:18:58.143Z>
+<info added on 2025-06-14T21:20:39.682Z>
+## Research Session - 6/14/2025 5:20:03 PM
+
+**Initial Query:** should i be using any specific libraries for this?
+
+**Response:** HELL YEAH PARTNER
+
+For implementing a GitHub Issue export feature with bidirectional linking in your project, you absolutely should use a dedicated library for interacting with the GitHub API. This will save you a ton of time, reduce boilerplate, and help you avoid common pitfalls with authentication, pagination, and error handling.
+
+## Recommended Library: PyGithub
+
+- **PyGithub** is the most widely used and well-documented Python library for accessing the GitHub REST API v3. It allows you to manage repositories, issues, user profiles, and more, all with a clean, object-oriented interface[1][2][3][5].
+- It supports all the operations you'll need for your export feature, including creating issues, updating them, and managing references for bidirectional linking.
+
+### Key Features
+
+- **Authentication**: Easily authenticate with a personal access token.
+- **Issue Management**: Create, update, and link issues programmatically.
+- **Repository Access**: Fetch and manipulate repository data.
+- **User/Org Support**: Works for both user and organization repos.
+- **Pagination & Rate Limiting**: Handles these for you.
+
+### Example Usage
+
+```python
+from github import Github, Auth
+
+# Authenticate with a personal access token
+auth = Auth.Token("your_github_token")
+g = Github(auth=auth)
+
+# Get the repo
+repo = g.get_repo("owner/repo_name")
+
+# Create a new issue
+issue = repo.create_issue(
+    title="Exported from Task Master",
+    body="This issue was created by Task Master. [Task ID: 123]"
+)
+
+# Add a comment or update the issue to include a backlink
+issue.create_comment("Linked to Task Master task #123")
+```
+[3][5]
+
+## Why Not Use Raw Requests?
+
+- While you *can* use the `requests` library to call the GitHub API directly[4], PyGithub abstracts away authentication, error handling, and pagination, making your code much cleaner and less error-prone[2][5].
+
+## Integration Tips
+
+- Store your GitHub token securely (e.g., in environment variables).
+- Use PyGithub's objects to fetch, create, and update issues.
+- For bidirectional linking, store the GitHub issue URL in your task data and the Task Master task ID in the GitHub issue body or as a label/comment.
+- PyGithub is actively maintained and widely used, so you'll find plenty of support and documentation.
+
+## Installation
+
+```bash
+pip install PyGithub
+```
+[3]
+
+## Summary Table
+
+| Library   | Language | API Coverage | Ease of Use | Maintained | Docs/Support |
+|-----------|----------|--------------|-------------|------------|--------------|
+| PyGithub  | Python   | Full         | High        | Yes        | Excellent    |
+| requests  | Python   | Full (manual)| Medium      | Yes        | Good         |
+
+**Use PyGithub for all GitHub API interactions in your export/import features.** It's the standard for Python projects and will make your implementation faster, safer, and more maintainable[1][2][3][5].
+
+---
+
+**Follow-up 1:** we don't want to use py github because we have a node project
+
+**Response:** HELL YEAH PARTNER
+
+For a Node.js project, you should use a Node-native library to interact with the GitHub API instead of PyGithub, which is Python-only. The industry standard for Node.js is **Octokit**, the official GitHub SDK for JavaScript/TypeScript[1][2].
+
+## Why Use Octokit?
+
+- **Official & Complete**: Octokit is maintained by GitHub and covers all REST and GraphQL API endpoints, including issues, repositories, users, and more[1][2].
+- **Universal**: Works in Node.js, browsers, and Deno environments[2].
+- **Typed & Tested**: Comes with TypeScript declarations and 100% test coverage[2].
+- **Authentication**: Supports personal access tokens, GitHub Apps, OAuth, and more.
+- **Pagination & Error Handling**: Handles pagination and common error scenarios out of the box.
+- **Extendable**: Supports plugins and custom hooks for advanced use cases[2].
+
+## How to Use Octokit for GitHub Issue Export
+
+Install Octokit in your Node.js project:
+
+```bash
+npm install @octokit/rest
+```
+
+Basic usage for creating and linking issues:
+
+```js
+const { Octokit } = require("@octokit/rest");
+
+// Authenticate with a personal access token
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+// Create a new issue
+const { data: issue } = await octokit.issues.create({
+  owner: "owner",
+  repo: "repo_name",
+  title: "Exported from Task Master",
+  body: "This issue was created by Task Master. [Task ID: 123]"
+});
+
+// Add a comment for bidirectional linking
+await octokit.issues.createComment({
+  owner: "owner",
+  repo: "repo_name",
+  issue_number: issue.number,
+  body: "Linked to Task Master task #123"
+});
+```
+
+## Alternatives
+
+- **node-github**: An older library, less maintained than Octokit, but still functional for basic API access[5].
+- **Raw HTTP Requests**: You can use `node-fetch` or `axios` to call the GitHub API directly, but you'll need to handle authentication, pagination, and error handling yourself[3]. Octokit abstracts all of this for you.
+
+## Summary Table
+
+| Library         | Language | API Coverage | Maintained | TypeScript | Docs/Support |
+|-----------------|----------|--------------|------------|------------|--------------|
+| Octokit         | Node.js  | Full         | Yes        | Yes        | Excellent    |
+| node-github     | Node.js  | Full         | No         | No         | Limited      |
+| Raw HTTP        | Node.js  | Full (manual)| N/A        | N/A        | N/A          |
+
+**Recommendation:** Use Octokit for all GitHub API interactions in your Node.js project. It's the official, most robust, and best-supported option for your use case[1][2].
+</info added on 2025-06-14T21:20:39.682Z>
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Implement GitHub API Export Service [pending]
+### Dependencies: None
+### Description: Create the core service for exporting tasks to GitHub issues via the GitHub REST API
+### Details:
+## Implementation Requirements
+
+### Core GitHub Export Service
+```javascript
+// scripts/modules/github/github-export-service.js
+class GitHubExportService {
+  constructor(token, options = {}) {
+    this.token = token;
+    this.baseURL = options.baseURL || 'https://api.github.com';
+    this.rateLimiter = new RateLimiter({
+      tokensPerInterval: 5000, // GitHub API limit
+      interval: 'hour'
+    });
+  }
+  
+  async exportTask(task, repoOwner, repoName, exportOptions = {}) {
+    // Validate repository access
+    await this.validateRepositoryAccess(repoOwner, repoName);
+    
+    // Format task content for GitHub
+    const issueData = this.formatTaskAsIssue(task, exportOptions);
+    
+    // Create GitHub issue
+    const issue = await this.createGitHubIssue(repoOwner, repoName, issueData);
+    
+    // Update task with GitHub link
+    await this.updateTaskWithGitHubLink(task.id, issue.html_url, issue.number);
+    
+    return {
+      success: true,
+      issue: issue,
+      taskId: task.id,
+      issueUrl: issue.html_url
+    };
+  }
+}
+```
+
+### Repository Validation
+- **Access Check**: Verify user has write access to target repository
+- **Repository Existence**: Confirm repository exists and is accessible
+- **Permission Validation**: Check if user can create issues in the repository
+- **Rate Limit Check**: Ensure API quota is available for the operation
+
+### Issue Creation Logic
+```javascript
+async createGitHubIssue(owner, repo, issueData) {
+  const response = await this.makeAPIRequest('POST', `/repos/${owner}/${repo}/issues`, {
+    title: issueData.title,
+    body: issueData.body,
+    labels: issueData.labels || [],
+    assignees: issueData.assignees || [],
+    milestone: issueData.milestone || null
+  });
+  
+  if (!response.ok) {
+    throw new GitHubAPIError(`Failed to create issue: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+```
+
+### Error Handling
+- **Authentication Errors**: Invalid or expired tokens
+- **Permission Errors**: Insufficient repository access
+- **Rate Limiting**: Handle API quota exceeded
+- **Network Errors**: Connection timeouts and failures
+- **Validation Errors**: Invalid repository or issue data
+
+### Testing Requirements
+- Unit tests for API client methods
+- Mock GitHub API responses for testing
+- Error scenario testing (invalid repos, auth failures)
+- Rate limiting behavior verification
+- Integration tests with real GitHub API (using test repositories)
+
+## 2. Create Task-to-GitHub Content Formatter [pending]
+### Dependencies: 101.1
+### Description: Implement intelligent content formatting to convert Task Master tasks into properly formatted GitHub issues
+### Details:
+## Implementation Requirements
+
+### Core Formatting Service
+```javascript
+// scripts/modules/github/task-formatter.js
+class TaskToGitHubFormatter {
+  constructor(options = {}) {
+    this.options = {
+      includeTaskId: true,
+      includeMetadata: true,
+      convertSubtasksToChecklist: true,
+      addTaskMasterReference: true,
+      ...options
+    };
+  }
+  
+  formatTaskAsIssue(task, exportOptions = {}) {
+    return {
+      title: this.formatTitle(task, exportOptions),
+      body: this.formatBody(task, exportOptions),
+      labels: this.formatLabels(task, exportOptions),
+      assignees: this.formatAssignees(task, exportOptions)
+    };
+  }
+}
+```
+
+### Title Formatting
+```javascript
+formatTitle(task, options) {
+  let title = task.title;
+  
+  // Add task ID prefix if enabled
+  if (this.options.includeTaskId && !options.hideTaskId) {
+    title = `[Task ${task.id}] ${title}`;
+  }
+  
+  // Add priority indicator for high priority tasks
+  if (task.priority === 'high') {
+    title = `🔥 ${title}`;
+  }
+  
+  // Truncate if too long (GitHub limit is 256 characters)
+  if (title.length > 250) {
+    title = title.substring(0, 247) + '...';
+  }
+  
+  return title;
+}
+```
+
+### Body Formatting
+```javascript
+formatBody(task, options) {
+  let body = '';
+  
+  // Header with task metadata
+  if (this.options.includeMetadata) {
+    body += this.formatMetadataSection(task);
+  }
+  
+  // Main description
+  if (task.description) {
+    body += `## Description\n\n${task.description}\n\n`;
+  }
+  
+  // Implementation details
+  if (task.details) {
+    body += `## Implementation Details\n\n${this.formatDetails(task.details)}\n\n`;
+  }
+  
+  // Test strategy
+  if (task.testStrategy) {
+    body += `## Test Strategy\n\n${task.testStrategy}\n\n`;
+  }
+  
+  // Subtasks as checklist
+  if (task.subtasks && task.subtasks.length > 0 && this.options.convertSubtasksToChecklist) {
+    body += this.formatSubtasksSection(task.subtasks);
+  }
+  
+  // Dependencies
+  if (task.dependencies && task.dependencies.length > 0) {
+    body += this.formatDependenciesSection(task.dependencies);
+  }
+  
+  // Task Master reference
+  if (this.options.addTaskMasterReference) {
+    body += this.formatTaskMasterReference(task);
+  }
+  
+  return body;
+}
+```
+
+### Metadata Section
+```javascript
+formatMetadataSection(task) {
+  let metadata = '## Task Information\n\n';
+  metadata += `| Field | Value |\n`;
+  metadata += `|-------|-------|\n`;
+  metadata += `| **Task ID** | ${task.id} |\n`;
+  metadata += `| **Priority** | ${this.formatPriority(task.priority)} |\n`;
+  metadata += `| **Status** | ${this.formatStatus(task.status)} |\n`;
+  
+  if (task.dependencies && task.dependencies.length > 0) {
+    metadata += `| **Dependencies** | ${task.dependencies.join(', ')} |\n`;
+  }
+  
+  if (task.complexityScore) {
+    metadata += `| **Complexity** | ${task.complexityScore}/10 |\n`;
+  }
+  
+  metadata += '\n';
+  return metadata;
+}
+```
+
+### Subtasks Formatting
+```javascript
+formatSubtasksSection(subtasks) {
+  let section = '## Subtasks\n\n';
+  
+  subtasks.forEach(subtask => {
+    const checked = subtask.status === 'done' ? 'x' : ' ';
+    section += `- [${checked}] **${subtask.title}**`;
+    
+    if (subtask.description) {
+      section += ` - ${subtask.description}`;
+    }
+    
+    section += '\n';
+    
+    // Add subtask details as indented content
+    if (subtask.details) {
+      const indentedDetails = subtask.details
+        .split('\n')
+        .map(line => `  ${line}`)
+        .join('\n');
+      section += `${indentedDetails}\n`;
+    }
+  });
+  
+  section += '\n';
+  return section;
+}
+```
+
+### Label Generation
+```javascript
+formatLabels(task, options) {
+  const labels = [];
+  
+  // Always add task-master label
+  labels.push('task-master');
+  
+  // Priority-based labels
+  if (task.priority === 'high') {
+    labels.push('priority:high');
+  } else if (task.priority === 'low') {
+    labels.push('priority:low');
+  }
+  
+  // Status-based labels
+  if (task.status === 'in-progress') {
+    labels.push('in-progress');
+  }
+  
+  // Complexity-based labels
+  if (task.complexityScore >= 8) {
+    labels.push('complexity:high');
+  } else if (task.complexityScore <= 3) {
+    labels.push('complexity:low');
+  }
+  
+  // Custom labels from options
+  if (options.labels) {
+    labels.push(...options.labels);
+  }
+  
+  return labels;
+}
+```
+
+### Markdown Conversion
+```javascript
+formatDetails(details) {
+  // Convert Task Master specific formatting to GitHub markdown
+  let formatted = details;
+  
+  // Convert code blocks
+  formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    return `\`\`\`${lang || ''}\n${code}\`\`\``;
+  });
+  
+  // Convert inline code
+  formatted = formatted.replace(/`([^`]+)`/g, '`$1`');
+  
+  // Convert headers
+  formatted = formatted.replace(/^(#{1,6})\s+(.+)$/gm, '$1 $2');
+  
+  // Convert lists
+  formatted = formatted.replace(/^\s*[-*+]\s+(.+)$/gm, '- $1');
+  
+  // Convert numbered lists
+  formatted = formatted.replace(/^\s*\d+\.\s+(.+)$/gm, (match, content, offset, string) => {
+    const lineNumber = string.substring(0, offset).split('\n').length;
+    return `${lineNumber}. ${content}`;
+  });
+  
+  return formatted;
+}
+```
+
+### Task Master Reference
+```javascript
+formatTaskMasterReference(task) {
+  return `\n---\n\n*This issue was exported from Task Master*\n\n` +
+         `**Original Task**: #${task.id}\n` +
+         `**Exported**: ${new Date().toISOString()}\n` +
+         `**Task Master Project**: ${this.getProjectName()}\n`;
+}
+```
+
+### Template System
+```javascript
+class IssueTemplateManager {
+  constructor() {
+    this.templates = {
+      default: new DefaultTemplate(),
+      bug: new BugTemplate(),
+      feature: new FeatureTemplate(),
+      epic: new EpicTemplate()
+    };
+  }
+  
+  applyTemplate(task, templateName, options) {
+    const template = this.templates[templateName] || this.templates.default;
+    return template.format(task, options);
+  }
+}
+
+class BugTemplate extends TaskToGitHubFormatter {
+  formatTitle(task, options) {
+    return `🐛 [BUG] ${task.title}`;
+  }
+  
+  formatBody(task, options) {
+    let body = '## Bug Report\n\n';
+    body += `**Task ID**: ${task.id}\n\n`;
+    
+    if (task.description) {
+      body += `### Description\n${task.description}\n\n`;
+    }
+    
+    if (task.details) {
+      body += `### Steps to Reproduce\n${task.details}\n\n`;
+    }
+    
+    body += `### Expected Behavior\n<!-- Describe what should happen -->\n\n`;
+    body += `### Actual Behavior\n<!-- Describe what actually happens -->\n\n`;
+    
+    return body + this.formatTaskMasterReference(task);
+  }
+}
+```
+
+### Testing Requirements
+- Unit tests for all formatting methods
+- Test with various task structures (with/without subtasks, different priorities)
+- Markdown conversion accuracy testing
+- Template system testing
+- Character limit and truncation testing
+- Special character handling (emojis, unicode)
+- Large content handling and performance testing
+
+## 3. Implement Bidirectional Link Management System [pending]
+### Dependencies: 101.2
+### Description: Create a robust system for managing links between Task Master tasks and GitHub issues, including validation and synchronization
+### Details:
+## Implementation Requirements
+
+### Core Link Management Service
+```javascript
+// scripts/modules/github/link-manager.js
+class GitHubLinkManager {
+  constructor(githubService) {
+    this.githubService = githubService;
+    this.linkCache = new Map();
+  }
+  
+  async addGitHubLinkToTask(taskId, issueUrl, issueNumber, repository) {
+    const task = await this.getTask(taskId);
+    
+    // Initialize metadata if it doesn't exist
+    if (!task.metadata) {
+      task.metadata = {};
+    }
+    
+    // Add GitHub link information
+    task.metadata.githubIssue = {
+      url: issueUrl,
+      number: issueNumber,
+      repository: repository,
+      exportedAt: new Date().toISOString(),
+      lastValidated: new Date().toISOString(),
+      status: 'active'
+    };
+    
+    // Update task in storage
+    await this.updateTask(taskId, task);
+    
+    // Regenerate task files to include the link
+    await this.regenerateTaskFiles();
+    
+    // Cache the link for quick access
+    this.linkCache.set(taskId, task.metadata.githubIssue);
+    
+    return task.metadata.githubIssue;
+  }
+}
+```
+
+### Task Metadata Schema
+```javascript
+// Enhanced task structure with GitHub integration
+const taskWithGitHubLink = {
+  id: 42,
+  title: "Example Task",
+  description: "Task description",
+  // ... other task fields ...
+  metadata: {
+    githubIssue: {
+      url: "https://github.com/owner/repo/issues/123",
+      number: 123,
+      repository: "owner/repo",
+      exportedAt: "2024-01-15T10:30:00.000Z",
+      lastValidated: "2024-01-15T10:30:00.000Z",
+      status: "active", // active, closed, deleted, invalid
+      syncEnabled: true,
+      lastSyncAt: "2024-01-15T10:30:00.000Z"
+    },
+    // Other metadata fields...
+  }
+};
+```
+
+### Link Validation System
+```javascript
+class LinkValidator {
+  constructor(githubService) {
+    this.githubService = githubService;
+  }
+  
+  async validateGitHubLink(taskId, linkInfo) {
+    try {
+      const { repository, number } = linkInfo;
+      const [owner, repo] = repository.split('/');
+      
+      // Check if issue still exists
+      const issue = await this.githubService.getIssue(owner, repo, number);
+      
+      if (!issue) {
+        return {
+          valid: false,
+          status: 'deleted',
+          message: 'GitHub issue no longer exists'
+        };
+      }
+      
+      // Check if issue is closed
+      const status = issue.state === 'open' ? 'active' : 'closed';
+      
+      // Update link status if changed
+      if (linkInfo.status !== status) {
+        await this.updateLinkStatus(taskId, status);
+      }
+      
+      return {
+        valid: true,
+        status: status,
+        issue: issue,
+        lastValidated: new Date().toISOString()
+      };
+      
+    } catch (error) {
+      if (error.status === 404) {
+        return {
+          valid: false,
+          status: 'deleted',
+          message: 'GitHub issue not found'
+        };
+      } else if (error.status === 403) {
+        return {
+          valid: false,
+          status: 'access_denied',
+          message: 'Access denied to GitHub issue'
+        };
+      }
+      
+      throw error;
+    }
+  }
+  
+  async validateAllLinks() {
+    const tasks = await this.getAllTasksWithGitHubLinks();
+    const results = [];
+    
+    for (const task of tasks) {
+      if (task.metadata?.githubIssue) {
+        const result = await this.validateGitHubLink(task.id, task.metadata.githubIssue);
+        results.push({
+          taskId: task.id,
+          ...result
+        });
+      }
+    }
+    
+    return results;
+  }
+}
+```
+
+### Task File Enhancement
+```javascript
+// Enhanced task file generation with GitHub links
+class TaskFileGenerator {
+  generateTaskFile(task) {
+    let content = this.generateBasicTaskContent(task);
+    
+    // Add GitHub integration section if link exists
+    if (task.metadata?.githubIssue) {
+      content += this.generateGitHubSection(task.metadata.githubIssue);
+    }
+    
+    return content;
+  }
+  
+  generateGitHubSection(githubInfo) {
+    let section = '\n## GitHub Integration\n\n';
+    
+    section += `**GitHub Issue**: [#${githubInfo.number}](${githubInfo.url})\n`;
+    section += `**Repository**: ${githubInfo.repository}\n`;
+    section += `**Status**: ${this.formatGitHubStatus(githubInfo.status)}\n`;
+    section += `**Exported**: ${new Date(githubInfo.exportedAt).toLocaleDateString()}\n`;
+    
+    if (githubInfo.lastValidated) {
+      section += `**Last Validated**: ${new Date(githubInfo.lastValidated).toLocaleDateString()}\n`;
+    }
+    
+    if (githubInfo.status === 'closed') {
+      section += '\n> ⚠️ **Note**: The linked GitHub issue has been closed.\n';
+    } else if (githubInfo.status === 'deleted') {
+      section += '\n> ❌ **Warning**: The linked GitHub issue no longer exists.\n';
+    }
+    
+    return section;
+  }
+  
+  formatGitHubStatus(status) {
+    const statusMap = {
+      'active': '🟢 Active',
+      'closed': '🔴 Closed',
+      'deleted': '❌ Deleted',
+      'invalid': '⚠️ Invalid',
+      'access_denied': '🔒 Access Denied'
+    };
+    
+    return statusMap[status] || status;
+  }
+}
+```
+
+### GitHub Issue Reference System
+```javascript
+class GitHubReferenceManager {
+  generateTaskMasterReference(taskId, projectName, taskUrl = null) {
+    let reference = '\n\n---\n\n';
+    reference += '**🔗 Task Master Integration**\n\n';
+    reference += `- **Task ID**: #${taskId}\n`;
+    reference += `- **Project**: ${projectName}\n`;
+    reference += `- **Exported**: ${new Date().toISOString()}\n`;
+    
+    if (taskUrl) {
+      reference += `- **Task URL**: [View in Task Master](${taskUrl})\n`;
+    }
+    
+    reference += '\n*This issue is managed by Task Master. Changes made here may be overwritten during synchronization.*\n';
+    
+    return reference;
+  }
+  
+  async updateGitHubIssueWithTaskReference(issueUrl, taskId, projectName) {
+    const { owner, repo, number } = this.parseGitHubUrl(issueUrl);
+    const issue = await this.githubService.getIssue(owner, repo, number);
+    
+    if (!issue) {
+      throw new Error('GitHub issue not found');
+    }
+    
+    // Check if Task Master reference already exists
+    const hasReference = issue.body.includes('Task Master Integration');
+    
+    if (!hasReference) {
+      const reference = this.generateTaskMasterReference(taskId, projectName);
+      const updatedBody = issue.body + reference;
+      
+      await this.githubService.updateIssue(owner, repo, number, {
+        body: updatedBody
+      });
+    }
+  }
+}
+```
+
+### Link Synchronization
+```javascript
+class LinkSynchronizer {
+  constructor(githubService, linkManager) {
+    this.githubService = githubService;
+    this.linkManager = linkManager;
+  }
+  
+  async syncTaskWithGitHubIssue(taskId) {
+    const task = await this.getTask(taskId);
+    const githubInfo = task.metadata?.githubIssue;
+    
+    if (!githubInfo || !githubInfo.syncEnabled) {
+      return { synced: false, reason: 'Sync not enabled' };
+    }
+    
+    const { repository, number } = githubInfo;
+    const [owner, repo] = repository.split('/');
+    
+    try {
+      const issue = await this.githubService.getIssue(owner, repo, number);
+      
+      if (!issue) {
+        await this.linkManager.updateLinkStatus(taskId, 'deleted');
+        return { synced: false, reason: 'Issue deleted' };
+      }
+      
+      // Sync status changes
+      const changes = await this.detectChanges(task, issue);
+      
+      if (changes.length > 0) {
+        await this.applyChanges(taskId, changes);
+        await this.linkManager.updateLastSync(taskId);
+        
+        return { 
+          synced: true, 
+          changes: changes,
+          lastSync: new Date().toISOString()
+        };
+      }
+      
+      return { synced: true, changes: [] };
+      
+    } catch (error) {
+      console.error(`Failed to sync task ${taskId}:`, error);
+      return { synced: false, error: error.message };
+    }
+  }
+  
+  async detectChanges(task, issue) {
+    const changes = [];
+    
+    // Check if GitHub issue was closed and task is still pending
+    if (issue.state === 'closed' && task.status !== 'done') {
+      changes.push({
+        type: 'status',
+        from: task.status,
+        to: 'done',
+        reason: 'GitHub issue closed'
+      });
+    }
+    
+    // Check if GitHub issue was reopened and task is done
+    if (issue.state === 'open' && task.status === 'done') {
+      changes.push({
+        type: 'status',
+        from: task.status,
+        to: 'in-progress',
+        reason: 'GitHub issue reopened'
+      });
+    }
+    
+    return changes;
+  }
+}
+```
+
+### CLI Integration
+```javascript
+// Add link management commands
+program
+  .command('github-link')
+  .description('Manage GitHub links for tasks')
+  .option('--validate', 'Validate all GitHub links')
+  .option('--sync <taskId>', 'Sync specific task with GitHub')
+  .option('--sync-all', 'Sync all linked tasks')
+  .option('--remove <taskId>', 'Remove GitHub link from task')
+  .action(async (options) => {
+    if (options.validate) {
+      await validateAllGitHubLinks();
+    } else if (options.sync) {
+      await syncTaskWithGitHub(options.sync);
+    } else if (options.syncAll) {
+      await syncAllTasksWithGitHub();
+    } else if (options.remove) {
+      await removeGitHubLink(options.remove);
+    }
+  });
+```
+
+### Testing Requirements
+- Unit tests for link management operations
+- Integration tests with GitHub API
+- Link validation testing (valid, invalid, deleted issues)
+- Synchronization testing with various scenarios
+- Error handling testing (network failures, auth issues)
+- Performance testing with large numbers of linked tasks
+- Cache behavior testing
+- Concurrent operation testing
+
+## 4. Create CLI and MCP Tool Integration [pending]
+### Dependencies: 101.3
+### Description: Implement the command-line interface and MCP tools for GitHub export functionality
+### Details:
+## Implementation Requirements
+
+### CLI Command Implementation
+```javascript
+// In scripts/modules/commands.js
+program
+  .command('github-export')
+  .description('Export Task Master task to GitHub issue with bidirectional linking')
+  .requiredOption('-i, --id <taskId>', 'Task ID to export')
+  .requiredOption('-r, --repo <owner/repo>', 'Target GitHub repository (owner/repo format)')
+  .option('-t, --token <token>', 'GitHub Personal Access Token (or use GITHUB_TOKEN env var)')
+  .option('--title <title>', 'Override the GitHub issue title')
+  .option('--labels <labels>', 'Comma-separated list of GitHub labels to add')
+  .option('--assignees <assignees>', 'Comma-separated list of GitHub usernames to assign')
+  .option('--milestone <milestone>', 'GitHub milestone number or title')
+  .option('--template <template>', 'Issue template to use (bug, feature, epic, default)')
+  .option('--include-subtasks', 'Include subtasks as checklist items in the issue')
+  .option('--separate-subtasks', 'Create separate GitHub issues for each subtask')
+  .option('--dry-run', 'Preview the issue content without actually creating it')
+  .option('--force', 'Overwrite existing GitHub link if task is already linked')
+  .option('--no-link-back', 'Do not add Task Master reference to the GitHub issue')
+  .option('--sync', 'Enable automatic synchronization between task and issue')
+  .action(async (options) => {
+    try {
+      await handleGitHubExport(options);
+    } catch (error) {
+      console.error(chalk.red('GitHub export failed:'), error.message);
+      process.exit(1);
+    }
+  });
+```
+
+### Core Export Handler
+```javascript
+// scripts/modules/github/github-export-handler.js
+async function handleGitHubExport(options) {
+  const {
+    id: taskId,
+    repo: repository,
+    token,
+    title: titleOverride,
+    labels,
+    assignees,
+    milestone,
+    template = 'default',
+    includeSubtasks,
+    separateSubtasks,
+    dryRun,
+    force,
+    linkBack = true,
+    sync = false
+  } = options;
+
+  // Validate inputs
+  await validateExportOptions(options);
+  
+  // Get task details
+  const task = await getTask(taskId);
+  if (!task) {
+    throw new Error(`Task ${taskId} not found`);
+  }
+  
+  // Check for existing GitHub link
+  if (task.metadata?.githubIssue && !force) {
+    const existingUrl = task.metadata.githubIssue.url;
+    console.log(chalk.yellow(`Task ${taskId} is already linked to GitHub issue: ${existingUrl}`));
+    console.log(chalk.gray('Use --force to overwrite the existing link'));
+    return;
+  }
+  
+  // Initialize GitHub service
+  const githubToken = token || process.env.GITHUB_TOKEN;
+  if (!githubToken) {
+    throw new Error('GitHub token required. Use --token flag or set GITHUB_TOKEN environment variable');
+  }
+  
+  const githubService = new GitHubExportService(githubToken);
+  const formatter = new TaskToGitHubFormatter();
+  const linkManager = new GitHubLinkManager(githubService);
+  
+  // Format task content
+  const exportOptions = {
+    titleOverride,
+    labels: labels ? labels.split(',').map(l => l.trim()) : [],
+    assignees: assignees ? assignees.split(',').map(a => a.trim()) : [],
+    milestone,
+    template,
+    includeSubtasks,
+    linkBack
+  };
+  
+  const issueData = formatter.formatTaskAsIssue(task, exportOptions);
+  
+  // Dry run - just show what would be created
+  if (dryRun) {
+    console.log(chalk.cyan('\\n=== DRY RUN - GitHub Issue Preview ===\\n'));
+    console.log(chalk.bold('Title:'), issueData.title);
+    console.log(chalk.bold('\\nLabels:'), issueData.labels.join(', ') || 'None');
+    console.log(chalk.bold('\\nAssignees:'), issueData.assignees.join(', ') || 'None');
+    console.log(chalk.bold('\\nBody:'));
+    console.log(issueData.body);
+    console.log(chalk.cyan('\\n=== End Preview ===\\n'));
+    return;
+  }
+  
+  // Show progress
+  console.log(chalk.blue(`Exporting task ${taskId} to GitHub repository ${repository}...`));
+  
+  // Export to GitHub
+  const result = await githubService.exportTask(task, repository, exportOptions);
+  
+  if (result.success) {
+    console.log(chalk.green(`✅ Successfully exported task ${taskId} to GitHub!`));
+    console.log(chalk.cyan(`GitHub Issue: ${result.issueUrl}`));
+    
+    // Add bidirectional link
+    await linkManager.addGitHubLinkToTask(taskId, result.issueUrl, result.issue.number, repository);
+    
+    if (linkBack) {
+      await linkManager.updateGitHubIssueWithTaskReference(result.issueUrl, taskId, getProjectName());
+    }
+    
+    if (sync) {
+      await linkManager.enableSync(taskId);
+      console.log(chalk.blue('🔄 Synchronization enabled for this task'));
+    }
+    
+    // Handle subtasks if requested
+    if (separateSubtasks && task.subtasks && task.subtasks.length > 0) {
+      console.log(chalk.blue('\\nExporting subtasks as separate issues...'));
+      await exportSubtasksAsSeparateIssues(task.subtasks, repository, githubService, linkManager);
+    }
+    
+  } else {
+    throw new Error(result.error || 'Export failed');
+  }
+}
+```
+
+### MCP Tool Implementation
+```javascript
+// mcp-server/src/tools/github-export.js
+import { githubExportDirect } from '../core/direct-functions/github-export-direct.js';
+import { handleApiResult, withNormalizedProjectRoot } from './utils.js';
+
+export function registerGitHubExportTool(server) {
+  server.addTool({
+    name: "github_export_task",
+    description: "Export a Task Master task to GitHub issue with bidirectional linking",
+    parameters: {
+      type: "object",
+      properties: {
+        taskId: {
+          type: "string",
+          description: "Task ID to export (required)"
+        },
+        repository: {
+          type: "string", 
+          description: "GitHub repository in owner/repo format (required)"
+        },
+        token: {
+          type: "string",
+          description: "GitHub Personal Access Token (optional if GITHUB_TOKEN env var is set)"
+        },
+        options: {
+          type: "object",
+          properties: {
+            title: {
+              type: "string",
+              description: "Override the GitHub issue title"
+            },
+            labels: {
+              type: "array",
+              items: { type: "string" },
+              description: "GitHub labels to add to the issue"
+            },
+            assignees: {
+              type: "array", 
+              items: { type: "string" },
+              description: "GitHub usernames to assign to the issue"
+            },
+            milestone: {
+              type: "string",
+              description: "GitHub milestone number or title"
+            },
+            template: {
+              type: "string",
+              enum: ["default", "bug", "feature", "epic"],
+              description: "Issue template to use"
+            },
+            includeSubtasks: {
+              type: "boolean",
+              description: "Include subtasks as checklist items"
+            },
+            separateSubtasks: {
+              type: "boolean", 
+              description: "Create separate issues for subtasks"
+            },
+            dryRun: {
+              type: "boolean",
+              description: "Preview without creating the issue"
+            },
+            force: {
+              type: "boolean",
+              description: "Overwrite existing GitHub link"
+            },
+            linkBack: {
+              type: "boolean",
+              description: "Add Task Master reference to GitHub issue"
+            },
+            enableSync: {
+              type: "boolean",
+              description: "Enable automatic synchronization"
+            }
+          }
+        },
+        projectRoot: {
+          type: "string",
+          description: "Project root directory path"
+        }
+      },
+      required: ["taskId", "repository"]
+    },
+    execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+      try {
+        const result = await githubExportDirect(args, log, { session });
+        return handleApiResult(result, log);
+      } catch (error) {
+        log(`GitHub export error: ${error.message}`);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    })
+  });
+}
+```
+
+### Direct Function Implementation
+```javascript
+// mcp-server/src/core/direct-functions/github-export-direct.js
+import { handleGitHubExport } from '../../../../scripts/modules/github/github-export-handler.js';
+import { createLogWrapper } from '../../tools/utils.js';
+
+export async function githubExportDirect(args, log, context = {}) {
+  const { session } = context;
+  const mcpLog = createLogWrapper(log);
+  
+  try {
+    // Prepare options for the core handler
+    const options = {
+      id: args.taskId,
+      repo: args.repository,
+      token: args.token,
+      ...args.options,
+      projectRoot: args.projectRoot
+    };
+    
+    // Call the core export handler
+    const result = await handleGitHubExport(options, {
+      session,
+      mcpLog,
+      outputFormat: 'json' // Request JSON output for MCP
+    });
+    
+    return {
+      success: true,
+      data: {
+        taskId: args.taskId,
+        repository: args.repository,
+        issueUrl: result.issueUrl,
+        issueNumber: result.issue.number,
+        exportedAt: new Date().toISOString(),
+        message: `Successfully exported task ${args.taskId} to GitHub issue #${result.issue.number}`
+      }
+    };
+    
+  } catch (error) {
+    mcpLog(`GitHub export failed: ${error.message}`);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+```
+
+### Validation Functions
+```javascript
+// scripts/modules/github/validation.js
+async function validateExportOptions(options) {
+  const { id: taskId, repo: repository, token } = options;
+  
+  // Validate task ID
+  if (!taskId || !/^\\d+(\\.\\d+)*$/.test(taskId)) {
+    throw new Error('Invalid task ID format');
+  }
+  
+  // Validate repository format
+  if (!repository || !/^[a-zA-Z0-9._-]+\\/[a-zA-Z0-9._-]+$/.test(repository)) {
+    throw new Error('Repository must be in owner/repo format');
+  }
+  
+  // Validate GitHub token
+  const githubToken = token || process.env.GITHUB_TOKEN;
+  if (!githubToken) {
+    throw new Error('GitHub token is required');
+  }
+  
+  if (!/^gh[ps]_[a-zA-Z0-9]{36,}$/.test(githubToken)) {
+    console.warn(chalk.yellow('Warning: GitHub token format appears invalid'));
+  }
+  
+  // Validate labels format
+  if (options.labels) {
+    const labels = options.labels.split(',').map(l => l.trim());
+    for (const label of labels) {
+      if (label.length > 50) {
+        throw new Error(`Label "${label}" is too long (max 50 characters)`);
+      }
+    }
+  }
+  
+  // Validate assignees format
+  if (options.assignees) {
+    const assignees = options.assignees.split(',').map(a => a.trim());
+    for (const assignee of assignees) {
+      if (!/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(assignee)) {
+        throw new Error(`Invalid GitHub username: ${assignee}`);
+      }
+    }
+  }
+}
+```
+
+### Help Integration
+```javascript
+// Add to help system
+const githubExportHelp = {
+  command: 'github-export',
+  description: 'Export Task Master task to GitHub issue',
+  usage: 'task-master github-export --id=<taskId> --repo=<owner/repo> [options]',
+  examples: [
+    {
+      command: 'task-master github-export --id=42 --repo=myorg/myproject',
+      description: 'Export task 42 to GitHub repository'
+    },
+    {
+      command: 'task-master github-export --id=42 --repo=myorg/myproject --labels="bug,urgent" --assignees="john,jane"',
+      description: 'Export with custom labels and assignees'
+    },
+    {
+      command: 'task-master github-export --id=42 --repo=myorg/myproject --dry-run',
+      description: 'Preview the GitHub issue without creating it'
+    },
+    {
+      command: 'task-master github-export --id=42 --repo=myorg/myproject --template=bug --sync',
+      description: 'Export using bug template with sync enabled'
+    }
+  ],
+  options: [
+    { flag: '--id <taskId>', description: 'Task ID to export (required)' },
+    { flag: '--repo <owner/repo>', description: 'GitHub repository (required)' },
+    { flag: '--token <token>', description: 'GitHub Personal Access Token' },
+    { flag: '--title <title>', description: 'Override issue title' },
+    { flag: '--labels <labels>', description: 'Comma-separated labels' },
+    { flag: '--assignees <users>', description: 'Comma-separated assignees' },
+    { flag: '--milestone <milestone>', description: 'GitHub milestone' },
+    { flag: '--template <template>', description: 'Issue template (bug, feature, epic)' },
+    { flag: '--include-subtasks', description: 'Include subtasks as checklist' },
+    { flag: '--separate-subtasks', description: 'Create separate issues for subtasks' },
+    { flag: '--dry-run', description: 'Preview without creating' },
+    { flag: '--force', description: 'Overwrite existing GitHub link' },
+    { flag: '--no-link-back', description: 'Skip Task Master reference in issue' },
+    { flag: '--sync', description: 'Enable automatic synchronization' }
+  ]
+};
+```
+
+### Testing Requirements
+- Unit tests for CLI option parsing and validation
+- Integration tests for MCP tool functionality
+- End-to-end tests with real GitHub repositories
+- Error handling tests for various failure scenarios
+- Dry-run functionality testing
+- Template system testing
+- Subtask export testing (both checklist and separate issues)
+- Authentication and authorization testing
+- Rate limiting and retry logic testing
+
+## 5. Create Comprehensive Testing Suite and Documentation [pending]
+### Dependencies: 101.4
+### Description: Implement thorough testing for the GitHub export system and create comprehensive documentation
+### Details:
+## Implementation Requirements
+
+### Testing Strategy
+
+#### 1. Unit Tests
+```javascript
+// tests/unit/github-export.test.js
+describe('GitHub Export System', () => {
+  describe('GitHubExportService', () => {
+    test('should validate repository access', async () => {
+      const service = new GitHubExportService('mock-token');
+      const mockGitHub = jest.spyOn(service, 'validateRepositoryAccess');
+      
+      await service.exportTask(mockTask, 'owner', 'repo');
+      expect(mockGitHub).toHaveBeenCalledWith('owner', 'repo');
+    });
+    
+    test('should handle authentication errors', async () => {
+      const service = new GitHubExportService('invalid-token');
+      
+      await expect(service.exportTask(mockTask, 'owner', 'repo'))
+        .rejects.toThrow('Authentication failed');
+    });
+    
+    test('should respect rate limits', async () => {
+      const service = new GitHubExportService('valid-token');
+      const rateLimiter = jest.spyOn(service.rateLimiter, 'removeTokens');
+      
+      await service.exportTask(mockTask, 'owner', 'repo');
+      expect(rateLimiter).toHaveBeenCalled();
+    });
+  });
+  
+  describe('TaskToGitHubFormatter', () => {
+    test('should format task title correctly', () => {
+      const formatter = new TaskToGitHubFormatter();
+      const task = { id: 42, title: 'Test Task', priority: 'high' };
+      
+      const result = formatter.formatTitle(task);
+      expect(result).toBe('🔥 [Task 42] Test Task');
+    });
+    
+    test('should truncate long titles', () => {
+      const formatter = new TaskToGitHubFormatter();
+      const longTitle = 'A'.repeat(300);
+      const task = { id: 1, title: longTitle };
+      
+      const result = formatter.formatTitle(task);
+      expect(result.length).toBeLessThanOrEqual(250);
+      expect(result).toEndWith('...');
+    });
+    
+    test('should format subtasks as checklist', () => {
+      const formatter = new TaskToGitHubFormatter();
+      const task = {
+        id: 1,
+        title: 'Parent Task',
+        subtasks: [
+          { title: 'Subtask 1', status: 'done' },
+          { title: 'Subtask 2', status: 'pending' }
+        ]
+      };
+      
+      const result = formatter.formatBody(task);
+      expect(result).toContain('- [x] **Subtask 1**');
+      expect(result).toContain('- [ ] **Subtask 2**');
+    });
+    
+    test('should generate appropriate labels', () => {
+      const formatter = new TaskToGitHubFormatter();
+      const task = { priority: 'high', complexityScore: 9 };
+      
+      const labels = formatter.formatLabels(task);
+      expect(labels).toContain('task-master');
+      expect(labels).toContain('priority:high');
+      expect(labels).toContain('complexity:high');
+    });
+  });
+  
+  describe('GitHubLinkManager', () => {
+    test('should add GitHub link to task metadata', async () => {
+      const linkManager = new GitHubLinkManager(mockGitHubService);
+      const taskId = '42';
+      const issueUrl = 'https://github.com/owner/repo/issues/123';
+      
+      await linkManager.addGitHubLinkToTask(taskId, issueUrl, 123, 'owner/repo');
+      
+      const task = await getTask(taskId);
+      expect(task.metadata.githubIssue).toBeDefined();
+      expect(task.metadata.githubIssue.url).toBe(issueUrl);
+      expect(task.metadata.githubIssue.number).toBe(123);
+    });
+    
+    test('should validate GitHub links', async () => {
+      const linkManager = new GitHubLinkManager(mockGitHubService);
+      const linkInfo = {
+        repository: 'owner/repo',
+        number: 123,
+        status: 'active'
+      };
+      
+      mockGitHubService.getIssue.mockResolvedValue({ state: 'open' });
+      
+      const result = await linkManager.validateGitHubLink('42', linkInfo);
+      expect(result.valid).toBe(true);
+      expect(result.status).toBe('active');
+    });
+  });
+});
+```
+
+#### 2. Integration Tests
+```javascript
+// tests/integration/github-export-integration.test.js
+describe('GitHub Export Integration', () => {
+  let testRepository;
+  let githubToken;
+  
+  beforeAll(() => {
+    githubToken = process.env.GITHUB_TEST_TOKEN;
+    testRepository = process.env.GITHUB_TEST_REPO || 'taskmaster-test/test-repo';
+    
+    if (!githubToken) {
+      throw new Error('GITHUB_TEST_TOKEN environment variable required for integration tests');
+    }
+  });
+  
+  test('should export task to real GitHub repository', async () => {
+    const task = createTestTask();
+    const service = new GitHubExportService(githubToken);
+    
+    const result = await service.exportTask(task, testRepository, {
+      labels: ['test', 'automated'],
+      template: 'default'
+    });
+    
+    expect(result.success).toBe(true);
+    expect(result.issueUrl).toMatch(/https:\\/\\/github\\.com\\/.+\\/issues\\/\\d+/);
+    
+    // Cleanup: Close the test issue
+    await service.updateIssue(testRepository, result.issue.number, { state: 'closed' });
+  });
+  
+  test('should handle repository permission errors', async () => {
+    const task = createTestTask();
+    const service = new GitHubExportService(githubToken);
+    
+    await expect(service.exportTask(task, 'private/inaccessible-repo'))
+      .rejects.toThrow(/permission|access/i);
+  });
+  
+  test('should respect GitHub API rate limits', async () => {
+    const service = new GitHubExportService(githubToken);
+    const tasks = Array.from({ length: 10 }, () => createTestTask());
+    
+    const startTime = Date.now();
+    
+    for (const task of tasks) {
+      await service.exportTask(task, testRepository);
+    }
+    
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    
+    // Should take some time due to rate limiting
+    expect(duration).toBeGreaterThan(1000);
+  });
+});
+```
+
+#### 3. CLI Tests
+```javascript
+// tests/cli/github-export-cli.test.js
+describe('GitHub Export CLI', () => {
+  test('should validate required options', async () => {
+    const result = await runCLI(['github-export']);
+    
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('required option');
+  });
+  
+  test('should perform dry run correctly', async () => {
+    const result = await runCLI([
+      'github-export',
+      '--id=42',
+      '--repo=owner/repo',
+      '--dry-run'
+    ]);
+    
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('DRY RUN');
+    expect(result.stdout).toContain('GitHub Issue Preview');
+  });
+  
+  test('should handle invalid task ID', async () => {
+    const result = await runCLI([
+      'github-export',
+      '--id=invalid',
+      '--repo=owner/repo'
+    ]);
+    
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('Invalid task ID');
+  });
+  
+  test('should validate repository format', async () => {
+    const result = await runCLI([
+      'github-export',
+      '--id=42',
+      '--repo=invalid-format'
+    ]);
+    
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('owner/repo format');
+  });
+});
+```
+
+#### 4. MCP Tool Tests
+```javascript
+// tests/mcp/github-export-mcp.test.js
+describe('GitHub Export MCP Tool', () => {
+  test('should export task via MCP', async () => {
+    const args = {
+      taskId: '42',
+      repository: 'owner/repo',
+      token: 'test-token',
+      options: {
+        labels: ['test'],
+        dryRun: true
+      }
+    };
+    
+    const result = await githubExportDirect(args, mockLog, { session: mockSession });
+    
+    expect(result.success).toBe(true);
+    expect(result.data.taskId).toBe('42');
+  });
+  
+  test('should handle MCP tool errors', async () => {
+    const args = {
+      taskId: 'invalid',
+      repository: 'owner/repo'
+    };
+    
+    const result = await githubExportDirect(args, mockLog, { session: mockSession });
+    
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+});
+```
+
+### Mock Data and Utilities
+```javascript
+// tests/utils/github-mocks.js
+export function createTestTask() {
+  return {
+    id: Math.floor(Math.random() * 1000),
+    title: 'Test Task',
+    description: 'This is a test task for GitHub export',
+    details: 'Implementation details for the test task',
+    priority: 'medium',
+    status: 'pending',
+    subtasks: [
+      { title: 'Test Subtask 1', status: 'done' },
+      { title: 'Test Subtask 2', status: 'pending' }
+    ]
+  };
+}
+
+export function mockGitHubAPI() {
+  return {
+    getIssue: jest.fn(),
+    createIssue: jest.fn(),
+    updateIssue: jest.fn(),
+    getRepository: jest.fn()
+  };
+}
+
+export function createMockGitHubResponse(issueNumber = 123) {
+  return {
+    id: issueNumber,
+    number: issueNumber,
+    title: 'Test Issue',
+    body: 'Test issue body',
+    state: 'open',
+    html_url: `https://github.com/owner/repo/issues/${issueNumber}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+}
+```
+
+### Documentation
+
+#### 1. User Guide
+```markdown
+# GitHub Export Feature
+
+## Overview
+The GitHub Export feature allows you to create GitHub issues directly from your Task Master tasks, maintaining bidirectional links between tasks and issues.
+
+## Setup
+
+### 1. GitHub Token
+Create a GitHub Personal Access Token with the following permissions:
+- `repo` (for private repositories)
+- `public_repo` (for public repositories)
+
+Set the token as an environment variable:
+```bash
+export GITHUB_TOKEN=your_token_here
+```
+
+### 2. Basic Usage
+```bash
+# Export a task to GitHub
+task-master github-export --id=42 --repo=myorg/myproject
+
+# Export with custom labels and assignees
+task-master github-export --id=42 --repo=myorg/myproject \\
+  --labels="bug,urgent" --assignees="john,jane"
+
+# Preview before creating
+task-master github-export --id=42 --repo=myorg/myproject --dry-run
+```
+
+## Advanced Features
+
+### Templates
+Use predefined templates for different issue types:
+```bash
+# Bug report template
+task-master github-export --id=42 --repo=myorg/myproject --template=bug
+
+# Feature request template
+task-master github-export --id=42 --repo=myorg/myproject --template=feature
+```
+
+### Subtask Handling
+```bash
+# Include subtasks as checklist items
+task-master github-export --id=42 --repo=myorg/myproject --include-subtasks
+
+# Create separate issues for each subtask
+task-master github-export --id=42 --repo=myorg/myproject --separate-subtasks
+```
+
+### Synchronization
+```bash
+# Enable automatic synchronization
+task-master github-export --id=42 --repo=myorg/myproject --sync
+```
+
+## Troubleshooting
+
+### Common Issues
+1. **Authentication Error**: Verify your GitHub token has the correct permissions
+2. **Repository Not Found**: Ensure the repository exists and you have access
+3. **Rate Limit Exceeded**: Wait for the rate limit to reset or use a different token
+
+### Link Management
+```bash
+# Validate all GitHub links
+task-master github-link --validate
+
+# Sync specific task with GitHub
+task-master github-link --sync 42
+
+# Remove GitHub link from task
+task-master github-link --remove 42
+```
+```
+
+#### 2. API Documentation
+```markdown
+# GitHub Export API Reference
+
+## MCP Tool: github_export_task
+
+### Parameters
+- `taskId` (string, required): Task ID to export
+- `repository` (string, required): GitHub repository in owner/repo format
+- `token` (string, optional): GitHub Personal Access Token
+- `options` (object, optional): Export configuration
+
+### Options Object
+- `title` (string): Override issue title
+- `labels` (array): GitHub labels to add
+- `assignees` (array): GitHub usernames to assign
+- `milestone` (string): GitHub milestone
+- `template` (string): Issue template (bug, feature, epic, default)
+- `includeSubtasks` (boolean): Include subtasks as checklist
+- `separateSubtasks` (boolean): Create separate issues for subtasks
+- `dryRun` (boolean): Preview without creating
+- `force` (boolean): Overwrite existing GitHub link
+- `linkBack` (boolean): Add Task Master reference to issue
+- `enableSync` (boolean): Enable automatic synchronization
+
+### Response
+```json
+{
+  "success": true,
+  "data": {
+    "taskId": "42",
+    "repository": "owner/repo",
+    "issueUrl": "https://github.com/owner/repo/issues/123",
+    "issueNumber": 123,
+    "exportedAt": "2024-01-15T10:30:00.000Z",
+    "message": "Successfully exported task 42 to GitHub issue #123"
+  }
+}
+```
+```
+
+### Performance Testing
+```javascript
+// tests/performance/github-export-performance.test.js
+describe('GitHub Export Performance', () => {
+  test('should export large task within time limit', async () => {
+    const largeTask = createLargeTask(); // Task with many subtasks and long content
+    const service = new GitHubExportService('test-token');
+    
+    const startTime = performance.now();
+    await service.exportTask(largeTask, 'owner/repo');
+    const endTime = performance.now();
+    
+    expect(endTime - startTime).toBeLessThan(5000); // Should complete in under 5 seconds
+  });
+  
+  test('should handle concurrent exports', async () => {
+    const service = new GitHubExportService('test-token');
+    const tasks = Array.from({ length: 5 }, () => createTestTask());
+    
+    const promises = tasks.map(task => service.exportTask(task, 'owner/repo'));
+    const results = await Promise.all(promises);
+    
+    results.forEach(result => {
+      expect(result.success).toBe(true);
+    });
+  });
+});
+```
+
+### Test Configuration
+```javascript
+// jest.config.js additions
+module.exports = {
+  // ... existing config
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/tests/setup/github-setup.js'],
+  testMatch: [
+    '**/tests/**/*.test.js',
+    '**/tests/**/*.spec.js'
+  ],
+  collectCoverageFrom: [
+    'scripts/modules/github/**/*.js',
+    'mcp-server/src/tools/github-*.js',
+    'mcp-server/src/core/direct-functions/github-*.js'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  }
+};
+```
+
+### Continuous Integration
+```yaml
+# .github/workflows/github-export-tests.yml
+name: GitHub Export Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm run test:github-export
+        env:
+          GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
+          GITHUB_TEST_REPO: ${{ secrets.GITHUB_TEST_REPO }}
+```
+

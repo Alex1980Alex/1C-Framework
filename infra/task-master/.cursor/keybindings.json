@@ -1,0 +1,98 @@
+[
+  {
+    "key": "ctrl+shift+t l",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master list\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t j",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master list --json\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t n",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master next\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t s",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master show "
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t p",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master list --status=pending\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t d",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master list --status=done\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t a",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master add-task --prompt=\""
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t c",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master list --compact\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t t",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master tags\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t h",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master --help\n"
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t u",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master set-status --id="
+    },
+    "when": "terminalFocus || !terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+t r",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": {
+      "text": "npx task-master research \""
+    },
+    "when": "terminalFocus || !terminalFocus"
+  }
+]

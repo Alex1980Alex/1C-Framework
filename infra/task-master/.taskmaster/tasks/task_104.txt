@@ -1,0 +1,158 @@
+# Task ID: 104
+# Title: Implement 'scope-up' and 'scope-down' CLI Commands for Dynamic Task Complexity Adjustment
+# Status: done
+# Dependencies: 3, 11, 19, 94
+# Priority: high
+# Description: Add new CLI commands 'scope-up' and 'scope-down' to enable users to dynamically increase or decrease the complexity of tasks or subtasks, with support for multiple IDs, strength levels, milestone-aware adjustments, and custom prompts for targeted modifications.
+# Details:
+1. Extend the CLI (commands.js) to introduce 'scope-up' and 'scope-down' commands, following established subcommand patterns for consistency and discoverability. 
+2. Accept comma-separated task/subtask IDs and an optional '--strength' flag (light|regular|heavy, defaulting to regular). Validate all inputs, ensuring referenced tasks/subtasks exist and strength is valid.
+3. Implement a '--prompt' flag that allows users to specify custom instructions for how to scope up/down tasks, including targeting specific parts of tasks/subtasks (e.g., removing unnecessary test sections, focusing on particular implementation aspects).
+4. Fetch current task details and associated milestone context to inform the adjustment logic.
+5. Implement core logic functions that:
+   - Construct context-aware AI prompts for scaling complexity up or down, leveraging the current state, project phase, strength parameter, and any user-provided custom prompt.
+   - Call the unified AI service (ai-services-unified.js) to generate new task/subtask content at the desired complexity level.
+   - Replace existing task details and subtasks with the AI-generated output, preserving historical versions for rollback/comparison.
+   - Ensure task dependency integrity and update tasks.json and related files accordingly.
+6. Integrate robust error handling for invalid IDs, parameters, or AI failures, and provide clear CLI output showing before/after differences.
+7. Add corresponding MCP tool equivalents for integrated environments and update documentation/help text to reflect new commands and usage patterns.
+8. Ensure compatibility with batch operations, milestone-based guidelines, and existing task management workflows.
+
+# Test Strategy:
+- Write unit and integration tests for both 'scope-up' and 'scope-down' commands, covering single and multiple ID scenarios, all strength levels, custom prompts, and edge cases (e.g., non-existent IDs, invalid strength values).
+- Test various custom prompt scenarios, including prompts that target specific sections of tasks/subtasks for modification.
+- Simulate CLI usage to verify correct parsing, validation, and error handling.
+- Test AI prompt construction and output integration, ensuring that task complexity is adjusted as expected for each strength level, milestone context, and custom prompt.
+- Verify that historical data is preserved and that before/after summaries are accurate and clear.
+- Confirm that task dependencies remain intact and that batch operations work as intended.
+- Validate MCP tool integration and documentation updates.
+
+# Subtasks:
+## 1. Extend CLI with scope-up and scope-down commands [done]
+### Dependencies: None
+### Description: Implement the basic command structure for scope-up and scope-down in commands.js, following established patterns and adding appropriate help text. [Updated: 2025-08-01]
+### Details:
+1. Add new command definitions in commands.js for 'scope-up' and 'scope-down'
+2. Implement command argument parsing for comma-separated task/subtask IDs
+3. Add the '--strength' flag with validation for 'light', 'regular', and 'heavy' options (default to 'regular')
+4. Add the '--prompt' flag for custom scoping instructions
+5. Create help text and usage examples for both commands
+6. Ensure commands follow the established pattern of other Task Master commands
+7. Implement basic input validation (checking if IDs exist, strength values are valid)
+<info added on 2025-08-01T11:42:01.901Z>
+TDD Progress Update:
+
+1. Completed test setup:
+   - Fixed test file to use ES module imports instead of CommonJS require
+   - Jest watch mode is running and showing failing tests as expected
+
+2. Implemented comprehensive test coverage for scope adjustment functionality:
+   - Tests for scopeUpTask and scopeDownTask core functions
+   - Strength level validation (light/regular/heavy)
+   - Custom prompt handling
+   - Multiple task ID processing
+   - AI service integration testing
+
+3. Current test status:
+   - All 5 tests are failing as expected (function modules don't exist yet)
+   - Ready to implement core logic to make tests pass
+   - Following TDD red-green-refactor cycle
+
+4. Next implementation step:
+   - Creating scripts/modules/task-manager/scope-adjustment.js with core functions to make tests pass
+</info added on 2025-08-01T11:42:01.901Z>
+<info added on 2025-08-01T13:57:37.573Z>
+Testing the subtask note feature from the kanban board. This is a simple test to verify that notes can be added directly from the kanban view. The feature appears to be working as expected.
+</info added on 2025-08-01T13:57:37.573Z>
+
+## 2. Implement task/subtask retrieval and context gathering [done]
+### Dependencies: 104.1
+### Description: Create functions to retrieve task/subtask details and gather relevant context information needed for complexity adjustment.
+### Details:
+1. Implement a function to fetch task and subtask details by ID from tasks.json
+2. Create a function to gather milestone context for the specified tasks
+3. Implement validation to ensure all specified IDs exist and are valid
+4. Add error handling for missing or invalid tasks/subtasks
+5. Create a data structure to hold the original task state for later comparison
+6. Implement functions to determine if an ID refers to a task or subtask
+7. Add support for handling multiple IDs in a single command execution
+
+## 3. Develop core complexity adjustment logic [done]
+### Dependencies: 104.2
+### Description: Implement the core functions that construct AI prompts and process responses to adjust task complexity up or down.
+### Details:
+1. Create separate handler functions for scope-up and scope-down operations
+2. Implement prompt construction logic that incorporates:
+   - Current task/subtask details
+   - Milestone context
+   - Strength parameter (light/regular/heavy)
+   - User-provided custom prompt
+3. Add integration with ai-services-unified.js to generate new content
+4. Implement response parsing to extract updated task details
+5. Create utility functions to determine how much to increase/decrease complexity based on strength
+6. Add special handling for different task components (description, implementation details, test strategy)
+
+## 4. Implement task update and persistence logic [done]
+### Dependencies: 104.3
+### Description: Create functions to update tasks/subtasks with new content while preserving integrity and handling dependencies.
+### Details:
+1. Implement functions to update task and subtask objects with new content
+2. Create logic to preserve task dependency integrity during updates
+3. Add version history tracking to store previous versions of tasks
+4. Implement file writing functions to persist changes to tasks.json
+5. Add validation to ensure updated tasks maintain required fields and format
+6. Implement rollback capability in case of errors
+7. Create utility functions to display before/after differences in the CLI
+8. Add support for batch updates when multiple IDs are provided
+
+## 5. Integrate with MCP tool and add comprehensive error handling [done]
+### Dependencies: 104.4
+### Description: Add MCP tool equivalents for the new commands and implement robust error handling throughout the implementation.
+### Details:
+1. Create MCP tool equivalents for scope-up and scope-down commands
+2. Implement comprehensive error handling for all potential failure points:
+   - Network errors during AI service calls
+   - Invalid task/subtask IDs
+   - Malformed AI responses
+   - File system errors
+3. Add clear user feedback with colorized output showing differences
+4. Implement progress indicators for longer operations
+5. Update documentation to include the new commands
+6. Add examples of common usage patterns to help text
+7. Ensure compatibility with existing task management workflows
+8. Add logging integration using the existing logging system
+<info added on 2025-08-02T14:00:38.363Z>
+MCP Integration Complete:
+
+✅ **Direct Functions Created:**
+- Created `mcp-server/src/core/direct-functions/scope-up.js` - Direct function wrapper for scope-up functionality
+- Created `mcp-server/src/core/direct-functions/scope-down.js` - Direct function wrapper for scope-down functionality
+- Both follow the exact same pattern as add-task direct function with proper error handling and silent mode
+
+✅ **MCP Tools Created:**
+- Created `mcp-server/src/tools/scope-up.js` - MCP tool for scope_up_task 
+- Created `mcp-server/src/tools/scope-down.js` - MCP tool for scope_down_task
+- Both follow the exact same pattern as add-task tool with proper Zod schema validation
+
+✅ **Integration Updates:**
+- Added imports and exports to `mcp-server/src/core/task-master-core.js` for both direct functions
+- Added imports and registrations to `mcp-server/src/tools/index.js` in Group 5: Task Creation & Modification
+- Tools will be available as `mcp_task-master-ai_scope_up_task` and `mcp_task-master-ai_scope_down_task` after MCP server restart
+
+✅ **Tool Parameters:**
+- `id`: Comma-separated list of task IDs (required)
+- `strength`: light/regular/heavy (optional, defaults to regular)  
+- `prompt`: Custom scoping instructions (optional)
+- `file`: Path to tasks.json (optional, auto-detected)
+- `projectRoot`: Absolute project path (required)
+- `tag`: Tag context (optional, uses current tag)
+- `research`: Enable research mode (optional, defaults to false)
+
+✅ **Error Handling:**
+- Comprehensive error handling for missing parameters, invalid task IDs, AI failures
+- Structured error responses with appropriate error codes
+- Silent mode handling to prevent CLI output interference
+
+**Status**: MCP integration complete. Requires MCP server restart for new tools to become available.
+</info added on 2025-08-02T14:00:38.363Z>
+
