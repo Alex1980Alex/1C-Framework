@@ -212,13 +212,14 @@ class ZAIProxy:
             headers=headers,
         ) as resp:
             data = await resp.json()
+            status = resp.status
 
         elapsed = (datetime.now() - start).total_seconds()
         self._stats["request_count"] += 1
         self._stats["total_time"] += elapsed
 
-        if resp.status != 200:
-            return web.json_response(data, status=resp.status)
+        if status != 200:
+            return web.json_response(data, status=status)
 
         openai_resp = anthropic_to_openai(data)
         return web.json_response(openai_resp)
