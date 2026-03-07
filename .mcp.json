@@ -78,6 +78,15 @@
         "PYTHONIOENCODING": "utf-8"
       },
       "timeout": 60000
+    },
+    "llm-rotation": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.shared.llm_rotation.mcp"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
     }
   }
 }
