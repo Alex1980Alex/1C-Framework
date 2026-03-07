@@ -12,7 +12,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, AsyncIterator, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from aiohttp import ClientSession, ClientTimeout, web
 from dotenv import load_dotenv
