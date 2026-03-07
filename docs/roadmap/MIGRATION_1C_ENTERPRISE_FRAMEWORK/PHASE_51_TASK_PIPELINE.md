@@ -98,9 +98,9 @@ Pipeline триггерится от существующих hooks:
 
 ## Чеклист завершения
 
-- [ ] Анализ совместимости Task Master + Task Protocol выполнен
-- [ ] `infra/task-master/` содержит Task Master
-- [ ] `infra/pipeline/` содержит Development Pipeline
-- [ ] `.mcp.json` содержит `task-master-ai`
-- [ ] Pipeline интегрирован с hooks
-- [ ] Git commit: `feat: Phase 51 — Task Master + Dev Pipeline`
+- [x] Анализ совместимости Task Master + Task Protocol выполнен
+- [x] `infra/task-master/` содержит Task Master (36MB, без node_modules)
+- [x] `infra/pipeline/` содержит Development Pipeline (133 .py, 4 agents)
+- [x] `.mcp.json` содержит `task-master-ai` (npx, Z.AI GLM-5)
+- [x] Pipeline интегрирован с hooks (auto-git-save, code-verify-reminder)
+- [x] Git commit: `feat: Phase 51 — Task Master + Dev Pipeline`
