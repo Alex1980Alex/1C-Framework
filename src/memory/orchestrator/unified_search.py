@@ -333,7 +333,7 @@ class UnifiedSearchEngine:
 
         # Deduplicate
         if options.dedup_enabled:
-            all_results = self._deduplicator.deduplicate(all_results, options.dedup_threshold)
+            all_results = self._deduplicator.deduplicate(all_results)
 
         # Rerank
         all_results = self._reranker.rerank(all_results, options)
