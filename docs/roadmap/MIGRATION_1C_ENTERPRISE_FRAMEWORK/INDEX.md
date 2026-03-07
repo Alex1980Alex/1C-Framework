@@ -26,7 +26,7 @@
 | **2** | [47](PHASE_47_AUTO_DOCUMENTER.md) | PHASE_47_AUTO_DOCUMENTER.md | DONE | Auto-Documenter (Profile #7) |
 | **2** | [48](PHASE_48_BSL_DEBUGGER.md) | PHASE_48_BSL_DEBUGGER.md | DONE | BSL Debugger (10 tools) |
 | **3** | [49](PHASE_49_UNIFIED_MEMORY.md) | PHASE_49_UNIFIED_MEMORY.md | DONE | Unified Memory System (4 системы) |
-| **3** | [50](PHASE_50_LLM_ROTATION.md) | PHASE_50_LLM_ROTATION.md | TODO | LLM Rotation Service |
+| **3** | [50](PHASE_50_LLM_ROTATION.md) | PHASE_50_LLM_ROTATION.md | DONE | LLM Rotation Service |
 | **3** | [51](PHASE_51_TASK_PIPELINE.md) | PHASE_51_TASK_PIPELINE.md | TODO | Task Master + Dev Pipeline |
 | **4** | [52](PHASE_52_SERENA_LSP.md) | PHASE_52_SERENA_LSP.md | TODO | Serena LSP Integration |
 | **4** | [53](PHASE_53_BSL_FINETUNING.md) | PHASE_53_BSL_FINETUNING.md | TODO | BSL Fine-tuning (Qwen2.5-Coder) |
