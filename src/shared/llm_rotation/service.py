@@ -168,7 +168,7 @@ class LLMRotationService:
         settings: Optional[LLMRotationSettings] = None,
     ):
         self._settings = settings or get_settings()
-        configs = providers or DEFAULT_PROVIDERS
+        configs = DEFAULT_PROVIDERS if providers is None else providers
         self._providers: Dict[str, ProviderState] = {
             cfg.name: ProviderState(config=cfg) for cfg in configs
         }
