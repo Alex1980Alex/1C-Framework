@@ -171,7 +171,7 @@ class Deduplicator:
     """Deduplicate results using content hashing."""
 
     def deduplicate(
-        self, items: List[SearchResultItem], threshold: float = 0.85,
+        self, items: List[SearchResultItem],
     ) -> List[SearchResultItem]:
         seen_hashes: Dict[str, SearchResultItem] = {}
         result = []
