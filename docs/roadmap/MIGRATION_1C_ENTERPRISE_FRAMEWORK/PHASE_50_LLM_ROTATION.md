@@ -127,5 +127,5 @@ async def test_fallback_chain():
 - [x] Z.AI proxy интегрирован
 - [x] Тест fallback цепочки проходит (33/33)
 - [x] MCP tools (5 шт.) доступны в `.mcp.json`
-- [ ] Skill `llm-rotation/SKILL.md` создан
+- [x] Skill `llm-rotation/SKILL.md` создан
 - [ ] Git commit: `feat: Phase 50 — LLM Rotation Service`
