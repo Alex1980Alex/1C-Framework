@@ -241,12 +241,11 @@ async def delete_message(args: dict) -> list[TextContent]:
     if not msg_id:
         return [TextContent(type="text", text="Error: message_id is required")]
 
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM important_messages WHERE id = ?", (msg_id,))
-    deleted = cursor.rowcount
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM important_messages WHERE id = ?", (msg_id,))
+        deleted = cursor.rowcount
+        conn.commit()
 
     return [TextContent(type="text", text=json.dumps({"success": deleted > 0, "deleted": deleted}))]
 
