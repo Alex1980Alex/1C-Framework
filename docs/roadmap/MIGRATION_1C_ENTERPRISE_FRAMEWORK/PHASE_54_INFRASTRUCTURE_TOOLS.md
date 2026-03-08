@@ -119,12 +119,12 @@ cp -r D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff tools/bsl-semantic-di
 
 ## Чеклист завершения
 
-- [ ] `infra/lazy-mcp/` — proxy работает
-- [ ] `infra/lazy-mcp/config/registry.yaml` — пути обновлены
-- [ ] `.mcp/lazy-mcp.json` — корректные пути
-- [ ] `infra/docker-mcp/` — Docker MCP Pilot
-- [ ] `tools/ast-grep-mcp/` — AST Grep работает
-- [ ] `tools/bsl-semantic-diff/` — BSL Semantic Diff
-- [ ] Docker конфигурация обновлена
-- [ ] Lazy MCP proxy запускается и проксирует запросы
+- [x] `infra/lazy-mcp/` — proxy работает (venv, 11 категорий, 27 серверов)
+- [x] `infra/lazy-mcp/config/registry.yaml` — пути обновлены
+- [x] `.mcp/lazy-mcp.json` — корректные пути
+- [x] `infra/docker-mcp/` — Docker MCP Pilot (volumes обновлены)
+- [x] `tools/ast-grep-mcp/` — AST Grep работает (venv, import OK)
+- [x] `tools/bsl-semantic-diff/` — BSL Semantic Diff скопирован
+- [x] Docker конфигурация обновлена
+- [x] Lazy MCP proxy запускается и проксирует запросы
 - [x] Git commit: `feat: Phase 54 — Infrastructure Tools migration`
