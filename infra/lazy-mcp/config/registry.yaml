@@ -186,6 +186,7 @@ categories:
         command: "node"
         args: ["D:/1C-Enterprise_Framework/mcp-reasoner/dist/index.js"]
         cwd: "D:/1C-Enterprise_Framework/mcp-reasoner"
+        # NOTE: Not yet migrated — still references source project
         env:
           NODE_ENV: "production"
           NODE_OPTIONS: "--max-old-space-size=4096"
