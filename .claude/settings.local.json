@@ -202,7 +202,8 @@
       "Bash(\"D:/1С-Framework/docs/architecture/bsl-integration.md\":*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 5 node:*)",
       "Bash(npm list:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(\"D:/1С-Framework/docs/roadmap/MIGRATION_1C_ENTERPRISE_FRAMEWORK/PHASE_57_MCP_REASONER.md\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -33,6 +33,7 @@
 | **4** | [54](PHASE_54_INFRASTRUCTURE_TOOLS.md) | PHASE_54_INFRASTRUCTURE_TOOLS.md | DONE | Lazy MCP + Docker + AST Grep |
 | **5** | [55](PHASE_55_INTEGRATION_CLEANUP.md) | PHASE_55_INTEGRATION_CLEANUP.md | DONE | E2E тесты, docs, cleanup |
 | **5** | [56](PHASE_56_1C_DOCS_RAG.md) | PHASE_56_1C_DOCS_RAG.md | DONE | 1C-Docs-RAG MCP migration |
+| **5** | [57](PHASE_57_MCP_REASONER.md) | PHASE_57_MCP_REASONER.md | DONE | MCP Reasoner + BSL strategies |
 
 ## Аналитика
 
