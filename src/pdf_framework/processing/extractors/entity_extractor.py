@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from src.pdf_framework.config import AgentSettings
 from src.pdf_framework.schemas.documents import DocumentChunk
 from src.pdf_framework.schemas.entities import Entity, ExtractionResult, Relation
+from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
 
