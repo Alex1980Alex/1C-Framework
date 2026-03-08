@@ -130,11 +130,11 @@ git tag v0.34.0-bsl-migration
 
 ### Документация актуальна
 
-- [ ] CLAUDE.md содержит BSL секцию
-- [ ] MEMORY.md содержит BSL конфигурацию
-- [ ] Skill router распознаёт BSL-запросы
-- [ ] `docs/architecture/bsl-integration.md` создан
-- [ ] Все skills имеют SKILL.md
+- [x] CLAUDE.md содержит BSL секцию
+- [x] MEMORY.md содержит BSL конфигурацию (строки 199-208)
+- [x] Skill router распознаёт BSL-запросы (bundles: bsl-dev, bsl-debug, bsl-memory)
+- [x] `docs/architecture/bsl-integration.md` создан
+- [x] Все skills имеют SKILL.md (bsl-development, 1c-doc-research, memory-unified)
 
 ---
 
