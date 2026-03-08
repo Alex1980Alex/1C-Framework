@@ -1,7 +1,7 @@
 # Фаза 54: Infrastructure Tools (Lazy MCP + Docker + AST Grep)
 
 **Tier:** 4 — Расширения
-**Статус:** TODO
+**Статус:** DONE
 **Зависимости:** Фазы 44-48 (все Tier 1-2)
 **Оценка:** ~5 часов
 
