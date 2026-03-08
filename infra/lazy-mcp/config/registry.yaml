@@ -21,7 +21,7 @@ categories:
 
       bsl-platform-context:
         command: "java"
-        args: ["-jar", "D:/1C-Enterprise_Framework/mcp-servers/mcp-bsl-context-0.3.1.jar", "--platform-path", "C:/Program Files/1cv8/8.3.27.1859/bin", "--verbose"]
+        args: ["-jar", "D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar", "--platform-path", "C:/Program Files/1cv8/8.3.27.1859/bin", "--verbose"]
         env:
           JAVA_HOME: "C:/Program Files/Zulu/zulu-17"
         description: "API платформы 1С - типы, методы, свойства."
