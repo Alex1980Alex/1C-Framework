@@ -117,29 +117,29 @@ class LLMEntityExtractor:
             content = cheap_content
         else:
             messages = [
-            SystemMessage(content="You are an entity extraction system. Output only valid JSON."),
-            HumanMessage(content=_EXTRACTION_PROMPT.format(text=chunk.content)),
-        ]
-        if feedback:
-            messages.append(HumanMessage(content=f"\u26a0\ufe0f {feedback}"))
+                SystemMessage(content="You are an entity extraction system. Output only valid JSON."),
+                HumanMessage(content=_EXTRACTION_PROMPT.format(text=chunk.content)),
+            ]
+            if feedback:
+                messages.append(HumanMessage(content=f"\u26a0\ufe0f {feedback}"))
 
-        response = await self._llm.ainvoke(messages)
+            response = await self._llm.ainvoke(messages)
 
-        # Extract text content — handle both str and list[ContentBlock] formats
-        if isinstance(response.content, str):
-            content = response.content
-        elif isinstance(response.content, list):
-            parts: list[str] = []
-            for block in response.content:
-                if isinstance(block, dict):
-                    parts.append(block.get("text", ""))
-                elif hasattr(block, "text"):
-                    parts.append(getattr(block, "text"))
-                else:
-                    parts.append(str(block))
-            content = "".join(parts)
-        else:
-            content = str(response.content)
+            # Extract text content — handle both str and list[ContentBlock] formats
+            if isinstance(response.content, str):
+                content = response.content
+            elif isinstance(response.content, list):
+                parts: list[str] = []
+                for block in response.content:
+                    if isinstance(block, dict):
+                        parts.append(block.get("text", ""))
+                    elif hasattr(block, "text"):
+                        parts.append(getattr(block, "text"))
+                    else:
+                        parts.append(str(block))
+                content = "".join(parts)
+            else:
+                content = str(response.content)
 
         if not content.strip():
             logger.warning("Empty LLM response for chunk %s", chunk.id)
