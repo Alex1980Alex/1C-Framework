@@ -207,7 +207,14 @@
       "mcp__llm-rotation__llm_complete",
       "mcp__llm-rotation__llm_get_stats",
       "Bash(ZAI_API_KEY=96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9 LLM_ROTATION_TIMEOUT=60 .venv/Scripts/python.exe:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__bsl-semantic-search__bsl_stats",
+      "mcp__bsl-platform-context__search",
+      "mcp__bsl-debugger__bsl_analyze",
+      "mcp__bsl-platform-context__getMembers",
+      "mcp__bsl-platform-context__getMember",
+      "mcp__bsl-platform-context__getConstructors",
+      "mcp__bsl-platform-context__info"
     ]
   },
   "enableAllProjectMcpServers": true,
