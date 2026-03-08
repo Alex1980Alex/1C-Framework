@@ -69,10 +69,35 @@ async def grade_documents(
         )
 
     # Grade one document via LLM (Ralph Wiggum: 1 retry for structured yes/no)
+    use_cheap = is_cheap_llm_enabled("grader")
+
     async def _grade_one(result) -> dict:
         content = result.chunk.content
         content_preview = content[:500] + "..." if len(content) > 500 else content
         prompt = _get_grading_prompt(question, content_preview)
+
+        # Cheap LLM path — single call, no retry overhead
+        if use_cheap:
+            try:
+                result_text = await cheap_llm_call(
+                    prompt=prompt["user"],
+                    system_prompt=prompt["system"],
+                    component="grader",
+                )
+                result_text = result_text.strip().lower()
+                if result_text:
+                    is_relevant = _parse_relevance(result_text)
+                    return {
+                        "chunk_id": result.chunk.id,
+                        "is_relevant": is_relevant,
+                        "reason": result_text[:200],
+                        "score": result.score,
+                        "content_preview": content_preview[:100],
+                    }
+            except Exception as e:
+                logger.warning("[GRADE] Cheap LLM failed for %s, falling back: %s", result.chunk.id[:12], e)
+            # Fall through to Claude on failure
+
         base_messages = [
             SystemMessage(content=prompt["system"]),
             HumanMessage(content=prompt["user"]),
