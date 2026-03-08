@@ -13,6 +13,11 @@ from src.shared.llm_rotation.service import (
     DEFAULT_PROVIDERS,
     get_service,
 )
+from src.shared.llm_rotation.adapter import (
+    cheap_llm_call,
+    is_cheap_llm_enabled,
+    COMPONENT_REGISTRY,
+)
 
 __all__ = [
     "LLMRotationService",
@@ -21,6 +26,9 @@ __all__ = [
     "ProviderStatus",
     "DEFAULT_PROVIDERS",
     "get_service",
+    "cheap_llm_call",
+    "is_cheap_llm_enabled",
+    "COMPONENT_REGISTRY",
 ]
 
 __version__ = "1.0.0"
