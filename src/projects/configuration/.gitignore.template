@@ -1,0 +1,63 @@
+# =============================================================================
+# .gitignore для проекта 1С:Предприятие
+# Копировать в корень проекта и переименовать в .gitignore
+# =============================================================================
+
+# Serena cache (автоматически создаётся при индексации)
+.serena/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary files
+*.tmp
+*.temp
+nul
+
+# Log files
+*.log
+logs/
+
+# Cache
+cache/
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# 1C specific
+*.dt
+*.cf
+*.cfe
+*.cfu
+*.epf
+*.erf
+*.log
+
+# Временные файлы 1С
+TempFiles*/
+temp_*/
+
+# Бинарные файлы конфигурации (обычно большие)
+*.dt
+
+# Но отслеживать исходный код
+!src/**/*.bsl
+!src/**/*.xml
+!src/**/*.mdo
+
+# Документация - отслеживать
+!docs/**/*.md
+
+# Медиа файлы (если не нужны в repo)
+# *.jpg
+# *.png
+# *.gif
