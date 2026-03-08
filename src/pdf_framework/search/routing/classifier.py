@@ -14,6 +14,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from pydantic import BaseModel
 
+from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
+
 logger = logging.getLogger(__name__)
 
 
