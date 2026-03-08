@@ -17,6 +17,9 @@ from src.shared.llm_rotation.adapter import (
     cheap_llm_call,
     is_cheap_llm_enabled,
     COMPONENT_REGISTRY,
+    QUALITY_CRITERIA,
+    evaluate_response,
+    discover_unregistered_components,
 )
 
 __all__ = [
@@ -29,6 +32,9 @@ __all__ = [
     "cheap_llm_call",
     "is_cheap_llm_enabled",
     "COMPONENT_REGISTRY",
+    "QUALITY_CRITERIA",
+    "evaluate_response",
+    "discover_unregistered_components",
 ]
 
 __version__ = "1.0.0"
