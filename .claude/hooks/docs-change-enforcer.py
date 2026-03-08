@@ -134,6 +134,10 @@ SKIP_PATTERNS = [
     "pyproject.toml",
     ".env.example",
     "mcp-server.log",
+    # Root-level infra files (Dockerfiles, compose, logs)
+    "dockerfile",
+    "docker-compose",
+    ".log",
     # Empty module markers (no logic to document)
     "__init__.py",
 ]
