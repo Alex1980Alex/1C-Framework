@@ -141,6 +141,8 @@ SKIP_PATTERNS = [
     ".log",
     # Empty module markers (no logic to document)
     "__init__.py",
+    # 1C project task folders (separate repos, not framework code)
+    "src/projects/",
 ]
 
 
