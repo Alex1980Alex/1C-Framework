@@ -21,7 +21,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
   maxTotalThoughts: 100,
   maxBeamWidth: 10,
   maxSimulations: 1000,
-  allowedStrategies: ['beam_search', 'mcts', 'mcts-002-alpha', 'mcts-002alt-alpha'],
+  allowedStrategies: ['beam_search', 'mcts', 'mcts-002-alpha', 'mcts-002alt-alpha', 'bsl_architecture', 'bsl_document_patterns', 'bsl_subsystem_analysis'],
   minThoughtNumber: 1,
   // Allow alphanumeric, spaces, punctuation, unicode letters/numbers
   allowedCharacters: /^[\w\s\p{L}\p{N}\p{P}\p{M}\p{S}]*$/u
