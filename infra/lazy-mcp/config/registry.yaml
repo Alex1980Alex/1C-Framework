@@ -155,7 +155,7 @@ categories:
 
       filesystem:
         command: "npx"
-        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1C-Enterprise_Framework"]
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1С-Framework"]
         description: "Файловые операции - read, write, edit, directory tree"
         type: "npx"
         timeout: 30000
