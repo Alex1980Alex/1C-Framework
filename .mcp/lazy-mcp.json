@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/.mcp.schema.json",
   "mcpServers": {
     "lazy-mcp": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "infra.lazy_mcp.server"],
-      "cwd": "D:\\1С-Framework",
+      "command": "D:\\1С-Framework\\infra\\lazy-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["src/server.py"],
+      "cwd": "D:\\1С-Framework\\infra\\lazy-mcp",
       "env": {
         "PYTHONIOENCODING": "utf-8",
-        "LAZY_MCP_CONFIG": "D:\\1С-Framework\\.mcp\\lazy-mcp-config.json"
+        "LAZY_MCP_CONFIG": "D:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
       },
       "timeout": 30000
     }
