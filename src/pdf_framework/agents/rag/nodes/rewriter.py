@@ -70,7 +70,47 @@ async def rewrite_query(
     else:
         logger.debug(f"[REWRITE] Keeping strategy: {current_strategy}")
 
-    # Rewrite query via LLM
+    # Cheap LLM path for query rewriting
+    if is_cheap_llm_enabled("rewriter"):
+        irrelevant_context = ""
+        graded_docs = state.get("graded_documents", [])
+        if graded_docs:
+            irrelevant = [d for d in graded_docs if not d["is_relevant"]]
+            if irrelevant:
+                irrelevant_context = (
+                    "\n\nPrevious search found these irrelevant topics:\n"
+                    + "\n".join(f"- {d.get('content_preview', 'N/A')[:80]}..." for d in irrelevant[:3])
+                )
+        user_prompt = (
+            f"Original question: {original_question}{irrelevant_context}\n\n"
+            f"Rewrite this question to get better search results. Return ONLY the rewritten question."
+        )
+        try:
+            cheap_result = await cheap_llm_call(
+                prompt=user_prompt,
+                system_prompt=(
+                    "You are a query optimization expert. "
+                    "Rewrite the question using more specific terms. "
+                    "Return ONLY the rewritten question, no explanations."
+                ),
+                component="rewriter",
+            )
+            cheap_result = cheap_result.strip()
+            if cheap_result and len(cheap_result) >= 5 and cheap_result != original_question:
+                logger.info(
+                    f"[REWRITE] Retry {new_retry_count} (cheap): "
+                    f'"{original_question[:50]}..." → "{cheap_result[:50]}..." '
+                    f"(strategy: {new_strategy})"
+                )
+                return {
+                    "question": cheap_result,
+                    "search_strategy": new_strategy,
+                    "retry_count": new_retry_count,
+                }
+        except Exception as e:
+            logger.warning("[REWRITE] Cheap LLM failed, falling back: %s", e)
+
+    # Rewrite query via LLM (Claude fallback)
     rewritten = await _rewrite_via_llm(
         original_question=original_question,
         llm=llm,
