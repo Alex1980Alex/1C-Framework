@@ -30,7 +30,7 @@
 | **3** | [51](PHASE_51_TASK_PIPELINE.md) | PHASE_51_TASK_PIPELINE.md | DONE | Task Master + Dev Pipeline |
 | **4** | [52](PHASE_52_SERENA_LSP.md) | PHASE_52_SERENA_LSP.md | DONE | Serena LSP Integration |
 | **4** | [53](PHASE_53_BSL_FINETUNING.md) | PHASE_53_BSL_FINETUNING.md | DONE | BSL Fine-tuning (Qwen2.5-Coder) |
-| **4** | [54](PHASE_54_INFRASTRUCTURE_TOOLS.md) | PHASE_54_INFRASTRUCTURE_TOOLS.md | TODO | Lazy MCP + Docker + AST Grep |
+| **4** | [54](PHASE_54_INFRASTRUCTURE_TOOLS.md) | PHASE_54_INFRASTRUCTURE_TOOLS.md | DONE | Lazy MCP + Docker + AST Grep |
 | **5** | [55](PHASE_55_INTEGRATION_CLEANUP.md) | PHASE_55_INTEGRATION_CLEANUP.md | TODO | E2E тесты, docs, cleanup |
 
 ## Аналитика
