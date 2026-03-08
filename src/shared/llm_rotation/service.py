@@ -101,12 +101,22 @@ class ProviderState:
 # Default provider configurations
 DEFAULT_PROVIDERS: List[ProviderConfig] = [
     ProviderConfig(
+        name="zai-glm5",
+        base_url="https://api.z.ai/api/anthropic",
+        api_key_env="ZAI_API_KEY",
+        default_model="glm-5",
+        models=["glm-5", "glm-4.6", "glm-4.5-air"],
+        format="anthropic",
+        priority=0,
+        rate_limit_rpm=30,
+    ),
+    ProviderConfig(
         name="zhipu",
         base_url="https://open.bigmodel.cn/api/paas/v4",
         api_key_env="ZHIPU_API_KEY",
         default_model="glm-4-flash",
         models=["glm-4-flash", "glm-4-plus"],
-        priority=0,
+        priority=1,
         rate_limit_rpm=60,
     ),
     ProviderConfig(
@@ -115,7 +125,7 @@ DEFAULT_PROVIDERS: List[ProviderConfig] = [
         api_key_env="GEMINI_API_KEY",
         default_model="gemini-2.0-flash",
         models=["gemini-2.0-flash", "gemini-1.5-flash"],
-        priority=1,
+        priority=2,
         rate_limit_rpm=15,
         daily_limit=1500,
     ),
@@ -125,7 +135,7 @@ DEFAULT_PROVIDERS: List[ProviderConfig] = [
         api_key_env="OPENROUTER_API_KEY",
         default_model="meta-llama/llama-3.3-70b-instruct:free",
         models=["meta-llama/llama-3.3-70b-instruct:free"],
-        priority=2,
+        priority=3,
     ),
     ProviderConfig(
         name="mistral",
@@ -133,7 +143,7 @@ DEFAULT_PROVIDERS: List[ProviderConfig] = [
         api_key_env="MISTRAL_API_KEY",
         default_model="mistral-small-latest",
         models=["mistral-small-latest"],
-        priority=3,
+        priority=4,
         rate_limit_rpm=60,
     ),
     ProviderConfig(
@@ -144,7 +154,7 @@ DEFAULT_PROVIDERS: List[ProviderConfig] = [
         models=["qwen2.5:7b", "llama3.1:8b"],
         format="ollama",
         requires_key=False,
-        priority=4,
+        priority=5,
     ),
     ProviderConfig(
         name="ollama-cloud",
@@ -154,7 +164,7 @@ DEFAULT_PROVIDERS: List[ProviderConfig] = [
         models=["qwen2.5:7b"],
         format="ollama",
         requires_key=False,
-        priority=5,
+        priority=6,
     ),
 ]
 
@@ -297,6 +307,68 @@ class LLMRotationService:
                 },
             }
 
+    async def _make_request_anthropic(
+        self,
+        state: ProviderState,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+    ) -> Dict[str, Any]:
+        """Make a request to Anthropic-compatible API (Z.AI with GLM-5)."""
+        session = await self._get_session()
+        url = f"{state.config.base_url}/v1/messages"
+        api_key = os.environ.get(state.config.api_key_env, "")
+
+        messages = [{"role": "user", "content": prompt}]
+
+        payload: Dict[str, Any] = {
+            "model": model or state.config.default_model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+        }
+
+        if system_prompt:
+            payload["system"] = system_prompt
+
+        if temperature != 1.0:
+            payload["temperature"] = temperature
+
+        # GLM-5 thinking mode
+        if (model or state.config.default_model) == "glm-5":
+            payload["thinking"] = {"type": "enabled", "budget_tokens": 10000}
+
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        }
+
+        async with session.post(url, json=payload, headers=headers) as resp:
+            if resp.status != 200:
+                text_resp = await resp.text()
+                raise RuntimeError(f"HTTP {resp.status}: {text_resp[:200]}")
+            data = await resp.json()
+
+        # Convert Anthropic response to OpenAI-like format
+        content_blocks = data.get("content", [])
+        text_parts = [b.get("text", "") for b in content_blocks if b.get("type") == "text"]
+        usage = data.get("usage", {})
+
+        return {
+            "choices": [{
+                "message": {"content": "
+".join(text_parts)},
+                "finish_reason": "stop",
+            }],
+            "model": data.get("model", ""),
+            "usage": {
+                "prompt_tokens": usage.get("input_tokens", 0),
+                "completion_tokens": usage.get("output_tokens", 0),
+            },
+        }
+
     async def complete(
         self,
         prompt: str,
@@ -334,7 +406,11 @@ class LLMRotationService:
             try:
                 start = time.monotonic()
 
-                if state.config.format == "ollama":
+                if state.config.format == "anthropic":
+                    data = await self._make_request_anthropic(
+                        state, prompt, system_prompt, model, temperature, max_tokens
+                    )
+                elif state.config.format == "ollama":
                     data = await self._make_request_ollama(
                         state, prompt, system_prompt, model, temperature, max_tokens
                     )
