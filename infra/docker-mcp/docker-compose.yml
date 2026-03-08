@@ -19,7 +19,7 @@ services:
     environment:
       - NODE_OPTIONS=--max-old-space-size=512
     volumes:
-      - D:/1C-Enterprise_Framework:/workspace:ro
+      - D:/1С-Framework:/workspace:ro
     networks:
       - mcp-pilot-network
     labels:
@@ -36,7 +36,7 @@ services:
     environment:
       - NODE_OPTIONS=--max-old-space-size=512
     volumes:
-      - D:/1C-Enterprise_Framework/data:/data:rw
+      - D:/1С-Framework/data:/data:rw
     networks:
       - mcp-pilot-network
     labels:
@@ -69,7 +69,7 @@ services:
       - NODE_OPTIONS=--max-old-space-size=512
     working_dir: /workspace
     volumes:
-      - D:/1C-Enterprise_Framework:/workspace:ro
+      - D:/1С-Framework:/workspace:ro
     networks:
       - mcp-pilot-network
     labels:
@@ -87,7 +87,7 @@ services:
       - NODE_OPTIONS=--max-old-space-size=512
       - MEMORY_FILE_PATH=/data/claude-memory.json
     volumes:
-      - D:/1C-Enterprise_Framework/data:/data:rw
+      - D:/1С-Framework/data:/data:rw
     networks:
       - mcp-pilot-network
     labels:
