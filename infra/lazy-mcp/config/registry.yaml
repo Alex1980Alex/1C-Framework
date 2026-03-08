@@ -281,9 +281,3 @@ categories:
         type: "npx"
         timeout: 60000
 
-  # ═══════════════════════════════════════════════════════════════════
-  # BRIDGES - MCP-to-API Bridges (для Z.AI интеграции)
-  # ═══════════════════════════════════════════════════════════════════
-  bridges:
-    description: "MCP-to-OpenAPI bridges для интеграции с внешними LLM (Z.AI, OpenAI)"
-    servers:
