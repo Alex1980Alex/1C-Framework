@@ -77,30 +77,30 @@ categories:
     description: "Системы памяти - сохранение контекста, история, knowledge graph"
     servers:
       unified-memory:
-        command: "D:/1C-Enterprise_Framework/unified-memory-mcp/.venv/Scripts/python.exe"
-        args: ["D:/1C-Enterprise_Framework/unified-memory-mcp/src/server.py"]
+        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.unified.mcp"]
+        cwd: "D:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
           QDRANT_URL: "http://localhost:6333"
-          GOOGLE_API_KEY: "AIzaSyAfduIFUzab5rFe1sMFqyfHjTR-9oSN78o"
-          GOOGLE_EMBEDDING_MODEL: "text-embedding-004"
-        description: "Unified Memory Orchestrator v2.2.0 - единый API для 4 memory систем (46+ tools)"
+        description: "Unified Memory Orchestrator - единый API для memory систем"
         timeout: 90000
 
       memory-ai:
-        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
-        args: ["D:/1C-Enterprise_Framework/ai-memory-system/mcp_local_scripts/memory_server_fixed.py"]
+        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.ai_memory.mcp"]
+        cwd: "D:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
         description: "AI Memory - важные сообщения с приоритетами"
         timeout: 60000
 
       conversation-memory:
-        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
-        args: ["D:/1C-Enterprise_Framework/bsl-semantic-search/mcp_local_scripts/memory_server_fixed.py"]
+        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.conversation_memory.mcp"]
+        cwd: "D:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
-          PYTHONPATH: "D:/1C-Enterprise_Framework/bsl-semantic-search/services"
         description: "Контекст разговоров и история сессий"
         timeout: 60000
 
@@ -108,14 +108,15 @@ categories:
         command: "npx"
         args: ["-y", "mcp-memory-libsql"]
         env:
-          LIBSQL_URL: "file:D:/1C-Enterprise_Framework/data/memory-libsql/memory.db"
+          LIBSQL_URL: "file:D:/1С-Framework/data/memory-libsql/memory.db"
         description: "Альтернативная память на LibSQL"
         type: "npx"
         timeout: 60000
 
       vector-memory-mcp:
-        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
-        args: ["D:/1C-Enterprise_Framework/vector-memory-mcp/server.py"]
+        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.vector_memory.mcp"]
+        cwd: "D:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
           QDRANT_URL: "http://localhost:6333"
