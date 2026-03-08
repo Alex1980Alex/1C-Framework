@@ -1,0 +1,203 @@
+@echo off
+chcp 65001 >nul
+setlocal EnableDelayedExpansion
+
+:: ============================================================
+:: Multi-Language индексация для семантического поиска
+:: Поддержка: BSL, JavaScript, TypeScript, Python, Markdown
+:: Использование:
+::   index-folder.bat "путь\к\папке"           Индексация по пути
+::   index-folder.bat "имя_проекта"            Индексация по имени проекта
+::   index-folder.bat --list                   Список проектов
+::   index-folder.bat "путь" --docs-only       Только 1c-docs-rag
+::   index-folder.bat "путь" --bsl-only        Только bsl-semantic-search
+::   index-folder.bat "путь" --full            Полная индексация (все файлы)
+::   index-folder.bat "путь" --force           Принудительная переиндексация
+::   index-folder.bat "путь" --languages js,py Указать языки
+::   index-folder.bat --help                   Справка
+:: ============================================================
+
+set SCRIPT_DIR=%~dp0
+set FRAMEWORK_ROOT=D:\1С-Framework
+
+:: Создаём папку logs если не существует
+if not exist "%FRAMEWORK_ROOT%\logs" mkdir "%FRAMEWORK_ROOT%\logs"
+set PROJECTS_ROOT=%FRAMEWORK_ROOT%\src\projects\configuration
+set SMART_SCRIPT=%SCRIPT_DIR%docs-mcp\smart_index_bsl.py
+
+:: Проверка аргументов
+if "%~1"=="" goto :USAGE
+if "%~1"=="--help" goto :USAGE
+if "%~1"=="-h" goto :USAGE
+if "%~1"=="--list" goto :LIST
+if "%~1"=="-l" goto :LIST
+
+:: Парсинг аргументов
+set "INPUT=%~1"
+set "MODE=both"
+set "BACKGROUND=0"
+set "FULL_INDEX=0"
+set "FORCE_INDEX=0"
+set "LANGUAGES=bsl,javascript,python,markdown"
+
+if "%~2"=="--docs-only" set "MODE=docs"
+if "%~2"=="--bsl-only" set "MODE=bsl"
+if "%~2"=="--background" set "BACKGROUND=1"
+if "%~2"=="--full" set "FULL_INDEX=1"
+if "%~2"=="--force" set "FORCE_INDEX=1"
+if "%~2"=="--languages" set "LANGUAGES=%~3"
+if "%~3"=="--background" set "BACKGROUND=1"
+if "%~3"=="--full" set "FULL_INDEX=1"
+if "%~3"=="--force" set "FORCE_INDEX=1"
+if "%~3"=="--languages" set "LANGUAGES=%~4"
+if "%~4"=="--full" set "FULL_INDEX=1"
+if "%~4"=="--force" set "FORCE_INDEX=1"
+if "%~4"=="--languages" set "LANGUAGES=%~5"
+if "%~5"=="--force" set "FORCE_INDEX=1"
+if "%~5"=="--languages" set "LANGUAGES=%~6"
+if "%~6"=="--languages" set "LANGUAGES=%~7"
+
+:: Определяем: путь или имя проекта?
+echo %INPUT% | findstr /C:"\" /C:":" >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    set "FOLDER_PATH=%INPUT%"
+) else (
+    :: Это имя проекта — ищем в projects/configuration
+    set "FOLDER_PATH=%PROJECTS_ROOT%\%INPUT%\src"
+    if not exist "!FOLDER_PATH!" (
+        set "FOLDER_PATH=%PROJECTS_ROOT%\%INPUT%"
+    )
+)
+
+:: Проверка существования папки
+if not exist "%FOLDER_PATH%" (
+    echo [ERROR] Папка не найдена: %FOLDER_PATH%
+    echo.
+    echo Возможно вы имели в виду проект? Используйте --list для списка.
+    goto :USAGE
+)
+
+echo.
+echo ╔══════════════════════════════════════════════════════════╗
+echo ║      MULTI-LANGUAGE ИНДЕКСАЦИЯ СЕМАНТИЧЕСКОГО ПОИСКА    ║
+echo ╚══════════════════════════════════════════════════════════╝
+echo.
+echo [INPUT]  Папка: %FOLDER_PATH%
+echo [LANG]   Языки: %LANGUAGES%
+echo [MODE]   Режим: %MODE%
+if "%FULL_INDEX%"=="1" echo [FULL]   Полная индексация (все файлы)
+if "%FORCE_INDEX%"=="1" echo [FORCE]  Принудительная переиндексация (игнорируем hash)
+
+:: Фоновый режим для больших проектов
+if "%BACKGROUND%"=="1" (
+    set "LOG_FILE=%FRAMEWORK_ROOT%\logs\index-%DATE:~-4%%DATE:~3,2%%DATE:~0,2%_%TIME:~0,2%%TIME:~3,2%.log"
+    echo [BACKGROUND] Запуск в фоновом режиме...
+    echo [LOG] Лог будет записан в: !LOG_FILE!
+    echo.
+    start /b cmd /c "%~f0" "%INPUT%" %MODE%-only ^> "!LOG_FILE!" 2^>^&1
+    echo [OK] Индексация запущена в фоне. Проверьте лог позже.
+    goto :END
+)
+echo.
+
+:: ============================================================
+:: 1. Индексация для 1c-docs-rag (документация + код)
+:: ============================================================
+if "%MODE%"=="bsl" goto :BSL_INDEX
+
+echo ────────────────────────────────────────────────────────────
+echo [1/2] 1c-docs-rag индексация (семантический поиск документации)
+echo ────────────────────────────────────────────────────────────
+echo.
+
+:: Остановка MCP сервера 1c-docs-rag (освобождаем БД)
+echo [MCP] Остановка 1c-docs-rag MCP сервера...
+wmic process where "commandline like '%%mcp_server.py%%'" delete >nul 2>&1
+timeout /t 2 /nobreak >nul
+echo [OK] MCP сервер остановлен
+
+if exist "%SMART_SCRIPT%" (
+    set "FULL_FLAG="
+    set "FORCE_FLAG="
+    if "%FULL_INDEX%"=="1" set "FULL_FLAG=--full"
+    if "%FORCE_INDEX%"=="1" set "FORCE_FLAG=--force"
+    python "%SMART_SCRIPT%" --path "%FOLDER_PATH%" --languages "%LANGUAGES%" !FULL_FLAG! !FORCE_FLAG!
+    if !ERRORLEVEL! EQU 0 (
+        echo [OK] 1c-docs-rag индексация завершена
+    ) else (
+        echo [WARN] 1c-docs-rag индексация завершена с предупреждениями
+    )
+) else (
+    echo [WARN] Скрипт не найден: %SMART_SCRIPT%
+)
+
+echo [INFO] MCP сервер 1c-docs-rag перезапустится автоматически при следующем вызове
+echo.
+
+if "%MODE%"=="docs" goto :DONE
+
+:BSL_INDEX
+:: ============================================================
+:: 2. Индексация для bsl-semantic-search (граф зависимостей)
+:: ============================================================
+echo ────────────────────────────────────────────────────────────
+echo [2/2] bsl-semantic-search индексация (граф зависимостей)
+echo ────────────────────────────────────────────────────────────
+echo.
+
+set BSL_SCRIPT=%FRAMEWORK_ROOT%\src\bsl\semantic_search\scripts\bsl_indexer_async.py
+if exist "%BSL_SCRIPT%" (
+    python "%BSL_SCRIPT%" "%FOLDER_PATH%" --output "%FRAMEWORK_ROOT%\data\bsl-index"
+    if !ERRORLEVEL! EQU 0 (
+        echo [OK] bsl-semantic-search индексация завершена
+    ) else (
+        echo [WARN] bsl-semantic-search индексация завершена с предупреждениями
+    )
+) else (
+    echo [INFO] BSL async indexer не найден: %BSL_SCRIPT%
+    echo        Используйте MCP: mcp__bsl-semantic-search__bsl_search
+)
+echo.
+
+:DONE
+echo ════════════════════════════════════════════════════════════
+echo [DONE] Индексация завершена!
+echo.
+echo Теперь доступен семантический поиск:
+echo   - mcp__bsl-semantic-search__bsl_search("запрос")
+echo   - mcp__bsl-semantic-search__bsl_stats()
+echo ════════════════════════════════════════════════════════════
+goto :END
+
+:LIST
+echo.
+echo Доступные проекты для индексации:
+echo ──────────────────────────────────
+python "%SMART_SCRIPT%" --list
+echo.
+echo Использование: index-folder.bat "имя_проекта"
+goto :END
+
+:USAGE
+echo.
+echo Использование:
+echo   index-folder.bat "путь\к\папке"                    Индексация по пути
+echo   index-folder.bat "имя_проекта"                     Индексация по имени проекта
+echo   index-folder.bat --list                            Список доступных проектов
+echo   index-folder.bat "путь" --docs-only                Только 1c-docs-rag
+echo   index-folder.bat "путь" --bsl-only                 Только bsl-semantic-search
+echo   index-folder.bat "путь" --background               Запустить в фоне
+echo   index-folder.bat "путь" --full                     Полная индексация (все файлы)
+echo   index-folder.bat "путь" --force                    Принудительная переиндексация
+echo   index-folder.bat "путь" --languages bsl,js,py      Указать языки
+echo   index-folder.bat --help                            Эта справка
+echo.
+echo Примеры:
+echo   index-folder.bat "260304_GKSTCPLK-2182"
+echo   index-folder.bat "260304_GKSTCPLK-2182" --full --force
+echo   index-folder.bat "D:\Projects\MyProject\src"
+echo.
+goto :END
+
+:END
+endlocal
