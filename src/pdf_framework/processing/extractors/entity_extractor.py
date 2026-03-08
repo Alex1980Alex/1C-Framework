@@ -101,26 +101,22 @@ class LLMEntityExtractor:
 
     async def _extract_impl(self, chunk: DocumentChunk, feedback: str = "") -> ExtractionResult:
         """Internal extraction logic."""
-        # Cheap LLM path for entity extraction
+        # Cheap LLM path for entity extraction (skip if retrying with feedback)
+        cheap_content: str | None = None
         if is_cheap_llm_enabled("entity_extractor") and not feedback:
             try:
-                content = await cheap_llm_call(
+                cheap_content = await cheap_llm_call(
                     prompt=_EXTRACTION_PROMPT.format(text=chunk.content),
                     system_prompt="You are an entity extraction system. Output only valid JSON.",
                     component="entity_extractor",
                 )
-                if content and content.strip():
-                    # Parse the cheap LLM response (same logic below)
-                    if "```json" in content:
-                        content = content.split("```json")[1].split("```")[0].strip()
-                    elif "```" in content:
-                        content = content.split("```")[1].split("```")[0].strip()
-                    data = json.loads(content)
-                    return self._build_result(chunk, data)
-            except (json.JSONDecodeError, Exception) as e:
+            except Exception as e:
                 logger.warning("[ENTITY] Cheap LLM failed for %s, falling back: %s", chunk.id[:12], e)
 
-        messages = [
+        if cheap_content and cheap_content.strip():
+            content = cheap_content
+        else:
+            messages = [
             SystemMessage(content="You are an entity extraction system. Output only valid JSON."),
             HumanMessage(content=_EXTRACTION_PROMPT.format(text=chunk.content)),
         ]
