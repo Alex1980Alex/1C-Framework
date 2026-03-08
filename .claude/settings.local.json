@@ -197,7 +197,8 @@
       "Bash(cp:*)",
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
       "Bash(python3:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(do echo:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

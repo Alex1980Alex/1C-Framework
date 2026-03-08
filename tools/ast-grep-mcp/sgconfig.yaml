@@ -1,0 +1,89 @@
+# AST-grep конфигурация для поддержки BSL через JavaScript парсер
+
+languageGlobs:
+  bsl:
+    - "**/*.bsl"
+    - "**/*.os"
+
+# Интеграция с JavaScript BSL парсером
+customLanguages:
+  bsl:
+    extensions: ["bsl", "os"]
+    expandoChar: "$"
+    # Используем JavaScript парсер вместо tree-sitter компиляции
+    libraryPath: "../tree-sitter-bsl/src/index.js"
+
+rules:
+  # Поиск процедур 1С - обновлены паттерны для реального синтаксиса
+  find-procedures:
+    id: find-1c-procedures
+    message: "Найдена процедура 1С"
+    language: bsl
+    rule:
+      pattern: "Процедура $NAME($$$)"
+
+  # Поиск функций 1С
+  find-functions:
+    id: find-1c-functions
+    message: "Найдена функция 1С"
+    language: bsl
+    rule:
+      pattern: "Функция $NAME($$$)"
+
+  # Поиск экспортных процедур
+  find-export-procedures:
+    id: find-1c-export-procedures
+    message: "Найдена экспортная процедура"
+    language: bsl
+    rule:
+      pattern: "Процедура $NAME($$$) Экспорт"
+
+  # Поиск экспортных функций
+  find-export-functions:
+    id: find-1c-export-functions
+    message: "Найдена экспортная функция"
+    language: bsl
+    rule:
+      pattern: "Функция $NAME($$$) Экспорт"
+
+  # Поиск переменных
+  find-variables:
+    id: find-1c-variables
+    message: "Найдена переменная"
+    language: bsl
+    rule:
+      pattern: "Перем $NAME"
+
+  # Поиск обработчиков событий форм
+  find-form-event-handlers:
+    id: find-1c-form-events
+    message: "Найден обработчик события формы"
+    language: bsl
+    rule:
+      any:
+        - pattern: "Процедура ПриСозданииНаСервере($$$)"
+        - pattern: "Процедура ПередЗаписью($$$)"
+        - pattern: "Процедура ПриЗаписи($$$)"
+        - pattern: "Процедура ПриОткрытии($$$)"
+        - pattern: "Процедура ПередЗакрытием($$$)"
+
+  # Поиск обработчиков команд
+  find-command-handlers:
+    id: find-1c-commands
+    message: "Найден обработчик команды"
+    language: bsl
+    rule:
+      any:
+        - pattern: "Процедура $NAMEВыполнить($$$)"
+        - pattern: "Процедура $NAMEНажатие($$$)"
+
+  # Поиск работы с запросами
+  find-query-usage:
+    id: find-1c-queries
+    message: "Найдено использование запросов"
+    language: bsl
+    rule:
+      any:
+        - pattern: "Новый Запрос($$$)"
+        - pattern: "Запрос.Текст = $$$"
+        - pattern: "Запрос.Выполнить($$$)"

@@ -1,0 +1,21 @@
+# Dockerfile for memory MCP server
+FROM node:18-alpine
+
+# Install MCP server globally
+RUN npm install -g @modelcontextprotocol/server-memory
+
+# Add global node modules to PATH
+ENV PATH=/usr/local/bin:/usr/local/sbin/:$PATH
+
+# Set working directory
+WORKDIR /data
+
+# Use npx to run globally installed package
+CMD ["npx", "-y", "@modelcontextprotocol/server-memory"]
+
+# Environment
+ENV MEMORY_FILE_PATH=/data/claude-memory.json
+
+# Labels
+LABEL mcp.server="memory"
+LABEL mcp.description="Basic JSON storage"
