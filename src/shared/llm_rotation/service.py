@@ -36,7 +36,7 @@ class ProviderConfig:
     api_key_env: str
     default_model: str
     models: List[str] = field(default_factory=list)
-    format: str = "openai"  # "openai" | "ollama" | "gemini"
+    format: str = "openai"  # "openai" | "ollama" | "anthropic"
     requires_key: bool = True
     daily_limit: Optional[int] = None
     rate_limit_rpm: Optional[int] = None
