@@ -184,14 +184,13 @@ categories:
 
       reasoner:
         command: "node"
-        args: ["D:/1C-Enterprise_Framework/mcp-reasoner/dist/index.js"]
-        cwd: "D:/1C-Enterprise_Framework/mcp-reasoner"
-        # NOTE: Not yet migrated — still references source project
+        args: ["dist/index.js"]
+        cwd: "D:/1С-Framework/tools/mcp-reasoner"
         env:
           NODE_ENV: "production"
           NODE_OPTIONS: "--max-old-space-size=4096"
-        description: "Reasoner - логический вывод с Beam Search и MCTS"
-        timeout: 30000
+        description: "Reasoner - Beam Search, MCTS + 3 BSL-стратегии (архитектура, подсистемы, документы)"
+        timeout: 60000
 
   # ═══════════════════════════════════════════════════════════════════
   # WEB - Веб поиск и HTTP (ТОЛЬКО Native NPX)
