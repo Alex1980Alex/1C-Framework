@@ -32,6 +32,7 @@
 | **4** | [53](PHASE_53_BSL_FINETUNING.md) | PHASE_53_BSL_FINETUNING.md | DONE | BSL Fine-tuning (Qwen2.5-Coder) |
 | **4** | [54](PHASE_54_INFRASTRUCTURE_TOOLS.md) | PHASE_54_INFRASTRUCTURE_TOOLS.md | DONE | Lazy MCP + Docker + AST Grep |
 | **5** | [55](PHASE_55_INTEGRATION_CLEANUP.md) | PHASE_55_INTEGRATION_CLEANUP.md | DONE | E2E тесты, docs, cleanup |
+| **5** | [56](PHASE_56_1C_DOCS_RAG.md) | PHASE_56_1C_DOCS_RAG.md | DONE | 1C-Docs-RAG MCP migration |
 
 ## Аналитика
 
