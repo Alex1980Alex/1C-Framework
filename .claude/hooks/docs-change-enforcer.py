@@ -82,6 +82,7 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/utils/",           "01_ОБЗОР",              "pdf-knowledge"),
     # BSL (1C Enterprise) modules
     ("src/bsl/",                           "06_ИНТЕРФЕЙСЫ",         "bsl-development"),
+    ("src/shared/llm_rotation/",           None,                    "llm-rotation"),
     ("src/shared/",                        "01_ОБЗОР",              "pdf-knowledge"),
     ("src/memory/",                        "01_ОБЗОР",              "pdf-knowledge"),
 ]
@@ -318,11 +319,14 @@ def find_stale_domains(session_files: set) -> list:
         for code_prefix, doc_subdir, skill in CODE_TO_DOMAIN:
             if fp_lower.startswith(code_prefix.lower()):
                 # Check if this domain's docs were also updated in session
-                doc_dir_prefix = f"{DOCS_BASE}/{doc_subdir}/".lower()
-                has_doc_update = any(
-                    d.replace("\\", "/").lower().startswith(doc_dir_prefix)
-                    for d in doc_files
-                )
+                if doc_subdir is not None:
+                    doc_dir_prefix = f"{DOCS_BASE}/{doc_subdir}/".lower()
+                    has_doc_update = any(
+                        d.replace("\\", "/").lower().startswith(doc_dir_prefix)
+                        for d in doc_files
+                    )
+                else:
+                    has_doc_update = True  # No docs required for this domain
 
                 # Also check if the matching skill was updated
                 skill_prefix = f".claude/skills/{skill}/".lower()
