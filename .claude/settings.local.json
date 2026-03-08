@@ -198,7 +198,8 @@
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
       "Bash(python3:*)",
       "Bash(rm:*)",
-      "Bash(do echo:*)"
+      "Bash(do echo:*)",
+      "Bash(\"D:/1С-Framework/docs/architecture/bsl-integration.md\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
