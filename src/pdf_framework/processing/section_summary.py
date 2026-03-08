@@ -17,6 +17,8 @@ from typing import Any
 
 from anthropic import Anthropic
 
+from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
+
 logger = logging.getLogger(__name__)
 
 
