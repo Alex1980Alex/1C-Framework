@@ -287,27 +287,3 @@ categories:
   bridges:
     description: "MCP-to-OpenAPI bridges для интеграции с внешними LLM (Z.AI, OpenAI)"
     servers:
-      mcpo:
-        command: "mcpo"
-        args: ["--config", "D:/1C-Enterprise_Framework/.claude/config/mcpo-config.json", "--port", "8765"]
-        # NOTE: Not yet migrated — still references source project
-        description: "MCPO (3.9k⭐) - MCP-to-OpenAPI proxy для Z.AI Native Tools интеграции"
-        type: "bridge"
-        timeout: 30000
-        endpoints:
-          base_url: "http://localhost:8765"
-          filesystem: "/filesystem"
-          ripgrep: "/ripgrep"
-        status: "production-ready"
-        notes: |
-          Тестирование 2026-01-17:
-          ✅ filesystem/read_text_file - РАБОТАЕТ
-          ✅ filesystem/list_directory - РАБОТАЕТ
-          ✅ ripgrep/list-files - РАБОТАЕТ (исправлено!)
-          ✅ ripgrep/search - РАБОТАЕТ (исправлено!)
-
-          Исправление ripgrep (2026-01-17):
-          - Создан mcp-ripgrep-fixed с Windows-совместимым escapeShellArg
-          - Путь: tools/mcp-ripgrep-fixed/
-          - Проблема: оригинал использовал одинарные кавычки (Unix-only)
-          - Решение: двойные кавычки для Windows cmd.exe
