@@ -214,6 +214,19 @@ class QueryClassifier:
         """Classify query using LLM."""
         prompt = self._get_classification_prompt(query)
 
+        # Cheap LLM path
+        if is_cheap_llm_enabled("search_classifier"):
+            try:
+                result_text = await cheap_llm_call(
+                    prompt=prompt,
+                    system_prompt=self._get_system_prompt(),
+                    component="search_classifier",
+                )
+                if result_text:
+                    return self._parse_classification(result_text.strip().lower())
+            except Exception as e:
+                logger.warning("[CLASSIFIER] Cheap LLM failed, falling back: %s", e)
+
         messages = [
             SystemMessage(content=self._get_system_prompt()),
             HumanMessage(content=prompt),
