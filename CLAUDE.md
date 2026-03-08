@@ -120,6 +120,18 @@ Dashboard: `scripts/hook-dashboard.py` (CLI) + `scripts/skill-enforcement-dashbo
 Monitoring: `src/pdf_framework/observability/hook_metrics_db.py` (SQLite) + `tracer.py` (OTLP) + `/metrics/html` (unified dashboard).
 Migration: `scripts/skill-migration-advisor.py` (pattern coverage analysis).
 
+## BSL Development (1C Enterprise)
+
+- **BSL код**: `src/bsl/` (semantic_search, mcp_server, mcp_integration, sonar, finetuning)
+- **Инструменты**: `tools/auto-documenter/` (Node.js), `tools/bsl-debugger/` (Node.js), `tools/ast-grep-mcp/`, `tools/bsl-semantic-diff/`
+- **MCP серверы**: bsl-semantic-search, bsl-platform-context, auto-documenter, bsl-debugger, ast-grep-mcp, bsl-semantic-diff
+- **Memory**: `src/memory/` (ai_memory, vector_memory, skill_learning, orchestrator)
+- **LLM Rotation**: `src/shared/llm_rotation/` (5 провайдеров, fallback)
+- **Профили**: `.mcp/pdf.json`, `.mcp/bsl.json`, `.mcp/full.json`, `.mcp/lazy-mcp.json`
+- **Lazy MCP**: `infra/lazy-mcp/` (proxy, 11 категорий, 27 on-demand серверов)
+- **Qdrant коллекции**: `bsl_code_v2` (768d nomic), `ai_memory` (768d), `learned_patterns` (768d)
+- **BSL hook**: `bsl-tool-router.py` — routes BSL/1C queries to bsl-development skill
+
 ## Research
 
 При вопросах про 1С: документация 8.3.27 — первоисточник. Внешние источники (its.1c.ru, infostart.ru) — только дополнение. Каждый факт с атрибуцией. Протокол: skill `1c-doc-research`.
