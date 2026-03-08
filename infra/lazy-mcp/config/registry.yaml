@@ -256,24 +256,6 @@ categories:
         timeout: 30000
 
   # ═══════════════════════════════════════════════════════════════════
-  # ROUTING - Интеллектуальная маршрутизация LLM
-  # ═══════════════════════════════════════════════════════════════════
-  routing:
-    description: "Интеллектуальная маршрутизация между Z.AI и Claude для оптимизации затрат"
-    servers:
-      mcp-llm-router:
-        command: "python"
-        args: ["D:/1C-Enterprise_Framework/scripts/mcp/zai-hooks-proxy/router_server.py"]
-        # NOTE: Not yet migrated — still references source project
-        env:
-          PYTHONIOENCODING: "utf-8"
-          ZAI_API_KEY: "96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9"
-          ZAI_BASE_URL: "https://api.z.ai/api/anthropic"
-          ZAI_MODEL: "glm-5"
-        description: "MCP-LLM-Router: интеллектуальная маршрутизация задач между Z.AI (60%) и Claude (15%), гибридные сценарии (25%)"
-        timeout: 120000
-
-  # ═══════════════════════════════════════════════════════════════════
   # BROWSER - Браузерная автоматизация
   # ═══════════════════════════════════════════════════════════════════
   browser:
