@@ -17,6 +17,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.schemas.entities import Entity, Relation
+from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
 
