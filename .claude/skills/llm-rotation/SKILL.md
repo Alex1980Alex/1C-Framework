@@ -25,12 +25,13 @@ ZAIProxy (HTTP server, port 8000)
 
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
-| 0 | zhipu | glm-4-flash | openai | Yes |
-| 1 | gemini | gemini-2.0-flash | openai | Yes |
-| 2 | openrouter | llama-3.3-70b:free | openai | Yes |
-| 3 | mistral | mistral-small-latest | openai | Yes |
-| 4 | ollama-local | qwen2.5:7b | ollama | No |
-| 5 | ollama-cloud | qwen2.5:7b | ollama | No |
+| 0 | **zai-glm5** | **glm-5** | **anthropic** | Yes (ZAI_API_KEY) |
+| 1 | zhipu | glm-4-flash | openai | Yes |
+| 2 | gemini | gemini-2.0-flash | openai | Yes |
+| 3 | openrouter | llama-3.3-70b:free | openai | Yes |
+| 4 | mistral | mistral-small-latest | openai | Yes |
+| 5 | ollama-local | qwen2.5:7b | ollama | No |
+| 6 | ollama-cloud | qwen2.5:7b | ollama | No |
 
 ## Health States
 
@@ -48,7 +49,7 @@ ZAIProxy (HTTP server, port 8000)
 ## Configuration
 
 ```env
-LLM_ROTATION_PRIMARY_PROVIDER=zhipu
+LLM_ROTATION_PRIMARY_PROVIDER=zai-glm5
 LLM_ROTATION_MAX_RETRIES=3
 LLM_ROTATION_TIMEOUT=30
 LLM_ROTATION_COOLDOWN_SECONDS=300
@@ -99,4 +100,6 @@ Registered in `.mcp.json` as `llm-rotation` server.
 - `providers=[]` (empty list) must use `if providers is None` check, not `or` (empty list is falsy)
 - Z.AI proxy requires `ZAI_API_KEY` env var
 - GLM-5 thinking mode adds `budget_tokens=10000` automatically
+- Z.AI uses Anthropic format (x-api-key header, /v1/messages endpoint)
+- `_make_request_anthropic()` handles Anthropic format natively (no proxy needed)
 - Ollama providers don't need API keys but require running Ollama instance
