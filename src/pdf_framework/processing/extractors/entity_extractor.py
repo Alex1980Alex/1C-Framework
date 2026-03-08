@@ -113,7 +113,7 @@ class LLMEntityExtractor:
             except Exception as e:
                 logger.warning("[ENTITY] Cheap LLM failed for %s, falling back: %s", chunk.id[:12], e)
 
-        if cheap_content and cheap_content.strip():
+        if cheap_content and len(cheap_content.strip()) >= 10:
             content = cheap_content
         else:
             messages = [

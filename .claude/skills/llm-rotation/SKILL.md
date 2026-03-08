@@ -58,12 +58,52 @@ LLM_ROTATION_RATE_LIMIT_COOLDOWN=60
 
 API keys via standard env vars: `ZHIPU_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `MISTRAL_API_KEY`.
 
+## CheapLLM Adapter
+
+Bridge between LLM Rotation and framework components. Cheap LLM first, falls back to Claude on failure.
+
+### Integrated Components
+
+| Component | Cat | max_tokens | File |
+|-----------|-----|------------|------|
+| grader | 1 | 50 | `agents/rag/nodes/grader.py` |
+| hallucination_checker | 1 | 100 | `agents/rag/nodes/hallucination_checker.py` |
+| rewriter | 1 | 200 | `agents/rag/nodes/rewriter.py` |
+| query_expansion | 1 | 300 | `search/query_expansion.py` |
+| hyde | 1 | 512 | `search/hyde.py` |
+| search_classifier | 1 | 100 | `search/routing/classifier.py` |
+| section_summary | 2 | 300 | `processing/section_summary.py` |
+| context_generator | 2 | 200 | `processing/context_generator.py` |
+| entity_extractor | 2 | 4096 | `processing/extractors/entity_extractor.py` |
+| community_summarizer | 2 | 1024 | `graph_store/summarizer.py` |
+
+Category 1 enabled by default. Category 2 opt-in via `LLM_ROTATION_COMPONENTS` env.
+
+### Quality Criteria (`QUALITY_CRITERIA` in adapter.py)
+
+| Metric | Components |
+|--------|-----------|
+| exact_match | grader (yes/no), hallucination_checker (grounded/not_grounded) |
+| different_from_input | rewriter |
+| valid_json | entity_extractor |
+| valid_classification | search_classifier |
+| min_length | hyde (30), section_summary (20), context_generator (10), community_summarizer (30) |
+
+### Auto-Discovery
+
+`discover_unregistered_components()` scans `src/` for ChatAnthropic/Anthropic not in COMPONENT_REGISTRY.
+
+### Metrics
+
+JSONL: `data/llm-rotation-metrics.jsonl` (ts, component, provider, response_time, success, fallback, text_len).
+
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | `src/shared/llm_rotation/config.py` | Pydantic-settings config |
 | `src/shared/llm_rotation/service.py` | Core service + providers |
+| `src/shared/llm_rotation/adapter.py` | CheapLLM adapter + quality + auto-discovery |
 | `src/shared/llm_rotation/zai_proxy.py` | Z.AI OpenAI->Anthropic proxy |
 | `src/shared/llm_rotation/mcp.py` | MCP server (5 tools) |
 | `tests/integration/test_llm_rotation.py` | 33 integration tests |
