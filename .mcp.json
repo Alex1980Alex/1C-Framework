@@ -34,7 +34,7 @@
       "env": {
         "NODE_ENV": "production"
       },
-      "timeout": 60000
+      "timeout": 120000
     },
     "bsl-platform-context": {
       "command": "java",
