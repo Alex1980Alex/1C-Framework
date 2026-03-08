@@ -99,7 +99,7 @@ Registered in `.mcp.json` as `llm-rotation` server.
 
 - `providers=[]` (empty list) must use `if providers is None` check, not `or` (empty list is falsy)
 - Z.AI proxy requires `ZAI_API_KEY` env var
-- GLM-5 thinking mode adds `budget_tokens=10000` automatically
+- GLM-5 thinking mode is **disabled** — it consumes output token budget, returning empty text for most tasks. Tested: 0/5 pass with thinking ON, 5/5 pass with thinking OFF
 - Z.AI uses Anthropic format (x-api-key header, /v1/messages endpoint)
 - `_make_request_anthropic()` handles Anthropic format natively (no proxy needed)
 - Ollama providers don't need API keys but require running Ollama instance
