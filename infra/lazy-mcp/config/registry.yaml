@@ -273,6 +273,7 @@ categories:
       mcp-llm-router:
         command: "python"
         args: ["D:/1C-Enterprise_Framework/scripts/mcp/zai-hooks-proxy/router_server.py"]
+        # NOTE: Not yet migrated — still references source project
         env:
           PYTHONIOENCODING: "utf-8"
           ZAI_API_KEY: "96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9"
