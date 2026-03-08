@@ -46,11 +46,11 @@ categories:
 
       bsl-semantic-diff:
         command: "python"
-        args: ["D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff/mcp_server.py"]
-        cwd: "D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff"
+        args: ["D:/1С-Framework/tools/bsl-semantic-diff/mcp_server.py"]
+        cwd: "D:/1С-Framework/tools/bsl-semantic-diff"
         env:
           PYTHONIOENCODING: "utf-8"
-          PYTHONPATH: "D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff"
+          PYTHONPATH: "D:/1С-Framework/tools/bsl-semantic-diff"
         description: "BSL Semantic Diff - семантическое сравнение BSL кода"
         timeout: 30000
 
