@@ -125,11 +125,12 @@ SKIP_PATTERNS = [
     "code-skill-patterns.json",
     # CI/CD workflows (documented in CLAUDE.md Skill Router Eval)
     ".github/",
-    # MCP configs, tooling, docker (infrastructure, not product code)
+    # MCP configs, tooling, docker, infra (infrastructure, not product code)
     ".mcp/",
     ".mcp.json",
     "tools/",
     "docker/",
+    "infra/",
     "pyproject.toml",
     ".env.example",
     "mcp-server.log",
