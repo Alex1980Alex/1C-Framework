@@ -164,6 +164,19 @@ class QueryExpander:
 
     async def expand_hyde(self, query: str) -> str:
         """Generate a hypothetical document for HyDE embedding (Ralph Wiggum)."""
+        # Cheap LLM path
+        if is_cheap_llm_enabled("hyde"):
+            try:
+                result = await cheap_llm_call(
+                    prompt=_HYDE_PROMPT.format(query=query),
+                    system_prompt="You are a knowledgeable assistant.",
+                    component="hyde",
+                )
+                if result and len(result.strip()) >= 30:
+                    return result.strip()
+            except Exception as e:
+                logger.warning("[HyDE] Cheap LLM failed, falling back: %s", e)
+
         base_messages = [
             SystemMessage(content="You are a knowledgeable assistant."),
             HumanMessage(content=_HYDE_PROMPT.format(query=query)),
