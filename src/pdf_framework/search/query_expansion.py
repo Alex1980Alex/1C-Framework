@@ -78,6 +78,24 @@ class QueryExpander:
 
     async def expand_llm(self, query: str, n: int = 3) -> list[str]:
         """Generate N alternative query phrasings via LLM (Ralph Wiggum)."""
+        # Cheap LLM path
+        if is_cheap_llm_enabled("query_expansion"):
+            try:
+                result = await cheap_llm_call(
+                    prompt=_EXPANSION_PROMPT.format(query=query, n=n),
+                    system_prompt="You are a search query expansion system.",
+                    component="query_expansion",
+                )
+                if result:
+                    alternatives = [
+                        line.strip() for line in result.strip().split("\n")
+                        if line.strip() and len(line.strip()) > 3
+                    ][:n]
+                    if alternatives:
+                        return [query] + alternatives
+            except Exception as e:
+                logger.warning("[EXPAND] Cheap LLM failed, falling back: %s", e)
+
         base_messages = [
             SystemMessage(content="You are a search query expansion system."),
             HumanMessage(content=_EXPANSION_PROMPT.format(query=query, n=n)),
