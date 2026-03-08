@@ -187,6 +187,24 @@ class ContextGenerator:
         doc_excerpt = document.raw_text[:2000] if document.raw_text else ""
         title = document.metadata.title or document.source_path
 
+        # Cheap LLM path
+        if is_cheap_llm_enabled("context_generator"):
+            try:
+                prompt = _CONTEXT_PROMPT.format(
+                    title=title,
+                    doc_excerpt=doc_excerpt,
+                    chunk_text=chunk.content[:1000],
+                )
+                result = await cheap_llm_call(
+                    prompt=prompt,
+                    system_prompt="You generate brief context summaries for document chunks.",
+                    component="context_generator",
+                )
+                if result and len(result.strip()) >= 10:
+                    return result.strip()
+            except Exception as e:
+                logger.warning("[CONTEXT] Cheap LLM failed, falling back: %s", e)
+
         messages = self._build_messages(chunk, title, doc_excerpt, use_prompt_caching)
 
         # Ralph Wiggum: self-correcting retry for context generation
