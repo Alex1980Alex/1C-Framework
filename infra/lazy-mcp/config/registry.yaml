@@ -11,8 +11,8 @@ categories:
     description: "Инструменты разработки 1С:Предприятие - анализ BSL, API платформы, семантический поиск"
     servers:
       ast-grep-mcp:
-        command: "D:/1C-Enterprise_Framework/ast-grep-mcp/.venv/Scripts/python.exe"
-        args: ["D:/1C-Enterprise_Framework/ast-grep-mcp/main.py"]
+        command: "D:/1С-Framework/tools/ast-grep-mcp/.venv/Scripts/python.exe"
+        args: ["D:/1С-Framework/tools/ast-grep-mcp/main.py"]
         env:
           PYTHONIOENCODING: "utf-8"
           PYTHONUTF8: "1"
