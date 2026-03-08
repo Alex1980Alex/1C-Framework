@@ -8,7 +8,7 @@
     },
     "auto-documenter": {
       "command": "node",
-      "args": ["mcp-start.js"],
+      "args": ["D:\\1С-Framework\\tools\\auto-documenter\\mcp-start.js"],
       "cwd": "D:\\1С-Framework\\tools\\auto-documenter",
       "env": {
         "NODE_OPTIONS": "--max-old-space-size=4096",
