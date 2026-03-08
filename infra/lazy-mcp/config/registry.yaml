@@ -317,6 +317,7 @@ categories:
       mcpo:
         command: "mcpo"
         args: ["--config", "D:/1C-Enterprise_Framework/.claude/config/mcpo-config.json", "--port", "8765"]
+        # NOTE: Not yet migrated — still references source project
         description: "MCPO (3.9k⭐) - MCP-to-OpenAPI proxy для Z.AI Native Tools интеграции"
         type: "bridge"
         timeout: 30000
