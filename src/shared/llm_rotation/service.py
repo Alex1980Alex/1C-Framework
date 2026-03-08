@@ -335,12 +335,10 @@ class LLMRotationService:
         if temperature != 1.0:
             payload["temperature"] = temperature
 
-        # GLM-5 thinking mode — only for complex tasks (>1024 max_tokens)
-        # Short tasks (grading, classification) fail: thinking budget eats all output tokens
-        # Budget proportional to max_tokens: min(10000, max_tokens * 3) keeps ratio sane
-        if (model or state.config.default_model) == "glm-5" and max_tokens > 1024:
-            budget = min(10000, max_tokens * 3)
-            payload["thinking"] = {"type": "enabled", "budget_tokens": budget}
+        # GLM-5 thinking mode — disabled by default
+        # GLM-5 thinking consumes output token budget, leaving no room for actual text
+        # Only enable explicitly via thinking=True parameter if caller needs it
+        # See: codegen test failure — budget_tokens eats all max_tokens
 
         headers = {
             "Content-Type": "application/json",
