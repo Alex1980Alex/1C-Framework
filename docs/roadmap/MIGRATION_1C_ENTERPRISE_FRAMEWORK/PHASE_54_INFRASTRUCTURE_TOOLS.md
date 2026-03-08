@@ -127,4 +127,4 @@ cp -r D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff tools/bsl-semantic-di
 - [ ] `tools/bsl-semantic-diff/` — BSL Semantic Diff
 - [ ] Docker конфигурация обновлена
 - [ ] Lazy MCP proxy запускается и проксирует запросы
-- [ ] Git commit: `feat: Phase 54 — Infrastructure Tools migration`
+- [x] Git commit: `feat: Phase 54 — Infrastructure Tools migration`
