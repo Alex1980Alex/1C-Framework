@@ -38,7 +38,7 @@ categories:
 
       bsl-debugger:
         command: "node"
-        args: ["D:/1C-Enterprise_Framework/bsl-debugger/dist/index.js"]
+        args: ["D:/1С-Framework/tools/bsl-debugger/dist/index.js"]
         env:
           NODE_ENV: "production"
         description: "Отладка BSL кода - 10 инструментов отладки"
