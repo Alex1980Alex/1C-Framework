@@ -232,7 +232,7 @@ categories:
 
       filesystem-extended:
         command: "npx"
-        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1C-Enterprise_Framework"]
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1С-Framework"]
         description: "Filesystem operations (Native NPX)"
         type: "npx"
         timeout: 30000
