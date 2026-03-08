@@ -236,14 +236,6 @@ categories:
         type: "npx"
         timeout: 30000
 
-      clipboard:
-        command: "node"
-        args: ["D:/1C-Enterprise_Framework/mcp-clipboard-server/index.js"]
-        cwd: "D:/1C-Enterprise_Framework/mcp-clipboard-server"
-        # NOTE: Not yet migrated — still references source project
-        description: "Работа с буфером обмена - текст, изображения"
-        timeout: 30000
-
       slack:
         command: "npx"
         args: ["-y", "@modelcontextprotocol/server-slack"]
