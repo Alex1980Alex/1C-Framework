@@ -153,7 +153,17 @@
         "отладка BSL",
         "debug 1С",
         "semantic search BSL",
-        "автодокументация BSL"
+        "автодокументация BSL",
+        "mcp-reasoner",
+        "reasoning BSL",
+        "архитектура модуля",
+        "анализ подсистем",
+        "паттерны документов",
+        "bsl_architecture",
+        "bsl_document_patterns",
+        "bsl_subsystem_analysis",
+        "God Object 1С",
+        "SOLID 1С"
       ],
       "weighted_keywords": {
         "bsl-semantic-search": 5,
@@ -166,7 +176,12 @@
         "функция": 2,
         "модуль": 2,
         "bsl код": 4,
-        "1с код": 3
+        "1с код": 3,
+        "mcp-reasoner": 5,
+        "bsl_architecture": 5,
+        "bsl_document_patterns": 5,
+        "bsl_subsystem_analysis": 5,
+        "архитектура модуля": 4
       },
       "utterances": [
         "найди похожий код в базе BSL",
@@ -176,7 +191,10 @@
         "проанализируй BSL код",
         "найди символы в модуле",
         "search for similar BSL code",
-        "debug 1C procedure"
+        "debug 1C procedure",
+        "проанализируй архитектуру модуля 1С",
+        "проверь паттерны проведения документа",
+        "анализ зависимостей подсистем"
       ],
       "skills": [
         "bsl-development"

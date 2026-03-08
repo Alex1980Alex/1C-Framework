@@ -46,9 +46,17 @@ def main() -> None:
     result = {"decision": "approve"}
 
     if bsl_signals:
+        # Determine recommended reasoner strategy based on context
+        context_text = (file_path + " " + command + " " + pattern).lower()
+        strategy_hint = "bsl_architecture"
+        if any(w in context_text for w in ["проведен", "движен", "регистр", "документ", "posting"]):
+            strategy_hint = "bsl_document_patterns"
+        elif any(w in context_text for w in ["подсистем", "rbac", "rls", "интеграц", "зависимост"]):
+            strategy_hint = "bsl_subsystem_analysis"
+
         result["message"] = (
             f"[BSL-ROUTER] {', '.join(bsl_signals)}. "
-            "Доступные инструменты: "
+            f"ОБЯЗАТЕЛЬНО: mcp__reasoner (strategyType='{strategy_hint}'), "
             "mcp__bsl-semantic-search (поиск кода), "
             "mcp__auto-documenter (документация), "
             "mcp__bsl-debugger (отладка), "
