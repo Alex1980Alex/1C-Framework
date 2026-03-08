@@ -133,8 +133,8 @@ async def cheap_llm_call(
         result = await service.complete(
             prompt=prompt,
             system_prompt=system_prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
+            temperature=resolved_temperature,
+            max_tokens=resolved_max_tokens,
         )
         elapsed = time.time() - t0
         text = result.get("text", "")
