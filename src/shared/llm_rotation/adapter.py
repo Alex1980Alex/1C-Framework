@@ -96,8 +96,8 @@ def _log_metric(component: str, provider: str, response_time: float,
         }
         with open(_METRICS_PATH, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except Exception:
-        pass  # metrics are best-effort
+    except Exception as exc:
+        logger.debug("[CHEAP-LLM] Metrics write failed: %s", exc)
 
 
 async def cheap_llm_call(
