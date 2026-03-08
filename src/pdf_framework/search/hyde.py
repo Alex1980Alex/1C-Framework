@@ -67,6 +67,23 @@ class HyDEGenerator:
         Returns:
             Hypothetical answer passage
         """
+        from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
+
+        # Cheap LLM path
+        if is_cheap_llm_enabled("hyde"):
+            try:
+                prompt = self._config.prompt_template.format(query=query)
+                result = await cheap_llm_call(
+                    prompt=prompt,
+                    system_prompt="You are a knowledgeable assistant writing reference document passages.",
+                    component="hyde",
+                )
+                if result and len(result.strip()) >= 30:
+                    logger.info(f"[HyDE] Generated hypothetical (cheap, {len(result.strip())} chars)")
+                    return result.strip()
+            except Exception as e:
+                logger.warning("[HyDE] Cheap LLM failed, falling back: %s", e)
+
         try:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
