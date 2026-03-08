@@ -358,8 +358,7 @@ class LLMRotationService:
 
         return {
             "choices": [{
-                "message": {"content": "
-".join(text_parts)},
+                "message": {"content": "\n".join(text_parts)},
                 "finish_reason": "stop",
             }],
             "model": data.get("model", ""),
