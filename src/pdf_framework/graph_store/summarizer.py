@@ -98,6 +98,26 @@ class CommunitySummarizer:
         # Build prompt
         prompt = self._build_summary_prompt(entities, relations, community_id, level)
 
+        # Cheap LLM path for community summarization
+        if is_cheap_llm_enabled("community_summarizer"):
+            try:
+                cheap_result = await cheap_llm_call(
+                    prompt=prompt,
+                    system_prompt=self._get_system_prompt(),
+                    component="community_summarizer",
+                )
+                if cheap_result and len(cheap_result.strip()) >= 30:
+                    formatted = f"[Community {community_id} (level {level})] {cheap_result.strip()}"
+                    self._summary_cache[cache_key] = formatted
+                    logger.info(
+                        "[SUMMARY] Generated summary for community %d via cheap LLM "
+                        "(%d entities, %d relations)",
+                        community_id, len(entities), len(relations),
+                    )
+                    return formatted
+            except Exception as e:
+                logger.warning("[SUMMARY] Cheap LLM failed for community %d, falling back: %s", community_id, e)
+
         messages = [
             SystemMessage(content=self._get_system_prompt()),
             HumanMessage(content=prompt),
