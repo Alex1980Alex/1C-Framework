@@ -335,10 +335,8 @@ class LLMRotationService:
         if temperature != 1.0:
             payload["temperature"] = temperature
 
-        # GLM-5 thinking mode — disabled by default
-        # GLM-5 thinking consumes output token budget, leaving no room for actual text
-        # Only enable explicitly via thinking=True parameter if caller needs it
-        # See: codegen test failure — budget_tokens eats all max_tokens
+        # GLM-5 thinking mode — disabled (eats output token budget, returns empty text)
+        # If needed, add explicit thinking parameter to method signature
 
         headers = {
             "Content-Type": "application/json",
