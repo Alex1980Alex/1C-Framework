@@ -28,8 +28,9 @@ categories:
         timeout: 30000
 
       bsl-semantic-search:
-        command: "python"
-        args: ["D:/1C-Enterprise_Framework/bsl-semantic-search/mcp_server/server_fastmcp.py"]
+        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.bsl.semantic_search.mcp"]
+        cwd: "D:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
         description: "Семантический поиск по BSL коду конфигураций"
