@@ -160,3 +160,186 @@ def reset_enabled_cache() -> None:
     """Reset cached enabled components (for testing)."""
     global _enabled_components
     _enabled_components = None
+
+
+# ---------------------------------------------------------------------------
+# Quality evaluation criteria per component
+# ---------------------------------------------------------------------------
+
+QUALITY_CRITERIA: dict[str, dict[str, Any]] = {
+    "grader": {
+        "metric": "exact_match",
+        "expected_format": "yes|no",
+        "min_length": 2,
+        "description": "Binary relevance grading — must output yes/no",
+    },
+    "hallucination_checker": {
+        "metric": "exact_match",
+        "expected_format": "grounded|not_grounded",
+        "min_length": 5,
+        "description": "Binary grounding check",
+    },
+    "rewriter": {
+        "metric": "different_from_input",
+        "min_length": 5,
+        "description": "Must produce a rewritten query different from original",
+    },
+    "query_expansion": {
+        "metric": "contains_keywords",
+        "min_length": 10,
+        "description": "Must produce expanded query with additional terms",
+    },
+    "hyde": {
+        "metric": "min_length",
+        "min_length": 30,
+        "description": "Must produce a plausible hypothetical passage",
+    },
+    "search_classifier": {
+        "metric": "valid_classification",
+        "expected_format": r"(simple|moderate|complex|thematic)\s+(factual|analytical|comparative|thematic)\s+\d",
+        "min_length": 10,
+        "description": "Must output: complexity type confidence",
+    },
+    "section_summary": {
+        "metric": "min_length",
+        "min_length": 20,
+        "description": "2-3 sentence section summary",
+    },
+    "context_generator": {
+        "metric": "min_length",
+        "min_length": 10,
+        "description": "1-2 sentence context for chunk",
+    },
+    "entity_extractor": {
+        "metric": "valid_json",
+        "min_length": 10,
+        "description": "Must produce valid JSON with entities/relations arrays",
+    },
+    "community_summarizer": {
+        "metric": "min_length",
+        "min_length": 30,
+        "description": "2-3 sentence community theme summary",
+    },
+}
+
+
+def evaluate_response(component: str, response: str, original_input: str = "") -> dict[str, Any]:
+    """Evaluate cheap LLM response quality against component criteria.
+
+    Args:
+        component: Component name from COMPONENT_REGISTRY.
+        response: The LLM response text.
+        original_input: Original input (for 'different_from_input' metric).
+
+    Returns:
+        {"passed": bool, "metric": str, "reason": str}
+    """
+    criteria = QUALITY_CRITERIA.get(component)
+    if not criteria:
+        return {"passed": True, "metric": "none", "reason": "No criteria defined"}
+
+    text = response.strip()
+    min_len = criteria.get("min_length", 1)
+
+    if len(text) < min_len:
+        return {"passed": False, "metric": "min_length",
+                "reason": f"Too short: {len(text)} < {min_len}"}
+
+    metric = criteria.get("metric", "min_length")
+
+    if metric == "exact_match":
+        expected = criteria.get("expected_format", "")
+        options = [o.strip() for o in expected.split("|")]
+        if text.lower() not in options:
+            return {"passed": False, "metric": metric,
+                    "reason": f"Expected one of {options}, got '{text[:50]}'"}
+
+    elif metric == "different_from_input":
+        if original_input and text.lower().strip() == original_input.lower().strip():
+            return {"passed": False, "metric": metric,
+                    "reason": "Response identical to input"}
+
+    elif metric == "valid_json":
+        import json as _json
+        try:
+            _json.loads(text)
+        except _json.JSONDecodeError:
+            # Try stripping markdown code blocks
+            cleaned = text
+            if "```json" in cleaned:
+                cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+            elif "```" in cleaned:
+                cleaned = cleaned.split("```")[1].split("```")[0].strip()
+            try:
+                _json.loads(cleaned)
+            except _json.JSONDecodeError:
+                return {"passed": False, "metric": metric,
+                        "reason": "Not valid JSON"}
+
+    elif metric == "valid_classification":
+        import re
+        pattern = criteria.get("expected_format", "")
+        if pattern and not re.match(pattern, text):
+            return {"passed": False, "metric": metric,
+                    "reason": f"Doesn't match classification pattern"}
+
+    return {"passed": True, "metric": metric, "reason": "OK"}
+
+
+# ---------------------------------------------------------------------------
+# Auto-discovery: find LLM components not yet in COMPONENT_REGISTRY
+# ---------------------------------------------------------------------------
+
+def discover_unregistered_components() -> list[dict[str, str]]:
+    """Scan framework source for ChatAnthropic/Anthropic usage not in COMPONENT_REGISTRY.
+
+    Returns list of dicts with 'file', 'pattern', 'suggestion' keys.
+    Useful for finding new components that could benefit from cheap LLM.
+    """
+    import re
+    from pathlib import Path
+
+    src_root = Path(__file__).parent.parent.parent  # src/
+    patterns = [
+        re.compile(r"ChatAnthropic\("),
+        re.compile(r"Anthropic\("),
+        re.compile(r"\.ainvoke\("),
+    ]
+
+    # Files already covered by COMPONENT_REGISTRY integrations
+    known_files = {
+        "grader.py", "hallucination_checker.py", "rewriter.py",
+        "query_expansion.py", "hyde.py", "classifier.py",
+        "section_summary.py", "context_generator.py",
+        "entity_extractor.py", "summarizer.py",
+        # Infrastructure (not candidates)
+        "adapter.py", "service.py", "zai_proxy.py", "mcp.py",
+    }
+
+    candidates: list[dict[str, str]] = []
+    seen_files: set[str] = set()
+
+    for py_file in src_root.rglob("*.py"):
+        if py_file.name in known_files:
+            continue
+        if "__pycache__" in str(py_file):
+            continue
+
+        try:
+            content = py_file.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+
+        for pattern in patterns:
+            if pattern.search(content):
+                rel = str(py_file.relative_to(src_root))
+                if rel not in seen_files:
+                    seen_files.add(rel)
+                    candidates.append({
+                        "file": rel,
+                        "pattern": pattern.pattern,
+                        "suggestion": f"Review {py_file.name} for cheap LLM integration",
+                    })
+                break
+
+    return candidates
