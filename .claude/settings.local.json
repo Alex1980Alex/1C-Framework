@@ -199,7 +199,8 @@
       "Bash(python3:*)",
       "Bash(rm:*)",
       "Bash(do echo:*)",
-      "Bash(\"D:/1С-Framework/docs/architecture/bsl-integration.md\":*)"
+      "Bash(\"D:/1С-Framework/docs/architecture/bsl-integration.md\":*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 5 node:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
