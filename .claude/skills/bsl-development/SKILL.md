@@ -19,6 +19,7 @@
 
 | Инструмент | MCP сервер | Назначение |
 |-----------|-----------|-----------|
+| **Reasoning (ОБЯЗАТЕЛЬНЫЙ)** | `mcp-reasoner` | 3 BSL-стратегии: архитектура, документы, подсистемы |
 | Семантический поиск | `bsl-semantic-search` | Поиск похожего кода (3,908+ модулей) |
 | Автодокументация | `auto-documenter` | generate_documentation, autoreview, autotestplan |
 | Отладка | `bsl-debugger` | breakpoints, step, variables, evaluate |
@@ -27,6 +28,28 @@
 | LSP | `serena` | Symbol extraction, рефакторинг |
 
 ## Workflow
+
+### 0. Архитектурный анализ (ОБЯЗАТЕЛЬНЫЙ для 1С кода)
+
+Перед написанием/рефакторингом BSL кода — выбрать стратегию анализа:
+
+| Контекст задачи | Стратегия | Глубина |
+|----------------|-----------|---------|
+| Архитектура модулей, SOLID, God Object | `bsl_architecture` | 8 уровней |
+| Проведение, движения, регистры, производительность | `bsl_document_patterns` | 10 уровней |
+| Подсистемы, RBAC, RLS, интеграция, зависимости | `bsl_subsystem_analysis` | 12 уровней |
+
+```
+mcp__reasoner__processThought(
+  thought="Анализ архитектуры модуля ОбработкаДокументов",
+  thoughtNumber=1,
+  totalThoughts=5,
+  nextThoughtNeeded=true,
+  strategyType="bsl_architecture"
+)
+```
+
+
 
 ### 1. Анализ кода
 ```
@@ -98,3 +121,4 @@ mcp__bsl-debugger__get_variables()
 - Фаза 47: Auto-Documenter
 - Фаза 48: BSL Debugger
 - Фаза 52: Serena LSP Integration
+- Фаза 57: MCP Reasoner (3 BSL-стратегии)
