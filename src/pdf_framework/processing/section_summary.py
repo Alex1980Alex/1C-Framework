@@ -267,6 +267,27 @@ class SectionSummaryService:
 
         content = "\n\n".join(content_parts)
 
+        # Cheap LLM path
+        if is_cheap_llm_enabled("section_summary"):
+            try:
+                result = await cheap_llm_call(
+                    prompt=(
+                        f"Раздел: {title}\n\n"
+                        f"Содержание:\n{content}\n\n"
+                        f"Напиши краткое описание этого раздела (2-3 предложения)."
+                    ),
+                    system_prompt=(
+                        "Ты — технический писатель. Напиши краткое описание "
+                        "раздела документации (2-3 предложения) на русском. "
+                        "Не используй 'В этом разделе...' — сразу описывай суть."
+                    ),
+                    component="section_summary",
+                )
+                if result and len(result.strip()) >= 20:
+                    return result.strip()
+            except Exception as e:
+                logger.warning("[SUMMARY] Cheap LLM failed for '%s', falling back: %s", title, e)
+
         try:
             result = await asyncio.to_thread(
                 self._call_summary_api, title, content,
