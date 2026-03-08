@@ -664,15 +664,15 @@ categories:
     description: "Инструменты разработки 1С:Предприятие"
     servers:
       ast-grep-mcp:
-        command: "D:\\\\1C-Enterprise_Framework\\\\ast-grep-mcp\\\\.venv\\\\Scripts\\\\python.exe"
-        args: ["D:\\\\1C-Enterprise_Framework\\\\ast-grep-mcp\\\\main.py"]
+        command: "D:\\\\1С-Framework\\\\ast-grep-mcp\\\\.venv\\\\Scripts\\\\python.exe"
+        args: ["D:\\\\1С-Framework\\\\ast-grep-mcp\\\\main.py"]
         env:
           PYTHONIOENCODING: "utf-8"
         description: "AST-анализ BSL кода (100% надёжность)"
 
       bsl-platform-context:
         command: "java"
-        args: ["-jar", "D:\\\\1C-Enterprise_Framework\\\\mcp-servers\\\\mcp-bsl-context-0.3.1.jar", "--platform-path", "C:\\\\Program Files\\\\1cv8\\\\8.3.27.1859\\\\bin"]
+        args: ["-jar", "D:\\\\1С-Framework\\\\mcp-servers\\\\mcp-bsl-context-0.3.1.jar", "--platform-path", "C:\\\\Program Files\\\\1cv8\\\\8.3.27.1859\\\\bin"]
         env:
           JAVA_HOME: "C:\\\\Program Files\\\\Zulu\\\\zulu-17"
         description: "API платформы 1С - типы, методы, свойства"
@@ -682,7 +682,7 @@ categories:
     servers:
       1c-docs-rag:
         command: "python"
-        args: ["D:\\\\1C-Enterprise_Framework\\\\scripts\\\\docs-mcp\\\\mcp_server.py"]
+        args: ["D:\\\\1С-Framework\\\\scripts\\\\docs-mcp\\\\mcp_server.py"]
         env:
           PYTHONIOENCODING: "utf-8"
           DOCS_ROOT: "D:/1C-Enterprise_Framework/docs"
@@ -693,7 +693,7 @@ categories:
     servers:
       unified-memory:
         command: "C:\\\\Users\\\\AlexT\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe"
-        args: ["D:\\\\1C-Enterprise_Framework\\\\unified-memory-mcp\\\\server.py"]
+        args: ["D:\\\\1С-Framework\\\\unified-memory-mcp\\\\server.py"]
         env:
           ANTHROPIC_DB_PATH: "D:/1C-Enterprise_Framework/cache/mcp_database.db"
         description: "Unified Memory System (6 backends)"
@@ -711,7 +711,7 @@ categories:
     description: "Анализ и рассуждения о коде"
     servers:
       serena:
-        command: "D:\\\\1C-Enterprise_Framework\\\\serena\\\\.venv\\\\Scripts\\\\serena.exe"
+        command: "D:\\\\1С-Framework\\\\serena\\\\.venv\\\\Scripts\\\\serena.exe"
         args: ["start-mcp-server", "--context", "ide-assistant"]
         timeout: 180000
         description: "LSP для Python/JS/TS"
