@@ -19,6 +19,10 @@ export class Reasoner {
         // Initialize experimental MCTS strategies
         this.strategies.set(ReasoningStrategy.MCTS_002_ALPHA, StrategyFactory.createStrategy(ReasoningStrategy.MCTS_002_ALPHA, this.stateManager, undefined, CONFIG.numSimulations));
         this.strategies.set(ReasoningStrategy.MCTS_002_ALT_ALPHA, StrategyFactory.createStrategy(ReasoningStrategy.MCTS_002_ALT_ALPHA, this.stateManager, undefined, CONFIG.numSimulations));
+        // Initialize BSL-specific strategies (1C architecture analysis)
+        this.strategies.set(ReasoningStrategy.BSL_ARCHITECTURE, StrategyFactory.createStrategy(ReasoningStrategy.BSL_ARCHITECTURE, this.stateManager));
+        this.strategies.set(ReasoningStrategy.BSL_DOCUMENT_PATTERNS, StrategyFactory.createStrategy(ReasoningStrategy.BSL_DOCUMENT_PATTERNS, this.stateManager));
+        this.strategies.set(ReasoningStrategy.BSL_SUBSYSTEM_ANALYSIS, StrategyFactory.createStrategy(ReasoningStrategy.BSL_SUBSYSTEM_ANALYSIS, this.stateManager));
         // Set default strategy
         const defaultStrategy = CONFIG.defaultStrategy;
         this.currentStrategy = this.strategies.get(defaultStrategy) ||
