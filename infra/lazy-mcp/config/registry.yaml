@@ -61,14 +61,14 @@ categories:
     description: "Поиск по документации, генерация документов, RAG системы"
     servers:
       1c-docs-rag:
-        command: "python"
-        args: ["D:/1C-Enterprise_Framework/scripts/docs-mcp/mcp_server.py"]
+        command: "D:/1С-Framework/tools/1c-docs-rag/.venv/Scripts/python.exe"
+        args: ["src/mcp_server.py"]
+        cwd: "D:/1С-Framework/tools/1c-docs-rag"
         env:
           PYTHONIOENCODING: "utf-8"
-          DOCS_ROOT: "D:/1C-Enterprise_Framework/docs"
-        # NOTE: Not yet migrated — still references source project
-        description: "RAG поиск по документации (863+ документов)"
-        timeout: 60000
+          DOCS_ROOT: "D:/1С-Framework/docs"
+        description: "RAG поиск по документации 1С (15 tools, FTS5 + Semantic)"
+        timeout: 7200000
 
   # ═══════════════════════════════════════════════════════════════════
   # MEMORY - Системы памяти

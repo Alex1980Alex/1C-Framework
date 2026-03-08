@@ -1,7 +1,7 @@
 # Фаза 56: 1C-Docs-RAG Migration
 
 **Tier:** 5 — Post-Migration
-**Статус:** IN PROGRESS
+**Статус:** DONE
 **Зависимости:** Phase 44 (Infrastructure), Phase 50 (LLM Rotation)
 **Оценка:** ~3 часа
 
@@ -118,11 +118,11 @@ cd tools/1c-docs-rag
 
 ## Чеклист
 
-- [ ] Директория `tools/1c-docs-rag/` создана
-- [ ] Исходники скопированы (8 модулей)
-- [ ] venv создан, dependencies установлены
-- [ ] SQLite БД перенесена
-- [ ] Пути обновлены (DOCS_ROOT, cache)
-- [ ] registry.yaml обновлён (убран NOTE: Not yet migrated)
-- [ ] Сервер запускается без ошибок
-- [ ] .gitignore для cache/
+- [x] Директория `tools/1c-docs-rag/` создана
+- [x] Исходники скопированы (11 модулей: 8 core + 3 utility)
+- [x] venv создан, dependencies установлены (mcp, aiohttp, numpy, watchdog)
+- [x] SQLite БД перенесена (~11GB, includes embeddings)
+- [x] Пути обновлены (DOCS_ROOT, LLM_ROTATION_HTTP_SCRIPT, smart_index_bsl)
+- [x] registry.yaml обновлён (убран NOTE: Not yet migrated)
+- [x] Сервер запускается без ошибок (15 tools, MCP initialize OK)
+- [x] .gitignore для cache/ и .venv/
