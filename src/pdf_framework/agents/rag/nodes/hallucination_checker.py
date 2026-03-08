@@ -65,6 +65,30 @@ async def check_hallucination(
         logger.debug(f"[HALLUCINATION] Context truncated to {max_chars} chars")
 
     check_prompt = _get_hallucination_check_prompt(context, answer)
+
+    # Cheap LLM path — single call for grounded/not_grounded classification
+    if is_cheap_llm_enabled("hallucination_checker"):
+        try:
+            result_text = await cheap_llm_call(
+                prompt=check_prompt["user"],
+                system_prompt=check_prompt["system"],
+                component="hallucination_checker",
+            )
+            result_text = result_text.strip().lower()
+            if result_text:
+                is_hallucinated = _parse_hallucination_result(result_text)
+                if is_hallucinated:
+                    logger.warning(f"[HALLUCINATION] Detected (cheap): {result_text[:200]}")
+                else:
+                    logger.info("[HALLUCINATION] Grounded (cheap)")
+                return {
+                    "is_hallucinated": is_hallucinated,
+                    "hallucination_reason": result_text[:300],
+                }
+        except Exception as e:
+            logger.warning("[HALLUCINATION] Cheap LLM failed, falling back to Claude: %s", e)
+        # Fall through to Claude
+
     messages = [
         SystemMessage(content=check_prompt["system"]),
         HumanMessage(content=check_prompt["user"]),
