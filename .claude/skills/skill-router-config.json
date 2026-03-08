@@ -6,7 +6,8 @@
   "domains": {
     "1c": [
       "research-1c",
-      "bsl-dev"
+      "bsl-dev",
+      "bsl-debug"
     ],
     "framework": [
       "search",
@@ -37,7 +38,8 @@
       "workflow"
     ],
     "memory": [
-      "memory"
+      "memory",
+      "bsl-memory"
     ],
     "llm": [
       "llm-rotation"
@@ -1441,11 +1443,57 @@
         "разработай эту фичу от начала до конца",
         "сделай эту многошаговую задачу"
       ]
+    },
+    "bsl-debug": {
+      "keywords": [
+        "отладка BSL",
+        "debug 1С",
+        "breakpoint BSL",
+        "отладчик 1С",
+        "bsl debug",
+        "bsl-debugger",
+        "точка останова",
+        "пошаговая отладка",
+        "стек вызовов BSL"
+      ],
+      "utterances": [
+        "отладь процедуру 1С",
+        "поставь breakpoint в BSL",
+        "покажи стек вызовов",
+        "debug this BSL code"
+      ],
+      "skills": [
+        "bsl-development"
+      ],
+      "optional": []
+    },
+    "bsl-memory": {
+      "keywords": [
+        "memory search",
+        "unified memory",
+        "запомни контекст",
+        "вспомни",
+        "история сессий",
+        "skill learning",
+        "vector memory",
+        "ai memory",
+        "память агента"
+      ],
+      "utterances": [
+        "найди в памяти",
+        "запомни это решение",
+        "что было в прошлой сессии",
+        "search memory for pattern"
+      ],
+      "skills": [
+        "memory-unified"
+      ],
+      "optional": []
     }
   },
   "min_score_gap": 2,
   "tfidf_thresholds": {
-    "strong": 0.40,
+    "strong": 0.4,
     "moderate": 0.25,
     "weak": 0.99,
     "strong_bonus": 1,

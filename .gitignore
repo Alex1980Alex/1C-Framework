@@ -69,4 +69,14 @@ temp_*.txt
 # Ralph Wiggum state files (runtime, prevents stop-hook infinite loop)
 .claude/hooks/.ralph_*
 
+# MCP/tool logs
+*.mcp-server.log
+mcp_debug.log
+bsl-semantic-diff-mcp.log
+
+# Build artifacts
+tools/*/build/
+infra/*/build/
+*.log
+
 test_all_phases_results.json
