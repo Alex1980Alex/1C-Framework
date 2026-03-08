@@ -1,0 +1,18 @@
+# Dockerfile for filesystem MCP server
+FROM node:18-alpine
+
+# Install MCP server globally
+RUN npm install -g @modelcontextprotocol/server-filesystem
+
+# Add global node modules to PATH
+ENV PATH=/usr/local/bin:/usr/local/sbin/:$PATH
+
+# Set working directory
+WORKDIR /workspace
+
+# Use npx to run globally installed package
+CMD ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+
+# Labels
+LABEL mcp.server="filesystem"
+LABEL mcp.description="File system operations"

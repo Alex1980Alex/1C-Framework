@@ -1,0 +1,333 @@
+# Lazy-MCP Registry Configuration
+# Полная конфигурация всех MCP серверов (ТОЛЬКО Native, БЕЗ Docker)
+# Версия: 2.1.0
+# Дата: 2026-01-08
+
+categories:
+  # ═══════════════════════════════════════════════════════════════════
+  # 1C DEVELOPMENT - Разработка 1С:Предприятие
+  # ═══════════════════════════════════════════════════════════════════
+  1c-development:
+    description: "Инструменты разработки 1С:Предприятие - анализ BSL, API платформы, семантический поиск"
+    servers:
+      ast-grep-mcp:
+        command: "D:/1C-Enterprise_Framework/ast-grep-mcp/.venv/Scripts/python.exe"
+        args: ["D:/1C-Enterprise_Framework/ast-grep-mcp/main.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          PYTHONUTF8: "1"
+        description: "AST-анализ BSL кода (100% надёжность). Поиск процедур, функций, паттернов."
+        timeout: 60000
+
+      bsl-platform-context:
+        command: "java"
+        args: ["-jar", "D:/1C-Enterprise_Framework/mcp-servers/mcp-bsl-context-0.3.1.jar", "--platform-path", "C:/Program Files/1cv8/8.3.27.1859/bin", "--verbose"]
+        env:
+          JAVA_HOME: "C:/Program Files/Zulu/zulu-17"
+        description: "API платформы 1С - типы, методы, свойства."
+        timeout: 30000
+
+      bsl-semantic-search:
+        command: "python"
+        args: ["D:/1C-Enterprise_Framework/bsl-semantic-search/mcp_server/server_fastmcp.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+        description: "Семантический поиск по BSL коду конфигураций"
+        timeout: 60000
+
+      bsl-debugger:
+        command: "node"
+        args: ["D:/1C-Enterprise_Framework/bsl-debugger/dist/index.js"]
+        env:
+          NODE_ENV: "production"
+        description: "Отладка BSL кода - 10 инструментов отладки"
+        timeout: 60000
+
+      bsl-semantic-diff:
+        command: "python"
+        args: ["D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff/mcp_server.py"]
+        cwd: "D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff"
+        env:
+          PYTHONIOENCODING: "utf-8"
+          PYTHONPATH: "D:/1C-Enterprise_Framework/scripts/bsl-semantic-diff"
+        description: "BSL Semantic Diff - семантическое сравнение BSL кода"
+        timeout: 30000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DOCUMENTATION - Документация и RAG
+  # ═══════════════════════════════════════════════════════════════════
+  documentation:
+    description: "Поиск по документации, генерация документов, RAG системы"
+    servers:
+      1c-docs-rag:
+        command: "python"
+        args: ["D:/1C-Enterprise_Framework/scripts/docs-mcp/mcp_server.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          DOCS_ROOT: "D:/1C-Enterprise_Framework/docs"
+        description: "RAG поиск по документации (863+ документов)"
+        timeout: 60000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # MEMORY - Системы памяти
+  # ═══════════════════════════════════════════════════════════════════
+  memory:
+    description: "Системы памяти - сохранение контекста, история, knowledge graph"
+    servers:
+      unified-memory:
+        command: "D:/1C-Enterprise_Framework/unified-memory-mcp/.venv/Scripts/python.exe"
+        args: ["D:/1C-Enterprise_Framework/unified-memory-mcp/src/server.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          QDRANT_URL: "http://localhost:6333"
+          GOOGLE_API_KEY: "AIzaSyAfduIFUzab5rFe1sMFqyfHjTR-9oSN78o"
+          GOOGLE_EMBEDDING_MODEL: "text-embedding-004"
+        description: "Unified Memory Orchestrator v2.2.0 - единый API для 4 memory систем (46+ tools)"
+        timeout: 90000
+
+      memory-ai:
+        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
+        args: ["D:/1C-Enterprise_Framework/ai-memory-system/mcp_local_scripts/memory_server_fixed.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+        description: "AI Memory - важные сообщения с приоритетами"
+        timeout: 60000
+
+      conversation-memory:
+        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
+        args: ["D:/1C-Enterprise_Framework/bsl-semantic-search/mcp_local_scripts/memory_server_fixed.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          PYTHONPATH: "D:/1C-Enterprise_Framework/bsl-semantic-search/services"
+        description: "Контекст разговоров и история сессий"
+        timeout: 60000
+
+      mcp-memory-libsql:
+        command: "npx"
+        args: ["-y", "mcp-memory-libsql"]
+        env:
+          LIBSQL_URL: "file:D:/1C-Enterprise_Framework/data/memory-libsql/memory.db"
+        description: "Альтернативная память на LibSQL"
+        type: "npx"
+        timeout: 60000
+
+      vector-memory-mcp:
+        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
+        args: ["D:/1C-Enterprise_Framework/vector-memory-mcp/server.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          QDRANT_URL: "http://localhost:6333"
+          LEARNING_COLLECTION_NAME: "learned_patterns"
+        description: "Vector-Memory - выученные паттерны и навыки (Qdrant + ONNX)"
+        timeout: 60000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # LEARNING - Самообучающиеся навыки (Self-Learning Skills)
+  # ═══════════════════════════════════════════════════════════════════
+  learning:
+    description: "Система самообучающихся навыков - захват паттернов, оценка уверенности"
+    servers:
+      skill-learning-mcp:
+        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
+        args: ["D:/1C-Enterprise_Framework/skill-learning-mcp/server.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          SKILLS_DIR: "D:/1C-Enterprise_Framework/.claude/learned-skills"
+          ORCHESTRATOR_URL: "http://localhost:3000"
+        description: "Захват паттернов из успешных tool use (PostToolUse hook)"
+        timeout: 60000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # FILE-OPERATIONS - Файловые операции
+  # ═══════════════════════════════════════════════════════════════════
+  file-operations:
+    description: "Операции с файлами - поиск, чтение, запись"
+    servers:
+      ripgrep:
+        command: "npx"
+        args: ["-y", "mcp-ripgrep"]
+        description: "Продвинутый поиск по файлам (rg) с regex"
+        type: "npx"
+        timeout: 30000
+
+      filesystem:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1C-Enterprise_Framework"]
+        description: "Файловые операции - read, write, edit, directory tree"
+        type: "npx"
+        timeout: 30000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # REASONING - Рассуждения и мышление
+  # ═══════════════════════════════════════════════════════════════════
+  reasoning:
+    description: "Структурированное мышление и анализ"
+    servers:
+      sequential-thinking:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+        description: "Пошаговое структурированное мышление с ветвлением"
+        type: "npx"
+        timeout: 60000
+
+      # code-reasoning: УДАЛЁН - не загружается, нет ответа
+      # Если нужен пошаговый анализ - используйте sequential-thinking или reasoner
+
+      # deep-code-reasoning: ПЕРЕНЕСЁН в native серверы (.mcp/lazy-mcp.json)
+      # Причина: lazy-mcp не поддерживает длинные таймауты для z.ai API
+
+      # gemini: УДАЛЁН - не загружается, нет ответа
+      # Используйте deep-code-reasoning (native) для работы с z.ai GLM-5
+
+      reasoner:
+        command: "node"
+        args: ["D:/1C-Enterprise_Framework/mcp-reasoner/dist/index.js"]
+        cwd: "D:/1C-Enterprise_Framework/mcp-reasoner"
+        env:
+          NODE_ENV: "production"
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        description: "Reasoner - логический вывод с Beam Search и MCTS"
+        timeout: 30000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # WEB - Веб поиск и HTTP (ТОЛЬКО Native NPX)
+  # ═══════════════════════════════════════════════════════════════════
+  web:
+    description: "Веб-поиск, HTTP запросы, браузерная автоматизация"
+    servers:
+      brave:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-brave-search"]
+        env:
+          BRAVE_API_KEY: "BSAf2bf7DurctyB_tspN8nw81MAjZqc"
+        description: "Brave Web Search API (Native NPX)"
+        type: "npx"
+        timeout: 30000
+
+      puppeteer:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-puppeteer"]
+        description: "Браузерная автоматизация (Native NPX)"
+        type: "npx"
+        timeout: 60000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # UTILS - Утилиты (ТОЛЬКО работающие)
+  # ═══════════════════════════════════════════════════════════════════
+  utils:
+    description: "Различные утилиты - git, sqlite, файлы"
+    servers:
+      github:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-github"]
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "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"
+        description: "GitHub API (Native NPX)"
+        type: "npx"
+        timeout: 30000
+
+      filesystem-extended:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1C-Enterprise_Framework"]
+        description: "Filesystem operations (Native NPX)"
+        type: "npx"
+        timeout: 30000
+
+      clipboard:
+        command: "node"
+        args: ["D:/1C-Enterprise_Framework/mcp-clipboard-server/index.js"]
+        cwd: "D:/1C-Enterprise_Framework/mcp-clipboard-server"
+        description: "Работа с буфером обмена - текст, изображения"
+        timeout: 30000
+
+      slack:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-slack"]
+        env:
+          SLACK_BOT_TOKEN: "xoxb-xxx"
+          SLACK_TEAM_ID: "T00000000"
+        description: "Slack integration (Native NPX) - требует API key"
+        type: "npx"
+        timeout: 30000
+
+      google-maps:
+        command: "npx"
+        args: ["-y", "@modelcontextprotocol/server-google-maps"]
+        env:
+          GOOGLE_MAPS_API_KEY: "xxx"
+        description: "Google Maps API (Native NPX) - требует API key"
+        type: "npx"
+        timeout: 30000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # ROUTING - Интеллектуальная маршрутизация LLM
+  # ═══════════════════════════════════════════════════════════════════
+  routing:
+    description: "Интеллектуальная маршрутизация между Z.AI и Claude для оптимизации затрат"
+    servers:
+      mcp-llm-router:
+        command: "python"
+        args: ["D:/1C-Enterprise_Framework/scripts/mcp/zai-hooks-proxy/router_server.py"]
+        env:
+          PYTHONIOENCODING: "utf-8"
+          ZAI_API_KEY: "96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9"
+          ZAI_BASE_URL: "https://api.z.ai/api/anthropic"
+          ZAI_MODEL: "glm-5"
+        description: "MCP-LLM-Router: интеллектуальная маршрутизация задач между Z.AI (60%) и Claude (15%), гибридные сценарии (25%)"
+        timeout: 120000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # BROWSER - Браузерная автоматизация
+  # ═══════════════════════════════════════════════════════════════════
+  browser:
+    description: "Браузерная автоматизация - Playwright, Chrome DevTools"
+    servers:
+      playwright:
+        command: "npx"
+        args: ["-y", "@executeautomation/playwright-mcp-server"]
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          PLAYWRIGHT_BROWSERS_PATH: "0"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        description: "Playwright MCP - автоматизация браузеров"
+        type: "npx"
+        timeout: 30000
+
+      chrome-devtools:
+        command: "npx"
+        args: ["-y", "chrome-devtools-mcp", "--viewport", "1280x720"]
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        description: "Chrome DevTools Protocol - отладка в браузере"
+        type: "npx"
+        timeout: 60000
+
+  # ═══════════════════════════════════════════════════════════════════
+  # BRIDGES - MCP-to-API Bridges (для Z.AI интеграции)
+  # ═══════════════════════════════════════════════════════════════════
+  bridges:
+    description: "MCP-to-OpenAPI bridges для интеграции с внешними LLM (Z.AI, OpenAI)"
+    servers:
+      mcpo:
+        command: "mcpo"
+        args: ["--config", "D:/1C-Enterprise_Framework/.claude/config/mcpo-config.json", "--port", "8765"]
+        description: "MCPO (3.9k⭐) - MCP-to-OpenAPI proxy для Z.AI Native Tools интеграции"
+        type: "bridge"
+        timeout: 30000
+        endpoints:
+          base_url: "http://localhost:8765"
+          filesystem: "/filesystem"
+          ripgrep: "/ripgrep"
+        status: "production-ready"
+        notes: |
+          Тестирование 2026-01-17:
+          ✅ filesystem/read_text_file - РАБОТАЕТ
+          ✅ filesystem/list_directory - РАБОТАЕТ
+          ✅ ripgrep/list-files - РАБОТАЕТ (исправлено!)
+          ✅ ripgrep/search - РАБОТАЕТ (исправлено!)
+
+          Исправление ripgrep (2026-01-17):
+          - Создан mcp-ripgrep-fixed с Windows-совместимым escapeShellArg
+          - Путь: tools/mcp-ripgrep-fixed/
+          - Проблема: оригинал использовал одинарные кавычки (Unix-only)
+          - Решение: двойные кавычки для Windows cmd.exe

@@ -1,0 +1,140 @@
+{
+  "version": "1.0.0",
+  "registry": {
+    "filesystem": {
+      "name": "Filesystem Operations",
+      "description": "Safe file system operations with scoped access",
+      "container": "mcp-filesystem",
+      "tools": [
+        {
+          "name": "read_file",
+          "description": "Read file contents",
+          "estimatedTokens": 500
+        },
+        {
+          "name": "write_file",
+          "description": "Write file contents",
+          "estimatedTokens": 500
+        },
+        {
+          "name": "list_directory",
+          "description": "List directory contents",
+          "estimatedTokens": 300
+        },
+        {
+          "name": "create_directory",
+          "description": "Create directory",
+          "estimatedTokens": 200
+        }
+      ],
+      "tags": ["filesystem", "files", "operations"],
+      "estimatedTokens": 2000,
+      "priority": 1,
+      "dependencies": []
+    },
+    "sqlite": {
+      "name": "SQLite Database",
+      "description": "SQLite database operations",
+      "container": "mcp-sqlite",
+      "tools": [
+        {
+          "name": "execute_query",
+          "description": "Execute SQL query",
+          "estimatedTokens": 1000
+        },
+        {
+          "name": "list_tables",
+          "description": "List database tables",
+          "estimatedTokens": 500
+        },
+        {
+          "name": "get_schema",
+          "description": "Get table schema",
+          "estimatedTokens": 1000
+        }
+      ],
+      "tags": ["database", "sqlite", "sql"],
+      "estimatedTokens": 3000,
+      "priority": 2,
+      "dependencies": []
+    },
+    "sequential-thinking": {
+      "name": "Sequential Thinking",
+      "description": "Step-by-step reasoning and analysis",
+      "container": "mcp-sequential-thinking",
+      "tools": [
+        {
+          "name": "sequentialthinking",
+          "description": "Think through problems step-by-step",
+          "estimatedTokens": 5000
+        }
+      ],
+      "tags": ["reasoning", "analysis", "thinking"],
+      "estimatedTokens": 6000,
+      "priority": 3,
+      "dependencies": []
+    },
+    "ripgrep": {
+      "name": "Ripgrep Search",
+      "description": "Advanced file search using ripgrep",
+      "container": "mcp-ripgrep",
+      "tools": [
+        {
+          "name": "search",
+          "description": "Search files using ripgrep",
+          "estimatedTokens": 2000
+        },
+        {
+          "name": "advanced_search",
+          "description": "Advanced search with context",
+          "estimatedTokens": 3000
+        }
+      ],
+      "tags": ["search", "grep", "find"],
+      "estimatedTokens": 5000,
+      "priority": 4,
+      "dependencies": []
+    },
+    "memory": {
+      "name": "Memory Storage",
+      "description": "Basic JSON file-based memory",
+      "container": "mcp-memory",
+      "tools": [
+        {
+          "name": "create_entities",
+          "description": "Create memory entities",
+          "estimatedTokens": 1000
+        },
+        {
+          "name": "search_memories",
+          "description": "Search stored memories",
+          "estimatedTokens": 1500
+        },
+        {
+          "name": "delete_entities",
+          "description": "Delete memory entities",
+          "estimatedTokens": 500
+        }
+      ],
+      "tags": ["memory", "storage", "json"],
+      "estimatedTokens": 4000,
+      "priority": 5,
+      "dependencies": []
+    }
+  },
+  "pilotPhase": {
+    "servers": ["filesystem", "sqlite", "sequential-thinking", "ripgrep", "memory"],
+    "totalEstimatedTokens": 20000,
+    "maxCacheSize": 5,
+    "loadStrategy": "on-demand",
+    "unloadStrategy": "lru"
+  },
+  "metadata": {
+    "created": "2026-01-04T10:00:00Z",
+    "updated": "2026-01-04T10:00:00Z",
+    "phase": "pilot",
+    "targetServers": 5,
+    "targetTokens": 20000,
+    "status": "active"
+  }
+}

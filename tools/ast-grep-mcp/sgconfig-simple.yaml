@@ -1,0 +1,32 @@
+# Упрощенная конфигурация AST-grep для BSL без компиляции
+# Использует текстовый поиск вместо AST
+
+languageGlobs:
+  javascript:
+    - "**/*.bsl"
+    - "**/*.os"
+
+rules:
+  # Поиск процедур через текстовые паттерны
+  find-procedures:
+    id: find-1c-procedures
+    message: "Найдена процедура 1С"
+    language: javascript
+    rule:
+      pattern: "Процедура $NAME($$$)"
+
+  # Поиск функций
+  find-functions:
+    id: find-1c-functions
+    message: "Найдена функция 1С"
+    language: javascript
+    rule:
+      pattern: "Функция $NAME($$$)"
+
+  # Поиск экспортных процедур
+  find-export-procedures:
+    id: find-1c-export-procedures
+    message: "Найдена экспортная процедура"
+    language: javascript
+    rule:
+      pattern: "Процедура $NAME($$$) Экспорт"

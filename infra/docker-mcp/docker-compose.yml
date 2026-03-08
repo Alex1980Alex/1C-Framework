@@ -1,0 +1,122 @@
+# Docker MCP Pilot - Proof of Concept (FIXED NETWORK)
+# Phase 1: 5 simple NPX wrappers with pre-built images
+# Date: 2026-01-04
+
+version: '3.8'
+
+services:
+  # ────────────────────────────────────────────────────────────────
+  # PILOT MCP SERVERS (using custom built images)
+  # ────────────────────────────────────────────────────────────────
+
+  filesystem:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.filesystem
+    container_name: mcp-filesystem
+    image: mcp-filesystem:latest
+    restart: unless-stopped
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
+    volumes:
+      - D:/1C-Enterprise_Framework:/workspace:ro
+    networks:
+      - mcp-pilot-network
+    labels:
+      - "mcp.server=filesystem"
+      - "mcp.description=File system operations"
+
+  sqlite:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.sqlite
+    container_name: mcp-sqlite
+    image: mcp-sqlite:latest
+    restart: unless-stopped
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
+    volumes:
+      - D:/1C-Enterprise_Framework/data:/data:rw
+    networks:
+      - mcp-pilot-network
+    labels:
+      - "mcp.server=sqlite"
+      - "mcp.description=SQLite database operations"
+
+  sequential-thinking:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.sequential-thinking
+    container_name: mcp-sequential-thinking
+    image: mcp-sequential-thinking:latest
+    restart: unless-stopped
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
+    networks:
+      - mcp-pilot-network
+    labels:
+      - "mcp.server=sequential-thinking"
+      - "mcp.description=Step-by-step reasoning"
+
+  ripgrep:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.ripgrep
+    container_name: mcp-ripgrep
+    image: mcp-ripgrep:latest
+    restart: unless-stopped
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
+    working_dir: /workspace
+    volumes:
+      - D:/1C-Enterprise_Framework:/workspace:ro
+    networks:
+      - mcp-pilot-network
+    labels:
+      - "mcp.server=ripgrep"
+      - "mcp.description=Advanced file search"
+
+  memory:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.memory
+    container_name: mcp-memory
+    image: mcp-memory:latest
+    restart: unless-stopped
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
+      - MEMORY_FILE_PATH=/data/claude-memory.json
+    volumes:
+      - D:/1C-Enterprise_Framework/data:/data:rw
+    networks:
+      - mcp-pilot-network
+    labels:
+      - "mcp.server=memory"
+      - "mcp.description=Basic JSON storage"
+
+  # ────────────────────────────────────────────────────────────────
+  # MONITORING (optional)
+  # ────────────────────────────────────────────────────────────────
+
+  logs:
+    image: amir20/dozzle:latest
+    container_name: mcp-logs
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - mcp-pilot-network
+    profiles:
+      - monitoring
+    labels:
+      - "mcp.monitoring=logs"
+
+networks:
+  mcp-pilot-network:
+    driver: bridge
+    name: mcp-pilot-network
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16  # Changed from 172.28.0.0/16 to avoid conflict
