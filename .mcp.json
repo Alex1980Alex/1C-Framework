@@ -84,7 +84,10 @@
       "args": ["-m", "src.shared.llm_rotation.mcp"],
       "cwd": "D:\\1С-Framework",
       "env": {
-        "PYTHONIOENCODING": "utf-8"
+        "PYTHONIOENCODING": "utf-8",
+        "ZAI_API_KEY": "96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9",
+        "LLM_ROTATION_PRIMARY_PROVIDER": "zai-glm5",
+        "LLM_ROTATION_TIMEOUT": "60"
       },
       "timeout": 60000
     },

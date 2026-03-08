@@ -203,7 +203,9 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 5 node:*)",
       "Bash(npm list:*)",
       "Bash(printf:*)",
-      "Bash(\"D:/1С-Framework/docs/roadmap/MIGRATION_1C_ENTERPRISE_FRAMEWORK/PHASE_57_MCP_REASONER.md\":*)"
+      "Bash(\"D:/1С-Framework/docs/roadmap/MIGRATION_1C_ENTERPRISE_FRAMEWORK/PHASE_57_MCP_REASONER.md\":*)",
+      "mcp__llm-rotation__llm_complete",
+      "mcp__llm-rotation__llm_get_stats"
     ]
   },
   "enableAllProjectMcpServers": true,
