@@ -131,12 +131,12 @@ categories:
     description: "Система самообучающихся навыков - захват паттернов, оценка уверенности"
     servers:
       skill-learning-mcp:
-        command: "C:/Users/AlexT/AppData/Local/Programs/Python/Python313/python.exe"
-        args: ["D:/1C-Enterprise_Framework/skill-learning-mcp/server.py"]
+        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.skill_learning.mcp"]
+        cwd: "D:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
-          SKILLS_DIR: "D:/1C-Enterprise_Framework/.claude/learned-skills"
-          ORCHESTRATOR_URL: "http://localhost:3000"
+          SKILLS_DIR: "D:/1С-Framework/.claude/learned-skills"
         description: "Захват паттернов из успешных tool use (PostToolUse hook)"
         timeout: 60000
 
