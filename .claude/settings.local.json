@@ -205,7 +205,8 @@
       "Bash(printf:*)",
       "Bash(\"D:/1С-Framework/docs/roadmap/MIGRATION_1C_ENTERPRISE_FRAMEWORK/PHASE_57_MCP_REASONER.md\":*)",
       "mcp__llm-rotation__llm_complete",
-      "mcp__llm-rotation__llm_get_stats"
+      "mcp__llm-rotation__llm_get_stats",
+      "Bash(ZAI_API_KEY=96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9 LLM_ROTATION_TIMEOUT=60 .venv/Scripts/python.exe:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

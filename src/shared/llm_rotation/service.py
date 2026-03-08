@@ -335,8 +335,9 @@ class LLMRotationService:
         if temperature != 1.0:
             payload["temperature"] = temperature
 
-        # GLM-5 thinking mode
-        if (model or state.config.default_model) == "glm-5":
+        # GLM-5 thinking mode — only for complex tasks (>200 max_tokens)
+        # Short tasks (grading, classification) fail with thinking: budget eats all tokens
+        if (model or state.config.default_model) == "glm-5" and max_tokens > 200:
             payload["thinking"] = {"type": "enabled", "budget_tokens": 10000}
 
         headers = {
