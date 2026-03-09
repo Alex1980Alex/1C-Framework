@@ -239,7 +239,9 @@
       "Bash(reg query:*)",
       "Bash(regsvr32:*)",
       "Bash(sc query:*)",
-      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)"
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)",
+      "Bash(sqlcmd:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
