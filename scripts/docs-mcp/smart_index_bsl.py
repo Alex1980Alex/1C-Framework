@@ -458,6 +458,16 @@ def main():
     target_name = "Framework" if args.framework else Path(project_path).name
     print(f"[INFO] Индексация: {target_name}")
     print(f"[INFO] Путь: {project_path}")
+
+    if args.ast:
+        print(f"[INFO] Режим: AST symbol-level indexing (Phase 59)\n")
+        ast_index_bsl(
+            project_path=project_path,
+            delay_seconds=args.delay,
+            full_index=args.full,
+        )
+        return
+
     mode_info = "ПОЛНАЯ" if args.full else "smart (только важные)"
     lang_names = ", ".join([SUPPORTED_EXTENSIONS[LANGUAGE_TO_EXTENSION[l]]["name"] for l in languages if l in LANGUAGE_TO_EXTENSION])
     print(f"[INFO] Языки: {lang_names}")
