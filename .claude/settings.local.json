@@ -237,7 +237,9 @@
       "Read(//c/Program Files/1cv8/**)",
       "Read(//c/Program Files \\(x86\\)/1cv8/**)",
       "Bash(reg query:*)",
-      "Bash(regsvr32:*)"
+      "Bash(regsvr32:*)",
+      "Bash(sc query:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
