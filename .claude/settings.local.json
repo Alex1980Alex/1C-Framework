@@ -226,7 +226,10 @@
       "mcp__auto-documenter__autoreview",
       "Bash(pip list:*)",
       "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/python.exe\":*)",
-      "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/serena.exe\":*)"
+      "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/serena.exe\":*)",
+      "Bash(ollama list:*)",
+      "Bash(ollama show:*)",
+      "Bash(ollama search:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
