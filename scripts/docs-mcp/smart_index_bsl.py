@@ -336,7 +336,6 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
     Inserts directly into SQLite documents table (trigger populates FTS5).
     """
     import hashlib
-    import sqlite3
     from datetime import datetime
     from src.bsl.parser.bsl_ast_parser import BSLASTParser
     from src.bsl.parser.bsl_chunker import BSLChunker
