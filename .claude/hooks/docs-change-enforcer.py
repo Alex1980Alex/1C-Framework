@@ -379,6 +379,19 @@ def main():
         except Exception:
             pass
 
+        # Cooldown: if we already blocked recently, allow stop (prevents infinite loop)
+        if COOLDOWN_FILE.exists():
+            try:
+                import time
+                mtime = COOLDOWN_FILE.stat().st_mtime
+                age_min = (time.time() - mtime) / 60
+                if age_min < COOLDOWN_MINUTES:
+                    if timer:
+                        timer.log(outcome="allow-cooldown")
+                    sys.exit(0)
+            except Exception:
+                pass
+
         session_files = get_session_files()
         if not session_files:
             if timer:
