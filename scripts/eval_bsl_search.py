@@ -148,24 +148,16 @@ def main():
         print(json.dumps(summary, indent=2, ensure_ascii=False))
     else:
         report = format_report(summary, title=f"BSL Search Baseline ({args.mode})")
-        report += "
-## Run Info
-
-"
-        report += f"- **Search mode**: {args.mode}
-"
-        report += f"- **Total time**: {summary[chr(39)+'elapsed_seconds'+chr(39)]}s
-"
-        report += f"- **Avg latency**: {summary[chr(39)+'avg_latency_ms'+chr(39)]}ms/query
-"
-        report += f"- **Date**: {time.strftime(chr(39)+'%Y-%m-%d %H:%M'+chr(39))}
-"
+        report += "\n## Run Info\n\n"
+        report += f"- **Search mode**: {args.mode}\n"
+        report += f"- **Total time**: {summary['elapsed_seconds']}s\n"
+        report += f"- **Avg latency**: {summary['avg_latency_ms']}ms/query\n"
+        report += f"- **Date**: {time.strftime('%Y-%m-%d %H:%M')}\n"
         print(report)
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
         with open(args.output, "w", encoding="utf-8") as f:
             f.write(report)
-        print(f"
-Report saved to: {args.output}")
+        print(f"\nReport saved to: {args.output}")
 
 
 if __name__ == "__main__":
