@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """
-BSL Qwen3 Reindex — Phase 60
+BSL Reindex — Phase 60
 
-Parse BSL files → chunk by symbols → embed with Qwen3 → store in Qdrant bsl_code_v3.
+Parse BSL files → chunk by symbols → embed → store in Qdrant bsl_code_v3.
+
+Embedder options:
+  e5     — intfloat/multilingual-e5-large (1024d, fast, default)
+  qwen3  — qwen3-embedding via Ollama (4096d, slow, needs GPU)
 
 Usage:
     python scripts/reindex_bsl_qwen3.py --project path/to/1c/project
-    python scripts/reindex_bsl_qwen3.py --project path --batch-size 20 --recreate
+    python scripts/reindex_bsl_qwen3.py --project path --embedder qwen3 --batch-size 20
 """
 
 import argparse
