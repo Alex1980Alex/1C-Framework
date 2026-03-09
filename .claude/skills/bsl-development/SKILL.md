@@ -113,6 +113,7 @@ mcp__bsl-debugger__get_variables()
 - **MCP профиль:** `.mcp/bsl.json`
 - **Embeddings:** nomic-embed-text (768d)
 - **Qdrant collection:** `bsl_code_v2`
+- **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — используется когда Qdrant недоступен
 
 ## Зависимости
 
