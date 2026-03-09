@@ -680,6 +680,202 @@ def bsl_object_info(
     return result
 
 
+def _get_hybrid_pipeline():
+    """Lazy singleton for BSLHybridPipeline."""
+    global _hybrid_pipeline
+    if _hybrid_pipeline is None:
+        from .services.hybrid_search import BSLHybridPipeline
+        from .services.qwen3_embedding import Qwen3EmbeddingService
+
+        # Qdrant client (optional)
+        qdrant = None
+        try:
+            from qdrant_client import QdrantClient
+            qdrant = QdrantClient(host="localhost", port=6333, timeout=10)
+            qdrant.get_collections()  # connectivity check
+        except Exception:
+            qdrant = None
+
+        embedder = Qwen3EmbeddingService() if qdrant else None
+
+        # Call graph (optional)
+        cg = None
+        try:
+            cg = _get_call_graph()
+        except Exception:
+            pass
+
+        _hybrid_pipeline = BSLHybridPipeline(
+            sqlite_db=_SQLITE_DB,
+            qdrant_client=qdrant,
+            embedder=embedder,
+            call_graph=cg,
+        )
+    return _hybrid_pipeline
+
+
+@mcp.tool()
+def bsl_hybrid_search(
+    query: str,
+    limit: int = 10,
+    fetch_k: int = 50,
+) -> Dict[str, Any]:
+    """Hybrid BSL code search: BM25 + Vector + RRF fusion + Call Graph boost.
+
+    Combines text search (SQLite FTS5) with semantic search (Qdrant vectors)
+    using Reciprocal Rank Fusion, then boosts results by call graph importance.
+
+    Args:
+        query: Search query (BSL code pattern, function name, or description)
+        limit: Number of results to return (default 10)
+        fetch_k: Candidates per stage before fusion (default 50)
+
+    Returns:
+        Dict with search results and pipeline metadata
+    """
+    pipeline = _get_hybrid_pipeline()
+    results = pipeline.search(query, limit=limit, fetch_k=fetch_k)
+
+    return {
+        "query": query,
+        "total": len(results),
+        "results": [
+            {
+                "name": r.name,
+                "module_path": r.module_path,
+                "score": round(r.score, 6),
+                "source": r.source,
+                "content": r.content[:300],
+                "object_type": r.metadata.get("object_type", ""),
+                "object_name": r.metadata.get("object_name", ""),
+                "caller_count": r.metadata.get("caller_count", 0),
+                "is_export": r.metadata.get("is_export", False),
+            }
+            for r in results
+        ],
+    }
+
+
+@mcp.tool()
+def bsl_coding_context(
+    object_name: str,
+    task_description: str = "",
+    include_style: bool = True,
+    similar_limit: int = 3,
+) -> Dict[str, Any]:
+    """Get full coding context for writing BSL code for a 1C object.
+
+    Aggregates: object metadata, module structure, similar code,
+    dependencies, and code style rules — everything needed for
+    informed BSL code generation.
+
+    Args:
+        object_name: 1C object name (e.g. "Номенклатура")
+        task_description: What code to write (used for similar code search)
+        include_style: Include code style analysis (default True)
+        similar_limit: Number of similar code results (default 3)
+
+    Returns:
+        Dict with object info, modules, dependencies, style rules, similar code
+    """
+    result: Dict[str, Any] = {"object_name": object_name}
+
+    # 1. Object metadata
+    try:
+        extractor = _get_metadata_extractor()
+        obj = extractor.get_object_by_name(object_name)
+        if obj:
+            result["object"] = {
+                "type": obj.object_type,
+                "path": obj.path,
+                "modules": obj.modules,
+                "has_forms": obj.has_forms,
+                "form_names": obj.form_names,
+            }
+        else:
+            result["object"] = {"error": f"Object '{object_name}' not found"}
+    except Exception as e:
+        result["object"] = {"error": str(e)}
+
+    # 2. Call graph dependencies
+    try:
+        store = _get_call_graph()
+        extractor = _get_metadata_extractor()
+        module_paths = extractor.get_object_modules(object_name)
+        exports = []
+        deps = set()
+        for mp in module_paths:
+            cur = store._conn.cursor()
+            cur.execute(
+                "SELECT name, type FROM symbols WHERE module_path = ? AND is_export = 1",
+                (mp,),
+            )
+            for row in cur.fetchall():
+                exports.append({"name": row["name"], "type": row["type"]})
+            # Cross-module dependencies
+            cur.execute(
+                "SELECT DISTINCT c.callee_module FROM calls c "
+                "JOIN symbols s ON c.caller_id = s.id "
+                "WHERE s.module_path = ? AND c.callee_module IS NOT NULL AND c.callee_module != ''",
+                (mp,),
+            )
+            for row in cur.fetchall():
+                deps.add(row["callee_module"])
+        result["exports"] = exports
+        result["dependencies"] = sorted(deps)
+    except Exception:
+        result["exports"] = []
+        result["dependencies"] = []
+
+    # 3. Similar code (via hybrid search)
+    if task_description:
+        try:
+            pipeline = _get_hybrid_pipeline()
+            similar = pipeline.search(task_description, limit=similar_limit)
+            result["similar_code"] = [
+                {
+                    "name": r.name,
+                    "module": r.module_path,
+                    "content": r.content[:400],
+                    "score": round(r.score, 6),
+                }
+                for r in similar
+            ]
+        except Exception:
+            result["similar_code"] = []
+    else:
+        result["similar_code"] = []
+
+    # 4. Code style
+    if include_style:
+        try:
+            from src.bsl.coding_assistant.style_extractor import BSLStyleExtractor
+            from src.bsl.parser import BSLASTParser
+
+            parser = BSLASTParser()
+            extractor = _get_metadata_extractor()
+            module_paths = extractor.get_object_modules(object_name)
+
+            parsed = []
+            for mp in module_paths[:10]:
+                try:
+                    parsed.append(parser.parse_file(mp))
+                except Exception:
+                    pass
+
+            if parsed:
+                style_ext = BSLStyleExtractor()
+                profile = style_ext.analyze(parsed)
+                result["style"] = profile.to_dict()
+                result["style_prompt"] = profile.to_prompt()
+            else:
+                result["style"] = None
+        except Exception:
+            result["style"] = None
+
+    return result
+
+
 if __name__ == "__main__":
     logger.info("=== Starting BSL Semantic Search MCP Server ===")
     mcp.run()
