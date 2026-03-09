@@ -184,7 +184,7 @@ class BSLHybridPipeline:
 
         # BM25 contribution
         for rank, r in enumerate(bm25):
-            key = r.module_path or r.chunk_id
+            key = r.chunk_id
             rrf_score = self._bm25_weight / (k + rank + 1)
             scores[key] = scores.get(key, 0.0) + rrf_score
             if key not in result_map:
@@ -192,7 +192,7 @@ class BSLHybridPipeline:
 
         # Vector contribution
         for rank, r in enumerate(vector):
-            key = r.module_path or r.chunk_id
+            key = r.chunk_id
             rrf_score = self._vector_weight / (k + rank + 1)
             scores[key] = scores.get(key, 0.0) + rrf_score
             if key not in result_map:
