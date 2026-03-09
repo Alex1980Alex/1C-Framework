@@ -250,7 +250,8 @@
       "Bash(export:*)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase:*)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" help:*)",
-      "Bash(net:*)"
+      "Bash(net:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" process:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
