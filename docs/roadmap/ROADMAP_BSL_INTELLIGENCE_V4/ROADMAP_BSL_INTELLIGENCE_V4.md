@@ -306,15 +306,25 @@ CREATE TABLE module_metadata (
 
 ---
 
-## Phase 63: Contextual BSL Search (Priority: MEDIUM)
+## Phase 63: Contextual BSL Search (Priority: MEDIUM) — COMPLETE
 
 **Goal:** Add module context to each chunk during indexing. +15-20% retrieval quality.
 
-Each symbol indexed with context: module, subsystem, type, dependencies, description.
+### Implementation
 
-Based on Anthropic's Contextual Retrieval research.
+`src/bsl/parser/context_enricher.py` — BSLContextEnricher class.
 
-### Effort: 2-3 days
+Each chunk gets context prefix prepended to content with object type, forms list,
+callers/dependencies from call graph. Metadata enriched with `object_type`,
+`object_name`, `forms`, `caller_count`, `cross_module_deps`.
+
+Integration:
+- `scripts/reindex_bsl_qwen3.py` — `--no-context` flag to disable
+- Uses MetadataExtractor (Phase 62) + CallGraphStore (Phase 61)
+- Path-based fallback when extractor not available
+- Object resolution cached per module_path
+
+### Effort: 0.5 days
 
 ---
 
