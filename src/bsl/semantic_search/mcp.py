@@ -466,7 +466,17 @@ def _get_metadata_extractor(project_root: str | None = None):
     global _metadata_extractor
     if _metadata_extractor is None:
         from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
-        root = FilePath(project_root) if project_root else _FRAMEWORK_ROOT
+        if project_root:
+            root = FilePath(project_root)
+        else:
+            # Auto-detect EDT project under src/projects/configuration/
+            config_dir = _FRAMEWORK_ROOT / "src" / "projects" / "configuration"
+            root = _FRAMEWORK_ROOT
+            if config_dir.is_dir():
+                for d in sorted(config_dir.iterdir()):
+                    if d.is_dir() and (d / "src").is_dir():
+                        root = d
+                        break
         _metadata_extractor = MetadataExtractor(root)
     return _metadata_extractor
 
