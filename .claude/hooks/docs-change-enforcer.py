@@ -147,6 +147,10 @@ SKIP_PATTERNS = [
     "src/bsl/",
     # Claude Code commands (slash commands, not product code)
     ".claude/commands/",
+    # Temporary helper scripts (prefixed with underscore, auto-deleted)
+    "_write_test",
+    "_gen_test",
+    "_gen_eval",
 ]
 
 
