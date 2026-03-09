@@ -328,6 +328,63 @@ def smart_index_multi_language(
 smart_index_important_only = smart_index_multi_language
 
 
+def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: bool = False):
+    """AST-based symbol-level indexing for BSL files (Phase 59).
+
+    Uses BSLASTParser + BSLChunker to create symbol-level chunks
+    with rich metadata (params, calls, regions, directives).
+    """
+    from src.bsl.parser.bsl_ast_parser import BSLASTParser
+    from src.bsl.parser.bsl_chunker import BSLChunker
+
+    parser = BSLASTParser()
+    chunker = BSLChunker()
+    engine = HybridSearchEngine()
+    project_root = Path(project_path)
+
+    bsl_files = list(project_root.rglob("*.bsl"))
+    if not full_index:
+        bsl_files = [f for f in bsl_files if not should_skip_file(f, "bsl", SKIP_PATTERNS_BY_TYPE)]
+
+    print(f"[AST] Found {len(bsl_files)} BSL files for symbol-level indexing")
+
+    total_chunks = 0
+    total_symbols = 0
+    errors = 0
+
+    for i, bsl_file in enumerate(bsl_files, 1):
+        try:
+            module = parser.parse_file(str(bsl_file))
+            chunks = chunker.chunk_module(module)
+            total_symbols += len(module.symbols)
+
+            for chunk in chunks:
+                engine.index_document(
+                    content=chunk.content,
+                    doc_type="bsl",
+                    metadata=chunk.metadata,
+                    doc_id=chunk.chunk_id,
+                )
+                total_chunks += 1
+
+            if i % 100 == 0:
+                pct = i * 100 // len(bsl_files)
+                print(f"[{pct:3d}%] {i}/{len(bsl_files)} files, {total_symbols} symbols, {total_chunks} chunks")
+
+            time.sleep(delay_seconds)
+        except Exception as e:
+            errors += 1
+            if errors <= 5:
+                print(f"[ERROR] {bsl_file.name}: {e}")
+
+    print(f"\n[AST-DONE] Symbol-level indexing complete")
+    print(f"  Files: {len(bsl_files)}")
+    print(f"  Symbols: {total_symbols}")
+    print(f"  Chunks: {total_chunks}")
+    print(f"  Errors: {errors}")
+    return {"files": len(bsl_files), "symbols": total_symbols, "chunks": total_chunks, "errors": errors}
+
+
 def main():
     """Main entry point for the Multi-Language Smart Indexer CLI."""
     parser = argparse.ArgumentParser(
