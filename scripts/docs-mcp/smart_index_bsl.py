@@ -351,10 +351,11 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
 
     print(f"[AST] Found {len(bsl_files)} BSL files for symbol-level indexing")
 
+    import sqlite3
     total_chunks = 0
     total_symbols = 0
     errors = 0
-    conn = engine.conn
+    conn = sqlite3.connect(str(engine.db_path), timeout=30.0)
     now = datetime.now().isoformat()
 
     for i, bsl_file in enumerate(bsl_files, 1):
