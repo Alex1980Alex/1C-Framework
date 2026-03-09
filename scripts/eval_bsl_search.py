@@ -124,25 +124,23 @@ def search_fts5(query: str, limit: int = 10) -> List[str]:
         return []
 
 
-_qwen3_embed = None
+_e5_model = None
 
 
-def _get_qwen3_embed():
-    global _qwen3_embed
-    if _qwen3_embed is None:
-        from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
-        _qwen3_embed = Qwen3EmbeddingService()
-    return _qwen3_embed
+def _get_e5_model():
+    global _e5_model
+    if _e5_model is None:
+        from sentence_transformers import SentenceTransformer
+        _e5_model = SentenceTransformer("intfloat/multilingual-e5-large")
+    return _e5_model
 
 
-def search_qwen3(query: str, limit: int = 10) -> List[str]:
-    """Search Qdrant bsl_code_v3 collection via Qwen3 embeddings."""
+def search_v3(query: str, limit: int = 10) -> List[str]:
+    """Search Qdrant bsl_code_v3 collection via E5-large embeddings (1024d)."""
     try:
         client = _get_qdrant()
-        embedder = _get_qwen3_embed()
-        embedding = embedder.embed_query(query)
-        if embedding is None:
-            return []
+        model = _get_e5_model()
+        embedding = model.encode(f"query: {query}").tolist()
         response = client.query_points(collection_name="bsl_code_v3", query=embedding, limit=limit)
         names = []
         for r in (response.points if hasattr(response, "points") else []):
