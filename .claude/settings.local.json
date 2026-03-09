@@ -243,7 +243,13 @@
       "Bash(sqlcmd:*)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase:*)",
       "Bash(\"D:/1С-Framework/docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md\":*)",
-      "Bash(\"D:/1С-Framework/docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.4_Настройка_сервера.md\":*)"
+      "Bash(\"D:/1С-Framework/docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.4_Настройка_сервера.md\":*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" help:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CONFIG:*)",
+      "Bash(choco list:*)",
+      "Bash(export:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" help:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
