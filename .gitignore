@@ -80,3 +80,4 @@ infra/*/build/
 *.log
 
 test_all_phases_results.json
+cache/
