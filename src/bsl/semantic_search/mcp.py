@@ -1,7 +1,8 @@
 """
 BSL Semantic Search MCP Server - Entry Point
 
-FastMCP сервер для семантического поиска по BSL коду
+FastMCP сервер для семантического поиска по BSL коду.
+SQLite FTS5 fallback когда Qdrant недоступен.
 
 Запуск: python -m src.bsl.semantic_search.mcp
 
@@ -10,8 +11,10 @@ Phase 45: Миграция из 1C-Enterprise_Framework
 
 import asyncio
 import logging
+import sqlite3
 import sys
 import os
+from pathlib import Path as FilePath
 from typing import List, Dict, Any
 
 # Добавляем родительские директории в путь для импортов
@@ -42,11 +45,37 @@ mcp = FastMCP("BSL Semantic Search")
 _services_initialized = False
 search_service = None
 embedding_service = None
+_qdrant_available = False
+
+# Auto-detect framework root and SQLite DB path
+_FRAMEWORK_ROOT = FilePath(__file__).resolve().parent.parent.parent.parent
+_SQLITE_DB = _FRAMEWORK_ROOT / "cache" / "docs-mcp" / "hybrid_search.db"
+
+
+def _check_qdrant() -> bool:
+    """Быстрая проверка доступности Qdrant (таймаут 2с)"""
+    try:
+        from qdrant_client import QdrantClient as QC
+        settings = get_bsl_settings()
+        client = QC(host=settings.qdrant_host, port=settings.qdrant_port, timeout=2)
+        client.get_collections()
+        return True
+    except Exception:
+        return False
+
+
+def _get_sqlite_conn():
+    """Подключение к SQLite FTS базе (hybrid_search.db)"""
+    if not _SQLITE_DB.exists():
+        raise FileNotFoundError(f"SQLite DB не найдена: {_SQLITE_DB}")
+    conn = sqlite3.connect(str(_SQLITE_DB))
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 async def ensure_services():
     """Ленивая инициализация всех сервисов"""
-    global _services_initialized, search_service, embedding_service
+    global _services_initialized, search_service, embedding_service, _qdrant_available
 
     if _services_initialized:
         return
@@ -55,21 +84,32 @@ async def ensure_services():
 
     settings = get_bsl_settings()
 
+    # Проверяем Qdrant
+    _qdrant_available = _check_qdrant()
+    if _qdrant_available:
+        logger.info("Qdrant ДОСТУПЕН")
+    else:
+        logger.warning("Qdrant НЕДОСТУПЕН - используем SQLite FTS5 fallback")
+        if _SQLITE_DB.exists():
+            logger.info(f"SQLite DB: {_SQLITE_DB} ({_SQLITE_DB.stat().st_size // 1024 // 1024} MB)")
+        else:
+            logger.warning(f"SQLite DB не найдена. Запустите: scripts/index-folder.bat")
+
     # Embedding Service
     embedding_service = EmbeddingService(
         ollama_host=settings.ollama_host,
         model=settings.embedding_model
     )
-    logger.info("✓ Embedding Service")
+    logger.info("Embedding Service OK")
 
-    # BSL Search Service (пока без Neo4j и LLM)
+    # BSL Search Service
     search_service = BSLSearchService(
-        qdrant_service=None,  # Будет инициализирован лениво
+        qdrant_service=None,
         neo4j_service=None,
         hybrid_engine=None,
         llm_service=None
     )
-    logger.info("✓ BSL Search Service")
+    logger.info("BSL Search Service OK")
 
     _services_initialized = True
     logger.info("=== Все сервисы инициализированы ===")
@@ -116,8 +156,15 @@ async def bsl_search(
             limit=min(limit, 50)
         )
 
-        # Выполняем поиск
+        # Выполняем поиск (Qdrant или SQLite fallback)
         results = await search_service.search(request)
+
+        # SQLite FTS5 fallback если Qdrant не дал результатов
+        if not results and not _qdrant_available:
+            try:
+                results = await _sqlite_fts_search(query, limit)
+            except Exception as e:
+                logger.warning(f"SQLite fallback search failed: {e}")
 
         # Форматируем результаты
         if not results:
@@ -208,10 +255,39 @@ async def bsl_context(
     logger.info(f"bsl_context: file='{file_path}'")
 
     try:
-        # TODO: Реализовать через Qdrant + Neo4j
+        # SQLite fallback для контекста модуля
+        if not _qdrant_available and _SQLITE_DB.exists():
+            try:
+                conn = _get_sqlite_conn()
+                try:
+                    cur = conn.cursor()
+                    like_path = f"%{file_path.replace(chr(92), '/')}%"
+                    cur.execute(
+                        """SELECT path, doc_type, content, content_preview
+                           FROM documents WHERE path LIKE ? LIMIT 1""",
+                        (like_path,)
+                    )
+                    row = cur.fetchone()
+                finally:
+                    conn.close()
+
+                if row:
+                    content_preview = (row["content"] or "")[:2000]
+                    return f"""## Контекст модуля: {row['path']}
+
+**Тип**: {row['doc_type']}
+**Источник**: SQLite FTS5
+
+**Содержимое** (первые 2000 символов):
+
+{content_preview}
+"""
+            except Exception as e:
+                logger.warning(f"SQLite context failed: {e}")
+
         return f"""## Контекст модуля: {file_path}
 
-Функционал в разработке. Используйте bsl_search для получения информации о модуле.
+Модуль не найден в индексе. Запустите индексацию: scripts/index-folder.bat
 """
 
     except Exception as e:
@@ -238,17 +314,13 @@ async def bsl_stats() -> str:
         settings = get_bsl_settings()
 
         # Попытка подключения к Qdrant
-        try:
-            from qdrant_client import QdrantClient
+        if _qdrant_available:
+            try:
+                from qdrant_client import QdrantClient as QC
+                client = QC(host=settings.qdrant_host, port=settings.qdrant_port, timeout=5)
+                collection_info = client.get_collection(settings.collection_name)
 
-            client = QdrantClient(
-                host=settings.qdrant_host,
-                port=settings.qdrant_port
-            )
-
-            collection_info = client.get_collection(settings.collection_name)
-
-            return f"""## Статистика BSL индекса
+                return f"""## Статистика BSL индекса (Qdrant)
 
 **Коллекция**: {settings.collection_name}
 **Векторная размерность**: {settings.embedding_dim}
@@ -260,15 +332,110 @@ async def bsl_stats() -> str:
 **Qdrant**: {settings.qdrant_host}:{settings.qdrant_port}
 **Ollama**: {settings.ollama_host}
 """
+            except Exception as e:
+                logger.warning(f"Qdrant stats failed, trying SQLite: {e}")
 
-        except ImportError:
-            return "qdrant-client не установлен"
+        # SQLite FTS5 fallback
+        try:
+            conn = _get_sqlite_conn()
+            try:
+                cur = conn.cursor()
+
+                cur.execute("SELECT COUNT(*) FROM documents")
+                total_docs = cur.fetchone()[0]
+
+                cur.execute("SELECT doc_type, COUNT(*) as cnt FROM documents GROUP BY doc_type ORDER BY cnt DESC")
+                type_rows = cur.fetchall()
+
+                db_size_mb = _SQLITE_DB.stat().st_size / 1024 / 1024
+
+                type_stats = chr(10).join([f"  - {r['doc_type']}: {r['cnt']}" for r in type_rows])
+            finally:
+                conn.close()
+
+            return f"""## Статистика BSL индекса (SQLite FTS5)
+
+**База данных**: {_SQLITE_DB.name} ({db_size_mb:.1f} MB)
+**Всего документов**: {total_docs}
+**Бэкенд**: SQLite FTS5 (Qdrant недоступен)
+
+**По типам**:
+{type_stats}
+
+**Ollama**: {settings.ollama_host}
+**Модель embeddings**: {settings.embedding_model}
+"""
+        except FileNotFoundError:
+            return "Индекс не найден. Запустите: scripts/index-folder.bat"
         except Exception as e:
-            return f"Ошибка подключения к Qdrant: {e}"
+            return f"Ошибка SQLite: {e}"
 
     except Exception as e:
         logger.error(f"Ошибка в bsl_stats: {e}", exc_info=True)
         return f"Ошибка при получении статистики: {str(e)}"
+
+
+# ================================================================
+# SQLite FTS5 fallback search
+# ================================================================
+async def _sqlite_fts_search(query: str, limit: int = 10):
+    """Поиск через SQLite FTS5 когда Qdrant недоступен"""
+    from .services.search import SearchResult
+
+    conn = _get_sqlite_conn()
+    try:
+        cur = conn.cursor()
+
+        # FTS5 поиск
+        try:
+            cur.execute(
+                """SELECT d.id, d.path, d.doc_type, d.content, d.content_preview
+                   FROM documents d
+                   WHERE d.id IN (
+                       SELECT id FROM documents_fts WHERE documents_fts MATCH ?
+                   )
+                   LIMIT ?""",
+                (query, limit * 3)
+            )
+        except Exception:
+            # Fallback: простой LIKE поиск
+            like_q = f"%{query}%"
+            cur.execute(
+                """SELECT d.id, d.path, d.doc_type, d.content, d.content_preview
+                   FROM documents d
+                   WHERE d.content LIKE ? OR d.path LIKE ?
+                   LIMIT ?""",
+                (like_q, like_q, limit * 3)
+            )
+
+        rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    # Группируем по path и формируем результаты
+    seen_paths = set()
+    results = []
+    for row in rows:
+        fp = row["path"] or ""
+        if fp in seen_paths:
+            continue
+        seen_paths.add(fp)
+
+        summary = (row["content_preview"] or row["content"] or "")[:500]
+        results.append(SearchResult(
+            file_path=fp,
+            module_type=row["doc_type"] or "bsl",
+            score=0.8,
+            original_score=0.8,
+            summary=summary,
+            functions_count=0,
+            source="sqlite_fts5",
+        ))
+
+        if len(results) >= limit:
+            break
+
+    return results
 
 
 if __name__ == "__main__":
