@@ -401,6 +401,14 @@ def main():
         stale = find_stale_domains(session_files)
         stale += find_stale_infra(session_files)
         stale += find_unmapped_changes(session_files)
+
+        # If docs were updated since last block, reset cooldown so hook can guard again
+        if not stale and COOLDOWN_FILE.exists():
+            try:
+                COOLDOWN_FILE.unlink()
+            except Exception:
+                pass
+
         if not stale:
             if timer:
                 timer.log(outcome="allow")
