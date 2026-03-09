@@ -95,28 +95,31 @@ def search_fts5(query: str, limit: int = 10) -> List[str]:
         import sqlite3
         db_path = os.path.join(PROJECT_ROOT, "cache", "docs-mcp", "hybrid_search.db")
         if not os.path.exists(db_path):
-            db_path = os.path.join(PROJECT_ROOT, "data", "bsl_fts5.db")
-            if not os.path.exists(db_path):
-                return []
+            return []
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         try:
+            # Primary: documents_fts table (actual schema)
             cursor.execute(
-                "SELECT title, rank FROM bsl_fts WHERE bsl_fts MATCH ? ORDER BY rank LIMIT ?",
+                "SELECT d.title, rank FROM documents_fts fts "
+                "JOIN documents d ON d.rowid = fts.rowid "
+                "WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?",
                 (query, limit),
             )
             rows = cursor.fetchall()
             return [row[0] for row in rows if row[0]]
         except sqlite3.OperationalError:
+            # Fallback: direct content search
             cursor.execute(
-                "SELECT content, rank FROM search_index WHERE search_index MATCH ? ORDER BY rank LIMIT ?",
+                "SELECT title, rank FROM documents_fts WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?",
                 (query, limit),
             )
             rows = cursor.fetchall()
-            return [row[0][:50] for row in rows if row[0]]
+            return [row[0] for row in rows if row[0]]
         finally:
             conn.close()
-    except Exception:
+    except Exception as e:
+        print(f"  [fts5 error: {e}]")
         return []
 
 
