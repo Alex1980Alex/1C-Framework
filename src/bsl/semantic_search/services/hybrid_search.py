@@ -138,11 +138,13 @@ class BSLHybridPipeline:
             if embedding is None:
                 return []
 
-            hits = self._qdrant.search(
+            from qdrant_client.http import models as qmodels
+            response = self._qdrant.query_points(
                 collection_name=self._collection,
-                query_vector=embedding,
+                query=embedding,
                 limit=limit,
             )
+            hits = response.points if hasattr(response, "points") else []
 
             results = []
             for rank, hit in enumerate(hits):
