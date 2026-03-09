@@ -318,26 +318,31 @@ Based on Anthropic's Contextual Retrieval research.
 
 ---
 
-## Phase 64: BSL Code Intelligence MCP (Priority: MEDIUM)
+## Phase 64: BSL Code Intelligence MCP (Priority: MEDIUM) — COMPLETE
 
 **Goal:** Unified MCP server: bsl-code-intelligence.
 
-### Tools
+### Implementation
 
-| Tool | Description | Depends On |
-|------|------------|------------|
-| bsl_search_symbols | Search by symbols | Phase 59 |
-| bsl_call_graph | Call graph | Phase 61 |
-| bsl_impact_analysis | Impact analysis | Phase 61 |
-| bsl_dead_code | Dead code | Phase 61 |
-| bsl_object_info | Object metadata | Phase 62 |
-| bsl_related_objects | Related objects | Phase 62 |
-| bsl_code_context | Coding context | Phase 63 |
-| bsl_similar_code | Similar procedures | Phases 59, 60 |
-| bsl_complexity | Code complexity | Phase 59 |
-| bsl_duplicates | Code duplicates | Phase 60 |
+4 new tools added to existing `src/bsl/semantic_search/mcp.py` (FastMCP server):
 
-### Effort: 3-4 days
+| Tool | Status | Description |
+|------|--------|------------|
+| bsl_call_graph | DONE | Callers/callees query with direction param |
+| bsl_impact_analysis | DONE | BFS transitive callers, configurable depth |
+| bsl_dead_code | DONE | 3,475 exported-but-never-called symbols found |
+| bsl_object_info | DONE | EDT folder metadata + call graph enrichment |
+
+Deferred (require Phase 63 or separate effort):
+- bsl_related_objects, bsl_code_context, bsl_similar_code, bsl_complexity, bsl_duplicates
+
+### Key decisions
+- Tools integrated into existing MCP server (not separate server)
+- Auto-detection of EDT project root under `src/projects/configuration/`
+- Lazy singletons for CallGraphStore and MetadataExtractor
+- Partial name matching with ambiguity handling in bsl_object_info
+
+### Effort: 0.5 days (4 core tools)
 
 ---
 
