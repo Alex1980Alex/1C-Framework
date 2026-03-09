@@ -124,6 +124,46 @@ def search_fts5(query: str, limit: int = 10) -> List[str]:
         return []
 
 
+_qwen3_embed = None
+
+
+def _get_qwen3_embed():
+    global _qwen3_embed
+    if _qwen3_embed is None:
+        from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
+        _qwen3_embed = Qwen3EmbeddingService()
+    return _qwen3_embed
+
+
+def search_qwen3(query: str, limit: int = 10) -> List[str]:
+    """Search Qdrant bsl_code_v3 collection via Qwen3 embeddings."""
+    try:
+        client = _get_qdrant()
+        embedder = _get_qwen3_embed()
+        embedding = embedder.embed_query(query)
+        if embedding is None:
+            return []
+        results = client.search(collection_name="bsl_code_v3", query_vector=embedding, limit=limit)
+        names = []
+        for r in results:
+            payload = r.payload or {}
+            name = payload.get("name", "")
+            if name:
+                module_name = payload.get("module_name", "")
+                if module_name:
+                    names.append(f"{module_name}.{name}")
+                else:
+                    names.append(name)
+            else:
+                fp = payload.get("module_path", "")
+                if fp:
+                    names.append(_extract_module_name(fp))
+        return names
+    except Exception as e:
+        print(f"  [qwen3 error: {e}]")
+        return []
+
+
 def search_combined(query: str, limit: int = 10) -> List[str]:
     """Combined search: Qdrant + FTS5, deduplicated."""
     qdrant_results = search_qdrant(query, limit)
