@@ -98,20 +98,22 @@ def search_fts5(query: str, limit: int = 10) -> List[str]:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         try:
-            # Primary: documents_fts table (actual schema)
+            # Escape query for FTS5: wrap each word in quotes
+            words = query.split()
+            fts_query = " ".join(f'"{w}"' for w in words if w)
             cursor.execute(
                 "SELECT d.title, rank FROM documents_fts fts "
                 "JOIN documents d ON d.rowid = fts.rowid "
                 "WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?",
-                (query, limit),
+                (fts_query, limit),
             )
             rows = cursor.fetchall()
             return [row[0] for row in rows if row[0]]
         except sqlite3.OperationalError:
-            # Fallback: direct content search
+            # Fallback: single phrase match
             cursor.execute(
                 "SELECT title, rank FROM documents_fts WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?",
-                (query, limit),
+                (f'"{query}"', limit),
             )
             rows = cursor.fetchall()
             return [row[0] for row in rows if row[0]]
