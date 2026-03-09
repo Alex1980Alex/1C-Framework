@@ -97,8 +97,7 @@ class ZAIWriteGuard(BaseHook):
             "2. mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
             "3. Отревьюй результат, исправь если нужно\n"
             "4. Write() финальный код\n\n"
-            "Полный протокол: Skill('z-ai-delegation')\n"
-            "Если Z.AI недоступен — вызови llm_complete с любым prompt чтобы разблокировать."
+            "Полный протокол: Skill('z-ai-delegation')"
         )
 
 
