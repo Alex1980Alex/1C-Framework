@@ -116,8 +116,8 @@ class ZAIDelegationEnforcer(BaseHook):
                 "Full protocol: Skill('z-ai-delegation')"
             )
 
-        # Medium signals (single task)
-        if medium_score >= 2:
+        # Medium signals (single task) — threshold 1 for maximum delegation
+        if medium_score >= 1:
             return HookOutput().system_message(
                 "[Z.AI DELEGATION: MEDIUM] This task should be delegated to Z.AI.\n"
                 "Protocol: Z.AI generates draft -> Opus review (mandatory).\n"
