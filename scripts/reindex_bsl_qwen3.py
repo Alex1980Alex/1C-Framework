@@ -120,6 +120,7 @@ def main() -> None:
     ap.add_argument("--collection", default="bsl_code_v3")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
+    ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
     args = ap.parse_args()
 
     project = args.project.resolve()
@@ -131,6 +132,24 @@ def main() -> None:
     parser = BSLASTParser()
     chunker = BSLChunker()
     embedder = Qwen3EmbeddingService()
+
+    # Phase 63: Context enrichment
+    enricher = None
+    if not args.no_context:
+        try:
+            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
+            from src.bsl.call_graph.store import CallGraphStore
+
+            extractor = MetadataExtractor(project)
+            cg_db = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
+            cg = CallGraphStore(cg_db) if cg_db.exists() else None
+            enricher = BSLContextEnricher(metadata_extractor=extractor, call_graph=cg)
+            obj_stats = extractor.stats()
+            print(f"Context enrichment ON: {obj_stats['total']} objects"
+                  f"{', call graph loaded' if cg else ''}")
+        except Exception as e:
+            print(f"Context enrichment unavailable: {e}")
+            enricher = None
 
     qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
     create_collection(qdrant, args.collection, VECTOR_DIMS, args.recreate)
