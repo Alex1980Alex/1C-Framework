@@ -376,20 +376,24 @@ Graceful degradation: works with BM25-only when Qdrant unavailable.
 
 ---
 
-## Phase 66: BSL Coding Assistant (Priority: HIGH)
+## Phase 66: BSL Coding Assistant (Priority: HIGH) — COMPLETE
 
 **Goal:** Improve BSL code generation via project context.
 
-### Tasks
+### Implementation
 
-1. Auto-context hook - on BSL request, auto-fetch:
-   - Similar procedures from index
-   - Related objects
-   - Module dependencies
-2. Code Style Extractor - rules from existing code
-3. Template Generator - templates by module type
+1. `src/bsl/coding_assistant/style_extractor.py` — BSLStyleExtractor
+   - Analyzes parsed modules: naming, indent, regions, metrics
+   - BSLStyleProfile with `to_prompt()` for LLM context
+   - Detected: PascalCase, Russian, tabs, 8 common regions
 
-### Effort: 3-5 days
+2. MCP tool: `bsl_coding_context(object_name, task_description)`
+   - Object metadata (type, modules, forms)
+   - Exported symbols + cross-module dependencies
+   - Similar code via hybrid search (optional, requires Qwen3)
+   - Code style profile from object's modules
+
+### Effort: 0.5 days
 
 ---
 
