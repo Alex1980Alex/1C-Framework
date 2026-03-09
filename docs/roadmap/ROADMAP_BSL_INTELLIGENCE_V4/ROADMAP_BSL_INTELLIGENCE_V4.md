@@ -150,60 +150,60 @@ Note: Russian-language equivalents also supported in actual implementation.
 
 ---
 
-## Phase 60: Code-Optimized Embeddings (Priority: HIGH)
+## Phase 60: Code-Optimized Embeddings (Priority: HIGH) — IN PROGRESS
 
 **Goal:** Replace nomic-embed-text with code-optimized model.
+
+**Status:** Implementation started. Qwen3-Embedding installed, provider created, reindexing in progress.
 
 ### Model Comparison
 
 | Model | Size | Dims | Code MTEB | Multilingual | Local |
 |-------|------|------|-----------|-------------|-------|
 | nomic-embed-text (current) | 137M | 768 | Medium | Weak RU | Ollama |
-| Qwen3-Embedding-0.6B | 600M | 1024 | Good | 100+ langs+code | Ollama |
-| **Qwen3-Embedding-4B-Q4_K_M** | 2.5 GB | 1024 | **SOTA** | 100+ langs+code | Ollama |
+| **qwen3-embedding (actual)** | 4.7 GB | **4096** | **SOTA** | 100+ langs+code | Ollama |
 | Voyage 3.5 | API | 1024 | Excellent | Good | No |
 | Jina v5-text | 200M-600M | 1024 | Good | SOTA | Docker |
 | BGE-M3 | 567M | 1024 | Good | 100+ | Ollama |
 
-**Decision: Qwen3-Embedding-4B-Q4_K_M** — best quality/resource ratio for CPU-only setup.
+**Decision: qwen3-embedding** via Ollama. Actual dims = 4096 (not 1024 as initially estimated).
 
-### 3-Level Embedding Architecture
+### Architecture (Implemented)
 
 ```
-Level 1: DeepInfra API (primary)
-  -> Qwen3-Embedding-4B, ~50ms, ~$0.05/10K embeddings
-  -> For search and indexing when internet is available
+Level 1: Ollama CPU (primary)
+  -> qwen3-embedding (4.7 GB, ~6 GB RAM)
+  -> ~4-5s per embedding on CPU, $0
+  -> Instruction prompts for BSL code search
 
-Level 2: Ollama CPU (fallback)
-  -> qwen3-embedding:4b-q4_K_M (2.5 GB, ~3 GB RAM)
-  -> ~3-5s per embedding, $0
-  -> When offline or API unavailable
-
-Level 3: SQLite FTS5 (emergency fallback)
+Level 2: SQLite FTS5 (emergency fallback)
   -> Text search, ~5ms, $0
   -> Already implemented in Phase 45
 ```
 
-**Why this works:**
-- Same model (Qwen3-Embedding-4B) on all levels = compatible embeddings, single Qdrant index
-- $0-5/month API cost
-- Always works, even without internet and GPU
-- Q4_K_M quantization: ~1-2% quality loss, 3x size reduction
+### Performance
 
-### Tasks
+- Single embed: ~6.7s on CPU
+- Batch of 5: ~21.5s on CPU (~4.3s/embed)
+- Full reindex (34,936 chunks): ~42h on CPU — run overnight
+- Sample reindex (500 chunks): ~35 min
 
-1. `ollama pull qwen3-embedding:4b-q4_K_M` (2.5 GB)
-2. Create embedding provider with fallback chain: DeepInfra -> Ollama -> FTS5
-3. Create new Qdrant collection: bsl_code_v3 (1024d, cosine)
-4. Instruction prompts for BSL:
-   - Query: "Instruct: Find BSL procedure\nQuery: ..."
-   - Passage: "Instruct: BSL code module\nPassage: ..."
-5. Reindex all 2,004 files (batch via DeepInfra or overnight via Ollama CPU)
-6. A/B comparison via eval dataset (Phase 58)
+### Implementation
+
+1. ✅ `ollama pull qwen3-embedding` (4.7 GB)
+2. ✅ Embedding provider: `src/bsl/semantic_search/services/qwen3_embedding.py`
+   - Qwen3EmbeddingService with singleton, instruction prompts, batch support
+3. ✅ Qdrant collection: `bsl_code_v3` (4096d, cosine)
+4. ✅ Instruction prompts for BSL:
+   - Query: "Instruct: Find BSL code procedure or function\nQuery: ..."
+   - Document: "Instruct: BSL code module from 1C Enterprise\nDocument: ..."
+5. ✅ Reindex script: `scripts/reindex_bsl_qwen3.py` (--limit for sampling)
+6. ✅ Eval script updated: `scripts/eval_bsl_search.py` (--mode qwen3)
+7. 🔄 A/B comparison via eval dataset (Phase 58)
 
 ### Expected: +55% recall, significantly better on RU queries
 
-### Cost: ~$0-5/month (DeepInfra API) | Effort: 2-3 days
+### Cost: $0 (Ollama CPU only) | Effort: 2-3 days
 
 ---
 
