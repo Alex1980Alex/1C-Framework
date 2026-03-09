@@ -333,7 +333,11 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
 
     Uses BSLASTParser + BSLChunker to create symbol-level chunks
     with rich metadata (params, calls, regions, directives).
+    Inserts directly into SQLite documents table (trigger populates FTS5).
     """
+    import hashlib
+    import sqlite3
+    from datetime import datetime
     from src.bsl.parser.bsl_ast_parser import BSLASTParser
     from src.bsl.parser.bsl_chunker import BSLChunker
 
@@ -351,6 +355,8 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
     total_chunks = 0
     total_symbols = 0
     errors = 0
+    conn = engine.conn
+    now = datetime.now().isoformat()
 
     for i, bsl_file in enumerate(bsl_files, 1):
         try:
@@ -359,24 +365,53 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
             total_symbols += len(module.symbols)
 
             for chunk in chunks:
-                engine.index_document(
-                    content=chunk.content,
-                    doc_type="bsl",
-                    metadata=chunk.metadata,
-                    doc_id=chunk.chunk_id,
+                meta = chunk.metadata
+                # Build title from symbol name and type
+                symbol_name = meta.get("symbol_name", "")
+                symbol_type = meta.get("symbol_type", "")
+                module_path = meta.get("module_path", str(bsl_file))
+                title = f"{symbol_name} ({symbol_type})" if symbol_name else bsl_file.stem
+
+                # Build tags
+                tags_parts = ["bsl", "ast-symbol", symbol_type.lower()]
+                if meta.get("is_export"):
+                    tags_parts.append("export")
+                if meta.get("compilation_directive"):
+                    tags_parts.append(meta["compilation_directive"])
+                tags = " ".join(t for t in tags_parts if t)
+
+                content_hash = hashlib.sha256(chunk.content.encode("utf-8")).hexdigest()
+
+                conn.execute(
+                    "INSERT OR REPLACE INTO documents "
+                    "(id, title, path, content, content_preview, size, modified, tags, doc_type, content_hash) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        chunk.chunk_id,
+                        title,
+                        module_path,
+                        chunk.content,
+                        chunk.content[:200],
+                        len(chunk.content),
+                        now,
+                        tags,
+                        "bsl-symbol",
+                        content_hash,
+                    ),
                 )
                 total_chunks += 1
 
             if i % 100 == 0:
+                conn.commit()
                 pct = i * 100 // len(bsl_files)
                 print(f"[{pct:3d}%] {i}/{len(bsl_files)} files, {total_symbols} symbols, {total_chunks} chunks")
 
-            time.sleep(delay_seconds)
         except Exception as e:
             errors += 1
             if errors <= 5:
                 print(f"[ERROR] {bsl_file.name}: {e}")
 
+    conn.commit()
     print(f"\n[AST-DONE] Symbol-level indexing complete")
     print(f"  Files: {len(bsl_files)}")
     print(f"  Symbols: {total_symbols}")
