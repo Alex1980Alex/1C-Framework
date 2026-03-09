@@ -685,7 +685,6 @@ def _get_hybrid_pipeline():
     global _hybrid_pipeline
     if _hybrid_pipeline is None:
         from .services.hybrid_search import BSLHybridPipeline
-        from .services.qwen3_embedding import Qwen3EmbeddingService
 
         # Qdrant client (optional)
         qdrant = None
@@ -696,7 +695,21 @@ def _get_hybrid_pipeline():
         except Exception:
             qdrant = None
 
-        embedder = Qwen3EmbeddingService() if qdrant else None
+        # E5-large embedder (fast, 1024d) — wraps sentence-transformers
+        embedder = None
+        if qdrant:
+            try:
+                from sentence_transformers import SentenceTransformer
+
+                class _E5Embedder:
+                    def __init__(self):
+                        self._model = SentenceTransformer("intfloat/multilingual-e5-large")
+                    def embed_query(self, text: str) -> list[float]:
+                        return self._model.encode(f"query: {text}").tolist()
+
+                embedder = _E5Embedder()
+            except ImportError:
+                pass
 
         # Call graph (optional)
         cg = None
