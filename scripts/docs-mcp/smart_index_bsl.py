@@ -351,6 +351,7 @@ def main():
     parser.add_argument("--delay", type=float, default=0.5, help="Задержка между файлами (сек)")
     parser.add_argument("--full", "-f", action="store_true", help="Полная индексация")
     parser.add_argument("--force", action="store_true", help="Принудительная переиндексация")
+    parser.add_argument("--ast", action="store_true", help="AST-based symbol-level indexing for BSL (Phase 59)")
 
     args = parser.parse_args()
 

@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 """Tests for BSL parser, chunker, and evaluation metrics (Phase 58-59)."""
 
-import math
 from src.bsl.parser.models import (
     SymbolType, CompilationDirective, ModuleType,
     BSLParam, BSLCall, BSLSymbol, BSLVariable, BSLRegion, BSLModule,
@@ -13,27 +11,29 @@ from src.bsl.evaluation.metrics import (
     evaluate_single, aggregate_results, format_report,
 )
 
-try:
-    import pytest
-    HAS_PYTEST = True
-except ImportError:
-    HAS_PYTEST = False
-
 
 class TestModels:
 
     def test_symbol_type_values(self):
-        assert SymbolType.PROCEDURE == "procedure"
-        assert SymbolType.FUNCTION == "function"
+        assert SymbolType.PROCEDURE.value == "Procedure"
+        assert SymbolType.FUNCTION.value == "Function"
 
     def test_compilation_directive(self):
-        assert CompilationDirective.AT_SERVER == "AtServer"
-        assert CompilationDirective.AT_CLIENT == "AtClient"
+        assert CompilationDirective.AT_SERVER.value == "&AtServer"
+        assert CompilationDirective.AT_CLIENT.value == "&AtClient"
+
+    def test_compilation_directive_from_string(self):
+        assert CompilationDirective.from_string("&AtServer") == CompilationDirective.AT_SERVER
+        assert CompilationDirective.from_string("unknown") == CompilationDirective.NONE
 
     def test_module_type(self):
-        assert ModuleType.OBJECT_MODULE == "object_module"
-        assert ModuleType.FORM_MODULE == "form_module"
-        assert ModuleType.COMMON_MODULE == "common_module"
+        assert ModuleType.OBJECT_MODULE.value == "ObjectModule"
+        assert ModuleType.FORM_MODULE.value == "FormModule"
+        assert ModuleType.COMMON_MODULE.value == "CommonModule"
+
+    def test_module_type_from_path(self):
+        assert ModuleType.from_path("CommonModules/MyModule/Module.bsl") == ModuleType.COMMON_MODULE
+        assert ModuleType.from_path("unknown/path.bsl") == ModuleType.UNKNOWN
 
     def test_bsl_param(self):
         p = BSLParam(name="Param1", default_value="123", by_val=True)
@@ -47,7 +47,7 @@ class TestModels:
             name="TestProc",
             symbol_type=SymbolType.PROCEDURE,
             params=params,
-            start_line=1, end_line=5, body="",
+            line_start=1, line_end=5, body="",
         )
         sig = sym.signature
         assert "TestProc" in sig
@@ -58,23 +58,33 @@ class TestModels:
         params = [BSLParam(name="X", by_val=True)]
         sym = BSLSymbol(
             name="Fn", symbol_type=SymbolType.FUNCTION,
-            params=params, start_line=1, end_line=3, body="",
+            params=params, line_start=1, line_end=3, body="",
         )
         ps = sym.params_str
         assert "X" in ps
 
     def test_bsl_module_properties(self):
-        mod = BSLModule(file_path="test.bsl", content="// test", symbols=[], variables=[])
-        assert mod.procedure_count == 0
-        assert mod.function_count == 0
-        assert mod.total_lines == 1
+        mod = BSLModule(file_path="test.bsl", module_type=ModuleType.UNKNOWN, symbols=[], variables=[])
+        assert len(mod.procedures) == 0
+        assert len(mod.functions) == 0
 
     def test_bsl_module_with_symbols(self):
-        sym1 = BSLSymbol(name="P1", symbol_type=SymbolType.PROCEDURE, start_line=1, end_line=3, body="")
-        sym2 = BSLSymbol(name="F1", symbol_type=SymbolType.FUNCTION, start_line=5, end_line=8, body="")
-        mod = BSLModule(file_path="m.bsl", content="line1", symbols=[sym1, sym2], variables=[])
-        assert mod.procedure_count == 1
-        assert mod.function_count == 1
+        sym1 = BSLSymbol(name="P1", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="")
+        sym2 = BSLSymbol(name="F1", symbol_type=SymbolType.FUNCTION, line_start=5, line_end=8, body="")
+        mod = BSLModule(file_path="m.bsl", module_type=ModuleType.UNKNOWN, symbols=[sym1, sym2], variables=[])
+        assert len(mod.procedures) == 1
+        assert len(mod.functions) == 1
+
+    def test_bsl_module_exports(self):
+        sym1 = BSLSymbol(name="ExportProc", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="", is_export=True)
+        sym2 = BSLSymbol(name="LocalProc", symbol_type=SymbolType.PROCEDURE, line_start=5, line_end=7, body="", is_export=False)
+        mod = BSLModule(file_path="m.bsl", module_type=ModuleType.UNKNOWN, symbols=[sym1, sym2])
+        assert len(mod.exports) == 1
+        assert mod.exports[0].name == "ExportProc"
+
+    def test_bsl_module_name(self):
+        mod = BSLModule(file_path="CommonModules/MyModule/Ext/Module.bsl", module_type=ModuleType.COMMON_MODULE)
+        assert mod.module_name == "MyModule"
 
 
 class TestParser:
@@ -162,17 +172,18 @@ class TestChunker:
             name="Calculate",
             symbol_type=SymbolType.FUNCTION,
             params=[BSLParam(name="Value")],
-            start_line=1, end_line=5,
+            line_start=1, line_end=5,
             body="Return Value * 2;",
-            calls=[BSLCall(name="Multiply", line=3)],
+            calls=[BSLCall(caller_name="Calculate", callee_module=None, callee_method="Multiply", line=3)],
             comment="Doubles the value",
         )
         return BSLModule(
             file_path="calc.bsl",
-            content="Function Calculate(Value)\n    Return Value * 2;\nEndFunction",
+            module_type=ModuleType.COMMON_MODULE,
+            raw_content="Function Calculate(Value)\n    Return Value * 2;\nEndFunction",
             symbols=[sym],
             variables=[],
-            module_type=ModuleType.COMMON_MODULE,
+            line_count=3,
         )
 
     def test_chunk_module(self):
@@ -187,7 +198,7 @@ class TestChunker:
         mod = self._make_sample_module()
         chunks = chunker.chunk_module(mod)
         for chunk in chunks:
-            assert chunk.file_path == "calc.bsl"
+            assert chunk.module_path == "calc.bsl"
 
     def test_chunk_content_not_empty(self):
         chunker = self._make_chunker()
@@ -198,17 +209,26 @@ class TestChunker:
 
     def test_empty_module(self):
         chunker = self._make_chunker()
-        mod = BSLModule(file_path="empty.bsl", content="", symbols=[], variables=[])
+        mod = BSLModule(file_path="empty.bsl", module_type=ModuleType.UNKNOWN, raw_content="", symbols=[], variables=[])
         chunks = chunker.chunk_module(mod)
         assert isinstance(chunks, list)
 
     def test_multiple_symbols(self):
         chunker = self._make_chunker()
-        sym1 = BSLSymbol(name="A", symbol_type=SymbolType.PROCEDURE, start_line=1, end_line=3, body="// a")
-        sym2 = BSLSymbol(name="B", symbol_type=SymbolType.FUNCTION, start_line=5, end_line=8, body="Return 1;")
-        mod = BSLModule(file_path="multi.bsl", content="code", symbols=[sym1, sym2], variables=[])
+        sym1 = BSLSymbol(name="A", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="// a")
+        sym2 = BSLSymbol(name="B", symbol_type=SymbolType.FUNCTION, line_start=5, line_end=8, body="Return 1;")
+        mod = BSLModule(file_path="multi.bsl", module_type=ModuleType.UNKNOWN, raw_content="code", symbols=[sym1, sym2], line_count=8)
         chunks = chunker.chunk_module(mod)
+        # 1 summary + 2 symbols = 3
         assert len(chunks) >= 2
+
+    def test_no_summary_mode(self):
+        chunker = BSLChunker(include_module_summary=False)
+        mod = self._make_sample_module()
+        chunks = chunker.chunk_module(mod)
+        # Should only have symbol chunks, no summary
+        chunk_types = [c.metadata.get("chunk_type") for c in chunks]
+        assert "module_summary" not in chunk_types
 
 
 class TestMetrics:
