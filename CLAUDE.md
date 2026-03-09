@@ -147,7 +147,7 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
     trust_scorer.py         # Trust scoring for sources (Context7/GitHub/SO/Infostart)
   skill-router.py           # UserPromptSubmit: skill recommendations
   skill-eval-enforcer-shell.py  # UserPromptSubmit: task protocol + activation enforcement
-  task-protocol-observer.py # PostToolUse:TaskCreate: records decomposition in session state
+  task-protocol-observer.py # PostToolUse:TaskCreate|Skill|llm_complete: records decomposition, skill activation, Z.AI delegation
   task-protocol-enforcer.py # PreToolUse:Write|Edit: blocks if protocol phase is idle
   code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F + A.1 research_protocol, protocol.py base)
   code-verify-reminder.py   # PostToolUse: mandatory code verification (v2.2: PASS-marker completion via Task result)
