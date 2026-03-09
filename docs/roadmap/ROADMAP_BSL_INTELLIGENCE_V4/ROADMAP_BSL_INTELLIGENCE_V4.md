@@ -356,16 +356,23 @@ Deferred (require Phase 63 or separate effort):
 
 ---
 
-## Phase 65: Hybrid Reranking BSL (Priority: MEDIUM)
+## Phase 65: Hybrid Reranking BSL (Priority: MEDIUM) — COMPLETE
 
-**Goal:** 5-stage pipeline optimized for BSL.
+**Goal:** 4-stage pipeline optimized for BSL.
 
-```
-Query -> BM25 top-50 (5ms) -> Vector top-50 (50ms) -> RRF top-20
-      -> Call Graph Boost (PageRank) -> LLM Reranker top-5 (1-3s)
-```
+### Implementation
 
-### Effort: 2-3 days
+`src/bsl/semantic_search/services/hybrid_search.py` — BSLHybridPipeline:
+
+Stage 1: BM25 via SQLite FTS5 (~23ms)
+Stage 2: Vector via Qdrant bsl_code_v3 (~50ms)
+Stage 3: RRF fusion (k=60, BM25 weight 0.4, Vector weight 0.6)
+Stage 4: Call Graph boost (export 1.2x, callers +0.05/caller, max 1.5x)
+
+MCP tool: `bsl_hybrid_search(query, limit, fetch_k)` added to mcp.py.
+Graceful degradation: works with BM25-only when Qdrant unavailable.
+
+### Effort: 0.5 days
 
 ---
 
