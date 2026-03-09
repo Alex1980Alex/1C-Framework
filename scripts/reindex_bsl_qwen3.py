@@ -155,6 +155,11 @@ def main() -> None:
                     n = flush_batch(qdrant, embedder, args.collection, batch)
                     total_chunks += n
                     batch.clear()
+                    if args.limit and total_chunks >= args.limit:
+                        break
+
+            if args.limit and total_chunks >= args.limit:
+                break
 
         except Exception as e:
             errors += 1
