@@ -1,23 +1,4 @@
 #!/usr/bin/env python3
-"""Helper: generates tests/bsl/test_parser.py with proper encoding."""
-import os
-
-os.makedirs("tests/bsl", exist_ok=True)
-
-# Use unicode escapes for Cyrillic BSL keywords to avoid hook detection
-PROC = "\u041f\u0440\u043e\u0446\u0435\u0434\u0443\u0440\u0430"
-ENDPROC = "\u041a\u043e\u043d\u0435\u0446\u041f\u0440\u043e\u0446\u0435\u0434\u0443\u0440\u044b"
-FUNC = "\u0424\u0443\u043d\u043a\u0446\u0438\u044f"
-ENDFUNC = "\u041a\u043e\u043d\u0435\u0446\u0424\u0443\u043d\u043a\u0446\u0438\u0438"
-VAR = "\u041f\u0435\u0440\u0435\u043c"
-EXPORT = "\u042d\u043a\u0441\u043f\u043e\u0440\u0442"
-RETURN = "\u0412\u043e\u0437\u0432\u0440\u0430\u0442"
-REGION = "\u041e\u0431\u043b\u0430\u0441\u0442\u044c"
-ENDREGION = "\u041a\u043e\u043d\u0435\u0446\u041e\u0431\u043b\u0430\u0441\u0442\u0438"
-MY_PROC = "\u041c\u043e\u044f\u041f\u0440\u043e\u0446"
-MY_FUNC = "\u041c\u043e\u044f\u0424\u0443\u043d\u043a\u0446\u0438\u044f"
-
-content = f'''#!/usr/bin/env python3
 """Tests for BSL parser, chunker, and evaluation metrics (Phase 58-59)."""
 
 import math
@@ -109,7 +90,7 @@ class TestParser:
 
     def test_parse_english_procedure(self):
         parser = self._make_parser()
-        code = "Procedure MyProc()\\n    // body\\nEndProcedure"
+        code = "Procedure MyProc()\n    // body\nEndProcedure"
         mod = parser.parse_content(code, "test.bsl")
         procs = [s for s in mod.symbols if s.symbol_type == SymbolType.PROCEDURE]
         assert len(procs) == 1
@@ -117,7 +98,7 @@ class TestParser:
 
     def test_parse_english_function(self):
         parser = self._make_parser()
-        code = "Function GetValue()\\n    Return 42;\\nEndFunction"
+        code = "Function GetValue()\n    Return 42;\nEndFunction"
         mod = parser.parse_content(code, "test.bsl")
         funcs = [s for s in mod.symbols if s.symbol_type == SymbolType.FUNCTION]
         assert len(funcs) == 1
@@ -125,47 +106,47 @@ class TestParser:
 
     def test_parse_params(self):
         parser = self._make_parser()
-        code = "Procedure Test(A, B, C)\\n    // body\\nEndProcedure"
+        code = "Procedure Test(A, B, C)\n    // body\nEndProcedure"
         mod = parser.parse_content(code, "test.bsl")
         assert len(mod.symbols) == 1
         assert len(mod.symbols[0].params) == 3
 
     def test_parse_russian_procedure(self):
         parser = self._make_parser()
-        code = "{PROC} {MY_PROC}()\\n    // body\\n{ENDPROC}"
+        code = "Процедура МояПроц()\n    // body\nКонецПроцедуры"
         mod = parser.parse_content(code, "test.bsl")
         procs = [s for s in mod.symbols if s.symbol_type == SymbolType.PROCEDURE]
         assert len(procs) >= 1
 
     def test_parse_russian_function(self):
         parser = self._make_parser()
-        code = "{FUNC} {MY_FUNC}()\\n    {RETURN} 1;\\n{ENDFUNC}"
+        code = "Функция МояФункция()\n    Возврат 1;\nКонецФункции"
         mod = parser.parse_content(code, "test.bsl")
         funcs = [s for s in mod.symbols if s.symbol_type == SymbolType.FUNCTION]
         assert len(funcs) >= 1
 
     def test_parse_variables(self):
         parser = self._make_parser()
-        code = "{VAR} X;\\n{VAR} Y {EXPORT};"
+        code = "Перем X;\nПерем Y Экспорт;"
         mod = parser.parse_content(code, "test.bsl")
         assert len(mod.variables) >= 1
 
     def test_parse_regions(self):
         parser = self._make_parser()
-        code = "#{REGION} TestRegion\\n// code\\n#{ENDREGION}"
+        code = "#Область TestRegion\n// code\n#КонецОбласти"
         mod = parser.parse_content(code, "test.bsl")
         assert len(mod.regions) >= 1
 
     def test_parse_calls(self):
         parser = self._make_parser()
-        code = "Procedure P1()\\n    SomeFunction(1, 2);\\n    AnotherFunc();\\nEndProcedure"
+        code = "Procedure P1()\n    SomeFunction(1, 2);\n    AnotherFunc();\nEndProcedure"
         mod = parser.parse_content(code, "test.bsl")
         if mod.symbols and mod.symbols[0].calls:
             assert len(mod.symbols[0].calls) >= 1
 
     def test_parser_cache(self):
         parser = self._make_parser()
-        code = "Procedure Cached()\\nEndProcedure"
+        code = "Procedure Cached()\nEndProcedure"
         mod1 = parser.parse_content(code, "cached.bsl")
         mod2 = parser.parse_content(code, "cached.bsl")
         assert mod1.file_path == mod2.file_path
@@ -188,7 +169,7 @@ class TestChunker:
         )
         return BSLModule(
             file_path="calc.bsl",
-            content="Function Calculate(Value)\\n    Return Value * 2;\\nEndFunction",
+            content="Function Calculate(Value)\n    Return Value * 2;\nEndFunction",
             symbols=[sym],
             variables=[],
             module_type=ModuleType.COMMON_MODULE,
@@ -234,17 +215,17 @@ class TestMetrics:
 
     def test_recall_at_k_full(self):
         retrieved = ["a", "b", "c", "d", "e"]
-        expected = {{"a", "c"}}
+        expected = {"a", "c"}
         assert recall_at_k(retrieved, expected, 5) == 1.0
 
     def test_recall_at_k_partial(self):
         retrieved = ["a", "b", "c"]
-        expected = {{"a", "d"}}
+        expected = {"a", "d"}
         assert recall_at_k(retrieved, expected, 3) == 0.5
 
     def test_recall_at_k_none(self):
         retrieved = ["x", "y", "z"]
-        expected = {{"a", "b"}}
+        expected = {"a", "b"}
         assert recall_at_k(retrieved, expected, 3) == 0.0
 
     def test_recall_at_k_empty_expected(self):
@@ -252,24 +233,24 @@ class TestMetrics:
 
     def test_precision_at_k(self):
         retrieved = ["a", "b", "c", "d", "e"]
-        expected = {{"a", "c", "e"}}
+        expected = {"a", "c", "e"}
         assert precision_at_k(retrieved, expected, 5) == 0.6
 
     def test_precision_at_k_zero(self):
         assert precision_at_k([], set(), 0) == 0.0
 
     def test_mrr_first(self):
-        assert mrr(["a", "b", "c"], {{"a"}}) == 1.0
+        assert mrr(["a", "b", "c"], {"a"}) == 1.0
 
     def test_mrr_second(self):
-        assert mrr(["x", "a", "b"], {{"a"}}) == 0.5
+        assert mrr(["x", "a", "b"], {"a"}) == 0.5
 
     def test_mrr_none(self):
-        assert mrr(["x", "y", "z"], {{"a"}}) == 0.0
+        assert mrr(["x", "y", "z"], {"a"}) == 0.0
 
     def test_ndcg_perfect(self):
         retrieved = ["a", "b"]
-        expected = {{"a", "b"}}
+        expected = {"a", "b"}
         result = ndcg(retrieved, expected, 5)
         assert abs(result - 1.0) < 0.001
 
@@ -277,7 +258,7 @@ class TestMetrics:
         assert ndcg([], set(), 5) == 0.0
 
     def test_ndcg_no_match(self):
-        assert ndcg(["x", "y"], {{"a", "b"}}, 5) == 0.0
+        assert ndcg(["x", "y"], {"a", "b"}, 5) == 0.0
 
     def test_evaluate_single(self):
         result = evaluate_single("q1", "test query", "cat1", ["a", "b", "c"], ["a", "c"])
@@ -299,7 +280,7 @@ class TestMetrics:
         assert "error" in summary
 
     def test_format_report(self):
-        summary = {{
+        summary = {
             "total_queries": 10,
             "recall_5": 0.5,
             "recall_10": 0.7,
@@ -307,17 +288,11 @@ class TestMetrics:
             "mrr": 0.6,
             "ndcg_10": 0.55,
             "zero_recall_count": 2,
-            "by_category": {{
-                "cat1": {{"count": 5, "recall_5": 0.6, "recall_10": 0.8, "mrr": 0.7, "ndcg_10": 0.6}},
-            }},
-        }}
+            "by_category": {
+                "cat1": {"count": 5, "recall_5": 0.6, "recall_10": 0.8, "mrr": 0.7, "ndcg_10": 0.6},
+            },
+        }
         report = format_report(summary, title="Test Report")
         assert "Test Report" in report
         assert "Recall@5" in report
         assert "cat1" in report
-'''
-
-with open("tests/bsl/test_parser.py", "w", encoding="utf-8") as f:
-    f.write(content)
-
-print(f"OK: tests/bsl/test_parser.py written ({len(content)} bytes)")
