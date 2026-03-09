@@ -28,7 +28,7 @@ from src.bsl.parser import BSLASTParser, BSLChunker
 from src.bsl.parser.bsl_chunker import BSLChunk
 from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
 
-SKIP_PATTERNS = ["node_modules", "bin/", "build/", "src/projects/configuration"]
+SKIP_PATTERNS = ["node_modules", "bin/", "build/"]
 VECTOR_DIMS = 4096
 UUID_NAMESPACE = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
