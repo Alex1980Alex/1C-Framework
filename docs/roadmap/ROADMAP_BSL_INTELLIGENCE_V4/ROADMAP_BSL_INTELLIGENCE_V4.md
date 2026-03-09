@@ -417,20 +417,20 @@ Already integrated:
 
 ## Summary Table
 
-| Phase | Name | Priority | Days | Depends On | Effect |
-|-------|------|----------|------|------------|--------|
-| **58** | Eval Dataset and Baseline | CRITICAL | 1-2 | -- | Measurement |
-| **59** | AST-based BSL Indexing | CRITICAL | 3-5 | -- | +44% recall |
-| **60** | Code-Optimized Embeddings | HIGH | 2-3 | 58 | +55% recall |
-| **61** | Call Graph and Dependencies | HIGH | 5-7 | 59 | New capability |
-| **62** | 1C Object Knowledge Graph | MEDIUM | 4-6 | -- | Context |
-| **63** | Contextual BSL Search | MEDIUM | 2-3 | 59,60,62 | +15-20% recall |
-| **64** | Code Intelligence MCP | MEDIUM | 3-4 | 59,61,62 | Unified API |
-| **65** | Hybrid Reranking BSL | MEDIUM | 2-3 | 60 | +10-15% precision |
-| **66** | Coding Assistant | HIGH | 3-5 | 59,61,62 | Code quality |
-| **67** | External Tools | LOW | 2-4 | -- | Ecosystem |
+| Phase | Name | Priority | Plan | Actual | Status |
+|-------|------|----------|------|--------|--------|
+| **58** | Eval Dataset and Baseline | CRITICAL | 1-2d | 0.5d | COMPLETE |
+| **59** | AST-based BSL Indexing | CRITICAL | 3-5d | 1d | COMPLETE |
+| **60** | Code-Optimized Embeddings | HIGH | 2-3d | 1d | COMPLETE (reindex slow on CPU) |
+| **61** | Call Graph and Dependencies | HIGH | 5-7d | 0.5d | COMPLETE |
+| **62** | 1C Object Knowledge Graph | MEDIUM | 4-6d | 0.5d | COMPLETE (folder-based) |
+| **63** | Contextual BSL Search | MEDIUM | 2-3d | 0.5d | COMPLETE |
+| **64** | Code Intelligence MCP | MEDIUM | 3-4d | 0.5d | COMPLETE (4 tools) |
+| **65** | Hybrid Reranking BSL | MEDIUM | 2-3d | 0.5d | COMPLETE |
+| **66** | Coding Assistant | HIGH | 3-5d | 0.5d | COMPLETE |
+| **67** | External Tools | LOW | 2-4d | -- | DEFERRED |
 
-**Total: 27-42 days**
+**Plan: 27-42 days | Actual: ~5 days (Phases 58-66)**
 
 ---
 
