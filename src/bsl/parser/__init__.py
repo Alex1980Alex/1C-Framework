@@ -8,10 +8,12 @@ Extracts procedures, functions, variables, calls, regions.
 from .models import BSLSymbol, BSLModule, SymbolType, CompilationDirective
 from .bsl_ast_parser import BSLASTParser
 from .bsl_chunker import BSLChunker
+from .context_enricher import BSLContextEnricher
 
 __all__ = [
     "BSLASTParser",
     "BSLChunker",
+    "BSLContextEnricher",
     "BSLSymbol",
     "BSLModule",
     "SymbolType",
