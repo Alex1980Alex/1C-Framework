@@ -397,11 +397,21 @@ Graceful degradation: works with BM25-only when Qdrant unavailable.
 
 ---
 
-## Phase 67: External Tools Integration (Priority: LOW)
+## Phase 67: External Tools Integration (Priority: LOW) — DEFERRED
 
 Integration candidates: claude-hud, codebase-memory-mcp, parry, sonar-bsl-plugin, bsl-language-server.
 
-### Effort: 2-4 days
+**Status:** Deferred — all core functionality (Phases 58-66) is implemented.
+External tools can be added incrementally as needed via `.mcp/bsl.json` config.
+
+Already integrated:
+- bsl-platform-context (Phase 46)
+- bsl-debugger (Phase 48)
+- ast-grep-mcp (Phase 52)
+- serena LSP (Phase 52)
+- bsl-semantic-search (Phase 45, enhanced Phases 60-66)
+
+### Effort: on-demand
 
 ---
 
