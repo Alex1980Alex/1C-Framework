@@ -67,7 +67,7 @@ class Qwen3EmbeddingService:
 
     def _get_client(self) -> httpx.Client:
         if self._client is None or self._client.is_closed:
-            self._client = httpx.Client(timeout=120.0)
+            self._client = httpx.Client(timeout=300.0)
         return self._client
 
     @property
