@@ -138,7 +138,6 @@ class BSLHybridPipeline:
             if embedding is None:
                 return []
 
-            from qdrant_client.http import models as qmodels
             response = self._qdrant.query_points(
                 collection_name=self._collection,
                 query=embedding,
