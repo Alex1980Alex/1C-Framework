@@ -241,7 +241,9 @@
       "Bash(sc query:*)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)",
       "Bash(sqlcmd:*)",
-      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase:*)"
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase:*)",
+      "Bash(\"D:/1С-Framework/docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md\":*)",
+      "Bash(\"D:/1С-Framework/docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.4_Настройка_сервера.md\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,

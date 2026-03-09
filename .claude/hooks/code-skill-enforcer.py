@@ -186,6 +186,13 @@ class CodeSkillEnforcer(BaseHook):
     # -------------------------------------------------------------------------
 
     def _handle_pre(self, inp):
+        # Skip non-code files (docs, config, data) — no skill enforcement needed
+        file_path = inp.tool_input.get("file_path", "")
+        if file_path:
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext in (".md", ".txt", ".json", ".yml", ".yaml", ".toml", ".env", ".ini", ".cfg", ".csv", ".log", ".v8i"):
+                return None
+
         # Level B: Directory rules (checked FIRST — most specific)
         result = self._check_directory_rules(inp)
         if result:
