@@ -267,23 +267,42 @@ CREATE TABLE module_metadata (
 
 ---
 
-## Phase 62: 1C Object Knowledge Graph (Priority: MEDIUM)
+## Phase 62: 1C Object Knowledge Graph (Priority: MEDIUM) — COMPLETE (folder-based)
 
-**Goal:** Metadata object graph - links between catalogs, documents, registers, subsystems.
+**Goal:** Metadata object graph from EDT folder structure.
 
-### Metadata Sources
-- Configuration .xml files
-- mdclasses (github.com/1c-syntax) - Java library for metadata parsing
-- BSL code (Phase 59) - call analysis
-- Folder structure - object type detection
+**Status:** Folder-based extraction complete. 959 objects discovered. XML parsing deferred.
 
-### MCP Tools
-- bsl_objects(type) -> list of objects
-- bsl_object_info(name) -> attributes, table parts, movements
-- bsl_related(name) -> related objects
-- bsl_subsystem(name) -> all objects in subsystem
+### Results
 
-### Effort: 4-6 days
+| Type | Count |
+|------|-------|
+| CommonModule | 424 |
+| InformationRegister | 162 |
+| Catalog | 90 |
+| CommonForm | 79 |
+| DataProcessor | 77 |
+| Constant | 42 |
+| Report | 32 |
+| Document | 25 |
+| Enum | 12 |
+| Subsystem | 11 |
+
+### Implementation
+
+1. `src/bsl/knowledge_graph/metadata_extractor.py` — MetadataExtractor
+   - `extract_objects()` — scan EDT folders, return ObjectInfo list
+   - `get_objects_by_type(type)` / `get_object_by_name(name)`
+   - `get_object_modules(name)` — BSL file paths for an object
+   - `stats()` — counts by type
+2. ObjectInfo dataclass: name, object_type, path, modules, forms
+3. Supports both English and Russian EDT folder names
+
+### Deferred
+- XML parsing for attributes, table parts, movements
+- MCP tools (Phase 64)
+
+### Effort: 0.5 days (folder-based)
 
 ---
 
