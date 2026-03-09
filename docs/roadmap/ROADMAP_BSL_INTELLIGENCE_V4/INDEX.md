@@ -60,16 +60,16 @@ BSL files (2,004)
 
 | Phase | Name | Priority | Days | Depends On | Effect | File |
 |-------|------|----------|------|------------|--------|------|
-| **58** | Eval Dataset and Baseline | CRITICAL | 1-2 | -- | Measurement | [PHASE_58.md](PHASE_58.md) |
-| **59** | AST-based BSL Indexing | CRITICAL | 3-5 | -- | +44% recall | [PHASE_59.md](PHASE_59.md) |
-| **60** | Code-Optimized Embeddings | HIGH | 2-3 | 58 | +55% recall | [PHASE_60.md](PHASE_60.md) |
-| **61** | Call Graph and Dependencies | HIGH | 5-7 | 59 | New capability | [PHASE_61.md](PHASE_61.md) |
-| **62** | 1C Object Knowledge Graph | MEDIUM | 4-6 | -- | Context | [PHASE_62.md](PHASE_62.md) |
-| **63** | Contextual BSL Search | MEDIUM | 2-3 | 59,60,62 | +15-20% recall | [PHASE_63.md](PHASE_63.md) |
-| **64** | Code Intelligence MCP | MEDIUM | 3-4 | 59,61,62 | Unified API | [PHASE_64.md](PHASE_64.md) |
-| **65** | Hybrid Reranking BSL | MEDIUM | 2-3 | 60 | +10-15% precision | [PHASE_65.md](PHASE_65.md) |
-| **66** | Coding Assistant | HIGH | 3-5 | 59,61,62 | Code quality | [PHASE_66.md](PHASE_66.md) |
-| **67** | External Tools | LOW | 2-4 | -- | Ecosystem | [PHASE_67.md](PHASE_67.md) |
+| **58** | Eval Dataset and Baseline | CRITICAL | 1-2 | -- | Measurement | [PHASE_58.md](PHASE_58.md) | [Checklist](PHASE_58_CHECKLIST.md) |
+| **59** | AST-based BSL Indexing | CRITICAL | 3-5 | -- | +44% recall | [PHASE_59.md](PHASE_59.md) | [Checklist](PHASE_59_CHECKLIST.md) |
+| **60** | Code-Optimized Embeddings | HIGH | 2-3 | 58 | +55% recall | [PHASE_60.md](PHASE_60.md) | [Checklist](PHASE_60_CHECKLIST.md) |
+| **61** | Call Graph and Dependencies | HIGH | 5-7 | 59 | New capability | [PHASE_61.md](PHASE_61.md) | [Checklist](PHASE_61_CHECKLIST.md) |
+| **62** | 1C Object Knowledge Graph | MEDIUM | 4-6 | -- | Context | [PHASE_62.md](PHASE_62.md) | [Checklist](PHASE_62_CHECKLIST.md) |
+| **63** | Contextual BSL Search | MEDIUM | 2-3 | 59,60,62 | +15-20% recall | [PHASE_63.md](PHASE_63.md) | [Checklist](PHASE_63_CHECKLIST.md) |
+| **64** | Code Intelligence MCP | MEDIUM | 3-4 | 59,61,62 | Unified API | [PHASE_64.md](PHASE_64.md) | [Checklist](PHASE_64_CHECKLIST.md) |
+| **65** | Hybrid Reranking BSL | MEDIUM | 2-3 | 60 | +10-15% precision | [PHASE_65.md](PHASE_65.md) | [Checklist](PHASE_65_CHECKLIST.md) |
+| **66** | Coding Assistant | HIGH | 3-5 | 59,61,62 | Code quality | [PHASE_66.md](PHASE_66.md) | [Checklist](PHASE_66_CHECKLIST.md) |
+| **67** | External Tools | LOW | 2-4 | -- | Ecosystem | [PHASE_67.md](PHASE_67.md) | [Checklist](PHASE_67_CHECKLIST.md) |
 
 **Total: 27-42 days**
 
