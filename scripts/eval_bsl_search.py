@@ -158,7 +158,7 @@ def search_v3(query: str, limit: int = 10) -> List[str]:
                     names.append(_extract_module_name(fp))
         return names
     except Exception as e:
-        print(f"  [qwen3 error: {e}]")
+        print(f"  [v3 error: {e}]")
         return []
 
 
