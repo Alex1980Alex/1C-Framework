@@ -143,9 +143,9 @@ def search_qwen3(query: str, limit: int = 10) -> List[str]:
         embedding = embedder.embed_query(query)
         if embedding is None:
             return []
-        results = client.search(collection_name="bsl_code_v3", query_vector=embedding, limit=limit)
+        response = client.query_points(collection_name="bsl_code_v3", query=embedding, limit=limit)
         names = []
-        for r in results:
+        for r in (response.points if hasattr(response, "points") else []):
             payload = r.payload or {}
             name = payload.get("name", "")
             if name:
