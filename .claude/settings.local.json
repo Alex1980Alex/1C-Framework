@@ -214,7 +214,16 @@
       "mcp__bsl-platform-context__getMembers",
       "mcp__bsl-platform-context__getMember",
       "mcp__bsl-platform-context__getConstructors",
-      "mcp__bsl-platform-context__info"
+      "mcp__bsl-platform-context__info",
+      "mcp__bsl-debugger__bsl_execute",
+      "mcp__auto-documenter__generate_dependency_graph",
+      "Read(//c/Users/AlexT/AppData/Local/Programs/**)",
+      "Read(//c/ProgramData/**)",
+      "Read(//c/Users/AlexT/**)",
+      "Bash(wmic process:*)",
+      "Bash(cmd:*)",
+      "mcp__auto-documenter__generate_documentation",
+      "mcp__auto-documenter__autoreview"
     ]
   },
   "enableAllProjectMcpServers": true,
