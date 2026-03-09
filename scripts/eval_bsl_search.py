@@ -75,9 +75,9 @@ def search_qdrant(query: str, limit: int = 10) -> List[str]:
         client = _get_qdrant()
         model = _get_embed_model()
         embedding = model.encode(f"search_query: {query}").tolist()
-        results = client.search(collection_name="bsl_code_v2", query_vector=embedding, limit=limit)
+        response = client.query_points(collection_name="bsl_code_v2", query=embedding, limit=limit)
         names = []
-        for r in results:
+        for r in (response.points if hasattr(response, "points") else []):
             payload = r.payload or {}
             fp = payload.get("file_path", "")
             if fp:
