@@ -116,8 +116,10 @@ SKIP_PATTERNS = [
     "settings.local.json",
     # Ralph state files (runtime, not code)
     ".ralph_",
-    # Scripts and tests (utility, not core product code)
+    # Scripts, batch files, and tests (utility, not core product code)
     "scripts/",
+    ".bat",
+    ".sh",
     "tests/",
     # Agent configs and subagent settings
     ".claude/agents/",
