@@ -233,7 +233,11 @@
       "mcp__llm-rotation__llm_list_providers",
       "mcp__llm-rotation__llm_reset_provider",
       "mcp__llm-rotation__llm_test_providers",
-      "Bash(ollama pull:*)"
+      "Bash(ollama pull:*)",
+      "Read(//c/Program Files/1cv8/**)",
+      "Read(//c/Program Files \\(x86\\)/1cv8/**)",
+      "Bash(reg query:*)",
+      "Bash(regsvr32:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
