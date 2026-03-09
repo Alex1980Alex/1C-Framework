@@ -26,7 +26,7 @@ QUERY_INSTRUCTION = "Instruct: Find BSL code procedure or function\nQuery: "
 DOCUMENT_INSTRUCTION = "Instruct: BSL code module from 1C Enterprise\nDocument: "
 
 MAX_INPUT_CHARS = 8000
-EXPECTED_DIMS = 1024
+EXPECTED_DIMS = 4096
 
 
 class Qwen3EmbeddingService:
