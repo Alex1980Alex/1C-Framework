@@ -223,7 +223,10 @@
       "Bash(wmic process:*)",
       "Bash(cmd:*)",
       "mcp__auto-documenter__generate_documentation",
-      "mcp__auto-documenter__autoreview"
+      "mcp__auto-documenter__autoreview",
+      "Bash(pip list:*)",
+      "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/python.exe\":*)",
+      "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/serena.exe\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
