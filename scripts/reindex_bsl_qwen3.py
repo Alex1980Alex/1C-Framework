@@ -189,7 +189,7 @@ def main() -> None:
             enricher = None
 
     qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
-    create_collection(qdrant, args.collection, VECTOR_DIMS, args.recreate)
+    create_collection(qdrant, args.collection, vector_dims, args.recreate)
 
     bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
     print(f"Found {len(bsl_files)} BSL files")
