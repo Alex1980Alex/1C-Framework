@@ -207,7 +207,7 @@ def main():
     parser = argparse.ArgumentParser(description="BSL Search Evaluation Runner")
     parser.add_argument("--dataset", default=os.path.join(PROJECT_ROOT, "data", "eval", "bsl", "bsl_eval_dataset.json"))
     parser.add_argument("--output", default=os.path.join(PROJECT_ROOT, "docs", "analysis", "bsl_baseline_report.md"))
-    parser.add_argument("--mode", choices=["qdrant", "fts5", "combined", "qwen3"], default="combined")
+    parser.add_argument("--mode", choices=["qdrant", "fts5", "combined", "v3"], default="combined")
     parser.add_argument("--json", action="store_true", help="Output raw JSON")
     args = parser.parse_args()
     if not os.path.exists(args.dataset):
