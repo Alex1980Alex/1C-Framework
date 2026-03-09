@@ -69,24 +69,29 @@ Full algorithm: `Skill('task-protocol')`.
 - Phase machine: `idle → classified → [decomposed] → skill_checked → ALLOW Write/Edit`
 - Exempt: `.claude/`, `docs/`, `data/`, config files (.json, .toml, .yml, .env)
 
-## Token Economy: Z.AI Delegation Protocol (MANDATORY)
+## Token Economy: Z.AI Delegation Protocol (MANDATORY — NEVER SKIP)
+
+**RULE: Before generating ANY content > 30 lines, ALWAYS ask: "Can Z.AI generate this?"**
+**If YES → MUST delegate. If NO → explain why (architecture/security/debug only).**
+**Violation: generating 50+ lines of docs/tests/boilerplate yourself = wasted Opus tokens.**
 
 Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotation.
 
 ### Delegation Levels
 - **Soft** (no review): bulk ops (10+ items), translations, formatting
-- **Medium** (Opus review mandatory): docs, decomposition, tests, boilerplate
+- **Medium** (Opus review mandatory): docs, decomposition, tests, boilerplate, checklists, templates
 - **Hard** (Opus thorough review mandatory): code writing, refactoring, analysis
 - **Never delegate**: architecture decisions, security, debugging, tasks < 30 lines output
 
-### Orchestrator Mode (complex tasks, 3+ files)
+### Orchestrator Mode (MUST use for 3+ output files)
 1. **DECOMPOSE** — Opus разбивает задачу на подзадачи, классифицирует каждую (Soft/Medium/Hard/Never)
 2. **PREPARE** — Opus строит промпт для каждой делегируемой подзадачи (задача+контекст+формат+ограничения)
 3. **DELEGATE** — `mcp__llm-rotation__llm_complete()` для каждой подзадачи (параллельно если независимы)
 4. **REVIEW** — Opus ревьюит каждый результат (Medium: accuracy; Hard: +logic+security)
 5. **ASSEMBLE** — Opus собирает финальный результат, Write() файлы
+6. **FALLBACK** — Если Z.AI недоступен (all providers failed) → Opus пишет сам, НЕ останавливается
 
-### Single Task Mode (1-2 files)
+### Single Task Mode (1-2 files, output > 30 lines)
 1. Classify -> delegation level
 2. `mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)`
 3. Review (Medium/Hard) -> fix inline
@@ -94,14 +99,22 @@ Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotat
 
 If >50% rewrite needed -> reclassify as Never, do it yourself.
 
-### Mandatory Opus Review (ALWAYS)
+### Mandatory Opus Review (ALWAYS — NEVER SKIP)
 After writing ANY code (.py, .js, .ts, .bsl, etc.) — self-review is MANDATORY:
 - **Code (any complexity)**: re-read written code, check logic, edge cases, naming
-- **Hard tasks**: thorough review — logic + security + patterns + edge cases
+- **Hard tasks**: thorough review — logic + security + patterns + edge cases + error handling
+- **After Z.AI draft**: verify names, imports, API calls exist (Z.AI hallucinates project details)
 - Format: brief inline review after Write/Edit, before moving to next task
-- Never skip even for "trivial" code changes — bugs hide in small fixes
+- **NEVER skip** even for "trivial" code changes — bugs hide in small fixes
+- Hook `code-review-enforcer.py` fires on every Write|Edit of code files
 
-Full protocol: `Skill('z-ai-delegation')`. Hook: `z-ai-delegation-enforcer.py` (UserPromptSubmit).
+### Self-Check Questions (ask before EVERY generative task)
+1. Output > 30 lines? → MUST delegate to Z.AI
+2. 3+ output files? → MUST use Orchestrator Mode
+3. Code file changed? → MUST self-review (THOROUGH if src/tools/infra/scripts)
+4. Z.AI down? → Opus writes, but note "Z.AI unavailable, writing directly"
+
+Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `code-review-enforcer.py` (PostToolUse Write|Edit).
 
 ## Output Rules
 
