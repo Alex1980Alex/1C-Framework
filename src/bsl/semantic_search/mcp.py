@@ -438,6 +438,237 @@ async def _sqlite_fts_search(query: str, limit: int = 10):
     return results
 
 
+# ---------------------------------------------------------------------------
+# Phase 64: BSL Code Intelligence tools
+# ---------------------------------------------------------------------------
+
+_CALL_GRAPH_DB = _FRAMEWORK_ROOT / "cache" / "bsl_call_graph.db"
+_call_graph_store = None
+_metadata_extractor = None
+
+
+def _get_call_graph():
+    """Lazy singleton for CallGraphStore."""
+    global _call_graph_store
+    if _call_graph_store is None:
+        from src.bsl.call_graph.store import CallGraphStore
+        if not _CALL_GRAPH_DB.exists():
+            raise FileNotFoundError(
+                f"Call graph DB not found: {_CALL_GRAPH_DB}. "
+                "Run: python scripts/build_call_graph.py --project <path>"
+            )
+        _call_graph_store = CallGraphStore(_CALL_GRAPH_DB)
+    return _call_graph_store
+
+
+def _get_metadata_extractor(project_root: str | None = None):
+    """Lazy singleton for MetadataExtractor."""
+    global _metadata_extractor
+    if _metadata_extractor is None:
+        from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
+        root = FilePath(project_root) if project_root else _FRAMEWORK_ROOT
+        _metadata_extractor = MetadataExtractor(root)
+    return _metadata_extractor
+
+
+@mcp.tool()
+def bsl_call_graph(
+    symbol_name: str,
+    direction: str = "both",
+    module: str | None = None,
+) -> Dict[str, Any]:
+    """Query BSL call graph: find callers and/or callees of a symbol.
+
+    Args:
+        symbol_name: Name of the procedure/function (e.g. "ПриЗаписи")
+        direction: "callers", "callees", or "both"
+        module: Optional module path filter for callers query
+
+    Returns:
+        Dict with callers and/or callees lists
+    """
+    store = _get_call_graph()
+    result: Dict[str, Any] = {"symbol": symbol_name}
+
+    if direction in ("callers", "both"):
+        callers = store.callers_of(symbol_name, module)
+        result["callers"] = [
+            {
+                "name": c["name"],
+                "module": c["module_path"],
+                "type": c["type"],
+                "line": c.get("call_line"),
+            }
+            for c in callers[:50]
+        ]
+        result["callers_count"] = len(callers)
+
+    if direction in ("callees", "both"):
+        # For callees we need a symbol_id; search by name across modules
+        store_conn = store._conn
+        cur = store_conn.cursor()
+        cur.execute(
+            "SELECT id, module_path FROM symbols WHERE name = ? LIMIT 1",
+            (symbol_name,),
+        )
+        row = cur.fetchone()
+        if row:
+            sid = row["id"]
+            callees = store.callees_of(sid)
+            result["callees"] = [
+                {
+                    "name": c["callee_name"],
+                    "module": c["callee_module"] or "(local)",
+                    "line": c["line_number"],
+                    "call_type": c["call_type"],
+                }
+                for c in callees[:50]
+            ]
+            result["callees_count"] = len(callees)
+            result["resolved_module"] = row["module_path"]
+        else:
+            result["callees"] = []
+            result["callees_count"] = 0
+            result["error"] = f"Symbol '{symbol_name}' not found in call graph"
+
+    return result
+
+
+@mcp.tool()
+def bsl_impact_analysis(
+    symbol_name: str,
+    depth: int = 3,
+    module: str | None = None,
+) -> Dict[str, Any]:
+    """Transitive impact analysis: find all symbols affected by changing a given symbol.
+
+    Uses BFS to traverse the call graph upward (callers of callers).
+
+    Args:
+        symbol_name: Name of the procedure/function to analyze
+        depth: Maximum traversal depth (default 3)
+        module: Optional module path filter
+
+    Returns:
+        Dict with affected symbols grouped by depth level
+    """
+    store = _get_call_graph()
+    affected = store.impact_analysis(symbol_name, module, depth=depth)
+
+    by_depth: Dict[int, list] = {}
+    for item in affected:
+        d = item.get("_depth", 0)
+        by_depth.setdefault(d, []).append({
+            "name": item["name"],
+            "module": item["module_path"],
+            "type": item["type"],
+        })
+
+    return {
+        "symbol": symbol_name,
+        "depth": depth,
+        "total_affected": len(affected),
+        "by_depth": {str(k): v for k, v in sorted(by_depth.items())},
+    }
+
+
+@mcp.tool()
+def bsl_dead_code(limit: int = 50) -> Dict[str, Any]:
+    """Find exported BSL symbols that are never called anywhere.
+
+    Returns:
+        Dict with dead code candidates (exported but unreferenced symbols)
+    """
+    store = _get_call_graph()
+    dead = store.dead_code()
+
+    items = [
+        {
+            "name": s["name"],
+            "module": s["module_path"],
+            "type": s["type"],
+            "line": s["line_start"],
+        }
+        for s in dead[:limit]
+    ]
+
+    return {
+        "total_dead": len(dead),
+        "showing": len(items),
+        "symbols": items,
+    }
+
+
+@mcp.tool()
+def bsl_object_info(
+    object_name: str,
+    project_root: str | None = None,
+) -> Dict[str, Any]:
+    """Get 1C Enterprise object metadata from EDT folder structure.
+
+    Args:
+        object_name: Name of the 1C object (e.g. "Номенклатура", "ЗаказКлиента")
+        project_root: Optional project root path (auto-detected if not set)
+
+    Returns:
+        Dict with object type, modules, forms, and related call graph stats
+    """
+    extractor = _get_metadata_extractor(project_root)
+    obj = extractor.get_object_by_name(object_name)
+
+    if obj is None:
+        # Try partial match
+        all_objects = extractor.extract_objects()
+        matches = [
+            o for o in all_objects
+            if object_name.lower() in o.name.lower()
+        ]
+        if not matches:
+            return {"error": f"Object '{object_name}' not found", "hint": "Use exact object folder name"}
+        # Return first partial match
+        obj = matches[0]
+        if len(matches) > 1:
+            return {
+                "error": f"Ambiguous name '{object_name}', multiple matches",
+                "matches": [{"name": m.name, "type": m.object_type} for m in matches[:10]],
+            }
+
+    result: Dict[str, Any] = {
+        "name": obj.name,
+        "object_type": obj.object_type,
+        "path": obj.path,
+        "modules": obj.modules,
+        "has_forms": obj.has_forms,
+        "form_names": obj.form_names,
+    }
+
+    # Enrich with call graph stats if available
+    try:
+        store = _get_call_graph()
+        module_paths = extractor.get_object_modules(object_name)
+        symbols_count = 0
+        exports_count = 0
+        for mp in module_paths:
+            cur = store._conn.cursor()
+            cur.execute(
+                "SELECT COUNT(*) FROM symbols WHERE module_path = ?", (mp,)
+            )
+            symbols_count += cur.fetchone()[0]
+            cur.execute(
+                "SELECT COUNT(*) FROM symbols WHERE module_path = ? AND is_export = 1",
+                (mp,),
+            )
+            exports_count += cur.fetchone()[0]
+        result["call_graph"] = {
+            "symbols": symbols_count,
+            "exports": exports_count,
+        }
+    except Exception:
+        result["call_graph"] = None
+
+    return result
+
+
 if __name__ == "__main__":
     logger.info("=== Starting BSL Semantic Search MCP Server ===")
     mcp.run()
