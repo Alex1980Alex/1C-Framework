@@ -159,26 +159,51 @@ Note: Russian-language equivalents also supported in actual implementation.
 | Model | Size | Dims | Code MTEB | Multilingual | Local |
 |-------|------|------|-----------|-------------|-------|
 | nomic-embed-text (current) | 137M | 768 | Medium | Weak RU | Ollama |
-| **Qwen3-Embedding-0.6B** | 600M | 1024 | SOTA | 100+ langs+code | Ollama |
-| Qwen3-Embedding-4B | 4B | 1024 | Better | 100+ langs+code | vLLM/GPU |
+| Qwen3-Embedding-0.6B | 600M | 1024 | Good | 100+ langs+code | Ollama |
+| **Qwen3-Embedding-4B-Q4_K_M** | 2.5 GB | 1024 | **SOTA** | 100+ langs+code | Ollama |
 | Voyage 3.5 | API | 1024 | Excellent | Good | No |
 | Jina v5-text | 200M-600M | 1024 | Good | SOTA | Docker |
 | BGE-M3 | 567M | 1024 | Good | 100+ | Ollama |
 
-**Recommendation:** Qwen3-Embedding-0.6B via Ollama
-- SOTA on code retrieval, 100+ languages, instruction-aware, Apache 2.0
+**Decision: Qwen3-Embedding-4B-Q4_K_M** — best quality/resource ratio for CPU-only setup.
+
+### 3-Level Embedding Architecture
+
+```
+Level 1: DeepInfra API (primary)
+  -> Qwen3-Embedding-4B, ~50ms, ~$0.05/10K embeddings
+  -> For search and indexing when internet is available
+
+Level 2: Ollama CPU (fallback)
+  -> qwen3-embedding:4b-q4_K_M (2.5 GB, ~3 GB RAM)
+  -> ~3-5s per embedding, $0
+  -> When offline or API unavailable
+
+Level 3: SQLite FTS5 (emergency fallback)
+  -> Text search, ~5ms, $0
+  -> Already implemented in Phase 45
+```
+
+**Why this works:**
+- Same model (Qwen3-Embedding-4B) on all levels = compatible embeddings, single Qdrant index
+- $0-5/month API cost
+- Always works, even without internet and GPU
+- Q4_K_M quantization: ~1-2% quality loss, 3x size reduction
 
 ### Tasks
 
-1. Add Qwen3-Embedding to Ollama
-2. Create new Qdrant collection: bsl_code_v3 (1024d, cosine)
-3. Instruction prompts for BSL
-4. Reindex all 2,004 files
-5. A/B comparison via eval dataset (Phase 58)
+1. `ollama pull qwen3-embedding:4b-q4_K_M` (2.5 GB)
+2. Create embedding provider with fallback chain: DeepInfra -> Ollama -> FTS5
+3. Create new Qdrant collection: bsl_code_v3 (1024d, cosine)
+4. Instruction prompts for BSL:
+   - Query: "Instruct: Find BSL procedure\nQuery: ..."
+   - Passage: "Instruct: BSL code module\nPassage: ..."
+5. Reindex all 2,004 files (batch via DeepInfra or overnight via Ollama CPU)
+6. A/B comparison via eval dataset (Phase 58)
 
 ### Expected: +55% recall, significantly better on RU queries
 
-### Effort: 2-3 days
+### Cost: ~$0-5/month (DeepInfra API) | Effort: 2-3 days
 
 ---
 
