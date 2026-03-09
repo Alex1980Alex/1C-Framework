@@ -166,6 +166,8 @@ def main() -> None:
         try:
             module = parser.parse_file(str(fp))
             chunks = chunker.chunk_module(module)
+            if enricher:
+                enricher.enrich(chunks)
             total_symbols += len(module.symbols)
 
             for chunk in chunks:
