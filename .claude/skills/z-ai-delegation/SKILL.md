@@ -266,6 +266,69 @@ Output complete test file.
 
 ---
 
+## Mandatory Opus Review
+
+Opus review обязателен в двух случаях — **всегда после кода** и **всегда после Hard задач**.
+
+### Когда ревью обязателен
+
+| Ситуация | Review level | Пропустить? |
+|----------|-------------|-------------|
+| Любой код (.py, .js, .ts, .bsl) — даже 3 строки | Basic | НЕТ |
+| Hard задача (Z.AI или Opus) | Thorough | НЕТ |
+| Hard + код | Thorough | НЕТ |
+| Docs / Markdown / config | Не требуется | Да |
+
+### Basic Review (для любого кода)
+
+После Write/Edit кода — перечитай и проверь:
+- [ ] Логика корректна (условия, циклы, возврат)
+- [ ] Naming понятный и консистентный
+- [ ] Нет copy-paste ошибок
+- [ ] Edge cases (None, пустой список, 0, пустая строка)
+
+Формат: 2-4 строки после Write/Edit, до перехода к следующей задаче.
+
+```
+Wrote `parser.py:45-60`. Review:
+- Logic: regex matches both EN/RU keywords — OK
+- Edge: empty file returns [] — OK
+- Naming: `_extract_symbols` consistent with `_extract_calls` — OK
+```
+
+### Thorough Review (Hard задачи)
+
+Всё из Basic ПЛЮС:
+- [ ] Security (injection, hardcoded secrets, input validation)
+- [ ] Паттерны проекта (async-first, provider pattern, Pydantic)
+- [ ] Performance (N+1, blocking in async, resource leaks)
+- [ ] Backward compatibility (public API не сломан)
+- [ ] Error handling (try/except не глотает ошибки)
+
+Формат: таблица после завершения задачи.
+
+```
+## Review: z-ai-delegation-enforcer.py
+| Check | Status | Note |
+|-------|--------|------|
+| Logic | OK | Priority: Never > Orchestrator > Hard > Medium |
+| Security | OK | No user input in regex, no file I/O |
+| Patterns | OK | BaseHook, systemMessage advisory |
+| Performance | OK | Keyword matching only, <1ms |
+| Edge cases | OK | Short prompts (<40 chars) skipped |
+```
+
+### Review после Z.AI генерации
+
+Z.AI не знает контекст проекта — ревью критически важен:
+- [ ] Имена переменных/функций соответствуют проекту
+- [ ] Импорты существуют и корректны
+- [ ] API вызовы с правильными параметрами
+- [ ] Нет выдуманных библиотек/функций (галлюцинации)
+- [ ] Формат соответствует стилю проекта
+
+---
+
 ## Диагностика проблем
 
 | Проблема | Причина | Решение |
