@@ -229,7 +229,8 @@
       "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/serena.exe\":*)",
       "Bash(ollama list:*)",
       "Bash(ollama show:*)",
-      "Bash(ollama search:*)"
+      "Bash(ollama search:*)",
+      "mcp__llm-rotation__llm_list_providers"
     ]
   },
   "enableAllProjectMcpServers": true,
