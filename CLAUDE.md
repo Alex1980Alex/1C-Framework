@@ -94,6 +94,13 @@ Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotat
 
 If >50% rewrite needed -> reclassify as Never, do it yourself.
 
+### Mandatory Opus Review (ALWAYS)
+After writing ANY code (.py, .js, .ts, .bsl, etc.) — self-review is MANDATORY:
+- **Code (any complexity)**: re-read written code, check logic, edge cases, naming
+- **Hard tasks**: thorough review — logic + security + patterns + edge cases
+- Format: brief inline review after Write/Edit, before moving to next task
+- Never skip even for "trivial" code changes — bugs hide in small fixes
+
 Full protocol: `Skill('z-ai-delegation')`. Hook: `z-ai-delegation-enforcer.py` (UserPromptSubmit).
 
 ## Output Rules
