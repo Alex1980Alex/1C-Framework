@@ -301,6 +301,23 @@ class SessionState:
         state["task_protocol"] = protocol
         cls._save_state(state)
 
+    # ===== Z.AI DELEGATION TRACKING =====
+
+    @classmethod
+    def record_llm_delegation(cls) -> None:
+        """Record that mcp__llm-rotation__llm_complete was called in this session."""
+        state = cls._load_state()
+        count = state.get("llm_delegation_count", 0)
+        state["llm_delegation_count"] = count + 1
+        state["llm_delegation_last"] = datetime.now().isoformat()
+        cls._save_state(state)
+
+    @classmethod
+    def has_llm_delegation(cls) -> bool:
+        """Check if Z.AI delegation was used in this session."""
+        state = cls._load_state()
+        return state.get("llm_delegation_count", 0) > 0
+
     # ===== ROUTER FIRED MARKER (Phase 11: enforcer coordination) =====
 
     @classmethod
