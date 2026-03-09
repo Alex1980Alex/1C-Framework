@@ -57,7 +57,6 @@ def _get_embed_model():
 
 def _extract_module_name(file_path: str) -> str:
     """Extract module name from file_path for matching."""
-    import re
     fp = file_path.replace("\\", "/")
     # Extract filename without extension
     name = os.path.basename(fp).replace(".bsl", "")
