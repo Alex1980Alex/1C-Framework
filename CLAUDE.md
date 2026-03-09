@@ -79,12 +79,20 @@ Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotat
 - **Hard** (Opus thorough review mandatory): code writing, refactoring, analysis
 - **Never delegate**: architecture decisions, security, debugging, tasks < 30 lines output
 
-### Protocol: Draft -> Review
-1. Classify task -> delegation level
-2. If delegatable -> `mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)`
-3. Review Z.AI output (Medium: accuracy+completeness+format; Hard: +logic+security)
-4. If >50% rewrite needed -> reclassify as Never, do it yourself
-5. Write final result after review fixes
+### Orchestrator Mode (complex tasks, 3+ files)
+1. **DECOMPOSE** — Opus разбивает задачу на подзадачи, классифицирует каждую (Soft/Medium/Hard/Never)
+2. **PREPARE** — Opus строит промпт для каждой делегируемой подзадачи (задача+контекст+формат+ограничения)
+3. **DELEGATE** — `mcp__llm-rotation__llm_complete()` для каждой подзадачи (параллельно если независимы)
+4. **REVIEW** — Opus ревьюит каждый результат (Medium: accuracy; Hard: +logic+security)
+5. **ASSEMBLE** — Opus собирает финальный результат, Write() файлы
+
+### Single Task Mode (1-2 files)
+1. Classify -> delegation level
+2. `mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)`
+3. Review (Medium/Hard) -> fix inline
+4. Write final result
+
+If >50% rewrite needed -> reclassify as Never, do it yourself.
 
 Full protocol: `Skill('z-ai-delegation')`. Hook: `z-ai-delegation-enforcer.py` (UserPromptSubmit).
 
