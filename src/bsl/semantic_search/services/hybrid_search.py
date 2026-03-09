@@ -233,8 +233,8 @@ class BSLHybridPipeline:
                             self._cg_boost_max - 1.0,
                         )
                         r.metadata["caller_count"] = caller_count
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("Call graph lookup failed for %s: %s", name, e)
 
             boost = min(boost, self._cg_boost_max)
             r.score *= boost
