@@ -139,7 +139,7 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   base/base.py              # Alt dataclass-based HookInput with auto-detect event
   shared/
     invocation_logger.py    # JSONL logger (data/hook-invocations.jsonl)
-    session_state.py        # Session: activated/recommended skills dedup, prompt_id, pending_learn, task_protocol
+    session_state.py        # Session: activated/recommended skills dedup, prompt_id, pending_learn, task_protocol, llm_delegation
     ralph_state.py          # Ralph Wiggum state management
     otel_exporter.py        # OpenTelemetry OTLP exporter
     task_master.py          # Task management from hooks (session_start_cleanup: git + code-verify)
