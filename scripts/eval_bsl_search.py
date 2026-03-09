@@ -35,29 +35,57 @@ def load_dataset(path: str) -> Dict[str, Any]:
         return json.load(f)
 
 
+_qdrant_client = None
+_embed_model = None
+
+
+def _get_qdrant():
+    global _qdrant_client
+    if _qdrant_client is None:
+        from qdrant_client import QdrantClient as QC
+        _qdrant_client = QC(host="localhost", port=6333, timeout=10)
+    return _qdrant_client
+
+
+def _get_embed_model():
+    global _embed_model
+    if _embed_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embed_model = SentenceTransformer("nomic-ai/nomic-embed-text-v1", trust_remote_code=True)
+    return _embed_model
+
+
+def _extract_module_name(file_path: str) -> str:
+    """Extract module name from file_path for matching."""
+    import re
+    fp = file_path.replace("\\", "/")
+    # Extract filename without extension
+    name = os.path.basename(fp).replace(".bsl", "")
+    # Also try to extract parent object name
+    parts = fp.split("/")
+    # Pattern: .../ObjectName/Ext/ModuleType.bsl
+    for i, p in enumerate(parts):
+        if p == "Ext" and i > 0:
+            return f"{parts[i-1]}.{name}"
+    return name
+
+
 def search_qdrant(query: str, limit: int = 10) -> List[str]:
     """Search Qdrant bsl_code_v2 collection via qdrant-client."""
     try:
-        from qdrant_client import QdrantClient as QC
-        client = QC(host="localhost", port=6333, timeout=10)
-        collections = [c.name for c in client.get_collections().collections]
-        if "bsl_code_v2" not in collections:
-            return []
-        try:
-            from sentence_transformers import SentenceTransformer
-            model = SentenceTransformer("nomic-ai/nomic-embed-text-v1", trust_remote_code=True)
-            embedding = model.encode(f"search_query: {query}").tolist()
-        except ImportError:
-            return []
+        client = _get_qdrant()
+        model = _get_embed_model()
+        embedding = model.encode(f"search_query: {query}").tolist()
         results = client.search(collection_name="bsl_code_v2", query_vector=embedding, limit=limit)
         names = []
         for r in results:
             payload = r.payload or {}
-            name = payload.get("name", payload.get("symbol_name", ""))
-            if name:
-                names.append(name)
+            fp = payload.get("file_path", "")
+            if fp:
+                names.append(_extract_module_name(fp))
         return names
-    except Exception:
+    except Exception as e:
+        print(f"  [qdrant error: {e}]")
         return []
 
 
