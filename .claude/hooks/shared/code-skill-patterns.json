@@ -108,7 +108,7 @@
       },
       {
         "directory_prefix": ".claude/skills/",
-        "skill": "create-skill",
+        "skill": "doc-to-skill",
         "label": "Skill Creation",
         "domain": "framework"
       },
