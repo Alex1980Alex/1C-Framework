@@ -24,7 +24,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from src.bsl.parser import BSLASTParser, BSLChunker
+from src.bsl.parser import BSLASTParser, BSLChunker, BSLContextEnricher
 from src.bsl.parser.bsl_chunker import BSLChunk
 from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
 
