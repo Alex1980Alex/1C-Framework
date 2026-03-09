@@ -138,7 +138,7 @@
       },
       {
         "directory_prefix": "tests/",
-        "skill": "testing",
+        "skill": "evaluation-benchmark",
         "label": "Testing & Test Infrastructure",
         "domain": "testing"
       },
