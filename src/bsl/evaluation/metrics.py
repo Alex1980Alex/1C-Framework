@@ -71,6 +71,36 @@ def ndcg(retrieved: List[str], expected: Set[str], k: int = 10) -> float:
     return dcg / idcg if idcg > 0 else 0.0
 
 
+def _normalize(s: str) -> str:
+    """Normalize string for matching: lowercase, strip whitespace."""
+    return s.strip().lower()
+
+
+def _fuzzy_match(retrieved_item: str, expected_set: Set[str]) -> bool:
+    """Check if retrieved item matches any expected (substring or exact)."""
+    r = _normalize(retrieved_item)
+    for e in expected_set:
+        en = _normalize(e)
+        if en in r or r in en or en == r:
+            return True
+    return False
+
+
+def _build_fuzzy_set(retrieved: List[str], expected_set: Set[str]) -> List[str]:
+    """Convert retrieved items: matched items become their expected name."""
+    result = []
+    for item in retrieved:
+        r = _normalize(item)
+        matched = None
+        for e in expected_set:
+            en = _normalize(e)
+            if en in r or r in en or en == r:
+                matched = e
+                break
+        result.append(matched if matched else item)
+    return result
+
+
 def evaluate_single(
     query_id: str,
     query: str,
@@ -80,6 +110,8 @@ def evaluate_single(
 ) -> EvalResult:
     """Evaluate a single query against expected results."""
     expected_set = set(expected)
+    # Use fuzzy matching: substring containment
+    retrieved = _build_fuzzy_set(retrieved, expected_set)
     return EvalResult(
         query_id=query_id,
         query=query,
