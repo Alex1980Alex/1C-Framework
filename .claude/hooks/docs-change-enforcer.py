@@ -45,6 +45,8 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+COOLDOWN_FILE = PROJECT_ROOT / "data" / "docs-enforcer-last-block.txt"
+COOLDOWN_MINUTES = 30  # After blocking once, allow stop for this duration
 
 # ═══════════════════════════════════════════════════════════════════════════
 # DOMAIN MAPPING: code prefix → (docs subdirectory, skill name)
