@@ -179,7 +179,7 @@ def search_combined(query: str, limit: int = 10) -> List[str]:
 
 def run_evaluation(dataset_path, search_fn=None, search_mode="combined"):
     if search_fn is None:
-        search_fn = {"qdrant": search_qdrant, "fts5": search_fts5, "combined": search_combined}.get(search_mode, search_combined)
+        search_fn = {"qdrant": search_qdrant, "fts5": search_fts5, "combined": search_combined, "qwen3": search_qwen3}.get(search_mode, search_combined)
     dataset = load_dataset(dataset_path)
     queries = dataset["queries"]
     print(f"Running evaluation: {len(queries)} queries, mode={search_mode}")
