@@ -69,6 +69,25 @@ Full algorithm: `Skill('task-protocol')`.
 - Phase machine: `idle → classified → [decomposed] → skill_checked → ALLOW Write/Edit`
 - Exempt: `.claude/`, `docs/`, `data/`, config files (.json, .toml, .yml, .env)
 
+## Token Economy: Z.AI Delegation Protocol (MANDATORY)
+
+Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotation.
+
+### Delegation Levels
+- **Soft** (no review): bulk ops (10+ items), translations, formatting
+- **Medium** (Opus review mandatory): docs, decomposition, tests, boilerplate
+- **Hard** (Opus thorough review mandatory): code writing, refactoring, analysis
+- **Never delegate**: architecture decisions, security, debugging, tasks < 30 lines output
+
+### Protocol: Draft -> Review
+1. Classify task -> delegation level
+2. If delegatable -> `mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)`
+3. Review Z.AI output (Medium: accuracy+completeness+format; Hard: +logic+security)
+4. If >50% rewrite needed -> reclassify as Never, do it yourself
+5. Write final result after review fixes
+
+Full protocol: `Skill('z-ai-delegation')`. Hook: `z-ai-delegation-enforcer.py` (UserPromptSubmit).
+
 ## Output Rules
 
 - File references in responses must be clickable markdown: `[file.py](.claude/hooks/file.py)` or `[file.py:42](.claude/hooks/file.py#L42)`
