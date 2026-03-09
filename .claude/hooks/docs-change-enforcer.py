@@ -143,6 +143,8 @@ SKIP_PATTERNS = [
     "__init__.py",
     # 1C project task folders (separate repos, not framework code)
     "src/projects/",
+    # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
+    "src/bsl/",
     # Claude Code commands (slash commands, not product code)
     ".claude/commands/",
 ]
