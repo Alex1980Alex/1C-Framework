@@ -43,6 +43,9 @@ class TaskProtocolObserver(BaseHook):
                 if skill_name:
                     SessionState.add_activated_skill(skill_name)
 
+            elif inp.tool_name == "mcp__llm-rotation__llm_complete":
+                SessionState.record_llm_delegation()
+
             else:
                 return None
 
