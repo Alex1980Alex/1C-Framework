@@ -83,6 +83,9 @@ def chunk_payload(chunk: BSLChunk) -> dict[str, Any]:
         "region": m.get("region", ""),
         "line_start": m.get("line_start", 0),
         "line_end": m.get("line_end", 0),
+        "object_type": m.get("object_type", ""),
+        "object_name": m.get("object_name", ""),
+        "caller_count": m.get("caller_count", 0),
     }
 
 
