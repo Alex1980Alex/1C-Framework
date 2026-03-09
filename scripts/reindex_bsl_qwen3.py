@@ -148,8 +148,9 @@ def flush_batch(
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Reindex BSL with Qwen3 embeddings")
+    ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
     ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
+    ap.add_argument("--embedder", choices=["e5", "qwen3"], default="e5", help="Embedding model (default: e5)")
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument("--collection", default="bsl_code_v3")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
@@ -165,7 +166,9 @@ def main() -> None:
     t0 = time.time()
     parser = BSLASTParser()
     chunker = BSLChunker()
-    embedder = Qwen3EmbeddingService()
+    embedder = make_embedder(args.embedder)
+    vector_dims = embedder.dims
+    print(f"Embedder: {args.embedder} ({vector_dims}d)")
 
     # Phase 63: Context enrichment
     enricher = None
