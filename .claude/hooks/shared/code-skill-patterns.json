@@ -167,7 +167,7 @@
       },
       {
         "pattern": "pytest|coverage\\.py|tox",
-        "skill": "testing",
+        "skill": "evaluation-benchmark",
         "label": "Python Testing",
         "domain": "testing"
       },
