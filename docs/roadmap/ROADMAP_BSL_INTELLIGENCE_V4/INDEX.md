@@ -58,8 +58,8 @@ BSL files (2,004)
 
 ## Phases
 
-| Phase | Name | Priority | Days | Depends On | Effect | File |
-|-------|------|----------|------|------------|--------|------|
+| Phase | Name | Priority | Days | Depends On | Effect | File | Checklist |
+|-------|------|----------|------|------------|--------|------|-----------|
 | **58** | Eval Dataset and Baseline | CRITICAL | 1-2 | -- | Measurement | [PHASE_58.md](PHASE_58.md) | [Checklist](PHASE_58_CHECKLIST.md) |
 | **59** | AST-based BSL Indexing | CRITICAL | 3-5 | -- | +44% recall | [PHASE_59.md](PHASE_59.md) | [Checklist](PHASE_59_CHECKLIST.md) |
 | **60** | Code-Optimized Embeddings | HIGH | 2-3 | 58 | +55% recall | [PHASE_60.md](PHASE_60.md) | [Checklist](PHASE_60_CHECKLIST.md) |
