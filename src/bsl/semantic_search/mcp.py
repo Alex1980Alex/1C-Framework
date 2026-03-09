@@ -445,6 +445,7 @@ async def _sqlite_fts_search(query: str, limit: int = 10):
 _CALL_GRAPH_DB = _FRAMEWORK_ROOT / "cache" / "bsl_call_graph.db"
 _call_graph_store = None
 _metadata_extractor = None
+_hybrid_pipeline = None
 
 
 def _get_call_graph():
