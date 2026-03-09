@@ -48,7 +48,96 @@ description: "Token Economy: делегирование генерации на 
 
 ---
 
-## Протокол: Draft -> Review
+## Режим Orchestrator (основной)
+
+Opus = мозг (декомпозиция + review). Z.AI = руки (генерация).
+
+```
+User: "Разбей roadmap на 10 файлов с декомпозицией"
+  |
+  +-- Opus: DECOMPOSE (сам, бесплатно)
+  |     Подзадачи:
+  |       1. INDEX.md (Medium)
+  |       2. PHASE_58.md (Medium)
+  |       3. PHASE_59.md (Medium)
+  |       ...
+  |       10. PHASE_67.md (Medium)
+  |
+  +-- Opus: DELEGATE пакетом
+  |     Для каждой подзадачи:
+  |       llm_complete(prompt="Generate PHASE_58.md...context...format...")
+  |       llm_complete(prompt="Generate PHASE_59.md...context...format...")
+  |       ... (параллельно или последовательно)
+  |
+  +-- Opus: REVIEW каждый результат
+  |     Medium: accuracy + completeness + format
+  |     Hard: + logic + security
+  |     Fix inline
+  |
+  +-- Opus: ASSEMBLE
+        Write() каждый файл с финальным контентом
+```
+
+### Когда включать Orchestrator
+
+| Сигнал | Действие |
+|--------|----------|
+| Задача = 3+ файлов output | Orchestrator |
+| Задача = повторяющаяся структура (N файлов по шаблону) | Orchestrator |
+| Задача = один файл, сложный | Single Draft -> Review |
+| Задача = архитектура, отладка | Never (Opus сам) |
+
+### Алгоритм Orchestrator
+
+```
+Step 1: DECOMPOSE (Opus, 0 tokens Z.AI)
+  - Разбей задачу на подзадачи
+  - Для каждой: определи уровень (Soft/Medium/Hard/Never)
+  - Never-подзадачи Opus делает сам
+  - Остальные готовь к делегированию
+
+Step 2: PREPARE PROMPTS (Opus, 0 tokens Z.AI)
+  - Для каждой делегируемой подзадачи построй промпт:
+    a) ЗАДАЧА — конкретно что сгенерировать
+    b) КОНТЕКСТ — релевантные сниппеты из проекта
+    c) ФОРМАТ — структура, стиль, язык
+    d) ОГРАНИЧЕНИЯ — naming, паттерны
+  - Используй шаблоны из секции "Шаблоны промптов"
+
+Step 3: DELEGATE (Z.AI tokens)
+  - Вызови llm_complete() для каждой подзадачи
+  - Независимые подзадачи — параллельно
+  - Зависимые (output одной = input другой) — последовательно
+
+Step 4: REVIEW (Opus, минимум tokens)
+  - Medium: accuracy + completeness + format
+  - Hard: + logic + edge cases + security
+  - Fix inline (Opus правит, не перегенерирует)
+  - При > 50% переписывания: пометь подзадачу как Never, сделай сам
+
+Step 5: ASSEMBLE + WRITE (Opus)
+  - Собери финальный результат из всех подзадач
+  - Write() файлы
+  - Один проход — не возвращайся к Z.AI
+```
+
+### Пример: 10 файлов roadmap
+
+```
+Подзадача         | Уровень | Промпт для Z.AI                    | Review
+INDEX.md          | Medium  | "Create index with table..."       | Format check
+PHASE_58.md       | Medium  | "Expand phase 58: eval dataset..." | Accuracy check
+PHASE_59.md       | Medium  | "Expand phase 59: AST parser..."   | Accuracy check
+...повторить для каждой фазы...
+
+Opus работа: decompose (1 мин) + prepare prompts (2 мин) + review (3 мин) = 6 мин
+Z.AI работа: 10 x llm_complete = 10 файлов
+Opus tokens saved: ~85% (только review, не генерация)
+```
+
+---
+
+## Протокол: Draft -> Review (single task)
 
 ### Step 1: CLASSIFY
 Определи уровень. Если Never — делай сам (Opus).
