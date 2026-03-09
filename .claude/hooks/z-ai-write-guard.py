@@ -71,7 +71,7 @@ class ZAIWriteGuard(BaseHook):
 
         # Skip exempt directories
         for prefix in _EXEMPT_PREFIXES:
-            if prefix in fp:
+            if fp.startswith(prefix) or f"/{prefix}" in fp:
                 return None
 
         # Count lines
