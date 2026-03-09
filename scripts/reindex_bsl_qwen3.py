@@ -91,9 +91,38 @@ def chunk_payload(chunk: BSLChunk) -> dict[str, Any]:
     }
 
 
+class E5Embedder:
+    """E5-large embedder via sentence-transformers (1024d, fast on CPU)."""
+
+    def __init__(self) -> None:
+        from sentence_transformers import SentenceTransformer
+        self.model = SentenceTransformer("intfloat/multilingual-e5-large")
+        self.dims = 1024
+
+    def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
+        prefix = "query: " if is_query else "passage: "
+        prefixed = [prefix + t[:8000] for t in texts]
+        embeddings = self.model.encode(prefixed, show_progress_bar=False)
+        return [emb.tolist() for emb in embeddings]
+
+    def close(self) -> None:
+        pass
+
+
+def make_embedder(name: str) -> E5Embedder:
+    """Create embedder by name."""
+    if name == "e5":
+        return E5Embedder()
+    elif name == "qwen3":
+        from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
+        return Qwen3EmbeddingService()  # type: ignore[return-value]
+    else:
+        raise ValueError(f"Unknown embedder: {name}. Use 'e5' or 'qwen3'")
+
+
 def flush_batch(
     client: QdrantClient,
-    embedder: Qwen3EmbeddingService,
+    embedder: Any,
     collection: str,
     chunks: list[BSLChunk],
 ) -> int:
@@ -108,7 +137,7 @@ def flush_batch(
         points.append(
             models.PointStruct(
                 id=point_id(chunk.chunk_id),
-                vector=vec,
+                vector=vec if isinstance(vec, list) else vec.tolist(),
                 payload=chunk_payload(chunk),
             )
         )
