@@ -114,7 +114,7 @@ After writing ANY code (.py, .js, .ts, .bsl, etc.) — self-review is MANDATORY:
 3. Code file changed? → MUST self-review (THOROUGH if src/tools/infra/scripts)
 4. Z.AI down? → Opus writes, but note "Z.AI unavailable, writing directly"
 
-Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `code-review-enforcer.py` (PostToolUse Write|Edit).
+Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `z-ai-write-guard.py` (PreToolUse:Write — blocks >30 lines without llm_complete), `code-review-enforcer.py` (PostToolUse Write|Edit).
 
 ## Output Rules
 
