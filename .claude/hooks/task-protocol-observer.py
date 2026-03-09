@@ -38,6 +38,10 @@ class TaskProtocolObserver(BaseHook):
 
             elif inp.tool_name == "Skill":
                 SessionState.record_skill_checked()
+                # Register skill name in activated_skills for code-skill-enforcer
+                skill_name = (inp.tool_input or {}).get("skill", "")
+                if skill_name:
+                    SessionState.add_activated_skill(skill_name)
 
             else:
                 return None
