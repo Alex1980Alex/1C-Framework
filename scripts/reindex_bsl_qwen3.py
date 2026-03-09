@@ -119,6 +119,7 @@ def main() -> None:
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument("--collection", default="bsl_code_v3")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
+    ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     args = ap.parse_args()
 
     project = args.project.resolve()
