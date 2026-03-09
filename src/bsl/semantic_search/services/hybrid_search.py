@@ -96,20 +96,22 @@ class BSLHybridPipeline:
 
         try:
             conn = sqlite3.connect(str(self._sqlite_db))
-            conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
+            try:
+                conn.row_factory = sqlite3.Row
+                cur = conn.cursor()
 
-            cur.execute(
-                """SELECT d.id, d.path, d.doc_type, d.content, d.content_preview
-                   FROM documents d
-                   WHERE d.id IN (
-                       SELECT id FROM documents_fts WHERE documents_fts MATCH ?
-                   )
-                   LIMIT ?""",
-                (query, limit),
-            )
-            rows = cur.fetchall()
-            conn.close()
+                cur.execute(
+                    """SELECT d.id, d.path, d.doc_type, d.content, d.content_preview
+                       FROM documents d
+                       WHERE d.id IN (
+                           SELECT id FROM documents_fts WHERE documents_fts MATCH ?
+                       )
+                       LIMIT ?""",
+                    (query, limit),
+                )
+                rows = cur.fetchall()
+            finally:
+                conn.close()
 
             results = []
             for rank, row in enumerate(rows):
