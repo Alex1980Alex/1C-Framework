@@ -232,7 +232,8 @@
       "Bash(ollama search:*)",
       "mcp__llm-rotation__llm_list_providers",
       "mcp__llm-rotation__llm_reset_provider",
-      "mcp__llm-rotation__llm_test_providers"
+      "mcp__llm-rotation__llm_test_providers",
+      "Bash(ollama pull:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
