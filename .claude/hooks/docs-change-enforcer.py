@@ -441,6 +441,16 @@ def main():
             "4. После обновления можешь завершить."
         )
 
+        # Write cooldown marker so next Stop attempt passes
+        try:
+            COOLDOWN_FILE.parent.mkdir(parents=True, exist_ok=True)
+            COOLDOWN_FILE.write_text(
+                f"blocked at session with {len(stale)} stale domain(s)",
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+
         output = {"decision": "block", "reason": reason}
         out_bytes = json.dumps(output, ensure_ascii=False).encode("utf-8")
         sys.stdout.buffer.write(out_bytes + b"\n")
