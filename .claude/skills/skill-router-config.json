@@ -1398,17 +1398,27 @@
         "glm-5",
         "provider cooldown",
         "provider health",
-        "llm provider"
+        "llm provider",
+        "token economy",
+        "delegation",
+        "draft review",
+        "делегировать",
+        "экономия токенов"
       ],
       "skills": [
-        "llm-rotation"
+        "llm-rotation",
+        "z-ai-delegation"
       ],
       "weighted_keywords": {
         "llm rotation": 5,
         "provider fallback": 4,
         "zai proxy": 4,
         "multi-provider llm": 5,
-        "provider cooldown": 3
+        "provider cooldown": 3,
+        "token economy": 5,
+        "delegation": 4,
+        "экономия токенов": 5,
+        "делегировать z.ai": 5
       },
       "utterances": [
         "send prompt to LLM with rotation",
@@ -1417,7 +1427,10 @@
         "test available LLM providers",
         "отправь запрос через ротацию LLM",
         "проверь статус LLM провайдеров",
-        "сбрось провайдер LLM"
+        "сбрось провайдер LLM",
+        "delegate this to Z.AI",
+        "делегируй на z.ai",
+        "экономь токены"
       ]
     },
     "task-protocol": {
