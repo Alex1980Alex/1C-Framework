@@ -61,7 +61,7 @@
       },
       {
         "pattern": "ОбработкаПроведения|Движения\\.(Выполнить|Записать)|ПроводитьРасчеты",
-        "skill": "1c-document-posting",
+        "skill": "bsl-development",
         "label": "1C Document Posting",
         "domain": "1c"
       },
