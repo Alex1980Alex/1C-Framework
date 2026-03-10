@@ -254,7 +254,10 @@
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" process:*)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" session:*)",
       "Bash(sed:*)",
-      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/dbgs.exe\":*)"
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/dbgs.exe\":*)",
+      "mcp__task-master-ai__get_tasks",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)"
     ]
   },
   "enableAllProjectMcpServers": true,
