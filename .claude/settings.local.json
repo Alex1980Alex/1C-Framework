@@ -258,7 +258,8 @@
       "mcp__task-master-ai__get_tasks",
       "Read(//c/Program Files/**)",
       "Read(//c/Program Files \\(x86\\)/**)",
-      "Bash(/c/Tools/OneScript/bin/oscript.exe:*)"
+      "Bash(/c/Tools/OneScript/bin/oscript.exe:*)",
+      "mcp__bsl-semantic-search__bsl_object_info"
     ]
   },
   "enableAllProjectMcpServers": true,
