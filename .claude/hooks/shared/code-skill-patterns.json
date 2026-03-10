@@ -79,7 +79,7 @@
       },
       {
         "pattern": "HTTPСервис|ВходящийJSON|HTTPОтвет|HTTPЗапрос",
-        "skill": "1c-http-services",
+        "skill": "1c-doc-research",
         "label": "1C HTTP Services",
         "domain": "1c"
       },
