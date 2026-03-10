@@ -43,7 +43,7 @@
       },
       {
         "pattern": "СправочникМенеджер\\.|ДокументыМенеджер\\.|РегистрыНакопления\\.|РегистрыСведений\\.",
-        "skill": "1c-object-map",
+        "skill": "1c-doc-research",
         "label": "1C Objects API",
         "domain": "1c"
       },
