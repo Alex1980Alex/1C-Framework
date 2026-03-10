@@ -263,7 +263,8 @@
       "Bash(\"C:\\\\Tools\\\\OneScript\\\\bin\\\\oscript.exe\":*)",
       "Bash(chcp 65001:*)",
       "mcp__bsl-semantic-search__bsl_search",
-      "mcp__bsl-semantic-search__bsl_hybrid_search"
+      "mcp__bsl-semantic-search__bsl_hybrid_search",
+      "Bash(\"C:/Tools/OneScript/bin/oscript.exe\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
