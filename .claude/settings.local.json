@@ -271,7 +271,9 @@
       "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query2.py\":*)",
       "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query3.py\":*)",
       "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query4.py\":*)",
-      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query5.py\":*)"
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query5.py\":*)",
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query6.py\":*)",
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query7.py\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
