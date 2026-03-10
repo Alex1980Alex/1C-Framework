@@ -257,7 +257,8 @@
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/dbgs.exe\":*)",
       "mcp__task-master-ai__get_tasks",
       "Read(//c/Program Files/**)",
-      "Read(//c/Program Files \\(x86\\)/**)"
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(/c/Tools/OneScript/bin/oscript.exe:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
