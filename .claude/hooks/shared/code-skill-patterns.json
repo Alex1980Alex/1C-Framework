@@ -85,7 +85,7 @@
       },
       {
         "pattern": "СКД|СхемаКомпоновкиДанных|КомпоновщикНастроек|НастройкиКомпоновкиДанных",
-        "skill": "1c-skd",
+        "skill": "1c-doc-research",
         "label": "1C SKD (Data Composition System)",
         "domain": "1c"
       }
