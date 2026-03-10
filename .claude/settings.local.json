@@ -259,7 +259,8 @@
       "Read(//c/Program Files/**)",
       "Read(//c/Program Files \\(x86\\)/**)",
       "Bash(/c/Tools/OneScript/bin/oscript.exe:*)",
-      "mcp__bsl-semantic-search__bsl_object_info"
+      "mcp__bsl-semantic-search__bsl_object_info",
+      "Bash(\"C:\\\\Tools\\\\OneScript\\\\bin\\\\oscript.exe\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
