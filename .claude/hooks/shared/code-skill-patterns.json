@@ -67,7 +67,7 @@
       },
       {
         "pattern": "Формат\\(|СтрШаблон\\(|СтрСоединить\\(|СтрНайти\\(",
-        "skill": "bsl-string-formatting",
+        "skill": "bsl-development",
         "label": "BSL String Formatting",
         "domain": "1c"
       },
