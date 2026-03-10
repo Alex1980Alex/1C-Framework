@@ -55,7 +55,7 @@
       },
       {
         "pattern": "Новый\\s+(Запрос|ТаблицаЗначений|Структура|Соответствие)|СоздатьМенеджерКомпоновкиДанных",
-        "skill": "1c-development",
+        "skill": "bsl-development",
         "label": "1C Development Core",
         "domain": "1c"
       },
