@@ -29619,3 +29619,517 @@ ru.alkoleft.context.exceptions.PlatformTypeNotFoundException: **Тип не на
 2026-03-10 07:28:33.487 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
 2026-03-10 07:28:33.487 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
 2026-03-10 07:28:33.516 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 2.567 seconds (process running for 3.661)
+2026-03-10 07:57:41.667 [main] INFO  r.a.context.McpServerApplicationKt - Starting McpServerApplicationKt v0.3.1 using Java 17.0.13 with PID 16388 (D:\1С-Framework\tools\mcp-jars\mcp-bsl-context-0.3.1.jar started by AlexT in D:\1С-Framework)
+2026-03-10 07:57:41.669 [main] DEBUG r.a.context.McpServerApplicationKt - Running with Spring Boot v3.5.3, Spring v6.2.8
+2026-03-10 07:57:41.670 [main] INFO  r.a.context.McpServerApplicationKt - The following 1 profile is active: "stdio"
+2026-03-10 07:57:41.734 [main] DEBUG o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2
+2026-03-10 07:57:41.752 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalConfigurationAnnotationProcessor'
+2026-03-10 07:57:41.772 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.internalCachingMetadataReaderFactory'
+2026-03-10 07:57:41.867 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/business/services/ContextSearchService.class]
+2026-03-10 07:57:41.877 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/infrastructure/configuration/PlatformContextConfiguration.class]
+2026-03-10 07:57:41.910 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/presentation/formatters/MarkdownFormatterService.class]
+2026-03-10 07:57:41.911 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/presentation/mcp/McpConfiguration.class]
+2026-03-10 07:57:41.913 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/presentation/mcp/PlatformContextMcpController.class]
+2026-03-10 07:57:42.831 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'propertySourcesPlaceholderConfigurer'
+2026-03-10 07:57:42.840 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.sql.init.dependency.DatabaseInitializationDependencyConfigurer$DependsOnDatabaseInitializationPostProcessor'
+2026-03-10 07:57:42.850 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.event.internalEventListenerProcessor'
+2026-03-10 07:57:42.852 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'forceAutoProxyCreatorToUseClassProxying'
+2026-03-10 07:57:42.853 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'bootstrapExecutorAliasPostProcessor'
+2026-03-10 07:57:42.854 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.event.internalEventListenerFactory'
+2026-03-10 07:57:42.865 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalAutowiredAnnotationProcessor'
+2026-03-10 07:57:42.872 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalCommonAnnotationProcessor'
+2026-03-10 07:57:42.878 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor'
+2026-03-10 07:57:42.878 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.internalConfigurationPropertiesBinder'
+2026-03-10 07:57:42.882 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.aop.config.internalAutoProxyCreator'
+2026-03-10 07:57:42.901 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'applicationTaskExecutor'
+2026-03-10 07:57:42.902 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$TaskExecutorConfiguration'
+2026-03-10 07:57:42.904 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'threadPoolTaskExecutorBuilder'
+2026-03-10 07:57:42.905 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$ThreadPoolTaskExecutorBuilderConfiguration'
+2026-03-10 07:57:42.906 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.task.execution-org.springframework.boot.autoconfigure.task.TaskExecutionProperties'
+2026-03-10 07:57:42.909 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.properties.BoundConfigurationProperties'
+2026-03-10 07:57:42.921 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'threadPoolTaskExecutorBuilder' via factory method to bean named 'spring.task.execution-org.springframework.boot.autoconfigure.task.TaskExecutionProperties'
+2026-03-10 07:57:42.924 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'applicationTaskExecutor' via factory method to bean named 'threadPoolTaskExecutorBuilder'
+2026-03-10 07:57:42.935 [main] DEBUG o.s.s.c.ThreadPoolTaskExecutor - Initializing ExecutorService 'applicationTaskExecutor'
+2026-03-10 07:57:42.937 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mcpServerApplication'
+2026-03-10 07:57:42.939 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'contextSearchService'
+2026-03-10 07:57:42.947 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformContextRepository'
+2026-03-10 07:57:42.947 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformContextConfiguration'
+2026-03-10 07:57:42.949 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'searchEngine'
+2026-03-10 07:57:42.950 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'contextStorage'
+2026-03-10 07:57:42.951 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'contextLoader'
+2026-03-10 07:57:42.952 [main] DEBUG o.s.c.e.PropertySourcesPropertyResolver - Found key 'platform.context.path' in PropertySource 'environmentProperties' with value of type String
+2026-03-10 07:57:42.966 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'contextStorage' via factory method to bean named 'contextLoader'
+2026-03-10 07:57:42.969 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'searchEngine' via factory method to bean named 'contextStorage'
+2026-03-10 07:57:42.973 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextRepository' via factory method to bean named 'searchEngine'
+2026-03-10 07:57:42.973 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextRepository' via factory method to bean named 'contextStorage'
+2026-03-10 07:57:42.974 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'contextSearchService' via constructor to bean named 'platformContextRepository'
+2026-03-10 07:57:42.984 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'markdownFormatterService'
+2026-03-10 07:57:42.988 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mcpConfiguration'
+2026-03-10 07:57:42.988 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformContextMcpController'
+2026-03-10 07:57:42.991 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'formatter'
+2026-03-10 07:57:42.992 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextMcpController' via constructor to bean named 'contextSearchService'
+2026-03-10 07:57:42.992 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextMcpController' via constructor to bean named 'formatter'
+2026-03-10 07:57:42.992 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformTools'
+2026-03-10 07:57:42.992 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformTools' via factory method to bean named 'platformContextMcpController'
+2026-03-10 07:57:43.077 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.116 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.119 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.121 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.124 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.Integer as definition (since it is the main schema "#")
+2026-03-10 07:57:43.126 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.127 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.128 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.129 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.131 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.AutoConfigurationPackages'
+2026-03-10 07:57:43.132 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration'
+2026-03-10 07:57:43.132 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration'
+2026-03-10 07:57:43.132 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'standardJacksonObjectMapperBuilderCustomizer'
+2026-03-10 07:57:43.133 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.jackson-org.springframework.boot.autoconfigure.jackson.JacksonProperties'
+2026-03-10 07:57:43.136 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'standardJacksonObjectMapperBuilderCustomizer' via factory method to bean named 'spring.jackson-org.springframework.boot.autoconfigure.jackson.JacksonProperties'
+2026-03-10 07:57:43.137 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'parameterNamesModule'
+2026-03-10 07:57:43.137 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$ParameterNamesModuleConfiguration'
+2026-03-10 07:57:43.139 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jsonMixinModule'
+2026-03-10 07:57:43.139 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonMixinConfiguration'
+2026-03-10 07:57:43.140 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jsonMixinModuleEntries'
+2026-03-10 07:57:43.140 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jsonMixinModuleEntries' via factory method to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 07:57:43.150 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jsonMixinModule' via factory method to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 07:57:43.150 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jsonMixinModule' via factory method to bean named 'jsonMixinModuleEntries'
+2026-03-10 07:57:43.152 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jsonComponentModule'
+2026-03-10 07:57:43.152 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration'
+2026-03-10 07:57:43.157 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.properties.EnableConfigurationPropertiesRegistrar.methodValidationExcludeFilter'
+2026-03-10 07:57:43.160 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration'
+2026-03-10 07:57:43.160 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperConfiguration'
+2026-03-10 07:57:43.161 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jacksonObjectMapper'
+2026-03-10 07:57:43.162 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonObjectMapperBuilder' via factory method to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 07:57:43.162 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonObjectMapperBuilder' via factory method to bean named 'standardJacksonObjectMapperBuilderCustomizer'
+2026-03-10 07:57:43.165 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonObjectMapper' via factory method to bean named 'jacksonObjectMapperBuilder'
+2026-03-10 07:57:43.172 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration$DefaultCodecsConfiguration'
+2026-03-10 07:57:43.172 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'defaultCodecCustomizer'
+2026-03-10 07:57:43.173 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.codec-org.springframework.boot.autoconfigure.codec.CodecProperties'
+2026-03-10 07:57:43.175 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.http.codecs-org.springframework.boot.autoconfigure.http.codec.HttpCodecsProperties'
+2026-03-10 07:57:43.176 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'defaultCodecCustomizer' via factory method to bean named 'spring.codec-org.springframework.boot.autoconfigure.codec.CodecProperties'
+2026-03-10 07:57:43.176 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'defaultCodecCustomizer' via factory method to bean named 'spring.http.codecs-org.springframework.boot.autoconfigure.http.codec.HttpCodecsProperties'
+2026-03-10 07:57:43.176 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'defaultCodecCustomizer' via factory method to bean named 'environment'
+2026-03-10 07:57:43.178 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration$JacksonCodecConfiguration'
+2026-03-10 07:57:43.178 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jacksonCodecCustomizer'
+2026-03-10 07:57:43.179 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonCodecCustomizer' via factory method to bean named 'jacksonObjectMapper'
+2026-03-10 07:57:43.180 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration'
+2026-03-10 07:57:43.181 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.ai.mcp.server.autoconfigure.McpServerAutoConfiguration'
+2026-03-10 07:57:43.184 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'stdioServerTransport'
+2026-03-10 07:57:43.243 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'capabilitiesBuilder'
+2026-03-10 07:57:43.245 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'syncTools'
+2026-03-10 07:57:43.248 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.ai.mcp.server-org.springframework.ai.mcp.server.autoconfigure.McpServerProperties'
+2026-03-10 07:57:43.255 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'syncTools' via factory method to bean named 'spring.ai.mcp.server-org.springframework.ai.mcp.server.autoconfigure.McpServerProperties'
+2026-03-10 07:57:43.258 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mcpSyncServer'
+2026-03-10 07:57:43.261 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'stdioServerTransport'
+2026-03-10 07:57:43.261 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'capabilitiesBuilder'
+2026-03-10 07:57:43.261 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'spring.ai.mcp.server-org.springframework.ai.mcp.server.autoconfigure.McpServerProperties'
+2026-03-10 07:57:43.261 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'platformTools'
+2026-03-10 07:57:43.263 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable tools capabilities, notification: true
+2026-03-10 07:57:43.266 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.267 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.269 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.270 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.271 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.Integer as definition (since it is the main schema "#")
+2026-03-10 07:57:43.273 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.274 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.275 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.276 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 07:57:43.351 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Registered tools: 5
+2026-03-10 07:57:43.351 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable resources capabilities, notification: true
+2026-03-10 07:57:43.352 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable prompts capabilities, notification: true
+2026-03-10 07:57:43.352 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable completions capabilities
+2026-03-10 07:57:43.448 [main] DEBUG reactor.util.Loggers - Using Slf4j logging framework
+2026-03-10 07:57:43.580 [main] DEBUG i.m.c.u.i.l.InternalLoggerFactory - Using SLF4J as the default logging framework
+2026-03-10 07:57:43.589 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"2.1.70"}},"jsonrpc":"2.0","id":0}
+2026-03-10 07:57:43.589 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"2.1.70"}},"jsonrpc":"2.0","id":0}
+2026-03-10 07:57:43.606 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.aop.AopAutoConfiguration$ClassProxyingConfiguration'
+2026-03-10 07:57:43.606 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.aop.AopAutoConfiguration'
+2026-03-10 07:57:43.606 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration'
+2026-03-10 07:57:43.607 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'applicationAvailability'
+2026-03-10 07:57:43.602 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=initialize, id=0, params={protocolVersion=2025-11-25, capabilities={roots={}}, clientInfo={name=claude-code, version=2.1.70}}]
+2026-03-10 07:57:43.608 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration'
+2026-03-10 07:57:43.609 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.context.LifecycleAutoConfiguration'
+2026-03-10 07:57:43.609 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'lifecycleProcessor'
+2026-03-10 07:57:43.609 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.lifecycle-org.springframework.boot.autoconfigure.context.LifecycleProperties'
+2026-03-10 07:57:43.610 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'lifecycleProcessor' via factory method to bean named 'spring.lifecycle-org.springframework.boot.autoconfigure.context.LifecycleProperties'
+2026-03-10 07:57:43.612 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration$StringHttpMessageConverterConfiguration'
+2026-03-10 07:57:43.614 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'stringHttpMessageConverter'
+2026-03-10 07:57:43.614 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'stringHttpMessageConverter' via factory method to bean named 'environment'
+2026-03-10 07:57:43.628 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration$MappingJackson2XmlHttpMessageConverterConfiguration'
+2026-03-10 07:57:43.629 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mappingJackson2XmlHttpMessageConverter'
+2026-03-10 07:57:43.630 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mappingJackson2XmlHttpMessageConverter' via factory method to bean named 'jacksonObjectMapperBuilder'
+2026-03-10 07:57:43.624 [pool-2-thread-1] INFO  i.m.server.McpAsyncServer - Client initialize request - Protocol: 2025-11-25, Capabilities: ClientCapabilities[experimental=null, roots=RootCapabilities[listChanged=null], sampling=null], Info: Implementation[name=claude-code, version=2.1.70]
+2026-03-10 07:57:43.631 [pool-2-thread-1] WARN  i.m.server.McpAsyncServer - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
+2026-03-10 07:57:43.633 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration'
+2026-03-10 07:57:43.634 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mappingJackson2HttpMessageConverter'
+2026-03-10 07:57:43.634 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mappingJackson2HttpMessageConverter' via factory method to bean named 'jacksonObjectMapper'
+2026-03-10 07:57:43.635 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration'
+2026-03-10 07:57:43.635 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration'
+2026-03-10 07:57:43.635 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'messageConverters'
+2026-03-10 07:57:43.655 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"notifications/initialized","jsonrpc":"2.0"}
+2026-03-10 07:57:43.655 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"notifications/initialized","jsonrpc":"2.0"}
+2026-03-10 07:57:43.657 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received notification: JSONRPCNotification[jsonrpc=2.0, method=notifications/initialized, params=null]
+2026-03-10 07:57:43.661 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"tools/list","jsonrpc":"2.0","id":1}
+2026-03-10 07:57:43.661 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"tools/list","jsonrpc":"2.0","id":1}
+2026-03-10 07:57:43.662 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=tools/list, id=1, params=null]
+2026-03-10 07:57:43.664 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration'
+2026-03-10 07:57:43.664 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"prompts/list","jsonrpc":"2.0","id":2}
+2026-03-10 07:57:43.664 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"prompts/list","jsonrpc":"2.0","id":2}
+2026-03-10 07:57:43.664 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=prompts/list, id=2, params=null]
+2026-03-10 07:57:43.665 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.ssl-org.springframework.boot.autoconfigure.ssl.SslProperties'
+2026-03-10 07:57:43.666 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"resources/list","jsonrpc":"2.0","id":3}
+2026-03-10 07:57:43.667 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"resources/list","jsonrpc":"2.0","id":3}
+2026-03-10 07:57:43.667 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration' via constructor to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 07:57:43.667 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration' via constructor to bean named 'spring.ssl-org.springframework.boot.autoconfigure.ssl.SslProperties'
+2026-03-10 07:57:43.668 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=resources/list, id=3, params=null]
+2026-03-10 07:57:43.674 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'fileWatcher'
+2026-03-10 07:57:43.675 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'sslPropertiesSslBundleRegistrar'
+2026-03-10 07:57:43.676 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'sslPropertiesSslBundleRegistrar' via factory method to bean named 'fileWatcher'
+2026-03-10 07:57:43.681 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'sslBundleRegistry'
+2026-03-10 07:57:43.691 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration'
+2026-03-10 07:57:43.692 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.http.client-org.springframework.boot.autoconfigure.http.client.HttpClientProperties'
+2026-03-10 07:57:43.695 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration' via constructor to bean named 'spring.http.client-org.springframework.boot.autoconfigure.http.client.HttpClientProperties'
+2026-03-10 07:57:43.697 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpRequestFactoryBuilder'
+2026-03-10 07:57:43.713 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpRequestFactorySettings'
+2026-03-10 07:57:43.716 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.reactor.netty.ReactorNettyConfigurations$ReactorResourceFactoryConfiguration'
+2026-03-10 07:57:43.716 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'reactorResourceFactory'
+2026-03-10 07:57:43.718 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.reactor.netty-org.springframework.boot.autoconfigure.reactor.netty.ReactorNettyProperties'
+2026-03-10 07:57:43.719 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'reactorResourceFactory' via factory method to bean named 'spring.reactor.netty-org.springframework.boot.autoconfigure.reactor.netty.ReactorNettyProperties'
+2026-03-10 07:57:43.723 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration$ReactorNetty'
+2026-03-10 07:57:43.723 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration'
+2026-03-10 07:57:43.723 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.http.reactiveclient-org.springframework.boot.autoconfigure.http.client.reactive.HttpReactiveClientProperties'
+2026-03-10 07:57:43.726 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration' via constructor to bean named 'spring.http.reactiveclient-org.springframework.boot.autoconfigure.http.client.reactive.HttpReactiveClientProperties'
+2026-03-10 07:57:43.728 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpConnectorBuilder'
+2026-03-10 07:57:43.731 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'reactorNettyHttpClientMapperClientHttpConnectorBuilderCustomizer'
+2026-03-10 07:57:43.731 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration$ReactorNetty'
+2026-03-10 07:57:43.733 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'reactorNettyHttpClientMapperClientHttpConnectorBuilderCustomizer' via factory method to bean named 'reactorResourceFactory'
+2026-03-10 07:57:43.738 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpConnectorSettings'
+2026-03-10 07:57:43.741 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration'
+2026-03-10 07:57:43.743 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties'
+2026-03-10 07:57:43.747 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration' via constructor to bean named 'spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties'
+2026-03-10 07:57:43.748 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'gitProperties'
+2026-03-10 07:57:43.757 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.netty.NettyAutoConfiguration'
+2026-03-10 07:57:43.758 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.netty-org.springframework.boot.autoconfigure.netty.NettyProperties'
+2026-03-10 07:57:43.760 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.netty.NettyAutoConfiguration' via constructor to bean named 'spring.netty-org.springframework.boot.autoconfigure.netty.NettyProperties'
+2026-03-10 07:57:43.760 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.reactor.ReactorAutoConfiguration'
+2026-03-10 07:57:43.762 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.reactor-org.springframework.boot.autoconfigure.reactor.ReactorProperties'
+2026-03-10 07:57:43.763 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.reactor.ReactorAutoConfiguration' via constructor to bean named 'spring.reactor-org.springframework.boot.autoconfigure.reactor.ReactorProperties'
+2026-03-10 07:57:43.764 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration'
+2026-03-10 07:57:43.764 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.sql.init-org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties'
+2026-03-10 07:57:43.766 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$SimpleAsyncTaskExecutorBuilderConfiguration'
+2026-03-10 07:57:43.768 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$SimpleAsyncTaskExecutorBuilderConfiguration' via constructor to bean named 'spring.task.execution-org.springframework.boot.autoconfigure.task.TaskExecutionProperties'
+2026-03-10 07:57:43.769 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'simpleAsyncTaskExecutorBuilder'
+2026-03-10 07:57:43.772 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$AsyncConfigurerConfiguration'
+2026-03-10 07:57:43.773 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'applicationTaskExecutorAsyncConfigurer'
+2026-03-10 07:57:43.773 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'applicationTaskExecutorAsyncConfigurer' via factory method to bean named 'org.springframework.beans.factory.support.DefaultListableBeanFactory@1d81e101'
+2026-03-10 07:57:43.775 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$BootstrapExecutorConfiguration'
+2026-03-10 07:57:43.776 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration'
+2026-03-10 07:57:43.776 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskSchedulingConfigurations$ThreadPoolTaskSchedulerBuilderConfiguration'
+2026-03-10 07:57:43.776 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'threadPoolTaskSchedulerBuilder'
+2026-03-10 07:57:43.777 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.task.scheduling-org.springframework.boot.autoconfigure.task.TaskSchedulingProperties'
+2026-03-10 07:57:43.779 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'threadPoolTaskSchedulerBuilder' via factory method to bean named 'spring.task.scheduling-org.springframework.boot.autoconfigure.task.TaskSchedulingProperties'
+2026-03-10 07:57:43.780 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskSchedulingConfigurations$SimpleAsyncTaskSchedulerBuilderConfiguration'
+2026-03-10 07:57:43.782 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.task.TaskSchedulingConfigurations$SimpleAsyncTaskSchedulerBuilderConfiguration' via constructor to bean named 'spring.task.scheduling-org.springframework.boot.autoconfigure.task.TaskSchedulingProperties'
+2026-03-10 07:57:43.783 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'simpleAsyncTaskSchedulerBuilder'
+2026-03-10 07:57:43.786 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration'
+2026-03-10 07:57:43.788 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration'
+2026-03-10 07:57:43.788 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'httpMessageConvertersRestClientCustomizer'
+2026-03-10 07:57:43.789 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'restClientSsl'
+2026-03-10 07:57:43.790 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'restClientSsl' via factory method to bean named 'sslBundleRegistry'
+2026-03-10 07:57:43.792 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'restClientBuilderConfigurer'
+2026-03-10 07:57:43.795 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration'
+2026-03-10 07:57:43.796 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration'
+2026-03-10 07:57:43.796 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration$WebClientCodecsConfiguration'
+2026-03-10 07:57:43.796 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'exchangeStrategiesCustomizer'
+2026-03-10 07:57:43.799 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration'
+2026-03-10 07:57:43.799 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'webClientSsl'
+2026-03-10 07:57:43.800 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'webClientSsl' via factory method to bean named 'clientHttpConnectorBuilder'
+2026-03-10 07:57:43.800 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'webClientSsl' via factory method to bean named 'clientHttpConnectorSettings'
+2026-03-10 07:57:43.800 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'webClientSsl' via factory method to bean named 'sslBundleRegistry'
+2026-03-10 07:57:43.822 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase -2147483647
+2026-03-10 07:57:43.822 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'springBootLoggingLifecycle'
+2026-03-10 07:57:43.822 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 0
+2026-03-10 07:57:43.898 [main] DEBUG i.n.u.i.l.InternalLoggerFactory - Using SLF4J as the default logging framework
+2026-03-10 07:57:43.906 [main] DEBUG i.n.util.internal.PlatformDependent0 - Java version: 17
+2026-03-10 07:57:43.906 [main] DEBUG i.n.util.internal.PlatformDependent0 - -Dio.netty.noUnsafe: false
+2026-03-10 07:57:43.907 [main] DEBUG i.n.util.internal.PlatformDependent0 - Thread.isVirtual() is not available: 
+2026-03-10 07:57:43.907 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.lang.BaseVirtualThread is not available: 
+2026-03-10 07:57:43.910 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe.theUnsafe: available
+2026-03-10 07:57:43.912 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe base methods: all available
+2026-03-10 07:57:43.913 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe.storeFence: available
+2026-03-10 07:57:43.915 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.nio.Buffer.address: available
+2026-03-10 07:57:43.916 [main] DEBUG i.n.util.internal.PlatformDependent0 - direct buffer constructor: unavailable: Reflective setAccessible(true) disabled
+2026-03-10 07:57:43.917 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.nio.Bits.unaligned: available, true
+2026-03-10 07:57:43.919 [main] DEBUG i.n.util.internal.PlatformDependent0 - jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable: class io.netty.util.internal.PlatformDependent0$7 cannot access class jdk.internal.misc.Unsafe (in module java.base) because module java.base does not export jdk.internal.misc to unnamed module @6b2ea799
+2026-03-10 07:57:43.921 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.nio.DirectByteBuffer.<init>(long, {int,long}): unavailable
+2026-03-10 07:57:43.921 [main] DEBUG i.n.util.internal.PlatformDependent - sun.misc.Unsafe: available
+2026-03-10 07:57:43.922 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.tmpdir: C:\Users\AlexT\AppData\Local\Temp (java.io.tmpdir)
+2026-03-10 07:57:43.922 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.bitMode: 64 (sun.arch.data.model)
+2026-03-10 07:57:43.922 [main] DEBUG i.n.util.internal.PlatformDependent - Platform: Windows
+2026-03-10 07:57:43.924 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.maxDirectMemory: -1 bytes
+2026-03-10 07:57:43.924 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.uninitializedArrayAllocationThreshold: -1
+2026-03-10 07:57:43.925 [main] DEBUG io.netty.util.internal.CleanerJava9 - java.nio.ByteBuffer.cleaner(): available
+2026-03-10 07:57:43.925 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.noPreferDirect: false
+2026-03-10 07:57:43.928 [main] DEBUG reactor.netty.tcp.TcpResources - [http] resources will use the default LoopResources: DefaultLoopResources {prefix=reactor-http, daemon=true, selectCount=16, workerCount=16}
+2026-03-10 07:57:43.928 [main] DEBUG reactor.netty.tcp.TcpResources - [http] resources will use the default ConnectionProvider: reactor.netty.resources.DefaultPooledConnectionProvider@6637a365
+2026-03-10 07:57:43.928 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
+2026-03-10 07:57:43.928 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
+2026-03-10 07:57:43.955 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 2.904 seconds (process running for 4.126)
+2026-03-10 11:16:53.808 [main] INFO  r.a.context.McpServerApplicationKt - Starting McpServerApplicationKt v0.3.1 using Java 17.0.13 with PID 11968 (D:\1С-Framework\tools\mcp-jars\mcp-bsl-context-0.3.1.jar started by AlexT in D:\1С-Framework)
+2026-03-10 11:16:53.810 [main] DEBUG r.a.context.McpServerApplicationKt - Running with Spring Boot v3.5.3, Spring v6.2.8
+2026-03-10 11:16:53.811 [main] INFO  r.a.context.McpServerApplicationKt - The following 1 profile is active: "stdio"
+2026-03-10 11:16:53.885 [main] DEBUG o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2
+2026-03-10 11:16:53.911 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalConfigurationAnnotationProcessor'
+2026-03-10 11:16:53.932 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.internalCachingMetadataReaderFactory'
+2026-03-10 11:16:54.039 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/business/services/ContextSearchService.class]
+2026-03-10 11:16:54.048 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/infrastructure/configuration/PlatformContextConfiguration.class]
+2026-03-10 11:16:54.072 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/presentation/formatters/MarkdownFormatterService.class]
+2026-03-10 11:16:54.073 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/presentation/mcp/McpConfiguration.class]
+2026-03-10 11:16:54.076 [main] DEBUG o.s.c.a.ClassPathBeanDefinitionScanner - Identified candidate component class: URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar/!BOOT-INF/classes/!/ru/alkoleft/context/presentation/mcp/PlatformContextMcpController.class]
+2026-03-10 11:16:55.029 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'propertySourcesPlaceholderConfigurer'
+2026-03-10 11:16:55.035 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.sql.init.dependency.DatabaseInitializationDependencyConfigurer$DependsOnDatabaseInitializationPostProcessor'
+2026-03-10 11:16:55.042 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.event.internalEventListenerProcessor'
+2026-03-10 11:16:55.048 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'forceAutoProxyCreatorToUseClassProxying'
+2026-03-10 11:16:55.049 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'bootstrapExecutorAliasPostProcessor'
+2026-03-10 11:16:55.051 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.event.internalEventListenerFactory'
+2026-03-10 11:16:55.059 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalAutowiredAnnotationProcessor'
+2026-03-10 11:16:55.061 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalCommonAnnotationProcessor'
+2026-03-10 11:16:55.068 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor'
+2026-03-10 11:16:55.069 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.internalConfigurationPropertiesBinder'
+2026-03-10 11:16:55.073 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.aop.config.internalAutoProxyCreator'
+2026-03-10 11:16:55.100 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'applicationTaskExecutor'
+2026-03-10 11:16:55.101 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$TaskExecutorConfiguration'
+2026-03-10 11:16:55.106 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'threadPoolTaskExecutorBuilder'
+2026-03-10 11:16:55.106 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$ThreadPoolTaskExecutorBuilderConfiguration'
+2026-03-10 11:16:55.108 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.task.execution-org.springframework.boot.autoconfigure.task.TaskExecutionProperties'
+2026-03-10 11:16:55.111 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.properties.BoundConfigurationProperties'
+2026-03-10 11:16:55.124 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'threadPoolTaskExecutorBuilder' via factory method to bean named 'spring.task.execution-org.springframework.boot.autoconfigure.task.TaskExecutionProperties'
+2026-03-10 11:16:55.129 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'applicationTaskExecutor' via factory method to bean named 'threadPoolTaskExecutorBuilder'
+2026-03-10 11:16:55.142 [main] DEBUG o.s.s.c.ThreadPoolTaskExecutor - Initializing ExecutorService 'applicationTaskExecutor'
+2026-03-10 11:16:55.144 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mcpServerApplication'
+2026-03-10 11:16:55.147 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'contextSearchService'
+2026-03-10 11:16:55.156 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformContextRepository'
+2026-03-10 11:16:55.156 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformContextConfiguration'
+2026-03-10 11:16:55.158 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'searchEngine'
+2026-03-10 11:16:55.159 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'contextStorage'
+2026-03-10 11:16:55.161 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'contextLoader'
+2026-03-10 11:16:55.163 [main] DEBUG o.s.c.e.PropertySourcesPropertyResolver - Found key 'platform.context.path' in PropertySource 'environmentProperties' with value of type String
+2026-03-10 11:16:55.178 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'contextStorage' via factory method to bean named 'contextLoader'
+2026-03-10 11:16:55.181 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'searchEngine' via factory method to bean named 'contextStorage'
+2026-03-10 11:16:55.186 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextRepository' via factory method to bean named 'searchEngine'
+2026-03-10 11:16:55.186 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextRepository' via factory method to bean named 'contextStorage'
+2026-03-10 11:16:55.188 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'contextSearchService' via constructor to bean named 'platformContextRepository'
+2026-03-10 11:16:55.198 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'markdownFormatterService'
+2026-03-10 11:16:55.201 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mcpConfiguration'
+2026-03-10 11:16:55.203 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformContextMcpController'
+2026-03-10 11:16:55.206 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'formatter'
+2026-03-10 11:16:55.207 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextMcpController' via constructor to bean named 'contextSearchService'
+2026-03-10 11:16:55.207 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformContextMcpController' via constructor to bean named 'formatter'
+2026-03-10 11:16:55.207 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'platformTools'
+2026-03-10 11:16:55.208 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'platformTools' via factory method to bean named 'platformContextMcpController'
+2026-03-10 11:16:55.296 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.311 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.332 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.335 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.337 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.338 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.340 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.Integer as definition (since it is the main schema "#")
+2026-03-10 11:16:55.343 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.344 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.346 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.AutoConfigurationPackages'
+2026-03-10 11:16:55.347 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration'
+2026-03-10 11:16:55.347 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration'
+2026-03-10 11:16:55.347 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'standardJacksonObjectMapperBuilderCustomizer'
+2026-03-10 11:16:55.348 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.jackson-org.springframework.boot.autoconfigure.jackson.JacksonProperties'
+2026-03-10 11:16:55.350 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'standardJacksonObjectMapperBuilderCustomizer' via factory method to bean named 'spring.jackson-org.springframework.boot.autoconfigure.jackson.JacksonProperties'
+2026-03-10 11:16:55.351 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'parameterNamesModule'
+2026-03-10 11:16:55.351 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$ParameterNamesModuleConfiguration'
+2026-03-10 11:16:55.354 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jsonMixinModule'
+2026-03-10 11:16:55.354 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonMixinConfiguration'
+2026-03-10 11:16:55.355 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jsonMixinModuleEntries'
+2026-03-10 11:16:55.355 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jsonMixinModuleEntries' via factory method to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 11:16:55.368 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jsonMixinModule' via factory method to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 11:16:55.368 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jsonMixinModule' via factory method to bean named 'jsonMixinModuleEntries'
+2026-03-10 11:16:55.370 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jsonComponentModule'
+2026-03-10 11:16:55.370 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration'
+2026-03-10 11:16:55.376 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.context.properties.EnableConfigurationPropertiesRegistrar.methodValidationExcludeFilter'
+2026-03-10 11:16:55.381 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration'
+2026-03-10 11:16:55.382 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperConfiguration'
+2026-03-10 11:16:55.382 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jacksonObjectMapper'
+2026-03-10 11:16:55.384 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonObjectMapperBuilder' via factory method to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 11:16:55.384 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonObjectMapperBuilder' via factory method to bean named 'standardJacksonObjectMapperBuilderCustomizer'
+2026-03-10 11:16:55.387 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonObjectMapper' via factory method to bean named 'jacksonObjectMapperBuilder'
+2026-03-10 11:16:55.395 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration$DefaultCodecsConfiguration'
+2026-03-10 11:16:55.395 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'defaultCodecCustomizer'
+2026-03-10 11:16:55.396 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.codec-org.springframework.boot.autoconfigure.codec.CodecProperties'
+2026-03-10 11:16:55.397 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.http.codecs-org.springframework.boot.autoconfigure.http.codec.HttpCodecsProperties'
+2026-03-10 11:16:55.399 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'defaultCodecCustomizer' via factory method to bean named 'spring.codec-org.springframework.boot.autoconfigure.codec.CodecProperties'
+2026-03-10 11:16:55.399 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'defaultCodecCustomizer' via factory method to bean named 'spring.http.codecs-org.springframework.boot.autoconfigure.http.codec.HttpCodecsProperties'
+2026-03-10 11:16:55.399 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'defaultCodecCustomizer' via factory method to bean named 'environment'
+2026-03-10 11:16:55.401 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration$JacksonCodecConfiguration'
+2026-03-10 11:16:55.402 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'jacksonCodecCustomizer'
+2026-03-10 11:16:55.403 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'jacksonCodecCustomizer' via factory method to bean named 'jacksonObjectMapper'
+2026-03-10 11:16:55.404 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration'
+2026-03-10 11:16:55.405 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.ai.mcp.server.autoconfigure.McpServerAutoConfiguration'
+2026-03-10 11:16:55.407 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'stdioServerTransport'
+2026-03-10 11:16:55.464 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'capabilitiesBuilder'
+2026-03-10 11:16:55.466 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'syncTools'
+2026-03-10 11:16:55.470 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.ai.mcp.server-org.springframework.ai.mcp.server.autoconfigure.McpServerProperties'
+2026-03-10 11:16:55.476 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'syncTools' via factory method to bean named 'spring.ai.mcp.server-org.springframework.ai.mcp.server.autoconfigure.McpServerProperties'
+2026-03-10 11:16:55.478 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mcpSyncServer'
+2026-03-10 11:16:55.481 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'stdioServerTransport'
+2026-03-10 11:16:55.481 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'capabilitiesBuilder'
+2026-03-10 11:16:55.481 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'spring.ai.mcp.server-org.springframework.ai.mcp.server.autoconfigure.McpServerProperties'
+2026-03-10 11:16:55.481 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mcpSyncServer' via factory method to bean named 'platformTools'
+2026-03-10 11:16:55.484 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable tools capabilities, notification: true
+2026-03-10 11:16:55.486 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.487 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.488 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.489 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.491 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.492 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.493 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.Integer as definition (since it is the main schema "#")
+2026-03-10 11:16:55.494 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.495 [main] DEBUG c.g.v.j.g.i.SchemaGenerationContextImpl - storing configured custom inline type for java.lang.String as definition (since it is the main schema "#")
+2026-03-10 11:16:55.568 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Registered tools: 5
+2026-03-10 11:16:55.568 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable resources capabilities, notification: true
+2026-03-10 11:16:55.569 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable prompts capabilities, notification: true
+2026-03-10 11:16:55.570 [main] INFO  o.s.a.m.s.a.McpServerAutoConfiguration - Enable completions capabilities
+2026-03-10 11:16:55.649 [main] DEBUG reactor.util.Loggers - Using Slf4j logging framework
+2026-03-10 11:16:55.748 [main] DEBUG i.m.c.u.i.l.InternalLoggerFactory - Using SLF4J as the default logging framework
+2026-03-10 11:16:55.753 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"2.1.70"}},"jsonrpc":"2.0","id":0}
+2026-03-10 11:16:55.753 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"2.1.70"}},"jsonrpc":"2.0","id":0}
+2026-03-10 11:16:55.766 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.aop.AopAutoConfiguration$ClassProxyingConfiguration'
+2026-03-10 11:16:55.767 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.aop.AopAutoConfiguration'
+2026-03-10 11:16:55.767 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration'
+2026-03-10 11:16:55.767 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'applicationAvailability'
+2026-03-10 11:16:55.769 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration'
+2026-03-10 11:16:55.769 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.context.LifecycleAutoConfiguration'
+2026-03-10 11:16:55.766 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=initialize, id=0, params={protocolVersion=2025-11-25, capabilities={roots={}}, clientInfo={name=claude-code, version=2.1.70}}]
+2026-03-10 11:16:55.769 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'lifecycleProcessor'
+2026-03-10 11:16:55.770 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.lifecycle-org.springframework.boot.autoconfigure.context.LifecycleProperties'
+2026-03-10 11:16:55.770 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'lifecycleProcessor' via factory method to bean named 'spring.lifecycle-org.springframework.boot.autoconfigure.context.LifecycleProperties'
+2026-03-10 11:16:55.772 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration$StringHttpMessageConverterConfiguration'
+2026-03-10 11:16:55.772 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'stringHttpMessageConverter'
+2026-03-10 11:16:55.772 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'stringHttpMessageConverter' via factory method to bean named 'environment'
+2026-03-10 11:16:55.785 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration$MappingJackson2XmlHttpMessageConverterConfiguration'
+2026-03-10 11:16:55.785 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mappingJackson2XmlHttpMessageConverter'
+2026-03-10 11:16:55.786 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mappingJackson2XmlHttpMessageConverter' via factory method to bean named 'jacksonObjectMapperBuilder'
+2026-03-10 11:16:55.783 [pool-2-thread-1] INFO  i.m.server.McpAsyncServer - Client initialize request - Protocol: 2025-11-25, Capabilities: ClientCapabilities[experimental=null, roots=RootCapabilities[listChanged=null], sampling=null], Info: Implementation[name=claude-code, version=2.1.70]
+2026-03-10 11:16:55.788 [pool-2-thread-1] WARN  i.m.server.McpAsyncServer - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
+2026-03-10 11:16:55.789 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration'
+2026-03-10 11:16:55.790 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'mappingJackson2HttpMessageConverter'
+2026-03-10 11:16:55.790 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'mappingJackson2HttpMessageConverter' via factory method to bean named 'jacksonObjectMapper'
+2026-03-10 11:16:55.790 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration'
+2026-03-10 11:16:55.790 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration'
+2026-03-10 11:16:55.790 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'messageConverters'
+2026-03-10 11:16:55.816 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"notifications/initialized","jsonrpc":"2.0"}
+2026-03-10 11:16:55.816 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"notifications/initialized","jsonrpc":"2.0"}
+2026-03-10 11:16:55.819 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received notification: JSONRPCNotification[jsonrpc=2.0, method=notifications/initialized, params=null]
+2026-03-10 11:16:55.820 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration'
+2026-03-10 11:16:55.820 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.ssl-org.springframework.boot.autoconfigure.ssl.SslProperties'
+2026-03-10 11:16:55.823 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration' via constructor to bean named 'org.springframework.context.annotation.AnnotationConfigApplicationContext@790174f2'
+2026-03-10 11:16:55.823 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration' via constructor to bean named 'spring.ssl-org.springframework.boot.autoconfigure.ssl.SslProperties'
+2026-03-10 11:16:55.826 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"tools/list","jsonrpc":"2.0","id":1}
+2026-03-10 11:16:55.826 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"tools/list","jsonrpc":"2.0","id":1}
+2026-03-10 11:16:55.826 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=tools/list, id=1, params=null]
+2026-03-10 11:16:55.828 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'fileWatcher'
+2026-03-10 11:16:55.828 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"prompts/list","jsonrpc":"2.0","id":2}
+2026-03-10 11:16:55.828 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"prompts/list","jsonrpc":"2.0","id":2}
+2026-03-10 11:16:55.829 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=prompts/list, id=2, params=null]
+2026-03-10 11:16:55.830 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'sslPropertiesSslBundleRegistrar'
+2026-03-10 11:16:55.830 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'sslPropertiesSslBundleRegistrar' via factory method to bean named 'fileWatcher'
+2026-03-10 11:16:55.832 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"resources/list","jsonrpc":"2.0","id":3}
+2026-03-10 11:16:55.832 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"resources/list","jsonrpc":"2.0","id":3}
+2026-03-10 11:16:55.833 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=resources/list, id=3, params=null]
+2026-03-10 11:16:55.835 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'sslBundleRegistry'
+2026-03-10 11:16:55.846 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration'
+2026-03-10 11:16:55.846 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.http.client-org.springframework.boot.autoconfigure.http.client.HttpClientProperties'
+2026-03-10 11:16:55.850 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration' via constructor to bean named 'spring.http.client-org.springframework.boot.autoconfigure.http.client.HttpClientProperties'
+2026-03-10 11:16:55.852 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpRequestFactoryBuilder'
+2026-03-10 11:16:55.865 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpRequestFactorySettings'
+2026-03-10 11:16:55.867 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.reactor.netty.ReactorNettyConfigurations$ReactorResourceFactoryConfiguration'
+2026-03-10 11:16:55.868 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'reactorResourceFactory'
+2026-03-10 11:16:55.869 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.reactor.netty-org.springframework.boot.autoconfigure.reactor.netty.ReactorNettyProperties'
+2026-03-10 11:16:55.871 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'reactorResourceFactory' via factory method to bean named 'spring.reactor.netty-org.springframework.boot.autoconfigure.reactor.netty.ReactorNettyProperties'
+2026-03-10 11:16:55.876 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration$ReactorNetty'
+2026-03-10 11:16:55.876 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration'
+2026-03-10 11:16:55.877 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.http.reactiveclient-org.springframework.boot.autoconfigure.http.client.reactive.HttpReactiveClientProperties'
+2026-03-10 11:16:55.879 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration' via constructor to bean named 'spring.http.reactiveclient-org.springframework.boot.autoconfigure.http.client.reactive.HttpReactiveClientProperties'
+2026-03-10 11:16:55.880 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpConnectorBuilder'
+2026-03-10 11:16:55.882 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'reactorNettyHttpClientMapperClientHttpConnectorBuilderCustomizer'
+2026-03-10 11:16:55.882 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration$ReactorNetty'
+2026-03-10 11:16:55.884 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'reactorNettyHttpClientMapperClientHttpConnectorBuilderCustomizer' via factory method to bean named 'reactorResourceFactory'
+2026-03-10 11:16:55.892 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'clientHttpConnectorSettings'
+2026-03-10 11:16:55.894 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration'
+2026-03-10 11:16:55.896 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties'
+2026-03-10 11:16:55.897 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration' via constructor to bean named 'spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties'
+2026-03-10 11:16:55.898 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'gitProperties'
+2026-03-10 11:16:55.905 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.netty.NettyAutoConfiguration'
+2026-03-10 11:16:55.906 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.netty-org.springframework.boot.autoconfigure.netty.NettyProperties'
+2026-03-10 11:16:55.907 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.netty.NettyAutoConfiguration' via constructor to bean named 'spring.netty-org.springframework.boot.autoconfigure.netty.NettyProperties'
+2026-03-10 11:16:55.908 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.reactor.ReactorAutoConfiguration'
+2026-03-10 11:16:55.909 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.reactor-org.springframework.boot.autoconfigure.reactor.ReactorProperties'
+2026-03-10 11:16:55.910 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.reactor.ReactorAutoConfiguration' via constructor to bean named 'spring.reactor-org.springframework.boot.autoconfigure.reactor.ReactorProperties'
+2026-03-10 11:16:55.910 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration'
+2026-03-10 11:16:55.910 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.sql.init-org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties'
+2026-03-10 11:16:55.913 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$SimpleAsyncTaskExecutorBuilderConfiguration'
+2026-03-10 11:16:55.914 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$SimpleAsyncTaskExecutorBuilderConfiguration' via constructor to bean named 'spring.task.execution-org.springframework.boot.autoconfigure.task.TaskExecutionProperties'
+2026-03-10 11:16:55.916 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'simpleAsyncTaskExecutorBuilder'
+2026-03-10 11:16:55.919 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$AsyncConfigurerConfiguration'
+2026-03-10 11:16:55.919 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'applicationTaskExecutorAsyncConfigurer'
+2026-03-10 11:16:55.920 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'applicationTaskExecutorAsyncConfigurer' via factory method to bean named 'org.springframework.beans.factory.support.DefaultListableBeanFactory@1d81e101'
+2026-03-10 11:16:55.922 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutorConfigurations$BootstrapExecutorConfiguration'
+2026-03-10 11:16:55.923 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration'
+2026-03-10 11:16:55.923 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskSchedulingConfigurations$ThreadPoolTaskSchedulerBuilderConfiguration'
+2026-03-10 11:16:55.924 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'threadPoolTaskSchedulerBuilder'
+2026-03-10 11:16:55.925 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'spring.task.scheduling-org.springframework.boot.autoconfigure.task.TaskSchedulingProperties'
+2026-03-10 11:16:55.927 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'threadPoolTaskSchedulerBuilder' via factory method to bean named 'spring.task.scheduling-org.springframework.boot.autoconfigure.task.TaskSchedulingProperties'
+2026-03-10 11:16:55.929 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskSchedulingConfigurations$SimpleAsyncTaskSchedulerBuilderConfiguration'
+2026-03-10 11:16:55.932 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'org.springframework.boot.autoconfigure.task.TaskSchedulingConfigurations$SimpleAsyncTaskSchedulerBuilderConfiguration' via constructor to bean named 'spring.task.scheduling-org.springframework.boot.autoconfigure.task.TaskSchedulingProperties'
+2026-03-10 11:16:55.932 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'simpleAsyncTaskSchedulerBuilder'
+2026-03-10 11:16:55.936 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration'
+2026-03-10 11:16:55.938 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration'
+2026-03-10 11:16:55.938 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'httpMessageConvertersRestClientCustomizer'
+2026-03-10 11:16:55.939 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'restClientSsl'
+2026-03-10 11:16:55.939 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'restClientSsl' via factory method to bean named 'sslBundleRegistry'
+2026-03-10 11:16:55.943 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'restClientBuilderConfigurer'
+2026-03-10 11:16:55.946 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration'
+2026-03-10 11:16:55.946 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration'
+2026-03-10 11:16:55.947 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration$WebClientCodecsConfiguration'
+2026-03-10 11:16:55.947 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'exchangeStrategiesCustomizer'
+2026-03-10 11:16:55.950 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration'
+2026-03-10 11:16:55.950 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'webClientSsl'
+2026-03-10 11:16:55.951 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'webClientSsl' via factory method to bean named 'clientHttpConnectorBuilder'
+2026-03-10 11:16:55.951 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'webClientSsl' via factory method to bean named 'clientHttpConnectorSettings'
+2026-03-10 11:16:55.951 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Autowiring by type from bean name 'webClientSsl' via factory method to bean named 'sslBundleRegistry'
+2026-03-10 11:16:55.978 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase -2147483647
+2026-03-10 11:16:55.978 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'springBootLoggingLifecycle'
+2026-03-10 11:16:55.978 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 0
+2026-03-10 11:16:56.058 [main] DEBUG i.n.u.i.l.InternalLoggerFactory - Using SLF4J as the default logging framework
+2026-03-10 11:16:56.062 [main] DEBUG i.n.util.internal.PlatformDependent0 - Java version: 17
+2026-03-10 11:16:56.062 [main] DEBUG i.n.util.internal.PlatformDependent0 - -Dio.netty.noUnsafe: false
+2026-03-10 11:16:56.062 [main] DEBUG i.n.util.internal.PlatformDependent0 - Thread.isVirtual() is not available: 
+2026-03-10 11:16:56.062 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.lang.BaseVirtualThread is not available: 
+2026-03-10 11:16:56.065 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe.theUnsafe: available
+2026-03-10 11:16:56.066 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe base methods: all available
+2026-03-10 11:16:56.068 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe.storeFence: available
+2026-03-10 11:16:56.069 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.nio.Buffer.address: available
+2026-03-10 11:16:56.069 [main] DEBUG i.n.util.internal.PlatformDependent0 - direct buffer constructor: unavailable: Reflective setAccessible(true) disabled
+2026-03-10 11:16:56.071 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.nio.Bits.unaligned: available, true
+2026-03-10 11:16:56.073 [main] DEBUG i.n.util.internal.PlatformDependent0 - jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable: class io.netty.util.internal.PlatformDependent0$7 cannot access class jdk.internal.misc.Unsafe (in module java.base) because module java.base does not export jdk.internal.misc to unnamed module @6b2ea799
+2026-03-10 11:16:56.075 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.nio.DirectByteBuffer.<init>(long, {int,long}): unavailable
+2026-03-10 11:16:56.075 [main] DEBUG i.n.util.internal.PlatformDependent - sun.misc.Unsafe: available
+2026-03-10 11:16:56.075 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.tmpdir: C:\Users\AlexT\AppData\Local\Temp (java.io.tmpdir)
+2026-03-10 11:16:56.075 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.bitMode: 64 (sun.arch.data.model)
+2026-03-10 11:16:56.076 [main] DEBUG i.n.util.internal.PlatformDependent - Platform: Windows
+2026-03-10 11:16:56.078 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.maxDirectMemory: -1 bytes
+2026-03-10 11:16:56.078 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.uninitializedArrayAllocationThreshold: -1
+2026-03-10 11:16:56.080 [main] DEBUG io.netty.util.internal.CleanerJava9 - java.nio.ByteBuffer.cleaner(): available
+2026-03-10 11:16:56.080 [main] DEBUG i.n.util.internal.PlatformDependent - -Dio.netty.noPreferDirect: false
+2026-03-10 11:16:56.083 [main] DEBUG reactor.netty.tcp.TcpResources - [http] resources will use the default LoopResources: DefaultLoopResources {prefix=reactor-http, daemon=true, selectCount=16, workerCount=16}
+2026-03-10 11:16:56.084 [main] DEBUG reactor.netty.tcp.TcpResources - [http] resources will use the default ConnectionProvider: reactor.netty.resources.DefaultPooledConnectionProvider@1213ffbc
+2026-03-10 11:16:56.084 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
+2026-03-10 11:16:56.084 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
+2026-03-10 11:16:56.105 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 2.921 seconds (process running for 3.855)
