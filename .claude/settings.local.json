@@ -267,7 +267,11 @@
       "Bash(\"C:/Tools/OneScript/bin/oscript.exe\":*)",
       "Bash(\"C:/Program:*)",
       "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)",
-      "Skill(git-commit-message)"
+      "Skill(git-commit-message)",
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query2.py\":*)",
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query3.py\":*)",
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query4.py\":*)",
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query5.py\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
