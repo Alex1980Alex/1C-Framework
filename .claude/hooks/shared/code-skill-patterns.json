@@ -49,7 +49,7 @@
       },
       {
         "pattern": "ВЫБРАТЬ|СУММА|КОЛИЧЕСТВО|МАКСИМУМ|ЕСТЬNULL|ПОМЕСТИТЬ",
-        "skill": "1c-query-language",
+        "skill": "1c-doc-research",
         "label": "1C Query Language",
         "domain": "1c"
       },
