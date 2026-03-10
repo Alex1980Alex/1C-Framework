@@ -266,7 +266,8 @@
       "mcp__bsl-semantic-search__bsl_hybrid_search",
       "Bash(\"C:/Tools/OneScript/bin/oscript.exe\":*)",
       "Bash(\"C:/Program:*)",
-      "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)"
+      "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster:*)",
+      "Skill(git-commit-message)"
     ]
   },
   "enableAllProjectMcpServers": true,
