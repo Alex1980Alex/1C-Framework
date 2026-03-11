@@ -105,7 +105,7 @@ if "%BACKGROUND%"=="1" (
     set "EXTRA_FLAGS="
     if "!FULL_INDEX!"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --full"
     if "!FORCE_INDEX!"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --force"
-    start "" /b cmd /c ""%~f0" "%INPUT%" !MODE_FLAG! !EXTRA_FLAGS!" ^> "!LOG_FILE!" 2^>^&1
+    start "" /b cmd /c ""%~f0" "%INPUT%" !MODE_FLAG! !EXTRA_FLAGS! > "!LOG_FILE!" 2>&1"
     echo [OK] Индексация запущена в фоне. Проверьте лог позже.
     goto :END
 )
