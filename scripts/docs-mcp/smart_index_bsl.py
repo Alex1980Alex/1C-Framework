@@ -21,6 +21,12 @@ import traceback
 from pathlib import Path
 from typing import List, Dict, Any
 
+# Force UTF-8 stdout/stderr (bat вызывает chcp 65001, но Python наследует cp1251)
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 
