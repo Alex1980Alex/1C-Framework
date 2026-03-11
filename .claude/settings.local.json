@@ -273,7 +273,12 @@
       "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query4.py\":*)",
       "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query5.py\":*)",
       "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query6.py\":*)",
-      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query7.py\":*)"
+      "Bash(\"C:/Users/AlexT/AppData/Local/Temp/query7.py\":*)",
+      "Bash(C:/Tools/OneScript/bin/oscript.exe:*)",
+      "Bash(/tmp/check_proby.os:*)",
+      "Bash(/tmp/check_proby2.os:*)",
+      "Bash(/tmp/check_union.os:*)",
+      "Bash(/tmp/check_original.os:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
