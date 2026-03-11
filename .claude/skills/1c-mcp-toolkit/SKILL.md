@@ -79,75 +79,115 @@ docker run -d -p 6003:6003 \
 | `find_references_to_object` | Ссылки на объект в метаданных | Анализ зависимостей, impact analysis | ✅ |
 | `get_access_rights` | Права ролей к объекту | Аудит безопасности, проверка доступа | ✅ |
 
-## Шаблоны запросов
+## Точные параметры API (проверено тестированием)
 
-### Чтение данных (execute_query)
+### 1. execute_query
 
-```
-execute_query(
-  query="ВЫБРАТЬ ПЕРВЫЕ 10 Код, Наименование ИЗ Справочник.Номенклатура",
-  limit=10
-)
+```json
+{"query": "ВЫБРАТЬ ПЕРВЫЕ 10 Код, Наименование ИЗ Справочник.Номенклатура"}
 ```
 
-### Чтение с параметрами
-
-```
-execute_query(
-  query="ВЫБРАТЬ Код, Наименование ИЗ Справочник.Номенклатура ГДЕ Код = &КодТовара",
-  params={"КодТовара": "001"},
-  limit=100,
-  include_schema=true
-)
+С параметрами:
+```json
+{"query": "ВЫБРАТЬ * ИЗ Документ.Х ГДЕ Контрагент = &К", "params": {"К": {"_objectRef": true, "УникальныйИдентификатор": "uuid", "ТипОбъекта": "СправочникСсылка.Контрагенты"}}}
 ```
 
-### Запрос с ссылкой на объект
+Результат: `{success: true, data: "[N]{колонки}:\n  строка1\n  строка2"}`. Ссылки возвращаются как `{_objectRef: true, "УникальныйИдентификатор": "uuid", "ТипОбъекта": "..."}`.
 
-```
-execute_query(
-  query="ВЫБРАТЬ * ИЗ Документ.РеализацияТоваровУслуг ГДЕ Контрагент = &МойКонтрагент",
-  params={
-    "МойКонтрагент": {
-      "_objectRef": true,
-      "УникальныйИдентификатор": "uuid-string",
-      "ТипОбъекта": "СправочникСсылка.Контрагенты"
-    }
-  }
-)
+### 2. execute_code
+
+```json
+{"code": "Результат = ТекущаяДатаСеанса();"}
 ```
 
-### Получение метаданных
+Результат записывается в переменную `Результат`. Возвращает: `{success: true, data: "\"2026-03-11T23:46:18Z\""}`.
 
-```
-get_metadata()                                    # Вся структура конфигурации
-get_metadata(object_type="Catalog")               # Только справочники
-get_metadata(object_type="Catalog", name_filter="Номенклатура")  # Конкретный справочник
-```
+### 3. get_metadata
 
-### Выполнение BSL кода (execute_code)
-
-```
-execute_code(
-  code="Результат = Справочники.Контрагенты.НайтиПоНаименованию(\"Тест\"); Возврат Строка(Результат);"
-)
+```json
+{}
 ```
 
-### Журнал регистрации
+Без параметров — вся конфигурация. Возвращает: типы объектов + количество + свойства конфигурации (имя, версия, режим запуска и т.д.).
 
-```
-get_event_log(
-  start_date="2026-03-11",
-  level="Error",
-  limit=20
-)
+### 4. get_event_log
+
+```json
+{"count": 20}
 ```
 
-### Права доступа
+Параметры: `count`, `start_date`, `end_date`, `level` (Information/Error/Warning). Возвращает до 100 записей: date, level, event, comment, user, metadata, session, application, computer, transaction_status.
+
+### 5. get_object_by_link
+
+**Параметр: `link`** (НЕ `navigation_link`!)
+
+```json
+{"link": "e1cib/data/Справочник.гкс_ГруппыТС?ref=813500505694551b11f0bbeb6a935645"}
+```
+
+Возвращает все реквизиты объекта: код, наименование, все поля. Ссылку можно получить через execute_code + `ПолучитьНавигационнуюСсылку()` или через `get_link_of_object`.
+
+### 6. get_link_of_object
+
+**Параметр: `object_description`** (object с обязательным `_objectRef: true`)
+
+```json
+{"object_description": {"_objectRef": true, "УникальныйИдентификатор": "6a935645-bbeb-11f0-8135-00505694551b", "ТипОбъекта": "СправочникСсылка.гкс_ГруппыТС"}}
+```
+
+Возвращает навигационную ссылку `e1cib/data/...?ref=...` для использования в `get_object_by_link`.
+
+### 7. get_access_rights
+
+```json
+{"metadata_object": "Справочник.гкс_ГруппыТС"}
+```
+
+Возвращает: тип метаданных, список применимых прав (Чтение, Добавление, Изменение, Удаление, Просмотр, ИнтерактивноеДобавление, Редактирование, и т.д.), роли и их настройки.
+
+### 8. find_references_to_object
+
+**Параметры:**
+- `target_object_description` — объект с `_objectRef: true` (обязательно)
+- `search_scope` — массив строк **на английском**: `documents`, `catalogs`, `information_registers`, `accumulation_registers`, `accounting_registers`, `calculation_registers`
+
+```json
+{
+  "target_object_description": {"_objectRef": true, "УникальныйИдентификатор": "uuid", "ТипОбъекта": "СправочникСсылка.гкс_ГруппыТС"},
+  "search_scope": ["documents", "catalogs", "information_registers"]
+}
+```
+
+Дополнительные параметры: `limit_hits` (default 200), `limit_per_meta` (default 20), `timeout_budget_sec` (default 30).
+
+## Типичные цепочки вызовов
+
+### Получить данные объекта по коду
 
 ```
-get_access_rights(
-  metadata_object="Справочник.Контрагенты"
-)
+1. execute_query("ВЫБРАТЬ ПЕРВЫЕ 1 Ссылка ИЗ Справочник.X ГДЕ Код = '1'")
+   → получаем _objectRef с UUID
+2. get_link_of_object(object_description={_objectRef...})
+   → получаем навигационную ссылку
+3. get_object_by_link(link="e1cib/data/...")
+   → получаем все реквизиты объекта
+```
+
+### Найти где используется объект
+
+```
+1. execute_query("ВЫБРАТЬ ПЕРВЫЕ 1 Ссылка ИЗ Справочник.X ГДЕ Код = '1'")
+   → получаем _objectRef
+2. find_references_to_object(target_object_description={_objectRef...}, search_scope=["documents","information_registers"])
+   → список всех ссылающихся объектов
+```
+
+### Получить дату сервера
+
+```
+execute_code(code="Результат = ТекущаяДатаСеанса();")
+→ "2026-03-11T23:46:18Z"
 ```
 
 ## Каналы изоляции
