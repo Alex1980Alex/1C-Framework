@@ -63,7 +63,8 @@
       "timeout": 60000
     },
     "1c-mcp-toolkit": {
-      "url": "http://localhost:6003/mcp",
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:6003/mcp"],
       "timeout": 180000
     }
   }
