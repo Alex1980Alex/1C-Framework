@@ -39,6 +39,7 @@ set "BACKGROUND=0"
 set "FULL_INDEX=0"
 set "FORCE_INDEX=0"
 set "LANGUAGES=bsl,javascript,python,markdown"
+set "EXIT_CODE=0"
 
 if "%~2"=="--docs-only" set "MODE=docs"
 if "%~2"=="--bsl-only" set "MODE=bsl"
@@ -90,11 +91,18 @@ if "%FORCE_INDEX%"=="1" echo [FORCE]  Принудительная переин�
 
 :: Фоновый режим для больших проектов
 if "%BACKGROUND%"=="1" (
-    set "LOG_FILE=%FRAMEWORK_ROOT%\logs\index-%DATE:~-4%%DATE:~3,2%%DATE:~0,2%_%TIME:~0,2%%TIME:~3,2%.log"
+    for /f %%a in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmm"') do set "DATESTAMP=%%a"
+    set "LOG_FILE=%FRAMEWORK_ROOT%\logs\index-!DATESTAMP!.log"
     echo [BACKGROUND] Запуск в фоновом режиме...
     echo [LOG] Лог будет записан в: !LOG_FILE!
     echo.
-    start /b cmd /c "%~f0" "%INPUT%" %MODE%-only ^> "!LOG_FILE!" 2^>^&1
+    set "MODE_FLAG="
+    if "!MODE!"=="docs" set "MODE_FLAG=--docs-only"
+    if "!MODE!"=="bsl" set "MODE_FLAG=--bsl-only"
+    set "EXTRA_FLAGS="
+    if "!FULL_INDEX!"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --full"
+    if "!FORCE_INDEX!"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --force"
+    start /b cmd /c "%~f0" "%INPUT%" !MODE_FLAG! !EXTRA_FLAGS! ^> "!LOG_FILE!" 2^>^&1
     echo [OK] Индексация запущена в фоне. Проверьте лог позже.
     goto :END
 )
@@ -112,7 +120,7 @@ echo.
 
 :: Остановка MCP сервера 1c-docs-rag (освобождаем БД)
 echo [MCP] Остановка 1c-docs-rag MCP сервера...
-wmic process where "commandline like '%%mcp_server.py%%'" delete >nul 2>&1
+powershell -NoProfile -Command "Get-Process python -EA SilentlyContinue | Where-Object {$_.CommandLine -like '*mcp_server.py*'} | Stop-Process -Force -EA SilentlyContinue" >nul 2>&1
 timeout /t 2 /nobreak >nul
 echo [OK] MCP сервер остановлен
 
@@ -125,10 +133,12 @@ if exist "%SMART_SCRIPT%" (
     if !ERRORLEVEL! EQU 0 (
         echo [OK] 1c-docs-rag индексация завершена
     ) else (
-        echo [WARN] 1c-docs-rag индексация завершена с предупреждениями
+        echo [ERROR] 1c-docs-rag индексация завершена с ошибкой ^(код: !ERRORLEVEL!^)
+        set "EXIT_CODE=1"
     )
 ) else (
-    echo [WARN] Скрипт не найден: %SMART_SCRIPT%
+    echo [ERROR] Скрипт не найден: %SMART_SCRIPT%
+    set "EXIT_CODE=1"
 )
 
 echo [INFO] MCP сервер 1c-docs-rag перезапустится автоматически при следующем вызове
@@ -151,7 +161,8 @@ if exist "%BSL_SCRIPT%" (
     if !ERRORLEVEL! EQU 0 (
         echo [OK] bsl-semantic-search индексация завершена
     ) else (
-        echo [WARN] bsl-semantic-search индексация завершена с предупреждениями
+        echo [ERROR] bsl-semantic-search индексация завершена с ошибкой ^(код: !ERRORLEVEL!^)
+        set "EXIT_CODE=1"
     )
 ) else (
     echo [INFO] BSL async indexer не найден: %BSL_SCRIPT%
@@ -161,7 +172,11 @@ echo.
 
 :DONE
 echo ════════════════════════════════════════════════════════════
-echo [DONE] Индексация завершена!
+if "!EXIT_CODE!"=="0" (
+    echo [DONE] Индексация завершена успешно!
+) else (
+    echo [DONE] Индексация завершена с ошибками!
+)
 echo.
 echo Теперь доступен семантический поиск:
 echo   - mcp__bsl-semantic-search__bsl_search("запрос")
@@ -173,7 +188,11 @@ goto :END
 echo.
 echo Доступные проекты для индексации:
 echo ──────────────────────────────────
-python "%SMART_SCRIPT%" --list
+if exist "%SMART_SCRIPT%" (
+    python "%SMART_SCRIPT%" --list
+) else (
+    echo [ERROR] Скрипт не найден: %SMART_SCRIPT%
+)
 echo.
 echo Использование: index-folder.bat "имя_проекта"
 goto :END
@@ -200,4 +219,4 @@ echo.
 goto :END
 
 :END
-endlocal
+endlocal & exit /b %EXIT_CODE%
