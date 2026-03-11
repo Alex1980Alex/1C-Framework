@@ -199,17 +199,27 @@ execute_code(code="Результат = ТекущаяДатаСеанса();")
 
 Это позволяет разделить dev/prod потоки через один Docker-контейнер.
 
+## Запуск 1С:Предприятие
+
+**ВАЖНО:** Использовать hostname `KOMPUTER`, НЕ `localhost` (иначе ошибка "определение принадлежности клиентского и серверного процессов").
+
+```bash
+"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe" ENTERPRISE /S"KOMPUTER/TestDB" /N"a.novozhenin.da@sodrugestvo.local" /P"Alex1980Alex"
+```
+
 ## Текущее окружение
 
 | Параметр | Значение |
 |----------|----------|
 | Docker-контейнер | `1c-mcp-toolkit-proxy` на порту 6003 |
 | Обработка .epf | `D:\1С-Framework\tools\1c-mcp-toolkit\1c-mcp-toolkit-main\build\MCP_Toolkit.epf` |
-| База | TestDB (`Srvr="localhost";Ref="TestDB"`) |
+| База | TestDB (`Srvr="KOMPUTER";Ref="TestDB"`) |
 | Конфигурация | УправлениеТранспортомНаПЛК v2026.1.1.0 |
 | Платформа | 8.3.27.1859 |
-| Объекты | 91 справочник, 27 документов, 190 РС, 588 общих модулей |
-| MCP конфиг | `.mcp/bsl.json` → `1c-mcp-toolkit` |
+| Объекты | 91 справочник, 27 документов, 190 РС, 1 РН, 588 общих модулей, 104 перечисления |
+| MCP конфиг | `.mcp.json` строка 111 → `1c-mcp-toolkit` (через `npx mcp-remote`) |
+| Протокол | Streamable HTTP + SSE, `Mcp-Session-Id` обязателен |
+| Все 8 tools | ✅ протестированы 2026-03-12 |
 
 ## Диагностика
 
