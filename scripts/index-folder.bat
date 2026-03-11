@@ -59,8 +59,11 @@ if "%~5"=="--languages" set "LANGUAGES=%~6"
 if "%~6"=="--languages" set "LANGUAGES=%~7"
 
 :: Определяем: путь или имя проекта?
-echo %INPUT% | findstr /C:"\" /C:":" >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
+:: Проверяем букву диска (X:) или UNC-путь (\\) — findstr через pipe ломается на кириллице
+set "IS_PATH=0"
+if "!INPUT:~1,1!"==":" set "IS_PATH=1"
+if "!INPUT:~0,2!"=="\\" set "IS_PATH=1"
+if "!IS_PATH!"=="1" (
     set "FOLDER_PATH=%INPUT%"
 ) else (
     :: Это имя проекта — ищем в projects/configuration
