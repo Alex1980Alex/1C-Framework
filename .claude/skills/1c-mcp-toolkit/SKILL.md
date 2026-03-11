@@ -228,11 +228,16 @@ execute_code(code="Результат = ТекущаяДатаСеанса();")
 | Docker error "pipe not found" | Docker Desktop не запущен | Запустить Docker Desktop, подождать 30 сек |
 | "Not Acceptable" на /mcp | Неправильный Accept header | Нужен `Accept: application/json, text/event-stream` |
 | "Missing session ID" | Повторный запрос без ID сессии | Сохранять `Mcp-Session-Id` из response headers |
-| Кракозябры в ответах execute_query | cp1251 → UTF-8 конфликт в .epf | Через MCP-клиент Claude Code должно работать; для curl — использовать Python с UTF-8 |
+| Кракозябры в ответах | cp1251 stdout на Windows | `PYTHONIOENCODING=utf-8` + `io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')` |
+| curl UTF-8 ошибки с кириллицей | Windows curl не передаёт UTF-8 JSON | Использовать Python `requests` вместо curl |
 | "204 No Content" на /1c/poll | Нормально — нет команд в очереди | Обработка ждёт команду, всё ok |
 | Обработка не подключается | Неверный URL прокси | Проверить `http://localhost:6003` в .epf |
 | Контейнер не стартует | Порт 6003 занят | `docker ps` проверить, `docker rm -f` старый |
 | Таймаут execute_query | Тяжёлый запрос | Добавить `ПЕРВЫЕ N`, оптимизировать запрос |
+| "object_description must contain '_objectRef'" | Неправильный формат для get_link/find_refs | Нужен `{_objectRef: true, УникальныйИдентификатор: "uuid", ТипОбъекта: "..."}` |
+| "Invalid search scope" в find_references | Русские названия типов | Использовать **английские**: `documents`, `catalogs`, `information_registers` |
+| "определение принадлежности процессов" при запуске 1С | `localhost` не резолвится корректно | Использовать hostname `KOMPUTER` вместо `localhost` |
+| Ошибка validation `link` required | Параметр назван иначе | `get_object_by_link` → param `link`, НЕ `navigation_link` |
 
 ## Антипаттерны
 
