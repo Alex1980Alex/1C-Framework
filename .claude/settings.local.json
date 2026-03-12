@@ -293,7 +293,12 @@
       "mcp__edt-mcp__read_method_source",
       "mcp__edt-mcp__validate_query",
       "mcp__edt-mcp__get_symbol_info",
-      "mcp__edt-mcp__get_project_errors"
+      "mcp__edt-mcp__get_project_errors",
+      "mcp__bsl-debugger__bsl_debug_start",
+      "mcp__bsl-debugger__bsl_debug_breakpoints",
+      "mcp__bsl-debugger__bsl_debug_step",
+      "mcp__bsl-debugger__bsl_debug_stop",
+      "Bash(setx PATH:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
