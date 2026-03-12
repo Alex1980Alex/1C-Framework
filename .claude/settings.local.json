@@ -303,7 +303,9 @@
       "mcp__bsl-debugger__bsl_debug_variables",
       "mcp__bsl-debugger__bsl_debug_stack",
       "mcp__bsl-debugger__bsl_debug_evaluate",
-      "mcp__edt-mcp__get_edt_version"
+      "mcp__edt-mcp__get_edt_version",
+      "mcp__edt-mcp__get_applications",
+      "mcp__edt-mcp__get_configuration_properties"
     ]
   },
   "enableAllProjectMcpServers": true,
