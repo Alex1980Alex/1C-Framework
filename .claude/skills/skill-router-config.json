@@ -201,7 +201,9 @@
         "bsl-development"
       ],
       "optional": [
-        "1c-doc-research"
+        "1c-doc-research",
+        "analyze-1c-task-v2",
+        "implement-1c-task"
       ]
     },
     "research-tech": {
