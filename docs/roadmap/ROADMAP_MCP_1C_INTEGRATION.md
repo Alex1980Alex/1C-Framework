@@ -186,6 +186,17 @@
 
 **Результат:** Claude полноценно анализирует BSL-код — модули, типы, запросы, ошибки.
 
+**Ограничения EDT-MCP:**
+- `debug_launch` только **запускает** отладку — управление breakpoints, step over/in/out, чтение переменных — вручную в EDT GUI
+- Нет программного управления UI EDT (кнопки, вкладки)
+- Для полноценной отладки через MCP нужен bsl-debugger (OneScript runtime)
+
+**bsl-debugger MCP (OneScript runtime):**
+- 10 инструментов: `bsl_debug_start/stop`, `bsl_debug_breakpoints`, `bsl_debug_step`, `bsl_debug_stack`, `bsl_debug_variables`, `bsl_debug_evaluate`, `bsl_execute`
+- Полный программный контроль breakpoints (условные, hit count, logpoints)
+- Работает только с OneScript, **не** с реальной 1С:Предприятие
+- Требует `OSCRIPT_HOME` в env для нестандартных путей установки
+
 **Конфигурация `.mcp.json`:**
 ```json
 {
