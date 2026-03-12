@@ -66,7 +66,7 @@ infra/
 
 ### bsl-debugger Configuration
 
-**Требование:** OneScript 2.0+ в PATH или явный путь в конфигурации.
+**Требование:** OneScript 2.0+ (путь задаётся через `OSCRIPT_HOME`).
 
 ```json
 {
@@ -76,12 +76,14 @@ infra/
     "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
     "env": {
       "NODE_ENV": "production",
-      "PATH": "C:\\Tools\\OneScript\\bin;${PATH}"
+      "OSCRIPT_HOME": "C:\\Tools\\OneScript"
     },
     "timeout": 120000
   }
 }
 ```
+
+**Примечание:** `${PATH}` в JSON не раскрывается. Используйте `OSCRIPT_HOME` — bsl-debugger автоматически найдёт `bin/oscript.exe`.
 
 **Инструменты (10):**
 - `bsl_analyze` — статический анализ (процедуры, функции, переменные)
