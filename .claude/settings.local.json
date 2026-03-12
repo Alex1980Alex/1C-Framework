@@ -283,7 +283,9 @@
       "Bash(scripts/index-folder.bat:*)",
       "Bash(docker:*)",
       "mcp__1c-mcp-toolkit__get_metadata",
-      "mcp__1c-mcp-toolkit__execute_query"
+      "mcp__1c-mcp-toolkit__execute_query",
+      "mcp__1c-mcp-toolkit__execute_code",
+      "mcp__1c-mcp-toolkit__get_event_log"
     ]
   },
   "enableAllProjectMcpServers": true,
