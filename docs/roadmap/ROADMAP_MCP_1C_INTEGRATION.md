@@ -191,7 +191,9 @@
 {
   "mcpServers": {
     "edt-mcp": {
-      "url": "http://localhost:8765/mcp"
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:8765/mcp"],
+      "timeout": 60000
     }
   }
 }
