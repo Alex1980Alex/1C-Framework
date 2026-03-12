@@ -286,7 +286,14 @@
       "mcp__1c-mcp-toolkit__execute_query",
       "mcp__1c-mcp-toolkit__execute_code",
       "mcp__1c-mcp-toolkit__get_event_log",
-      "mcp__1c-mcp-toolkit__find_references_to_object"
+      "mcp__1c-mcp-toolkit__find_references_to_object",
+      "mcp__edt-mcp__list_projects",
+      "mcp__edt-mcp__list_modules",
+      "mcp__edt-mcp__get_module_structure",
+      "mcp__edt-mcp__read_method_source",
+      "mcp__edt-mcp__validate_query",
+      "mcp__edt-mcp__get_symbol_info",
+      "mcp__edt-mcp__get_project_errors"
     ]
   },
   "enableAllProjectMcpServers": true,
