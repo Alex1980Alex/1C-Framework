@@ -32,7 +32,8 @@
       "args": ["D:\\1С-Framework\\tools\\bsl-debugger\\dist\\index.js"],
       "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "PATH": "C:\\Tools\\OneScript\\bin;${PATH}"
       },
       "timeout": 120000
     },
