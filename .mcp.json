@@ -33,7 +33,7 @@
       "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
       "env": {
         "NODE_ENV": "production",
-        "PATH": "C:\\Tools\\OneScript\\bin;${PATH}"
+        "OSCRIPT_HOME": "C:\\Tools\\OneScript"
       },
       "timeout": 120000
     },
