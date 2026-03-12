@@ -62,6 +62,54 @@ infra/
 | llm-rotation | Python | 5 | .mcp/full.json |
 | lazy-mcp | Python | 3 | .mcp/lazy-mcp.json |
 | serena | Python | 15+ | .mcp/full.json |
+| edt-mcp | HTTP | 13+ | .mcp.json |
+
+### bsl-debugger Configuration
+
+**Требование:** OneScript 2.0+ в PATH или явный путь в конфигурации.
+
+```json
+{
+  "bsl-debugger": {
+    "command": "node",
+    "args": ["D:\\1С-Framework\\tools\\bsl-debugger\\dist\\index.js"],
+    "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
+    "env": {
+      "NODE_ENV": "production",
+      "PATH": "C:\\Tools\\OneScript\\bin;${PATH}"
+    },
+    "timeout": 120000
+  }
+}
+```
+
+**Инструменты (10):**
+- `bsl_analyze` — статический анализ (процедуры, функции, переменные)
+- `bsl_debug_start` — создать сессию отладки
+- `bsl_debug_stop` — завершить сессию
+- `bsl_debug_breakpoints` — установить breakpoints (условные, hit count)
+- `bsl_debug_step` — continue/stepOver/stepIn/stepOut/pause
+- `bsl_debug_stack` — стек вызовов
+- `bsl_debug_variables` — переменные (local/module/global)
+- `bsl_debug_evaluate` — вычислить выражение
+- `bsl_debug_sessions` — список активных сессий
+- `bsl_execute` — быстрое выполнение без отладки
+
+### edt-mcp Configuration
+
+**Требование:** 1C:EDT с плагином EDT-MCP (port 8765).
+
+```json
+{
+  "edt-mcp": {
+    "command": "npx",
+    "args": ["-y", "mcp-remote", "http://localhost:8765/mcp"],
+    "timeout": 60000
+  }
+}
+```
+
+**Инструменты (13+):** list_projects, list_modules, get_module_structure, read_module_source, write_module_source, get_symbol_info, get_content_assist, go_to_definition, validate_query, search_in_code, get_project_errors, get_metadata_objects, find_references, rename_metadata_object, delete_metadata_object, get_form_screenshot, update_database, debug_launch.
 
 ## MCP Profiles
 
