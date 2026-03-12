@@ -298,7 +298,8 @@
       "mcp__bsl-debugger__bsl_debug_breakpoints",
       "mcp__bsl-debugger__bsl_debug_step",
       "mcp__bsl-debugger__bsl_debug_stop",
-      "Bash(setx PATH:*)"
+      "Bash(setx PATH:*)",
+      "mcp__bsl-debugger__bsl_debug_sessions"
     ]
   },
   "enableAllProjectMcpServers": true,
