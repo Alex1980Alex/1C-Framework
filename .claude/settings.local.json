@@ -306,7 +306,8 @@
       "mcp__edt-mcp__get_edt_version",
       "mcp__edt-mcp__get_applications",
       "mcp__edt-mcp__get_configuration_properties",
-      "mcp__edt-mcp__debug_launch"
+      "mcp__edt-mcp__debug_launch",
+      "mcp__edt-mcp__read_module_source"
     ]
   },
   "enableAllProjectMcpServers": true,
