@@ -281,7 +281,8 @@
       "Bash(/tmp/check_original.os:*)",
       "Bash(scripts/index-folder.bat D:\\\\1С-Framework\\\\src\\\\projects\\\\configuration\\\\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС:*)",
       "Bash(scripts/index-folder.bat:*)",
-      "Bash(docker:*)"
+      "Bash(docker:*)",
+      "mcp__1c-mcp-toolkit__get_metadata"
     ]
   },
   "enableAllProjectMcpServers": true,
