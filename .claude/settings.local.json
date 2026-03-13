@@ -336,7 +336,8 @@
       "mcp__mcp-onec-test-runner__check_syntax_edt",
       "mcp__mcp-onec-test-runner__launch_app",
       "Bash(oscript:*)",
-      "Bash(\"C:/Tools/OneScript/bin/opm.bat\" install:*)"
+      "Bash(\"C:/Tools/OneScript/bin/opm.bat\" install:*)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Tools/OneScript/bin/oscript.exe\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
