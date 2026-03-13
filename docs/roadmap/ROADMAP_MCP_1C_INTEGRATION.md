@@ -13,7 +13,7 @@
 | 5 | FSerg/mcp-1c-v1 | Метаданные | RAG + Qdrant по структуре конфигурации | [link](https://github.com/FSerg/mcp-1c-v1) |
 | 6 | alkoleft/mcp-bsl-platform-context | BSL | Синтакс-помощник платформы 8.3 (уже установлен!) | [link](https://github.com/alkoleft/mcp-bsl-platform-context) |
 | 7 | alkoleft/mcp-onec-test-runner | BSL | YaXUnit тесты, сборка, EDT CLI | [link](https://github.com/alkoleft/mcp-onec-test-runner) |
-| 8 | DitriXNew/EDT-MCP | BSL | 1C:EDT плагин, валидация запросов, BSL-анализ | [link](https://github.com/DitriXNew/EDT-MCP) |
+| 8 | DitriXNew/EDT-MCP | BSL | 1C:EDT плагин, 33 MCP-инструмента: BSL-анализ, валидация запросов, рефакторинг, скриншоты форм | [link](https://github.com/DitriXNew/EDT-MCP) |
 | 9 | spremotely/vanessa-app-mcp | Тестирование | MCP-обёртка для Vanessa Automation (BDD) | [link](https://lobehub.com/mcp/spremotely-vanessa-app-mcp) |
 | 10 | vanessa-opensource/vanessa-runner | CI/CD | CLI: сборка, деплой, запуск тестов (поглотил deployka) | [link](https://github.com/vanessa-opensource/vanessa-runner) |
 | 11 | oisee/odata_mcp_go | OData | Универсальный OData v2/v4 мост (работает с 1С OData) | [link](https://github.com/oisee/odata_mcp_go) |
@@ -69,23 +69,54 @@
 
 ### DitriXNew/EDT-MCP — Мощнейший инструмент для BSL-разработки
 
-**Почему второй:** 13 MCP-инструментов — мощнее чем bsl-platform-context + serena вместе. Но требует 1C:EDT.
+**Почему второй:** 33 MCP-инструмента — мощнее чем bsl-platform-context + serena вместе. Но требует 1C:EDT.
 
 | Tool | Категория | Что делает |
 |------|-----------|-----------|
+| **Проекты и конфигурация** | | |
 | `list_projects` | Проекты | Список проектов в workspace EDT |
-| `get_project_info` | Проекты | Свойства конфигурации проекта |
-| `get_problems` | Ошибки | Ошибки и предупреждения с фильтрами |
-| `get_problem_summary` | Ошибки | Сводка по количеству ошибок/предупреждений |
-| `get_check_description` | Ошибки | Документация по конкретной проверке |
-| `revalidate_project` | Валидация | Перезапуск валидации проекта |
-| `validate_query` | Запросы 1С | Валидация синтаксис + семантика (знает метаданные), режим DCS |
-| `list_modules` | BSL-код | Список модулей с фильтрами по типу (документы, справочники, регистры...) |
+| `get_configuration_properties` | Проекты | Свойства конфигурации (имя, совместимость, вариант скрипта) |
+| `get_applications` | Проекты | Список информационных баз проекта (ID для update/debug) |
+| `get_edt_version` | Проекты | Версия 1C:EDT |
+| **Метаданные** | | |
+| `get_metadata_objects` | Метаданные | Список объектов с фильтрацией по типу (справочники, документы...) |
+| `get_metadata_details` | Метаданные | Детальные свойства объектов (реквизиты, ТЧ, full mode) |
+| `get_tags` | Метаданные | Список тегов проекта |
+| `get_objects_by_tags` | Метаданные | Поиск объектов по тегам |
+| **BSL-код — чтение** | | |
+| `list_modules` | BSL-код | Список модулей с фильтрами по типу |
 | `get_module_structure` | BSL-код | Процедуры/функции, сигнатуры, строки, регионы, &НаСервере/&НаКлиенте |
-| `get_symbol_info` | BSL-код | Типизация символа: inferred types, сигнатуры, документация (hover) |
-| `content_assist` | Автодополнение | Подсказки типов, методов, документация платформы |
+| `read_module_source` | BSL-код | Чтение исходного кода модуля (полный или диапазон строк) |
+| `read_method_source` | BSL-код | Чтение конкретной процедуры/функции по имени |
+| **BSL-код — запись** | | |
+| `write_module_source` | BSL-код | Запись в модуль (searchReplace/replace/append) с проверкой синтаксиса |
+| **BSL-код — анализ** | | |
+| `get_symbol_info` | Анализ | Типизация символа: inferred types, сигнатуры, документация (hover) |
+| `get_content_assist` | Анализ | Автодополнение: подсказки типов, методов, документация платформы |
+| `go_to_definition` | Навигация | Переход к определению символа (метод, объект метаданных) |
+| `find_references` | Навигация | Поиск всех ссылок на объект (код, формы, роли, подсистемы) |
+| `get_method_call_hierarchy` | Навигация | Иерархия вызовов: callers/callees через BM-index |
+| `search_in_code` | Поиск | Полнотекстовый поиск по BSL (regex, фильтр по типу метаданных) |
+| **Запросы 1С** | | |
+| `validate_query` | Запросы | Валидация синтаксис + семантика (знает метаданные), режим DCS |
+| **Ошибки и валидация** | | |
+| `get_project_errors` | Ошибки | Детальные ошибки с фильтрами (severity, объект, checkId) |
+| `get_problem_summary` | Ошибки | Сводка по количеству ошибок/предупреждений |
+| `get_check_description` | Ошибки | Документация по конкретной проверке EDT |
+| `revalidate_objects` | Валидация | Перезапуск валидации проекта или конкретных объектов |
+| `clean_project` | Валидация | Полная очистка и ревалидация проекта |
+| **Рефакторинг** | | |
+| `rename_metadata_object` | Рефакторинг | Переименование с обновлением всех ссылок (preview + confirm) |
+| `delete_metadata_object` | Рефакторинг | Удаление с очисткой ссылок (preview + confirm) |
+| `add_metadata_attribute` | Рефакторинг | Добавление реквизита к объекту |
+| **Формы** | | |
+| `get_form_screenshot` | Формы | Скриншот формы из WYSIWYG-редактора (PNG) |
+| **Навигация** | | |
 | `get_bookmarks` | Навигация | Закладки в коде |
 | `get_tasks` | Навигация | TODO/FIXME маркеры |
+| **Деплой и отладка** | | |
+| `update_database` | Деплой | Обновление БД (полное или инкрементальное) |
+| `debug_launch` | Отладка | Запуск приложения в режиме отладки |
 
 **Требования:** 1C:EDT установлен, проект открыт в workspace. Порт 8765, Streamable HTTP + SSE.
 
@@ -106,11 +137,11 @@
 
 | Критерий | ROCTUP/toolkit | DitriXNew/EDT-MCP | FSerg/mcp-1c-v1 |
 |----------|---------------|-------------------|-----------------|
-| **MCP tools** | 2 | 13 | 1 |
+| **MCP tools** | 2 | 33 | 1 |
 | **Чтение данных** | execute_query | - | - |
 | **Запись данных** | через запрос | - | - |
 | **Метаданные** | get_metadata | list_modules, structure | RAG-поиск |
-| **BSL-анализ** | - | 5 tools + валидация | - |
+| **BSL-анализ** | - | 19 tools (чтение, запись, анализ, навигация, рефакторинг) | - |
 | **Установка** | Docker 1 команда | EDT + плагин | Docker Compose (6 ГБ) |
 | **Меняет конфигурацию** | Нет (.epf) | Нет (плагин) | Нет (выгрузка) |
 | **Реальное время** | live | live workspace | по выгрузке |
@@ -161,14 +192,18 @@
 ---
 
 ### Фаза 2: BSL-разработка через EDT-MCP ✓ COMPLETE (2026-03-12)
-> Claude анализирует BSL-код, валидирует запросы, навигирует по модулям через 13 инструментов EDT
+> Claude анализирует BSL-код, валидирует запросы, навигирует по модулям через 33 инструмента EDT
 
 **Инструменты:** DitriXNew/EDT-MCP + alkoleft/mcp-bsl-platform-context (уже установлен)
 
 **Почему EDT-MCP вторым:**
-- 13 MCP-инструментов — мощнее bsl-platform-context + serena вместе
+- 33 MCP-инструмента — мощнее bsl-platform-context + serena вместе
 - Валидация запросов 1С в контексте метаданных (знает справочники/документы)
 - get_symbol_info — типизация для динамического BSL (то, чего нет у LSP)
+- write_module_source — запись в BSL с проверкой синтаксиса
+- rename/delete_metadata_object — рефакторинг с обновлением всех ссылок
+- get_method_call_hierarchy — семантический граф вызовов через BM-index
+- get_form_screenshot — визуализация форм (PNG)
 - Но требует 1C:EDT — нужна установка IDE
 
 | Шаг | Действие | Статус | Результат |
@@ -307,11 +342,17 @@ Claude Code
   │   └── get_metadata                             Структура конфигурации
   │
   │ ═══ Фаза 2 (P0) ═══════════════════════════════════════════════════
-  ├── EDT MCP (DitriXNew/EDT-MCP)             ─── BSL-разработка ────► 1C:EDT:8765
+  ├── EDT MCP (DitriXNew/EDT-MCP)             ─── BSL-разработка ────► 1C:EDT:8765 (33 tools)
   │   ├── list_modules, get_module_structure        Навигация по коду
+  │   ├── read/write_module_source                  Чтение и запись BSL-кода
   │   ├── get_symbol_info, content_assist           Типизация, автодополнение
+  │   ├── go_to_definition, find_references         Навигация по символам
+  │   ├── get_method_call_hierarchy                 Граф вызовов (BM-index)
+  │   ├── rename/delete/add_metadata                Рефакторинг метаданных
   │   ├── validate_query                            Валидация запросов (синтаксис + семантика)
-  │   └── get_problems, get_tasks                   Ошибки, TODO/FIXME
+  │   ├── get_form_screenshot                       Визуализация форм (PNG)
+  │   ├── update_database, debug_launch             Деплой и отладка
+  │   └── get_project_errors, get_tasks             Ошибки, TODO/FIXME
   │
   │ ═══ Фаза 3 (P1) ═══════════════════════════════════════════════════
   ├── 1C MCP (vladimir-kharin/1c_mcp)         ─── CRUD + Проведение ► HTTP-сервис ──► TestDB
@@ -338,7 +379,7 @@ Claude Code
 | Приоритет | Фаза | Инструмент | Ценность | Срок |
 |-----------|-------|-----------|----------|------|
 | **P0** | Фаза 1 | ROCTUP/1c-mcp-toolkit | Данные + метаданные, Docker + .epf, 0 изменений конфигурации | 1 день |
-| **P0** | Фаза 2 | DitriXNew/EDT-MCP | 13 tools BSL-анализ, валидация запросов, типизация | 1-2 дня |
+| **P0** | Фаза 2 | DitriXNew/EDT-MCP | 33 tools: BSL R/W, рефакторинг, валидация, типизация, граф вызовов | 1-2 дня |
 | **P1** | Фаза 3 | 1c_mcp + OData | Полноценный CRUD + быстрое batch-чтение | 2 дня |
 | **P1** | Фаза 3.5 | Наш bsl-semantic-search | Мультивекторный RRF по метаданным (идеи FSerg) | 1 день |
 | **P1** | Фаза 4 | Vanessa + YaXUnit | BDD/TDD тестирование | 2-3 дня |
