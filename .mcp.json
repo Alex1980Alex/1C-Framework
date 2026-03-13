@@ -123,11 +123,12 @@
       "command": "java",
       "args": [
         "-Dfile.encoding=UTF-8",
-        "-Dspring.config.additional-location=file:D:\\1С-Framework\\tools\\mcp-jars\\",
+        "-Dspring.config.additional-location=file:D:/1С-Framework/tools/mcp-jars/",
         "-jar",
-        "D:\\1С-Framework\\tools\\mcp-jars\\mcp-yaxunit-runner-0.5.1.jar",
+        "D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar",
         "--spring.profiles.active=mcp,testdb"
       ],
+      "cwd": "D:\\1С-Framework\\tools\\mcp-jars",
       "env": {
         "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
       },
