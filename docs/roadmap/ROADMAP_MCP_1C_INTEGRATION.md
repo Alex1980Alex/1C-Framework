@@ -335,14 +335,14 @@
 |-----|----------|--------|-----------|
 | 4.1 | Установить OneScript + vanessa-runner | ✓ | OneScript 2.0.0, vanessa-runner 2.6.0 (GitHub, hub.oscript.io TLS) |
 | 4.2 | Настроить vanessa-runner для TestDB (`vrunner.json`) | ✓ | `vrunner.json` в корне проекта |
-| 4.3 | Скачать Vanessa Automation (.epf) | ✓ | `tools/vanessa/vanessa-automation-single.epf` v1.2.043.1 + VAExtension.cfe |
+| 4.3 | Скачать и установить расширения в TestDB | ✓ | YAXUnit 25.12 + VAExtension 1.21 + Smoke 0.2.1 — все активны |
 | 4.4 | vanessa-app-mcp (MCP для BDD) | ⏭ | Не найден на GitHub/npm, пропущен |
-| 4.5 | Добавить mcp-onec-test-runner в `.mcp.json` | ✓ | JAR v0.5.1, port stdio |
+| 4.5 | Добавить mcp-onec-test-runner в `.mcp.json` | ✓ | JAR v0.5.1, stdio transport |
 | 4.6 | Тест UI: "Открой документ, заполни форму, нажми Провести" | ⏳ | Требует открытия .epf в 1С |
 | 4.7 | Тест BDD: "Создай BDD-сценарий" | ⏳ | Требует Vanessa Automation в 1С |
 | 4.8 | Установить mcp-onec-test-runner (MCP для YaXUnit) | ✓ | `tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar` |
-| 4.9 | Тест TDD: "Запусти unit-тесты" | ⏳ | Требует YaXUnit в конфигурации |
-| 4.10 | Настроить дымовые тесты | ⏳ | |
+| 4.9 | Тест TDD: "Запусти unit-тесты" | ⏳ | YaXUnit установлен, нужен тестовый запуск |
+| 4.10 | Настроить дымовые тесты | ⏳ | Smoke 0.2.1 расширение установлено |
 | 4.11 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | ⏳ | |
 
 **Результат:** Claude эмулирует пользователя через Vanessa Automation (кнопки, формы, проведение), пишет и запускает BDD-сценарии, гоняет unit-тесты через YaXUnit.
