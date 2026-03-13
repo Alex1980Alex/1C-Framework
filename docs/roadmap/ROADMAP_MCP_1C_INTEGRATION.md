@@ -331,19 +331,19 @@
 
 #### Шаги внедрения
 
-| Шаг | Действие | Время |
-|-----|----------|-------|
-| 4.1 | Установить OneScript + vanessa-runner: `opm install vanessa-runner` | 30 мин |
-| 4.2 | Настроить vanessa-runner для TestDB (`vrunner.json`) | 1 час |
-| 4.3 | Установить Vanessa Automation (.epf) в TestDB | 30 мин |
-| 4.4 | Установить vanessa-app-mcp (MCP для BDD) | 30 мин |
-| 4.5 | Добавить в `.mcp.json` | 10 мин |
-| 4.6 | Тест UI: "Открой документ, заполни форму, нажми Провести" (Vanessa Automation) | 1 час |
-| 4.7 | Тест BDD: "Создай BDD-сценарий проверки блокировки ТС" (vanessa-app-mcp) | 30 мин |
-| 4.8 | Установить mcp-onec-test-runner (MCP для YaXUnit) | 30 мин |
-| 4.9 | Тест TDD: "Запусти unit-тесты модуля гкс_ВходнойКонтрольКачества" | 30 мин |
-| 4.10 | Настроить дымовые тесты: Vanessa ADD или YAxUnit Smoke | 1 час |
-| 4.11 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | 2 часа |
+| Шаг | Действие | Статус | Результат |
+|-----|----------|--------|-----------|
+| 4.1 | Установить OneScript + vanessa-runner | ✓ | OneScript 2.0.0, vanessa-runner 2.6.0 (GitHub, hub.oscript.io TLS) |
+| 4.2 | Настроить vanessa-runner для TestDB (`vrunner.json`) | ✓ | `vrunner.json` в корне проекта |
+| 4.3 | Скачать Vanessa Automation (.epf) | ✓ | `tools/vanessa/vanessa-automation-single.epf` v1.2.043.1 + VAExtension.cfe |
+| 4.4 | vanessa-app-mcp (MCP для BDD) | ⏭ | Не найден на GitHub/npm, пропущен |
+| 4.5 | Добавить mcp-onec-test-runner в `.mcp.json` | ✓ | JAR v0.5.1, port stdio |
+| 4.6 | Тест UI: "Открой документ, заполни форму, нажми Провести" | ⏳ | Требует открытия .epf в 1С |
+| 4.7 | Тест BDD: "Создай BDD-сценарий" | ⏳ | Требует Vanessa Automation в 1С |
+| 4.8 | Установить mcp-onec-test-runner (MCP для YaXUnit) | ✓ | `tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar` |
+| 4.9 | Тест TDD: "Запусти unit-тесты" | ⏳ | Требует YaXUnit в конфигурации |
+| 4.10 | Настроить дымовые тесты | ⏳ | |
+| 4.11 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | ⏳ | |
 
 **Результат:** Claude эмулирует пользователя через Vanessa Automation (кнопки, формы, проведение), пишет и запускает BDD-сценарии, гоняет unit-тесты через YaXUnit.
 
