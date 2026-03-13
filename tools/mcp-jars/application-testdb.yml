@@ -11,8 +11,8 @@ app:
 
   connection:
     connection-string: 'Srvr="KOMPUTER";Ref="TestDB";'
-    user: "a.novozhenin.da@sodrugestvo.local"
-    password: "Alex1980Alex"
+    user: "a.terletskiy@sodru.com"
+    password: "Alex80Alex"
 
   platform-version: "8.3.27.1859"
 
