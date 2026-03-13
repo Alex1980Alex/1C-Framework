@@ -1,0 +1,15 @@
+{
+  "skill": "implement-1c-task",
+  "version": "2.0.0",
+  "last_updated": "2026-03-13",
+  "entries": {
+    "query-patterns": {
+      "file": "query-patterns.md",
+      "description": "Паттерны SQL-запросов в конфигурации УправлениеТранспортомНаПЛК"
+    },
+    "mcp-tool-mapping": {
+      "file": "mcp-tool-mapping.md",
+      "description": "Маппинг MCP-инструментов на этапы реализации (EDT-MCP, 1c-mcp-toolkit, bsl-debug-server)"
+    }
+  }
+}
