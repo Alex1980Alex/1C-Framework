@@ -293,23 +293,70 @@
 
 ---
 
-### Фаза 4: Тестирование — Vanessa + YaXUnit (2-3 дня)
-> Claude запускает BDD/TDD тесты и анализирует результаты
+### Фаза 4: Тестирование — Vanessa Automation + YaXUnit (3-4 дня)
+> Claude эмулирует действия пользователя (нажатие кнопок, проведение документов), запускает BDD/TDD тесты
 
-**Инструменты:** vanessa-runner (CLI) + spremotely/vanessa-app-mcp + alkoleft/mcp-onec-test-runner
+**Инструменты:** Vanessa Automation (UI) + vanessa-runner (CLI) + spremotely/vanessa-app-mcp + alkoleft/mcp-onec-test-runner
+
+#### Vanessa Automation — эмуляция пользователя
+
+**Зачем:** COM-соединение (Фаза 1) и EDT-MCP (Фаза 2) работают на сервере — у них нет форм, кнопок, клиентского контекста. Vanessa Automation решает это:
+
+| Возможность | COM (ROCTUP) | EDT-MCP | Vanessa Automation |
+|---|---|---|---|
+| Нажать кнопку «Провести» | Нет | Нет | **Да** |
+| Выполнить код `&НаКлиенте` | Нет | Нет | **Да** (VAExtension) |
+| Заполнить форму как пользователь | Нет | Нет | **Да** |
+| Проверить обработчики форм | Нет | Нет | **Да** |
+| Работать с модальными окнами | Нет | Нет | **Да** |
+| Запись действий → генерация кода | Нет | Нет | **Да** |
+
+**Ключевые GitHub-проекты:**
+
+| # | Проект | Назначение | GitHub |
+|---|--------|-----------|--------|
+| 1 | **Vanessa Automation** | BDD, полная эмуляция пользователя, VAExtension (клиент+сервер код) | [Pr-Mex/vanessa-automation](https://github.com/Pr-Mex/vanessa-automation) |
+| 2 | **Vanessa Automation Single** | Однофайловая версия VA, Исследователь формы | [Pr-Mex/vanessa-automation-single](https://github.com/Pr-Mex/vanessa-automation-single) |
+| 3 | **Vanessa ADD** | TDD+BDD, плагин «ТестКлиенты», дымовые тесты всех форм | [vanessa-opensource/add](https://github.com/vanessa-opensource/add) |
+| 4 | **Тестер 1С** | Сценарное тестирование, запись действий пользователя, видеозапись, CI | [grumagargler/tester](https://github.com/grumagargler/tester) |
+| 5 | **xUnitFor1C** | Юнит+сценарное тестирование, тонкий/толстый клиент | [xDrivenDevelopment/xUnitFor1C](https://github.com/xDrivenDevelopment/xUnitFor1C) |
+| 6 | **YAxUnit** | Современный фреймворк, Allure-отчёты, EDT интеграция | [bia-technologies/yaxunit](https://github.com/bia-technologies/yaxunit) |
+| 7 | **YAxUnit Smoke** | Дымовые тесты: авто-открытие форм, проверка макетов СКД | [alexandr-yang/yaxunit-smoke](https://github.com/alexandr-yang/yaxunit-smoke) |
+| 8 | **vanessa-runner** | CLI-ядро: запуск BDD/TDD, сборка, деплой, сессии | [vanessa-opensource/vanessa-runner](https://github.com/vanessa-opensource/vanessa-runner) |
+| 9 | **EDT Test Runner** | Плагин EDT для запуска/отладки YAxUnit тестов | [bia-technologies/edt-test-runner](https://github.com/bia-technologies/edt-test-runner) |
+| 10 | **vanessa-app-mcp** | MCP-обёртка для Vanessa Automation (BDD) | [spremotely/vanessa-app-mcp](https://lobehub.com/mcp/spremotely-vanessa-app-mcp) |
+| 11 | **mcp-onec-test-runner** | MCP для YaXUnit тестов, сборка, EDT CLI | [alkoleft/mcp-onec-test-runner](https://github.com/alkoleft/mcp-onec-test-runner) |
+| 12 | **MockServer Client 1C** | Мок HTTP-сервисов для тестирования интеграций | [astrizhachuk/mockserver-client-1c](https://github.com/astrizhachuk/mockserver-client-1c) |
+| 13 | **Mutagen** | Мутационное тестирование — «тесты для тестов» | [oscript-library/mutagen](https://github.com/oscript-library/mutagen) |
+
+#### Шаги внедрения
 
 | Шаг | Действие | Время |
 |-----|----------|-------|
 | 4.1 | Установить OneScript + vanessa-runner: `opm install vanessa-runner` | 30 мин |
 | 4.2 | Настроить vanessa-runner для TestDB (`vrunner.json`) | 1 час |
-| 4.3 | Установить vanessa-app-mcp (MCP для BDD) | 30 мин |
-| 4.4 | Добавить в `.mcp.json` | 10 мин |
-| 4.5 | Тест: "Создай BDD-сценарий проверки блокировки ТС" | 30 мин |
-| 4.6 | Установить mcp-onec-test-runner (MCP для YaXUnit) | 30 мин |
-| 4.7 | Тест: "Запусти unit-тесты модуля гкс_ВходнойКонтрольКачества" | 30 мин |
-| 4.8 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | 2 часа |
+| 4.3 | Установить Vanessa Automation (.epf) в TestDB | 30 мин |
+| 4.4 | Установить vanessa-app-mcp (MCP для BDD) | 30 мин |
+| 4.5 | Добавить в `.mcp.json` | 10 мин |
+| 4.6 | Тест UI: "Открой документ, заполни форму, нажми Провести" (Vanessa Automation) | 1 час |
+| 4.7 | Тест BDD: "Создай BDD-сценарий проверки блокировки ТС" (vanessa-app-mcp) | 30 мин |
+| 4.8 | Установить mcp-onec-test-runner (MCP для YaXUnit) | 30 мин |
+| 4.9 | Тест TDD: "Запусти unit-тесты модуля гкс_ВходнойКонтрольКачества" | 30 мин |
+| 4.10 | Настроить дымовые тесты: Vanessa ADD или YAxUnit Smoke | 1 час |
+| 4.11 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | 2 часа |
 
-**Результат:** Claude пишет и запускает тесты — BDD через Vanessa, TDD через YaXUnit.
+**Результат:** Claude эмулирует пользователя через Vanessa Automation (кнопки, формы, проведение), пишет и запускает BDD-сценарии, гоняет unit-тесты через YaXUnit.
+
+**Выбор инструмента по задаче:**
+
+| Задача | Инструмент |
+|---|---|
+| Нажать «Провести» как пользователь | **Vanessa Automation** |
+| Проверить клиентский код `&НаКлиенте` | **Vanessa Automation** (VAExtension) |
+| Дымовые тесты всех форм | **Vanessa ADD** или **YAxUnit Smoke** |
+| Юнит-тесты серверного кода | **YAxUnit** или **xUnitFor1C** |
+| BDD-сценарии через MCP | **vanessa-app-mcp** |
+| CI/CD запуск тестов | **vanessa-runner** + любой фреймворк |
 
 **vanessa-runner как CLI-ядро:** даже без собственного MCP, vanessa-runner остаётся ядром для CI/CD операций (сборка, деплой, управление сессиями). MCP-серверы (vanessa-app-mcp, onec-test-runner) вызывают его под капотом.
 
