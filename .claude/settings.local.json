@@ -311,7 +311,11 @@
       "mcp__pdf-vector-graph__web_search",
       "mcp__edt-mcp__write_module_source",
       "mcp__edt-mcp__get_method_call_hierarchy",
-      "mcp__edt-mcp__search_in_code"
+      "mcp__edt-mcp__search_in_code",
+      "Bash(C:/Tools/OneScript/bin/opm.exe version:*)",
+      "Bash(\"C:\\\\Tools\\\\OneScript\\\\bin\\\\opm.exe\" version:*)",
+      "Bash(\"/c/Tools/OneScript/bin/opm.bat\" version:*)",
+      "Read(//c/Tools/OneScript/lib/opm/src//**)"
     ]
   },
   "enableAllProjectMcpServers": true,
