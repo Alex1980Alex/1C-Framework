@@ -15,7 +15,7 @@
     "xunit": {
         "--xddTestRunnerPath": "",
         "--xddExitCodeRecordPath": "./build/xunit-exit-code.txt",
-        "--reportsxunit": "./build/reports/xunit;ГенsшераторОтчетаJUnitXML{./build/reports/junit.xml}",
+        "--reportsxunit": "ГенераторОтчетаJUnitXML{./build/reports/junit.xml}",
         "--testclient": ""
     },
 
