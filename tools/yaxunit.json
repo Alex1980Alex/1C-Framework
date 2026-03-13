@@ -1,9 +1,9 @@
 {
-	"reportPath": "D:/1С-Framework/build/reports",
+	"reportPath": "D:\\1С-Framework\\build\\reports",
 	"reportFormat": "jUnit",
 	"closeAfterTests": true,
 	"showReport": false,
-	"exitCode": "D:/1С-Framework/build/buildstatus.log",
+	"exitCode": "D:\\1С-Framework\\build\\buildstatus.log",
 	"logging": {
 		"level": "debug",
 		"console": true
