@@ -66,6 +66,26 @@
       "command": "npx",
       "args": ["-y", "mcp-remote", "http://localhost:6003/mcp"],
       "timeout": 180000
+    },
+    "mcp-onec-test-runner": {
+      "command": "java",
+      "args": [
+        "-Dfile.encoding=UTF-8",
+        "-jar",
+        "D:\\1С-Framework\\tools\\mcp-jars\\mcp-yaxunit-runner-0.5.1.jar",
+        "--v8-path",
+        "C:\\Program Files\\1cv8\\8.3.27.1859",
+        "--connection-string",
+        "Srvr=\"KOMPUTER\";Ref=\"TestDB\"",
+        "--db-user",
+        "a.novozhenin.da@sodrugestvo.local",
+        "--db-pwd",
+        "Alex1980Alex"
+      ],
+      "env": {
+        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
+      },
+      "timeout": 120000
     }
   }
 }
