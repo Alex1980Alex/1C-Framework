@@ -1,0 +1,16 @@
+{
+	"extensions": ["Smoke"],
+	"reportPath": "D:/1С-Framework/build/reports",
+	"reportFormat": "jUnit",
+	"closeAfterTests": true,
+	"exitCode": "D:/1С-Framework/build/buildstatus.log",
+	"logging": {
+		"level": "debug",
+		"console": true
+	},
+	"smoke": {
+		"ОткрытиеФорм": {
+			"Использовать": true
+		}
+	}
+}
