@@ -308,7 +308,9 @@
       "mcp__edt-mcp__get_configuration_properties",
       "mcp__edt-mcp__debug_launch",
       "mcp__edt-mcp__read_module_source",
-      "mcp__pdf-vector-graph__web_search"
+      "mcp__pdf-vector-graph__web_search",
+      "mcp__edt-mcp__write_module_source",
+      "mcp__edt-mcp__get_method_call_hierarchy"
     ]
   },
   "enableAllProjectMcpServers": true,
