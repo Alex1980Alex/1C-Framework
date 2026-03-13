@@ -1,0 +1,23 @@
+app:
+  id: testdb
+  format: DESIGNER
+  base-path: "D:\\1С-Framework\\src\\bsl"
+
+  source-set:
+    - path: "."
+      name: testdb
+      type: "CONFIGURATION"
+      purpose: [ "MAIN" ]
+
+  connection:
+    connection-string: 'Srvr="KOMPUTER";Ref="TestDB";'
+    user: "a.novozhenin.da@sodrugestvo.local"
+    password: "Alex1980Alex"
+
+  platform-version: "8.3.27.1859"
+
+  tools:
+    builder: DESIGNER
+    enterprise:
+      additional-launch-keys:
+        - "/TESTMANAGER"
