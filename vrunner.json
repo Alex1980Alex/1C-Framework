@@ -9,7 +9,7 @@
 
     "vanessa": {
         "--vanessasettings": "./tools/vanessa/vanessa.json",
-        "--pathvanessa": ""
+        "--pathvanessa": "./tools/vanessa/vanessa-automation-single.epf"
     },
 
     "xunit": {
