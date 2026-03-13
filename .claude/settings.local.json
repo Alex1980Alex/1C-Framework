@@ -337,7 +337,9 @@
       "mcp__mcp-onec-test-runner__launch_app",
       "Bash(oscript:*)",
       "Bash(\"C:/Tools/OneScript/bin/opm.bat\" install:*)",
-      "Bash(MSYS_NO_PATHCONV=1 \"C:/Tools/OneScript/bin/oscript.exe\":*)"
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Tools/OneScript/bin/oscript.exe\":*)",
+      "mcp__mcp-onec-test-runner__run_module_tests",
+      "mcp__mcp-onec-test-runner__dump_config"
     ]
   },
   "enableAllProjectMcpServers": true,

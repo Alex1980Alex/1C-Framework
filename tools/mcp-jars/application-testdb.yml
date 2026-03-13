@@ -8,6 +8,14 @@ app:
       name: testdb
       type: "CONFIGURATION"
       purpose: [ "MAIN" ]
+    - path: "exts/YAXUNIT"
+      name: YAXUNIT
+      type: "EXTENSION"
+      purpose: [ "TESTING" ]
+    - path: "exts/Smoke"
+      name: Smoke
+      type: "EXTENSION"
+      purpose: [ "TESTING" ]
 
   connection:
     connection-string: 'Srvr="KOMPUTER";Ref="TestDB";'
