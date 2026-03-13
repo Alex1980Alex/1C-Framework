@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.20">
+	<ConfigVersions>
+		<Metadata name="CommonModule.ДТОткрытиеФорм" id="95f6496f-2338-45c5-9e0e-380e55cce9ba" configVersion="517e1a7d6e27f237cc41fd42c27eaa4cfb620c0e"/>
+		<Metadata name="CommonModule.ДТОткрытиеФорм.Module" id="95f6496f-2338-45c5-9e0e-380e55cce9ba.0" configVersion="459dd0c4a9434779aac833a2485c9494e10c2165"/>
+		<Metadata name="CommonModule.ДТОткрытиеФормСлужебныйВызовСервера" id="4c76a9f9-24a5-4c25-8a33-52c3751ce918" configVersion="16c9f5ab345630dcc1a20f039e46be4c81d5bb96"/>
+		<Metadata name="CommonModule.ДТОткрытиеФормСлужебныйВызовСервера.Module" id="4c76a9f9-24a5-4c25-8a33-52c3751ce918.0" configVersion="ff7a441513887e064f153cfa7f3aeea9dac08b0b"/>
+		<Metadata name="CommonModule.ДТОткрытиеФормСлужебныйКлиентСервер" id="cddd3d20-68aa-4f23-a7c0-9b094d00f501" configVersion="2c273722efcc0f3d107fcbaca7f2c33c1a887f9f"/>
+		<Metadata name="CommonModule.ДТОткрытиеФормСлужебныйКлиентСервер.Module" id="cddd3d20-68aa-4f23-a7c0-9b094d00f501.0" configVersion="c33f98d20faab90caa7e6ebff2db334921467f8e"/>
+		<Metadata name="CommonTemplate.ДТОткрытиеФормТипыТестов" id="d312bbaf-1c9a-4b4f-a554-1fa5a90e475e" configVersion="a5efcff4bee2c1d5d3f3e7b5e886f529691062a9"/>
+		<Metadata name="CommonTemplate.ДТОткрытиеФормТипыТестов.Template" id="d312bbaf-1c9a-4b4f-a554-1fa5a90e475e.0" configVersion="6fc1ccbf59b5f4606804481c047260cccc2ec820"/>
+		<Metadata name="Configuration.Smoke" id="e87fc0b5-ccdc-4353-a26b-a4f9cdf2fd72" configVersion="b75940576e551214f36844afd7016bae8a7e7531"/>
+		<Metadata name="Subsystem.ДТ_ЮТПодключаемыеМодули" id="447a00a3-8d20-4df6-b564-9a4c84d299d0" configVersion="0420cd01c6e628dd5c2952f62130d81a97ff9b61"/>
+		<Metadata name="Subsystem.ДТ_ЮТПодключаемыеМодули.Subsystem.ДымовыеТесты" id="ac841546-b155-4b82-8724-a8a3fc9a07b4" configVersion="0e0ef8dcdb3287561231b57b0eb64f4f216a6683"/>
+		<Metadata name="Subsystem.ДТ_ЮТПодключаемыеМодули.Subsystem.ОбработчикиСобытий" id="6ccf8623-5f72-48d5-9b82-a31fb45e9570" configVersion="03ccbb337fbe0f60ef330ecb9eb2bf9b2d4dd02f"/>
+		<Metadata name="Subsystem.ДТ_ЮТПодключаемыеМодули.Subsystem.ОбработчикиСобытий.Subsystem.Инициализация" id="4feba5ea-6359-47ae-bc9a-4e9f39478179" configVersion="e68fdcf040680de653027b2b5a8b375c85e00eb6"/>
+	</ConfigVersions>
+</ConfigDumpInfo>
