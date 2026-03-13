@@ -310,7 +310,8 @@
       "mcp__edt-mcp__read_module_source",
       "mcp__pdf-vector-graph__web_search",
       "mcp__edt-mcp__write_module_source",
-      "mcp__edt-mcp__get_method_call_hierarchy"
+      "mcp__edt-mcp__get_method_call_hierarchy",
+      "mcp__edt-mcp__search_in_code"
     ]
   },
   "enableAllProjectMcpServers": true,
