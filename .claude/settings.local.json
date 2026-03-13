@@ -335,7 +335,8 @@
       "mcp__mcp-onec-test-runner__check_syntax_designer_modules",
       "mcp__mcp-onec-test-runner__check_syntax_edt",
       "mcp__mcp-onec-test-runner__launch_app",
-      "Bash(oscript:*)"
+      "Bash(oscript:*)",
+      "Bash(\"C:/Tools/OneScript/bin/opm.bat\" install:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
