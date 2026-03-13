@@ -322,7 +322,13 @@
       "Read(//c/Tools/OneScript/lib/vanessa-runner/src/**)",
       "Read(//c/Tools/OneScript/lib/vanessa-runner/oscript_modules/**)",
       "Read(//c/Tools/OneScript/**)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(\"C:/Program Files/Zulu/zulu-17/bin/java\":*)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Zulu/zulu-17\" \"C:/Program Files/Zulu/zulu-17/bin/java\":*)",
+      "Bash(\"C:/Program Files/Zulu/zulu-17/bin/jar\" tf:*)",
+      "Bash(script:*)",
+      "Bash(\"C:/Program Files/Zulu/zulu-17/bin/jar\" xf:*)",
+      "Bash(javap:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
