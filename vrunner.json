@@ -1,0 +1,26 @@
+{
+    "$schema": "https://raw.githubusercontent.com/vanessa-opensource/vanessa-runner/develop/vanessa-runner-schema.json",
+    "--v8version": "8.3.27.1859",
+    "--ibconnection": "/S\"KOMPUTER\\TestDB\"",
+    "--db-user": "a.novozhenin.da@sodrugestvo.local",
+    "--db-pwd": "Alex1980Alex",
+    "--root": ".",
+    "--language": "ru",
+
+    "vanessa": {
+        "--vanessasettings": "./tools/vanessa/vanessa.json",
+        "--pathvanessa": ""
+    },
+
+    "xunit": {
+        "--xddTestRunnerPath": "",
+        "--xddExitCodeRecordPath": "./build/xunit-exit-code.txt",
+        "--reportsxunit": "./build/reports/xunit;ГенsшераторОтчетаJUnitXML{./build/reports/junit.xml}",
+        "--testclient": ""
+    },
+
+    "run": {
+        "--command": "",
+        "--execute": ""
+    }
+}
