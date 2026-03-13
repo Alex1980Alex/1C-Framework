@@ -334,7 +334,8 @@
       "mcp__mcp-onec-test-runner__check_syntax_designer_config",
       "mcp__mcp-onec-test-runner__check_syntax_designer_modules",
       "mcp__mcp-onec-test-runner__check_syntax_edt",
-      "mcp__mcp-onec-test-runner__launch_app"
+      "mcp__mcp-onec-test-runner__launch_app",
+      "Bash(oscript:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
