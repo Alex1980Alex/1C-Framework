@@ -321,7 +321,8 @@
       "Read(//tmp/**)",
       "Read(//c/Tools/OneScript/lib/vanessa-runner/src/**)",
       "Read(//c/Tools/OneScript/lib/vanessa-runner/oscript_modules/**)",
-      "Read(//c/Tools/OneScript/**)"
+      "Read(//c/Tools/OneScript/**)",
+      "Bash(npm:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
