@@ -341,7 +341,8 @@
       "mcp__mcp-onec-test-runner__run_module_tests",
       "mcp__mcp-onec-test-runner__dump_config",
       "Bash(MSYS_NO_PATHCONV=1 tasklist:*)",
-      "Bash(\"D:/va-test/run-va.bat\":*)"
+      "Bash(\"D:/va-test/run-va.bat\":*)",
+      "Bash(\"C:/Program Files/1Cv8/8.3.27.1859/bin/1cv8c.exe\" ENTERPRISE:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
