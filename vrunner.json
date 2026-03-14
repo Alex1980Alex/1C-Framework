@@ -2,8 +2,8 @@
     "$schema": "https://raw.githubusercontent.com/vanessa-opensource/vanessa-runner/develop/vanessa-runner-schema.json",
     "--v8version": "8.3.27.1859",
     "--ibconnection": "/S\"KOMPUTER\\TestDB\"",
-    "--db-user": "ОселедькоВС",
-    "--db-pwd": "",
+    "--db-user": "a.terletskiy@sodru.com",
+    "--db-pwd": "Alex80Alex",
     "--root": ".",
     "--language": "ru",
 
