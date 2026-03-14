@@ -14,6 +14,7 @@
 #   documentation   — Add docstrings to public API
 #   lint            — Fix all linter warnings
 #   quality         — AutoResearch: autonomous code quality loop (ruff+mypy)
+#   1c-study        — AutoResearch: autonomous 1C configuration study (6-phase cycle)
 
 set -euo pipefail
 
