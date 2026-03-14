@@ -13,6 +13,7 @@
 #   evaluation      — Run RAGAS evaluation suite
 #   documentation   — Add docstrings to public API
 #   lint            — Fix all linter warnings
+#   quality         — AutoResearch: autonomous code quality loop (ruff+mypy)
 
 set -euo pipefail
 
