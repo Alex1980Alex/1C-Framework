@@ -270,8 +270,8 @@
 | 3.6 | Установить IIS + настроить публикацию TestDB                         | ✓      | IIS + ISAPI + AppPool + default.vrd    |
 | 3.7 | Тест: health endpoint + tools/list через HTTP                        | ✓      | health=OK, 2 tools (list+structure)    |
 | 3.8 | Тест: tool call list_metadata_objects                                | ✓      | 5 документов, кириллица OK             |
-| 3.9 | Включить OData (опционально)                                         | ⏳      | Скрипт: `enable-odata.ps1`             |
-| 3.10| Тест: OData endpoint (опционально)                                   | ⏳      | `odata_mcp_go` — отложено              |
+| 3.9 | Включить OData для 18 объектов                                       | ✓      | execute_code → УстановитьСоставOData   |
+| 3.10| Тест: OData endpoint                                                 | ✓      | 24 коллекции, JSON, данные OK          |
 
 **Результат:** Три канала доступа к данным: ROCTUP (универсальный), 1c_mcp (CRUD), OData (быстрое чтение).
 
