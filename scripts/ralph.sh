@@ -167,6 +167,58 @@ TEMPLATES[quality]='ЗАДАЧА: Автономный цикл улучшени
 
 Когда ВСЕ критерии выполнены: RALPH_DONE'
 
+TEMPLATES[1c-study]='ЗАДАЧА: Автономное изучение конфигурации 1С через AutoResearch-цикл.
+
+КОНТЕКСТ:
+- Конфигурация: УправлениеТранспортомНаПЛК v2026.1.1.0
+- Тестовая база: testdb1c_research (копия, безопасна для экспериментов)
+- MCP: 1c-mcp-toolkit (runtime: get_metadata, execute_query, execute_code, find_references, get_access_rights, get_event_log)
+- MCP: EDT-MCP (код: list_modules, get_module_structure, get_symbol_info, validate_query, get_problems)
+- Кэш: .claude/skills/1c-config-knowledge/cache/
+- Дорожная карта: docs/roadmap/ROADMAP_AUTORESEARCH_1C_STUDY.md
+
+АЛГОРИТМ ВЫБОРА ТЕМЫ:
+1. Прочитай cache/_index.json (если нет — создай)
+2. Получи список объектов через get_metadata
+3. Найди первый НЕизученный (приоритет: документы, потом регистры, потом справочники)
+4. Если ВСЁ изучено — RALPH_DONE
+
+6 ФАЗ ИЗУЧЕНИЯ:
+
+ФАЗА 1 МЕТАДАННЫЕ (1c-mcp-toolkit, read-only):
+  get_metadata, find_references, execute_query первые 3 записи, get_access_rights
+
+ФАЗА 2 ИСХОДНЫЙ КОД (EDT-MCP, read-only):
+  list_modules, get_symbol_info для ОбработкаПроведения/ПередЗаписью/ОбработкаЗаполнения, get_problems
+
+ФАЗА 3 ГИПОТЕЗА (LLM reasoning):
+  Сформулировать: обязательные реквизиты, движения, зависимости, бизнес-смысл
+
+ФАЗА 4 ПРОВЕРКА НА БАЗЕ (1c-mcp-toolkit, write):
+  Создать зависимости (префикс ТЕСТ_AR_), создать и провести документ,
+  при ошибке — записать и исправить, проверить движения по регистрам
+
+ФАЗА 5 ГРАНИЧНЫЕ СЛУЧАИ:
+  Без обязательного поля, отмена проведения, ввод на основании
+
+ФАЗА 6 CLEANUP + КЭШ:
+  Удалить все ТЕСТ_AR_*, записать cache/documents/ИмяОбъекта.md,
+  обновить _index.json и document_register_map.md
+
+БЕЗОПАСНОСТЬ: префикс ТЕСТ_AR_, cleanup каждой итерации, только testdb1c_research
+
+КРИТЕРИИ ЗАВЕРШЕНИЯ ИТЕРАЦИИ:
+1. Файл cache/ создан для объекта
+2. _index.json обновлён
+3. Тестовые данные удалены
+
+КРИТЕРИИ ЗАВЕРШЕНИЯ ЦИКЛА:
+1. Все 27 документов изучены
+2. document_register_map.md — полная карта
+3. business_processes.md — цепочки
+
+Когда ВСЕ критерии цикла выполнены: RALPH_DONE'
+
 # Parse arguments
 show_help() {
     echo -e "${BLUE}Ralph Wiggum — Autonomous Loop for PDF Framework${NC}"
