@@ -343,7 +343,8 @@
       "Bash(MSYS_NO_PATHCONV=1 tasklist:*)",
       "Bash(\"D:/va-test/run-va.bat\":*)",
       "Bash(\"C:/Program Files/1Cv8/8.3.27.1859/bin/1cv8c.exe\" ENTERPRISE:*)",
-      "Bash(netsh advfirewall:*)"
+      "Bash(netsh advfirewall:*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
