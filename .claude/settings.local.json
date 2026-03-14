@@ -353,7 +353,8 @@
       "Bash(%windir%/system32/inetsrv/appcmd recycle:*)",
       "Bash(code:*)",
       "Bash(./gradlew.bat shadowJar:*)",
-      "Bash(\"/c/Users/AlexT/AppData/Local/Programs/Microsoft VS Code/bin/code.cmd\":*)"
+      "Bash(\"/c/Users/AlexT/AppData/Local/Programs/Microsoft VS Code/bin/code.cmd\":*)",
+      "Bash(jar tf:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
