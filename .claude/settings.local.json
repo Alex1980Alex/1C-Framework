@@ -344,7 +344,10 @@
       "Bash(\"D:/va-test/run-va.bat\":*)",
       "Bash(\"C:/Program Files/1Cv8/8.3.27.1859/bin/1cv8c.exe\" ENTERPRISE:*)",
       "Bash(netsh advfirewall:*)",
-      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER:*)"
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER:*)",
+      "Read(//c/Temp/**)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\":*)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" extension:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
