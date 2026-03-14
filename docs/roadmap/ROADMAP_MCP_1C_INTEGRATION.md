@@ -531,6 +531,7 @@ Claude Code
 Фаза 3.5 (RRF метаданные) ► наш Qdrant ──► расширяет bsl-semantic-search
 Фаза 4 (Тестирование) ────► OneScript ────► vanessa-runner
 Фаза 5 (artesk metadata) ─► расширение 1С ► дополняет Фазу 1
+Фаза 6 (bsl-debug-server) ► Java + DAP ──► runtime-отладка 1С
 ```
 
 ## Требования к серверу
