@@ -1,0 +1,23 @@
+{
+	"featurepath": "D:\\1С-Framework\\features",
+	"projectpath": "D:\\1С-Framework",
+	"junitcreatereport": true,
+	"junitpath": "D:\\1С-Framework\\build\\reports",
+	"stoponerror": false,
+	"testclienttimeout": 60,
+	"testclientports": "48010-48050",
+	"datatestclients": [
+		{
+			"Name": "TestDB",
+			"ConnectionString": "/S\"KOMPUTER\\TestDB\"",
+			"Port": 48010,
+			"ClientType": "thin",
+			"AdditionalParameters": ""
+		}
+	],
+	"outputloginconsole": true,
+	"logtotext": true,
+	"textlogname": "D:\\1С-Framework\\build\\vanessaonline.txt",
+	"fulllog": true,
+	"useaddin": false
+}
