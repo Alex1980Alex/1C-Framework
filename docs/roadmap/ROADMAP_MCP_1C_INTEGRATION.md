@@ -624,13 +624,14 @@ Claude Code
 
 | Шаг | Действие                                              | Статус | Результат |
 | --- | ----------------------------------------------------- | ------ | --------- |
-| 6.1 | Установить Java Runtime (JRE 11+)                     | ⏳      |           |
-| 6.2 | Скачать bsl-debug-server JAR                           | ⏳      |           |
-| 6.3 | Установить vsc-bsl-dap в VS Code                      | ⏳      |           |
-| 6.4 | Запустить 1С с /Debug, подключить bsl-debug-server     | ⏳      |           |
-| 6.5 | Тест: breakpoint в VS Code → останов → переменные     | ⏳      |           |
-| 6.6 | Создать MCP-DAP адаптер (MCP tools → DAP commands)    | ⏳      |           |
-| 6.7 | Тест: Claude ставит breakpoint, читает переменные     | ⏳      |           |
+| 6.1 | Установить Java Runtime (JRE 11+)                     | ✓      | OpenJDK Zulu 17.0.13                    |
+| 6.2 | Скачать bsl-debug-server JAR                           | ✓      | Извлечён из vsc-bsl-dap-1.1.0.vsix     |
+| 6.3 | Установить vsc-bsl-dap в VS Code                      | ✓      | vsc-bsl-dap v1.1.0 installed            |
+| 6.4 | Создать launch.json + start-1c-debug.bat              | ✓      | port 1550, attach mode                  |
+| 6.5 | Запустить 1С с /Debug, подключить VS Code              | ⏳      | Требуется ручной запуск                 |
+| 6.6 | Тест: breakpoint в VS Code → останов → переменные     | ⏳      | После 6.5                               |
+| 6.7 | Создать MCP-DAP адаптер (MCP tools → DAP commands)    | ⏳      | После 6.6                               |
+| 6.8 | Тест: Claude ставит breakpoint, читает переменные     | ⏳      | После 6.7                               |
 
 **Требования:**
 - Java Runtime (JRE 11+)
