@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "1С: Подключиться к отладке TestDB",
+      "type": "bsldbgs",
+      "request": "attach",
+      "debuggerURL": "http://localhost:1550",
+      "infobaseAlias": "DefAlias",
+      "cwd": "${workspaceFolder}",
+      "sources": {
+        "path": "D:/WorkSpace/УправлениеТранспортомНаПЛК/УправлениеТранспортомНаПЛК"
+      }
+    }
+  ]
+}
