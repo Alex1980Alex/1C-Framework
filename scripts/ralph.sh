@@ -127,6 +127,44 @@ TEMPLATES[lint]='ЗАДАЧА: Исправить все предупрежде�
 
 Когда ВСЕ критерии выполнены: RALPH_DONE'
 
+TEMPLATES[quality]='ЗАДАЧА: Автономный цикл улучшения качества Python-кода (AutoResearch-подход).
+
+КОНТЕКСТ:
+- Проект: PDF Vector & Graph Framework (d:/1С-Framework)
+- Python 3.11+
+- Инструменты: ruff (lint), mypy (типизация)
+- Лог результатов: data/autoresearch-results.tsv
+
+ПРОТОКОЛ КАЖДОЙ ИТЕРАЦИИ:
+1. ЗАМЕР: запусти `ruff check src/ --output-format json` и подсчитай ошибки.
+   Запусти `mypy src/` и подсчитай строки с ": error:". Запиши оба числа.
+2. КОММИТ: `git add -A && git commit -m "[RALPH] quality: pre-check iteration N"`
+   (чтобы можно было откатить если станет хуже).
+3. ИЗМЕНЕНИЕ: выбери ОДНУ самую частую категорию ошибок (по ruff или mypy)
+   и исправь её ВО ВСЕХ файлах. Делай минимальные изменения — не рефактори код.
+4. ПРОВЕРКА: запусти ruff check и mypy снова. Сравни с замером из п.1.
+5. РЕШЕНИЕ:
+   - Если ошибок стало МЕНЬШЕ → keep, `git add -A && git commit -m "[RALPH] quality: fix <category>"`
+   - Если ошибок стало БОЛЬШЕ или код сломался → `git revert HEAD --no-edit` (discard)
+6. ЛОГ: добавь строку в data/autoresearch-results.tsv:
+   iteration<TAB>commit<TAB>ruff_errors<TAB>mypy_errors<TAB>delta<TAB>status<TAB>description
+7. ПОВТОР: перейди к следующей итерации.
+
+ВАЖНЫЕ ПРАВИЛА:
+- НЕ удаляй функциональный код ради уменьшения ошибок
+- НЕ добавляй # type: ignore без крайней необходимости
+- НЕ трогай файлы в .claude/, docs/, data/, migrations/
+- Одна итерация = одна категория ошибок = один коммит
+- Если 3 раза подряд discard — попробуй радикально другой подход
+
+КРИТЕРИИ ЗАВЕРШЕНИЯ:
+1. ruff check src/ = 0 ошибок
+2. mypy src/ = 0 ошибок типизации (или стабильно уменьшается к нулю)
+3. Ни одно исправление не сломало существующий код
+4. data/autoresearch-results.tsv содержит полный лог всех итераций
+
+Когда ВСЕ критерии выполнены: RALPH_DONE'
+
 # Parse arguments
 show_help() {
     echo -e "${BLUE}Ralph Wiggum — Autonomous Loop for PDF Framework${NC}"
