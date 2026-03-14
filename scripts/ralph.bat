@@ -143,6 +143,7 @@ echo   test-coverage   Increase test coverage to 80%%+
 echo   evaluation      Run RAGAS evaluation suite
 echo   documentation   Add docstrings to public API
 echo   lint            Fix all linter warnings
+echo   quality         AutoResearch: autonomous code quality loop (ruff+mypy, measure-fix-revert)
 echo.
 echo Options:
 echo   --max-iterations N   Set max iterations (default: 10)
