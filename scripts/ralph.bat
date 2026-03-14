@@ -68,6 +68,9 @@ if not "%USE_TEMPLATE%"=="" (
     ) else if "%USE_TEMPLATE%"=="lint" (
         echo [TEMPLATE] lint
         set "PROMPT=ЗАДАЧА: Исправить все предупреждения и ошибки линтера. КОНТЕКСТ: ruff или flake8, black. КРИТЕРИИ ЗАВЕРШЕНИЯ: 1. ruff check src/ = 0 ошибок. 2. Импорты отсортированы. 3. Код отформатирован. 4. Нет unused imports. Когда ВСЕ критерии выполнены: RALPH_DONE"
+    ) else if "%USE_TEMPLATE%"=="quality" (
+        echo [TEMPLATE] quality
+        set "PROMPT=ЗАДАЧА: Автономный цикл улучшения качества Python-кода (AutoResearch-подход). КОНТЕКСТ: Проект D:\1С-Framework. Python 3.11+. Инструменты: ruff, mypy. ПРОТОКОЛ КАЖДОЙ ИТЕРАЦИИ: 1. ЗАМЕР: запусти ruff check src/ --output-format json и подсчитай ошибки. Запусти mypy src/ и подсчитай ошибки. Запиши числа. 2. КОММИТ: git commit текущее состояние (чтобы можно было откатить). 3. ИЗМЕНЕНИЕ: выбери ОДНУ категорию ошибок (самую частую по ruff или mypy) и исправь ВО ВСЕХ файлах. 4. ПРОВЕРКА: запусти ruff check и mypy снова. Сравни с замером из п.1. 5. РЕШЕНИЕ: если ошибок стало меньше — оставь (keep). Если больше или код сломался — git revert HEAD --no-edit (discard). 6. ЛОГ: добавь строку в data/autoresearch-results.tsv в формате: iteration TAB commit TAB ruff_errors TAB mypy_errors TAB delta TAB status TAB description. 7. ПОВТОР: перейди к следующей итерации. КРИТЕРИИ ЗАВЕРШЕНИЯ: 1. ruff check src/ = 0 ошибок. 2. mypy src/ = 0 ошибок типизации. 3. Ни одно исправление не сломало существующий код. 4. Файл data/autoresearch-results.tsv содержит полный лог. Когда ВСЕ критерии выполнены: RALPH_DONE"
     ) else (
         echo [ERROR] Unknown template: %USE_TEMPLATE%
         echo Available: reindex, test-coverage, evaluation, documentation, lint
