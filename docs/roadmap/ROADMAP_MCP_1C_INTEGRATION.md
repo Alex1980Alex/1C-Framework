@@ -266,12 +266,12 @@
 | 3.2 | Создать venv + установить зависимости Python proxy                   | ✓      | mcp-1.26.0, fastapi-0.135.1            |
 | 3.3 | Создать конфигурацию `.env`                                          | ✓      | TestDB credentials                     |
 | 3.4 | Добавить в `.mcp.json` (транспорт: stdio)                            | ✓      | `1c-mcp-crud` server                   |
-| 3.5 | Установить расширение `MCP_Сервер.cfe` в TestDB                      | ⏳      | Требуется ручная установка в конфигураторе |
-| 3.6 | Опубликовать HTTP-сервис `mcp_APIBackend` на IIS                     | ⏳      | Требуется публикация TestDB            |
-| 3.7 | Тест: "Создай и проведи документ" через 1c_mcp                       | ⏳      | После публикации                       |
-| 3.8 | Включить OData в конфигураторе TestDB                                | ⏳      | Опционально                            |
-| 3.9 | Опубликовать на IIS: `http://localhost/TestDB/odata/standard.odata/` | ⏳      | Опционально                            |
-| 3.10| Собрать и настроить `odata_mcp_go`                                   | ⏳      | Опционально                            |
+| 3.5 | Установить расширение `MCP_Сервер.cfe` в TestDB                      | 🔄      | Ручная установка через Конфигуратор    |
+| 3.6 | Установить IIS + настроить публикацию TestDB                         | ⏳      | Скрипт: `setup-phase3-iis.ps1`         |
+| 3.7 | Тест: health endpoint + tools/list через HTTP                        | ⏳      | Скрипт: `test-phase3.ps1`              |
+| 3.8 | Тест: CRUD через Python proxy (stdio)                                | ⏳      | После 3.5 + 3.6                        |
+| 3.9 | Включить OData (опционально)                                         | ⏳      | Скрипт: `enable-odata.ps1`             |
+| 3.10| Тест: OData endpoint (опционально)                                   | ⏳      | `odata_mcp_go` — отложено              |
 
 **Результат:** Три канала доступа к данным: ROCTUP (универсальный), 1c_mcp (CRUD), OData (быстрое чтение).
 
@@ -279,14 +279,27 @@
 - Расширение: `D:\1C-Enterprise_Framework\src\external\1c_mcp\build\MCP_Сервер.cfe`
 - Python Proxy: `D:\1C-Enterprise_Framework\src\external\1c_mcp\venv\`
 - Конфигурация: `D:\1C-Enterprise_Framework\src\external\1c_mcp\.env`
-- Скрипты: `setup-phase3.bat`, `publish-testdb.bat`, `start-proxy-http.bat`
+- Скрипты (оригинальные): `setup-phase3.bat`, `publish-testdb.bat`, `start-proxy-http.bat`
+- Скрипты (новые): `tools/1c-mcp-crud/setup-phase3-iis.ps1`, `install-extension.ps1`, `test-phase3.ps1`, `enable-odata.ps1`
 - Инструкция: `install-extension-guide.md`
 
+**Автоматизация (новые скрипты в `tools/1c-mcp-crud/`):**
+1. `install-extension.ps1` — установка .cfe через ibcmd/DESIGNER batch mode
+2. `setup-phase3-iis.ps1` — полная установка IIS + ISAPI + публикация TestDB
+3. `test-phase3.ps1` — верификация всех компонентов (IIS, health, tools, OData)
+4. `enable-odata.ps1` — включение/отключение OData в default.vrd
+
 **Ручные шаги:**
-1. Открыть Конфигуратор TestDB
-2. Установить расширение из файла `MCP_Сервер.cfe`
-3. Опубликовать HTTP-сервис `mcp_APIBackend` на IIS
-4. Проверить: `curl http://localhost/TestDB/hs/mcp/health`
+1. Открыть Конфигуратор TestDB (`Srvr="KOMPUTER";Ref="TestDB"`)
+2. Конфигурация → Расширения → Добавить из файла: `MCP_Сервер.cfe`
+3. Запустить `setup-phase3-iis.ps1` от Администратора (установит IIS + ISAPI)
+4. Проверить: `test-phase3.ps1`
+
+**Диагностика:**
+- IIS не установлен на машине (Windows IoT Enterprise) → нужна установка через DISM
+- DESIGNER зависает (вероятно, лицензия не поддерживает batch-режим) → ручная установка
+- ibcmd не подключается к SQL (Shared Memory timeout, TCP refused) → SQL Server принимает только Named Pipes через 1C cluster
+- `default.vrd` уже сконфигурирован с HTTP-сервисом `mcp_APIBackend`
 
 **Когда нужна Фаза 3 (а не только ROCTUP):**
 - Нужно полноценное создание/проведение документов (не через execute_query)
