@@ -20,5 +20,10 @@
 			"ИмяКомпьютера": ""
 		}
 	],
-	"ИмяПодключения": "TestDB"
+	"ИмяПодключения": "TestDB",
+	"DisableFirstRunHelper": true,
+	"DisableLoadConfig": true,
+	"DisableLoadTestClientsTable": true,
+	"ClearStepsCache": true,
+	"DisableCheckPossibilityOfSynchronousCalls": true
 }
