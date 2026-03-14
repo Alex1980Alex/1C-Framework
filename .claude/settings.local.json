@@ -340,7 +340,8 @@
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Tools/OneScript/bin/oscript.exe\":*)",
       "mcp__mcp-onec-test-runner__run_module_tests",
       "mcp__mcp-onec-test-runner__dump_config",
-      "Bash(MSYS_NO_PATHCONV=1 tasklist:*)"
+      "Bash(MSYS_NO_PATHCONV=1 tasklist:*)",
+      "Bash(\"D:/va-test/run-va.bat\":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
