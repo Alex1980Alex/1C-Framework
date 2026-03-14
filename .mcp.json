@@ -133,6 +133,19 @@
         "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
       },
       "timeout": 120000
+    },
+    "1c-mcp-crud": {
+      "command": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": ["-m", "src.py_server"],
+      "cwd": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/TestDB",
+        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
+        "MCP_ONEC_PASSWORD": "Alex80Alex"
+      },
+      "timeout": 60000
     }
   }
 }
