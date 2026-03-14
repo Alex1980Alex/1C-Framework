@@ -553,6 +553,9 @@ scripts\ralph.bat --template 1c-study --max-iterations 10
 | **Обратная связь** | Автоматическая (ruff) | Человек + автоматика |
 | **Scope** | src/*.py | Вся работа Claude Code |
 | **Время** | Бесконечный цикл за ночь | Постепенное накопление между сессиями |
+| **LLM** | Одна (Claude) | Две: Opus (reasoning) + локальная (retrieval, шаблоны) |
+| **Роль LLM** | Только fix code | Analyze → Hypothesize → Act → Evaluate → Learn |
+| **Стоимость** | $0.05-0.10/итерация | Opus: $0.05-0.10 + Локальная: $0 |
 
 ---
 
