@@ -8,11 +8,11 @@
 	"testclientports": "48010-48050",
 	"datatestclients": [
 		{
-			"Name": "TestDB",
-			"ConnectionString": "/S\"KOMPUTER\\TestDB\"",
-			"Port": 48010,
-			"ClientType": "thin",
-			"AdditionalParameters": ""
+			"name": "TestDB",
+			"connectionstring": "/S\"KOMPUTER\\TestDB\"",
+			"port": 48010,
+			"clienttype": "thin",
+			"additionalparameters": ""
 		}
 	],
 	"outputloginconsole": true,
