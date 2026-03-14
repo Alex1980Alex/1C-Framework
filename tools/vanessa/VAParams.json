@@ -1,20 +1,9 @@
 {
-	"featurepath": "D:\\1С-Framework\\features",
+	"featurepath": "D:\\1С-Framework\\features\\smoke_simple.feature",
 	"projectpath": "D:\\1С-Framework",
 	"junitcreatereport": true,
 	"junitpath": "D:\\1С-Framework\\build\\reports",
 	"stoponerror": false,
-	"testclienttimeout": 60,
-	"testclientports": "48010-48050",
-	"datatestclients": [
-		{
-			"name": "TestDB",
-			"connectionstring": "/S\"KOMPUTER\\TestDB\"",
-			"port": 48010,
-			"clienttype": "thin",
-			"additionalparameters": ""
-		}
-	],
 	"outputloginconsole": true,
 	"logtotext": true,
 	"textlogname": "D:\\1С-Framework\\build\\vanessaonline.txt",
