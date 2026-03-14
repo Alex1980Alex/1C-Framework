@@ -520,6 +520,7 @@ Claude Code
 | **P1**    | Фаза 3.5 | Наш bsl-semantic-search      | Мультивекторный RRF по метаданным (идеи FSerg)                     | 1 день  |
 | **P1**    | Фаза 4   | Vanessa Automation + YaXUnit | UI-эмуляция пользователя + BDD/TDD тестирование (13 проектов)      | 3-4 дня |
 | **P2**    | Фаза 5   | artesk/1C_MCP_metadata       | Дополнительный поиск по метаданным                                 | 0.5 дня |
+| **P2**    | Фаза 6   | bsl-debug-server + MCP-DAP   | Runtime-отладка: breakpoints, переменные, step, evaluate           | 2-3 дня |
 
 ## Зависимости
 
