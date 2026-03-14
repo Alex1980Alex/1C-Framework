@@ -147,6 +147,7 @@ echo   evaluation      Run RAGAS evaluation suite
 echo   documentation   Add docstrings to public API
 echo   lint            Fix all linter warnings
 echo   quality         AutoResearch: autonomous code quality loop (ruff+mypy, measure-fix-revert)
+echo   1c-study        AutoResearch: autonomous 1C configuration study (6-phase cycle)
 echo.
 echo Options:
 echo   --max-iterations N   Set max iterations (default: 10)
