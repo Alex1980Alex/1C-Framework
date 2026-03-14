@@ -266,10 +266,10 @@
 | 3.2 | Создать venv + установить зависимости Python proxy                   | ✓      | mcp-1.26.0, fastapi-0.135.1            |
 | 3.3 | Создать конфигурацию `.env`                                          | ✓      | TestDB credentials                     |
 | 3.4 | Добавить в `.mcp.json` (транспорт: stdio)                            | ✓      | `1c-mcp-crud` server                   |
-| 3.5 | Установить расширение `MCP_Сервер.cfe` в TestDB                      | 🔄      | Ручная установка через Конфигуратор    |
-| 3.6 | Установить IIS + настроить публикацию TestDB                         | ⏳      | Скрипт: `setup-phase3-iis.ps1`         |
-| 3.7 | Тест: health endpoint + tools/list через HTTP                        | ⏳      | Скрипт: `test-phase3.ps1`              |
-| 3.8 | Тест: CRUD через Python proxy (stdio)                                | ⏳      | После 3.5 + 3.6                        |
+| 3.5 | Установить расширение `MCP_Сервер.cfe` в TestDB                      | ✓      | Установлено через Конфигуратор         |
+| 3.6 | Установить IIS + настроить публикацию TestDB                         | ✓      | IIS + ISAPI + AppPool + default.vrd    |
+| 3.7 | Тест: health endpoint + tools/list через HTTP                        | ✓      | health=OK, 2 tools (list+structure)    |
+| 3.8 | Тест: tool call list_metadata_objects                                | ✓      | 5 документов, кириллица OK             |
 | 3.9 | Включить OData (опционально)                                         | ⏳      | Скрипт: `enable-odata.ps1`             |
 | 3.10| Тест: OData endpoint (опционально)                                   | ⏳      | `odata_mcp_go` — отложено              |
 
