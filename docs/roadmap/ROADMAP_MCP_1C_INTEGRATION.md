@@ -384,7 +384,23 @@ Claude (через MCP)                    Разработчик (в EDT GUI)
 
 **Важно:** EDT Test Runner — GUI-плагин (нет API/CLI/MCP), Claude не может им управлять. Это инструмент разработчика для ручной отладки упавших тестов. `mcp-onec-test-runner` — MCP-аналог от того же автора (alkoleft), через который Claude запускает тесты и получает результаты.
 
-**Статус:** `mcp-onec-test-runner` **не добавлен** в `.mcp.json` — будет настроен при выполнении Фазы 4.
+**Статус (2026-03-14):** mcp-onec-test-runner добавлен в `.mcp.json`, но возвращает generic errors. Рабочий путь — `vrunner run` через Bash с `MSYS_NO_PATHCONV=1`.
+
+**Рабочая команда запуска тестов:**
+```bash
+cd "D:/1С-Framework" && MSYS_NO_PATHCONV=1 \
+  "C:/Tools/OneScript/bin/oscript.exe" \
+  "C:/Tools/OneScript/lib/vanessa-runner/src/main.os" run \
+  --ibconnection '/S"KOMPUTER\TestDB"' \
+  --db-user "a.terletskiy@sodru.com" --db-pwd "Alex80Alex" \
+  --v8version "8.3.27.1859" \
+  --command 'RunUnitTests=D:\1С-Framework\tools\yaxunit.json' --debuglog
+```
+
+**Ключевые баги (решены):**
+1. Пути в `yaxunit.json` — только `\\`, не `/` (YAxUnit `ЭтоАбсолютныйПутьWindows` проверяет backslash)
+2. `ДымовыеТесты` — структура `{Использовать: true, ОткрытиеФорм: true}`, не boolean
+3. `MSYS_NO_PATHCONV=1` — Git Bash манглит `/S` в Windows-путь
 
 **vanessa-runner как CLI-ядро:** даже без собственного MCP, vanessa-runner остаётся ядром для CI/CD операций (сборка, деплой, управление сессиями). MCP-серверы (vanessa-app-mcp, onec-test-runner) вызывают его под капотом.
 
