@@ -347,7 +347,8 @@
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER:*)",
       "Read(//c/Temp/**)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\":*)",
-      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" extension:*)"
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" extension:*)",
+      "Bash(ipconfig:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
