@@ -498,6 +498,14 @@ Claude Code
   │ ═══ Фаза 5 (P2) ═══════════════════════════════════════════════════
   ├── Metadata MCP (artesk/1C_MCP_metadata)   ─── search + validate ► HTTP-сервис ────► TestDB
   │
+  │ ═══ Фаза 6 (P2) ═══════════════════════════════════════════════════
+  ├── bsl-debug-server (Java, DAP)           ─── Runtime-отладка 1С ► TCP:1550 ──► debug agent
+  │   ├── debug_set_breakpoints                   Точки останова на строки модулей
+  │   ├── debug_get_variables                     Чтение переменных в точке останова
+  │   ├── debug_evaluate                          Выполнение выражений в контексте
+  │   ├── debug_stack_trace                       Стек вызовов
+  │   └── debug_step / debug_continue             Пошаговое выполнение
+  │
   │ ═══ Уже работает ══════════════════════════════════════════════════
   └── BSL Platform (mcp-bsl-platform-context) ─── Справка платформы 8.3.27
 ```
