@@ -337,15 +337,15 @@
 | 4.2 | Настроить vanessa-runner для TestDB (`vrunner.json`) | ✓ | `vrunner.json` в корне проекта |
 | 4.3 | Скачать и установить расширения в TestDB | ✓ | YAXUnit 25.12 + VAExtension 1.21 + Smoke 0.2.1 — все активны |
 | 4.4 | vanessa-app-mcp (MCP для BDD) | ⏭ | Не найден на GitHub/npm, пропущен |
-| 4.5 | Добавить mcp-onec-test-runner в `.mcp.json` | ✓ | JAR v0.5.1, stdio transport |
-| 4.6 | Тест UI: "Открой документ, заполни форму, нажми Провести" | ⏳ | Требует открытия .epf в 1С |
-| 4.7 | Тест BDD: "Создай BDD-сценарий" | ⏳ | Требует Vanessa Automation в 1С |
+| 4.5 | Добавить mcp-onec-test-runner в `.mcp.json` | ✓ | JAR v0.5.1, stdio transport. Generic errors — использовать vrunner CLI напрямую |
+| 4.6 | Тест UI: "Открой документ, заполни форму, нажми Провести" | ⏸ | VA TestClient не подключается к серверной базе. Отложено |
+| 4.7 | Тест BDD: "Создай BDD-сценарий" | ⏸ | Зависит от 4.6 (TestClient). Feature-файл `features/smoke.feature` создан |
 | 4.8 | Установить mcp-onec-test-runner (MCP для YaXUnit) | ✓ | `tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar` |
-| 4.9 | Тест TDD: "Запусти unit-тесты" | ⏳ | YaXUnit установлен, нужен тестовый запуск |
-| 4.10 | Настроить дымовые тесты | ⏳ | Smoke 0.2.1 расширение установлено |
-| 4.11 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | ⏳ | |
+| 4.9 | Тест TDD: "Запусти unit-тесты" | ✓ | **690 smoke-тестов** через `vrunner run` + YAxUnit. 554 passed (80.3%), 57 errors, 25 failures, 54 skipped. Отчёт: `build/reports/junit.xml` (950 KB) |
+| 4.10 | Настроить дымовые тесты | ✓ | Конфиг `tools/yaxunit.json`: `ДымовыеТесты: {Использовать: true, ОткрытиеФорм: true}`. Пути в JSON — только обратные слеши (`D:\\...`), иначе `ЭтоАбсолютныйПутьWindows()` не распознаёт |
+| 4.11 | Создать MCP-обёртку для vanessa-runner CLI (опционально) | ⏳ | Не начато. vrunner CLI через Bash работает |
 
-**Результат:** Claude эмулирует пользователя через Vanessa Automation (кнопки, формы, проведение), пишет и запускает BDD-сценарии, гоняет unit-тесты через YaXUnit.
+**Результат (2026-03-14):** YAxUnit smoke-тесты полностью работают из CLI. 690 тестов открытия форм за ~5 минут. VA BDD-тестирование отложено до настройки TestClient.
 
 **Выбор инструмента по задаче:**
 
