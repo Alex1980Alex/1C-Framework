@@ -14,7 +14,7 @@
 			"Синоним": "TestDB",
 			"ПутьКИнфобазе": "Srvr=\"KOMPUTER\";Ref=\"TestDB\";",
 			"ПортЗапускаТестКлиента": 48010,
-			"ДопПараметры": "",
+			"ДопПараметры": "/N\"a.terletskiy@sodru.com\" /P\"Alex80Alex\" /DisableStartupMessages /DisableStartupDialogs",
 			"ТипКлиента": "Тонкий",
 			"ИмяКомпьютера": ""
 		}
