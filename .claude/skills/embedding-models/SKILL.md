@@ -1,3 +1,8 @@
+---
+name: embedding-models
+description: "Embedding Models — выбор, настройка и отладка моделей эмбеддингов. ИСПОЛЬЗУЙ когда выбираешь модель embeddings (E5, BGE, Jina, Giga), настраиваешь ONNX backend, исправляешь dimension mismatch, добавляешь prefix query:/passage:. Триггеры: 'embedding', 'E5', 'BGE', 'ONNX', 'dimension mismatch', 'prefix', 'query: passage:', 'модель эмбеддингов', 'Jina', 'Giga-Embeddings'. НЕ для поиска (→ search-pipeline-debug), НЕ для Qdrant (→ qdrant-operations)."
+---
+
 # Embedding Models
 
 ## Когда использовать
