@@ -1,3 +1,8 @@
+---
+name: deployment
+description: "Deployment — развёртывание PDF Framework в production. ИСПОЛЬЗУЙ когда настраиваешь Docker, production окружение, health checks, rate limiting, CORS, JWT авторизацию, мультитенантность, мониторинг. Триггеры: 'deploy', 'docker', 'production', 'health check', 'rate limiting', 'CORS', 'мультитенантность', 'JWT', 'мониторинг', 'docker compose'. НЕ для локальной разработки (→ framework-quickstart)."
+---
+
 # Deployment
 
 ## Когда использовать
