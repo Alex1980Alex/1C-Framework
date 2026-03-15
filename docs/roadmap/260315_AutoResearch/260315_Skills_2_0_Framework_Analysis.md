@@ -1,345 +1,408 @@
-# Skills 2.0: Анализ улучшений для всего фреймворка
+# Единый паттерн: Measure → Change → Verify → Keep/Revert
 
 **Дата:** 2026-03-15
-**Источник:** [Skills 2.0 Research](../260315_skills_2_0_research.md)
-**Scope:** 65 скиллов, 15,700 строк, 13 хуков
+**Источник:** [Skills 2.0 Research](../260315_skills_2_0_research.md) + [AutoResearch v2 Roadmap](260315_AutoResearch_v2_Roadmap.md)
+**Инсайт:** Skills 2.0 и AutoResearch — это ОДИН И ТОТ ЖЕ паттерн, применённый к разным доменам
 
 ---
 
-## 1. Аудит текущего состояния
-
-### 1.1 YAML Frontmatter: 16 скиллов без метаданных
+## Паттерн
 
 ```
-NO_YAML (16):                    YAML (49):
-├── 1c-mcp-toolkit               ├── 1c-doc-research
-├── agent-orchestration           ├── analyze-1c-task-v2
-├── bsl-development               ├── architecture-research
-├── deployment                    ├── audit-docs
-├── embedding-models              ├── ... (45 more)
-├── evaluation-benchmark
-├── framework-caching
-├── framework-mcp-ui
-├── framework-quickstart
-├── graph-operations
-├── indexing-pipeline
-├── llm-rotation
-├── memory-unified
-├── prompt-engineering
-├── qdrant-operations
-├── search-pipeline-debug
+measure → change → verify → keep/revert → repeat
 ```
 
-**Проблема:** 16 скиллов без YAML = **невидимы** для Skill Router и Claude Code.
-Claude не знает когда их вызывать — только если пользователь явно напишет `Skill('name')`.
-
-**Skills 2.0 говорит:** `description` в YAML — **главный сигнал** для триггеринга.
-Без него скилл мёртв.
-
-### 1.2 Классификация по типам (Skills 2.0 таксономия)
-
-| Тип | Скиллы | Кол-во | Долговечность |
-|-----|--------|--------|---------------|
-| **Encoded Preference** (workflow) | task-protocol, triad-factory, code-verify, auto-git-save, git-commit-message, create-hook, doc-to-skill, doc-to-cache, audit-docs, implement-1c-task, analyze-1c-task-v2, learning-loop, z-ai-delegation, architecture-research, task-evaluation | 15 | Высокая |
-| **Capability Uplift** (компенсация) | bsl-development, 1c-doc-research, 1c-mcp-toolkit | 3 | Средняя (зависит от модели) |
-| **Reference** (справочник) | claude-code-*, langchain-*, langgraph-*, framework-*, tenacity-retry, git-porcelain-parsing, deep-agents | 35 | Низкая (устаревают) |
-| **Infrastructure** (инфра скиллы) | hook-debugging, hook-enforcement-pattern, windows-hooks-paths, claude-code-hooks-bugs, multi-level-hook-architecture, hooks-skills-mcp-triad, memory-unified, llm-rotation | 8 | Средняя |
-| **Domain Knowledge** (знания домена) | pdf-knowledge, embedding-models, qdrant-operations, graph-operations, prompt-engineering, search-pipeline-debug, evaluation-benchmark, framework-caching, deployment, indexing-pipeline, agent-orchestration | 11 | Средняя |
-
-### 1.3 Ключевые метрики
-
-| Метрика | Текущее | Проблема |
-|---------|---------|----------|
-| Скиллов без YAML | 16 (25%) | Невидимы для триггеринга |
-| Средний размер SKILL.md | 242 строки | Некоторые > 500 (triad-factory: 537) |
-| Reference-скиллов | 35 (54%) | Потенциально устаревают, **самая большая группа** |
-| Eval-тесты для скиллов | 0 | Нет способа проверить регрессии |
-| Trigger accuracy | ~70% (субъективно) | Skill Router ловит не всё |
-
----
-
-## 2. Улучшения из Skills 2.0
-
-### 2.1 YAML Frontmatter для всех 16 скиллов (P0)
-
-**Что:** добавить `---` YAML с `name` и `description` ко всем 16 скиллам без него.
-
-**Пример — bsl-development:**
-
-```yaml
----
-name: bsl-development
-description: >
-  Разработка на BSL (1С:Предприятие 8.3.27): написание кода, модули объектов,
-  обработки, процедуры проведения, запросы, формы. MCP: bsl-semantic-search,
-  bsl-platform-context, EDT-MCP, bsl-debugger. Триггеры: 'написать BSL',
-  'код 1С', 'модуль объекта', 'обработка проведения', 'BSL код', 'процедура 1С',
-  'функция 1С', 'запрос 1С', 'форма 1С'. НЕ для документации 1С — используй
-  1c-doc-research. НЕ для анализа задач — используй analyze-1c-task-v2.
----
-```
-
-**Объём:** 16 файлов, ~5-10 строк YAML каждый.
-
-**Эффект:** все 65 скиллов видимы для Skill Router → trigger accuracy +10-15%.
-
----
-
-### 2.2 Trigger Tuning: "настойчивые" описания (P1)
-
-**Что:** Skills 2.0 рекомендует делать description **pushy** —
-недотриггеринг чаще, чем перетриггеринг. Бюджет: 2% контекстного окна.
-
-**Текущие проблемы:**
-- Слишком короткие описания: `"LLM Rotation Service"` — о чём это?
-- Нет негативных маркеров: когда НЕ использовать
-- Нет явных триггеров на русском
-
-**Паттерн хорошего описания (из наших лучших):**
-
-```yaml
-description: >
-  [ЧТО ДЕЛАЕТ — 1 предложение].
-  [ИНСТРУМЕНТЫ / MCP].
-  Триггеры: '[ключевое слово 1]', '[ключевое слово 2]', ...
-  НЕ для [X] — используй [другой скилл].
-```
-
-**Скиллы с плохими описаниями (нужно переписать):**
-
-| Скилл | Текущий description | Проблема |
-|-------|-------------------|----------|
-| bsl-development | (нет YAML) | Невидим |
-| llm-rotation | (нет YAML) | Невидим |
-| deployment | (нет YAML) | Невидим |
-| embedding-models | (нет YAML) | Невидим |
-| framework-quickstart | (нет YAML) | Невидим |
-| qdrant-operations | (нет YAML) | Невидим |
-| search-pipeline-debug | (нет YAML) | Невидим |
-| pdf-knowledge | Есть YAML но нет триггеров на русском | Частичная видимость |
-
----
-
-### 2.3 Eval-система для скиллов (P1)
-
-**Что:** из Skills 2.0 — система eval для проверки триггеринга и качества.
-
-**Что создать:**
+Karpathy применил его к ML-коду. Goenka обобщил на любой код. Skills 2.0 применил к скиллам.
+Мы применяем ко **ВСЕМУ фреймворку** — к каждому домену, где есть измеримая метрика.
 
 ```
-data/eval/skills/
-├── trigger_eval.json              # 100+ промптов: какой скилл должен сработать?
-├── negative_eval.json             # 50+ промптов: какой скилл НЕ должен сработать
-├── eval_results_{date}.json       # Результаты последнего прогона
-└── eval_history.tsv               # История: date, trigger_accuracy, false_pos, false_neg
-
-scripts/
-├── eval-skill-triggers.py         # Прогон eval через Skill Router
-└── eval-skill-triggers-report.py  # Отчёт с рекомендациями
-```
-
-**Уже есть частично:** `scripts/eval-skill-router.py` (64 ground truth, F1/precision/recall).
-Нужно **расширить** до 150+ промптов и добавить **A/B бенчмарк**.
-
-**A/B бенчмарк:** запустить задачу со скиллом vs без → сравнить:
-- Количество tool calls
-- Токены
-- Качество результата (graded 1-10)
-
----
-
-### 2.4 Классификация и lifecycle скиллов (P2)
-
-**Что:** из Skills 2.0 — два типа скиллов имеют разный lifecycle.
-
-**Reference-скиллы (35 шт.) — риск устаревания:**
-
-Скиллы-справочники (claude-code-*, langchain-*, langgraph-*, framework-*)
-содержат **зашитую документацию**. При обновлении Claude Code или LangChain
-информация в них **устаревает молча**.
-
-**Решение: `expires` поле + auto-audit:**
-
-```yaml
----
-name: langchain-core
-description: "..."
-created: 2026-02-21
-last_verified: 2026-03-01
-source_version: "langchain 0.3.x"
-type: reference  # reference | encoded_preference | capability_uplift | infrastructure
----
-```
-
-**Auto-audit скрипт:**
-
-```python
-# scripts/audit-skill-freshness.py
-# Для каждого reference-скилла:
-# 1. Прочитать source_version
-# 2. Проверить текущую версию (pip show / npm list)
-# 3. Если расхождение → пометить "needs update"
-# 4. Если last_verified > 30 дней → warning
-```
-
-**Encoded Preference скиллы (15 шт.) — приоритет инвестиций:**
-
-Эти скиллы кодируют **наши workflow** — они не устаревают с обновлением моделей.
-Именно в них нужно **инвестировать больше** (eval, trigger tuning, расширение).
-
----
-
-### 2.5 Ultrathink в ключевых скиллах (P2)
-
-**Что:** из Skills 2.0 — слово `ultrathink` в SKILL.md включает extended thinking (31999 токенов).
-
-**Где добавить:**
-
-| Скилл | Где ultrathink | Почему |
-|-------|---------------|--------|
-| analyze-1c-task-v2 | Фаза анализа требований | Сложное рассуждение о бизнес-логике |
-| architecture-research | Фаза evaluation matrix | Взвешивание подходов |
-| implement-1c-task | Фаза проектирования алгоритма | Сложный BSL-код |
-| task-evaluation | Фаза классификации | Правильный тип = правильный workflow |
-| triad-factory | Фаза Q1-Q5 анализа | 5 вопросов требуют глубокого рассуждения |
-| autoresearch (новый) | Phase 0 ANALYZE + Phase 2 IDEATE | Подбор инструментов, гипотезы |
-
-**Как встроить:**
-
-```markdown
-## Phase: Анализ требований
-
-ultrathink
-
-Проанализируй задачу по 5 аспектам:
-1. Какие объекты конфигурации затронуты?
-...
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│   ДОМЕН            МЕТРИКА              VERIFY COMMAND        │
+│   ─────            ───────              ──────────────        │
+│   Код              ruff/mypy errors     ruff check --json     │
+│   Скиллы           trigger accuracy     eval-skill-router.py  │
+│   Хуки             false positive rate  eval-hooks.py         │
+│   Документация     coverage %           audit-docs            │
+│   BSL              bsl_analyze errors   bsl_analyze --json    │
+│   Конфигурация 1С  knowledge coverage   1c_coverage.py        │
+│   API              response time ms     pytest-benchmark      │
+│   Тесты            coverage %           pytest --cov          │
+│   Промпты          quality score        LLM-graded eval       │
+│   Безопасность     findings count       bandit -r src/        │
+│                                                              │
+│   КАЖДЫЙ домен = тот же цикл.                                │
+│   Отличается только: инструменты, метрика, verify command.   │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 2.6 Scope-разделение скиллов (P3)
-
-**Что:** из Skills 2.0 — скиллы бывают personal / project / enterprise.
-
-**Текущее:** все 65 скиллов в `.claude/skills/` (project scope).
-
-**Рекомендация: выделить universal скиллы в personal scope:**
+## Архитектура: AutoResearch как универсальный движок
 
 ```
-~/.claude/skills/  (personal — работают во всех проектах)
-├── claude-code-cli-interactive/   # Справочник CLI — универсален
-├── claude-code-settings/          # Настройки — универсальны
-├── claude-code-admin/             # Администрирование — универсально
-├── claude-code-vscode/            # VS Code — универсален
-├── claude-code-programmatic/      # Headless mode — универсален
-├── git-commit-message/            # Git коммиты — универсальны
-├── git-porcelain-parsing/         # Git парсинг — универсален
-├── tenacity-retry/                # retry паттерн — универсален
-└── windows-hooks-paths/           # Windows пути — универсальны
-
-.claude/skills/  (project — только для этого фреймворка)
-├── pdf-knowledge/                 # PDF Framework
-├── bsl-development/               # BSL разработка
-├── 1c-doc-research/               # 1С документация
-├── framework-api/                 # REST API фреймворка
-├── task-protocol/                 # Наш workflow
-├── ...                            # Остальные project-specific
+                    ┌─────────────────────────┐
+                    │     /autoresearch       │
+                    │   (универсальный движок) │
+                    └────────────┬────────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+              ▼                  ▼                  ▼
+     ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+     │  Domain: Code  │ │ Domain: Skills │ │ Domain: 1C     │
+     │                │ │                │ │                │
+     │ metric: errors │ │ metric: F1     │ │ metric: cover% │
+     │ tools: ruff    │ │ tools: eval.py │ │ tools: MCP     │
+     │ scope: src/    │ │ scope: .claude/│ │ scope: cache/  │
+     └────────────────┘ └────────────────┘ └────────────────┘
+              │                  │                  │
+              ▼                  ▼                  ▼
+     ┌────────────────────────────────────────────────────┐
+     │              ОДИНАКОВЫЙ ЦИКЛ:                      │
+     │  Executor → Reviewer → Comparator → Log → Repeat   │
+     └────────────────────────────────────────────────────┘
 ```
 
-**Эффект:**
-- 9 скиллов → personal (доступны в любом проекте)
-- Меньше контекстного мусора при загрузке в других проектах
-- Соответствует Skills 2.0 архитектуре
+**Один движок. Разные домены. Одинаковый цикл.**
 
 ---
 
-### 2.7 Comparator для Skill Router (P2)
+## Домены и их рецепты
 
-**Что:** из Skills 2.0 — слепое A/B сравнение скиллов.
-
-**Применение:** сравнить работу Claude **со скиллом vs без скилла**
-на одних и тех же задачах. Скилл приносит пользу или мешает?
-
-**Методика:**
+### Домен 1: Скиллы (из Skills 2.0)
 
 ```
-Для каждого скилла:
-1. Выбрать 5 типичных задач
-2. Запустить Claude без скилла → замерить: tool calls, tokens, quality (1-10)
-3. Запустить Claude со скиллом → замерить те же метрики
-4. Слепое сравнение результатов (Comparator агент)
-5. Если скилл ухудшает → пересмотреть или удалить
+Проблема:  16 скиллов без YAML (невидимы), trigger accuracy ~70%
+Метрика:   eval-skill-router.py → F1 score
+Baseline:  F1 = текущий (64 ground truth)
+Target:    F1 > 0.90
+
+Executor:
+  - Переписывает description одного скилла (pushy стиль)
+  - Добавляет YAML frontmatter если нет
+  - Добавляет type: reference|encoded_preference|capability_uplift
+  - Добавляет ultrathink в критические фазы
+  Инструменты: Read/Edit SKILL.md
+
+Reviewer:
+  - Запускает: python scripts/eval-skill-router.py → F1
+  - Проверяет: description не > 500 символов (бюджет 2% контекста)
+  - Проверяет: есть негативные маркеры ("НЕ для X — используй Y")
+  - Проверяет: есть триггеры на русском И английском
+  Verdict: F1 вырос → KEEP, F1 упал → REVERT
+
+Comparator (каждые 5 итераций):
+  - Слепое A/B: Claude с обновлёнными скиллами vs со старыми
+  - 5 задач: подобрал правильный скилл?
+  - Оценка: tool calls, токены, качество ответа
 ```
 
-**Ожидаемые результаты:**
-- Encoded Preference скиллы: **значительное улучшение** (5-12 tool calls → 3-5)
-- Reference скиллы: **умеренное** (экономия на поиске документации)
-- Некоторые скиллы: **ухудшение** (слишком длинные, забивают контекст)
+**Конкретные улучшения:**
+
+| Итерация | Что меняем | Ожидаемый эффект |
+|----------|-----------|------------------|
+| 1-16 | YAML frontmatter к 16 скиллам без него | +25% видимость, F1 += 0.05-0.10 |
+| 17-30 | Pushy description у слабых скиллов | Trigger accuracy += 10-15% |
+| 31-36 | Ultrathink в 6 ключевых скиллах | Качество рассуждения в критических фазах |
+| 37-45 | type: поле + last_verified | Lifecycle management |
+| 46+ | Удаление/архивация бесполезных (по Comparator) | Меньше контекстного мусора |
+
+**Скиллы без YAML (добавить первыми):**
+```
+bsl-development, llm-rotation, 1c-mcp-toolkit, deployment,
+embedding-models, evaluation-benchmark, framework-caching,
+framework-mcp-ui, framework-quickstart, graph-operations,
+indexing-pipeline, memory-unified, prompt-engineering,
+qdrant-operations, search-pipeline-debug, agent-orchestration
+```
+
+**Скиллы для ultrathink:**
+```
+analyze-1c-task-v2     → фаза анализа требований
+architecture-research  → фаза evaluation matrix
+implement-1c-task      → фаза проектирования алгоритма
+task-evaluation        → фаза классификации задачи
+triad-factory          → фаза Q1-Q5 анализа
+autoresearch           → Phase 0 ANALYZE + Phase 2 IDEATE
+```
 
 ---
 
-## 3. План действий по приоритетам
+### Домен 2: Хуки (из Hook eval)
 
-### P0: Немедленно (1-2 дня)
+```
+Проблема:  Ложные срабатывания (ralph_activator в этой сессии), пропуски
+Метрика:   scripts/eval-hooks.py → accuracy (40 тестов, 16 скиллов)
+Baseline:  текущий accuracy
+Target:    > 95% (0 false positives в production)
 
-| # | Действие | Файлов | Эффект |
-|---|----------|--------|--------|
-| 1 | Добавить YAML к 16 скиллам без frontmatter | 16 | +25% видимость |
-| 2 | Добавить `type:` поле ко всем YAML (reference/encoded_preference/capability_uplift/infrastructure) | 65 | Классификация для lifecycle management |
+Executor:
+  - Правит один хук: добавляет/убирает сигналы, меняет threshold
+  Инструменты: Read/Edit .claude/hooks/*.py
 
-### P1: На этой неделе (3-5 дней)
+Reviewer:
+  - Запускает: python scripts/eval-hooks.py → accuracy
+  - Проверяет: latency хука < 5s (timeout)
+  - Проверяет: нет regression в других хуках
+  Verdict: accuracy вырос + latency ok → KEEP
 
-| # | Действие | Файлов | Эффект |
-|---|----------|--------|--------|
-| 3 | Trigger Tuning: переписать слабые description (pushy стиль) | ~20 | +10-15% trigger accuracy |
-| 4 | Расширить eval до 150+ промптов (с trigger_eval.json) | 3 | Измеримый trigger accuracy |
-| 5 | Ultrathink в 6 ключевых скиллах | 6 | Глубже рассуждение в критических фазах |
+Comparator:
+  - 10 типовых промптов → какие хуки сработали?
+  - False positives, false negatives
+```
 
-### P2: На следующей неделе
+**Конкретные улучшения:**
 
-| # | Действие | Файлов | Эффект |
-|---|----------|--------|--------|
-| 6 | `last_verified` + `source_version` в reference-скиллах | 35 | Отслеживание устаревания |
-| 7 | `scripts/audit-skill-freshness.py` | 1 | Автоматическая проверка свежести |
-| 8 | A/B Comparator для top-10 скиллов | 1 | Объективная оценка полезности |
-
-### P3: Через 2 недели
-
-| # | Действие | Файлов | Эффект |
-|---|----------|--------|--------|
-| 9 | Выделить 9 universal скиллов в `~/.claude/skills/` | 9 | Чище project scope |
-| 10 | Удалить/архивировать бесполезные скиллы (по данным Comparator) | ? | Меньше контекстного мусора |
+| Хук | Проблема | Исправление |
+|-----|----------|-------------|
+| ralph_activator.py | Ложно активирует Ralph на "autoresearch" в чате | Добавить проверку: в ralph.bat контексте? или интерактив? |
+| skill-router.py | ~70% accuracy | Pushy descriptions в скиллах → роутер автоматически лучше |
+| task-protocol-enforcer.py | Блокирует иногда без причины | Eval: 10 кейсов where block is wrong |
+| ralph_wiggum_stop.py | Ложно блокирует в интерактиве | Проверка: `.ralph_active` file exists? |
 
 ---
 
-## 4. Ожидаемый результат
+### Домен 3: Код Python (из AutoResearch Comprehensive)
 
-| Метрика | До | После |
-|---------|-----|-------|
-| Скиллы с YAML | 49/65 (75%) | **65/65 (100%)** |
-| Trigger accuracy | ~70% | **>85%** |
-| Reference скиллы проверены | 0/35 | **35/35** (last_verified) |
-| Eval промптов | 64 | **150+** |
-| Скиллы с ultrathink | 0 | **6** |
-| Скиллы в personal scope | 0 | **9** |
-| Подтверждённо полезных (A/B) | неизвестно | **измерено** |
+```
+Проблема:  Не измерено, предположительно > 100 ruff ошибок
+Метрика:   ruff check src/ --output-format json | jq length
+Baseline:  не замерен
+Target:    0 errors
+
+Executor:
+  - Исправляет ОДНУ категорию ошибок ruff во ВСЕХ файлах
+  Инструменты: Read/Edit src/**/*.py, Bash (ruff)
+
+Reviewer:
+  - ruff check → кол-во ошибок
+  - pytest → тесты не сломались?
+  Verdict: errors уменьшились + тесты ok → KEEP
+
+Шаблон: ralph.bat --template quality (уже существует)
+```
 
 ---
 
-## 5. Связь с AutoResearch v2
-
-AutoResearch v2 может **автоматизировать** улучшение скиллов:
+### Домен 4: BSL-код (из BSL Intelligence)
 
 ```
-/autoresearch
-Goal: Улучшить trigger accuracy Skill Router с 70% до 90%
-Metric: eval-skill-router.py F1 score
-Scope: .claude/skills/*/SKILL.md (description поля)
+Проблема:  Claude ошибается в синтаксисе BSL, путает API
+Метрика:   bsl_analyze → count errors в написанном коде
+Baseline:  не замерен
+Target:    < 1 ошибка на 50 строк
 
-Executor: переписывает description, добавляет триггеры
-Reviewer: запускает eval → F1 вырос?
-Comparator: слепое A/B — новый description vs старый
+Executor:
+  - Пишет BSL-код, используя bsl-platform-context для проверки API
+  Инструменты: bsl-platform-context, EDT-MCP, Read/Edit
+
+Reviewer:
+  - bsl_analyze → ошибки
+  - Проверка: API вызовы существуют? (bsl-platform-context search)
+  Verdict: 0 ошибок → KEEP
+
+Кэш: bsl-development/cache/common_mistakes.md (накапливает паттерны ошибок)
 ```
 
-Это идеальный use case для AutoResearch — измеримая метрика, атомарные изменения (1 скилл за итерацию), автоматическая верификация.
+---
+
+### Домен 5: Конфигурация 1С (из AutoResearch 1C Study)
+
+```
+Проблема:  Claude не знает конфигурацию, каждую сессию заново
+Метрика:   изученных объектов / всего объектов (27 документов + 190 регистров + 91 справочник)
+Baseline:  ~5%
+Target:    40% (Волна 1), 80% (Волна 3)
+
+Executor:
+  - Изучает 1 объект: get_metadata → find_references → execute_query → код модуля
+  - Записывает в cache/documents/{name}.md
+  Инструменты: 1c-mcp-toolkit, EDT-MCP, bsl-semantic-search
+
+Reviewer:
+  - Проверяет на базе: "в регистре X есть движения от документа Y?"
+  - Валидирует: кэш-файл содержит реквизиты, ТЧ, движения, бизнес-смысл
+  Verdict: данные верифицированы → KEEP
+
+Шаблон: ralph.bat --template 1c-study (уже существует)
+```
+
+---
+
+### Домен 6: Документация (из audit-docs)
+
+```
+Проблема:  Документация расходится с кодом
+Метрика:   audit-docs → coverage score
+Baseline:  не замерен
+Target:    > 85% coverage
+
+Executor:
+  - Дописывает документацию к одному модулю/фиче
+  Инструменты: Read/Write docs/**/*.md
+
+Reviewer:
+  - audit-docs → coverage score вырос?
+  - Содержит: описание, примеры, API reference
+  Verdict: coverage вырос → KEEP
+```
+
+---
+
+### Домен 7: API Performance (новый)
+
+```
+Проблема:  Не измерено, возможны bottlenecks
+Метрика:   avg response time (ms) по ключевым endpoints
+Baseline:  не замерен
+Target:    < 200ms на /search/ask
+
+Executor:
+  - Оптимизирует 1 endpoint: кэширование, async, query optimization
+  Инструменты: Read/Edit src/api/, pytest-benchmark
+
+Reviewer:
+  - pytest --benchmark → время ответа
+  - pytest → тесты ok?
+  Verdict: быстрее + тесты ok → KEEP
+```
+
+---
+
+### Домен 8: Безопасность (из /autoresearch:security)
+
+```
+Проблема:  Не проверено
+Метрика:   findings count × severity
+Baseline:  не замерен (предположительно > 0)
+Target:    0 critical, 0 high
+
+Executor (read-only!):
+  - Анализирует 1 attack vector из STRIDE threat model
+  Инструменты: Read, Grep, bandit
+
+Reviewer:
+  - Проверяет: finding реальный? (не false positive)
+  - Классифицирует: OWASP category + severity
+  Verdict: real finding → LOG, false positive → SKIP
+
+Comparator:
+  - Покрытие OWASP Top 10: сколько категорий проверено?
+```
+
+---
+
+### Домен 9: Промпты (Prompt Optimization)
+
+```
+Проблема:  Промпты Executor/Reviewer не оптимизированы
+Метрика:   качество результата (LLM-graded 1-10) при минимальных токенах
+Baseline:  не замерен
+Target:    quality > 8, tokens < 5000 на итерацию
+
+Executor:
+  - Переписывает 1 промпт (executor или reviewer)
+  Инструменты: Read/Edit prompt файлы
+
+Reviewer:
+  - Запускает 5 тестовых задач с новым промптом
+  - Оценивает: quality (1-10), tokens, tool calls
+  Verdict: quality >= 8 + tokens < 5000 → KEEP
+```
+
+---
+
+### Домен 10: Сам AutoResearch (мета-оптимизация)
+
+```
+Проблема:  Эффективность самого цикла не измерена
+Метрика:   iterations_to_target / total_iterations (keep rate)
+Baseline:  не замерен
+Target:    keep rate > 50% (половина изменений полезны)
+
+Executor:
+  - Корректирует Phase-протокол: добавляет правила, убирает лишние шаги
+  Инструменты: Read/Edit SKILL.md, autoresearch.md
+
+Reviewer:
+  - Запускает AutoResearch на эталонной задаче
+  - Замеряет: iterations to target, keep rate
+  Verdict: keep rate вырос → KEEP
+
+Это рекурсивный цикл: AutoResearch улучшает сам AutoResearch.
+```
+
+---
+
+## Единый CLI
+
+Все 10 доменов запускаются **одинаково**:
+
+```bash
+# Через /autoresearch в чате (интерактивный)
+> /autoresearch
+> Улучши trigger accuracy скиллов
+
+# Через ralph с шаблоном (автономный)
+scripts\ralph.bat --template skills-triggers --max-iterations 20
+scripts\ralph.bat --template python-quality --max-iterations 15
+scripts\ralph.bat --template bsl-quality --max-iterations 10
+scripts\ralph.bat --template 1c-study --max-iterations 10
+scripts\ralph.bat --template docs-coverage --max-iterations 10
+scripts\ralph.bat --template api-performance --max-iterations 15
+scripts\ralph.bat --template security-audit --max-iterations 20
+
+# Или любая кастомная идея
+> /autoresearch
+> Хочу чтобы все промпты Executor были < 1000 токенов без потери качества
+```
+
+---
+
+## Приоритизация доменов
+
+| Приоритет | Домен | Метрика | Инфра готова? | Impact |
+|-----------|-------|---------|---------------|--------|
+| **P0** | Скиллы | F1 trigger accuracy | Да (eval-skill-router.py) | Высокий: все 65 скиллов |
+| **P0** | Хуки | eval-hooks accuracy | Да (eval-hooks.py) | Высокий: каждый промпт |
+| **P1** | Код Python | ruff + mypy errors | Да (ralph --template quality) | Средний |
+| **P1** | Конфигурация 1С | coverage % | Да (ralph --template 1c-study) | Высокий для 1С задач |
+| **P1** | BSL-код | bsl_analyze errors | Частично (MCP есть) | Средний |
+| **P2** | Документация | audit-docs coverage | Да (audit-docs скилл) | Низкий |
+| **P2** | API Performance | response ms | Нет (нужен benchmark setup) | Средний |
+| **P2** | Безопасность | findings × severity | Нет (нужен bandit setup) | Важно но не срочно |
+| **P3** | Промпты | quality / tokens | Нет (нужен eval framework) | Мета |
+| **P3** | Мета | keep rate | Нет (нужен опыт работы) | Рекурсивный |
+
+---
+
+## Связь компонентов
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     ЕДИНЫЙ ПАТТЕРН                              │
+│                                                                 │
+│  measure → change → verify → keep/revert → repeat               │
+│                                                                 │
+│  Реализован через:                                              │
+│  ├── /autoresearch (Skill)     → анализ идеи, создание рецепта  │
+│  ├── ralph.bat (Script)        → автономный цикл                │
+│  ├── 3 агента (Architecture)   → Executor + Reviewer + Compare  │
+│  ├── autoresearch.md (Memory)  → persistence между сессиями     │
+│  └── TSV + JSONL (Log)         → история экспериментов          │
+│                                                                 │
+│  Применяется к 10 доменам — одинаковый движок, разные рецепты   │
+│                                                                 │
+│  Skills 2.0 концепции:                                          │
+│  ├── Trigger Tuning            → pushy descriptions             │
+│  ├── Eval system               → 150+ промптов, A/B             │
+│  ├── Comparator                → слепое сравнение               │
+│  ├── Ultrathink                → extended thinking в key phases  │
+│  ├── Encoded Preference        → долговечные workflow-скиллы    │
+│  └── Scope separation          → personal vs project            │
+│                                                                 │
+│  Это не 10 отдельных проектов. Это ОДИН паттерн × 10 доменов.  │
+└─────────────────────────────────────────────────────────────────┘
+```
