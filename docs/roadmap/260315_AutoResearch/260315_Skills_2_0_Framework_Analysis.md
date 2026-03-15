@@ -341,25 +341,191 @@ Reviewer:
 
 ---
 
+## Непрерывный цикл (не разовая задача)
+
+Улучшение скиллов, хуков, кода — это **не "запустил раз, починил, забыл"**.
+Это постоянный процесс, встроенный в саму систему на трёх уровнях:
+
+### Уровень 1: Автоматический (хуки — каждый промпт)
+
+Хуки работают на каждом промпте, молча собирают данные и ловят деградацию.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  КАЖДЫЙ ПРОМПТ ПОЛЬЗОВАТЕЛЯ                                │
+│                                                             │
+│  UserPromptSubmit:                                          │
+│  ├── skill-router.py        → какой скилл подобрал?         │
+│  │   └── log: prompt, matched_skill, confidence             │
+│  │                                                          │
+│  ├── skill-quality-monitor.py  ← НОВЫЙ                      │
+│  │   └── Считает: сколько раз пользователь                  │
+│  │       вызвал Skill() ВРУЧНУЮ (= роутер не сработал)      │
+│  │   └── Считает: сколько раз скилл вызван но не помог      │
+│  │       (пользователь сразу переформулировал)              │
+│  │   └── Копит в: data/skill-quality-metrics.jsonl          │
+│  │                                                          │
+│  PostToolUse (Skill):                                       │
+│  ├── task-protocol-observer.py → записал какой скилл        │
+│  └── skill-usage-tracker.py    ← НОВЫЙ                      │
+│      └── Записывает: skill_name, duration, помог ли         │
+│                                                             │
+│  Stop:                                                      │
+│  ├── skill-health-check.py     ← НОВЫЙ                      │
+│  │   └── Раз в сессию: проверяет skill-quality-metrics      │
+│  │   └── Если accuracy по скиллу < 70% за последние 20      │
+│  │       вызовов → systemMessage "Скилл X деградировал"     │
+│  │   └── Если reference-скилл last_verified > 30 дней       │
+│  │       → systemMessage "Скилл X устарел"                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Что это даёт:** система **сама замечает** когда скилл перестал работать.
+Не нужно помнить "а давно ли я проверял скиллы?" — хук скажет.
+
+### Уровень 2: Периодический (ночной AutoResearch цикл)
+
+Раз в неделю (или по расписанию) — автономный цикл улучшений.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  НОЧНОЙ ЦИКЛ (cron / Task Scheduler)                       │
+│                                                             │
+│  1. Прочитать data/skill-quality-metrics.jsonl              │
+│     → Какие скиллы деградировали? (accuracy < 80%)          │
+│     → Какие скиллы не вызывались > 30 дней? (мёртвые)       │
+│     → Какие скиллы вызывались вручную? (плохой trigger)     │
+│                                                             │
+│  2. Для каждого проблемного скилла:                         │
+│     AutoResearch цикл (Executor → Reviewer):                │
+│     - Executor: переписывает description (pushy стиль)      │
+│     - Reviewer: eval-skill-router.py → F1 вырос?            │
+│     - Keep / Revert                                         │
+│                                                             │
+│  3. Для reference-скиллов с last_verified > 30 дней:        │
+│     - Проверить source_version vs текущая                    │
+│     - Если расхождение → пометить needs_update              │
+│                                                             │
+│  4. Обновить data/skill-health-report.md                    │
+│     (последний отчёт о здоровье всех скиллов)              │
+│                                                             │
+│  Запуск:                                                    │
+│  scripts\ralph.bat --template skill-health --max-iterations 15
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Что это даёт:** скиллы **сами себя чинят**. Хук заметил деградацию →
+ночной цикл автоматически переписал description → eval подтвердил улучшение.
+
+### Уровень 3: Ручной (/autoresearch — по запросу)
+
+Когда пользователь видит конкретную проблему или хочет целенаправленно улучшить.
+
+```
+> /autoresearch
+> bsl-development скилл срабатывает на запросы про Python, почини
+
+Claude анализирует → создаёт рецепт → пользователь запускает
+```
+
+### Три уровня работают вместе
+
+```
+Уровень 1 (хуки)           Уровень 2 (ночной)         Уровень 3 (ручной)
+────────────────            ──────────────────          ─────────────────
+Каждый промпт              Раз в неделю                По запросу
+Пассивный сбор             Автономное исправление      Целенаправленная работа
+
+  │ собирает метрики          │ читает метрики            │ анализирует идею
+  │ ловит деградацию          │ чинит автоматически       │ создаёт рецепт
+  │ предупреждает             │ запускает eval            │ запускает цикл
+  ▼                           ▼                          ▼
+  data/skill-quality-         Улучшенные SKILL.md        Улучшенные SKILL.md
+  metrics.jsonl               + eval report              + autoresearch.md
+
+  ДАТЧИК                      АВТОПИЛОТ                  РУЧНОЕ УПРАВЛЕНИЕ
+```
+
+**Аналогия:**
+- Уровень 1 = **приборная панель** (показывает температуру двигателя)
+- Уровень 2 = **автоматический термостат** (температура высокая → охлаждает)
+- Уровень 3 = **механик** (разобрал двигатель, нашёл причину, починил)
+
+---
+
+## Непрерывный цикл для КАЖДОГО домена
+
+Тот же трёхуровневый подход работает не только для скиллов:
+
+| Домен | Уровень 1 (хук-датчик) | Уровень 2 (ночной цикл) | Уровень 3 (ручной) |
+|-------|------------------------|--------------------------|---------------------|
+| **Скиллы** | skill-quality-monitor: accuracy per skill | ralph --template skill-health | /autoresearch "improve trigger X" |
+| **Хуки** | hook-latency-monitor: timing per hook | ralph --template hook-quality | /autoresearch "fix false positives" |
+| **Python** | code-quality-monitor: ruff errors on Write | ralph --template python-quality | /autoresearch "0 ruff errors" |
+| **BSL** | bsl-quality-monitor: errors on BSL Write | ralph --template bsl-quality | /autoresearch "0 bsl errors" |
+| **1С знания** | knowledge-gap-detector: вопрос без ответа в кэше | ralph --template 1c-study | /autoresearch "изучи документ X" |
+| **Документация** | docs-change-enforcer (уже есть) | ralph --template docs-coverage | /autoresearch "audit-docs > 85%" |
+| **Безопасность** | нет (добавить bandit on Write) | ralph --template security-audit | /autoresearch:security |
+
+---
+
+## Жизненный цикл скилла (непрерывный)
+
+```
+Создание                  Жизнь                          Смерть
+────────                  ─────                          ──────
+
+  doc-to-skill     →    Хуки мониторят usage        →   Comparator: "скилл
+  или вручную      →    Eval проверяет triggers     →   не приносит пользы"
+                   →    Ночной цикл правит desc     →   → архивация
+                   →    Модель обновилась?           →
+                   │      → re-eval автоматически    │
+                   │    Код изменился?               │
+                   │      → docs-change-enforcer     │
+                   │        ловит расхождение        │
+                   │    Пользователь вызвал вручную? │
+                   │      → плохой trigger,          │
+                   │        ночной цикл починит      │
+                   └─────────────────────────────────┘
+                         НЕПРЕРЫВНО
+```
+
+---
+
+## Новые хуки для непрерывного мониторинга
+
+| Хук | Событие | Что делает |
+|-----|---------|-----------|
+| **skill-quality-monitor.py** | UserPromptSubmit | Логирует: какой скилл подобран, confidence, ручной вызов? |
+| **skill-usage-tracker.py** | PostToolUse:Skill | Логирует: skill_name, помог ли (пользователь продолжил или переформулировал) |
+| **skill-health-check.py** | Stop | Проверяет метрики за сессию, предупреждает о деградации |
+| **code-quality-monitor.py** | PostToolUse:Write | На каждый Write .py — считает ruff errors в файле |
+| **knowledge-gap-detector.py** | PostToolUse:MCP | Если вопрос про 1С и ответа нет в кэше → лог gap |
+
+---
+
 ## Единый CLI
 
 Все 10 доменов запускаются **одинаково**:
 
 ```bash
-# Через /autoresearch в чате (интерактивный)
+# Через /autoresearch в чате (интерактивный — уровень 3)
 > /autoresearch
 > Улучши trigger accuracy скиллов
 
-# Через ralph с шаблоном (автономный)
-scripts\ralph.bat --template skills-triggers --max-iterations 20
+# Через ralph с шаблоном (автономный — уровень 2)
+scripts\ralph.bat --template skill-health --max-iterations 15
 scripts\ralph.bat --template python-quality --max-iterations 15
 scripts\ralph.bat --template bsl-quality --max-iterations 10
 scripts\ralph.bat --template 1c-study --max-iterations 10
 scripts\ralph.bat --template docs-coverage --max-iterations 10
-scripts\ralph.bat --template api-performance --max-iterations 15
 scripts\ralph.bat --template security-audit --max-iterations 20
 
-# Или любая кастомная идея
+# Ночной cron (автоматический — уровень 2)
+# В Windows Task Scheduler:
+scripts\ralph.bat --template skill-health --max-iterations 10
+
+# Или любая кастомная идея (уровень 3)
 > /autoresearch
 > Хочу чтобы все промпты Executor были < 1000 токенов без потери качества
 ```
