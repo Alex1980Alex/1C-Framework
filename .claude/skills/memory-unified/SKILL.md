@@ -1,3 +1,8 @@
+---
+name: memory-unified
+description: "Unified Memory System — кросс-системная память (AI Memory, Vector Memory, Skill Learning). ИСПОЛЬЗУЙ когда работаешь с unified ID, link registry, federated search, pattern learning, confidence decay. Триггеры: 'memory', 'unified id', 'link registry', 'federated search', 'pattern learning', 'confidence decay', 'memory-ai', 'vector-memory', 'skill-learning'. НЕ для MEMORY.md (→ auto-memory)."
+---
+
 # Unified Memory System
 
 ## When to use
