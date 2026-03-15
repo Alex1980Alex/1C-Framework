@@ -56,18 +56,10 @@
     ]
   },
   "affinities": {
-    "langchain-core": [
-      "langgraph-core"
-    ],
-    "langgraph-core": [
-      "langchain-core"
-    ],
     "langchain-streaming": [
       "langgraph-core"
     ],
-    "langchain-multiagent": [
-      "langgraph-core"
-    ],
+    "langchain-multiagent": [],
     "1c-doc-research": [],
     "tech-research": [],
     "architecture-research": [
