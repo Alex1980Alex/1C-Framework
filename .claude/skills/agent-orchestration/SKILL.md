@@ -1,3 +1,8 @@
+---
+name: agent-orchestration
+description: "Agent Orchestration — выбор и настройка RAG/analytical/research агентов. ИСПОЛЬЗУЙ когда выбираешь агента (RAG, Self-RAG, analytical, research, adaptive), настраиваешь LangGraph nodes, отлаживаешь hallucination/query rewriting, запускаешь multi-agent оркестрацию. Триггеры: 'RAG agent', 'multi-agent', 'LangGraph nodes', 'Self-RAG', 'hallucination', 'query rewriting', 'analytical agent', 'research agent', 'какой агент выбрать'. НЕ для LangChain core (→ langchain-core)."
+---
+
 # Agent Orchestration
 
 ## Когда использовать
