@@ -1,3 +1,8 @@
+---
+name: graph-operations
+description: "Graph Operations — графы знаний, сущности и связи. ИСПОЛЬЗУЙ когда строишь граф знаний, ищешь по графу (LightRAG/GraphRAG), извлекаешь сущности, настраиваешь entity extraction, выбираешь режим поиска. Триггеры: 'граф знаний', 'сущности', 'связи', 'entities', 'LightRAG', 'GraphRAG', 'graph traversal', 'entity extraction', 'knowledge graph'. НЕ для векторного поиска (→ search-pipeline-debug)."
+---
+
 # Graph Operations
 
 ## Когда использовать
