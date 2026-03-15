@@ -1438,44 +1438,29 @@
     },
     "task-protocol": {
       "keywords": [
-        "implement",
-        "реализовать",
-        "new feature",
-        "добавь функцию",
-        "создай функцию",
-        "сделай функцию",
-        "добавь фичу",
-        "новая фича",
-        "декомпозиция",
-        "decompose task"
+        "task protocol",
+        "протокол задач",
+        "декомпозиция задачи",
+        "decompose task",
+        "разбей на подзадачи"
       ],
       "skills": [
         "task-protocol"
       ],
       "optional": [],
       "weighted_keywords": {
-        "задача": 2,
-        "implement": 2,
-        "реализуй": 3,
-        "добавь": 2,
-        "сделай": 2,
-        "создай": 2,
-        "new feature": 3,
-        "новая фича": 3,
+        "task protocol": 5,
+        "протокол задач": 5,
         "декомпозиция": 4,
-        "task protocol": 5
+        "decompose": 4,
+        "подзадачи": 3
       },
       "utterances": [
-        "implement a new feature for the system",
-        "add a new capability to the framework",
-        "build this multi-step functionality",
-        "create a new module with several components",
-        "develop this feature end to end",
-        "реализуй новую функциональность для системы",
-        "добавь новую возможность во фреймворк",
-        "создай новый модуль с несколькими компонентами",
-        "разработай эту фичу от начала до конца",
-        "сделай эту многошаговую задачу"
+        "как работает протокол задач",
+        "разбей задачу на подзадачи",
+        "какой протокол выполнения задач",
+        "how does task protocol work",
+        "decompose this task into subtasks"
       ]
     },
     "bsl-debug": {
