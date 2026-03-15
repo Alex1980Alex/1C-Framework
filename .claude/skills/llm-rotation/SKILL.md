@@ -1,3 +1,8 @@
+---
+name: llm-rotation
+description: "LLM Rotation Service — мульти-провайдерное LLM API с автофоллбэком. ИСПОЛЬЗУЙ когда делегируешь генерацию Z.AI, проверяешь статус провайдеров, сбрасываешь failed provider. Триггеры: 'llm_complete', 'llm rotation', 'Z.AI', 'провайдер LLM', 'fallback LLM', 'llm_reset_provider', 'llm_test_providers', 'делегировать генерацию'. НЕ для прямых вызовов Anthropic API (→ claude-api)."
+---
+
 # LLM Rotation Service
 
 ## When to Use
