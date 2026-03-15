@@ -33,7 +33,8 @@
     ],
     "langchain": [
       "langchain-core",
-      "langchain-infra"
+      "langchain-infra",
+      "langchain-streaming"
     ],
     "research": [
       "research-tech",
