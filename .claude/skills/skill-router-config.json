@@ -209,11 +209,9 @@
         "embeddings",
         "reranker",
         "vector search",
-        "sparse vector",
         "colbert",
         "graphrag",
-        "sentence-transformers",
-        "faiss"
+        "sentence-transformers"
       ],
       "skills": [
         "tech-research"
@@ -222,7 +220,6 @@
       "weighted_keywords": {
         "reranking": 3,
         "chunking": 3,
-        "bm25": 3,
         "hybrid search": 3
       },
       "utterances": [
@@ -811,8 +808,7 @@
       ],
       "optional": [
         "langchain-multiagent",
-        "langchain-mcp-tools",
-        "langchain-tutorials"
+        "langchain-mcp-tools"
       ],
       "utterances": [
         "build an AI agent using the LC framework",
@@ -881,10 +877,7 @@
         "langgraph-core"
       ],
       "optional": [
-        "langchain-streaming",
         "langchain-integrations",
-        "langgraph-memory-persistence",
-        "langgraph-production",
         "deep-agents"
       ],
       "utterances": [
