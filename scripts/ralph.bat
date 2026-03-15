@@ -71,12 +71,15 @@ if not "%USE_TEMPLATE%"=="" (
     ) else if "%USE_TEMPLATE%"=="quality" (
         echo [TEMPLATE] quality
         set "PROMPT=ЗАДАЧА: Автономный цикл улучшения качества Python-кода (AutoResearch-подход). КОНТЕКСТ: Проект D:\1С-Framework. Python 3.11+. Инструменты: ruff, mypy. ПРОТОКОЛ КАЖДОЙ ИТЕРАЦИИ: 1. ЗАМЕР: запусти ruff check src/ --output-format json и подсчитай ошибки. Запусти mypy src/ и подсчитай ошибки. Запиши числа. 2. КОММИТ: git commit текущее состояние (чтобы можно было откатить). 3. ИЗМЕНЕНИЕ: выбери ОДНУ категорию ошибок (самую частую по ruff или mypy) и исправь ВО ВСЕХ файлах. 4. ПРОВЕРКА: запусти ruff check и mypy снова. Сравни с замером из п.1. 5. РЕШЕНИЕ: если ошибок стало меньше — оставь (keep). Если больше или код сломался — git revert HEAD --no-edit (discard). 6. ЛОГ: добавь строку в data/autoresearch-results.tsv в формате: iteration TAB commit TAB ruff_errors TAB mypy_errors TAB delta TAB status TAB description. 7. ПОВТОР: перейди к следующей итерации. КРИТЕРИИ ЗАВЕРШЕНИЯ: 1. ruff check src/ = 0 ошибок. 2. mypy src/ = 0 ошибок типизации. 3. Ни одно исправление не сломало существующий код. 4. Файл data/autoresearch-results.tsv содержит полный лог. Когда ВСЕ критерии выполнены: RALPH_DONE"
+    ) else if "%USE_TEMPLATE%"=="skill-health" (
+        echo [TEMPLATE] skill-health
+        set "PROMPT=ЗАДАЧА: Автономное улучшение skill router accuracy через AutoResearch-цикл. КОНТЕКСТ: 66 скиллов в .claude/skills/. Eval: python scripts/eval-skill-router.py (F1 метрика). Health report: python scripts/skill-health-analyzer.py --no-eval. Config: .claude/skills/skill-router-config.json. ПРОТОКОЛ: 1. ЗАМЕР: eval-skill-router.py, запиши F1(All). skill-health-analyzer.py --no-eval для health report. 2. КОММИТ текущего состояния. 3. АНАЛИЗ: data/skill-health-report.md — найди проблемный скилл (HIGH WASTE → сузить description, ROUTER MISS → добавить keywords в config, NEVER USED → архивировать). 4. ИЗМЕНЕНИЕ: ОДНО изменение (description ИЛИ config). 5. ПРОВЕРКА: eval снова, сравни F1. 6. РЕШЕНИЕ: F1 вырос → keep, F1 упал → git revert HEAD --no-edit. 7. ЛОГ в autoresearch.jsonl. Одна итерация = один скилл. Используй pushy стиль с триггерами и негативными маркерами. КРИТЕРИИ: F1(All) ^>= 0.85 ИЛИ 5 итераций без улучшений. Нет HIGH WASTE и ROUTER MISS в health report. Когда ВСЕ критерии выполнены: RALPH_DONE"
     ) else if "%USE_TEMPLATE%"=="1c-study" (
         echo [TEMPLATE] 1c-study
         set "PROMPT=ЗАДАЧА: Автономное изучение конфигурации 1С через AutoResearch-цикл. КОНТЕКСТ: Конфигурация УправлениеТранспортомНаПЛК v2026.1.1.0. Тестовая база: testdb1c_research. MCP: 1c-mcp-toolkit (get_metadata, execute_query, execute_code, find_references, get_access_rights, get_event_log). MCP: EDT-MCP (list_modules, get_module_structure, get_symbol_info, validate_query, get_problems). Кэш: .claude/skills/1c-config-knowledge/cache/. Дорожная карта: docs/roadmap/ROADMAP_AUTORESEARCH_1C_STUDY.md. АЛГОРИТМ: 1. Прочитай cache/_index.json (если нет — создай). 2. Получи список объектов через get_metadata. 3. Найди первый НЕизученный (приоритет: документы, регистры, справочники). 4. Если всё изучено — RALPH_DONE. 6 ФАЗ: Ф1 МЕТАДАННЫЕ (get_metadata, find_references, execute_query первые 3). Ф2 ИСХОДНЫЙ КОД (list_modules, get_symbol_info ОбработкаПроведения/ПередЗаписью). Ф3 ГИПОТЕЗА (обязательные реквизиты, движения, зависимости, бизнес-смысл). Ф4 ПРОВЕРКА НА БАЗЕ (создать ТЕСТ_AR_*, провести, проверить движения). Ф5 ГРАНИЧНЫЕ СЛУЧАИ (без обязательного поля, отмена проведения). Ф6 CLEANUP + КЭШ (удалить ТЕСТ_AR_*, записать cache/documents/). БЕЗОПАСНОСТЬ: префикс ТЕСТ_AR_, cleanup, только testdb1c_research. КРИТЕРИИ ИТЕРАЦИИ: файл cache создан, _index.json обновлён, тестовые данные удалены. КРИТЕРИИ ЦИКЛА: все 27 документов изучены, document_register_map.md полная карта, business_processes.md цепочки. Когда ВСЕ критерии цикла выполнены: RALPH_DONE"
     ) else (
         echo [ERROR] Unknown template: %USE_TEMPLATE%
-        echo Available: reindex, test-coverage, evaluation, documentation, lint, quality, 1c-study
+        echo Available: reindex, test-coverage, evaluation, documentation, lint, quality, skill-health, 1c-study
         exit /b 1
     )
 )
@@ -107,6 +110,9 @@ set /a "ITERATION+=1"
 
 echo === Iteration %ITERATION% / %MAX_ITERATIONS% [%date% %time%] ===
 echo === Iteration %ITERATION% / %MAX_ITERATIONS% [%date% %time%] === >> "%LOG_FILE%"
+
+:: Enable Ralph activator hook
+set "RALPH_ENABLED=1"
 
 :: Run Claude Code
 claude -p "%PROMPT% Текущая итерация: %ITERATION% из %MAX_ITERATIONS%. Проверь git log --oneline -5 и git diff --stat для контекста. Если задача полностью завершена по ВСЕМ критериям, включи в конец ответа строку: %COMPLETION_MARKER%. Если нет — продолжай работу." --dangerously-skip-permissions > "%TEMP%\ralph_output.txt" 2>&1
@@ -147,6 +153,7 @@ echo   evaluation      Run RAGAS evaluation suite
 echo   documentation   Add docstrings to public API
 echo   lint            Fix all linter warnings
 echo   quality         AutoResearch: autonomous code quality loop (ruff+mypy, measure-fix-revert)
+echo   skill-health    AutoResearch: autonomous skill description optimization (F1 metric)
 echo   1c-study        AutoResearch: autonomous 1C configuration study (6-phase cycle)
 echo.
 echo Options:

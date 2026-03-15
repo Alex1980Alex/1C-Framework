@@ -59,6 +59,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/z-ai-delegation-enforcer.py",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/skill-quality-monitor.py",
+            "timeout": 2
           }
         ]
       }

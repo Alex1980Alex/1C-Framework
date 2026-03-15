@@ -147,6 +147,12 @@ class RalphActivator(BaseHook):
         if not prompt or len(prompt) < 15:
             return None
 
+        # Only activate Ralph in autonomous context (ralph.bat / autoresearch.ps1).
+        # These scripts set RALPH_ENABLED=1 before calling claude -p.
+        # In interactive mode (no env var) → never activate to avoid false positives.
+        if not os.environ.get("RALPH_ENABLED"):
+            return None
+
         # Don't re-activate if already active (but auto-deactivate if stale)
         from shared.ralph_state import is_active, is_stale, deactivate
         if is_active():
