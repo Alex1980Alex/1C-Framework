@@ -643,11 +643,7 @@
       "skills": [
         "framework-cli"
       ],
-      "optional": [
-        "framework-api",
-        "framework-quickstart",
-        "framework-mcp-ui"
-      ],
+      "optional": [],
       "weighted_keywords": {
         "CLI команд": 3,
         "cli команд": 3,
