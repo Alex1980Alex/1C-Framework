@@ -1448,7 +1448,15 @@
       ],
       "optional": [],
       "weighted_keywords": {
-        "retry": 2
+        "retry": 2,
+        "enforcer pattern": 5,
+        "stop hook": 4,
+        "block operation": 4,
+        "retry pattern": 3,
+        "exponential backoff": 4,
+        "fault tolerance": 3,
+        "отказоустойчивость": 3,
+        "повторные попытки": 4
       },
       "utterances": [
         "automatically repeat failed API calls",
