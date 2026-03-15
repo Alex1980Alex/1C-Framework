@@ -619,35 +619,56 @@ Phase 9: REPEAT
 
 ---
 
-## 5. Двухагентная реализация
+## 5. Трёхагентная реализация
 
-### Вариант A: Два вызова `claude -p` (простой, надёжный)
+### Вариант A: Три вызова `claude -p` (простой, надёжный)
 
 ```powershell
 # В autoresearch.ps1
 
-# Executor prompt (полный контекст + инструкция на ONE изменение)
-$executorPrompt = @"
-Ты — EXECUTOR в AutoResearch v2.
-Прочитай data/autoresearch/autoresearch.md.
+for ($i = 1; $i -le $MaxIterations; $i++) {
+
+    # 1. EXECUTOR: одна итерация изменений
+    $executorPrompt = @"
+Ты — EXECUTOR в AutoResearch v2. Итерация $i.
+Прочитай data/autoresearch/{idea}/autoresearch.md.
 Сделай ОДНО атомарное изменение для улучшения метрики.
-Git commit с prefix [AR-$iteration].
+Git commit с prefix [AR-$i].
 НЕ запускай тесты. НЕ оценивай свой код.
 "@
+    claude -p $executorPrompt --dangerously-skip-permissions `
+        > "data/autoresearch/{idea}/executor_$i.txt" 2>&1
 
-# Reviewer prompt (diff + verify command)
-$reviewerPrompt = @"
-Ты — REVIEWER в AutoResearch v2.
+    # 2. REVIEWER: проверка изменений
+    $reviewerPrompt = @"
+Ты — REVIEWER в AutoResearch v2. Итерация $i.
 1. git diff HEAD~1 — прочитай изменения
 2. Запусти: $verifyCommand — получи метрику
 3. Запусти: $testCommand — тесты проходят?
 4. Проверь: файлы вне scope ($scope) не затронуты?
 5. Выведи JSON verdict: {metric_before, metric_after, tests_pass, verdict, reason}
 6. Если verdict=REVERT: выполни git revert HEAD --no-edit
+7. Обнови data/autoresearch/{idea}/autoresearch.md (History, Dead Ends)
 "@
+    claude -p $reviewerPrompt --dangerously-skip-permissions `
+        > "data/autoresearch/{idea}/reviewer_$i.txt" 2>&1
 
-claude -p $executorPrompt --dangerously-skip-permissions
-claude -p $reviewerPrompt --dangerously-skip-permissions
+    # 3. COMPARATOR: каждые 5 итераций — слепое A/B сравнение
+    if ($i % 5 -eq 0) {
+        $comparatorPrompt = @"
+Ты — COMPARATOR в AutoResearch v2. Слепое A/B сравнение.
+1. Прочитай текущий код в scope: $scope
+2. git stash && git checkout {baseline_commit} — прочитай baseline код
+3. git checkout - && git stash pop — вернись
+4. Сравни версию A и B БЕЗ знания какая baseline, какая current
+5. Оцени: качество кода (1-10), читаемость (1-10), сложность (1-10)
+6. Выведи JSON: {winner, quality_A, quality_B, readability_A, readability_B, notes}
+7. Обнови autoresearch.md секцию '## Comparator Reviews'
+"@
+        claude -p $comparatorPrompt --dangerously-skip-permissions `
+            > "data/autoresearch/{idea}/comparator_$i.txt" 2>&1
+    }
+}
 ```
 
 ### Вариант B: Subagent внутри одной сессии (продвинутый)
@@ -655,7 +676,7 @@ claude -p $reviewerPrompt --dangerously-skip-permissions
 ```
 # В SKILL.md — инструкция для Claude Code
 
-После каждого изменения (Phase 3-4), вызови Agent tool:
+После каждого изменения (Phase 3-4), вызови Agent tool для Review:
 
 Agent(prompt="Ты REVIEWER. Проверь последний коммит:
   1. git diff HEAD~1
@@ -664,9 +685,18 @@ Agent(prompt="Ты REVIEWER. Проверь последний коммит:
   4. Verdict: KEEP/REVERT/FIX/SKIP + reason
   Если REVERT: git revert HEAD --no-edit",
   subagent_type="general")
+
+Каждые 5 итераций вызови Agent tool для Compare:
+
+Agent(prompt="Ты COMPARATOR. Слепое A/B сравнение:
+  1. Прочитай текущий код в {scope}
+  2. git stash; git checkout {baseline}; прочитай код; git checkout -; git stash pop
+  3. Оцени оба варианта по качеству, читаемости, сложности (1-10)
+  4. JSON: {winner, quality_A, quality_B, notes}",
+  subagent_type="general")
 ```
 
-### Рекомендация: начать с Вариант A (два вызова), мигрировать на B позже.
+### Рекомендация: начать с Вариант A (три вызова), мигрировать на B позже.
 
 ---
 
