@@ -1,3 +1,8 @@
+---
+name: indexing-pipeline
+description: "Indexing Pipeline — индексация PDF документов, загрузчики, сплиттеры, page_offsets. ИСПОЛЬЗУЙ когда индексируешь PDF, отлаживаешь потерянные страницы, настраиваешь loader/splitter, выбираешь флаги индексации, переиндексируешь. Триггеры: 'индексировать', 'индексация', 'loader', 'splitter', 'page_offsets', 'batch indexing', 'потерялись страницы', 'ошибка индексации', 'переиндексация'. НЕ для поиска после индексации (→ search-pipeline-debug)."
+---
+
 # Indexing Pipeline
 
 ## Когда использовать
