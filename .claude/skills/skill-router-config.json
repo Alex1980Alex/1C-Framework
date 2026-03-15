@@ -859,10 +859,7 @@
       "skills": [
         "langchain-core"
       ],
-      "optional": [
-        "langchain-multiagent",
-        "langchain-mcp-tools"
-      ],
+      "optional": [],
       "utterances": [
         "build an AI agent using the LC framework",
         "define tools and chain them together",
@@ -875,6 +872,51 @@
         "подключи внешние сервера инструментов к агенту",
         "реализуй структурированные ответы от модели",
         "координируй нескольких помощников"
+      ]
+    },
+    "langchain-streaming": {
+      "keywords": [
+        "SSE streaming",
+        "stream tokens",
+        "streaming response",
+        "real-time tokens",
+        "stream_mode values",
+        "astream_events",
+        "streaming langchain",
+        "SSE langgraph",
+        "stream_mode",
+        "StreamWriter",
+        "stream langgraph",
+        "token streaming",
+        "get_stream_writer",
+        "useStream"
+      ],
+      "weighted_keywords": {
+        "streaming": 5,
+        "SSE": 5,
+        "streaming langgraph": 6,
+        "SSE langgraph": 6,
+        "стриминг": 4,
+        "стриминг langgraph": 6,
+        "stream_mode": 4,
+        "astream": 4,
+        "token stream": 4,
+        "real-time": 3,
+        "stream tokens": 5,
+        "streaming response": 4
+      },
+      "skills": [
+        "langchain-streaming"
+      ],
+      "optional": [],
+      "utterances": [
+        "stream tokens to the frontend in real time",
+        "implement SSE streaming for the agent",
+        "enable real-time token streaming",
+        "set up streaming mode for responses",
+        "configure astream events for the pipeline",
+        "стримь токены на фронтенд в реальном времени",
+        "настрой SSE streaming для агента"
       ]
     },
     "langchain-infra": {
