@@ -1,6 +1,6 @@
 ---
 name: claude-code-cli-interactive
-description: "CLI справочник Claude Code: команды, 45+ флагов, интерактивный режим, горячие клавиши, Vim mode, многострочный ввод, фоновые задачи, контрольные точки (checkpoints), rewind. Триггеры: 'cli reference', 'справочник cli', 'горячие клавиши', 'keyboard shortcuts', 'vim mode', 'interactive mode', 'интерактивный режим', 'checkpoints', 'контрольные точки', 'rewind', 'отмотать', 'slash commands', '/commands', 'cli flags', 'флаги cli', 'background tasks', 'фоновые задачи', 'bash mode'. НЕ для CLI фреймворка — используй framework-cli."
+description: "CLI справочник Claude Code: команды, 45+ флагов, интерактивный режим, горячие клавиши, Vim mode, многострочный ввод, фоновые задачи, контрольные точки (checkpoints), rewind. Триггеры: 'claude -p', 'claude --print', 'claude flags', 'claude cli', 'claude code vim mode', 'claude checkpoints', 'claude rewind', 'claude resume', 'claude continue', '/help claude', 'claude slash commands', 'claude interactive', 'headless claude', 'claude output format', 'claude permission mode'. НЕ для общих CLI вопросов, НЕ для framework-cli."
 ---
 
 # CLI и интерактивный режим Claude Code
