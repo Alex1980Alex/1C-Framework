@@ -1,3 +1,8 @@
+---
+name: evaluation-benchmark
+description: "Evaluation & Benchmark — оценка качества поиска и RAG. ИСПОЛЬЗУЙ когда измеряешь метрики (RAGAS, NDCG, precision, recall), запускаешь бенчмарки, сравниваешь стратегии, настраиваешь feedback loop, regression testing. Триггеры: 'оценить качество', 'метрики', 'RAGAS', 'benchmark', 'precision', 'recall', 'NDCG', 'regression test', 'feedback', 'self-learning', 'A/B test'. НЕ для отладки поиска (→ search-pipeline-debug)."
+---
+
 # Evaluation & Benchmark
 
 ## Когда использовать
