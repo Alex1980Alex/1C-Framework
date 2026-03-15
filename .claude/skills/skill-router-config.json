@@ -1345,7 +1345,13 @@
       "weighted_keywords": {
         "проверь код": 3,
         "verify code": 3,
-        "code review": 2
+        "code review": 2,
+        "verify": 3,
+        "ревью": 2,
+        "review": 2,
+        "проверь": 2,
+        "код соответствует": 3,
+        "верификация": 2
       },
       "utterances": [
         "check if the implementation matches requirements",
