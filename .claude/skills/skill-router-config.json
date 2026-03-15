@@ -62,6 +62,9 @@
     "langgraph-core": [
       "langchain-core"
     ],
+    "langchain-streaming": [
+      "langgraph-core"
+    ],
     "langchain-multiagent": [
       "langgraph-core"
     ],
@@ -987,6 +990,53 @@
         "сохрани и восстанови состояние разговора агента",
         "создай пайплайн рассуждений на основе графа",
         "реализуй устойчивое выполнение с чекпоинтами"
+      ]
+    },
+    "langgraph-memory": {
+      "keywords": [
+        "checkpointer langgraph",
+        "persistence langgraph",
+        "state snapshots",
+        "InMemorySaver",
+        "PostgresSaver",
+        "SqliteSaver",
+        "MemorySaver",
+        "langgraph memory",
+        "long-term memory",
+        "durable execution",
+        "conversation state save",
+        "state persistence",
+        "checkpoint",
+        "сохранить состояние",
+        "чекпоинтер",
+        "персистентность"
+      ],
+      "weighted_keywords": {
+        "checkpointer": 6,
+        "persistence": 5,
+        "InMemorySaver": 6,
+        "PostgresSaver": 6,
+        "SqliteSaver": 6,
+        "MemorySaver": 6,
+        "state snapshot": 5,
+        "durable execution": 5,
+        "сохранить состояние агента": 6,
+        "чекпоинтер": 5,
+        "персистентность": 4
+      },
+      "skills": [
+        "langgraph-memory-persistence"
+      ],
+      "optional": [],
+      "utterances": [
+        "save and restore agent conversation state",
+        "implement durable execution with checkpoints",
+        "configure persistent storage for langgraph",
+        "add long-term memory to the assistant",
+        "set up PostgresSaver for production",
+        "сохрани и восстанови состояние разговора агента",
+        "реализуй устойчивое выполнение с чекпоинтами",
+        "настрой постоянное хранилище для langgraph"
       ]
     },
     "hooks": {
