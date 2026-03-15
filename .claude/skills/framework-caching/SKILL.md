@@ -1,3 +1,8 @@
+---
+name: framework-caching
+description: "Framework Caching — 3 уровня кеширования (семантический, embedding, HTTP). ИСПОЛЬЗУЙ когда настраиваешь кеш, очищаешь кеш, ускоряешь повторные запросы, проверяешь cache stats. Триггеры: 'кеш', 'кэш', 'cache', 'TTL', 'семантический кеш', 'semantic cache', 'очистить кеш', 'cache stats', 'медленный поиск', 'ускорить'. НЕ для оптимизации поиска (→ search-pipeline-debug)."
+---
+
 # Framework Caching
 
 ## Когда использовать
