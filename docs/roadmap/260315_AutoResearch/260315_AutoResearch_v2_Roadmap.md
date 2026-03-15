@@ -813,11 +813,14 @@ Wizard:
 | Метрика | Baseline | Цель (через 2 недели) |
 |---------|----------|----------------------|
 | Шаблоны работают end-to-end | 0 | 7 шаблонов |
-| Dual-agent verdict accuracy | — | >90% correct KEEP/REVERT |
+| Три агента verdict accuracy | — | >90% correct KEEP/REVERT |
+| Comparator A/B accuracy | — | >85% correct winner |
 | Session resume работает | нет | Да (autoresearch.md) |
 | Среднее итераций до target | — | < 15 |
 | Пользователь запускает 1 командой | нет | Да |
 | Ralph интеграция | нет | Полная |
+| Eval trigger accuracy | — | >90% |
+| Eval tool selection accuracy | — | >85% |
 
 ---
 
@@ -826,12 +829,29 @@ Wizard:
 | Фаза | Приоритет | Зависимости | Оценка сложности |
 |------|-----------|-------------|------------------|
 | 1. Skill + Plan Wizard | P0 | — | Medium |
-| 2. Dual-Agent Engine | P0 | Фаза 1 | High |
+| 2. Three-Agent Engine | P0 | Фаза 1 | High |
 | 3. Session Persistence | P0 | Фаза 2 | Medium |
 | 4. Ralph интеграция | P1 | Фаза 2 | Low |
 | 5. Шаблоны задач | P1 | Фаза 1 | Low |
 | 6. Security Audit | P2 | Фаза 1 | Medium |
-| 7. Dashboard | P3 | Фаза 3 | Low |
+| 7. Eval-система | P1 | Фаза 1 | Medium |
+| 8. Dashboard | P3 | Фаза 3 | Low |
+
+---
+
+## 11. Источники из Skills 2.0 (интегрировано)
+
+| Концепция из Skills 2.0 | Как применено в AutoResearch v2 |
+|---|---|
+| **4 агента** (Executor, Grader, Comparator, Analyzer) | 3 агента: Executor + Reviewer + Comparator. Analyzer = autoresearch.md |
+| **Eval-система** (20 промптов, A/B) | Фаза 7: `data/eval/autoresearch/eval_prompts.json` |
+| **Trigger Tuning** (pushy description) | YAML frontmatter: развёрнутый description с ключевыми словами |
+| **Ultrathink** (extended thinking в SKILL.md) | Phase 0 (ANALYZE) и Phase 2 (IDEATE) — ultrathink для глубокого рассуждения |
+| **Encoded Preference > Capability Uplift** | AutoResearch = Encoded Preference скилл (долговечный) |
+| **Слепое A/B** (Comparator без знания "кто есть кто") | Phase 7 (COMPARE): каждые 5 итераций |
+| **Чистый изолированный контекст** | Каждый `claude -p` = отдельный контекст (уже есть) |
+
+Подробный анализ: [260315_skills_2_0_research.md](../260315_skills_2_0_research.md)
 
 ---
 
