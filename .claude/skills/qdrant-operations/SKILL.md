@@ -1,3 +1,8 @@
+---
+name: qdrant-operations
+description: "Qdrant Operations — управление коллекциями Qdrant, sparse vectors, snapshots. ИСПОЛЬЗУЙ когда создаёшь/настраиваешь коллекции Qdrant, мигрируешь с ChromaDB, настраиваешь named vectors (dense+bm25), делаешь snapshot/rebuild. Триггеры: 'qdrant', 'collection', 'sparse vectors', 'snapshot', 'named vectors', 'rebuild', 'миграция с ChromaDB', 'qdrant collection'. НЕ для embedding моделей (→ embedding-models)."
+---
+
 # Qdrant Operations
 
 ## Когда использовать
