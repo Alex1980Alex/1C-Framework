@@ -1,3 +1,8 @@
+---
+name: framework-quickstart
+description: "Framework Quickstart — установка и первый запуск PDF Framework с нуля. ИСПОЛЬЗУЙ когда пользователь устанавливает фреймворк, настраивает окружение, запускает впервые, спрашивает системные требования. Триггеры: 'установка', 'install', 'начать', 'start', 'первый запуск', 'quickstart', 'getting started', 'системные требования', 'как запустить', 'развернуть с нуля'. НЕ для production deployment (→ deployment)."
+---
+
 # Framework Quickstart
 
 ## Когда использовать
