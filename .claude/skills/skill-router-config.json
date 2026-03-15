@@ -1443,7 +1443,11 @@
         "review": 2,
         "проверь": 2,
         "код соответствует": 3,
-        "верификация": 2
+        "верификация": 2,
+        "проверь соответствует ли реализация": 6,
+        "review the changes for correctness": 6,
+        "validate the code meets": 6,
+        "проверь на потенциальные проблемы": 5
       },
       "utterances": [
         "check if the implementation matches requirements",
