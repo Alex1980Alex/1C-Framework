@@ -922,6 +922,45 @@
         "настрой SSE streaming для агента"
       ]
     },
+    "langchain-multiagent": {
+      "keywords": [
+        "multi-agent supervisor",
+        "supervisor pattern",
+        "agent hierarchy",
+        "agent orchestration",
+        "multi-agent system",
+        "координация агентов",
+        "agent handoff",
+        "hierarchical agents",
+        "agent team",
+        "collaborative agents"
+      ],
+      "weighted_keywords": {
+        "multi-agent": 5,
+        "supervisor": 5,
+        "supervisor pattern": 6,
+        "agent handoff": 5,
+        "agent team": 4,
+        "hierarchical": 4,
+        "координация агентов": 5,
+        "несколько агентов": 4,
+        "агентная команда": 4,
+        "collaborative agents": 4
+      },
+      "skills": [
+        "langchain-multiagent"
+      ],
+      "optional": [],
+      "utterances": [
+        "coordinate multiple agents with supervisor pattern",
+        "build a hierarchical multi-agent system",
+        "implement agent handoff between assistants",
+        "create a team of collaborative agents",
+        "set up supervisor for agent orchestration",
+        "координируй несколько агентов с supervisor",
+        "создай иерархическую мультиагентную систему"
+      ]
+    },
     "langchain-infra": {
       "keywords": [
         "streaming langchain",
