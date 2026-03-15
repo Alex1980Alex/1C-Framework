@@ -159,9 +159,11 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   ralph_wiggum_stop.py      # Stop: Ralph iteration enforcement
   memory-sync.py            # Stop: memory system change advisory
   z-ai-write-guard.py      # PreToolUse:Write: blocks >30 lines code without Z.AI delegation
+  skill-quality-monitor.py  # UserPromptSubmit: passive quality metrics logging (data/skill-quality-metrics.jsonl)
   bsl-tool-router.py        # UserPromptSubmit: routes BSL/1C queries to bsl-development skill
 ```
 
+AutoResearch: `scripts/skill-health-analyzer.py` (health report) + `scripts/audit-skill-freshness.py` (freshness audit) + `scripts/autoresearch.ps1` (autonomous cycle). Templates: `ralph.bat --template skill-health|quality|1c-study`. Archive: `.claude/skills/_archived/`. Docs: [Chapter 18](docs/framework%20documentation/18_AUTORESEARCH/).
 Evaluation: `scripts/eval-hooks.py` + `tests/eval/hook_prompts.json` (40 тестов, 16 скиллов).
 Skill Router Eval: `scripts/eval-skill-router.py` (64 ground truth, F1/precision/recall) + `scripts/skill-router-dashboard.py` (CLI dashboard) + CI gate в `.github/workflows/ci.yml`.
 Dashboard: `scripts/hook-dashboard.py` (CLI) + `scripts/skill-enforcement-dashboard.py` (enforcement) + `src/ui/pages/hook_dashboard.py` (Streamlit).
