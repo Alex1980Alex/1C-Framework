@@ -1390,6 +1390,46 @@
         "научись этой новой возможности самостоятельно"
       ]
     },
+    "autoresearch": {
+      "keywords": [
+        "autoresearch",
+        "авторесёрч",
+        "автономный цикл",
+        "улучшить метрику",
+        "measure and improve",
+        "baseline then iterate",
+        "keep or revert",
+        "keep/revert",
+        "итеративное улучшение",
+        "A/B test",
+        "метрика F1",
+        "coverage improve",
+        "skill health",
+        "skill-health"
+      ],
+      "skills": [
+        "autoresearch"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "autoresearch": 5,
+        "автономный цикл": 4,
+        "улучшить метрику": 4,
+        "keep/revert": 4,
+        "measure and improve": 3
+      },
+      "utterances": [
+        "run autonomous improvement loop",
+        "iteratively improve the metric",
+        "measure baseline then iterate",
+        "autoresearch cycle for skill health",
+        "run ralph wiggum for improvements",
+        "запусти автономный цикл улучшений",
+        "итеративно улучши метрику",
+        "измерь baseline и итерируй",
+        "авторесёрч для улучшения качества"
+      ]
+    },
     "memory": {
       "keywords": [
         "unified memory",
