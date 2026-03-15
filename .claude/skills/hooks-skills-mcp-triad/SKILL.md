@@ -141,7 +141,7 @@ Config-driven маршрутизация промптов к скиллам че
   → skill-router.py (UserPromptSubmit)
     → _detect_skill_activations(): парсит <command-name> теги из предыдущего turn
       → если найден → SessionState.add_activated_skill() + log activate (source=prompt-detection)
-    → Layer A: keyword matching по 32 bundles (config v6)
+    → Layer A: keyword matching по 32 bundles (config v7, weighted_keywords)
     → Layer B: fuzzy matching (fuzz.partial_ratio)
     → Layer C: TF-IDF semantic scoring (shared/tfidf_scorer.py, numpy-only)
       → генерирует prompt_id, пишет в SessionState.set_prompt_id() + skill-accuracy.jsonl (recommend)
