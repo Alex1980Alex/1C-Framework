@@ -1,3 +1,8 @@
+---
+name: framework-mcp-ui
+description: "Framework MCP, UI & Python API — интерфейсы доступа к PDF Framework. ИСПОЛЬЗУЙ когда настраиваешь MCP сервер для Claude Code, запускаешь Gradio/Streamlit UI, используешь Python API (QuickRAG, Components). Триггеры: 'MCP server', 'Gradio', 'Web UI', 'интерфейс', 'Python API', 'QuickRAG', 'Components', 'Claude Code integration', 'какой интерфейс выбрать'. НЕ для CLI (→ framework-cli), НЕ для REST API (→ framework-api)."
+---
+
 # Framework MCP, UI & Python API
 
 ## Когда использовать
