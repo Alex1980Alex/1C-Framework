@@ -485,7 +485,52 @@ security/{timestamp}-audit/
 
 ---
 
-### Фаза 7: Dashboard + Reporting
+### Фаза 7: Eval-система для скилла AutoResearch
+
+**Цель:** Измеримое тестирование самого скилла autoresearch (из Skills 2.0)
+
+> Skills 2.0 Skill Creator включает eval-систему: 20 промптов, A/B бенчмарк,
+> слепое сравнение. Применяем тот же подход к нашему скиллу.
+
+**Артефакты:**
+```
+data/eval/autoresearch/
+├── eval_prompts.json              # 20 eval-промптов (10 должны триггерить, 10 нет)
+├── eval_results.json              # Результаты последнего прогона
+└── eval_baseline.json             # Baseline: без скилла (vanilla Claude)
+
+scripts/
+├── eval-autoresearch.py           # Прогон eval: запускает агентов, считает метрики
+└── eval-autoresearch-report.py    # Отчёт: trigger accuracy, A/B comparison
+```
+
+**Eval-промпты (примеры):**
+```json
+[
+  {"prompt": "Уменьши количество ошибок ruff в src/", "should_trigger": true, "expected_tools": ["ruff"]},
+  {"prompt": "Оптимизируй время ответа API", "should_trigger": true, "expected_tools": ["pytest-benchmark"]},
+  {"prompt": "Изучи документ ЗаказНаПеревозку", "should_trigger": false, "expected_skill": "1c-doc-research"},
+  {"prompt": "Сделай git commit", "should_trigger": false, "expected_skill": null},
+  {"prompt": "Повысь покрытие тестами до 80%", "should_trigger": true, "expected_tools": ["pytest-cov"]},
+  {"prompt": "Запусти автономный цикл улучшения BSL", "should_trigger": true, "expected_tools": ["bsl_analyze"]}
+]
+```
+
+**Метрики eval:**
+- **Trigger accuracy**: % правильных срабатываний/несрабатываний
+- **Tool selection accuracy**: правильно ли подобраны инструменты
+- **Recipe quality**: autoresearch.md содержит scope + metric + verify?
+- **A/B**: с autoresearch vs без (vanilla Ralph) — кол-во итераций до target
+
+**Критерии завершения:**
+- [ ] 20 eval-промптов покрывают все 7 шаблонов + негативные кейсы
+- [ ] Trigger accuracy > 90%
+- [ ] Tool selection accuracy > 85%
+- [ ] A/B показывает преимущество autoresearch vs vanilla
+
+---
+
+### Фаза 8: Dashboard + Reporting
 
 **Цель:** Визуализация прогресса AutoResearch
 
