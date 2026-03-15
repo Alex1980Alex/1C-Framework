@@ -1,3 +1,8 @@
+---
+name: prompt-engineering
+description: "Prompt Engineering (DSPy) — оптимизация промптов через DSPy модули. ИСПОЛЬЗУЙ когда оптимизируешь промпты (MIPROv2), настраиваешь A/B тестирование качества ответов, улучшаешь grading/rewriting/analysis. Триггеры: 'DSPy', 'оптимизация промптов', 'A/B testing', 'MIPROv2', 'метрики качества ответов', 'prompt optimization'. НЕ для RAG pipeline (→ search-pipeline-debug)."
+---
+
 # Prompt Engineering (DSPy)
 
 ## Когда использовать
