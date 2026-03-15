@@ -14,6 +14,7 @@
 #   documentation   — Add docstrings to public API
 #   lint            — Fix all linter warnings
 #   quality         — AutoResearch: autonomous code quality loop (ruff+mypy)
+#   skill-health    — AutoResearch: autonomous skill description optimization (F1 metric)
 #   1c-study        — AutoResearch: autonomous 1C configuration study (6-phase cycle)
 
 set -euo pipefail
@@ -167,6 +168,47 @@ TEMPLATES[quality]='ЗАДАЧА: Автономный цикл улучшени
 
 Когда ВСЕ критерии выполнены: RALPH_DONE'
 
+TEMPLATES[skill-health]='ЗАДАЧА: Автономное улучшение skill router accuracy через AutoResearch-цикл.
+
+КОНТЕКСТ:
+- Проект: PDF Vector & Graph Framework (d:/1С-Framework)
+- Скиллы: .claude/skills/ (66 скиллов с YAML frontmatter)
+- Eval: python scripts/eval-skill-router.py (F1 метрика)
+- Health report: python scripts/skill-health-analyzer.py --no-eval
+- Ground truth: data/skill-router-ground-truth.jsonl (73 записи)
+- Config: .claude/skills/skill-router-config.json (bundles + keywords)
+
+ПРОТОКОЛ КАЖДОЙ ИТЕРАЦИИ:
+1. ЗАМЕР: запусти python scripts/eval-skill-router.py, запиши F1(All).
+   Запусти python scripts/skill-health-analyzer.py --no-eval для health report.
+2. КОММИТ: git add -A && git commit -m "[AR] skill-health: pre-check iteration N"
+3. АНАЛИЗ: прочитай data/skill-health-report.md, найди самый проблемный скилл:
+   - HIGH WASTE → переписать description (сузить триггеры)
+   - ROUTER MISS → добавить keywords в skill-router-config.json
+   - NEVER USED → кандидат на архивирование в _archived/
+4. ИЗМЕНЕНИЕ: внеси ОДНО изменение (description ИЛИ config, не оба сразу).
+5. ПРОВЕРКА: запусти eval-skill-router.py снова, сравни F1 с замером.
+6. РЕШЕНИЕ:
+   - Если F1 вырос → keep, git commit -m "[AR] skill-health: fix <skill-name>"
+   - Если F1 упал → git revert HEAD --no-edit (discard)
+7. ЛОГ: добавь строку в data/autoresearch.jsonl.
+8. ПОВТОР: перейди к следующей итерации.
+
+ВАЖНЫЕ ПРАВИЛА:
+- Изменяй только YAML frontmatter description — не трогай содержимое скилла
+- Используй pushy стиль с триггерами и негативными маркерами
+- Одна итерация = один скилл = один коммит
+- НЕ трогай файлы вне .claude/skills/ и skill-router-config.json
+- Если 3 раза подряд revert — смени подход (попробуй другой скилл)
+
+КРИТЕРИИ ЗАВЕРШЕНИЯ:
+1. F1(All) >= 0.85 ИЛИ 5 итераций без улучшений
+2. Нет HIGH WASTE скиллов в health report
+3. Нет ROUTER MISS скиллов в health report
+4. data/autoresearch.jsonl содержит полный лог
+
+Когда ВСЕ критерии выполнены: RALPH_DONE'
+
 TEMPLATES[1c-study]='ЗАДАЧА: Автономное изучение конфигурации 1С через AutoResearch-цикл.
 
 КОНТЕКСТ:
@@ -234,6 +276,7 @@ show_help() {
     echo "  documentation   Add docstrings to public API"
     echo "  lint            Fix all linter warnings"
     echo "  quality         AutoResearch: autonomous code quality loop (ruff+mypy, measure-fix-revert)"
+    echo "  skill-health    AutoResearch: autonomous skill description optimization (F1 metric)"
     echo "  1c-study        AutoResearch: autonomous 1C configuration study (6-phase cycle)"
     echo ""
     echo "Options:"
@@ -315,6 +358,9 @@ while [ $ITERATION -lt $MAX_ITERATIONS ]; do
     TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
     echo -e "${BLUE}=== Iteration $ITERATION / $MAX_ITERATIONS [$TIMESTAMP] ===${NC}" | tee -a "$LOG_FILE"
+
+    # Enable Ralph activator hook
+    export RALPH_ENABLED=1
 
     # Run Claude Code
     claude -p "$PROMPT

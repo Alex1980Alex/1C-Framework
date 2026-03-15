@@ -6,6 +6,7 @@ description: >
 version: 2.1.0
 updated: 2026-03-12
 tags: [1c, analysis, bsl, configuration, methodology, semantic-search]
+ultrathink: true
 ---
 
 # Анализ задачи 1С — 5-фазная методология (v2.1)

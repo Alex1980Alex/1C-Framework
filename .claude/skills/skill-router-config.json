@@ -19,7 +19,9 @@
       "data-stores",
       "deploy",
       "framework-use",
-      "framework-ops"
+      "framework-ops",
+      "framework-troubleshoot",
+      "framework-cache"
     ],
     "claude-code": [
       "claude-code-dev",
@@ -63,17 +65,12 @@
     "langchain-multiagent": [
       "langgraph-core"
     ],
-    "1c-doc-research": [
-      "pdf-knowledge"
-    ],
+    "1c-doc-research": [],
     "tech-research": [],
     "architecture-research": [
       "task-evaluation"
     ],
-    "indexing-pipeline": [
-      "embedding-models",
-      "qdrant-operations"
-    ],
+    "indexing-pipeline": [],
     "search-pipeline-debug": [
       "pdf-search"
     ],
@@ -337,10 +334,7 @@
         "create-hook",
         "hooks-skills-mcp-triad"
       ],
-      "optional": [
-        "doc-to-skill",
-        "triad-factory"
-      ],
+      "optional": [],
       "weighted_keywords": {
         "создай hook": 4,
         "создай хук": 4,
@@ -698,10 +692,7 @@
       "skills": [
         "framework-config"
       ],
-      "optional": [
-        "framework-troubleshooting",
-        "framework-caching"
-      ],
+      "optional": [],
       "weighted_keywords": {
         ".env": 3,
         "env файл": 3,
@@ -725,6 +716,64 @@
         "приложение работает медленно",
         "как настроить кеширование ответов",
         "обнови до новой версии фреймворка"
+      ]
+    },
+    "framework-troubleshoot": {
+      "keywords": [
+        "ошибка фреймворка",
+        "не работает фреймворк",
+        "troubleshoot",
+        "framework error",
+        "не запускается сервер",
+        "crash",
+        "exception",
+        "traceback"
+      ],
+      "skills": [
+        "framework-troubleshooting"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "ошибка при запуске": 4,
+        "не работает сервер": 4,
+        "timeout ошибка": 4,
+        "500 error": 3,
+        "debug framework": 3
+      },
+      "utterances": [
+        "сервер падает с ошибкой при запуске",
+        "получаю timeout при запросе к API",
+        "framework throws exception on startup"
+      ]
+    },
+    "framework-cache": {
+      "keywords": [
+        "семантический кеш",
+        "semantic cache",
+        "кеширование запросов",
+        "cache framework",
+        "embedding cache",
+        "http cache",
+        "cache stats",
+        "очистить кеш"
+      ],
+      "skills": [
+        "framework-caching"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "настроить кеш": 4,
+        "кеширование": 4,
+        "cache hit": 3,
+        "cache miss": 3,
+        "очистить кеш": 4,
+        "семантический кеш": 3,
+        "кеш для": 3
+      },
+      "utterances": [
+        "настрой семантический кеш для запросов",
+        "как включить кеширование эмбеддингов",
+        "configure response caching"
       ]
     },
     "data-stores": {
@@ -877,7 +926,6 @@
         "langgraph-core"
       ],
       "optional": [
-        "langchain-integrations",
         "deep-agents"
       ],
       "utterances": [
