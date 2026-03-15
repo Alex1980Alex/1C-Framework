@@ -1,3 +1,8 @@
+---
+name: search-pipeline-debug
+description: "Search Pipeline Debug — отладка и выбор стратегии поиска. ИСПОЛЬЗУЙ когда поиск не находит результаты, низкое качество поиска, нужно сравнить BM25 vs vector, отладить reranking, выбрать стратегию. Триггеры: 'поиск не находит', 'низкое качество поиска', 'отладка search', 'score debug', 'BM25 vs vector', 'reranking', 'какую стратегию', 'search strategy', 'hybrid search'. НЕ для индексации (→ indexing-pipeline)."
+---
+
 # Search Pipeline Debug
 
 ## Когда использовать
