@@ -66,9 +66,7 @@
     "1c-doc-research": [
       "pdf-knowledge"
     ],
-    "tech-research": [
-      "embedding-models"
-    ],
+    "tech-research": [],
     "architecture-research": [
       "task-evaluation"
     ],
