@@ -505,7 +505,15 @@
       "weighted_keywords": {
         "граф знаний": 4,
         "knowledge graph": 4,
-        "entity extraction": 3
+        "entity extraction": 3,
+        "графовые операции": 5,
+        "graph operations": 5,
+        "операции с графом": 4,
+        "graph traversal": 4,
+        "entity relation": 4,
+        "связи между сущностями": 4,
+        "LightRAG": 5,
+        "построй граф": 4
       },
       "utterances": [
         "extract connections between concepts in documents",
