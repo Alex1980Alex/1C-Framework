@@ -553,14 +553,25 @@ triggers:
 ---
 ```
 
-### 8-фазный цикл (dual-agent)
+### 10-фазный цикл (три агента)
+
+> **ultrathink** встроен в Phase 0 и Phase 2 для максимального рассуждения
+> при анализе идеи и генерации гипотез (Skills 2.0: ultrathink в SKILL.md
+> включает extended thinking на 31999 токенов).
 
 ```
+Phase 0: ANALYZE (только первая итерация) — ultrathink
+  Claude анализирует идею пользователя:
+  - Какие инструменты нужны? (MCP, CLI, тесты)
+  - Как измерить прогресс? (метрика + verify command)
+  - Какой подход? (по файлу, по категории, по объекту)
+  - Создаёт: autoresearch.md + executor-prompt.md + reviewer-prompt.md + run.bat
+
 Phase 1: REVIEW
   Executor читает: autoresearch.md + git log -10 + autoresearch.jsonl (last 5)
   Понимает: что уже пробовали, что работало, что dead end
 
-Phase 2: IDEATE
+Phase 2: IDEATE — ultrathink
   Executor выбирает ОДНО изменение на основе:
   - Паттернов успешных изменений (из истории)
   - Dead ends (НЕ повторять)
@@ -588,12 +599,19 @@ Phase 6: DECIDE (Reviewer)
   FIX    — тесты упали, но идея хорошая → Executor получает 1 попытку
   SKIP   — метрика не изменилась, нет смысла держать (revert для чистоты)
 
-Phase 7: LOG
+Phase 7: COMPARE (Comparator — каждые N итераций)
+  Каждые 5 итераций (настраиваемо) запускается Comparator:
+  - Слепое A/B: baseline code (git stash) vs current code
+  - Оценка: не только метрика, но и качество кода, читаемость, сложность
+  - Если код деградировал при лучшей метрике → рекомендация "пересмотреть подход"
+  - Результат в autoresearch.md секция "## Comparator Reviews"
+
+Phase 8: LOG
   Append to autoresearch-results.tsv
   Append to autoresearch.jsonl
   Update autoresearch.md (History table + Dead Ends + Next Ideas)
 
-Phase 8: REPEAT
+Phase 9: REPEAT
   Проверить: target достигнут? → RALPH_DONE
   Проверить: max iterations? → stop
   Иначе → Phase 1
