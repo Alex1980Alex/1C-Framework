@@ -722,12 +722,16 @@
       "keywords": [
         "ошибка фреймворка",
         "не работает фреймворк",
-        "troubleshoot",
+        "troubleshoot framework",
         "framework error",
         "не запускается сервер",
-        "crash",
-        "exception",
-        "traceback"
+        "Qdrant error",
+        "BM25 не находит",
+        "ChromaDB corruption",
+        "ConnectionError Qdrant",
+        "vector store error",
+        "переиндексация",
+        "performance framework"
       ],
       "skills": [
         "framework-troubleshooting"
