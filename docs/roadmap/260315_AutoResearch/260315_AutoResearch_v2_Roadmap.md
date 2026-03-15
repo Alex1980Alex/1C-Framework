@@ -521,20 +521,35 @@ Top improvements:
 
 ### YAML Frontmatter
 
+> **Trigger Tuning** (из Skills 2.0): описание должно быть "настойчивым" (pushy) —
+> недотриггеринг чаще, чем перетриггеринг. Бюджет: ~2% контекстного окна.
+
 ```yaml
 ---
 name: autoresearch
-description: "Autonomous goal-directed iteration. Modify → Verify → Keep/Discard → Repeat."
+description: >
+  ИСПОЛЬЗУЙ ЭТОТ СКИЛЛ когда пользователь хочет что-то УЛУЧШИТЬ, ОПТИМИЗИРОВАТЬ,
+  УСКОРИТЬ, УМЕНЬШИТЬ ОШИБКИ, ПОВЫСИТЬ ПОКРЫТИЕ, или запустить АВТОНОМНЫЙ ЦИКЛ
+  улучшений любого кода или процесса. Скилл анализирует идею, подбирает инструменты,
+  создаёт уникальный рецепт (autoresearch.md + промпты + run.bat) и запускает
+  автономный цикл с тремя агентами (Executor + Reviewer + Comparator).
+  Домены: Python, BSL/1С, документация, тесты, производительность, безопасность.
+  Ключевые слова: autoresearch, автономный цикл, улучши, оптимизируй, уменьши ошибки,
+  повысь покрытие, ускорь, reduce errors, improve, optimize, benchmark, качество кода.
 commands:
-  - /autoresearch        # Unlimited loop
-  - /autoresearch:plan   # Interactive wizard
-  - /autoresearch:security  # STRIDE + OWASP audit
+  - /autoresearch           # Анализ идеи → создание рецепта → запуск
+  - /autoresearch:plan      # Интерактивный wizard (scope, metric, verify)
+  - /autoresearch:security  # STRIDE + OWASP аудит (read-only)
 triggers:
   - "autoresearch"
   - "autonomous loop"
   - "автономный цикл"
-  - "optimize metric"
-  - "улучши метрику"
+  - "optimize"
+  - "оптимизируй"
+  - "улучши"
+  - "уменьши ошибки"
+  - "повысь покрытие"
+  - "ускорь"
 ---
 ```
 
