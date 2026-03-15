@@ -1015,9 +1015,7 @@
       "skills": [
         "langgraph-core"
       ],
-      "optional": [
-        "deep-agents"
-      ],
+      "optional": [],
       "utterances": [
         "build a stateful workflow with nodes and edges",
         "stream tokens to the frontend in real time",
