@@ -146,6 +146,15 @@
         "MCP_ONEC_PASSWORD": "Alex80Alex"
       },
       "timeout": 60000
+    },
+    "1c-debug": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["D:\\1С-Framework\\tools\\bsl-debug-server\\mcp_debug_server.py"],
+      "cwd": "D:\\1С-Framework\\tools\\bsl-debug-server",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
     }
   }
 }
