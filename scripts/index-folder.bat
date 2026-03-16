@@ -151,26 +151,71 @@ if "%MODE%"=="docs" goto :DONE
 
 :BSL_INDEX
 :: ============================================================
-:: 2. Индексация для bsl-semantic-search (граф зависимостей)
+:: 2. Индексация для bsl-semantic-search (BSL эмбеддинги + Ollama)
 :: ============================================================
 echo ────────────────────────────────────────────────────────────
-echo [2/2] bsl-semantic-search индексация (граф зависимостей)
+echo [2/2] bsl-semantic-search индексация (BSL эмбеддинги)
 echo ────────────────────────────────────────────────────────────
 echo.
 
-set BSL_SCRIPT=%FRAMEWORK_ROOT%\src\bsl\semantic_search\scripts\bsl_indexer_async.py
-if exist "%BSL_SCRIPT%" (
-    python "%BSL_SCRIPT%" "%FOLDER_PATH%" --output "%FRAMEWORK_ROOT%\data\bsl-index"
-    if !ERRORLEVEL! EQU 0 (
-        echo [OK] bsl-semantic-search индексация завершена
-    ) else (
-        echo [ERROR] bsl-semantic-search индексация завершена с ошибкой ^(код: !ERRORLEVEL!^)
-        set "EXIT_CODE=1"
-    )
-) else (
-    echo [INFO] BSL async indexer не найден: %BSL_SCRIPT%
-    echo        Используйте MCP: mcp__bsl-semantic-search__bsl_search
+set BSL_SEARCH_ROOT=D:\1C-Enterprise_Framework\bsl-semantic-search
+set BSL_SCRIPT=%BSL_SEARCH_ROOT%\scripts\indexing\bsl_indexer_async.py
+set BSL_OUTPUT=%BSL_SEARCH_ROOT%\data\index
+
+if not exist "%BSL_SCRIPT%" (
+    echo [SKIP] BSL indexer не найден: %BSL_SCRIPT%
+    echo        bsl-semantic-search не установлен
+    echo.
+    goto :DONE
 )
+
+:: Проверка и запуск Ollama (требуется для BSL эмбеддингов)
+set "OLLAMA_EXE="
+where ollama >nul 2>&1 && set "OLLAMA_EXE=ollama"
+if "!OLLAMA_EXE!"=="" if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" set "OLLAMA_EXE=%LOCALAPPDATA%\Programs\Ollama\ollama.exe"
+if "!OLLAMA_EXE!"=="" if exist "C:\Program Files\Ollama\ollama.exe" set "OLLAMA_EXE=C:\Program Files\Ollama\ollama.exe"
+
+if "!OLLAMA_EXE!"=="" (
+    echo [ERROR] Ollama не установлен. BSL индексация невозможна.
+    echo         Установите: https://ollama.com/download
+    set "EXIT_CODE=1"
+    echo.
+    goto :DONE
+)
+
+echo [CHECK] Проверка Ollama...
+curl -s --connect-timeout 3 http://localhost:11434/api/tags >nul 2>&1
+if !ERRORLEVEL! NEQ 0 (
+    echo [START] Запуск Ollama...
+    start "" "!OLLAMA_EXE!" serve
+    echo [WAIT] Ожидание готовности Ollama...
+    set "OLLAMA_READY=0"
+    for /L %%W in (1,1,15) do (
+        if "!OLLAMA_READY!"=="0" (
+            ping -n 2 127.0.0.1 >nul 2>&1
+            curl -s --connect-timeout 2 http://localhost:11434/api/tags >nul 2>&1
+            if !ERRORLEVEL! EQU 0 set "OLLAMA_READY=1"
+        )
+    )
+    if "!OLLAMA_READY!"=="0" (
+        echo [ERROR] Ollama не запустился за 30 секунд. BSL индексация пропущена.
+        set "EXIT_CODE=1"
+        echo.
+        goto :DONE
+    )
+)
+echo [OK] Ollama доступен
+
+:: Запуск BSL indexer из его рабочей директории (для корректных импортов)
+pushd "%BSL_SEARCH_ROOT%"
+python "%BSL_SCRIPT%" "%FOLDER_PATH%" --output "%BSL_OUTPUT%"
+if !ERRORLEVEL! EQU 0 (
+    echo [OK] bsl-semantic-search индексация завершена
+) else (
+    echo [ERROR] bsl-semantic-search индексация завершена с ошибкой ^(код: !ERRORLEVEL!^)
+    set "EXIT_CODE=1"
+)
+popd
 echo.
 
 :DONE
