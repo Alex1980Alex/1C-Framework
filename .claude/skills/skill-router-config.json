@@ -651,21 +651,26 @@
       "skills": [
         "framework-cli"
       ],
-      "optional": [],
+      "optional": ["framework-api", "framework-quickstart", "framework-mcp-ui"],
       "weighted_keywords": {
         "CLI команд": 3,
         "cli команд": 3,
         "python -m src.cli": 5,
-        "REST API": 3,
-        "endpoint": 2,
-        "quickstart": 3,
+        "REST API": 4,
+        "endpoint": 3,
+        "API endpoint": 4,
+        "quickstart": 4,
         "установить фреймворк": 4,
         "install framework": 3,
         "как установить": 3,
-        "MCP server фреймворк": 3,
-        "Gradio": 3,
-        "Streamlit фреймворк": 2,
-        "CLI": 2
+        "MCP server фреймворк": 4,
+        "Gradio": 4,
+        "Streamlit фреймворк": 3,
+        "CLI": 2,
+        "FastAPI endpoint": 5,
+        "swagger": 3,
+        "установка с нуля": 5,
+        "MCP UI": 4
       },
       "utterances": [
         "how do I run this project",
