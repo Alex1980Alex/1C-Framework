@@ -1,6 +1,6 @@
 ---
 name: langchain-integrations
-description: "LangChain интеграции: vector stores, embeddings, document loaders, text splitters, retrievers, chat models, key-value stores, tools/toolkits, провайдеры. Триггеры: 'vector store langchain', 'Chroma', 'FAISS', 'Pinecone', 'Qdrant langchain', 'embeddings langchain', 'OpenAIEmbeddings', 'CacheBackedEmbeddings', 'document loader', 'WebBaseLoader', 'PyPDF', 'text splitter', 'RecursiveCharacterTextSplitter', 'retriever langchain', 'BM25Retriever', 'reranker', 'ChatOpenAI', 'ChatAnthropic', 'init_chat_model провайдер', 'langchain-openai', 'langchain-anthropic', 'langchain-google-genai', 'langchain-aws', 'langchain-ollama', 'InMemoryVectorStore', 'LocalFileStore', 'key-value store', 'toolkits langchain', 'Tavily', 'DuckDuckGo'. НЕ для create_agent/@tool/middleware — используй langchain-core. НЕ для LangGraph — используй langgraph-core."
+description: "LangChain v0.3 интеграции (import langchain-openai/langchain-anthropic). ТОЛЬКО при: Chroma/FAISS/Pinecone/Qdrant langchain, OpenAIEmbeddings, ChatOpenAI, ChatAnthropic, WebBaseLoader, RecursiveCharacterTextSplitter, BM25Retriever langchain. НЕ для create_agent/middleware (→ langchain-core), НЕ для LangGraph (→ langgraph-core), НЕ для 1С, НЕ для Claude Code."
 ---
 
 # LangChain Integrations

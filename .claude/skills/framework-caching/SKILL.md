@@ -1,6 +1,6 @@
 ---
 name: framework-caching
-description: "Framework Caching — 3 уровня кеширования (семантический, embedding, HTTP). ИСПОЛЬЗУЙ когда настраиваешь кеш, очищаешь кеш, ускоряешь повторные запросы, проверяешь cache stats. Триггеры: 'кеш', 'кэш', 'cache', 'TTL', 'семантический кеш', 'semantic cache', 'очистить кеш', 'cache stats', 'медленный поиск', 'ускорить'. НЕ для оптимизации поиска (→ search-pipeline-debug)."
+description: "Кеширование PDF Vector Framework (семантический/embedding/HTTP cache). ТОЛЬКО при: семантический кеш pdf-framework, embedding cache pdf-framework, cache stats pdf-framework, очистить кеш pdf-framework. НЕ для оптимизации поиска (→ search-pipeline-debug), НЕ для 1С, НЕ для Claude Code, НЕ для LangChain."
 ---
 
 # Framework Caching

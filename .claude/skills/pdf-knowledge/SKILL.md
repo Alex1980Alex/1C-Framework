@@ -1,6 +1,6 @@
 ---
 name: pdf-knowledge
-description: Skill for working with PDF Vector & Graph Framework
+description: "PDF Vector & Graph Framework: pdf_framework, QuickRAG, граф знаний PDF. ТОЛЬКО при import pdf_framework, pdf-vector-framework, pdf search pipeline. НЕ для 1С, НЕ для Claude Code, НЕ для LangChain."
 version: 1.0.0
 triggers:
   - pdf search

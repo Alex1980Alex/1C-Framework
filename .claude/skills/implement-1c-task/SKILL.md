@@ -1,9 +1,6 @@
 ---
 name: implement-1c-task
-description: >
-  Реализация задачи 1С:Предприятие по готовому ANALYSIS-REPORT.
-  BSL/XML изменения через EDT-MCP, верификация на живых данных через 1c-mcp-toolkit,
-  статический анализ через bsl-debug-server. Git commit.
+description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
 version: 2.0.0
 updated: 2026-03-13
 tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger]

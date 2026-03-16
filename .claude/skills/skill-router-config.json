@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "cooldown_minutes": 3,
   "min_score": 2,
   "max_bundles": 2,
@@ -1211,7 +1211,22 @@
         "плагин": 2,
         "subagent": 3,
         "подагент": 3,
-        "headless": 3
+        "headless": 3,
+        "claude -p": 5,
+        "programmatic": 4,
+        "программный запуск": 4,
+        "agent sdk": 4,
+        "structured output claude": 4,
+        "ralph wiggum": 5,
+        "ralph": 4,
+        "автономный скрипт claude": 4,
+        "CI pipeline claude": 4,
+        "stream-json claude": 4,
+        "print mode claude": 4,
+        "скрипт с claude": 3,
+        "автоматизация через claude": 3,
+        "json schema claude": 3,
+        "dangerously-skip-permissions": 5
       },
       "utterances": [
         "run the assistant from a script without UI",
@@ -1537,7 +1552,12 @@
         "найди информацию и сделай",
         "научись делать",
         "создай скилл из опыта",
-        "fetch and learn"
+        "fetch and learn",
+        "нет навыка для этого",
+        "не знаешь как",
+        "learn and create skill",
+        "самообучение",
+        "нет готового решения"
       ],
       "skills": [
         "learning-loop"
@@ -1547,8 +1567,16 @@
         "triad-factory"
       ],
       "weighted_keywords": {
-        "learning loop": 4,
-        "цикл обучения": 4
+        "learning loop": 5,
+        "цикл обучения": 5,
+        "learning-loop": 5,
+        "нет скилла": 4,
+        "создай скилл": 4,
+        "create skill from": 4,
+        "научись и запомни": 4,
+        "self-learn": 4,
+        "fetch learn create": 4,
+        "новый навык из опыта": 4
       },
       "utterances": [
         "I need something that does not exist yet",
@@ -1556,10 +1584,14 @@
         "figure it out and save the knowledge",
         "teach yourself this new capability",
         "find a solution and make it reusable",
+        "learn how to do this from scratch",
+        "you dont know how to do this yet so learn it",
         "мне нужно то чего ещё не существует",
         "изучи как это сделать и запомни на будущее",
         "разберись в теме и сохрани знания",
-        "научись этой новой возможности самостоятельно"
+        "научись этой новой возможности самостоятельно",
+        "ты этого не умеешь — найди и научись",
+        "нет готового скилла — создай новый"
       ]
     },
     "autoresearch": {
@@ -1577,7 +1609,10 @@
         "метрика F1",
         "coverage improve",
         "skill health",
-        "skill-health"
+        "skill-health",
+        "autoresearch.ps1",
+        "eval-skill-router",
+        "skill-health-analyzer"
       ],
       "skills": [
         "autoresearch"
@@ -1585,10 +1620,17 @@
       "optional": [],
       "weighted_keywords": {
         "autoresearch": 5,
+        "autoresearch.ps1": 5,
         "автономный цикл": 4,
         "улучшить метрику": 4,
         "keep/revert": 4,
-        "measure and improve": 3
+        "measure and improve": 3,
+        "eval-skill-router": 5,
+        "skill-health-analyzer": 5,
+        "skill-health": 4,
+        "итеративный цикл": 3,
+        "METRIC: число": 4,
+        "VERDICT: KEEP": 4
       },
       "utterances": [
         "run autonomous improvement loop",
@@ -1599,7 +1641,10 @@
         "запусти автономный цикл улучшений",
         "итеративно улучши метрику",
         "измерь baseline и итерируй",
-        "авторесёрч для улучшения качества"
+        "авторесёрч для улучшения качества",
+        "запусти autoresearch.ps1",
+        "проанализируй skill health",
+        "run autoresearch for improvements"
       ]
     },
     "memory": {
@@ -1758,15 +1803,42 @@
         "права доступа роли",
         "создать документ в 1С",
         "провести документ",
-        "записать справочник"
+        "записать справочник",
+        "mcp 1с",
+        "mcp 1c",
+        "что в базе 1С",
+        "покажи данные 1С"
       ],
+      "weighted_keywords": {
+        "execute_query": 5,
+        "get_metadata": 5,
+        "execute_code 1с": 5,
+        "1c-mcp-toolkit": 5,
+        "get_event_log": 5,
+        "get_object_by_link": 5,
+        "find_references_to_object": 5,
+        "get_access_rights": 5,
+        "mcp__1c-toolkit": 5,
+        "запрос к базе": 4,
+        "данные из базы 1С": 4,
+        "метаданные 1С": 4,
+        "журнал регистрации 1С": 4,
+        "навигационная ссылка 1С": 4,
+        "права роли 1С": 4
+      },
       "utterances": [
         "выполни запрос к базе 1С",
         "покажи метаданные конфигурации",
         "прочитай данные из справочника",
         "получи журнал регистрации",
         "выполни код в 1С",
-        "найди ссылки на объект"
+        "найди ссылки на объект",
+        "какие реквизиты у справочника в базе",
+        "покажи структуру документа из базы",
+        "проверь права доступа роли",
+        "получи навигационную ссылку на объект",
+        "execute a query against the 1C database",
+        "get metadata from 1C configuration"
       ],
       "skills": [
         "1c-mcp-toolkit"

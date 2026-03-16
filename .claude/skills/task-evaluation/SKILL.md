@@ -1,10 +1,6 @@
 ---
 name: task-evaluation
-description: "Используй этот скилл когда нужно определить тип задачи: research
-  (найти существующее), brainstorm (придумать новое) или hybrid (найти + придумать).
-  Триггеры: 'research или brainstorm', 'тип задачи', 'оценить задачу',
-  'придумай', 'предложи подход', 'как улучшить', 'какой вариант лучше',
-  'давай обсудим варианты', 'спроектируй', 'suggest', 'design', 'propose'."
+description: "Классификация задачи: research vs brainstorm vs hybrid. ТОЛЬКО при явном запросе: 'research или brainstorm?', 'какой тип задачи', 'оценить подход research/brainstorm'. НЕ для обычных задач разработки, НЕ для 1С анализа (→ analyze-1c-task-v2), НЕ для Claude Code."
 ---
 
 # Task Evaluation — классификация: Research vs Brainstorm vs Hybrid

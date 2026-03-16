@@ -1,6 +1,6 @@
 ---
 name: claude-code-settings
-description: "Параметры и конфигурация Claude Code: settings.json (scopes: managed/user/project/local), переменные окружения, CLAUDE.md иерархия памяти, модели, стили вывода. Триггеры: 'settings.json', 'параметры claude code', 'claude code config', 'настройки claude', 'managed settings', 'CLAUDE.md', 'память claude', 'memory management', 'model config', 'output style', 'стиль вывода', 'конфигурация модели', 'scopes', 'области конфигурации', 'environment variables claude'. НЕ для .env фреймворка — используй framework-config."
+description: "settings.json и CLAUDE.md конфигурация Claude Code. ТОЛЬКО при: settings.json scopes managed/user/project/local, CLAUDE.md memory hierarchy, model config Claude Code, output style Claude Code. НЕ для .env pdf-framework (→ framework-config), НЕ для VS Code extension (→ claude-code-vscode), НЕ для 1С, НЕ для LangChain."
 ---
 
 # Параметры Claude Code

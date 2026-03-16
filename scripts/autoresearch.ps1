@@ -113,7 +113,7 @@ AutoResearch итерация $i из $MaxIterations. Домен: $Domain.
 2. Внеси ОДНО изменение.
 3. git add и git commit -m "[AR] $Domain iter ${i}: описание"
 4. Запусти verify: $($recipe.Verify)
-5. Выведи результат: METRIC: число
+5. Выведи результат СТРОГО в формате: METRIC: число (например METRIC: 0.7189). Без таблиц, без F1:, только METRIC: число.
 6. Сравни с предыдущим значением и выведи VERDICT: KEEP или VERDICT: REVERT
 7. Если REVERT — выполни git revert HEAD --no-edit
 8. Если задача полностью завершена по ВСЕМ критериям: AUTORESEARCH_DONE
@@ -133,7 +133,9 @@ AutoResearch итерация $i из $MaxIterations. Домен: $Domain.
 
     # Парсинг метрики и вердикта
     $metric = $null
+    # Парсинг метрики: METRIC: число, или F1: число, или F1 = число
     if ($output -match "METRIC:\s*([\d.]+)") { $metric = [double]$Matches[1] }
+    elseif ($output -match "F1[\s:=]+([\d.]+)") { $metric = [double]$Matches[1] }
     $delta = if ($bestMetric -ne $null -and $metric -ne $null) { $metric - $bestMetric } else { 0 }
 
     $action = "unknown"

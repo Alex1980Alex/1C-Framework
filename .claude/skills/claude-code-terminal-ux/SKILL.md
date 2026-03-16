@@ -1,6 +1,6 @@
 ---
 name: claude-code-terminal-ux
-description: "UX-кастомизация Claude Code: интеграция с Chrome, строка состояния (statusline), настройка терминала, Vim mode, уведомления, Shift+Enter. Триггеры: 'chrome integration', 'интеграция с chrome', '--chrome', '/chrome', 'browser automation', 'автоматизация браузера', 'statusline', 'строка состояния', '/statusline', 'status line', 'терминал claude', 'terminal setup', '/terminal-setup', 'Shift+Enter', 'vim mode claude', '/vim', 'уведомления claude', 'notifications', 'iTerm2', 'Ghostty', 'Kitty', 'WezTerm', 'Alacritty', 'GIF recording', 'console logs chrome', 'DOM inspection'. НЕ для CLI-команд и флагов — используй claude-code-cli-interactive. НЕ для VS Code расширения — используй claude-code-vscode."
+description: "UX-кастомизация терминала Claude Code (chrome, statusline, Shift+Enter). ТОЛЬКО при: --chrome Claude, /statusline, /vim Claude, iTerm2/Ghostty/Kitty/WezTerm/Alacritty Claude, GIF recording Claude. НЕ для CLI флагов (→ claude-code-cli-interactive), НЕ для VS Code (→ claude-code-vscode), НЕ для 1С, НЕ для LangChain."
 ---
 
 # UX-кастомизация Claude Code

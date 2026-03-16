@@ -1,6 +1,6 @@
 ---
 name: deep-agents
-description: "Deep Agents (LangChain): CLI-инструмент для автономных агентов, встроенные tools, backends (Filesystem, Store, Composite), middleware, субагенты, долговременная память, навыки, HITL, sandbox execution. Триггеры: 'deep agents', 'deepagents', 'deepagents-cli', 'autonomous agent', 'автономный агент', 'deep agent tools', 'FilesystemBackend', 'StoreBackend', 'CompositeBackend', 'StateBackend', 'deep agent middleware', 'TodoListMiddleware', 'SubAgentMiddleware', 'FilesystemMiddleware', 'deep agent skills', 'deep agent memory', 'agent CLI', 'write_todos', 'task tool deep'. НЕ для LangChain create_agent — используй langchain-core. НЕ для LangGraph — используй langgraph-core."
+description: "Deep Agents LangChain CLI (import deepagents, deepagents-cli). ТОЛЬКО при: deepagents, FilesystemBackend, StoreBackend, CompositeBackend, TodoListMiddleware, SubAgentMiddleware, deep agent skills/memory. НЕ для LangChain create_agent (→ langchain-core), НЕ для LangGraph (→ langgraph-core), НЕ для Claude Code subagents, НЕ для 1С."
 ---
 
 # Deep Agents

@@ -1,6 +1,6 @@
 ---
 name: framework-config
-description: "Конфигурация PDF Framework через .env. Триггеры: 'настройка', 'конфигурация', '.env', 'переменная окружения', 'config', 'environment', 'профиль', 'configure', 'settings'. НЕ для кода конфигурации — для этого используй operational skills."
+description: "Переменные окружения PDF Vector Framework (.env pdf-framework). ТОЛЬКО при: ANTHROPIC__API_KEY, EMBEDDING__MODEL, QDRANT__URL, .env pdf-framework, профиль конфигурации pdf-framework. НЕ для Claude Code settings (→ claude-code-settings), НЕ для 1С, НЕ для LangChain."
 ---
 
 # Framework Configuration — все .env параметры
