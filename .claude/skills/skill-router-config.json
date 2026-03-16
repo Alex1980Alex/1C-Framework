@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "cooldown_minutes": 3,
   "min_score": 2,
   "max_bundles": 2,
