@@ -548,10 +548,10 @@ Claude Code
 | Qdrant            | Фаза 3.5 | Уже работает (localhost:6333)                        |
                                                                                                                                             
   
-### Фаза 6: Runtime-отладка 1С через bsl-debug-server ⏳ TODO
+### Фаза 6: Runtime-отладка 1С через прямой RDBG протокол ⏳ IN PROGRESS
 > Claude программно ставит breakpoints, читает переменные и управляет выполнением BSL в реальной 1С
 
-**Инструменты:** [1c-syntax/bsl-debug-server](https://github.com/1c-syntax/bsl-debug-server) (Java) + vsc-bsl-dap (VS Code) + MCP-DAP адаптер (создать)
+**Инструменты:** Прямой HTTP/XML доступ к RDBG debug agent 1С (порт 1550) + Python MCP сервер (aiohttp)
 
 **Зачем:** Фазы 1–4 дают доступ к данным, коду и тестам, но не к **runtime-состоянию**. Отладка позволяет:
 - Остановить 1С на конкретной строке и прочитать значения переменных
@@ -559,26 +559,26 @@ Claude Code
 - Шагнуть по коду (step over/in/out)
 - Понять **почему** код работает именно так, а не просто **что** он делает
 
-**Архитектура:**
+**Архитектура (обновлённая — прямой RDBG без Java):**
 
 ```
-┌──────────────┐                ┌──────────────────┐                ┌─────────────────┐
-│   VS Code    │  DAP Protocol  │ bsl-debug-server │   TCP :1550    │ 1С:Предприятие  │
-│ + vsc-bsl-dap│ ◄────────────► │     (Java)       │ ◄────────────► │  (debug agent)  │
-└──────────────┘   JSON-RPC     └──────────────────┘                └─────────────────┘
-       │                               ▲
-       │ Breakpoints, Variables,       │
-       │ Step Over, Call Stack         │ DAP Protocol
-       │                               │
-┌──────────────┐                ┌──────────────────┐
-│  Claude Code │  MCP Protocol  │  MCP-DAP адаптер │
-│  (AI-агент)  │ ◄────────────► │   (создать)      │
-└──────────────┘                └──────────────────┘
+┌──────────────┐                                    ┌─────────────────┐
+│   VS Code    │  DAP Protocol (через Java/C#)      │                 │
+│ + vsc-bsl-dap│ ◄──────────────────────────────────►│ 1С:Предприятие  │
+└──────────────┘                                    │  (debug agent)  │
+                                                    │  HTTP :1550     │
+┌──────────────┐   MCP    ┌──────────────────┐      │  /e1crdbg/rdbg  │
+│  Claude Code │ ◄───────►│ MCP RDBG Server  │ ◄───►│                 │
+│  (AI-агент)  │          │ (Python/aiohttp) │ HTTP │                 │
+└──────────────┘          └──────────────────┘      └─────────────────┘
 ```
+
+**Ключевое решение:** Вместо цепочки MCP→DAP→Java→HTTP используем **прямой HTTP/XML** к debug agent 1С. Это убирает зависимость от Java и bsl-debug-server.
 
 **Два клиента — один отладчик:**
-- **VS Code** — визуально: видишь код, красные точки, жёлтую строку останова, панель переменных
-- **Claude** — программно: те же команды через MCP, без GUI
+- **VS Code** — визуально: через DAP-адаптер (bsl-debug-server или onec-debug-adapter)
+- **Claude** — программно: прямой RDBG протокол через MCP, без промежуточных слоёв
+- ⚠️ Только ОДИН клиент одновременно (ограничение 1С: один debug UI на инфобазу)
 
 **Workflow (как это выглядит для пользователя):**
 
@@ -628,17 +628,77 @@ Claude Code
 | 6.2 | Скачать bsl-debug-server JAR                           | ✓      | Извлечён из vsc-bsl-dap-1.1.0.vsix     |
 | 6.3 | Установить vsc-bsl-dap в VS Code                      | ✓      | vsc-bsl-dap v1.1.0 installed            |
 | 6.4 | Создать launch.json + start-1c-debug.bat              | ✓      | port 1550, attach mode                  |
-| 6.5 | Запустить 1С с /Debug, подключить VS Code              | ⏳      | Требуется ручной запуск                 |
-| 6.6 | Тест: breakpoint в VS Code → останов → переменные     | ⏳      | После 6.5                               |
-| 6.7 | Создать MCP-DAP адаптер (MCP tools → DAP commands)    | ⏳      | После 6.6                               |
-| 6.8 | Тест: Claude ставит breakpoint, читает переменные     | ⏳      | После 6.7                               |
+| 6.5 | Запустить 1С с /Debug, подключить VS Code              | ✓      | 1С запускается с debug agent на :1550   |
+| 6.6 | Тест: breakpoint → останов → step(Continue)            | ✓      | test_rdbg11: BP hit + Continue SUCCESS  |
+| 6.7 | Создать MCP-DAP адаптер (MCP tools → DAP commands)    | ⏳      | Прямой RDBG протокол (без DAP/Java)     |
+| 6.8 | Тест: Claude ставит breakpoint, читает переменные     | ⏳      | Breakpoint + step работает, eval нет    |
+
+**Промежуточные результаты (2026-03-16):**
+
+Реализован прямой доступ к RDBG протоколу 1С (HTTP/XML на порту 1550) без Java bsl-debug-server.
+Тесты: `tools/bsl-debug-server/test_rdbg11..19*.py`
+
+**Что работает:**
+- ✅ `attachDebugUI` — регистрация отладочной сессии
+- ✅ `initSettings` — настройка автоподключения (Server + ManagedClient)
+- ✅ `setBreakpoints` — установка точки останова (type=ConfigModule, objectID, propertyID, line)
+- ✅ `pingDebugUIParams` — long-poll (~5s), обнаружение `callStackFormed`
+- ✅ `attachDetachDbgTargets` — подключение к остановленному процессу
+- ✅ `step(Continue)` — продолжение выполнения после останова (test 11: HTTP 200, 1912b)
+- ✅ Cleanup stale sessions: `getDebugID` → `detachDebugUI`
+
+**Что НЕ работает:**
+- ❌ `evalLocalVariables` — всегда возвращает 462b self-closing XML (нет данных)
+  - Причина: Java bsl-debug-server `ServerContext.scopes()` = `new Scope[0]` (заглушка)
+  - Добавление `presOptions` не помогает
+  - Асинхронные результаты через ping не приходят
+- ❌ `evalExpr` — не тестировалось успешно (сессия умирает до eval)
+
+**Обнаруженные ограничения RDBG протокола:**
+1. **Один TCP на debug UI** — сервер убивает ВСЕ соединения при обнаружении параллельных запросов
+2. **ConnectionResetError после eval** — сервер закрывает TCP после `evalLocalVariables`
+3. **`requests` (urllib3) не справляется** — ConnectionResetError → 400 "UI+ не зарегистрирована"
+4. **`aiohttp` работает** — прозрачно пересоздаёт соединение, step(Continue) успешен
+5. **`force_close=True` ломает** — сервер требует persistent TCP (не новое соединение каждый раз)
+
+**Исследование GitHub — существующие решения (2026-03-16):**
+
+| Проект | Язык | Статус eval/variables | Ссылка |
+|--------|------|----------------------|--------|
+| yukon39/bsl-debug-server | Java | ❌ `scopes()` = `new Scope[0]` (заглушка) | [GitHub](https://github.com/yukon39/bsl-debug-server) |
+| akpaevj/onec-debug-adapter | C# | ❓ Нужно проверить исходники | [GitHub](https://github.com/akpaevj/onec-debug-adapter) |
+| 1c-syntax/Coverage41C | Java | ❌ Только покрытие кода | [GitHub](https://github.com/1c-syntax/Coverage41C) |
+| EDT `RuntimeDebugHttpClient` | Java | ✅ Полная реализация (проприетарный) | [API docs](https://edt.1c.ru/dev/edt/2024.2/apidocs/) |
+| **Python-реализация RDBG** | **Python** | **⏳ Наша — первая в мире** | `tools/bsl-debug-server/` |
+
+**Важные факты из исследования:**
+- EDT и Конфигуратор **показывают переменные** = RDBG протокол это поддерживает
+- Java bsl-debug-server (yukon39) — eval **не реализован** (заглушка)
+- C# onec-debug-adapter (akpaevj) — **альтернативная реализация**, возможно с eval
+- EDT JAR `com._1c.g5.v8.dt.debug.core` — **полная рабочая реализация**, можно декомпилировать
+- Python-реализаций RDBG протокола **не существует** — мы первые
+
+**Оценка реализуемости:**
+
+| Функция | Уверенность | Обоснование |
+|---------|-------------|-------------|
+| Breakpoint + step + call stack | 90% | Уже работает (test 11) |
+| MCP сервер на aiohttp | 90% | aiohttp доказал стабильность |
+| evalLocalVariables | 60% | Нужен правильный формат XML (изучить C#/EDT) |
+| evalExpr (вычисление выражений) | 60% | Async pattern: eval → ping → результат |
+| Полный runtime debugging | 75% | Даже без eval — breakpoint+step+callstack полезны |
+
+**Следующие шаги:**
+1. Изучить исходники [akpaevj/onec-debug-adapter](https://github.com/akpaevj/onec-debug-adapter) (C#) — возможно рабочий eval
+2. Декомпилировать EDT JAR (`com._1c.g5.v8.dt.debug.core`) — точный формат eval запросов
+3. Попробовать `Connection: close` в заголовках (test 19 — не протестирован)
+4. Собрать MCP сервер на aiohttp с breakpoint + step (уже работающий функционал)
+5. Добавить eval после изучения правильного формата
 
 **Требования:**
-- Java Runtime (JRE 11+)
-- BSL-файлы модулей (выгрузка из EDT или Конфигуратора в `src/bsl/`)
-- 1С запущена с флагом отладки
+- Python 3.11+ с aiohttp
+- 1С запущена с флагом отладки (`/Debug -http`)
 - Порт 1550 свободен (TCP, debug agent)
-- Порт 4711 свободен (DAP, bsl-debug-server)
 
 **Уже есть (не путать):**
 - `bsl-debugger` MCP (Node.js) — отладка **OneScript** (не 1С:Предприятие)
