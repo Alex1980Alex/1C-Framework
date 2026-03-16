@@ -1,6 +1,6 @@
 ---
 name: framework-quickstart
-description: "Framework Quickstart — установка и первый запуск PDF Framework с нуля. ИСПОЛЬЗУЙ когда пользователь устанавливает фреймворк, настраивает окружение, запускает впервые, спрашивает системные требования. Триггеры: 'установка', 'install', 'начать', 'start', 'первый запуск', 'quickstart', 'getting started', 'системные требования', 'как запустить', 'развернуть с нуля'. НЕ для production deployment (→ deployment)."
+description: "Установка PDF Vector Framework с нуля (pip install pdf-framework, .env). ТОЛЬКО при: установить pdf-framework, quickstart pdf-framework, системные требования pdf-framework. НЕ для production deploy (→ deployment), НЕ для Claude Code, НЕ для 1С, НЕ для LangChain."
 ---
 
 # Framework Quickstart

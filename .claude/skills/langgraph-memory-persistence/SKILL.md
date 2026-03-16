@@ -1,6 +1,6 @@
 ---
 name: langgraph-memory-persistence
-description: "LangGraph память и persistence: checkpointers (InMemory, Postgres, SQLite, Redis, MongoDB, CosmosDB), long-term memory (Store), semantic search, threads, state snapshots, message trimming, summarization, encryption. Триггеры: 'checkpointer', 'InMemorySaver', 'PostgresSaver', 'SqliteSaver', 'langgraph memory', 'long-term memory', 'BaseStore', 'InMemoryStore', 'PostgresStore', 'RedisStore', 'MongoDBStore', 'store.put', 'store.search', 'store.get', 'thread_id', 'get_state', 'get_state_history', 'update_state', 'StateSnapshot', 'trim_messages', 'RemoveMessage', 'REMOVE_ALL_MESSAGES', 'message summarization', 'EncryptedSerializer', 'semantic search memory', 'cross-thread memory', 'кратковременная память', 'долговременная память'. НЕ для StateGraph/edges — используй langgraph-core. НЕ для стриминга — используй langchain-streaming."
+description: "LangGraph persistence и memory (checkpointers, Store). ТОЛЬКО при: InMemorySaver/PostgresSaver/SqliteSaver, BaseStore/InMemoryStore/PostgresStore, store.put/store.search, thread_id, get_state/update_state, StateSnapshot, trim_messages, RemoveMessage, EncryptedSerializer. НЕ для StateGraph/edges (→ langgraph-core), НЕ для стриминга (→ langchain-streaming), НЕ для 1С, НЕ для Claude Code memory."
 ---
 
 # LangGraph Memory & Persistence

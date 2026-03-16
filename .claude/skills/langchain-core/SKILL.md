@@ -1,6 +1,6 @@
 ---
 name: langchain-core
-description: "LangChain ядро: create_agent, инструменты (@tool), модели (init_chat_model), сообщения, middleware, structured output, guardrails, runtime, human-in-the-loop. Триггеры: 'langchain agent', 'create_agent', 'langchain tool', '@tool decorator', 'init_chat_model', 'langchain model', 'langchain messages', 'SystemMessage', 'HumanMessage', 'AIMessage', 'ToolMessage', 'middleware langchain', 'before_model', 'after_model', 'wrap_model_call', 'wrap_tool_call', 'structured output langchain', 'ProviderStrategy', 'ToolStrategy', 'ToolRuntime', 'PIIMiddleware', 'guardrails', 'human in the loop', 'HumanInTheLoopMiddleware', 'langchain runtime', 'context_schema'. НЕ для LangGraph графов — используй langgraph-core. НЕ для интеграций (vector stores, loaders) — используй langchain-integrations. НЕ для стриминга — используй langchain-streaming."
+description: "LangChain v0.3 ядро (import langchain). ТОЛЬКО при: create_agent, @tool decorator, init_chat_model, SystemMessage/HumanMessage/AIMessage, middleware before_model/after_model, structured output langchain, guardrails, HumanInTheLoopMiddleware. НЕ для LangGraph StateGraph (→ langgraph-core), НЕ для vector stores/loaders (→ langchain-integrations), НЕ для стриминга (→ langchain-streaming), НЕ для 1С, НЕ для Claude Code."
 ---
 
 # LangChain Core

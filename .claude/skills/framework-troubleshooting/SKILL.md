@@ -1,6 +1,6 @@
 ---
 name: framework-troubleshooting
-description: "Устранение ошибок PDF Framework, оптимизация производительности, миграция. Триггеры: 'ошибка', 'не работает', 'error', 'проблема', 'troubleshoot', 'debug', 'медленно', 'slow', 'миграция', 'migration', 'performance', 'timeout'. НЕ для внутренней отладки кода — используй operational skills."
+description: "Устранение ошибок PDF Vector Framework (Qdrant, BM25, reranker, ChromaDB). ТОЛЬКО при: ConnectionError Qdrant, BM25 not found, ChromaDB corruption, vector store error, pdf-framework не запускается. НЕ для 1С ошибок, НЕ для Claude Code, НЕ для LangChain, НЕ для общих Python ошибок."
 ---
 
 # Framework Troubleshooting

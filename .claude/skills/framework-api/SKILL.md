@@ -1,6 +1,6 @@
 ---
 name: framework-api
-description: "REST API endpoints PDF Framework. Триггеры: 'framework REST API', '/search/ endpoint', '/documents/ endpoint', 'PDF Framework API', 'swagger pdf framework', 'OpenAI compatible RAG', 'FastAPI pdf', 'uvicorn pdf', 'POST /search', 'GET /documents', 'API сервер фреймворка'. НЕ для CLI — используй framework-cli, НЕ для общих HTTP вопросов."
+description: "REST API PDF Vector Framework (FastAPI/uvicorn). ТОЛЬКО при: POST /search/ pdf-framework, GET /documents/ pdf-framework, swagger pdf-framework, OpenAI compatible RAG endpoint. НЕ для CLI (→ framework-cli), НЕ для Gradio/MCP (→ framework-mcp-ui), НЕ для HTTP-сервисов 1С, НЕ для LangChain."
 ---
 
 # Framework REST API — все endpoints

@@ -1,6 +1,6 @@
 ---
 name: framework-cli
-description: "CLI-команды PDF Framework. Триггеры: 'CLI', 'команда', 'command', 'pdf-framework', 'терминал', 'консоль', 'как запустить', 'python -m src.cli'. НЕ для REST API — используй framework-api."
+description: "CLI-команды PDF Vector Framework (python -m src.cli). ТОЛЬКО при: src.cli, pdf-framework CLI, команды поиска/индексации PDF. НЕ для Claude Code CLI (→ claude-code-cli-interactive), НЕ для REST API (→ framework-api), НЕ для 1С, НЕ для LangChain."
 ---
 
 # Framework CLI — все команды

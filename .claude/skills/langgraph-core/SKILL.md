@@ -1,6 +1,6 @@
 ---
 name: langgraph-core
-description: "LangGraph ядро: StateGraph, Functional API, nodes, edges, state, Command, Send, подграфы, прерывания (interrupt), durable execution, time travel, Pregel runtime. Триггеры: 'langgraph', 'StateGraph', 'add_node', 'add_edge', 'conditional_edges', 'entrypoint', '@task', 'Command', 'Send', 'interrupt', 'subgraph', 'time travel', 'MessagesState', 'Pregel', 'recursion_limit'. НЕ для LangChain агентов/tools — используй langchain-core. НЕ для стриминга — используй langchain-streaming. НЕ для памяти/checkpointers/Store — используй langgraph-memory-persistence. НЕ для LangSmith/deploy/тестирования — используй langgraph-production."
+description: "LangGraph v0.2 ядро (import langgraph). ТОЛЬКО при: StateGraph, add_node/add_edge, conditional_edges, @entrypoint/@task, Command/Send, interrupt, subgraph, MessagesState, Pregel, recursion_limit. НЕ для LangChain agents (→ langchain-core), НЕ для стриминга (→ langchain-streaming), НЕ для checkpointers/Store (→ langgraph-memory-persistence), НЕ для LangSmith/deploy (→ langgraph-production), НЕ для 1С."
 ---
 
 # LangGraph Core

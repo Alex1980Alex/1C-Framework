@@ -1,6 +1,6 @@
 ---
 name: langchain-streaming
-description: "Стриминг LangChain и LangGraph: 5 режимов потоковой передачи, SSE, токен-стриминг, StreamWriter, фильтрация, подграфы, React useStream, фронтенд-интеграция. Триггеры: 'streaming langchain', 'stream_mode', 'stream langgraph', 'token streaming', 'SSE langchain', 'StreamWriter', 'get_stream_writer', 'useStream', 'stream updates', 'stream messages', 'stream custom', 'stream values', 'stream debug', 'стриминг', 'потоковая передача', 'real-time streaming', 'frontend streaming', 'React streaming', 'agent streaming', 'stream subgraph', 'disable_streaming'. НЕ для create_agent/middleware — используй langchain-core. НЕ для StateGraph/edges — используй langgraph-core."
+description: "Стриминг LangChain/LangGraph (stream_mode, astream_events). ТОЛЬКО при: stream_mode values/messages/updates/custom/debug, SSE langchain, StreamWriter, get_stream_writer, useStream React, token streaming langgraph, disable_streaming. НЕ для create_agent (→ langchain-core), НЕ для StateGraph (→ langgraph-core), НЕ для 1С, НЕ для Claude Code."
 ---
 
 # Streaming (LangChain + LangGraph)

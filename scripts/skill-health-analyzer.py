@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Analyze skill router quality metrics and generate health reports.
 
-Reads skill-quality-metrics.jsonl (passive monitor data) and eval results,
+Reads skill-accuracy.jsonl (router recommend/activate events),
 identifies problematic skills (noisy, missed, unused), generates report.
 
 Usage:
@@ -39,8 +39,8 @@ class SkillStats:
         return (self.recommended_count - self.activated_count) / self.recommended_count
 
 
-def load_metrics(filepath: Path, days: int) -> list[dict]:
-    """Load metrics from JSONL file filtered by date range."""
+def load_accuracy_events(filepath: Path, days: int) -> list[dict]:
+    """Load events from skill-accuracy.jsonl filtered by date range."""
     if not filepath.exists():
         return []
 
@@ -91,41 +91,48 @@ def get_f1_score() -> float | None:
     return None
 
 
-def compute_skill_stats(entries: list[dict]) -> dict[str, SkillStats]:
-    """Compute per-skill statistics from metrics entries.
+def compute_skill_stats(events: list[dict]) -> tuple[dict[str, SkillStats], int]:
+    """Compute per-skill statistics from skill-accuracy.jsonl events.
 
-    NOTE: skill-quality-monitor writes cumulative session data (recommended/activated
-    grow across the session). To avoid overcounting, we deduplicate by taking only
-    the LAST entry per session — it contains the full picture.
+    skill-accuracy.jsonl has two event types:
+      {"type": "recommend", "prompt_id": "...", "skills": ["a", "b"]}
+      {"type": "activate",  "prompt_id": "...", "skill": "x"}
+
+    Returns (stats_dict, unique_prompt_count).
     """
-    # Deduplicate: keep only last entry per session_id
-    by_session: dict[str, dict] = {}
-    for entry in entries:
-        sid = entry.get("session_id", "")
-        if sid:
-            by_session[sid] = entry  # last wins
-        else:
-            by_session[entry.get("ts", "")] = entry  # fallback key
+    # Collect per prompt_id: which skills were recommended and activated
+    prompts: dict[str, dict] = defaultdict(lambda: {"recommended": set(), "activated": set()})
+
+    for event in events:
+        pid = event.get("prompt_id", "")
+        if not pid:
+            continue
+        etype = event.get("type", "")
+        if etype == "recommend":
+            for skill in event.get("skills", []):
+                prompts[pid]["recommended"].add(skill)
+        elif etype == "activate":
+            skill = event.get("skill", "")
+            if skill:
+                prompts[pid]["activated"].add(skill)
 
     stats: dict[str, SkillStats] = defaultdict(SkillStats)
 
-    for entry in by_session.values():
-        recommended = set(entry.get("recommended", []))
-        activated = set(entry.get("activated", []))
-        manual = set(entry.get("manual_activations", []))
+    for prompt_data in prompts.values():
+        recommended = prompt_data["recommended"]
+        activated = prompt_data["activated"]
 
         for skill in recommended:
             stats[skill].recommended_count += 1
             if skill in activated:
                 stats[skill].activated_count += 1
 
-        for skill in manual:
-            # Skip dynamic learning-loop entries (not real skills)
-            if skill.startswith("learn:"):
-                continue
-            stats[skill].manual_count += 1
+        # Manual activations: activated but NOT recommended by router
+        for skill in activated:
+            if skill not in recommended:
+                stats[skill].manual_count += 1
 
-    return dict(stats)
+    return dict(stats), len(prompts)
 
 
 def identify_problems(
@@ -229,17 +236,17 @@ def main() -> int:
     parser.add_argument("--no-eval", action="store_true", help="Skip F1 eval run")
     args = parser.parse_args()
 
-    metrics_path = PROJECT_ROOT / "data" / "skill-quality-metrics.jsonl"
+    metrics_path = PROJECT_ROOT / "data" / "skill-accuracy.jsonl"
     output_path = args.output or PROJECT_ROOT / "data" / "skill-health-report.md"
 
-    entries = load_metrics(metrics_path, args.days)
-    stats = compute_skill_stats(entries)
+    events = load_accuracy_events(metrics_path, args.days)
+    stats, prompt_count = compute_skill_stats(events)
     f1 = None if args.no_eval else get_f1_score()
 
     high_waste, router_miss, never_used = identify_problems(stats)
 
     report = generate_report(
-        len(entries), stats, f1, high_waste, router_miss, never_used,
+        prompt_count, stats, f1, high_waste, router_miss, never_used,
         args.min_samples, args.days,
     )
 
