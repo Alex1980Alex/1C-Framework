@@ -6,12 +6,14 @@ Adapted: pydantic-settings config, project-local imports, async-first.
 """
 
 import asyncio
+import json as _json
 import logging
 import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import aiohttp
@@ -19,6 +21,19 @@ import aiohttp
 from src.shared.llm_rotation.config import LLMRotationSettings, get_settings
 
 logger = logging.getLogger("llm-rotation")
+
+_COMPLETIONS_LOG = Path("data/llm-rotation-completions.jsonl")
+
+
+def _log_completion(**kwargs) -> None:
+    """Append completion metric to JSONL (fire-and-forget)."""
+    try:
+        _COMPLETIONS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        kwargs["ts"] = datetime.now().isoformat()
+        with open(_COMPLETIONS_LOG, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(kwargs, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 class ProviderStatus(str, Enum):
@@ -431,6 +446,7 @@ class LLMRotationService:
         """
         tried: List[str] = []
         total_attempts = 0
+        primary_retries = 0
         primary_name = self._settings.primary_provider
 
         # --- Phase 1: Force-retry primary provider ---
@@ -453,12 +469,21 @@ class LLMRotationService:
                         break
 
                     total_attempts += 1
+                    primary_retries += 1
                     try:
                         result = await self._call_provider(
                             primary_state, prompt, system_prompt, model,
                             temperature, max_tokens,
                         )
                         result["attempt"] = total_attempts
+                        usage = result.get("usage", {})
+                        _log_completion(
+                            provider=result["provider"], model=result["model"],
+                            response_time=result["response_time"], attempt=total_attempts,
+                            primary_retries=primary_retries, fallback=False,
+                            prompt_tokens=usage.get("prompt_tokens", 0),
+                            completion_tokens=usage.get("completion_tokens", 0),
+                        )
                         return result
 
                     except Exception as e:
@@ -506,6 +531,14 @@ class LLMRotationService:
                     temperature, max_tokens,
                 )
                 result["attempt"] = total_attempts
+                usage = result.get("usage", {})
+                _log_completion(
+                    provider=result["provider"], model=result["model"],
+                    response_time=result["response_time"], attempt=total_attempts,
+                    primary_retries=primary_retries, fallback=True,
+                    prompt_tokens=usage.get("prompt_tokens", 0),
+                    completion_tokens=usage.get("completion_tokens", 0),
+                )
                 return result
 
             except Exception as e:
@@ -521,10 +554,20 @@ class LLMRotationService:
                 )
 
         if total_attempts == 0:
+            _log_completion(
+                provider="none", model="none", response_time=0,
+                attempt=0, primary_retries=0, fallback=False,
+                error="No available providers",
+            )
             raise RuntimeError(
                 f"No available LLM providers. Tried: {tried}. "
                 "Check API keys and provider availability."
             )
+        _log_completion(
+            provider="none", model="none", response_time=0,
+            attempt=total_attempts, primary_retries=primary_retries,
+            fallback=True, error=f"All failed. Tried: {tried}",
+        )
         raise RuntimeError(
             f"All providers failed after {total_attempts} attempts. "
             f"Tried: {tried}"
