@@ -27,30 +27,39 @@ _ORCHESTRATOR_SIGNALS = [
     "каждая фаза", "каждый модуль",
 ]
 
-# Medium: docs, decomposition, tests, boilerplate
+# Medium: docs, decomposition, tests, boilerplate, configs
 _MEDIUM_SIGNALS = [
     "documentation", "readme", "changelog",
     "decompos", "split into", "break down",
     "generate tests", "test cases", "write tests",
-    "boilerplate", "template",
+    "boilerplate", "template", "scaffold",
+    "config", "setup", "migration script",
+    "checklist", "summary", "table",
     # Russian
     "разбей", "декомпозиция", "разбить на",
     "сгенерируй", "напиши тесты", "создай тесты",
     "напиши readme", "changelog",
     "по шаблону", "бойлерплейт",
     "максимальн", "подробн",
+    "конфиг", "настрой", "миграц",
+    "чеклист", "таблиц", "сводк",
+    "добавь", "создай файл",
 ]
 
 # Hard: code generation, refactoring, analysis
 _HARD_SIGNALS = [
     "write code", "implement", "create module",
-    "refactor", "rewrite",
+    "refactor", "rewrite", "add feature",
     "analysis report", "generate report",
+    "new class", "new function", "new hook",
+    "write service", "write handler",
     # Russian
     "напиши код", "реализуй", "создай модуль",
     "рефакторинг", "перепиши",
     "аналитический отчёт", "сгенерируй отчёт",
     "написать функцию", "написать класс",
+    "новый класс", "новый хук", "новый сервис",
+    "добавь функционал", "добавь фичу",
 ]
 
 # Never: architecture, security, debugging (skip delegation)
@@ -68,7 +77,7 @@ import re
 _MULTI_FILE_RE = re.compile(r"\b([3-9]|[1-9]\d+)\s*(файл|file|модул|module|фаз|phase|часте|part)", re.IGNORECASE)
 
 # Min prompt length to consider (skip short prompts)
-_MIN_PROMPT_LEN = 40
+_MIN_PROMPT_LEN = 20
 
 
 class ZAIDelegationEnforcer(BaseHook):

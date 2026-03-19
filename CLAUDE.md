@@ -71,7 +71,7 @@ Full algorithm: `Skill('task-protocol')`.
 
 ## Token Economy: Z.AI Delegation Protocol (MANDATORY — NEVER SKIP)
 
-**RULE: Before generating ANY content > 30 lines, ALWAYS ask: "Can Z.AI generate this?"**
+**RULE: Before generating ANY content > 15 lines, ALWAYS ask: "Can Z.AI generate this?"**
 **If YES → MUST delegate. If NO → explain why (architecture/security/debug only).**
 **Violation: generating 50+ lines of docs/tests/boilerplate yourself = wasted Opus tokens.**
 
@@ -91,7 +91,7 @@ Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotat
 5. **ASSEMBLE** — Opus собирает финальный результат, Write() файлы
 6. **FALLBACK** — Если Z.AI недоступен (all providers failed) → Opus пишет сам, НЕ останавливается
 
-### Single Task Mode (1-2 files, output > 30 lines)
+### Single Task Mode (1-2 files, output > 15 lines)
 1. Classify -> delegation level
 2. `mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)`
 3. Review (Medium/Hard) -> fix inline
@@ -109,12 +109,12 @@ After writing ANY code (.py, .js, .ts, .bsl, etc.) — self-review is MANDATORY:
 - Hook `code-review-enforcer.py` fires on every Write|Edit of code files
 
 ### Self-Check Questions (ask before EVERY generative task)
-1. Output > 30 lines? → MUST delegate to Z.AI
+1. Output > 15 lines? → MUST delegate to Z.AI
 2. 3+ output files? → MUST use Orchestrator Mode
 3. Code file changed? → MUST self-review (THOROUGH if src/tools/infra/scripts)
 4. Z.AI down? → Opus writes, but note "Z.AI unavailable, writing directly"
 
-Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `z-ai-write-guard.py` (PreToolUse:Write — blocks >30 lines without llm_complete), `code-review-enforcer.py` (PostToolUse Write|Edit).
+Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `z-ai-write-guard.py` (PreToolUse:Write — blocks >15 lines without llm_complete), `code-review-enforcer.py` (PostToolUse Write|Edit).
 
 ## Output Rules
 
@@ -158,7 +158,7 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   task-enforcer.py          # Stop: task list completion check (v2.2: auto-clean stale code-verify tasks)
   ralph_wiggum_stop.py      # Stop: Ralph iteration enforcement
   memory-sync.py            # Stop: memory system change advisory
-  z-ai-write-guard.py      # PreToolUse:Write: blocks >30 lines code without Z.AI delegation
+  z-ai-write-guard.py      # PreToolUse:Write: blocks >15 lines code without Z.AI delegation
   skill-quality-monitor.py  # UserPromptSubmit: passive quality metrics logging (data/skill-quality-metrics.jsonl)
   bsl-tool-router.py        # UserPromptSubmit: routes BSL/1C queries to bsl-development skill
 ```

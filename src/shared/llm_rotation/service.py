@@ -5,6 +5,7 @@ Migrated from D:\\1C-Enterprise_Framework\\shared\\llm_rotation_service.py
 Adapted: pydantic-settings config, project-local imports, async-first.
 """
 
+import asyncio
 import logging
 import os
 import time
@@ -367,6 +368,50 @@ class LLMRotationService:
             },
         }
 
+    async def _call_provider(
+        self,
+        state: ProviderState,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+    ) -> Dict[str, Any]:
+        """Make a single request to a provider. Returns normalized result dict."""
+        start = time.monotonic()
+
+        if state.config.format == "anthropic":
+            data = await self._make_request_anthropic(
+                state, prompt, system_prompt, model, temperature, max_tokens
+            )
+        elif state.config.format == "ollama":
+            data = await self._make_request_ollama(
+                state, prompt, system_prompt, model, temperature, max_tokens
+            )
+        else:
+            data = await self._make_request_openai(
+                state, prompt, system_prompt, model, temperature, max_tokens
+            )
+
+        elapsed = time.monotonic() - start
+        state.record_success(elapsed)
+
+        text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        usage = data.get("usage", {})
+
+        logger.info(
+            f"[{state.config.name}] Completed in {elapsed:.2f}s "
+            f"(tokens: {usage.get('completion_tokens', '?')})"
+        )
+
+        return {
+            "provider": state.config.name,
+            "model": data.get("model", model or state.config.default_model),
+            "text": text,
+            "response_time": round(elapsed, 3),
+            "usage": usage,
+        }
+
     async def complete(
         self,
         prompt: str,
@@ -378,13 +423,69 @@ class LLMRotationService:
     ) -> Dict[str, Any]:
         """Generate completion with automatic provider rotation.
 
+        When force_primary is enabled, retries the primary provider
+        (with delay) before falling back to other providers.
+
         Returns dict with: provider, model, text, response_time, usage.
         Raises RuntimeError if all providers fail.
         """
         tried: List[str] = []
+        total_attempts = 0
+        primary_name = self._settings.primary_provider
 
-        for attempt in range(self._settings.max_retries):
-            # Select provider (exclude already-tried to avoid retrying same one)
+        # --- Phase 1: Force-retry primary provider ---
+        if self._settings.force_primary and primary_name in self._providers:
+            primary_state = self._providers[primary_name]
+            can_try = True
+            if primary_state.config.requires_key:
+                can_try = bool(os.environ.get(primary_state.config.api_key_env, ""))
+
+            if can_try:
+                for retry in range(self._settings.primary_max_retries):
+                    # Reset expired cooldown for primary (shorter threshold)
+                    if primary_state.status == ProviderStatus.COOLDOWN:
+                        if primary_state.cooldown_until and datetime.now() >= primary_state.cooldown_until:
+                            primary_state.status = ProviderStatus.DEGRADED
+                            primary_state.consecutive_errors = 0
+
+                    if not primary_state.is_available():
+                        logger.info(f"[{primary_name}] Unavailable, skipping to fallback")
+                        break
+
+                    total_attempts += 1
+                    try:
+                        result = await self._call_provider(
+                            primary_state, prompt, system_prompt, model,
+                            temperature, max_tokens,
+                        )
+                        result["attempt"] = total_attempts
+                        return result
+
+                    except Exception as e:
+                        error_msg = str(e)[:200]
+                        # Use reduced cooldown for primary provider
+                        primary_state.record_error(
+                            error_msg,
+                            self._settings.primary_cooldown_seconds,
+                            self._settings.rate_limit_cooldown,
+                        )
+                        logger.warning(
+                            f"[{primary_name}] Force-primary retry "
+                            f"{retry + 1}/{self._settings.primary_max_retries}: {error_msg}"
+                        )
+
+                        # Wait before retrying primary
+                        if retry < self._settings.primary_max_retries - 1:
+                            delay = self._settings.primary_retry_delay
+                            if "429" in error_msg or "rate limit" in error_msg.lower():
+                                delay = min(delay * 2, 10.0)
+                            logger.info(f"[{primary_name}] Waiting {delay}s before retry...")
+                            await asyncio.sleep(delay)
+
+                tried.append(primary_name)
+
+        # --- Phase 2: Fallback rotation (other providers) ---
+        for _ in range(self._settings.max_retries):
             if preferred_provider and preferred_provider in self._providers:
                 state = self._providers[preferred_provider]
                 if not state.is_available() or preferred_provider in tried:
@@ -393,52 +494,21 @@ class LLMRotationService:
                 state = self.get_best_provider(exclude=tried)
 
             if state is None:
-                raise RuntimeError(
-                    f"No available LLM providers. Tried: {tried}. "
-                    "Check API keys and provider availability."
-                )
+                break
 
             provider_name = state.config.name
             tried.append(provider_name)
+            total_attempts += 1
 
             try:
-                start = time.monotonic()
-
-                if state.config.format == "anthropic":
-                    data = await self._make_request_anthropic(
-                        state, prompt, system_prompt, model, temperature, max_tokens
-                    )
-                elif state.config.format == "ollama":
-                    data = await self._make_request_ollama(
-                        state, prompt, system_prompt, model, temperature, max_tokens
-                    )
-                else:
-                    data = await self._make_request_openai(
-                        state, prompt, system_prompt, model, temperature, max_tokens
-                    )
-
-                elapsed = time.monotonic() - start
-                state.record_success(elapsed)
-
-                text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                usage = data.get("usage", {})
-
-                logger.info(
-                    f"[{provider_name}] Completed in {elapsed:.2f}s "
-                    f"(tokens: {usage.get('completion_tokens', '?')})"
+                result = await self._call_provider(
+                    state, prompt, system_prompt, model,
+                    temperature, max_tokens,
                 )
-
-                return {
-                    "provider": provider_name,
-                    "model": data.get("model", model or state.config.default_model),
-                    "text": text,
-                    "response_time": round(elapsed, 3),
-                    "usage": usage,
-                    "attempt": attempt + 1,
-                }
+                result["attempt"] = total_attempts
+                return result
 
             except Exception as e:
-                elapsed = time.monotonic() - start
                 error_msg = str(e)[:200]
                 state.record_error(
                     error_msg,
@@ -446,11 +516,17 @@ class LLMRotationService:
                     self._settings.rate_limit_cooldown,
                 )
                 logger.warning(
-                    f"[{provider_name}] Error (attempt {attempt + 1}): {error_msg}"
+                    f"[{provider_name}] Fallback error "
+                    f"(attempt {total_attempts}): {error_msg}"
                 )
 
+        if total_attempts == 0:
+            raise RuntimeError(
+                f"No available LLM providers. Tried: {tried}. "
+                "Check API keys and provider availability."
+            )
         raise RuntimeError(
-            f"All providers failed after {self._settings.max_retries} attempts. "
+            f"All providers failed after {total_attempts} attempts. "
             f"Tried: {tried}"
         )
 

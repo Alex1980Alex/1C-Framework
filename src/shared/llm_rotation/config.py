@@ -16,6 +16,12 @@ class LLMRotationSettings(BaseSettings):
     cooldown_seconds: int = 300
     rate_limit_cooldown: int = 60
 
+    # Force-primary mode: retry primary provider before any fallback
+    force_primary: bool = True
+    primary_max_retries: int = 2
+    primary_retry_delay: float = 3.0
+    primary_cooldown_seconds: int = 30
+
     # API Keys (from environment)
     zhipu_api_key: str = ""
     gemini_api_key: str = ""
