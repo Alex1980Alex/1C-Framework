@@ -148,3 +148,4 @@ Registered in `.mcp.json` as `llm-rotation` server.
 - Z.AI uses Anthropic format (x-api-key header, /v1/messages endpoint)
 - `_make_request_anthropic()` handles Anthropic format natively (no proxy needed)
 - Ollama providers don't need API keys but require running Ollama instance
+- **FIXED**: `preferred_provider` bypassed `tried` list — all retries went to same provider instead of rotating. Fix: added `or preferred_provider in tried` check in `complete()`
