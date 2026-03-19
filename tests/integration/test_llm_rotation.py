@@ -274,7 +274,7 @@ class TestLLMRotationService:
 class TestSettings:
     def test_defaults(self):
         settings = LLMRotationSettings()
-        assert settings.primary_provider == "zhipu"
+        assert settings.primary_provider == "zai-glm5"
         assert settings.max_retries == 3
         assert settings.timeout == 30
 
