@@ -43,7 +43,7 @@ class TestProviderConfig:
 
     def test_provider_formats(self):
         for p in DEFAULT_PROVIDERS:
-            assert p.format in ("openai", "ollama")
+            assert p.format in ("openai", "ollama", "anthropic")
 
     def test_ollama_no_key_required(self):
         ollama = [p for p in DEFAULT_PROVIDERS if p.format == "ollama"]
