@@ -95,6 +95,7 @@ class EmbeddingService:
         self.ollama_host = ollama_host
         self.model = model
         self.client = httpx.Client(timeout=60.0)
+        self._ollama_checked = False
 
         logger.info(f"EmbeddingService инициализирован: {ollama_host}, model={model}")
 
