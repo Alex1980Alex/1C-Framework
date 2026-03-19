@@ -387,7 +387,7 @@ class LLMRotationService:
             # Select provider (exclude already-tried to avoid retrying same one)
             if preferred_provider and preferred_provider in self._providers:
                 state = self._providers[preferred_provider]
-                if not state.is_available():
+                if not state.is_available() or preferred_provider in tried:
                     state = self.get_best_provider(exclude=tried)
             else:
                 state = self.get_best_provider(exclude=tried)
