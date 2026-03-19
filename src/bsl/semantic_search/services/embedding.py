@@ -113,6 +113,11 @@ class EmbeddingService:
             logger.warning("Пустой текст для embedding")
             return None
 
+        if not self._ollama_checked:
+            if not _ensure_ollama(self.ollama_host):
+                return None
+            self._ollama_checked = True
+
         try:
             url = f"{self.ollama_host}/api/embeddings"
             payload = {
