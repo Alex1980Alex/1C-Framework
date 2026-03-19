@@ -123,7 +123,7 @@ class TestProviderState:
 class TestLLMRotationService:
     def test_create_with_defaults(self):
         service = LLMRotationService()
-        assert len(service._providers) == 6
+        assert len(service._providers) == 7
 
     def test_create_with_custom_providers(self):
         configs = [
