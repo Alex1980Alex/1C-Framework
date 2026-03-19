@@ -3,8 +3,8 @@
 Hook: z-ai-write-guard
 Event: PreToolUse
 Matcher: Write
-Purpose: Block Write of >30 lines of code if Z.AI (llm_complete) was not
-         used in this session. Enforces Token Economy protocol.
+Purpose: Block Write of >15 lines of code if Z.AI (llm_complete) was not
+         used in this session. Enforces Token Economy protocol (strict mode).
 Timeout: 3s
 
 Pattern: Enforcer (blocks until condition met).
@@ -14,7 +14,7 @@ Flow:
   2. Skip non-code files (.md, .json, .yml, .env, .toml, .txt, .csv, .html)
   3. Skip exempt paths (.claude/, docs/, data/, tests/)
   4. Count lines in content
-  5. If lines > 30 AND no llm_delegation in session → block with Z.AI instructions
+  5. If lines > 15 AND no llm_delegation in session → block with Z.AI instructions
   6. Otherwise → allow
 """
 
@@ -45,8 +45,8 @@ _EXEMPT_PREFIXES = [
     "data/",
 ]
 
-# Line threshold for delegation
-_LINE_THRESHOLD = 30
+# Line threshold for delegation (strict: 15 lines forces more through Z.AI)
+_LINE_THRESHOLD = 15
 
 
 class ZAIWriteGuard(BaseHook):
@@ -92,7 +92,7 @@ class ZAIWriteGuard(BaseHook):
         return HookOutput().block(
             f"[Z.AI WRITE GUARD] Запись {line_count} строк кода без делегирования на Z.AI.\n"
             f"Файл: {os.path.basename(file_path)}\n\n"
-            "Token Economy protocol требует делегировать генерацию >30 строк:\n"
+            "Token Economy protocol требует делегировать генерацию >15 строк:\n"
             "1. Подготовь промпт с задачей + контекстом + форматом\n"
             "2. mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
             "3. Отревьюй результат, исправь если нужно\n"
