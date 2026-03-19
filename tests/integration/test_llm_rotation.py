@@ -263,6 +263,31 @@ class TestLLMRotationService:
             assert result["attempt"] == 2
 
     @pytest.mark.asyncio
+    async def test_preferred_provider_rotation_on_failure(self):
+        """Test that preferred_provider falls back to other providers after failure."""
+        configs = [
+            ProviderConfig(name="preferred", base_url="http://p", api_key_env="", default_model="m", requires_key=False, priority=0),
+            ProviderConfig(name="fallback", base_url="http://f", api_key_env="", default_model="m", requires_key=False, priority=1),
+        ]
+        service = LLMRotationService(providers=configs)
+
+        mock_ok = {
+            "choices": [{"message": {"content": "OK"}, "finish_reason": "stop"}],
+            "model": "m",
+            "usage": {},
+        }
+
+        async def mock_request(state, *args, **kwargs):
+            if state.config.name == "preferred":
+                raise RuntimeError("Provider down")
+            return mock_ok
+
+        with patch.object(service, "_make_request_openai", side_effect=mock_request):
+            result = await service.complete("test", preferred_provider="preferred")
+            assert result["provider"] == "fallback"
+            assert result["attempt"] == 2
+
+    @pytest.mark.asyncio
     async def test_close_session(self):
         service = LLMRotationService(providers=[])
         await service.close()  # Should not raise
