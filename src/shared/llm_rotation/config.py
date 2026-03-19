@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 class LLMRotationSettings(BaseSettings):
     """Settings for LLM Rotation Service."""
 
-    primary_provider: str = "zhipu"
+    primary_provider: str = "zai-glm5"
     max_retries: int = 3
     timeout: int = 30
     cooldown_seconds: int = 300
