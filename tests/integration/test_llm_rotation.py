@@ -29,11 +29,13 @@ from src.shared.llm_rotation.service import (
 
 class TestProviderConfig:
     def test_default_providers_exist(self):
-        assert len(DEFAULT_PROVIDERS) == 6
+        assert len(DEFAULT_PROVIDERS) == 7
         names = [p.name for p in DEFAULT_PROVIDERS]
+        assert "zai-glm5" in names
         assert "zhipu" in names
         assert "gemini" in names
         assert "mistral" in names
+        assert "ollama-cloud" in names
 
     def test_provider_priority_order(self):
         priorities = [p.priority for p in DEFAULT_PROVIDERS]
