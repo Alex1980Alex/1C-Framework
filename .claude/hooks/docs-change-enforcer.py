@@ -170,13 +170,10 @@ def _is_infra_file(filepath: str) -> bool:
     # runtime permissions that change on every permission grant — skip it
     if fp == ".claude/settings.json":
         return True
-    # Skill config files (not SKILL.md itself — that IS the doc)
+    # Skill files — everything inside .claude/skills/ is skill definitions, not product code.
+    # SKILL.md is the doc itself; other files (.json, .py, .md) are skill internals.
     if fp.startswith(".claude/skills/") and not fp.endswith("/skill.md"):
-        if fp.endswith((".json", ".py")):
-            return True
-        # ADR and cache .md files are internal knowledge, not user-facing docs
-        if "/adr/" in fp or "/cache/" in fp:
-            return True
+        return True
     return False
 
 
