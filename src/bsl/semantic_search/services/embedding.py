@@ -7,10 +7,70 @@ Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
 import logging
+import os
+import shutil
+import subprocess
+import time
 from typing import List, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
+
+_OLLAMA_KNOWN_PATHS = [
+    os.path.expandvars(r"%LOCALAPPDATA%\Programs\Ollama\ollama.exe"),
+]
+
+
+def _find_ollama() -> Optional[str]:
+    path = shutil.which("ollama")
+    if path:
+        return path
+    for p in _OLLAMA_KNOWN_PATHS:
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+def _is_ollama_running(host: str) -> bool:
+    try:
+        resp = httpx.get(f"{host}/api/tags", timeout=3.0)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
+def _ensure_ollama(host: str, max_wait: int = 30) -> bool:
+    """Запустить Ollama если не запущена. Возвращает True если доступна."""
+    if _is_ollama_running(host):
+        return True
+
+    exe = _find_ollama()
+    if not exe:
+        logger.error("Ollama не найдена. Установите: https://ollama.com/download")
+        return False
+
+    logger.info(f"Ollama не запущена, запускаю: {exe} serve")
+    try:
+        subprocess.Popen(
+            [exe, "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0)
+            | getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except Exception as e:
+        logger.error(f"Не удалось запустить Ollama: {e}")
+        return False
+
+    for i in range(max_wait):
+        time.sleep(1)
+        if _is_ollama_running(host):
+            logger.info(f"Ollama запущена (ожидание {i + 1}с)")
+            return True
+
+    logger.error(f"Ollama не отвечает после {max_wait}с ожидания")
+    return False
 
 
 class EmbeddingService:
