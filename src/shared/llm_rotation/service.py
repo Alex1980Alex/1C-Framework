@@ -11,13 +11,14 @@ import logging
 import os
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
 import aiohttp
 
+from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.config import LLMRotationSettings, get_settings
 
 logger = logging.getLogger("llm-rotation")
