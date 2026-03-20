@@ -1,6 +1,6 @@
 # Roadmap: LLM Rotation Service Improvements
 
-**Date:** 2026-03-20 | **Status:** PLANNING
+**Date:** 2026-03-20 | **Status:** IN PROGRESS (Iteration 1 DONE)
 
 **Goal:** Улучшить LLM Rotation Service на основе GitHub best practices: circuit breaker, exponential backoff, health checks, multi-level failover, adaptive routing.
 
