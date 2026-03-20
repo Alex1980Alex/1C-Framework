@@ -1710,7 +1710,8 @@
       ],
       "skills": [
         "llm-rotation",
-        "z-ai-delegation"
+        "z-ai-delegation",
+        "delegation-classifier"
       ],
       "weighted_keywords": {
         "llm rotation": 5,
