@@ -125,6 +125,10 @@ class TestForceOpen:
         time.sleep(0.02)
         assert cb.can_execute()
         assert cb.state == CircuitState.HALF_OPEN
+        # After recovery, reset_timeout restores to original
+        cb.record_success()
+        assert cb.state == CircuitState.CLOSED
+        assert cb.reset_timeout == 999
 
 
 class TestReset:
