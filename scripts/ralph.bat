@@ -158,6 +158,7 @@ echo   lint            Fix all linter warnings
 echo   quality         AutoResearch: autonomous code quality loop (ruff+mypy, measure-fix-revert)
 echo   skill-health    AutoResearch: autonomous skill description optimization (F1 metric)
 echo   1c-study        AutoResearch: autonomous 1C configuration study (6-phase cycle)
+echo   autoresearch    AutoResearch v2: three-agent engine (Executor+Reviewer+Comparator)
 echo.
 echo Options:
 echo   --max-iterations N   Set max iterations (default: 10)
