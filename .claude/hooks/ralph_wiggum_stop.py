@@ -78,6 +78,14 @@ CRITERIA_SIGNAL_MAP = {
     "recommendation given": [
         "recommendation", "рекомендация", "выбран", "recommend", "chosen",
     ],
+    "target metric reached": [
+        "target reached", "цель достигнута", "autoresearch_done",
+        "metric target", "target met",
+    ],
+    "autoresearch complete": [
+        "autoresearch_done", "autoresearch complete", "autoresearch завершён",
+        "all iterations", "plateau",
+    ],
 }
 
 def _find_hook_todos():
