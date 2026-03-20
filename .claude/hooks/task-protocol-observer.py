@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 """
 Hook: task-protocol-observer
-Event: PostToolUse
-Matcher: TaskCreate|Skill
+Event: PreToolUse + PostToolUse (dual-registered workaround)
+Matcher: PreToolUse:Skill | PostToolUse:TaskCreate|Skill|llm_complete
 Purpose: Track task protocol phases via tool usage.
 Timeout: 3s
 
-Part of Task Protocol enforcement system.
-Observes two events:
-  - TaskCreate → records decomposition (phase=decomposed)
-  - Skill      → records skill check (phase=skill_checked)
-
-skill_checked is the ONLY phase that allows Write/Edit through the enforcer gate.
+PostToolUse broken on Windows (github #6305, 0 invocations ever).
+PreToolUse added as workaround - tool_input has skill name before execution.
 
 Silent observer: returns None (no output), never blocks.
 """
