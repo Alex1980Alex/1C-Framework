@@ -13,7 +13,6 @@ Usage:
 
 import json
 import os
-import re
 import sys
 
 EVAL_PROMPTS_PATH = os.path.join("data", "eval", "autoresearch", "eval_prompts.json")
