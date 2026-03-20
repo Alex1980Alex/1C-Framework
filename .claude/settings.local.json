@@ -368,7 +368,8 @@
       "Bash(\"C:/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe\" pull:*)",
       "Bash(chmod:*)",
       "Bash(\"D:/1С-Framework/data/delegation-outcomes.jsonl\")",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(OPENROUTER_API_KEY=\"***REDACTED-SECRET***\" python -c \":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
