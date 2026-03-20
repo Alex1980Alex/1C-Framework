@@ -48,9 +48,20 @@ async def list_tools() -> list[Tool]:
                     "prompt": {"type": "string", "description": "The prompt to send"},
                     "system_prompt": {"type": "string", "description": "Optional system prompt"},
                     "model": {"type": "string", "description": "Specific model to use (optional)"},
-                    "preferred_provider": {"type": "string", "description": "Preferred provider name (optional)"},
-                    "temperature": {"type": "number", "description": "Temperature (0.0-2.0)", "default": 0.7},
-                    "max_tokens": {"type": "integer", "description": "Max tokens to generate", "default": 2048},
+                    "preferred_provider": {
+                        "type": "string",
+                        "description": "Preferred provider name (optional)",
+                    },
+                    "temperature": {
+                        "type": "number",
+                        "description": "Temperature (0.0-2.0)",
+                        "default": 0.7,
+                    },
+                    "max_tokens": {
+                        "type": "integer",
+                        "description": "Max tokens to generate",
+                        "default": 2048,
+                    },
                 },
                 "required": ["prompt"],
             },
