@@ -168,12 +168,14 @@ class TestLLMRotationService:
         assert best.config.name == "p2"
 
     def test_get_best_prefers_healthy(self):
+        """Provider with errors should sort after healthy provider."""
         configs = [
             ProviderConfig(name="degraded", base_url="http://t", api_key_env="", default_model="m", requires_key=False, priority=0),
             ProviderConfig(name="healthy", base_url="http://t", api_key_env="", default_model="m", requires_key=False, priority=1),
         ]
         service = LLMRotationService(providers=configs)
-        service._providers["degraded"].status = ProviderStatus.DEGRADED
+        # Record errors to make CB track failures (status derives from CB)
+        service._providers["degraded"].record_error("test error")
         best = service.get_best_provider()
         assert best.config.name == "healthy"
 
