@@ -365,7 +365,8 @@
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/scripts/skill-health-analyzer.py\" --no-eval 2>&1)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \"\nimport json, pathlib, datetime\ntodos_path = pathlib.Path\\('D:/1С-Framework/.claude/cache/hook-todos.json'\\)\ndata = json.loads\\(todos_path.read_text\\('utf-8'\\)\\)\ntodos = data.get\\('todos', data\\) if isinstance\\(data, dict\\) else data\nnow = datetime.datetime.now\\(\\).isoformat\\(\\)\ncleared = 0\nfor t in todos:\n    if t.get\\('status'\\) == 'pending':\n        t['status'] = 'completed'\n        t['completedAt'] = now\n        cleared += 1\nif isinstance\\(data, dict\\):\n    data['todos'] = todos\n    todos_path.write_text\\(json.dumps\\(data, ensure_ascii=False, indent=2\\), encoding='utf-8'\\)\nelse:\n    todos_path.write_text\\(json.dumps\\(todos, ensure_ascii=False, indent=2\\), encoding='utf-8'\\)\nprint\\(f'Cleared {cleared} pending tasks'\\)\n\")",
       "mcp__edt-mcp__get_metadata_details",
-      "Bash(\"C:/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe\" pull:*)"
+      "Bash(\"C:/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe\" pull:*)",
+      "Bash(chmod:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
