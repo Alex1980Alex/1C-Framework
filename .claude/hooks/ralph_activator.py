@@ -194,6 +194,16 @@ class RalphActivator(BaseHook):
                 "factory", prompt, self.FACTORY_CRITERIA, self.FACTORY_MAX
             )
 
+        # --- Tier 1.5: AutoResearch ---
+        ar_score = sum(
+            1 for kw in self.AUTORESEARCH_SIGNALS if kw in prompt_lower
+        )
+        if ar_score >= 1:
+            return self._activate(
+                "autoresearch", prompt,
+                self.AUTORESEARCH_CRITERIA, self.AUTORESEARCH_MAX,
+            )
+
         # --- Tier 4: Phase/architecture ---
         phase_score = sum(
             1 for kw in self.PHASE_SIGNALS if kw in prompt_lower
