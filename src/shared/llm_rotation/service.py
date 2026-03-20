@@ -151,9 +151,15 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         name="openrouter",
         base_url="https://openrouter.ai/api/v1",
         api_key_env="OPENROUTER_API_KEY",
-        default_model="meta-llama/llama-3.3-70b-instruct:free",
-        models=["meta-llama/llama-3.3-70b-instruct:free"],
+        default_model="google/gemma-3-27b-it:free",
+        models=[
+            "google/gemma-3-27b-it:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "mistralai/mistral-small-3.1-24b-instruct:free",
+        ],
         priority=3,
+        rate_limit_rpm=20,
+        daily_limit=200,
     ),
     ProviderConfig(
         name="mistral",
