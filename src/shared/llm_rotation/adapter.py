@@ -143,7 +143,10 @@ async def cheap_llm_call(
         provider = result.get("provider", "unknown")
 
         if not text.strip():
-            logger.warning("[CHEAP-LLM] %s: empty response from %s (%.1fs)", component, provider, elapsed)
+            logger.warning(
+                "[CHEAP-LLM] %s: empty response from %s (%.1fs)",
+                component, provider, elapsed,
+            )
             _log_metric(component, provider, elapsed, success=False, fallback=False, text_len=0)
             return ""
 
