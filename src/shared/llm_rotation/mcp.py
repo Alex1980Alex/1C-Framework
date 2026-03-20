@@ -68,7 +68,10 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="llm_get_stats",
-            description="Get statistics for all LLM providers: status, requests, errors, response times.",
+            description=(
+                "Get statistics for all LLM providers: "
+                "status, requests, errors, response times."
+            ),
             inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
