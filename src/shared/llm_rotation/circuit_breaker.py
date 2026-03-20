@@ -44,6 +44,7 @@ class CircuitBreaker:
         self.fail_threshold = fail_threshold
         self.success_threshold = success_threshold
         self.reset_timeout = reset_timeout
+        self._default_reset_timeout = reset_timeout
         self.opened_at: float | None = None
 
     def can_execute(self) -> bool:
