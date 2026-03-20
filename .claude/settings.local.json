@@ -369,7 +369,9 @@
       "Bash(chmod:*)",
       "Bash(\"D:/1С-Framework/data/delegation-outcomes.jsonl\")",
       "Bash(python -c \":*)",
-      "Bash(OPENROUTER_API_KEY=\"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\" python -c \":*)"
+      "Bash(OPENROUTER_API_KEY=\"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\" python -c \":*)",
+      "Bash(mv \"ROADMAP_DELEGATION_LEARNING.md\" \"260320_ROADMAP_DELEGATION_LEARNING.md\")",
+      "Bash(mv \"ROADMAP_LLM_ROTATION.md\" \"260320_ROADMAP_LLM_ROTATION.md\")"
     ]
   },
   "enableAllProjectMcpServers": true,
