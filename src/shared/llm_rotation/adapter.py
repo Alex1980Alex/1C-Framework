@@ -124,7 +124,9 @@ async def cheap_llm_call(
     # Resolve defaults from registry
     reg = COMPONENT_REGISTRY.get(component, {})
     resolved_max_tokens: int = max_tokens if max_tokens is not None else reg.get("max_tokens", 200)
-    resolved_temperature: float = temperature if temperature is not None else reg.get("temperature", 0.7)
+    resolved_temperature: float = (
+        temperature if temperature is not None else reg.get("temperature", 0.7)
+    )
 
     service = get_service()
     t0 = time.time()
