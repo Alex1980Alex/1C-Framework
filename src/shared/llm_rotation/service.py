@@ -610,9 +610,9 @@ class LLMRotationService:
         """Reset a provider state to HEALTHY."""
         if name in self._providers:
             state = self._providers[name]
+            state.circuit_breaker.reset()
             state.status = ProviderStatus.HEALTHY
             state.consecutive_errors = 0
-            state.cooldown_until = None
             state.last_error = None
             return True
         return False
@@ -620,9 +620,9 @@ class LLMRotationService:
     def reset_all(self) -> None:
         """Reset all providers to HEALTHY."""
         for state in self._providers.values():
+            state.circuit_breaker.reset()
             state.status = ProviderStatus.HEALTHY
             state.consecutive_errors = 0
-            state.cooldown_until = None
             state.last_error = None
 
     async def close(self) -> None:
