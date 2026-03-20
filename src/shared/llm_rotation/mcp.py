@@ -142,7 +142,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         elif name == "llm_reset_provider":
             provider = arguments.get("provider", "")
             success = service.reset_provider(provider)
-            msg = f"Provider '{provider}' reset to HEALTHY" if success else f"Provider '{provider}' not found"
+            if success:
+                msg = f"Provider '{provider}' reset to HEALTHY"
+            else:
+                msg = f"Provider '{provider}' not found"
             return [TextContent(type="text", text=msg)]
 
         elif name == "llm_test_providers":
