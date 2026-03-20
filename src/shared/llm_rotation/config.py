@@ -22,6 +22,12 @@ class LLMRotationSettings(BaseSettings):
     primary_retry_delay: float = 3.0
     primary_cooldown_seconds: int = 30
 
+    # Circuit Breaker
+    cb_fail_threshold: int = 3
+    cb_success_threshold: int = 1
+    cb_reset_timeout: float = 60.0
+    cb_rate_limit_timeout: float = 30.0
+
     # API Keys (from environment)
     zhipu_api_key: str = ""
     gemini_api_key: str = ""
