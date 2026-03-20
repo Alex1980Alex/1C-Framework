@@ -367,7 +367,8 @@
       "mcp__edt-mcp__get_metadata_details",
       "Bash(\"C:/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe\" pull:*)",
       "Bash(chmod:*)",
-      "Bash(\"D:/1С-Framework/data/delegation-outcomes.jsonl\")"
+      "Bash(\"D:/1С-Framework/data/delegation-outcomes.jsonl\")",
+      "Bash(python -c \":*)"
     ]
   },
   "enableAllProjectMcpServers": true,
