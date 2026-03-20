@@ -68,6 +68,7 @@ class CircuitBreaker:
                 self.state = CircuitState.CLOSED
                 self.fail_count = 0
                 self.success_count = 0
+                self.reset_timeout = self._default_reset_timeout
         else:
             self.fail_count = 0
 
