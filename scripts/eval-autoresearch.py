@@ -21,16 +21,18 @@ SKILL_MD_PATH = os.path.join(".claude", "skills", "autoresearch", "SKILL.md")
 # AutoResearch trigger keywords (from SKILL.md YAML description)
 TRIGGER_KEYWORDS = [
     "autoresearch", "автономный цикл", "улучши", "оптимизируй",
-    "уменьши ошибки", "повысь покрытие", "ускорь", "reduce errors",
+    "уменьши", "повысь покрытие", "ускорь", "reduce errors",
     "improve", "optimize", "benchmark", "качество кода",
     "measure and improve", "keep/revert", "автоисследование",
     "итеративно", "автономное улучшение", "улучши метрику",
+    "security audit", "docstring", "покрытие тестами",
+    "повысь", "уменьши ошибки",
 ]
 
 # Negative signals (should NOT trigger autoresearch)
 NEGATIVE_KEYWORDS = [
     "исправь", "fix", "покажи", "объясни", "создай", "напиши",
-    "git", "commit", "изучи", "расскажи", "настрой", "переименуй",
+    "git", "commit", "расскажи", "настрой", "переименуй",
 ]
 
 # Domain detection keywords
