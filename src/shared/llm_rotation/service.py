@@ -475,15 +475,6 @@ class LLMRotationService:
 
             if can_try:
                 for retry in range(self._settings.primary_max_retries):
-                    # Reset expired cooldown for primary (shorter threshold)
-                    if primary_state.status == ProviderStatus.COOLDOWN:
-                        if (
-                            primary_state.cooldown_until
-                            and datetime.now() >= primary_state.cooldown_until
-                        ):
-                            primary_state.status = ProviderStatus.DEGRADED
-                            primary_state.consecutive_errors = 0
-
                     if not primary_state.is_available():
                         logger.info(f"[{primary_name}] Unavailable, skipping to fallback")
                         break
