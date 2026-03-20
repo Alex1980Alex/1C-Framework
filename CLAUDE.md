@@ -114,7 +114,7 @@ After writing ANY code (.py, .js, .ts, .bsl, etc.) — self-review is MANDATORY:
 3. Code file changed? → MUST self-review (THOROUGH if src/tools/infra/scripts)
 4. Z.AI down? → Opus writes, but note "Z.AI unavailable, writing directly"
 
-Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `z-ai-write-guard.py` (PreToolUse:Write — blocks >15 lines without llm_complete), `code-review-enforcer.py` (PostToolUse Write|Edit).
+Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` (UserPromptSubmit), `z-ai-write-guard.py` (PreToolUse:Write — blocks >15 lines without llm_complete), `code-review-enforcer.py` (PreToolUse Write|Edit).
 
 ## Output Rules
 
@@ -147,10 +147,15 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
     trust_scorer.py         # Trust scoring for sources (Context7/GitHub/SO/Infostart)
   skill-router.py           # UserPromptSubmit: skill recommendations
   skill-eval-enforcer-shell.py  # UserPromptSubmit: task protocol + activation enforcement
-  task-protocol-observer.py # PostToolUse:TaskCreate|Skill|llm_complete: records decomposition, skill activation, Z.AI delegation
+  task-protocol-observer.py # PreToolUse:Skill|TaskCreate|llm_complete: records decomposition, skill activation, Z.AI delegation (migrated from PostToolUse)
   task-protocol-enforcer.py # PreToolUse:Write|Edit: blocks if protocol phase is idle
-  code-skill-enforcer.py    # PreToolUse+PostToolUse: skill-first enforcement (6 levels A-F + A.1 research_protocol, protocol.py base)
-  code-verify-reminder.py   # PostToolUse: mandatory code verification (v2.2: PASS-marker completion via Task result)
+  code-skill-enforcer.py    # PreToolUse:Write|Edit|Bash: skill-first enforcement (6 levels A-F + A.1 research_protocol, protocol.py base)
+  code-verify-reminder.py   # PreToolUse:Write|Edit: mandatory code verification task creation (migrated from PostToolUse)
+  code-review-enforcer.py   # PreToolUse:Write|Edit: mandatory code review reminder (migrated from PostToolUse)
+  docs-change-tracker.py    # PreToolUse:Write|Edit: maps code changes to docs (migrated from PostToolUse)
+  factory-enforcer.py       # PreToolUse:Write: factory steps enforcement for .claude/ files (migrated from PostToolUse)
+  bulk-action-guard.py      # PreToolUse:Bash: detects destructive commands BEFORE execution (migrated from PostToolUse, now proactive)
+  skill-usage-metrics.py    # PreToolUse:Skill: logs skill invocations (migrated from PostToolUse)
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
