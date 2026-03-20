@@ -29,7 +29,7 @@ class CircuitBreaker:
     __slots__ = (
         "state", "fail_count", "success_count",
         "fail_threshold", "success_threshold", "reset_timeout",
-        "opened_at",
+        "_default_reset_timeout", "opened_at",
     )
 
     def __init__(
