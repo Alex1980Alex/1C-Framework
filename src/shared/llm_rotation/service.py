@@ -600,8 +600,11 @@ class LLMRotationService:
                 os.environ.get(state.config.api_key_env, "")
                 if state.config.requires_key else "(not needed)"
             )
+            cb = state.circuit_breaker
             stats[name] = {
                 "status": state.status.value,
+                "circuit_breaker": cb.state.value,
+                "cb_fail_count": cb.fail_count,
                 "priority": state.config.priority,
                 "requests": state.requests_count,
                 "errors": state.errors_count,
