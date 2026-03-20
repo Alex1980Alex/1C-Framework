@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -86,7 +86,7 @@ def _log_metric(component: str, provider: str, response_time: float,
     try:
         _METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
         entry = {
-            "ts": datetime.now(timezone.utc).isoformat(),
+            "ts": datetime.now(UTC).isoformat(),
             "component": component,
             "provider": provider,
             "response_time_s": round(response_time, 3),
@@ -281,7 +281,7 @@ def evaluate_response(component: str, response: str, original_input: str = "") -
         pattern = criteria.get("expected_format", "")
         if pattern and not re.match(pattern, text):
             return {"passed": False, "metric": metric,
-                    "reason": f"Doesn't match classification pattern"}
+                    "reason": "Doesn't match classification pattern"}
 
     return {"passed": True, "metric": metric, "reason": "OK"}
 

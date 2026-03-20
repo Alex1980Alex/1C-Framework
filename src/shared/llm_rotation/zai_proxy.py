@@ -12,7 +12,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiohttp import ClientSession, ClientTimeout, web
 from dotenv import load_dotenv
@@ -33,7 +33,7 @@ GLM_5_DEFAULT_TEMPERATURE = 1.0
 GLM_5_THINKING_ENABLED = True
 
 
-def openai_to_anthropic(openai_request: Dict[str, Any]) -> Dict[str, Any]:
+def openai_to_anthropic(openai_request: dict[str, Any]) -> dict[str, Any]:
     """Convert OpenAI Chat Completion request to Anthropic Messages format."""
     messages = openai_request.get("messages", [])
 
@@ -59,7 +59,7 @@ def openai_to_anthropic(openai_request: Dict[str, Any]) -> Dict[str, Any]:
             mapped_role = "assistant" if role == "assistant" else "user"
             converted_messages.append({"role": mapped_role, "content": content})
 
-    anthropic_req: Dict[str, Any] = {
+    anthropic_req: dict[str, Any] = {
         "model": openai_request.get("model", ZAI_DEFAULT_MODEL),
         "messages": converted_messages,
         "max_tokens": min(
@@ -97,7 +97,7 @@ def openai_to_anthropic(openai_request: Dict[str, Any]) -> Dict[str, Any]:
     return anthropic_req
 
 
-def anthropic_to_openai(anthropic_response: Dict[str, Any]) -> Dict[str, Any]:
+def anthropic_to_openai(anthropic_response: dict[str, Any]) -> dict[str, Any]:
     """Convert Anthropic Messages response to OpenAI Chat Completion format."""
     content_blocks = anthropic_response.get("content", [])
     text_parts = []
@@ -123,7 +123,7 @@ def anthropic_to_openai(anthropic_response: Dict[str, Any]) -> Dict[str, Any]:
     stop_reason = anthropic_response.get("stop_reason", "end_turn")
     finish_reason = _map_stop_reason(stop_reason)
 
-    message: Dict[str, Any] = {
+    message: dict[str, Any] = {
         "role": "assistant",
         "content": "\n".join(text_parts) if text_parts else None,
     }
@@ -170,7 +170,7 @@ class ZAIProxy:
 
     def __init__(self, port: int = 8000):
         self.port = port
-        self._session: Optional[ClientSession] = None
+        self._session: ClientSession | None = None
         self._stats = {
             "request_count": 0,
             "stream_request_count": 0,
@@ -196,7 +196,7 @@ class ZAIProxy:
             return await self._handle_stream(request, anthropic_req)
         return await self._handle_normal(anthropic_req)
 
-    async def _handle_normal(self, anthropic_req: Dict[str, Any]) -> web.Response:
+    async def _handle_normal(self, anthropic_req: dict[str, Any]) -> web.Response:
         """Non-streaming request."""
         session = await self._get_session()
         headers = {
@@ -225,7 +225,7 @@ class ZAIProxy:
         return web.json_response(openai_resp)
 
     async def _handle_stream(
-        self, request: web.Request, anthropic_req: Dict[str, Any]
+        self, request: web.Request, anthropic_req: dict[str, Any]
     ) -> web.StreamResponse:
         """Streaming request with SSE."""
         anthropic_req["stream"] = True
@@ -270,7 +270,7 @@ class ZAIProxy:
 
         return response
 
-    def _convert_stream_chunk(self, event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _convert_stream_chunk(self, event: dict[str, Any]) -> dict[str, Any] | None:
         """Convert Anthropic stream event to OpenAI stream chunk."""
         event_type = event.get("type", "")
 

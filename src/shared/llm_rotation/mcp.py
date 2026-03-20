@@ -10,11 +10,10 @@ import asyncio
 import json
 import logging
 import sys
-from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 logging.basicConfig(
     level=logging.INFO,

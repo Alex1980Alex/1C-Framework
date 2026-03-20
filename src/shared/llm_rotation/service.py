@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiohttp
 
@@ -51,11 +51,11 @@ class ProviderConfig:
     base_url: str
     api_key_env: str
     default_model: str
-    models: List[str] = field(default_factory=list)
+    models: list[str] = field(default_factory=list)
     format: str = "openai"  # "openai" | "ollama" | "anthropic"
     requires_key: bool = True
-    daily_limit: Optional[int] = None
-    rate_limit_rpm: Optional[int] = None
+    daily_limit: int | None = None
+    rate_limit_rpm: int | None = None
     priority: int = 0
 
 
@@ -67,11 +67,11 @@ class ProviderState:
     requests_count: int = 0
     errors_count: int = 0
     consecutive_errors: int = 0
-    last_error: Optional[str] = None
-    last_error_time: Optional[datetime] = None
-    last_success_time: Optional[datetime] = None
+    last_error: str | None = None
+    last_error_time: datetime | None = None
+    last_success_time: datetime | None = None
     avg_response_time: float = 0.0
-    cooldown_until: Optional[datetime] = None
+    cooldown_until: datetime | None = None
 
     def record_success(self, response_time: float) -> None:
         """Record a successful request."""
@@ -115,7 +115,7 @@ class ProviderState:
 
 
 # Default provider configurations
-DEFAULT_PROVIDERS: List[ProviderConfig] = [
+DEFAULT_PROVIDERS: list[ProviderConfig] = [
     ProviderConfig(
         name="zai-glm5",
         base_url="https://api.z.ai/api/anthropic",
@@ -190,15 +190,15 @@ class LLMRotationService:
 
     def __init__(
         self,
-        providers: Optional[List[ProviderConfig]] = None,
-        settings: Optional[LLMRotationSettings] = None,
+        providers: list[ProviderConfig] | None = None,
+        settings: LLMRotationSettings | None = None,
     ):
         self._settings = settings or get_settings()
         configs = DEFAULT_PROVIDERS if providers is None else providers
-        self._providers: Dict[str, ProviderState] = {
+        self._providers: dict[str, ProviderState] = {
             cfg.name: ProviderState(config=cfg) for cfg in configs
         }
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
@@ -208,7 +208,7 @@ class LLMRotationService:
             )
         return self._session
 
-    def get_available_providers(self) -> List[ProviderState]:
+    def get_available_providers(self) -> list[ProviderState]:
         """Return list of available providers sorted by priority."""
         available = []
         for state in self._providers.values():
@@ -221,7 +221,7 @@ class LLMRotationService:
             available.append(state)
         return sorted(available, key=lambda s: s.config.priority)
 
-    def get_best_provider(self, exclude: Optional[List[str]] = None) -> Optional[ProviderState]:
+    def get_best_provider(self, exclude: list[str] | None = None) -> ProviderState | None:
         """Select the best available provider, optionally excluding names."""
         available = self.get_available_providers()
         if exclude:
@@ -244,11 +244,11 @@ class LLMRotationService:
         self,
         state: ProviderState,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        model: Optional[str] = None,
+        system_prompt: str | None = None,
+        model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make a request to an OpenAI-compatible API."""
         session = await self._get_session()
         url = f"{state.config.base_url}/chat/completions"
@@ -281,11 +281,11 @@ class LLMRotationService:
         self,
         state: ProviderState,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        model: Optional[str] = None,
+        system_prompt: str | None = None,
+        model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make a request to Ollama API."""
         session = await self._get_session()
         url = f"{state.config.base_url}/api/chat"
@@ -327,11 +327,11 @@ class LLMRotationService:
         self,
         state: ProviderState,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        model: Optional[str] = None,
+        system_prompt: str | None = None,
+        model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make a request to Anthropic-compatible API (Z.AI with GLM-5)."""
         session = await self._get_session()
         url = f"{state.config.base_url}/v1/messages"
@@ -339,7 +339,7 @@ class LLMRotationService:
 
         messages = [{"role": "user", "content": prompt}]
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": model or state.config.default_model,
             "messages": messages,
             "max_tokens": max_tokens,
@@ -387,11 +387,11 @@ class LLMRotationService:
         self,
         state: ProviderState,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        model: Optional[str] = None,
+        system_prompt: str | None = None,
+        model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make a single request to a provider. Returns normalized result dict."""
         start = time.monotonic()
 
@@ -430,12 +430,12 @@ class LLMRotationService:
     async def complete(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        model: Optional[str] = None,
-        preferred_provider: Optional[str] = None,
+        system_prompt: str | None = None,
+        model: str | None = None,
+        preferred_provider: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate completion with automatic provider rotation.
 
         When force_primary is enabled, retries the primary provider
@@ -444,7 +444,7 @@ class LLMRotationService:
         Returns dict with: provider, model, text, response_time, usage.
         Raises RuntimeError if all providers fail.
         """
-        tried: List[str] = []
+        tried: list[str] = []
         total_attempts = 0
         primary_retries = 0
         primary_name = self._settings.primary_provider
@@ -573,7 +573,7 @@ class LLMRotationService:
             f"Tried: {tried}"
         )
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return statistics for all providers."""
         stats = {}
         for name, state in self._providers.items():
@@ -618,7 +618,7 @@ class LLMRotationService:
 
 
 # Singleton
-_service: Optional[LLMRotationService] = None
+_service: LLMRotationService | None = None
 
 
 def get_service() -> LLMRotationService:
