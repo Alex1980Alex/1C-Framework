@@ -213,7 +213,15 @@ class LLMRotationService:
         self._settings = settings or get_settings()
         configs = DEFAULT_PROVIDERS if providers is None else providers
         self._providers: dict[str, ProviderState] = {
-            cfg.name: ProviderState(config=cfg) for cfg in configs
+            cfg.name: ProviderState(
+                config=cfg,
+                circuit_breaker=CircuitBreaker(
+                    fail_threshold=self._settings.cb_fail_threshold,
+                    success_threshold=self._settings.cb_success_threshold,
+                    reset_timeout=self._settings.cb_reset_timeout,
+                ),
+            )
+            for cfg in configs
         }
         self._session: aiohttp.ClientSession | None = None
 
