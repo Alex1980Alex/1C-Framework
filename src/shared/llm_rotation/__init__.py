@@ -13,6 +13,7 @@ from src.shared.llm_rotation.adapter import (
     evaluate_response,
     is_cheap_llm_enabled,
 )
+from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.service import (
     DEFAULT_PROVIDERS,
     LLMRotationService,
