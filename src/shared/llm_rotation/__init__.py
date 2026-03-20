@@ -24,6 +24,8 @@ from src.shared.llm_rotation.service import (
 )
 
 __all__ = [
+    "CircuitBreaker",
+    "CircuitState",
     "LLMRotationService",
     "ProviderConfig",
     "ProviderState",
