@@ -582,7 +582,10 @@ class LLMRotationService:
         """Return statistics for all providers."""
         stats = {}
         for name, state in self._providers.items():
-            api_key = os.environ.get(state.config.api_key_env, "") if state.config.requires_key else "(not needed)"
+            api_key = (
+                os.environ.get(state.config.api_key_env, "")
+                if state.config.requires_key else "(not needed)"
+            )
             stats[name] = {
                 "status": state.status.value,
                 "priority": state.config.priority,
