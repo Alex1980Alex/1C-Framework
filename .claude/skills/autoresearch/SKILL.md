@@ -1,6 +1,21 @@
 ---
 name: autoresearch
-description: "AutoResearch — автономный цикл улучшений с измеримыми метриками. ИСПОЛЬЗУЙ когда нужно итеративно улучшить метрику (F1, coverage, errors, performance) через цикл measure→change→verify→keep/revert. Триггеры: 'autoresearch', 'автономный цикл', 'улучшить метрику', 'measure and improve', 'baseline then iterate', 'keep/revert', 'A/B test'. НЕ для разовых правок (→ обычный Write/Edit), НЕ для исследования (→ tech-research/1c-doc-research)."
+description: >
+  AutoResearch v2 — автономный цикл улучшений с измеримыми метриками.
+  ИСПОЛЬЗУЙ когда нужно итеративно УЛУЧШИТЬ, ОПТИМИЗИРОВАТЬ, УСКОРИТЬ,
+  УМЕНЬШИТЬ ОШИБКИ, ПОВЫСИТЬ ПОКРЫТИЕ, или запустить АВТОНОМНЫЙ ЦИКЛ
+  улучшений любого кода или процесса. Скилл анализирует идею, подбирает
+  инструменты, создаёт уникальный рецепт (autoresearch.md + промпты + run.bat)
+  и запускает автономный цикл с тремя агентами (Executor + Reviewer + Comparator).
+  Домены: Python, BSL/1С, документация, тесты, производительность, безопасность.
+  Триггеры: 'autoresearch', 'автономный цикл', 'улучши', 'оптимизируй',
+  'уменьши ошибки', 'повысь покрытие', 'ускорь', 'reduce errors', 'improve',
+  'optimize', 'benchmark', 'качество кода', 'measure and improve', 'keep/revert'.
+  НЕ для разовых правок (→ обычный Write/Edit), НЕ для исследования (→ tech-research).
+commands:
+  - /autoresearch           # Анализ идеи → создание рецепта → запуск
+  - /autoresearch:plan      # Интерактивный wizard (scope, metric, verify)
+  - /autoresearch:security  # STRIDE + OWASP аудит (read-only)
 ultrathink: true
 ---
 
