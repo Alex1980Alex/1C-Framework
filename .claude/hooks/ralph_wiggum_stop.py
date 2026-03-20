@@ -28,7 +28,7 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
     sys.path.insert(0, _USER_HOOKS)
 sys.path.insert(0, _THIS_DIR)
 
-COMPLETION_MARKERS = ["RALPH_DONE", "TASK_COMPLETE_OK", "ALL_DONE"]
+COMPLETION_MARKERS = ["RALPH_DONE", "TASK_COMPLETE_OK", "ALL_DONE", "AUTORESEARCH_DONE"]
 
 INCOMPLETE_SIGNALS = [
     "todo",
