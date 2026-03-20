@@ -68,6 +68,21 @@ class RalphActivator(BaseHook):
         "объясни", "расскажи",
     ]
 
+    # --- Tier 1.5: AutoResearch signals (max 20 iterations) ---
+    AUTORESEARCH_SIGNALS = [
+        "autoresearch", "автоисследование", "автономный цикл",
+        "улучши метрику", "improve metric", "reduce errors",
+        "уменьши ошибки", "повысь покрытие", "increase coverage",
+        "optimize", "оптимизируй итеративно",
+        "measure and improve", "keep/revert",
+        "автономное улучшение",
+    ]
+    AUTORESEARCH_CRITERIA = [
+        "all listed items completed",
+        "MEMORY.md updated",
+    ]
+    AUTORESEARCH_MAX = 20
+
     # --- Tier 2.5: Brainstorm signals (max 10 iterations) ---
     BRAINSTORM_SIGNALS = [
         "придумай", "предложи", "спроектируй",
