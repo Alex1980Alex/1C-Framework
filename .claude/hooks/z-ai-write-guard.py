@@ -65,17 +65,24 @@ class ZAIWriteGuard(BaseHook):
         # Extract extension
         _, ext = os.path.splitext(fp)
 
-        # Skip non-code files
-        if ext in _SKIP_EXTENSIONS or ext not in _CODE_EXTENSIONS:
-            return None
+        # Count lines early (needed for .md large file check)
+        line_count = content.count("\n") + 1
 
-        # Skip exempt directories
-        for prefix in _EXEMPT_PREFIXES:
-            if fp.startswith(prefix) or f"/{prefix}" in fp:
+        # Large .md files outside .claude/ and data/ are NOT exempt (docs can be delegated)
+        _LARGE_MD_THRESHOLD = 50
+        is_large_md = (ext == ".md" and line_count > _LARGE_MD_THRESHOLD
+                       and not any(fp.startswith(p) or f"/{p}" in fp
+                                   for p in [".claude/", "data/"]))
+
+        if not is_large_md:
+            # Skip non-code files
+            if ext in _SKIP_EXTENSIONS or ext not in _CODE_EXTENSIONS:
                 return None
 
-        # Count lines
-        line_count = content.count("\n") + 1
+            # Skip exempt directories
+            for prefix in _EXEMPT_PREFIXES:
+                if fp.startswith(prefix) or f"/{prefix}" in fp:
+                    return None
 
         if line_count <= _LINE_THRESHOLD:
             return None
