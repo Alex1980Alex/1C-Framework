@@ -35,8 +35,11 @@ _MEDIUM_SIGNALS = [
     "boilerplate", "template", "scaffold",
     "config", "setup", "migration script",
     "checklist", "summary", "table",
+    "roadmap", "plan document",
     # Russian
     "разбей", "декомпозиция", "разбить на",
+    "дорожн", "план реализаци", "план фаз",
+    "создай документ", "напиши документ",
     "сгенерируй", "напиши тесты", "создай тесты",
     "напиши readme", "changelog",
     "по шаблону", "бойлерплейт",
