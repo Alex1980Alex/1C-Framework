@@ -138,31 +138,55 @@ Claude:
 - Критическая ошибка (тесты сломаны, код не компилируется)
 - Маркер: `RALPH_DONE` (при работе через ralph.bat)
 
-## Примеры
+## Команды
 
-### Пример 1: Skill Router F1
-```
-Idea: "Улучшить description скилла graph-operations"
-Baseline: F1 = 0.6651
-Execute: переписал description → pushy + triggers
-Review: eval → F1 = 0.6720 (+0.0069)
-Decide: KEEP → git commit -m "[AR] graph-operations desc +0.007 F1"
-```
+### /autoresearch — Анализ идеи и запуск
 
-### Пример 2: Python Quality
 ```
-Idea: "Исправить все unused imports в src/pdf_framework/"
-Baseline: ruff errors = 42
-Execute: ruff check --fix --select F401
-Review: ruff errors = 35 (-7)
-Decide: KEEP → git commit -m "[AR] fix unused imports -7 errors"
+> /autoresearch
+> Улучши F1 skill router до 0.85
+
+Claude:
+1. ANALYZE: текущий F1, FP/FN breakdown
+2. RECIPE: домен + tools + metric + verify
+3. Создаёт data/autoresearch/{idea}/ (autoresearch.md + prompts + run.bat)
+4. Запускает цикл или предлагает run.bat
 ```
 
-### Пример 3: 1С Configuration Study
+### /autoresearch:plan — Интерактивный wizard
+
+Проводит через 5 gates: Scope → Metric → Direction → Verify → Baseline.
+См. [plan-workflow.md](references/plan-workflow.md)
+
+### /autoresearch:security — STRIDE + OWASP аудит
+
+Read-only режим. Итерации = анализ разных attack vectors.
+См. [security-audit.md](templates/security-audit.md)
+
+## Запуск
+
+```bash
+# Через autoresearch.ps1 (три агента)
+.\scripts\autoresearch.ps1 -Domain skills -MaxIterations 15 -Target 0.85
+
+# Через ralph.bat (шаблон)
+scripts\ralph.bat --template autoresearch --max-iterations 20
 ```
-Idea: "Изучить документ ЗаказНаТранспорт"
-Baseline: coverage = 5/27 документов
-Execute: get_metadata → find_references → cache
-Review: кэш содержит реквизиты + ТЧ + движения
-Decide: KEEP → coverage = 6/27
-```
+
+## Справочники
+
+- [autonomous-loop-protocol.md](references/autonomous-loop-protocol.md) — 10-фазный цикл
+- [core-principles.md](references/core-principles.md) — 7 принципов
+- [dual-agent-protocol.md](references/dual-agent-protocol.md) — протокол 3 агентов
+- [results-logging.md](references/results-logging.md) — форматы TSV + JSONL
+- [plan-workflow.md](references/plan-workflow.md) — wizard /autoresearch:plan
+
+## Шаблоны доменов
+
+- [python-quality.md](templates/python-quality.md) — ruff + mypy
+- [python-performance.md](templates/python-performance.md) — benchmark
+- [bsl-quality.md](templates/bsl-quality.md) — BSL ошибки
+- [1c-study.md](templates/1c-study.md) — изучение конфигурации
+- [test-coverage.md](templates/test-coverage.md) — покрытие тестами
+- [documentation.md](templates/documentation.md) — docstrings
+- [security-audit.md](templates/security-audit.md) — STRIDE + OWASP
