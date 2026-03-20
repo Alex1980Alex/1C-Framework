@@ -163,7 +163,7 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   bsl-tool-router.py        # UserPromptSubmit: routes BSL/1C queries to bsl-development skill
 ```
 
-AutoResearch: `scripts/skill-health-analyzer.py` (health report) + `scripts/audit-skill-freshness.py` (freshness audit) + `scripts/autoresearch.ps1` (autonomous cycle). Templates: `ralph.bat --template skill-health|quality|1c-study`. Archive: `.claude/skills/_archived/`. Docs: [Chapter 18](docs/framework%20documentation/18_AUTORESEARCH/).
+AutoResearch: `scripts/skill-health-analyzer.py` (health report) + `scripts/audit-skill-freshness.py` (freshness audit) + `scripts/autoresearch.ps1` (autonomous cycle). Templates: `ralph.bat --template skill-health|quality|1c-study|autoresearch`. Archive: `.claude/skills/_archived/`. Docs: [Chapter 18 (v1)](docs/framework%20documentation/18_AUTORESEARCH/), [Chapter 20 (v2)](docs/framework%20documentation/20_AUTORESEARCH_V2/). AutoResearch v2: three-agent engine (Executor+Reviewer+Comparator), `autoresearch.sh` (bash), eval: `scripts/eval-autoresearch.py`, dashboard: `scripts/autoresearch-dashboard.py`.
 Evaluation: `scripts/eval-hooks.py` + `tests/eval/hook_prompts.json` (40 тестов, 16 скиллов).
 Skill Router Eval: `scripts/eval-skill-router.py` (64 ground truth, F1/precision/recall) + `scripts/skill-router-dashboard.py` (CLI dashboard) + CI gate в `.github/workflows/ci.yml`.
 Dashboard: `scripts/hook-dashboard.py` (CLI) + `scripts/skill-enforcement-dashboard.py` (enforcement) + `src/ui/pages/hook_dashboard.py` (Streamlit).
