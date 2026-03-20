@@ -72,13 +72,14 @@ class ProviderState:
     last_error_time: datetime | None = None
     last_success_time: datetime | None = None
     avg_response_time: float = 0.0
-    cooldown_until: datetime | None = None
+    circuit_breaker: CircuitBreaker = field(default_factory=CircuitBreaker)
 
     def record_success(self, response_time: float) -> None:
         """Record a successful request."""
         self.requests_count += 1
         self.consecutive_errors = 0
-        self.status = ProviderStatus.HEALTHY
+        self.circuit_breaker.record_success()
+        self.status = self._status_from_cb()
         self.last_success_time = datetime.now()
         # Running average
         if self.avg_response_time == 0:
@@ -89,32 +90,39 @@ class ProviderState:
     def record_error(
         self, error: str, cooldown_seconds: int = 300, rate_limit_cooldown: int = 60,
     ) -> None:
-        """Record an error and potentially enter cooldown."""
+        """Record an error. CB handles state transitions."""
         self.errors_count += 1
         self.consecutive_errors += 1
         self.last_error = error
         self.last_error_time = datetime.now()
 
         if "429" in error or "rate limit" in error.lower():
-            self.status = ProviderStatus.COOLDOWN
-            self.cooldown_until = datetime.now() + timedelta(seconds=rate_limit_cooldown)
-        elif self.consecutive_errors >= 3:
-            self.status = ProviderStatus.COOLDOWN
-            self.cooldown_until = datetime.now() + timedelta(seconds=cooldown_seconds)
+            # Rate limit → trip CB immediately with shorter timeout
+            self.circuit_breaker.force_open(reset_timeout=rate_limit_cooldown)
         else:
-            self.status = ProviderStatus.DEGRADED
+            self.circuit_breaker.record_failure()
+
+        self.status = self._status_from_cb()
 
     def is_available(self) -> bool:
         """Check if provider can accept requests."""
         if self.status == ProviderStatus.UNAVAILABLE:
             return False
-        if self.status == ProviderStatus.COOLDOWN:
-            if self.cooldown_until and datetime.now() < self.cooldown_until:
-                return False
-            # Cooldown expired
-            self.status = ProviderStatus.DEGRADED
-            self.consecutive_errors = 0
-        return True
+        available = self.circuit_breaker.can_execute()
+        self.status = self._status_from_cb()
+        return available
+
+    def _status_from_cb(self) -> ProviderStatus:
+        """Derive ProviderStatus from circuit breaker state."""
+        if self.status == ProviderStatus.UNAVAILABLE:
+            return ProviderStatus.UNAVAILABLE
+        cb = self.circuit_breaker
+        if cb.state == CircuitState.CLOSED:
+            return ProviderStatus.HEALTHY if cb.fail_count == 0 else ProviderStatus.DEGRADED
+        if cb.state == CircuitState.OPEN:
+            return ProviderStatus.COOLDOWN
+        # HALF_OPEN
+        return ProviderStatus.DEGRADED
 
 
 # Default provider configurations
