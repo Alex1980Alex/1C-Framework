@@ -128,6 +128,16 @@
             "timeout": 3
           }
         ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-protocol-observer.py",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUse": [
