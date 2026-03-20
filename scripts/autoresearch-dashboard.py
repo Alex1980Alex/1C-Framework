@@ -140,24 +140,25 @@ def main():
     if args:
         session_dir = args[0]
     else:
-        session_dir = os.path.join("data", "autoresearch")
+        session_dir = "data"
 
-    if not os.path.isdir(session_dir):
-        # Check if there are subdirectories with sessions
-        parent = Path(session_dir).parent
-        if parent.is_dir():
-            found = False
-            for d in sorted(parent.iterdir()):
-                if d.is_dir() and (d / "autoresearch.jsonl").exists():
-                    render_dashboard(str(d), as_json)
-                    found = True
-            if not found:
-                print(f"[No sessions found in {parent}]")
-        else:
-            print(f"[ERROR] Directory not found: {session_dir}")
-            sys.exit(1)
-    else:
+    # Check if the directory itself has autoresearch files (flat layout)
+    if os.path.isdir(session_dir) and os.path.exists(os.path.join(session_dir, "autoresearch.jsonl")):
         render_dashboard(session_dir, as_json)
+        return
+
+    # Check subdirectories for sessions
+    if os.path.isdir(session_dir):
+        found = False
+        for d in sorted(Path(session_dir).iterdir()):
+            if d.is_dir() and (d / "autoresearch.jsonl").exists():
+                render_dashboard(str(d), as_json)
+                found = True
+        if not found:
+            print(f"[No sessions found in {session_dir}]")
+    else:
+        print(f"[ERROR] Directory not found: {session_dir}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
