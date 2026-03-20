@@ -85,7 +85,9 @@ class ProviderState:
         else:
             self.avg_response_time = (self.avg_response_time * 0.8) + (response_time * 0.2)
 
-    def record_error(self, error: str, cooldown_seconds: int = 300, rate_limit_cooldown: int = 60) -> None:
+    def record_error(
+        self, error: str, cooldown_seconds: int = 300, rate_limit_cooldown: int = 60,
+    ) -> None:
         """Record an error and potentially enter cooldown."""
         self.errors_count += 1
         self.consecutive_errors += 1
