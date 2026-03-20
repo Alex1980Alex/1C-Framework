@@ -93,12 +93,21 @@ class TestProviderState:
         assert state.status == ProviderStatus.COOLDOWN
 
     def test_cooldown_expires(self):
+        """CB OPEN → HALF_OPEN after reset_timeout, then available."""
+        from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
         cfg = ProviderConfig(name="test", base_url="http://test", api_key_env="", default_model="m")
-        state = ProviderState(config=cfg)
-        state.status = ProviderStatus.COOLDOWN
-        state.cooldown_until = datetime.now() - timedelta(seconds=1)
+        cb = CircuitBreaker(fail_threshold=3, reset_timeout=0.01)
+        state = ProviderState(config=cfg, circuit_breaker=cb)
+        # Trip the CB
+        for _ in range(3):
+            state.record_error("error")
+        assert state.status == ProviderStatus.COOLDOWN
+        assert not state.is_available()
+        # Wait for reset_timeout to expire
+        import time
+        time.sleep(0.02)
         assert state.is_available()
-        assert state.status == ProviderStatus.DEGRADED
+        assert state.circuit_breaker.state == CircuitState.HALF_OPEN
 
     def test_unavailable_not_available(self):
         cfg = ProviderConfig(name="test", base_url="http://test", api_key_env="", default_model="m")
