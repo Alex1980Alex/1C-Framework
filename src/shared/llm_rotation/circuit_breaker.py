@@ -93,6 +93,7 @@ class CircuitBreaker:
         self.state = CircuitState.CLOSED
         self.fail_count = 0
         self.success_count = 0
+        self.reset_timeout = self._default_reset_timeout
         self.opened_at = None
 
     def _open(self) -> None:
