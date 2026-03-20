@@ -150,7 +150,10 @@ async def cheap_llm_call(
             _log_metric(component, provider, elapsed, success=False, fallback=False, text_len=0)
             return ""
 
-        logger.debug("[CHEAP-LLM] %s: %s responded in %.1fs (%d chars)", component, provider, elapsed, len(text))
+        logger.debug(
+            "[CHEAP-LLM] %s: %s responded in %.1fs (%d chars)",
+            component, provider, elapsed, len(text),
+        )
         _log_metric(component, provider, elapsed, success=True, fallback=False, text_len=len(text))
         return text
 
