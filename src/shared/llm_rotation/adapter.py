@@ -204,7 +204,10 @@ QUALITY_CRITERIA: dict[str, dict[str, Any]] = {
     },
     "search_classifier": {
         "metric": "valid_classification",
-        "expected_format": r"(simple|moderate|complex|thematic)\s+(factual|analytical|comparative|thematic)\s+\d",
+        "expected_format": (
+            r"(simple|moderate|complex|thematic)\s+"
+            r"(factual|analytical|comparative|thematic)\s+\d"
+        ),
         "min_length": 10,
         "description": "Must output: complexity type confidence",
     },
