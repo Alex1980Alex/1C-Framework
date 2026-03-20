@@ -26,7 +26,6 @@ class LLMRotationSettings(BaseSettings):
     cb_fail_threshold: int = 3
     cb_success_threshold: int = 1
     cb_reset_timeout: float = 60.0
-    cb_rate_limit_timeout: float = 30.0
 
     # API Keys (from environment)
     zhipu_api_key: str = ""
