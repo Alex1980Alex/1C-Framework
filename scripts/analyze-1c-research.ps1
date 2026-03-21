@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# analyze-1c-research.ps1 — Three-Agent 1C Analysis Engine
+# analyze-1c-research.ps1 -Three-Agent 1C Analysis Engine
 #
 # Usage:
 #   .\scripts\analyze-1c-research.ps1 -TaskFile docs/tasks/GKSTCPLK-1234.md
@@ -92,7 +92,7 @@ function Load-Template($path, [hashtable]$vars) {
 }
 
 function Run-Claude($prompt, $logFile, $agentName) {
-    Log-Progress "$agentName START (timeout=${AgentTimeoutMin}m, idle=${IdleTimeoutMin}m, max-turns=$AgentMaxTurns)"
+    Log-Progress "$agentName START timeout=${AgentTimeoutMin}m idle=${IdleTimeoutMin}m max-turns=$AgentMaxTurns"
     $agentStart = Get-Date
 
     # Status & log files
@@ -101,7 +101,7 @@ function Run-Claude($prompt, $logFile, $agentName) {
     $toolLog = New-Object System.Collections.ArrayList
 
     @"
-# $agentName — RUNNING
+# $agentName -RUNNING
 Started: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTurns
 "@ | Set-Content $statusFile -Encoding UTF8
@@ -193,7 +193,7 @@ Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTur
                     $currentPhase = $phase
                     $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
                     $total = $script:PhaseOrder.Count
-                    Log-Progress "$agentName >> $phase ($phaseIdx/$total)"
+                    Log-Progress "$agentName >> $phase [$phaseIdx/$total]"
                 }
                 Log-Progress "$agentName #${toolCount} $tName"
             }
@@ -211,7 +211,7 @@ Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTur
                             $currentPhase = $phase
                             $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
                             $total = $script:PhaseOrder.Count
-                            Log-Progress "$agentName >> $phase ($phaseIdx/$total)"
+                            Log-Progress "$agentName >> $phase [$phaseIdx/$total]"
                         }
                         Log-Progress "$agentName #${toolCount} $tName"
                     }
@@ -233,7 +233,7 @@ Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTur
         if ($elapsed % 30 -lt 1) {
             Log-Progress "$agentName | elapsed=${elapsed}s tools=$toolCount phase=[$currentPhase] idle=${idleSec}s"
             @"
-# $agentName — RUNNING
+# $agentName -RUNNING
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Elapsed: ${elapsed}s | Tools: $toolCount | Phase: $currentPhase | Idle: ${idleSec}s
 "@ | Set-Content $statusFile -Encoding UTF8
@@ -241,10 +241,10 @@ Elapsed: ${elapsed}s | Tools: $toolCount | Phase: $currentPhase | Idle: ${idleSe
 
         # IDLE TIMEOUT
         if ($idleSec -ge ($IdleTimeoutMin * 60)) {
-            Log-Progress "$agentName IDLE TIMEOUT: no events for ${IdleTimeoutMin}m — killing"
+            Log-Progress "$agentName IDLE TIMEOUT: no events for ${IdleTimeoutMin}m -killing"
             try { $proc.Kill() } catch {}
             @"
-# $agentName — IDLE TIMEOUT
+# $agentName -IDLE TIMEOUT
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Reason: No stream events for ${IdleTimeoutMin} minutes
@@ -258,12 +258,12 @@ Last phase: $currentPhase
         if ((Get-Date) -gt $deadline) {
             if ($idleSec -lt 60) {
                 $deadline = (Get-Date).AddMinutes(5)
-                Log-Progress "$agentName | deadline extended +5m (last event ${idleSec}s ago)"
+                Log-Progress "$agentName | deadline extended +5m, last event ${idleSec}s ago"
             } else {
-                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m exceeded — killing"
+                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m exceeded -killing"
                 try { $proc.Kill() } catch {}
                 @"
-# $agentName — HARD TIMEOUT
+# $agentName -HARD TIMEOUT
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Reason: Hard timeout ${AgentTimeoutMin}m (idle ${idleSec}s)
@@ -273,7 +273,7 @@ Tools: $toolCount | Last phase: $currentPhase
             }
         }
 
-        # Process exited but reader not done yet — wait briefly
+        # Process exited but reader not done yet -wait briefly
         if ($proc.HasExited -and -not $readerDone) {
             Start-Sleep -Milliseconds 2000
             # Drain remaining
@@ -301,7 +301,7 @@ Tools: $toolCount | Last phase: $currentPhase
     if (-not $proc.HasExited) {
         $proc.WaitForExit(10000)  # 10s grace
         if (-not $proc.HasExited) {
-            Log-Progress "$agentName | process still alive after result — force killing (bug #25629)"
+            Log-Progress "$agentName | process still alive after result, force killing [bug 25629]"
             try { $proc.Kill() } catch {}
         }
     }
@@ -334,7 +334,7 @@ Tools: $toolCount | Last phase: $currentPhase
 
     # Final status file
     @"
-# $agentName — DONE
+# $agentName -DONE
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Finished: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Duration: ${elapsed}s | Tools: $toolCount
@@ -465,7 +465,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $resultsDir = "$SessionDir/results"
     if (-not (Test-Path $resultsDir)) { New-Item -ItemType Directory -Path $resultsDir -Force > $null }
     @"
-# Iteration $i — Executor Result
+# Iteration $i -Executor Result
 **Time:** $ts | **Duration:** ${execSec}s
 
 ## Output (truncated)
@@ -538,11 +538,11 @@ $($executorOutput.Substring(0, [math]::Min($executorOutput.Length, 2000)))
         }
     }
 
-    Log-Progress "REVIEWER result: score=$metric verdict=$verdict delta=$delta reason=$reason (${revSec}s)"
+    Log-Progress "REVIEWER result: score=$metric verdict=$verdict delta=$delta reason=$reason ${revSec}s"
 
     # Save reviewer intermediate result
     @"
-# Iteration $i — Reviewer Result
+# Iteration $i -Reviewer Result
 **Time:** $ts | **Duration:** ${revSec}s
 **Score:** $metric / $TargetScore | **Verdict:** $verdict | **Delta:** $delta
 
@@ -562,11 +562,11 @@ $($reviewerOutput.Substring(0, [math]::Min($reviewerOutput.Length, 2000)))
         $comparatorOutput = Run-Claude $comparatorPrompt "$logDir/comparator_$i.txt" "CMP"
         $cmpSec = [math]::Round(((Get-Date) - $cmpStart).TotalSeconds)
         Write-Host "  [COMPARATOR] Done (${cmpSec}s)" -ForegroundColor Magenta
-        Log-Progress "COMPARATOR done (${cmpSec}s)"
+        Log-Progress "COMPARATOR done ${cmpSec}s"
 
         # Save comparator intermediate result
         @"
-# Iteration $i — Comparator Result
+# Iteration $i -Comparator Result
 **Time:** $ts | **Duration:** ${cmpSec}s
 
 ## A/B Comparison (truncated)
@@ -606,7 +606,7 @@ $($comparatorOutput.Substring(0, [math]::Min($comparatorOutput.Length, 2000)))
 
     # Save iteration summary
     @"
-# Iteration $i — Summary
+# Iteration $i -Summary
 **Time:** $ts | **Total Duration:** ${iterTotalSec}s
 
 | Metric | Value |
