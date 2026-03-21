@@ -95,173 +95,263 @@ function Run-Claude($prompt, $logFile, $agentName) {
     Log-Progress "$agentName START (timeout=${AgentTimeoutMin}m, idle=${IdleTimeoutMin}m, max-turns=$AgentMaxTurns)"
     $agentStart = Get-Date
 
-    # Create status file
+    # Status & log files
     $statusFile = $logFile -replace '\.txt$', '_status.md'
+    $streamLog = "$logFile.stream"
+    $toolLog = New-Object System.Collections.ArrayList
+
     @"
 # $agentName — RUNNING
 Started: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTurns
 "@ | Set-Content $statusFile -Encoding UTF8
 
-    # Snapshot: files in session dir before launch
-    $sessionFiles = @{}
-    if (Test-Path $script:SessionDirPath) {
-        Get-ChildItem $script:SessionDirPath -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
-            $sessionFiles[$_.FullName] = $_.LastWriteTime
-        }
-    }
+    # Save prompt to temp file
+    $promptFile = "$logFile.prompt"
+    $prompt | Set-Content $promptFile -Encoding UTF8
 
-    # Launch claude -p as background job
-    $jsonOutFile = "$logFile.json"
-    $job = Start-Job -ScriptBlock {
-        param($p, $mt, $outFile)
-        $result = claude -p $p --dangerously-skip-permissions --output-format json --max-turns $mt 2>&1 | Out-String
-        $result | Set-Content $outFile -Encoding UTF8
-        return $result
-    } -ArgumentList $prompt, $AgentMaxTurns, $jsonOutFile
+    # --- Launch via System.Diagnostics.Process for real-time stdout ---
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "cmd.exe"
+    $psi.Arguments = "/c `"type `"$($promptFile.Replace('/', '\'))`" | claude -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns`""
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+    $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
 
-    # Monitor loop: check for activity
+    $proc = [System.Diagnostics.Process]::Start($psi)
+
+    # --- Async stderr reader (prevent deadlock) ---
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+    # --- Real-time stdout reading with timeout ---
+    $resultText = ""
+    $toolCount = 0
+    $currentPhase = ""
     $lastActivity = Get-Date
     $deadline = (Get-Date).AddMinutes($AgentTimeoutMin)
-    $pollInterval = 5
-    $activityCount = 0
 
-    while ($job.State -eq "Running") {
-        Start-Sleep -Seconds $pollInterval
+    "" | Set-Content $streamLog -Encoding UTF8
 
-        # Check for file activity in session dir
-        $newActivity = $false
-        if (Test-Path $script:SessionDirPath) {
-            Get-ChildItem $script:SessionDirPath -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
-                $prev = $sessionFiles[$_.FullName]
-                if (-not $prev -or $_.LastWriteTime -gt $prev) {
-                    $newActivity = $true
-                    $sessionFiles[$_.FullName] = $_.LastWriteTime
-                    $activityCount++
-                    $shortName = $_.Name
-                    Log-Progress "$agentName | file changed: $shortName"
+    # Read stdout line by line in a background runspace (ReadLine blocks)
+    $lineQueue = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
+    $readerDone = $false
+    $reader = $proc.StandardOutput
+    $readJob = Start-Job -ScriptBlock {
+        param($procId)
+        # Re-attach to the process stdout - not possible from job
+        # Instead we signal via file
+    } -ArgumentList $proc.Id
+    # Actually: use a runspace for non-blocking readline
+    Remove-Job $readJob -Force -ErrorAction SilentlyContinue
+
+    $runspace = [runspacefactory]::CreateRunspace()
+    $runspace.Open()
+    $ps = [powershell]::Create().AddScript({
+        param($reader, $queue, $logPath)
+        try {
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ($null -ne $line) {
+                    $queue.Enqueue($line)
+                    $line | Add-Content $logPath -Encoding UTF8
                 }
+            }
+        } catch {}
+        $queue.Enqueue("__READER_DONE__")
+    }).AddArgument($reader).AddArgument($lineQueue).AddArgument($streamLog)
+    $ps.Runspace = $runspace
+    $asyncHandle = $ps.BeginInvoke()
+
+    # --- Main monitor loop ---
+    while (-not $readerDone) {
+        Start-Sleep -Milliseconds 500
+
+        # Drain queue
+        $line = $null
+        while ($lineQueue.TryDequeue([ref]$line)) {
+            if ($line -eq "__READER_DONE__") {
+                $readerDone = $true
+                break
+            }
+
+            # Parse JSON event
+            try { $evt = $line | ConvertFrom-Json -ErrorAction Stop } catch { continue }
+
+            # Tool use: content_block_start
+            if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
+                $toolCount++
+                $tName = $evt.content_block.name
+                $lastActivity = Get-Date
+                [void]$toolLog.Add("$toolCount $tName")
+
+                # Phase detection
+                $phase = Detect-Phase $tName
+                if ($phase -and $phase -ne $currentPhase) {
+                    $currentPhase = $phase
+                    $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
+                    $total = $script:PhaseOrder.Count
+                    Log-Progress "$agentName >> $phase ($phaseIdx/$total)"
+                }
+                Log-Progress "$agentName #${toolCount} $tName"
+            }
+
+            # Tool use: from assistant message
+            if ($evt.type -eq "assistant" -and $evt.message -and $evt.message.content) {
+                foreach ($block in $evt.message.content) {
+                    if ($block.type -eq "tool_use") {
+                        $toolCount++
+                        $tName = $block.name
+                        $lastActivity = Get-Date
+                        [void]$toolLog.Add("$toolCount $tName")
+                        $phase = Detect-Phase $tName
+                        if ($phase -and $phase -ne $currentPhase) {
+                            $currentPhase = $phase
+                            $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
+                            $total = $script:PhaseOrder.Count
+                            Log-Progress "$agentName >> $phase ($phaseIdx/$total)"
+                        }
+                        Log-Progress "$agentName #${toolCount} $tName"
+                    }
+                }
+            }
+
+            # Result event
+            if ($evt.type -eq "result" -and $evt.result) {
+                $resultText = $evt.result
+                $lastActivity = Get-Date
             }
         }
 
-        # Check git for new commits
-        $currentCommit = git rev-parse --short HEAD 2>$null
-        if ($script:LastKnownCommit -and $currentCommit -ne $script:LastKnownCommit) {
-            $newActivity = $true
-            $activityCount++
-            Log-Progress "$agentName | new commit: $currentCommit"
-            $script:LastKnownCommit = $currentCommit
-        }
-
-        if ($newActivity) {
-            $lastActivity = Get-Date
-        }
-
-        # Periodic heartbeat
+        # Timeout checks
         $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
         $idleSec = [math]::Round(((Get-Date) - $lastActivity).TotalSeconds)
-        if ($elapsed % 30 -lt $pollInterval) {
-            Log-Progress "$agentName | elapsed=${elapsed}s activity=$activityCount idle=${idleSec}s"
-        }
 
-        # Update status file
-        @"
+        # Heartbeat every 30s
+        if ($elapsed % 30 -lt 1) {
+            Log-Progress "$agentName | elapsed=${elapsed}s tools=$toolCount phase=[$currentPhase] idle=${idleSec}s"
+            @"
 # $agentName — RUNNING
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
-Elapsed: ${elapsed}s | Activity: $activityCount events | Idle: ${idleSec}s
+Elapsed: ${elapsed}s | Tools: $toolCount | Phase: $currentPhase | Idle: ${idleSec}s
 "@ | Set-Content $statusFile -Encoding UTF8
+        }
 
-        # IDLE TIMEOUT: no activity for IdleTimeoutMin
+        # IDLE TIMEOUT
         if ($idleSec -ge ($IdleTimeoutMin * 60)) {
-            Log-Progress "$agentName IDLE TIMEOUT: no activity for ${IdleTimeoutMin}m — killing"
-            Stop-Job $job -ErrorAction SilentlyContinue
-            Remove-Job $job -Force -ErrorAction SilentlyContinue
+            Log-Progress "$agentName IDLE TIMEOUT: no events for ${IdleTimeoutMin}m — killing"
+            try { $proc.Kill() } catch {}
             @"
 # $agentName — IDLE TIMEOUT
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Reason: No file activity for ${IdleTimeoutMin} minutes
-Activity events before timeout: $activityCount
+Reason: No stream events for ${IdleTimeoutMin} minutes
+Tools before timeout: $toolCount
+Last phase: $currentPhase
 "@ | Set-Content $statusFile -Encoding UTF8
-            "" | Set-Content $logFile -Encoding UTF8
-            return ""
+            break
         }
 
-        # HARD DEADLINE: absolute max time
+        # HARD DEADLINE
         if ((Get-Date) -gt $deadline) {
             if ($idleSec -lt 60) {
-                # Recent activity — extend by 5 min
                 $deadline = (Get-Date).AddMinutes(5)
-                Log-Progress "$agentName | deadline extended +5m (recent activity ${idleSec}s ago)"
+                Log-Progress "$agentName | deadline extended +5m (last event ${idleSec}s ago)"
             } else {
-                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m exceeded, idle=${idleSec}s — killing"
-                Stop-Job $job -ErrorAction SilentlyContinue
-                Remove-Job $job -Force -ErrorAction SilentlyContinue
+                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m exceeded — killing"
+                try { $proc.Kill() } catch {}
                 @"
 # $agentName — HARD TIMEOUT
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Reason: Hard timeout ${AgentTimeoutMin}m exceeded (idle ${idleSec}s)
-Activity events: $activityCount
+Reason: Hard timeout ${AgentTimeoutMin}m (idle ${idleSec}s)
+Tools: $toolCount | Last phase: $currentPhase
 "@ | Set-Content $statusFile -Encoding UTF8
-                "" | Set-Content $logFile -Encoding UTF8
-                return ""
+                break
             }
+        }
+
+        # Process exited but reader not done yet — wait briefly
+        if ($proc.HasExited -and -not $readerDone) {
+            Start-Sleep -Milliseconds 2000
+            # Drain remaining
+            while ($lineQueue.TryDequeue([ref]$line)) {
+                if ($line -eq "__READER_DONE__") { $readerDone = $true; break }
+                try { $evt = $line | ConvertFrom-Json -ErrorAction Stop } catch { continue }
+                if ($evt.type -eq "result" -and $evt.result) { $resultText = $evt.result }
+                if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
+                    $toolCount++
+                    Log-Progress "$agentName #${toolCount} $($evt.content_block.name)"
+                }
+            }
+            $readerDone = $true
         }
     }
 
-    # Job completed — collect result
-    $output = Receive-Job $job 2>&1 | Out-String
-    Remove-Job $job -Force -ErrorAction SilentlyContinue
+    # Cleanup runspace
+    try {
+        $ps.EndInvoke($asyncHandle)
+        $ps.Dispose()
+        $runspace.Close()
+    } catch {}
 
-    # If output empty, try reading from json file
-    if (-not $output -and (Test-Path $jsonOutFile)) {
-        $output = Get-Content $jsonOutFile -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+    # Wait for process exit (bug #25629: CLI may hang after result)
+    if (-not $proc.HasExited) {
+        $proc.WaitForExit(10000)  # 10s grace
+        if (-not $proc.HasExited) {
+            Log-Progress "$agentName | process still alive after result — force killing (bug #25629)"
+            try { $proc.Kill() } catch {}
+        }
     }
 
-    # Parse JSON result
-    $resultText = ""
-    $toolCount = 0
-    $cost = ""
-    $numTurns = 0
-    try {
-        $json = $output | ConvertFrom-Json -ErrorAction Stop
-        $resultText = $json.result
-        $cost = "$([math]::Round($json.total_cost_usd, 3))"
-        $numTurns = if ($json.num_turns) { $json.num_turns } else { 0 }
-    } catch {
-        $resultText = $output
+    # Fallback: if no result from stream, try json format
+    if (-not $resultText) {
+        Log-Progress "$agentName | no result from stream-json, falling back to json format"
+        $fallbackOutput = claude -p $prompt --dangerously-skip-permissions --output-format json --max-turns $AgentMaxTurns 2>&1 | Out-String
+        try {
+            $json = $fallbackOutput | ConvertFrom-Json -ErrorAction Stop
+            $resultText = $json.result
+            $toolCount = if ($json.num_turns) { $json.num_turns } else { 0 }
+        } catch {
+            $resultText = $fallbackOutput
+        }
+        Log-Progress "$agentName | fallback result: $($resultText.Length) chars"
     }
 
     $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
-    Log-Progress "$agentName DONE: ${elapsed}s, turns=$numTurns, cost=$cost, activity=$activityCount"
+    Log-Progress "$agentName DONE: ${elapsed}s, tools=$toolCount, phase=$currentPhase"
 
     # Detect phases from result text
     $phases = @()
     if ($resultText) {
         foreach ($phaseName in $script:PhaseOrder) {
-            $phaseNum = $phaseName.Substring(0, 7)
-            if ($resultText -match $phaseNum) { $phases += $phaseName }
+            if ($resultText -match $phaseName.Substring(0, 7)) { $phases += $phaseName }
         }
-        if ($phases.Count -gt 0) {
-            Log-Progress "$agentName phases: $($phases -join ' -> ')"
-        }
+        if ($phases.Count -gt 0) { Log-Progress "$agentName phases: $($phases -join ' -> ')" }
     }
 
-    # Update status file
+    # Final status file
     @"
 # $agentName — DONE
 Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
 Finished: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Duration: ${elapsed}s | Turns: $numTurns | Cost: $cost
-Activity events: $activityCount
-Phases: $($phases -join ', ')
+Duration: ${elapsed}s | Tools: $toolCount
+Last phase: $currentPhase
+Phases detected: $($phases -join ', ')
 Output: $($resultText.Length) chars
+
+## Tool Calls
+$($toolLog -join "`n")
 "@ | Set-Content $statusFile -Encoding UTF8
 
     # Save result
     $resultText | Set-Content $logFile -Encoding UTF8
-    $output | Set-Content "$logFile.json" -Encoding UTF8
+
+    # Cleanup temp
+    Remove-Item $promptFile -ErrorAction SilentlyContinue
+    Remove-Item $streamLog -ErrorAction SilentlyContinue
 
     return $resultText
 }
