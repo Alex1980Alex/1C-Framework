@@ -89,114 +89,52 @@ function Load-Template($path, [hashtable]$vars) {
 }
 
 function Run-Claude($prompt, $logFile, $agentName) {
-    $streamFile = "$logFile.stream"
-    $promptFile = "$logFile.prompt"
-    $errFile = "$logFile.err"
-
-    $prompt | Set-Content $promptFile -Encoding UTF8
-    "" | Set-Content $streamFile -Encoding UTF8
-
     Log-Progress "$agentName START"
-
-    # claude is an npm script — pipe prompt via cmd.exe type on Windows
-    $promptFileWin = $promptFile.Replace("/", "\")
-    $streamFileWin = $streamFile.Replace("/", "\")
-    $errFileWin = $errFile.Replace("/", "\")
-    $cmdLine = "type `"$promptFileWin`" | claude -p - --dangerously-skip-permissions --output-format stream-json > `"$streamFileWin`" 2> `"$errFileWin`""
-    $proc = Start-Process -FilePath "cmd.exe" `
-        -ArgumentList "/c",$cmdLine `
-        -NoNewWindow -PassThru
-
-    $lastPos = 0
-    $toolCount = 0
-    $resultText = ""
-    $lastReport = Get-Date
     $agentStart = Get-Date
-    $currentPhase = ""
 
-    while (-not $proc.HasExited) {
-        Start-Sleep -Milliseconds 1500
-        if (-not (Test-Path $streamFile)) { continue }
-        try { $bytes = [System.IO.File]::ReadAllBytes($streamFile) } catch { continue }
-        if ($bytes.Length -le $lastPos) {
-            if (((Get-Date) - $lastReport).TotalSeconds -ge 30) {
-                $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
-                Log-Progress "$agentName | phase=[$currentPhase] tools=$toolCount elapsed=${elapsed}s"
-                $lastReport = Get-Date
-            }
-            continue
-        }
-        $newText = [System.Text.Encoding]::UTF8.GetString($bytes, $lastPos, $bytes.Length - $lastPos)
-        $lastPos = $bytes.Length
-        $lastReport = Get-Date
+    # Run claude -p with JSON output, capture result
+    $output = claude -p $prompt --dangerously-skip-permissions --output-format json 2>&1 | Out-String
 
-        foreach ($jsonLine in ($newText -split "`n")) {
-            $jsonLine = $jsonLine.Trim()
-            if (-not $jsonLine) { continue }
-            try { $evt = $jsonLine | ConvertFrom-Json -ErrorAction Stop } catch { continue }
-
-            # Tool use from content_block_start
-            if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
-                $toolCount++
-                $tName = $evt.content_block.name
-                $phase = Detect-Phase $tName
-                if ($phase -and $phase -ne $currentPhase) {
-                    $currentPhase = $phase
-                    $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
-                    $total = $script:PhaseOrder.Count
-                    Log-Progress "$agentName >> $phase ($phaseIdx/$total)"
-                }
-                Log-Progress "$agentName #${toolCount} $tName"
-            }
-            # Tool use from assistant message
-            if ($evt.type -eq "assistant" -and $evt.message -and $evt.message.content) {
-                foreach ($block in $evt.message.content) {
-                    if ($block.type -eq "tool_use") {
-                        $toolCount++
-                        $tName = $block.name
-                        $phase = Detect-Phase $tName
-                        if ($phase -and $phase -ne $currentPhase) {
-                            $currentPhase = $phase
-                            $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
-                            $total = $script:PhaseOrder.Count
-                            Log-Progress "$agentName >> $phase ($phaseIdx/$total)"
-                        }
-                        Log-Progress "$agentName #${toolCount} $tName"
-                    }
-                }
-            }
-            # Result
-            if ($evt.type -eq "result" -and $evt.result) {
-                $resultText = $evt.result
+    # Parse JSON result
+    $resultText = ""
+    $toolCount = 0
+    $cost = ""
+    $duration = ""
+    try {
+        $json = $output | ConvertFrom-Json -ErrorAction Stop
+        $resultText = $json.result
+        $duration = "$([math]::Round($json.duration_ms / 1000))s"
+        $cost = "$([math]::Round($json.total_cost_usd, 3))$"
+        # Extract tool count from usage iterations
+        if ($json.usage -and $json.usage.iterations) {
+            foreach ($iter in $json.usage.iterations) {
+                if ($iter.tool_uses) { $toolCount += $iter.tool_uses }
             }
         }
-    }
-
-    # Drain remaining data
-    if (Test-Path $streamFile) {
-        try { $bytes = [System.IO.File]::ReadAllBytes($streamFile) } catch { $bytes = @() }
-        if ($bytes.Length -gt $lastPos) {
-            $newText = [System.Text.Encoding]::UTF8.GetString($bytes, $lastPos, $bytes.Length - $lastPos)
-            foreach ($jsonLine in ($newText -split "`n")) {
-                $jsonLine = $jsonLine.Trim()
-                if (-not $jsonLine) { continue }
-                try { $evt = $jsonLine | ConvertFrom-Json -ErrorAction Stop } catch { continue }
-                if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
-                    $toolCount++
-                    Log-Progress "$agentName #${toolCount} $($evt.content_block.name)"
-                }
-                if ($evt.type -eq "result" -and $evt.result) { $resultText = $evt.result }
-            }
-        }
+        # Fallback: count from num_turns
+        if ($toolCount -eq 0 -and $json.num_turns) { $toolCount = $json.num_turns }
+    } catch {
+        # Not JSON — raw text output
+        $resultText = $output
     }
 
     $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
-    Log-Progress "$agentName DONE: $toolCount tools, ${elapsed}s"
+    Log-Progress "$agentName DONE: ${elapsed}s, turns=$toolCount, cost=$cost"
 
+    # Detect phases from result text
+    $phases = @()
+    foreach ($phaseName in $script:PhaseOrder) {
+        $phaseNum = $phaseName.Substring(0, 7)  # "Phase N"
+        if ($resultText -match $phaseNum) { $phases += $phaseName }
+    }
+    if ($phases.Count -gt 0) {
+        Log-Progress "$agentName phases: $($phases -join ' -> ')"
+    }
+
+    # Save full output to log
     $resultText | Set-Content $logFile -Encoding UTF8
-    Remove-Item $streamFile -ErrorAction SilentlyContinue
-    Remove-Item $promptFile -ErrorAction SilentlyContinue
-    Remove-Item $errFile -ErrorAction SilentlyContinue
+    # Save raw JSON next to it
+    $output | Set-Content "$logFile.json" -Encoding UTF8
 
     return $resultText
 }
