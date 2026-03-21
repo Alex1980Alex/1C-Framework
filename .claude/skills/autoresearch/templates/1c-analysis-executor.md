@@ -38,9 +38,21 @@ Task: {task_description}
 - execute_query(query_text) — run 1C query language on live database
 - search(query) — search 1C platform API docs
 
+## Phase Progress Files (MANDATORY)
+After completing each phase, write a progress file to {session_dir}/phases/:
+- Phase 1 done: Write {session_dir}/phases/phase1_requirements.md with parsed requirements list
+- Phase 2 done: Write {session_dir}/phases/phase2_objects.md with found objects and metadata results
+- Phase 3 done: Write {session_dir}/phases/phase3_patterns.md with code patterns found
+- Phase 4 done: Write {session_dir}/phases/phase4_plan.md with modification plan summary
+- Phase 5 done: Write {session_dir}/phases/phase5_verification.md with SQL/field verification results
+
+Each file: first line = "# Phase N: Name", then key findings in 5-15 lines.
+These files are monitored by the orchestrator to track your progress. No file = assumed hung.
+
 ## Rules
 - ONE improvement per iteration (atomic, explainable in 1 sentence)
 - Do NOT run scorer or evaluate your own work
 - Do NOT retry Dead Ends from autoresearch.md
 - Commit BEFORE reviewer checks
-- Always add markers (✓/✗) for traceability
+- Always add markers for traceability
+- ALWAYS write phase files after each phase

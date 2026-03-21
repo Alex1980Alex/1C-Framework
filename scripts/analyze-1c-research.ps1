@@ -1,10 +1,6 @@
 #!/usr/bin/env pwsh
-# analyze-1c-research.ps1 -Three-Agent 1C Analysis Engine
-#
-# Usage:
-#   .\scripts\analyze-1c-research.ps1 -TaskFile docs/tasks/GKSTCPLK-1234.md
-#   .\scripts\analyze-1c-research.ps1 -TaskFile task.md -TargetScore 90 -MaxIterations 10
-#   .\scripts\analyze-1c-research.ps1 -SessionDir data/analyze-1c-research/GKSTCPLK-1234
+# analyze-1c-research.ps1 - Three-Agent 1C Analysis Engine v3
+# Real-time monitoring via phase files + CPU check + smart timeout
 
 param(
     [string]$TaskFile,
@@ -30,40 +26,20 @@ Set-Location $projectRoot
 $templatesDir = "$projectRoot/.claude/skills/autoresearch/templates"
 $dataDir = "$projectRoot/data/analyze-1c-research"
 
-# --- Phase Detection ---
-$script:PhaseMap = @{
-    "Read"                = "Phase 1: Requirements"
-    "Skill"               = "Phase 1: Requirements"
-    "bsl_search"          = "Phase 2: Objects"
-    "bsl_hybrid_search"   = "Phase 2: Objects"
-    "bsl_object_info"     = "Phase 2: Objects"
-    "get_metadata"        = "Phase 2: Objects"
-    "search_in_code"      = "Phase 3: Patterns"
-    "read_method_source"  = "Phase 3: Patterns"
-    "get_module_structure" = "Phase 3: Patterns"
-    "read_module_source"  = "Phase 3: Patterns"
-    "bsl_coding_context"  = "Phase 3: Patterns"
-    "Write"               = "Phase 4: Plan"
-    "write_module_source" = "Phase 4: Plan"
-    "validate_query"      = "Phase 5: Verification"
-    "execute_query"       = "Phase 5: Verification"
-    "bsl_analyze"         = "Phase 5: Verification"
+# --- Per-phase timeout limits in seconds ---
+$script:PhaseLimits = @{
+    "phase1" = 180;  "phase2" = 240;  "phase3" = 300
+    "phase4" = 180;  "phase5" = 180
+    "review1" = 180; "review2" = 180; "review3" = 180
+    "compare1" = 180; "compare2" = 180
+    "default" = 180
 }
-$script:PhaseOrder = @(
-    "Phase 1: Requirements",
-    "Phase 2: Objects",
-    "Phase 3: Patterns",
-    "Phase 4: Plan",
-    "Phase 5: Verification"
-)
-$script:ProgressFile = $null
+$script:CpuGraceSec = 120
 
-function Detect-Phase($toolName) {
-    foreach ($key in $script:PhaseMap.Keys) {
-        if ($toolName -match $key) { return $script:PhaseMap[$key] }
-    }
-    return $null
-}
+$script:ProgressFile = $null
+$script:SessionDirPath = $null
+$script:LastKnownCommit = $null
+$script:CurrentIter = 0
 
 function Log-Progress($msg) {
     $ts = Get-Date -Format "HH:mm:ss"
@@ -74,7 +50,6 @@ function Log-Progress($msg) {
     }
 }
 
-# --- Helper Functions ---
 function Extract-TaskId($path) {
     $name = [System.IO.Path]::GetFileNameWithoutExtension($path)
     if ($name -match '^(GKSTCPLK-\d+|[A-Za-z0-9_-]+)') { return $Matches[1] }
@@ -91,267 +66,193 @@ function Load-Template($path, [hashtable]$vars) {
     return $text
 }
 
+function Get-ClaudeCpu {
+    try {
+        $procs = Get-Process -Name "node" -ErrorAction SilentlyContinue
+        if ($procs) {
+            return [math]::Round(($procs | Measure-Object -Property CPU -Sum).Sum, 1)
+        }
+    } catch {}
+    return 0
+}
+
+function Get-PhaseFiles($dir) {
+    if (-not (Test-Path $dir)) { return @() }
+    return Get-ChildItem $dir -Filter "*.md" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime
+}
+
+function Get-PhaseLimit($fileName) {
+    if ($fileName -match '^(phase\d|review\d|compare\d)') {
+        $key = $Matches[1]
+        if ($script:PhaseLimits.ContainsKey($key)) { return $script:PhaseLimits[$key] }
+    }
+    return $script:PhaseLimits["default"]
+}
+
+# =============================================================
+# Run-Claude: Start-Job + phase file monitoring + CPU check
+# =============================================================
 function Run-Claude($prompt, $logFile, $agentName) {
-    Log-Progress "$agentName START timeout=${AgentTimeoutMin}m idle=${IdleTimeoutMin}m max-turns=$AgentMaxTurns"
+    Log-Progress "$agentName START timeout=${AgentTimeoutMin}m idle=${IdleTimeoutMin}m turns=$AgentMaxTurns"
     $agentStart = Get-Date
 
-    # Status & log files
     $statusFile = $logFile -replace '\.txt$', '_status.md'
-    $streamLog = "$logFile.stream"
-    $toolLog = New-Object System.Collections.ArrayList
-
     @"
-# $agentName -RUNNING
+# $agentName - RUNNING
 Started: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTurns
 "@ | Set-Content $statusFile -Encoding UTF8
 
-    # --- Launch via bash pipe (cmd.exe/node corrupt stdin on Windows) ---
-    $promptFile = "$logFile.prompt"
-    $prompt | Set-Content $promptFile -Encoding UTF8
-    $promptFileUnix = $promptFile.Replace('\', '/')
+    # Phases dir for heartbeat files
+    $phasesDir = "$script:SessionDirPath/phases"
+    if (-not (Test-Path $phasesDir)) { New-Item -ItemType Directory -Path $phasesDir -Force > $null }
+    $phaseCountBefore = (Get-PhaseFiles $phasesDir).Count
 
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "bash"
-    $psi.Arguments = "-c `"cat '$promptFileUnix' | claude -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns`""
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.UseShellExecute = $false
-    $psi.CreateNoWindow = $true
-    $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-    $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    # Launch agent as background job
+    $jsonOutFile = "$logFile.json"
+    $job = Start-Job -ScriptBlock {
+        param($p, $mt, $outFile)
+        $r = claude -p $p --dangerously-skip-permissions --output-format json --max-turns $mt 2>&1 | Out-String
+        $r | Set-Content $outFile -Encoding UTF8
+        return $r
+    } -ArgumentList $prompt, $AgentMaxTurns, $jsonOutFile
 
-    $proc = [System.Diagnostics.Process]::Start($psi)
-
-    # --- Async stderr reader to prevent deadlock ---
-    $stderrTask = $proc.StandardError.ReadToEndAsync()
-
-    # --- Real-time stdout reading with timeout ---
-    $resultText = ""
-    $toolCount = 0
-    $currentPhase = ""
-    $lastActivity = Get-Date
+    # Monitor loop
+    $lastPhaseTime = Get-Date
+    $lastPhaseFile = ""
+    $currentPhase = "starting"
     $deadline = (Get-Date).AddMinutes($AgentTimeoutMin)
+    $cpuBaseline = Get-ClaudeCpu
 
-    "" | Set-Content $streamLog -Encoding UTF8
+    while ($job.State -eq "Running") {
+        Start-Sleep -Seconds 5
 
-    # Read stdout line by line in a background runspace (ReadLine blocks)
-    $lineQueue = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
-    $readerDone = $false
-    $reader = $proc.StandardOutput
-    $readJob = Start-Job -ScriptBlock {
-        param($procId)
-        # Re-attach to the process stdout - not possible from job
-        # Instead we signal via file
-    } -ArgumentList $proc.Id
-    # Actually: use a runspace for non-blocking readline
-    Remove-Job $readJob -Force -ErrorAction SilentlyContinue
-
-    $runspace = [runspacefactory]::CreateRunspace()
-    $runspace.Open()
-    $ps = [powershell]::Create().AddScript({
-        param($reader, $queue, $logPath)
-        try {
-            while (-not $reader.EndOfStream) {
-                $line = $reader.ReadLine()
-                if ($null -ne $line) {
-                    $queue.Enqueue($line)
-                    $line | Add-Content $logPath -Encoding UTF8
-                }
-            }
-        } catch {}
-        $queue.Enqueue("__READER_DONE__")
-    }).AddArgument($reader).AddArgument($lineQueue).AddArgument($streamLog)
-    $ps.Runspace = $runspace
-    $asyncHandle = $ps.BeginInvoke()
-
-    # --- Main monitor loop ---
-    while (-not $readerDone) {
-        Start-Sleep -Milliseconds 500
-
-        # Drain queue
-        $line = $null
-        while ($lineQueue.TryDequeue([ref]$line)) {
-            if ($line -eq "__READER_DONE__") {
-                $readerDone = $true
-                break
-            }
-
-            # Parse JSON event
-            try { $evt = $line | ConvertFrom-Json -ErrorAction Stop } catch { continue }
-
-            # Tool use: content_block_start
-            if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
-                $toolCount++
-                $tName = $evt.content_block.name
-                $lastActivity = Get-Date
-                [void]$toolLog.Add("$toolCount $tName")
-
-                # Phase detection
-                $phase = Detect-Phase $tName
-                if ($phase -and $phase -ne $currentPhase) {
-                    $currentPhase = $phase
-                    $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
-                    $total = $script:PhaseOrder.Count
-                    Log-Progress "$agentName >> $phase [$phaseIdx/$total]"
-                }
-                Log-Progress "$agentName #${toolCount} $tName"
-            }
-
-            # Tool use: from assistant message
-            if ($evt.type -eq "assistant" -and $evt.message -and $evt.message.content) {
-                foreach ($block in $evt.message.content) {
-                    if ($block.type -eq "tool_use") {
-                        $toolCount++
-                        $tName = $block.name
-                        $lastActivity = Get-Date
-                        [void]$toolLog.Add("$toolCount $tName")
-                        $phase = Detect-Phase $tName
-                        if ($phase -and $phase -ne $currentPhase) {
-                            $currentPhase = $phase
-                            $phaseIdx = [array]::IndexOf($script:PhaseOrder, $phase) + 1
-                            $total = $script:PhaseOrder.Count
-                            Log-Progress "$agentName >> $phase [$phaseIdx/$total]"
-                        }
-                        Log-Progress "$agentName #${toolCount} $tName"
-                    }
-                }
-            }
-
-            # Result event
-            if ($evt.type -eq "result" -and $evt.result) {
-                $resultText = $evt.result
-                $lastActivity = Get-Date
-            }
-        }
-
-        # Timeout checks
         $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
-        $idleSec = [math]::Round(((Get-Date) - $lastActivity).TotalSeconds)
+        $sincePhase = [math]::Round(((Get-Date) - $lastPhaseTime).TotalSeconds)
 
-        # Heartbeat every 30s
-        if ($elapsed % 30 -lt 1) {
-            Log-Progress "$agentName | elapsed=${elapsed}s tools=$toolCount phase=[$currentPhase] idle=${idleSec}s"
+        # Check new phase files
+        $phaseFiles = Get-PhaseFiles $phasesDir
+        if ($phaseFiles.Count -gt $phaseCountBefore) {
+            $newest = $phaseFiles[-1]
+            if ($newest.Name -ne $lastPhaseFile) {
+                $lastPhaseFile = $newest.Name
+                $lastPhaseTime = Get-Date
+                $currentPhase = $newest.BaseName
+                $firstLine = (Get-Content $newest.FullName -TotalCount 2 -Encoding UTF8 -ErrorAction SilentlyContinue) -join " "
+                if ($firstLine.Length -gt 100) { $firstLine = $firstLine.Substring(0, 100) + "..." }
+                Log-Progress "$agentName >> $currentPhase [file $($phaseFiles.Count - $phaseCountBefore + 1)]"
+                Log-Progress "$agentName    $firstLine"
+                $phaseCountBefore = $phaseFiles.Count
+            }
+        }
+
+        # Check git commits
+        $curCommit = git rev-parse --short HEAD 2>$null
+        if ($script:LastKnownCommit -and $curCommit -ne $script:LastKnownCommit) {
+            $lastPhaseTime = Get-Date
+            Log-Progress "$agentName | git commit: $curCommit"
+            $script:LastKnownCommit = $curCommit
+        }
+
+        # CPU check
+        $cpuNow = Get-ClaudeCpu
+        $cpuActive = ($cpuNow - $cpuBaseline) -gt 1
+
+        # Heartbeat every ~30s
+        if ($elapsed % 30 -lt 6) {
+            Log-Progress "$agentName | ${elapsed}s phase=$currentPhase idle=${sincePhase}s cpu=$cpuNow"
             @"
-# $agentName -RUNNING
-Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
-Elapsed: ${elapsed}s | Tools: $toolCount | Phase: $currentPhase | Idle: ${idleSec}s
+# $agentName - RUNNING
+Elapsed: ${elapsed}s | Phase: $currentPhase | Idle: ${sincePhase}s | CPU: $cpuNow
 "@ | Set-Content $statusFile -Encoding UTF8
         }
 
-        # IDLE TIMEOUT
-        if ($idleSec -ge ($IdleTimeoutMin * 60)) {
-            Log-Progress "$agentName IDLE TIMEOUT: no events for ${IdleTimeoutMin}m -killing"
-            try { $proc.Kill() } catch {}
-            @"
-# $agentName -IDLE TIMEOUT
-Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
-Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Reason: No stream events for ${IdleTimeoutMin} minutes
-Tools before timeout: $toolCount
-Last phase: $currentPhase
-"@ | Set-Content $statusFile -Encoding UTF8
-            break
-        }
+        # --- TIMEOUT LOGIC ---
+        $phaseLimit = Get-PhaseLimit $currentPhase
+        $effectiveLimit = if ($cpuActive) { $phaseLimit + $script:CpuGraceSec } else { $phaseLimit }
 
-        # HARD DEADLINE
-        if ((Get-Date) -gt $deadline) {
-            if ($idleSec -lt 60) {
-                $deadline = (Get-Date).AddMinutes(5)
-                Log-Progress "$agentName | deadline extended +5m, last event ${idleSec}s ago"
+        # Phase timeout
+        if ($sincePhase -gt $effectiveLimit) {
+            if ($cpuActive) {
+                Log-Progress "$agentName | WARNING: $currentPhase over limit but CPU active"
+                $lastPhaseTime = Get-Date
             } else {
-                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m exceeded -killing"
-                try { $proc.Kill() } catch {}
+                Log-Progress "$agentName HUNG: $currentPhase idle=${sincePhase}s cpu=$cpuNow - killing"
+                Stop-Job $job -ErrorAction SilentlyContinue
+                Remove-Job $job -Force -ErrorAction SilentlyContinue
                 @"
-# $agentName -HARD TIMEOUT
-Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
+# $agentName - HUNG
 Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Reason: Hard timeout ${AgentTimeoutMin}m (idle ${idleSec}s)
-Tools: $toolCount | Last phase: $currentPhase
+Reason: $currentPhase no progress ${sincePhase}s, CPU=$cpuNow
 "@ | Set-Content $statusFile -Encoding UTF8
-                break
+                "" | Set-Content $logFile -Encoding UTF8
+                return ""
             }
         }
 
-        # Process exited but reader not done yet -wait briefly
-        if ($proc.HasExited -and -not $readerDone) {
-            Start-Sleep -Milliseconds 2000
-            # Drain remaining
-            while ($lineQueue.TryDequeue([ref]$line)) {
-                if ($line -eq "__READER_DONE__") { $readerDone = $true; break }
-                try { $evt = $line | ConvertFrom-Json -ErrorAction Stop } catch { continue }
-                if ($evt.type -eq "result" -and $evt.result) { $resultText = $evt.result }
-                if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
-                    $toolCount++
-                    Log-Progress "$agentName #${toolCount} $($evt.content_block.name)"
-                }
+        # Hard deadline
+        if ((Get-Date) -gt $deadline) {
+            if ($cpuActive -or $sincePhase -lt 60) {
+                $deadline = (Get-Date).AddMinutes(5)
+                Log-Progress "$agentName | deadline extended +5m"
+            } else {
+                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m cpu=$cpuNow - killing"
+                Stop-Job $job -ErrorAction SilentlyContinue
+                Remove-Job $job -Force -ErrorAction SilentlyContinue
+                @"
+# $agentName - HARD TIMEOUT
+Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Reason: ${AgentTimeoutMin}m exceeded, idle=${sincePhase}s, CPU=$cpuNow
+"@ | Set-Content $statusFile -Encoding UTF8
+                "" | Set-Content $logFile -Encoding UTF8
+                return ""
             }
-            $readerDone = $true
         }
     }
 
-    # Cleanup runspace
+    # --- Job completed ---
+    $output = Receive-Job $job 2>&1 | Out-String
+    Remove-Job $job -Force -ErrorAction SilentlyContinue
+
+    if (-not $output -and (Test-Path $jsonOutFile)) {
+        $output = Get-Content $jsonOutFile -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+    }
+
+    $resultText = ""
+    $numTurns = 0
+    $cost = ""
     try {
-        $ps.EndInvoke($asyncHandle)
-        $ps.Dispose()
-        $runspace.Close()
-    } catch {}
-
-    # Wait for process exit (bug #25629: CLI may hang after result)
-    if (-not $proc.HasExited) {
-        $proc.WaitForExit(10000)  # 10s grace
-        if (-not $proc.HasExited) {
-            Log-Progress "$agentName | process still alive after result, force killing [bug 25629]"
-            try { $proc.Kill() } catch {}
-        }
-    }
-
-    # Fallback: if no result from stream, try json format
-    if (-not $resultText) {
-        Log-Progress "$agentName | no result from stream-json, falling back to json format"
-        $fallbackOutput = claude -p $prompt --dangerously-skip-permissions --output-format json --max-turns $AgentMaxTurns 2>&1 | Out-String
-        try {
-            $json = $fallbackOutput | ConvertFrom-Json -ErrorAction Stop
-            $resultText = $json.result
-            $toolCount = if ($json.num_turns) { $json.num_turns } else { 0 }
-        } catch {
-            $resultText = $fallbackOutput
-        }
-        Log-Progress "$agentName | fallback result: $($resultText.Length) chars"
+        $json = $output | ConvertFrom-Json -ErrorAction Stop
+        $resultText = $json.result
+        $cost = "$([math]::Round($json.total_cost_usd, 3))"
+        $numTurns = if ($json.num_turns) { $json.num_turns } else { 0 }
+    } catch {
+        $resultText = $output
     }
 
     $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
-    Log-Progress "$agentName DONE: ${elapsed}s, tools=$toolCount, phase=$currentPhase"
+    $finalPhases = Get-PhaseFiles $phasesDir
+    $phaseNames = ($finalPhases | ForEach-Object { $_.BaseName }) -join ", "
+    Log-Progress "$agentName DONE: ${elapsed}s turns=$numTurns cost=$cost phases=[$phaseNames]"
 
-    # Detect phases from result text
-    $phases = @()
-    if ($resultText) {
-        foreach ($phaseName in $script:PhaseOrder) {
-            if ($resultText -match $phaseName.Substring(0, 7)) { $phases += $phaseName }
-        }
-        if ($phases.Count -gt 0) { Log-Progress "$agentName phases: $($phases -join ' -> ')" }
-    }
-
-    # Final status file
     @"
-# $agentName -DONE
-Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
-Finished: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Duration: ${elapsed}s | Tools: $toolCount
-Last phase: $currentPhase
-Phases detected: $($phases -join ', ')
+# $agentName - DONE
+Duration: ${elapsed}s | Turns: $numTurns | Cost: $cost
+Phases: $phaseNames
 Output: $($resultText.Length) chars
-
-## Tool Calls
-$($toolLog -join "`n")
 "@ | Set-Content $statusFile -Encoding UTF8
 
-    # Save result
     $resultText | Set-Content $logFile -Encoding UTF8
+    $output | Set-Content "$logFile.json" -Encoding UTF8
 
-    # Cleanup temp
-    Remove-Item $promptFile -ErrorAction SilentlyContinue
-    Remove-Item $streamLog -ErrorAction SilentlyContinue
+    # Copy phases to results, then clean
+    $resultsDir = "$script:SessionDirPath/results"
+    if (-not (Test-Path $resultsDir)) { New-Item -ItemType Directory -Path $resultsDir -Force > $null }
+    if ($finalPhases.Count -gt 0) {
+        $iterPhasesDir = "$resultsDir/iter$($script:CurrentIter)_${agentName}_phases"
+        if (-not (Test-Path $iterPhasesDir)) { New-Item -ItemType Directory -Path $iterPhasesDir -Force > $null }
+        Copy-Item "$phasesDir/*.md" $iterPhasesDir -ErrorAction SilentlyContinue
+    }
+    Get-ChildItem $phasesDir -Filter "*.md" -ErrorAction SilentlyContinue | Remove-Item -Force
 
     return $resultText
 }
@@ -389,6 +290,8 @@ if ($SessionDir) {
     $SessionDir = "$dataDir/$taskId"
     if (-not (Test-Path $SessionDir)) {
         New-Item -ItemType Directory -Path "$SessionDir/logs" -Force > $null
+        New-Item -ItemType Directory -Path "$SessionDir/phases" -Force > $null
+        New-Item -ItemType Directory -Path "$SessionDir/results" -Force > $null
         Copy-Item $TaskFile "$SessionDir/task.md"
         $baseline = (git rev-parse --short HEAD 2>$null)
         @"
@@ -409,7 +312,6 @@ $logDir = "$SessionDir/logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force > $null }
 $jsonlPath = "$SessionDir/autoresearch.jsonl"
 
-# --- Init progress log and monitoring ---
 $script:ProgressFile = "$SessionDir/progress.log"
 $script:SessionDirPath = $SessionDir
 $script:LastKnownCommit = (git rev-parse --short HEAD 2>$null)
@@ -418,7 +320,6 @@ $script:LastKnownCommit = (git rev-parse --short HEAD 2>$null)
 # --- Read State ---
 $md = Get-Content "$SessionDir/autoresearch.md" -Raw -Encoding UTF8
 $startIter = 0; $bestMetric = 0; $plateauCount = 0; $baselineCommit = ""
-
 if ($md -match 'Iteration:\s*(\d+)') { $startIter = [int]$Matches[1] }
 if ($md -match 'BestMetric:\s*(\d+)') { $bestMetric = [int]$Matches[1] }
 if ($md -match 'Plateau:\s*(\d+)') { $plateauCount = [int]$Matches[1] }
@@ -428,17 +329,18 @@ if (-not $baselineCommit) { $baselineCommit = (git rev-parse --short HEAD 2>$nul
 $taskContent = Get-Content "$SessionDir/task.md" -Raw -Encoding UTF8
 
 # --- Banner ---
-Write-Host "=== Analyze-1C-Research: Three-Agent Engine ===" -ForegroundColor Cyan
+Write-Host "=== Analyze-1C-Research v3 ===" -ForegroundColor Cyan
 Write-Host "Session:  $SessionDir"
-Write-Host "Target:   $TargetScore | Max iterations: $MaxIterations | Agent timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | Max turns: $AgentMaxTurns"
+Write-Host "Target:   $TargetScore | Max: $MaxIterations | Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | Turns: $AgentMaxTurns"
 Write-Host "Start:    iter=$startIter best=$bestMetric plateau=$plateauCount baseline=$baselineCommit"
 Write-Host "Progress: $script:ProgressFile"
 Write-Host ""
 
-Log-Progress "=== SESSION START: target=$TargetScore max=$MaxIterations ==="
+Log-Progress "=== SESSION START target=$TargetScore max=$MaxIterations ==="
 
 # --- Main Loop ---
 for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
+    $script:CurrentIter = $i
     $ts = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
     Write-Host "`n=== Iteration $i / $MaxIterations [$ts] ===" -ForegroundColor Cyan
     Log-Progress "=== ITERATION $i / $MaxIterations ==="
@@ -447,50 +349,36 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
 
     # --- EXECUTOR ---
     $execStart = Get-Date
-    Write-Host "  [EXECUTOR] Running 5-phase analysis..." -ForegroundColor Yellow
+    Write-Host "  [EXECUTOR] 5-phase analysis..." -ForegroundColor Yellow
     $vars = @{
         iter = $i; max_iterations = $MaxIterations
         task_description = $taskContent; session_dir = $SessionDir
         best_metric = $bestMetric; target_score = $TargetScore
         baseline_commit = $baselineCommit
     }
-
     $executorPrompt = Load-Template "$templatesDir/1c-analysis-executor.md" $vars
     $executorOutput = Run-Claude $executorPrompt "$logDir/executor_$i.txt" "EXEC"
     $execSec = [math]::Round(((Get-Date) - $execStart).TotalSeconds)
-    Write-Host "  [EXECUTOR] Done (${execSec}s)" -ForegroundColor Green
-    Log-Progress "EXECUTOR result: ${execSec}s, output=$($executorOutput.Length) chars"
-
-    # Save intermediate result
-    $resultsDir = "$SessionDir/results"
-    if (-not (Test-Path $resultsDir)) { New-Item -ItemType Directory -Path $resultsDir -Force > $null }
-    @"
-# Iteration $i -Executor Result
-**Time:** $ts | **Duration:** ${execSec}s
-
-## Output (truncated)
-$($executorOutput.Substring(0, [math]::Min($executorOutput.Length, 2000)))
-"@ | Set-Content "$resultsDir/iter${i}_executor.md" -Encoding UTF8
+    Write-Host "  [EXECUTOR] Done ${execSec}s" -ForegroundColor Green
+    Log-Progress "EXECUTOR: ${execSec}s $($executorOutput.Length) chars"
 
     if ($executorOutput -match "AUTORESEARCH_DONE") {
         Write-Host "`n  AUTORESEARCH_DONE" -ForegroundColor Green
-        Log-Progress "AUTORESEARCH_DONE signal received"
         break
     }
 
     $commitAfter = (git rev-parse --short HEAD 2>$null)
     if ($commitAfter -eq $commitBefore) {
-        Write-Host "  [SKIP] Executor made no commit." -ForegroundColor Yellow
-        Log-Progress "SKIP: no commit by executor"
+        Write-Host "  [SKIP] No commit." -ForegroundColor Yellow
+        Log-Progress "SKIP: no commit"
         $plateauCount++
-        $entry = @{ iter=$i; ts=$ts; score=$bestMetric; delta=0; verdict="SKIP"; reason="no commit" }
-        ($entry | ConvertTo-Json -Compress) | Add-Content $jsonlPath -Encoding UTF8
+        (@{iter=$i;ts=$ts;score=$bestMetric;delta=0;verdict="SKIP";reason="no commit"} | ConvertTo-Json -Compress) | Add-Content $jsonlPath -Encoding UTF8
         continue
     }
 
     # --- REVIEWER ---
     $revStart = Get-Date
-    Write-Host "  [REVIEWER] Scoring & verifying..." -ForegroundColor Yellow
+    Write-Host "  [REVIEWER] Scoring..." -ForegroundColor Yellow
     $vars.best_metric = $bestMetric
     $reviewerPrompt = Load-Template "$templatesDir/1c-analysis-reviewer.md" $vars
     $reviewerOutput = Run-Claude $reviewerPrompt "$logDir/reviewer_$i.txt" "REV"
@@ -501,152 +389,73 @@ $($executorOutput.Substring(0, [math]::Min($executorOutput.Length, 2000)))
     $reason = ""
     if ($reviewerOutput -match 'REASON:\s*(.+)') { $reason = $Matches[1].Trim() }
 
-    # Fallback: run scorer directly
     if ($null -eq $metric) {
-        $reportPath = "$SessionDir/analysis-report.md"
-        if (Test-Path $reportPath) {
-            $scorerOutput = python "$projectRoot/scripts/score-analysis-report.py" $reportPath 2>&1 | Out-String
-            $metric = Extract-Metric $scorerOutput
+        $rp = "$SessionDir/analysis-report.md"
+        if (Test-Path $rp) {
+            $so = python "$projectRoot/scripts/score-analysis-report.py" $rp 2>&1 | Out-String
+            $metric = Extract-Metric $so
         }
     }
     if ($null -eq $metric) { $metric = 0 }
-
     $delta = $metric - $bestMetric
 
     switch ($verdict) {
-        "KEEP" {
-            if ($metric -gt $bestMetric) {
-                $bestMetric = $metric
-                $plateauCount = 0
-            } else { $plateauCount++ }
-            Write-Host "  [REVIEWER] KEEP: score=$metric delta=+$delta (${revSec}s)" -ForegroundColor Green
-        }
-        "IMPROVE" {
-            if ($metric -gt $bestMetric) {
-                $bestMetric = $metric
-                $plateauCount = 0
-            } else { $plateauCount++ }
-            Write-Host "  [REVIEWER] IMPROVE: score=$metric gaps remain (${revSec}s)" -ForegroundColor Yellow
-        }
-        "REVERT" {
-            $plateauCount++
-            Write-Host "  [REVIEWER] REVERT: score=$metric reason=$reason (${revSec}s)" -ForegroundColor Red
-        }
-        default {
-            $plateauCount++
-            Write-Host "  [REVIEWER] $verdict : score=$metric (${revSec}s)" -ForegroundColor Yellow
-        }
+        "KEEP"    { if ($metric -gt $bestMetric) { $bestMetric=$metric; $plateauCount=0 } else { $plateauCount++ }; Write-Host "  [REVIEWER] KEEP score=$metric +$delta ${revSec}s" -ForegroundColor Green }
+        "IMPROVE" { if ($metric -gt $bestMetric) { $bestMetric=$metric; $plateauCount=0 } else { $plateauCount++ }; Write-Host "  [REVIEWER] IMPROVE score=$metric ${revSec}s" -ForegroundColor Yellow }
+        "REVERT"  { $plateauCount++; Write-Host "  [REVIEWER] REVERT score=$metric ${revSec}s" -ForegroundColor Red }
+        default   { $plateauCount++; Write-Host "  [REVIEWER] $verdict score=$metric ${revSec}s" -ForegroundColor Yellow }
     }
+    Log-Progress "REVIEWER: score=$metric verdict=$verdict delta=$delta ${revSec}s"
 
-    Log-Progress "REVIEWER result: score=$metric verdict=$verdict delta=$delta reason=$reason ${revSec}s"
-
-    # Save reviewer intermediate result
-    @"
-# Iteration $i -Reviewer Result
-**Time:** $ts | **Duration:** ${revSec}s
-**Score:** $metric / $TargetScore | **Verdict:** $verdict | **Delta:** $delta
-
-## Reason
-$reason
-
-## Reviewer Output (truncated)
-$($reviewerOutput.Substring(0, [math]::Min($reviewerOutput.Length, 2000)))
-"@ | Set-Content "$resultsDir/iter${i}_reviewer.md" -Encoding UTF8
-
-    # --- COMPARATOR (every N iterations) ---
+    # --- COMPARATOR ---
     $cmpSec = 0
     if ($i % $CompareEvery -eq 0 -and $baselineCommit) {
         $cmpStart = Get-Date
-        Write-Host "  [COMPARATOR] Blind A/B comparison..." -ForegroundColor Magenta
-        $comparatorPrompt = Load-Template "$templatesDir/1c-analysis-comparator.md" $vars
-        $comparatorOutput = Run-Claude $comparatorPrompt "$logDir/comparator_$i.txt" "CMP"
+        Write-Host "  [COMPARATOR] A/B..." -ForegroundColor Magenta
+        $cmpPrompt = Load-Template "$templatesDir/1c-analysis-comparator.md" $vars
+        $cmpOut = Run-Claude $cmpPrompt "$logDir/comparator_$i.txt" "CMP"
         $cmpSec = [math]::Round(((Get-Date) - $cmpStart).TotalSeconds)
-        Write-Host "  [COMPARATOR] Done (${cmpSec}s)" -ForegroundColor Magenta
-        Log-Progress "COMPARATOR done ${cmpSec}s"
-
-        # Save comparator intermediate result
-        @"
-# Iteration $i -Comparator Result
-**Time:** $ts | **Duration:** ${cmpSec}s
-
-## A/B Comparison (truncated)
-$($comparatorOutput.Substring(0, [math]::Min($comparatorOutput.Length, 2000)))
-"@ | Set-Content "$resultsDir/iter${i}_comparator.md" -Encoding UTF8
+        Write-Host "  [COMPARATOR] Done ${cmpSec}s" -ForegroundColor Magenta
+        Log-Progress "COMPARATOR: ${cmpSec}s"
     }
 
-    # --- LOG: JSONL ---
-    $changeDesc = ""
-    if ($executorOutput -match '\[AR-\d+\]\s*(.+)') { $changeDesc = $Matches[1].Trim() }
-    $entry = @{
-        iter = $i; ts = $ts; commit = (git rev-parse --short HEAD 2>$null)
-        score = $metric; delta = $delta; verdict = $verdict
-        reason = $reason; change = $changeDesc
-    }
-    ($entry | ConvertTo-Json -Compress) | Add-Content $jsonlPath -Encoding UTF8
+    # JSONL + state
+    $cd = ""; if ($executorOutput -match '\[AR-\d+\]\s*(.+)') { $cd = $Matches[1].Trim() }
+    (@{iter=$i;ts=$ts;commit=(git rev-parse --short HEAD 2>$null);score=$metric;delta=$delta;verdict=$verdict;reason=$reason;change=$cd} | ConvertTo-Json -Compress) | Add-Content $jsonlPath -Encoding UTF8
 
-    # --- Update State File ---
-    $mdContent = Get-Content "$SessionDir/autoresearch.md" -Raw -Encoding UTF8
-    $mdContent = $mdContent -replace 'Iteration:\s*\d+', "Iteration: $i"
-    $mdContent = $mdContent -replace 'BestMetric:\s*\d+', "BestMetric: $bestMetric"
-    $mdContent = $mdContent -replace 'Plateau:\s*\d+', "Plateau: $plateauCount"
-    Set-Content "$SessionDir/autoresearch.md" -Value $mdContent -Encoding UTF8
+    $mc = Get-Content "$SessionDir/autoresearch.md" -Raw -Encoding UTF8
+    $mc = $mc -replace 'Iteration:\s*\d+', "Iteration: $i"
+    $mc = $mc -replace 'BestMetric:\s*\d+', "BestMetric: $bestMetric"
+    $mc = $mc -replace 'Plateau:\s*\d+', "Plateau: $plateauCount"
+    Set-Content "$SessionDir/autoresearch.md" -Value $mc -Encoding UTF8
 
-    # --- Iteration Summary ---
-    $iterTotalSec = [math]::Round(((Get-Date) - $execStart).TotalSeconds)
+    # Summary
+    $total = [math]::Round(((Get-Date) - $execStart).TotalSeconds)
     $bar = "#" * [math]::Min([math]::Max([math]::Round($bestMetric / 5), 0), 20)
     $gap = "." * (20 - $bar.Length)
     Write-Host ""
-    Write-Host "  ---- Iteration $i Summary ----" -ForegroundColor Cyan
-    Write-Host "  Score:    $metric / $TargetScore  [$bar$gap] best=$bestMetric" -ForegroundColor White
-    Write-Host "  Verdict:  $verdict  |  Delta: $delta  |  Plateau: $plateauCount/3" -ForegroundColor White
-    Write-Host "  Time:     Exec=${execSec}s  Review=${revSec}s  Compare=${cmpSec}s  Total=${iterTotalSec}s" -ForegroundColor DarkGray
-    Write-Host "  ----------------------------" -ForegroundColor Cyan
+    Write-Host "  ---- Iteration $i ----" -ForegroundColor Cyan
+    Write-Host "  Score:   $metric/$TargetScore [$bar$gap] best=$bestMetric" -ForegroundColor White
+    Write-Host "  Verdict: $verdict | Delta:$delta | Plateau:$plateauCount/3" -ForegroundColor White
+    Write-Host "  Time:    E=${execSec}s R=${revSec}s C=${cmpSec}s T=${total}s" -ForegroundColor DarkGray
+    Log-Progress "SUMMARY: $metric/$TargetScore best=$bestMetric $verdict plateau=$plateauCount/3 ${total}s"
 
-    Log-Progress "SUMMARY: score=$metric/$TargetScore best=$bestMetric verdict=$verdict plateau=$plateauCount/3 time=${iterTotalSec}s"
-
-    # Save iteration summary
+    $rd = "$SessionDir/results"
     @"
-# Iteration $i -Summary
-**Time:** $ts | **Total Duration:** ${iterTotalSec}s
+# Iteration $i
+Score: $metric/$TargetScore | Best: $bestMetric | Verdict: $verdict
+Executor: ${execSec}s | Reviewer: ${revSec}s | Comparator: ${cmpSec}s | Total: ${total}s
+"@ | Set-Content "$rd/iter${i}_summary.md" -Encoding UTF8
 
-| Metric | Value |
-|--------|-------|
-| Score | $metric / $TargetScore |
-| Best | $bestMetric |
-| Verdict | $verdict |
-| Delta | $delta |
-| Plateau | $plateauCount / 3 |
-| Executor | ${execSec}s |
-| Reviewer | ${revSec}s |
-| Comparator | ${cmpSec}s |
-"@ | Set-Content "$resultsDir/iter${i}_summary.md" -Encoding UTF8
-
-    # --- Stop Conditions ---
-    if ($bestMetric -ge $TargetScore) {
-        Write-Host "`n  TARGET REACHED: $bestMetric >= $TargetScore" -ForegroundColor Green
-        Log-Progress "TARGET REACHED: $bestMetric >= $TargetScore"
-        break
-    }
-    if ($plateauCount -ge 3) {
-        Write-Host "`n  PLATEAU: 3 iterations without improvement." -ForegroundColor Yellow
-        Log-Progress "PLATEAU: 3 iterations without improvement"
-        break
-    }
-
+    if ($bestMetric -ge $TargetScore) { Write-Host "`n  TARGET: $bestMetric >= $TargetScore" -ForegroundColor Green; Log-Progress "TARGET REACHED"; break }
+    if ($plateauCount -ge 3) { Write-Host "`n  PLATEAU: 3x no improvement" -ForegroundColor Yellow; Log-Progress "PLATEAU"; break }
     Start-Sleep -Seconds 2
 }
 
-Write-Host ""
-Write-Host "======================================" -ForegroundColor Cyan
-Write-Host "  Analyze-1C-Research COMPLETE" -ForegroundColor Cyan
-Write-Host "======================================" -ForegroundColor Cyan
-Write-Host "  Iterations:  $i / $MaxIterations"
-Write-Host "  Best Score:  $bestMetric / $TargetScore"
-$status = if ($bestMetric -ge $TargetScore) { "TARGET REACHED" } else { "STOPPED (plateau=$plateauCount)" }
-Write-Host "  Status:      $status"
-Write-Host "  Report:      $SessionDir/analysis-report.md"
-Write-Host "  Progress:    $script:ProgressFile"
-Write-Host "  Logs:        $logDir/"
-Write-Host "======================================"  -ForegroundColor Cyan
-
-Log-Progress "=== SESSION END: best=$bestMetric status=$status ==="
+Write-Host "`n=== COMPLETE ===" -ForegroundColor Cyan
+$st = if ($bestMetric -ge $TargetScore) { "TARGET" } else { "STOPPED plateau=$plateauCount" }
+Write-Host "  Iterations: $i/$MaxIterations | Best: $bestMetric/$TargetScore | Status: $st"
+Write-Host "  Report:  $SessionDir/analysis-report.md"
+Write-Host "  Results: $SessionDir/results/"
+Write-Host "  Log:     $script:ProgressFile"
+Log-Progress "=== END best=$bestMetric $st ==="

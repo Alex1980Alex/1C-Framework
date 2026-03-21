@@ -28,7 +28,16 @@ Task: {task_description}
 
 5. Append to autoresearch.md under ## Comparator Reviews
 
+## Phase Progress Files (MANDATORY)
+After each step, write a progress file to {session_dir}/phases/:
+- Step 1-3 done: Write {session_dir}/phases/compare1_analysis.md with ratings for both versions
+- Step 4-5 done: Write {session_dir}/phases/compare2_verdict.md with winner and notes
+
+Each file: first line = "# Compare N: Name", then key results in 5-10 lines.
+These files are monitored to track progress. No file = assumed hung.
+
 ## Rules
 - UNBIASED: judge report quality holistically
 - If score improved but readability degraded, note it
-- Do NOT modify any files except autoresearch.md (Comparator Reviews section)
+- Do NOT modify any files except autoresearch.md and phase files
+- ALWAYS write phase files after each step
