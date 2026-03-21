@@ -3,13 +3,17 @@ name: analyze-1c-task-v2
 description: >
   5-фазная методология анализа задачи 1С:Предприятие.
   Требования -> Объекты -> Алгоритм -> План -> Верификация.
-version: 2.1.0
-updated: 2026-03-12
-tags: [1c, analysis, bsl, configuration, methodology, semantic-search]
+  v3.0: Итеративный режим с 3 агентами (Executor + Reviewer + Comparator).
+version: 3.0.0
+updated: 2026-03-21
+tags: [1c, analysis, bsl, configuration, methodology, semantic-search, autoresearch, three-agent]
 ultrathink: true
+commands:
+  - /analyze-1c-task-v2
+  - /analyze-1c-task:research
 ---
 
-# Анализ задачи 1С — 5-фазная методология (v2.1)
+# Анализ задачи 1С — 5-фазная методология (v3.0)
 
 ## Overview
 
@@ -122,3 +126,90 @@ Skill для комплексного анализа задачи по конф�
 - **bsl-platform-context** — API платформы 1С
 - **Serena** — символьный анализ кода
 - **Grep/Glob** — поиск файлов и паттернов
+
+## Итеративный режим: /analyze-1c-task:research
+
+### Принцип
+Executor (фазы 1-4) -> Reviewer (фаза 5 + scoring) -> fix gaps -> repeat.
+Три агента с разделением обязанностей (адаптация AutoResearch v2).
+
+### Метрика: Analysis Quality Score (0-100)
+
+| Компонент | Вес | Источник |
+|-----------|-----|----------|
+| Requirements coverage | 30% | Маркеры [REQ-N] в плане |
+| Fields verified | 25% | Маркеры `✓ get_metadata` |
+| Patterns found | 20% | Маркеры `✓ pattern` |
+| SQL validated | 15% | Маркеры `✓ execute_query` |
+| Open questions | 10% | Секция 6 |
+
+### Маркеры (обязательны для scoring)
+
+```
+✓ get_metadata   — поле проверено через MCP
+✗ не проверено   — поле не проверено (gap)
+✓ pattern        — найден образец из конфигурации
+✓ execute_query  — SQL валидирован на реальных данных
+[REQ-N]          — привязка к требованию N
+```
+
+### Стоп-условия
+- Score >= 85 (target)
+- 3 итерации без улучшения (plateau)
+- Max 7 итераций
+- Все gaps = 0
+
+### Как запускается
+
+**Интерактивный (в Claude Code):**
+```
+/analyze-1c-task:research
+GKSTCPLK-1234: Добавить расчёт суммы НДС по маршрутным листам
+```
+Claude выполняет Executor (main context) -> Reviewer (Agent subagent) -> fix -> repeat.
+
+**Headless (скрипт):**
+```powershell
+.\scripts\analyze-1c-research.ps1 -TaskFile docs/tasks/GKSTCPLK-1234.md -TargetScore 85
+```
+
+**Автономный (Ralph):**
+```bash
+scripts\ralph.bat --template 1c-analysis --task docs/tasks/GKSTCPLK-1234.md
+```
+
+### Протокол интерактивного режима
+
+1. Создать сессию: `data/analyze-1c-research/{task-id}/`
+2. **EXECUTOR** (main context): полный 5-фазный анализ -> analysis-report.md
+3. **Цикл** (max 7 итераций):
+   a. REVIEWER (Agent subagent): scorer + verify + gaps -> verdict
+   b. Если score >= target -> DONE
+   c. Если plateau >= 3 -> DONE
+   d. Показать: "Score: N/100. K gaps. Verdict."
+   e. EXECUTOR (main): Fix ONE gap из reviewer feedback
+   f. Каждые 3 итерации: COMPARATOR (Agent subagent)
+4. Финальный git commit: `[ANALYSIS] {task-id}: score {N}`
+
+### Выходной формат с маркерами
+
+```markdown
+## 2. Задействованные объекты конфигурации
+### 2.1 Основные объекты (требуют изменения)
+- Документ.МаршрутныйЛист — поле СуммаНДС ✓ get_metadata
+- РегистрНакопления.Движения — поле Сумма ✗ не проверено
+
+## 4. План изменений
+### Точка модификации 1: Добавить реквизит [REQ-1]
+- Образец: Документ.ЗаказНаПеревозку.СуммаНДС ✓ pattern
+- SQL:
+` ``sql
+ВЫБРАТЬ СуммаНДС ИЗ Документ.МаршрутныйЛист
+` ``
+✓ execute_query
+
+## Метаданные анализа
+- Score: 87/100
+- Iterations: 4
+- Session: data/analyze-1c-research/GKSTCPLK-1234/
+```
