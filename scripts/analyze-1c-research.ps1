@@ -107,9 +107,11 @@ Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTur
 "@ | Set-Content $statusFile -Encoding UTF8
 
     # --- Launch via System.Diagnostics.Process with programmatic stdin ---
+    # Use node directly (cmd.exe corrupts stdin pipe)
+    $claudeCliJs = "$env:APPDATA/npm/node_modules/@anthropic-ai/claude-code/cli.js"
     $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "cmd.exe"
-    $psi.Arguments = "/c claude -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns"
+    $psi.FileName = "node"
+    $psi.Arguments = "`"$claudeCliJs`" -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns"
     $psi.RedirectStandardInput = $true
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
