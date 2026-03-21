@@ -39,4 +39,7 @@ commands:
 
 - `-TargetScore 90` — целевой балл (по умолчанию 85)
 - `-MaxIterations 10` — макс итераций (по умолчанию 7)
+- `-AgentTimeoutMin 20` — hard timeout на агента в минутах (по умолчанию 15)
+- `-IdleTimeoutMin 5` — kill если нет файловой активности N минут (по умолчанию 5)
+- `-AgentMaxTurns 50` — макс tool calls на агента (по умолчанию 50)
 - `-SessionDir path` — возобновить из существующей сессии (вместо -TaskFile)
