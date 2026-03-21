@@ -1,0 +1,114 @@
+[
+  {
+    "id": "GKSTCPLK-2181",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2181 Доработать форму Направления на разгрузку/GKSTCPLK-2181-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 95},
+    "expected_gaps": [],
+    "notes": "Perfect: 1 req, 1 mod point, pattern reuse, no open questions. Markers added."
+  },
+  {
+    "id": "GKSTCPLK-2176",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2176 Исправить ошибку/GKSTCPLK-2176-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 90},
+    "expected_gaps": [],
+    "notes": "Excellent analysis: root cause in SQL JOIN, pattern from 'по УК' tab. Markers added."
+  },
+  {
+    "id": "GKSTCPLK-2215",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2215 Исправить ошибку блокировки ТС по правилу группы ТС/GKSTCPLK-2215-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 90},
+    "expected_gaps": [],
+    "notes": "3 bugs, deep logical analysis (OR vs AND), test matrix. Markers added."
+  },
+  {
+    "id": "blocked-ts-5",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260311_5. Заблокированные ТС по правилу Первого ТС.Ошибка/ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 80},
+    "expected_gaps": [{"type": "requirement_gap"}],
+    "notes": "2 critical bugs found, precise code fix. Nonstandard format, partial markers."
+  },
+  {
+    "id": "GKSTCPLK-2182",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку/GKSTCPLK-2182-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 85},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}],
+    "notes": "Very deep: 5 requirements, SQL verified on live TestDB. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2206",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2206 Доработать интерфейс АРМПриемка.Детали по заблокированным ТС/GKSTCPLK-2206-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 88},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}, {"type": "open_question"}],
+    "notes": "Complex: 6 mod points, dual-chain SQL, verified on TestDB. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2210",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2210 Доработать проведение Лаб. анализа по УК и АРМ Промежуточного композита/GKSTCPLK-2210-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 85},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}, {"type": "open_question"}],
+    "notes": "Real data analysis: 15 hanging records. 5 mod points. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2256",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2256 Актуальность информации в регистре Информация на электронные табло/GKSTCPLK-2256-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 85},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}, {"type": "open_question"}],
+    "notes": "Architectural depth: 6 problems, 2 update paths, 5 tablo types. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2177",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2177 Исправить ошибку формирования единичного анализа из АРМ промежуточный композит/GKSTCPLK-2177-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 78},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}, {"type": "open_question"}],
+    "notes": "Deep SQL root cause, 3 mod points. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2178",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2178 Доработать проведение по РС Состояние регистрации для ФНП/GKSTCPLK-2178-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 72},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}, {"type": "open_question"}],
+    "notes": "2 variant solutions proposed. Complex problem. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2178-B",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2178 Доработать проведение по РС Состояние регистрации для ФНП/GKSTCPLK-2178-VARIANT-B-ANALYSIS.md",
+    "human_scores": {"overall": 70},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "open_question"}],
+    "notes": "Variant B with partial markers."
+  },
+  {
+    "id": "GKSTCPLK-2178-P",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2178 Доработать проведение по РС Состояние регистрации для ФНП/GKSTCPLK-2178-VARIANT-PARAM-ANALYSIS.md",
+    "human_scores": {"overall": 72},
+    "expected_gaps": [{"type": "requirement_gap"}],
+    "notes": "Variant PARAM, no open questions."
+  },
+  {
+    "id": "GKSTCPLK-2213",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2213 Исправить ошибку проверки блокировки в АРМ приемка/GKSTCPLK-2213-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 75},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "query_invalid"}],
+    "notes": "Simple fix but thorough: comparison with 7 other queries. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2257",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260319_GKSTCPLK-2257 Доработать создание Направление на разгрузку для заблокированных ТС/ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 65},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "open_question"}],
+    "notes": "Brief, 1 requirement, 1 mod point, 3 open questions."
+  },
+  {
+    "id": "GKSTCPLK-2288",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260319_GKSTCPLK-2288 Доработать формирование для движения запасов/ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 72},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}, {"type": "open_question"}],
+    "notes": "Systematic: 2 SQL fixes. No markers."
+  },
+  {
+    "id": "GKSTCPLK-2272",
+    "report_path": "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260320_GKSTCPLK-2272 Доработать АРМы для вывода результата внешних (АРМ по жд, список регистрации)/GKSTCPLK-2272-ANALYSIS-REPORT.md",
+    "human_scores": {"overall": 60},
+    "expected_gaps": [{"type": "requirement_gap"}, {"type": "pattern_missing"}],
+    "notes": "Medium quality: 3 mod points, some uncertainties."
+  }
+]

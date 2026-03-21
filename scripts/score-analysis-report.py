@@ -24,11 +24,46 @@ _REQ_REF_RE = re.compile(r"\[REQ-(\d+)\]")
 _SQL_OPEN_RE = re.compile(r"^```sql\b")
 _SQL_CLOSE_RE = re.compile(r"^```\s*$")
 
+# Keyword-based section detection (tolerant mode)
+_REQ_HEADING_KW = re.compile(
+    r"^#{1,3}\s+.*(?:требовани|описание\s+задачи|описание\s+проблемы|найденные\s+баги)",
+    re.IGNORECASE,
+)
+_PLAN_HEADING_KW = re.compile(
+    r"^#{1,3}\s+.*(?:план\s+(?:изменений|модификаци)|точки\s+модификаци)",
+    re.IGNORECASE,
+)
+_QUESTIONS_HEADING_KW = re.compile(
+    r"^#{1,3}\s+.*(?:риски|открыт\w+\s+вопрос|вопросы\s+бизнесу)",
+    re.IGNORECASE,
+)
+# Bug/requirement as heading: ### Баг N: or ### BUG #N
+_BUG_HEADING_RE = re.compile(
+    r"^###\s+(?:Баг|BUG)\s*#?\s*(\d+)", re.IGNORECASE
+)
+# Modification table row: | N | file | line | action |
+_MOD_TABLE_RE = re.compile(r"^\|\s*(\d+)\s*\|.*\|.*\|.*\|")
+
 
 def _current_section(line: str, prev: str) -> str:
     """Return section id like '1.1', '4', '6' or prev if not a heading."""
-    m = _SECTION_RE.match(line.strip())
-    return m.group(1) if m else prev
+    stripped = line.strip()
+    # Standard numbered section
+    m = _SECTION_RE.match(stripped)
+    if m:
+        return m.group(1)
+    # Keyword-based fallback
+    if _REQ_HEADING_KW.match(stripped):
+        return "1.1"  # treat as requirements section
+    if _PLAN_HEADING_KW.match(stripped):
+        return "4"
+    if _QUESTIONS_HEADING_KW.match(stripped):
+        return "6"
+    # Sub-heading resets (new ## section that doesn't match keywords)
+    if re.match(r"^#{1,2}\s+", stripped) and not re.match(r"^###", stripped):
+        if prev in ("1.1", "6") and not _REQ_HEADING_KW.match(stripped) and not _QUESTIONS_HEADING_KW.match(stripped):
+            return ""  # reset
+    return prev
 
 
 def parse_report(text: str) -> dict:
@@ -61,7 +96,7 @@ def parse_report(text: str) -> dict:
                 in_sql_block = False
             continue
 
-        # Requirements (section 1.1) — numbered, bulleted, or table rows
+        # Requirements (section 1.1 or keyword-detected)
         if section == "1.1":
             is_req = (
                 re.match(r"^\d+\.", stripped)
@@ -70,15 +105,25 @@ def parse_report(text: str) -> dict:
             )
             if is_req and stripped and not stripped.startswith("|---"):
                 requirements.append(stripped)
+            # Bug headings as requirements: ### Баг N:
+            bug_m = _BUG_HEADING_RE.match(stripped)
+            if bug_m:
+                requirements.append(stripped)
 
-        # Open questions (section 6)
+        # Open questions (section 6 or keyword-detected)
         if section == "6":
             if re.match(r"^\d+\.", stripped) or stripped.startswith("- "):
                 if stripped:
                     open_questions += 1
+            # Standalone "### Открытый вопрос:" counts
+            if re.match(r"^###?\s+Открыт", stripped, re.IGNORECASE):
+                open_questions += 1
 
-        # Modification points
+        # Modification points — heading format
         if _MOD_POINT_RE.match(stripped):
+            modification_points += 1
+        # Modification points — table format (| N | file | line | action |)
+        elif section == "4" and _MOD_TABLE_RE.match(stripped):
             modification_points += 1
 
         # Markers (anywhere in document)
