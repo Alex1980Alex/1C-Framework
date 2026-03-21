@@ -189,7 +189,13 @@ class TestHealthCheck:
             "provider": "test-provider", "model": "m", "text": "pong",
             "response_time": 0.1, "usage": {},
         }
-        with patch.object(service, "_call_provider", new_callable=AsyncMock, return_value=mock_response):
+
+        async def mock_call_provider(*args, **kwargs):
+            # _call_provider calls state.record_success() internally
+            state.record_success(0.1)
+            return mock_response
+
+        with patch.object(service, "_call_provider", new_callable=AsyncMock, side_effect=mock_call_provider):
             await service._health_check_loop_once()
 
         assert state.circuit_breaker.state == CircuitState.CLOSED
