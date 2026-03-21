@@ -8,8 +8,8 @@ param(
     [int]$TargetScore = 85,
     [int]$MaxIterations = 7,
     [int]$CompareEvery = 3,
-    [int]$PhaseTimeoutMin = 5,
-    [int]$PhaseMaxTurns = 20
+    [int]$PhaseTimeoutMin = 8,
+    [int]$PhaseMaxTurns = 30
 )
 
 chcp 65001 > $null 2>&1
@@ -29,6 +29,11 @@ function Log($msg) {
     if ($script:ProgressFile) { $line | Add-Content $script:ProgressFile -Encoding UTF8 }
 }
 
+# Write file without BOM (PowerShell 5.1 Set-Content adds BOM)
+function Write-Utf8($path, $text) {
+    [System.IO.File]::WriteAllText($path, $text, [System.Text.UTF8Encoding]::new($false))
+}
+
 function Extract-TaskId($path) {
     $name = [System.IO.Path]::GetFileNameWithoutExtension($path)
     if ($name -match '^(GKSTCPLK-\d+|[A-Za-z0-9_-]+)') { return $Matches[1] }
@@ -39,7 +44,7 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
     if (-not $maxTurns) { $maxTurns = $PhaseMaxTurns }
     $start = Get-Date
     Log "$phaseName START"
-    "# $phaseName - RUNNING" | Set-Content "$outputFile.status" -Encoding UTF8
+    Write-Utf8 "$outputFile.status" "# $phaseName - RUNNING"
 
     $job = Start-Job -ScriptBlock {
         param($p, $mt)
@@ -54,7 +59,7 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
         if ($waited % 30 -lt 6) {
             $cpu = try { [math]::Round((Get-Process -Name "node" -ErrorAction SilentlyContinue | Measure-Object CPU -Sum).Sum, 1) } catch { 0 }
             Log "$phaseName | ${waited}s cpu=$cpu"
-            "# $phaseName - RUNNING ${waited}s cpu=$cpu" | Set-Content "$outputFile.status" -Encoding UTF8
+            Write-Utf8 "$outputFile.status" "# $phaseName - RUNNING ${waited}s cpu=$cpu"
         }
     }
 
@@ -62,8 +67,8 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
         Log "$phaseName TIMEOUT ${PhaseTimeoutMin}m - killing"
         Stop-Job $job -ErrorAction SilentlyContinue
         Remove-Job $job -Force -ErrorAction SilentlyContinue
-        "# $phaseName - TIMEOUT" | Set-Content "$outputFile.status" -Encoding UTF8
-        "" | Set-Content $outputFile -Encoding UTF8
+        Write-Utf8 "$outputFile.status" "# $phaseName - TIMEOUT"
+        Write-Utf8 $outputFile ""
         return ""
     }
 
@@ -81,9 +86,9 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
     $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds)
     Log "$phaseName DONE: ${elapsed}s turns=$turns cost=$cost chars=$($resultText.Length)"
 
-    $resultText | Set-Content $outputFile -Encoding UTF8
-    $raw | Set-Content "$outputFile.json" -Encoding UTF8
-    "# $phaseName - DONE ${elapsed}s turns=$turns cost=$cost" | Set-Content "$outputFile.status" -Encoding UTF8
+    Write-Utf8 $outputFile $resultText
+    Write-Utf8 "$outputFile.json" $raw
+    Write-Utf8 "$outputFile.status" "# $phaseName - DONE ${elapsed}s turns=$turns cost=$cost"
     return $resultText
 }
 
@@ -110,14 +115,16 @@ if ($SessionDir) {
         New-Item -ItemType Directory -Path "$SessionDir/results" -Force > $null
         Copy-Item $TaskFile "$SessionDir/task.md"
         $bl = (git rev-parse --short HEAD 2>$null)
-        "# Analyze-1C-Research: $taskId`nIteration: 0 | BestMetric: 0 | Plateau: 0`nBaselineCommit: $bl`n## History`n| Iter | Score | Verdict |`n|------|-------|---------|" | Set-Content "$SessionDir/autoresearch.md" -Encoding UTF8
+        Write-Utf8 "$SessionDir/autoresearch.md" "# Analyze-1C-Research: $taskId`nIteration: 0 | BestMetric: 0 | Plateau: 0`nBaselineCommit: $bl`n## History`n| Iter | Score | Verdict |`n|------|-------|---------|"
     }
 }
 
 $script:ProgressFile = "$SessionDir/progress.log"
-"" | Set-Content $script:ProgressFile -Encoding UTF8
+Write-Utf8 $script:ProgressFile ""
 $phasesDir = "$SessionDir/phases"
 if (-not (Test-Path $phasesDir)) { New-Item -ItemType Directory -Path $phasesDir -Force > $null }
+# Clean phases from previous run
+Get-ChildItem $phasesDir -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse
 
 $md = Get-Content "$SessionDir/autoresearch.md" -Raw -Encoding UTF8
 $startIter = 0; $bestMetric = 0; $plateauCount = 0; $baselineCommit = ""
@@ -219,7 +226,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $mc = $mc -replace 'Iteration:\s*\d+', "Iteration: $i"
     $mc = $mc -replace 'BestMetric:\s*\d+', "BestMetric: $bestMetric"
     $mc = $mc -replace 'Plateau:\s*\d+', "Plateau: $plateauCount"
-    Set-Content "$SessionDir/autoresearch.md" -Value $mc -Encoding UTF8
+    Write-Utf8 "$SessionDir/autoresearch.md" $mc
 
     # Copy phases to results
     $iterDir = "$SessionDir/results/iter$i"
@@ -232,7 +239,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $gap = "." * (20 - $bar.Length)
     Write-Host "`n  ---- Iter ${i} | ${metric}/${TargetScore} [$bar$gap] $verdict E=${execSec}s R=${revSec}s C=${cmpSec}s T=${total}s ----" -ForegroundColor Cyan
     Log "SUMMARY: $metric/$TargetScore $verdict ${total}s"
-    "# Iter $i`nScore: $metric/$TargetScore | Best: $bestMetric | Verdict: $verdict`nExec: ${execSec}s | Rev: ${revSec}s | Cmp: ${cmpSec}s | Total: ${total}s" | Set-Content "$iterDir/summary.md" -Encoding UTF8
+    Write-Utf8 "$iterDir/summary.md" "# Iter $i`nScore: $metric/$TargetScore | Best: $bestMetric | Verdict: $verdict`nExec: ${execSec}s | Rev: ${revSec}s | Cmp: ${cmpSec}s | Total: ${total}s"
 
     if ($bestMetric -ge $TargetScore) { Write-Host "`n  TARGET: $bestMetric >= $TargetScore" -ForegroundColor Green; break }
     if ($plateauCount -ge 3) { Write-Host "`n  PLATEAU" -ForegroundColor Yellow; break }
