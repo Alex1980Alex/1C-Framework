@@ -106,14 +106,11 @@ Started: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTurns
 "@ | Set-Content $statusFile -Encoding UTF8
 
-    # Save prompt to temp file
-    $promptFile = "$logFile.prompt"
-    $prompt | Set-Content $promptFile -Encoding UTF8
-
-    # --- Launch via System.Diagnostics.Process for real-time stdout ---
+    # --- Launch via System.Diagnostics.Process with programmatic stdin ---
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = "cmd.exe"
-    $psi.Arguments = "/c `"type `"$($promptFile.Replace('/', '\'))`" | claude -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns`""
+    $psi.Arguments = "/c claude -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns"
+    $psi.RedirectStandardInput = $true
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
@@ -123,7 +120,11 @@ Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTur
 
     $proc = [System.Diagnostics.Process]::Start($psi)
 
-    # --- Async stderr reader (prevent deadlock) ---
+    # Write prompt to stdin then close to signal EOF
+    $proc.StandardInput.Write($prompt)
+    $proc.StandardInput.Close()
+
+    # --- Async stderr reader to prevent deadlock ---
     $stderrTask = $proc.StandardError.ReadToEndAsync()
 
     # --- Real-time stdout reading with timeout ---
@@ -350,7 +351,6 @@ $($toolLog -join "`n")
     $resultText | Set-Content $logFile -Encoding UTF8
 
     # Cleanup temp
-    Remove-Item $promptFile -ErrorAction SilentlyContinue
     Remove-Item $streamLog -ErrorAction SilentlyContinue
 
     return $resultText
