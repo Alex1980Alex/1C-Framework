@@ -12,7 +12,8 @@ class LLMRotationSettings(BaseSettings):
 
     primary_provider: str = "zai-glm5"
     max_retries: int = 3
-    timeout: int = 30
+    timeout: int = 60
+    timeout_generation: int = 90
     cooldown_seconds: int = 300
     rate_limit_cooldown: int = 60
 
