@@ -164,6 +164,8 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   ralph_wiggum_stop.py      # Stop: Ralph iteration enforcement
   memory-sync.py            # Stop: memory system change advisory
   z-ai-write-guard.py      # PreToolUse:Write: blocks >15 lines code without Z.AI delegation
+  delegation-outcome-tracker.py # PreToolUse:Write: records Write >15 lines to delegation-outcomes.jsonl
+  delegation-outcome-stop.py # Stop: appends session delegation summary to JSONL
   skill-quality-monitor.py  # UserPromptSubmit: passive quality metrics logging (data/skill-quality-metrics.jsonl)
   bsl-tool-router.py        # UserPromptSubmit: routes BSL/1C queries to bsl-development skill
 ```
