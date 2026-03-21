@@ -45,29 +45,97 @@ function Load-Template($path, [hashtable]$vars) {
 }
 
 function Run-Claude($prompt, $logFile, $agentName) {
-    # Stream claude -p output: save to file + show key progress lines
-    $output = New-Object System.Text.StringBuilder
-    $lineNum = 0
+    # Stream claude -p with --output-format stream-json for real-time progress
+    $streamFile = "$logFile.stream"
+    $promptFile = "$logFile.prompt"
+    $errFile = "$logFile.err"
+
+    $prompt | Set-Content $promptFile -Encoding UTF8
+    "" | Set-Content $streamFile -Encoding UTF8
+
+    # Start claude -p in background with stream-json output
+    $proc = Start-Process -FilePath "claude" `
+        -ArgumentList "-p","-","--dangerously-skip-permissions","--output-format","stream-json" `
+        -RedirectStandardInput $promptFile -RedirectStandardOutput $streamFile -RedirectStandardError $errFile `
+        -NoNewWindow -PassThru
+
+    # Poll stream file for real-time events
+    $lastPos = 0
+    $toolCount = 0
+    $resultText = ""
     $lastReport = Get-Date
-    "" | Set-Content $logFile -Encoding UTF8
-    claude -p $prompt --dangerously-skip-permissions 2>&1 | ForEach-Object {
-        $line = [string]$_
-        [void]$output.AppendLine($line)
-        $line | Add-Content $logFile -Encoding UTF8
-        $lineNum++
-        # Show key progress markers
-        if ($line -match 'Phase\s*\d|bsl_search|bsl_hybrid|get_metadata|execute_query|validate_query|analysis-report|METRIC|AUTORESEARCH|VERDICT|REASON|mcp__|search_in_code|read_method|write_module|get_module') {
-            $short = if ($line.Length -gt 140) { $line.Substring(0,140) + "..." } else { $line }
-            Write-Host "    [$agentName] $short" -ForegroundColor DarkGray
+
+    while (-not $proc.HasExited) {
+        Start-Sleep -Milliseconds 1500
+        if (-not (Test-Path $streamFile)) { continue }
+        $bytes = [System.IO.File]::ReadAllBytes($streamFile)
+        if ($bytes.Length -le $lastPos) {
+            # Heartbeat every 30s if no new data
+            if (((Get-Date) - $lastReport).TotalSeconds -ge 30) {
+                Write-Host "    [$agentName] ... tools=$toolCount, waiting..." -ForegroundColor DarkGray
+                $lastReport = Get-Date
+            }
+            continue
         }
-        # Heartbeat every 60s
-        $now = Get-Date
-        if (($now - $lastReport).TotalSeconds -ge 60) {
-            Write-Host "    [$agentName] ... ${lineNum} lines, still working..." -ForegroundColor DarkGray
-            $lastReport = $now
+        $newText = [System.Text.Encoding]::UTF8.GetString($bytes, $lastPos, $bytes.Length - $lastPos)
+        $lastPos = $bytes.Length
+        $lastReport = Get-Date
+
+        foreach ($jsonLine in ($newText -split "`n")) {
+            $jsonLine = $jsonLine.Trim()
+            if (-not $jsonLine) { continue }
+            try { $evt = $jsonLine | ConvertFrom-Json -ErrorAction Stop } catch { continue }
+
+            # Tool use events
+            if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
+                $toolCount++
+                Write-Host "    [$agentName] #${toolCount} $($evt.content_block.name)" -ForegroundColor DarkGray
+            }
+            # Result text (assistant message blocks)
+            if ($evt.type -eq "result" -and $evt.result) {
+                $resultText = $evt.result
+            }
+            # Message start — show subtype
+            if ($evt.type -eq "assistant" -and $evt.message -and $evt.message.content) {
+                foreach ($block in $evt.message.content) {
+                    if ($block.type -eq "tool_use") {
+                        $toolCount++
+                        Write-Host "    [$agentName] #${toolCount} $($block.name)" -ForegroundColor DarkGray
+                    }
+                }
+            }
         }
     }
-    return $output.ToString()
+
+    # Process remaining data after exit
+    if (Test-Path $streamFile) {
+        $bytes = [System.IO.File]::ReadAllBytes($streamFile)
+        if ($bytes.Length -gt $lastPos) {
+            $newText = [System.Text.Encoding]::UTF8.GetString($bytes, $lastPos, $bytes.Length - $lastPos)
+            foreach ($jsonLine in ($newText -split "`n")) {
+                $jsonLine = $jsonLine.Trim()
+                if (-not $jsonLine) { continue }
+                try { $evt = $jsonLine | ConvertFrom-Json -ErrorAction Stop } catch { continue }
+                if ($evt.type -eq "content_block_start" -and $evt.content_block -and $evt.content_block.type -eq "tool_use") {
+                    $toolCount++
+                    Write-Host "    [$agentName] #${toolCount} $($evt.content_block.name)" -ForegroundColor DarkGray
+                }
+                if ($evt.type -eq "result" -and $evt.result) { $resultText = $evt.result }
+            }
+        }
+    }
+
+    Write-Host "    [$agentName] Done: $toolCount tool calls" -ForegroundColor DarkGray
+
+    # Save final text to log
+    $resultText | Set-Content $logFile -Encoding UTF8
+
+    # Cleanup
+    Remove-Item $streamFile -ErrorAction SilentlyContinue
+    Remove-Item $promptFile -ErrorAction SilentlyContinue
+    Remove-Item $errFile -ErrorAction SilentlyContinue
+
+    return $resultText
 }
 
 function Extract-Verdict($text) {
