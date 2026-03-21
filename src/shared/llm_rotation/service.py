@@ -18,6 +18,8 @@ from typing import Any
 
 import aiohttp
 
+from src.shared.llm_rotation.adaptive import AdaptiveScorer, BudgetTracker, PRICE_PER_1K_TOKENS
+from src.shared.llm_rotation.backoff import BackoffStrategy, RateLimitError
 from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.config import LLMRotationSettings, get_settings
 
@@ -35,6 +37,16 @@ def _log_completion(**kwargs) -> None:
             f.write(_json.dumps(kwargs, ensure_ascii=False) + "\n")
     except Exception:
         pass
+
+
+def _parse_retry_after(value: str | None) -> float | None:
+    """Parse Retry-After header value to seconds."""
+    if not value:
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
 
 
 class ProviderStatus(str, Enum):
@@ -223,7 +235,19 @@ class LLMRotationService:
             )
             for cfg in configs
         }
+        self._backoff = BackoffStrategy(
+            base_delay=self._settings.backoff_base_delay,
+            max_delay=self._settings.backoff_max_delay,
+            jitter=self._settings.backoff_jitter,
+            multiplier=self._settings.backoff_multiplier,
+        )
+        self._scorer = AdaptiveScorer()
+        self._budget = BudgetTracker(
+            daily_budget=self._settings.daily_budget,
+            alert_threshold=self._settings.budget_alert_threshold,
+        )
         self._session: aiohttp.ClientSession | None = None
+        self._health_task: asyncio.Task | None = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
@@ -254,16 +278,18 @@ class LLMRotationService:
         if not available:
             return None
 
-        # Sort: healthy first, then fewer errors, then higher priority, then faster
-        def score(s: ProviderState) -> tuple:
+        # Sort: healthy first, then by adaptive score (if enough data), then priority
+        def sort_key(s: ProviderState) -> tuple:
+            adaptive = self._scorer.score(s.config.name) if self._settings.adaptive_routing else 0.5
             return (
                 0 if s.status == ProviderStatus.HEALTHY else 1,
+                -adaptive,  # higher adaptive score = better (negate for ascending sort)
                 s.consecutive_errors,
                 s.config.priority,
                 s.avg_response_time,
             )
 
-        return sorted(available, key=score)[0]
+        return sorted(available, key=sort_key)[0]
 
     async def _make_request_openai(
         self,
@@ -296,6 +322,10 @@ class LLMRotationService:
             headers["Authorization"] = f"Bearer {api_key}"
 
         async with session.post(url, json=payload, headers=headers) as resp:
+            if resp.status == 429:
+                retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
+                text = await resp.text()
+                raise RateLimitError(f"HTTP 429: {text[:200]}", retry_after=retry_after)
             if resp.status != 200:
                 text = await resp.text()
                 raise RuntimeError(f"HTTP {resp.status}: {text[:200]}")
@@ -386,6 +416,10 @@ class LLMRotationService:
         }
 
         async with session.post(url, json=payload, headers=headers) as resp:
+            if resp.status == 429:
+                retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
+                text_resp = await resp.text()
+                raise RateLimitError(f"HTTP 429: {text_resp[:200]}", retry_after=retry_after)
             if resp.status != 200:
                 text_resp = await resp.text()
                 raise RuntimeError(f"HTTP {resp.status}: {text_resp[:200]}")
@@ -439,10 +473,20 @@ class LLMRotationService:
         text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
         usage = data.get("usage", {})
 
+        total_tokens = usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0)
         logger.info(
             f"[{state.config.name}] Completed in {elapsed:.2f}s "
             f"(tokens: {usage.get('completion_tokens', '?')})"
         )
+
+        # Adaptive scoring: estimate quality from response length
+        quality = min(1.0, len(text) / 100.0) if text else 0.0
+        self._scorer.record(state.config.name, elapsed, total_tokens, quality)
+
+        # Budget tracking
+        price = PRICE_PER_1K_TOKENS.get(state.config.name, 0.0)
+        cost = total_tokens * price / 1000.0
+        self._budget.record_cost(state.config.name, cost)
 
         return {
             "provider": state.config.name,
@@ -507,6 +551,7 @@ class LLMRotationService:
 
                     except Exception as e:
                         error_msg = str(e)[:200]
+                        retry_after = e.retry_after if isinstance(e, RateLimitError) else None
                         # Use reduced cooldown for primary provider
                         primary_state.record_error(
                             error_msg,
@@ -518,17 +563,15 @@ class LLMRotationService:
                             f"{retry + 1}/{self._settings.primary_max_retries}: {error_msg}"
                         )
 
-                        # Wait before retrying primary
+                        # Exponential backoff with jitter before retrying
                         if retry < self._settings.primary_max_retries - 1:
-                            delay = self._settings.primary_retry_delay
-                            if "429" in error_msg or "rate limit" in error_msg.lower():
-                                delay = min(delay * 2, 10.0)
-                            logger.info(f"[{primary_name}] Waiting {delay}s before retry...")
+                            delay = self._backoff.compute_delay(retry, retry_after=retry_after)
+                            logger.info(f"[{primary_name}] Backoff {delay:.2f}s before retry...")
                             await asyncio.sleep(delay)
 
                 tried.append(primary_name)
 
-        # --- Phase 2: Fallback rotation (other providers) ---
+        # --- Phase 2: Fallback rotation with model-level failover ---
         for _ in range(self._settings.max_retries):
             if preferred_provider and preferred_provider in self._providers:
                 state = self._providers[preferred_provider]
@@ -542,35 +585,49 @@ class LLMRotationService:
 
             provider_name = state.config.name
             tried.append(provider_name)
-            total_attempts += 1
 
-            try:
-                result = await self._call_provider(
-                    state, prompt, system_prompt, model,
-                    temperature, max_tokens,
-                )
-                result["attempt"] = total_attempts
-                usage = result.get("usage", {})
-                _log_completion(
-                    provider=result["provider"], model=result["model"],
-                    response_time=result["response_time"], attempt=total_attempts,
-                    primary_retries=primary_retries, fallback=True,
-                    prompt_tokens=usage.get("prompt_tokens", 0),
-                    completion_tokens=usage.get("completion_tokens", 0),
-                )
-                return result
+            # Level 2: try default model, then alternative models
+            models_to_try = [model or state.config.default_model] + [
+                m for m in state.config.models
+                if m != (model or state.config.default_model)
+            ]
+            for model_idx, try_model in enumerate(models_to_try):
+                total_attempts += 1
+                try:
+                    result = await self._call_provider(
+                        state, prompt, system_prompt, try_model,
+                        temperature, max_tokens,
+                    )
+                    result["attempt"] = total_attempts
+                    usage = result.get("usage", {})
+                    _log_completion(
+                        provider=result["provider"], model=result["model"],
+                        response_time=result["response_time"], attempt=total_attempts,
+                        primary_retries=primary_retries, fallback=True,
+                        prompt_tokens=usage.get("prompt_tokens", 0),
+                        completion_tokens=usage.get("completion_tokens", 0),
+                    )
+                    return result
 
-            except Exception as e:
-                error_msg = str(e)[:200]
-                state.record_error(
-                    error_msg,
-                    self._settings.cooldown_seconds,
-                    self._settings.rate_limit_cooldown,
-                )
-                logger.warning(
-                    f"[{provider_name}] Fallback error "
-                    f"(attempt {total_attempts}): {error_msg}"
-                )
+                except Exception as e:
+                    error_msg = str(e)[:200]
+                    is_transient = self._is_transient(e)
+                    if model_idx < len(models_to_try) - 1 and is_transient:
+                        logger.warning(
+                            f"[{provider_name}/{try_model}] Failed, "
+                            f"trying alt model: {error_msg}"
+                        )
+                        continue
+                    state.record_error(
+                        error_msg,
+                        self._settings.cooldown_seconds,
+                        self._settings.rate_limit_cooldown,
+                    )
+                    logger.warning(
+                        f"[{provider_name}/{try_model}] Fallback error "
+                        f"(attempt {total_attempts}): {error_msg}"
+                    )
+                    break  # move to next provider
 
         if total_attempts == 0:
             _log_completion(
@@ -594,14 +651,14 @@ class LLMRotationService:
 
     def get_stats(self) -> dict[str, Any]:
         """Return statistics for all providers."""
-        stats = {}
+        stats: dict[str, Any] = {}
         for name, state in self._providers.items():
             api_key = (
                 os.environ.get(state.config.api_key_env, "")
                 if state.config.requires_key else "(not needed)"
             )
             cb = state.circuit_breaker
-            stats[name] = {
+            provider_stats: dict[str, Any] = {
                 "status": state.status.value,
                 "circuit_breaker": cb.state.value,
                 "cb_fail_count": cb.fail_count,
@@ -615,6 +672,11 @@ class LLMRotationService:
                 "model": state.config.default_model,
                 "available": state.is_available() and bool(api_key),
             }
+            if self._settings.adaptive_routing:
+                provider_stats["adaptive"] = self._scorer.get_stats(name)
+            stats[name] = provider_stats
+        if self._settings.adaptive_routing:
+            stats["_budget"] = self._budget.get_stats()
         return stats
 
     def reset_provider(self, name: str) -> bool:
@@ -636,8 +698,72 @@ class LLMRotationService:
             state.consecutive_errors = 0
             state.last_error = None
 
+    @staticmethod
+    def _is_transient(error: Exception) -> bool:
+        """Check if error is transient (retry-worthy)."""
+        msg = str(error).lower()
+        return any(kw in msg for kw in (
+            "timeout", "timed out", "429", "rate limit",
+            "500", "502", "503", "504",
+            "connection", "temporarily",
+        ))
+
+    def start_health_checks(self) -> None:
+        """Start background health check loop (if enabled in settings)."""
+        if not self._settings.health_check_enabled:
+            return
+        if self._health_task is not None and not self._health_task.done():
+            return
+        self._health_task = asyncio.create_task(self._health_check_loop())
+        logger.info(f"Health check loop started (interval={self._settings.health_check_interval}s)")
+
+    def stop_health_checks(self) -> None:
+        """Stop the background health check loop."""
+        if self._health_task is not None and not self._health_task.done():
+            self._health_task.cancel()
+            self._health_task = None
+            logger.info("Health check loop stopped")
+
+    async def _health_check_loop(self) -> None:
+        """Background loop: probe OPEN providers for recovery."""
+        while True:
+            await asyncio.sleep(self._settings.health_check_interval)
+            try:
+                await self._health_check_loop_once()
+            except asyncio.CancelledError:
+                return
+
+    async def _health_check_loop_once(self) -> None:
+        """Single pass: probe OPEN providers that have timed out."""
+        for name, state in self._providers.items():
+            if state.circuit_breaker.state != CircuitState.OPEN:
+                continue
+            if not state.circuit_breaker.can_execute():
+                continue  # still within reset_timeout
+            # Half-Open: send lightweight probe
+            try:
+                await self._call_provider(state, "ping", max_tokens=5)
+                state.circuit_breaker.record_success()
+                state.status = state._status_from_cb()
+                logger.info(f"[{name}] Health check PASSED, recovered")
+                _log_completion(
+                    provider=name, model=state.config.default_model,
+                    response_time=0, attempt=0, health_check=True,
+                    result="recovered",
+                )
+            except Exception as e:
+                state.circuit_breaker.record_failure()
+                state.status = state._status_from_cb()
+                logger.info(f"[{name}] Health check FAILED: {e}")
+                _log_completion(
+                    provider=name, model=state.config.default_model,
+                    response_time=0, attempt=0, health_check=True,
+                    result="failed", error=str(e)[:200],
+                )
+
     async def close(self) -> None:
-        """Close the HTTP session."""
+        """Close the HTTP session and stop health checks."""
+        self.stop_health_checks()
         if self._session and not self._session.closed:
             await self._session.close()
 

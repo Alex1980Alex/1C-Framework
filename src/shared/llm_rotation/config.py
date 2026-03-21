@@ -27,6 +27,21 @@ class LLMRotationSettings(BaseSettings):
     cb_success_threshold: int = 1
     cb_reset_timeout: float = 60.0
 
+    # Backoff Strategy (Iteration 2)
+    backoff_base_delay: float = 1.0
+    backoff_max_delay: float = 30.0
+    backoff_jitter: float = 1.0
+    backoff_multiplier: float = 2.0
+
+    # Health Check (Iteration 3)
+    health_check_enabled: bool = True
+    health_check_interval: int = 120  # seconds between probes
+
+    # Adaptive Routing + Budget (Iteration 5)
+    adaptive_routing: bool = True
+    daily_budget: float = 1.0  # dollars
+    budget_alert_threshold: float = 0.8  # warn at 80%
+
     # API Keys (from environment)
     zhipu_api_key: str = ""
     gemini_api_key: str = ""
