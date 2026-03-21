@@ -123,6 +123,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $commitBefore = (git rev-parse --short HEAD 2>$null)
 
     # --- EXECUTOR ---
+    $execStart = Get-Date
     Write-Host "  [EXECUTOR] Running analysis..." -ForegroundColor Yellow
     $vars = @{
         iter = $i; max_iterations = $MaxIterations
@@ -134,7 +135,8 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $executorPrompt = Load-Template "$templatesDir/1c-analysis-executor.md" $vars
     $executorOutput = claude -p $executorPrompt --dangerously-skip-permissions 2>&1 | Out-String
     $executorOutput | Set-Content "$logDir/executor_$i.txt" -Encoding UTF8
-    Write-Host "  [EXECUTOR] Done." -ForegroundColor Green
+    $execSec = [math]::Round(((Get-Date) - $execStart).TotalSeconds)
+    Write-Host "  [EXECUTOR] Done (${execSec}s)" -ForegroundColor Green
 
     if ($executorOutput -match "AUTORESEARCH_DONE") {
         Write-Host "`n  AUTORESEARCH_DONE" -ForegroundColor Green
@@ -151,11 +153,13 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     }
 
     # --- REVIEWER ---
+    $revStart = Get-Date
     Write-Host "  [REVIEWER] Verifying..." -ForegroundColor Yellow
     $vars.best_metric = $bestMetric
     $reviewerPrompt = Load-Template "$templatesDir/1c-analysis-reviewer.md" $vars
     $reviewerOutput = claude -p $reviewerPrompt --dangerously-skip-permissions 2>&1 | Out-String
     $reviewerOutput | Set-Content "$logDir/reviewer_$i.txt" -Encoding UTF8
+    $revSec = [math]::Round(((Get-Date) - $revStart).TotalSeconds)
 
     $verdict = Extract-Verdict $reviewerOutput
     $metric = Extract-Metric $reviewerOutput
@@ -180,32 +184,35 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
                 $bestMetric = $metric
                 $plateauCount = 0
             } else { $plateauCount++ }
-            Write-Host "  [REVIEWER] KEEP: score=$metric delta=$delta" -ForegroundColor Green
+            Write-Host "  [REVIEWER] KEEP: score=$metric delta=+$delta (${revSec}s)" -ForegroundColor Green
         }
         "IMPROVE" {
             if ($metric -gt $bestMetric) {
                 $bestMetric = $metric
                 $plateauCount = 0
             } else { $plateauCount++ }
-            Write-Host "  [REVIEWER] IMPROVE: score=$metric gaps remain" -ForegroundColor Yellow
+            Write-Host "  [REVIEWER] IMPROVE: score=$metric gaps remain (${revSec}s)" -ForegroundColor Yellow
         }
         "REVERT" {
             $plateauCount++
-            Write-Host "  [REVIEWER] REVERT: score=$metric reason=$reason" -ForegroundColor Red
+            Write-Host "  [REVIEWER] REVERT: score=$metric reason=$reason (${revSec}s)" -ForegroundColor Red
         }
         default {
             $plateauCount++
-            Write-Host "  [REVIEWER] $verdict : score=$metric" -ForegroundColor Yellow
+            Write-Host "  [REVIEWER] $verdict : score=$metric (${revSec}s)" -ForegroundColor Yellow
         }
     }
 
     # --- COMPARATOR (every N iterations) ---
+    $cmpSec = 0
     if ($i % $CompareEvery -eq 0 -and $baselineCommit) {
+        $cmpStart = Get-Date
         Write-Host "  [COMPARATOR] Blind A/B..." -ForegroundColor Magenta
         $comparatorPrompt = Load-Template "$templatesDir/1c-analysis-comparator.md" $vars
         $comparatorOutput = claude -p $comparatorPrompt --dangerously-skip-permissions 2>&1 | Out-String
         $comparatorOutput | Set-Content "$logDir/comparator_$i.txt" -Encoding UTF8
-        Write-Host "  [COMPARATOR] Done." -ForegroundColor Magenta
+        $cmpSec = [math]::Round(((Get-Date) - $cmpStart).TotalSeconds)
+        Write-Host "  [COMPARATOR] Done (${cmpSec}s)" -ForegroundColor Magenta
     }
 
     # --- LOG: JSONL ---
@@ -225,19 +232,38 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $mdContent = $mdContent -replace 'Plateau:\s*\d+', "Plateau: $plateauCount"
     Set-Content "$SessionDir/autoresearch.md" -Value $mdContent -Encoding UTF8
 
+    # --- Iteration Summary ---
+    $iterTotalSec = [math]::Round(((Get-Date) - $execStart).TotalSeconds)
+    $bar = "#" * [math]::Min([math]::Max([math]::Round($bestMetric / 5), 0), 20)
+    $gap = "." * (20 - $bar.Length)
+    Write-Host ""
+    Write-Host "  ---- Iteration $i Summary ----" -ForegroundColor Cyan
+    Write-Host "  Score:    $metric / $TargetScore  [$bar$gap] best=$bestMetric" -ForegroundColor White
+    Write-Host "  Verdict:  $verdict  |  Delta: $delta  |  Plateau: $plateauCount/3" -ForegroundColor White
+    Write-Host "  Time:     Exec=${execSec}s  Review=${revSec}s  Compare=${cmpSec}s  Total=${iterTotalSec}s" -ForegroundColor DarkGray
+    Write-Host "  ----------------------------" -ForegroundColor Cyan
+
     # --- Stop Conditions ---
     if ($bestMetric -ge $TargetScore) {
-        Write-Host "`n  Target reached: $bestMetric >= $TargetScore" -ForegroundColor Green
+        Write-Host "`n  TARGET REACHED: $bestMetric >= $TargetScore" -ForegroundColor Green
         break
     }
     if ($plateauCount -ge 3) {
-        Write-Host "`n  Plateau: 3 iterations without improvement." -ForegroundColor Yellow
+        Write-Host "`n  PLATEAU: 3 iterations without improvement." -ForegroundColor Yellow
         break
     }
 
     Start-Sleep -Seconds 2
 }
 
-Write-Host "`n=== Analyze-1C-Research Complete ===" -ForegroundColor Cyan
-Write-Host "Iterations: $i | Best: $bestMetric | Target: $TargetScore"
-Write-Host "Session: $SessionDir | Logs: $logDir/"
+Write-Host ""
+Write-Host "======================================" -ForegroundColor Cyan
+Write-Host "  Analyze-1C-Research COMPLETE" -ForegroundColor Cyan
+Write-Host "======================================" -ForegroundColor Cyan
+Write-Host "  Iterations:  $i / $MaxIterations"
+Write-Host "  Best Score:  $bestMetric / $TargetScore"
+$status = if ($bestMetric -ge $TargetScore) { "TARGET REACHED" } else { "STOPPED (plateau=$plateauCount)" }
+Write-Host "  Status:      $status"
+Write-Host "  Report:      $SessionDir/analysis-report.md"
+Write-Host "  Logs:        $logDir/"
+Write-Host "======================================"  -ForegroundColor Cyan
