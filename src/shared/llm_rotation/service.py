@@ -258,12 +258,14 @@ class LLMRotationService:
         self._session: aiohttp.ClientSession | None = None
         self._health_task: asyncio.Task | None = None
 
+    def _request_timeout(self, timeout: int | None = None) -> aiohttp.ClientTimeout:
+        """Build per-request timeout."""
+        return aiohttp.ClientTimeout(total=timeout or self._settings.timeout)
+
     async def _get_session(self) -> aiohttp.ClientSession:
-        """Get or create aiohttp session."""
+        """Get or create aiohttp session (no default timeout — set per-request)."""
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=self._settings.timeout)
-            )
+            self._session = aiohttp.ClientSession()
         return self._session
 
     def get_available_providers(self) -> list[ProviderState]:
@@ -318,6 +320,7 @@ class LLMRotationService:
         model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
+        timeout: int | None = None,
     ) -> dict[str, Any]:
         """Make a request to an OpenAI-compatible API."""
         session = await self._get_session()
@@ -340,7 +343,8 @@ class LLMRotationService:
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
-        async with session.post(url, json=payload, headers=headers) as resp:
+        async with session.post(url, json=payload, headers=headers,
+                               timeout=self._request_timeout(timeout)) as resp:
             if resp.status == 429:
                 retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
                 text = await resp.text()
@@ -359,6 +363,7 @@ class LLMRotationService:
         model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
+        timeout: int | None = None,
     ) -> dict[str, Any]:
         """Make a request to Ollama API."""
         session = await self._get_session()
@@ -379,7 +384,8 @@ class LLMRotationService:
             },
         }
 
-        async with session.post(url, json=payload) as resp:
+        async with session.post(url, json=payload,
+                               timeout=self._request_timeout(timeout)) as resp:
             if resp.status != 200:
                 text = await resp.text()
                 raise RuntimeError(f"HTTP {resp.status}: {text[:200]}")
@@ -405,6 +411,7 @@ class LLMRotationService:
         model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
+        timeout: int | None = None,
     ) -> dict[str, Any]:
         """Make a request to Anthropic-compatible API (Z.AI with GLM-5)."""
         session = await self._get_session()
@@ -434,7 +441,8 @@ class LLMRotationService:
             "anthropic-version": "2023-06-01",
         }
 
-        async with session.post(url, json=payload, headers=headers) as resp:
+        async with session.post(url, json=payload, headers=headers,
+                               timeout=self._request_timeout(timeout)) as resp:
             if resp.status == 429:
                 retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
                 text_resp = await resp.text()
@@ -469,21 +477,22 @@ class LLMRotationService:
         model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
+        timeout: int | None = None,
     ) -> dict[str, Any]:
         """Make a single request to a provider. Returns normalized result dict."""
         start = time.monotonic()
 
         if state.config.format == "anthropic":
             data = await self._make_request_anthropic(
-                state, prompt, system_prompt, model, temperature, max_tokens
+                state, prompt, system_prompt, model, temperature, max_tokens, timeout
             )
         elif state.config.format == "ollama":
             data = await self._make_request_ollama(
-                state, prompt, system_prompt, model, temperature, max_tokens
+                state, prompt, system_prompt, model, temperature, max_tokens, timeout
             )
         else:
             data = await self._make_request_openai(
-                state, prompt, system_prompt, model, temperature, max_tokens
+                state, prompt, system_prompt, model, temperature, max_tokens, timeout
             )
 
         elapsed = time.monotonic() - start
@@ -531,6 +540,7 @@ class LLMRotationService:
         preferred_provider: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2048,
+        timeout: int | None = None,
     ) -> dict[str, Any]:
         """Generate completion with automatic provider rotation.
 
@@ -544,6 +554,11 @@ class LLMRotationService:
         total_attempts = 0
         primary_retries = 0
         primary_name = self._settings.primary_provider
+
+        # Auto-select timeout: generation (high max_tokens) gets longer timeout
+        if timeout is None:
+            timeout = (self._settings.timeout_generation if max_tokens > 1024
+                       else self._settings.timeout)
 
         # Budget advisory check
         self._budget.check_daily_reset()
@@ -575,7 +590,7 @@ class LLMRotationService:
                     try:
                         result = await self._call_provider(
                             primary_state, prompt, system_prompt, model,
-                            temperature, max_tokens,
+                            temperature, max_tokens, timeout=timeout,
                         )
                         result["attempt"] = total_attempts
                         usage = result.get("usage", {})
@@ -645,7 +660,7 @@ class LLMRotationService:
                 try:
                     result = await self._call_provider(
                         state, prompt, system_prompt, try_model,
-                        temperature, max_tokens,
+                        temperature, max_tokens, timeout=timeout,
                     )
                     result["attempt"] = total_attempts
                     usage = result.get("usage", {})

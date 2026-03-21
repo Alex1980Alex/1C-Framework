@@ -62,6 +62,10 @@ async def list_tools() -> list[Tool]:
                         "description": "Max tokens to generate",
                         "default": 2048,
                     },
+                    "timeout": {
+                        "type": "integer",
+                        "description": "Request timeout in seconds (auto: 60s short, 90s generation)",
+                    },
                 },
                 "required": ["prompt"],
             },
@@ -111,6 +115,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 preferred_provider=arguments.get("preferred_provider"),
                 temperature=arguments.get("temperature", 0.7),
                 max_tokens=arguments.get("max_tokens", 2048),
+                timeout=arguments.get("timeout"),
             )
             return [TextContent(
                 type="text",

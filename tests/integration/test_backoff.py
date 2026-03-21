@@ -287,7 +287,7 @@ class TestMultiLevelFailover:
         service = LLMRotationService(providers=configs)
         call_models = []
 
-        async def mock_call(state, prompt, system_prompt=None, model=None, temperature=0.7, max_tokens=2048):
+        async def mock_call(state, prompt, system_prompt=None, model=None, temperature=0.7, max_tokens=2048, **kwargs):
             call_models.append(model)
             if model == "model-a":
                 raise RuntimeError("HTTP 500 Internal Server Error")
@@ -320,7 +320,7 @@ class TestMultiLevelFailover:
         service = LLMRotationService(providers=configs)
         call_log = []
 
-        async def mock_call(state, prompt, system_prompt=None, model=None, temperature=0.7, max_tokens=2048):
+        async def mock_call(state, prompt, system_prompt=None, model=None, temperature=0.7, max_tokens=2048, **kwargs):
             call_log.append(f"{state.config.name}/{model}")
             if state.config.name == "p1":
                 raise RuntimeError("HTTP 400 Bad Request")  # non-transient
