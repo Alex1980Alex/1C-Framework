@@ -38,8 +38,18 @@ Previous best score: {best_metric}. Target: {target_score}.
 9. If VERDICT is REVERT: execute git revert HEAD --no-edit
 10. Update autoresearch.md: History table, Dead Ends (if REVERT), Current Best (if KEEP)
 
+## Phase Progress Files (MANDATORY)
+After completing each review step, write a progress file to {session_dir}/phases/:
+- Step 1 done: Write {session_dir}/phases/review1_scoring.md with METRIC, BREAKDOWN scores
+- Step 2-4 done: Write {session_dir}/phases/review2_verification.md with MCP verification results
+- Step 5-10 done: Write {session_dir}/phases/review3_verdict.md with VERDICT, REASON, decision
+
+Each file: first line = "# Review N: Name", then key results in 5-10 lines.
+These files are monitored to track progress. No file = assumed hung.
+
 ## Rules
 - Do NOT write analysis code or modify analysis-report.md content
 - Be objective: numbers decide the verdict
 - MCP calls are for VERIFICATION only, not improving the report
-- Max 3 MCP verification calls per iteration (cost control)
+- Max 3 MCP verification calls per iteration
+- ALWAYS write phase files after each step
