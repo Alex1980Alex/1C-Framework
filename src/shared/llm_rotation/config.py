@@ -14,6 +14,7 @@ class LLMRotationSettings(BaseSettings):
     max_retries: int = 3
     timeout: int = 60
     timeout_generation: int = 90
+    timeout_heavy: int = 180
     cooldown_seconds: int = 300
     rate_limit_cooldown: int = 60
 

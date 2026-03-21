@@ -555,10 +555,14 @@ class LLMRotationService:
         primary_retries = 0
         primary_name = self._settings.primary_provider
 
-        # Auto-select timeout: generation (high max_tokens) gets longer timeout
+        # Auto-select timeout by max_tokens tier
         if timeout is None:
-            timeout = (self._settings.timeout_generation if max_tokens > 1024
-                       else self._settings.timeout)
+            if max_tokens > 3000:
+                timeout = self._settings.timeout_heavy       # 180s
+            elif max_tokens > 1024:
+                timeout = self._settings.timeout_generation  # 90s
+            else:
+                timeout = self._settings.timeout             # 60s
 
         # Budget advisory check
         self._budget.check_daily_reset()
