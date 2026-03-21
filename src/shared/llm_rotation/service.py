@@ -254,10 +254,7 @@ class LLMRotationService:
         # Load persisted state
         if self._settings.persist_adaptive:
             self._scorer.load(self._settings.adaptive_data_path)
-            budget_path = self._settings.adaptive_data_path.replace(
-                "adaptive", "budget"
-            )
-            self._budget.load(budget_path)
+            self._budget.load(self._settings.budget_data_path)
         self._session: aiohttp.ClientSession | None = None
         self._health_task: asyncio.Task | None = None
 
@@ -309,10 +306,7 @@ class LLMRotationService:
         """Save adaptive scorer and budget state to disk."""
         try:
             self._scorer.save(self._settings.adaptive_data_path)
-            budget_path = self._settings.adaptive_data_path.replace(
-                "adaptive", "budget"
-            )
-            self._budget.save(budget_path)
+            self._budget.save(self._settings.budget_data_path)
         except Exception as e:
             logger.warning(f"Failed to save state: {e}")
 
@@ -504,8 +498,12 @@ class LLMRotationService:
             f"(tokens: {usage.get('completion_tokens', '?')})"
         )
 
-        # Adaptive scoring: estimate quality from response length
-        quality = min(1.0, len(text) / 100.0) if text else 0.0
+        # Adaptive scoring: estimate quality from response characteristics
+        quality = 0.0
+        if text:
+            length_score = min(1.0, len(text) / 100.0)
+            error_penalty = 0.5 if any(kw in text.lower() for kw in ("error", "sorry", "i cannot")) else 0.0
+            quality = max(0.0, length_score - error_penalty)
         self._scorer.record(state.config.name, elapsed, total_tokens, quality)
 
         # Budget tracking
@@ -546,6 +544,11 @@ class LLMRotationService:
         total_attempts = 0
         primary_retries = 0
         primary_name = self._settings.primary_provider
+
+        # Budget advisory check
+        self._budget.check_daily_reset()
+        if self._budget.is_over_budget:
+            logger.warning(f"Daily budget exceeded (${self._budget.total_spent:.4f}/${self._budget.daily_budget})")
 
         # --- Phase 1: Force-retry primary provider ---
         if self._settings.force_primary and primary_name in self._providers:
@@ -789,10 +792,9 @@ class LLMRotationService:
             if not state.circuit_breaker.can_execute():
                 continue  # still within reset_timeout
             # Half-Open: send lightweight probe
+            # _call_provider already calls state.record_success() which updates CB
             try:
                 await self._call_provider(state, "ping", max_tokens=5)
-                state.circuit_breaker.record_success()
-                state.status = state._status_from_cb()
                 logger.info(f"[{name}] Health check PASSED, recovered")
                 _log_completion(
                     provider=name, model=state.config.default_model,
@@ -800,8 +802,7 @@ class LLMRotationService:
                     result="recovered",
                 )
             except Exception as e:
-                state.circuit_breaker.record_failure()
-                state.status = state._status_from_cb()
+                state.record_error(str(e)[:200])
                 logger.info(f"[{name}] Health check FAILED: {e}")
                 _log_completion(
                     provider=name, model=state.config.default_model,

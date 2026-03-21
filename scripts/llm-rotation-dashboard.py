@@ -15,15 +15,14 @@ from datetime import datetime
 from pathlib import Path
 from statistics import mean, quantiles
 
-PRICE_PER_1K_TOKENS = {
-    "zai-glm5": 0.002,
-    "zhipu": 0.001,
-    "gemini": 0.0,
-    "openrouter": 0.0,
-    "mistral": 0.001,
-    "ollama-local": 0.0,
-    "ollama-cloud": 0.0,
-}
+try:
+    from src.shared.llm_rotation.adaptive import PRICE_PER_1K_TOKENS
+except ImportError:
+    PRICE_PER_1K_TOKENS = {
+        "zai-glm5": 0.002, "zhipu": 0.001, "gemini": 0.0,
+        "openrouter": 0.0, "mistral": 0.001,
+        "ollama-local": 0.0, "ollama-cloud": 0.0,
+    }
 
 
 def parse_entries(file_path: Path, last_n: int | None = None) -> list[dict]:

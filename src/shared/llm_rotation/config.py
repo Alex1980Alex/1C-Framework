@@ -48,6 +48,7 @@ class LLMRotationSettings(BaseSettings):
     # Persistence (Iteration 7)
     persist_adaptive: bool = True
     adaptive_data_path: str = "data/llm-rotation-adaptive.json"
+    budget_data_path: str = "data/llm-rotation-budget.json"
 
     # API Keys (from environment)
     zhipu_api_key: str = ""
