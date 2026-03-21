@@ -13,6 +13,8 @@ from src.shared.llm_rotation.adapter import (
     evaluate_response,
     is_cheap_llm_enabled,
 )
+from src.shared.llm_rotation.adaptive import AdaptiveScorer, BudgetTracker, PRICE_PER_1K_TOKENS
+from src.shared.llm_rotation.backoff import BackoffStrategy, RateLimitError
 from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.service import (
     DEFAULT_PROVIDERS,
@@ -24,6 +26,11 @@ from src.shared.llm_rotation.service import (
 )
 
 __all__ = [
+    "AdaptiveScorer",
+    "BudgetTracker",
+    "PRICE_PER_1K_TOKENS",
+    "BackoffStrategy",
+    "RateLimitError",
     "CircuitBreaker",
     "CircuitState",
     "LLMRotationService",
