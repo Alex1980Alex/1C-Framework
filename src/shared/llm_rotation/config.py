@@ -37,10 +37,17 @@ class LLMRotationSettings(BaseSettings):
     health_check_enabled: bool = True
     health_check_interval: int = 120  # seconds between probes
 
+    # Rate Limiting (Iteration 6)
+    rate_limiting_enabled: bool = True
+
     # Adaptive Routing + Budget (Iteration 5)
     adaptive_routing: bool = True
     daily_budget: float = 1.0  # dollars
     budget_alert_threshold: float = 0.8  # warn at 80%
+
+    # Persistence (Iteration 7)
+    persist_adaptive: bool = True
+    adaptive_data_path: str = "data/llm-rotation-adaptive.json"
 
     # API Keys (from environment)
     zhipu_api_key: str = ""

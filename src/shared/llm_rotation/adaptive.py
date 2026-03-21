@@ -4,10 +4,14 @@ Adaptive routing and cost tracking for LLM providers.
 Records quality, latency, and cost per provider.
 Computes composite score for intelligent provider selection.
 Tracks budget usage with configurable alerts.
+Persistence: save/load state to JSON file.
 """
 
+import json
 import logging
 from dataclasses import dataclass, field
+from datetime import date
+from pathlib import Path
 
 logger = logging.getLogger("llm-rotation")
 
@@ -93,6 +97,34 @@ class AdaptiveScorer:
             "total_tokens": sum(r.tokens for r in records),
         }
 
+    def save(self, path: str | Path) -> None:
+        """Save history to JSON file (last window_size per provider)."""
+        data = {}
+        for provider, records in self.history.items():
+            recent = records[-self.window_size:]
+            data[provider] = [
+                {"latency": r.latency, "tokens": r.tokens,
+                 "quality": r.quality, "cost": r.cost}
+                for r in recent
+            ]
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+    def load(self, path: str | Path) -> None:
+        """Load history from JSON file."""
+        p = Path(path)
+        if not p.exists():
+            return
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            for provider, records in data.items():
+                self.history[provider] = [
+                    RequestOutcome(**r) for r in records
+                ]
+        except (json.JSONDecodeError, TypeError, KeyError):
+            logger.warning(f"Failed to load adaptive data from {path}")
+
 
 @dataclass
 class BudgetTracker:
@@ -102,6 +134,7 @@ class BudgetTracker:
     alert_threshold: float = 0.8  # warn at 80%
     _spending: dict[str, float] = field(default_factory=dict)
     _alerted: bool = False
+    _reset_date: date = field(default_factory=date.today)
 
     def record_cost(self, provider: str, cost: float) -> None:
         """Record cost and check budget."""
@@ -139,3 +172,40 @@ class BudgetTracker:
         """Reset daily spending (call at start of new day)."""
         self._spending.clear()
         self._alerted = False
+        self._reset_date = date.today()
+
+    def check_daily_reset(self) -> bool:
+        """Auto-reset if a new day has started. Returns True if reset occurred."""
+        today = date.today()
+        if self._reset_date != today:
+            logger.info(f"Budget auto-reset: new day {today} (was {self._reset_date})")
+            self.reset()
+            return True
+        return False
+
+    def save(self, path: str | Path) -> None:
+        """Save budget state to JSON file."""
+        data = {
+            "spending": self._spending,
+            "reset_date": self._reset_date.isoformat(),
+        }
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+    def load(self, path: str | Path) -> None:
+        """Load budget state from JSON file. Auto-resets if new day."""
+        p = Path(path)
+        if not p.exists():
+            return
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            saved_date = date.fromisoformat(data.get("reset_date", ""))
+            if saved_date == date.today():
+                self._spending = data.get("spending", {})
+                self._reset_date = saved_date
+            else:
+                logger.info(f"Budget data from {saved_date}, resetting for today")
+                self.reset()
+        except (json.JSONDecodeError, ValueError, TypeError):
+            logger.warning(f"Failed to load budget data from {path}")

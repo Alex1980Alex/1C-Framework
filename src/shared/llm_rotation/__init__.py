@@ -16,6 +16,7 @@ from src.shared.llm_rotation.adapter import (
 from src.shared.llm_rotation.adaptive import AdaptiveScorer, BudgetTracker, PRICE_PER_1K_TOKENS
 from src.shared.llm_rotation.backoff import BackoffStrategy, RateLimitError
 from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
+from src.shared.llm_rotation.rate_limiter import ProviderRateLimiter, TokenBucket
 from src.shared.llm_rotation.service import (
     DEFAULT_PROVIDERS,
     LLMRotationService,
@@ -45,6 +46,8 @@ __all__ = [
     "QUALITY_CRITERIA",
     "evaluate_response",
     "discover_unregistered_components",
+    "ProviderRateLimiter",
+    "TokenBucket",
 ]
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
