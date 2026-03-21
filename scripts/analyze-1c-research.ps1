@@ -44,6 +44,32 @@ function Load-Template($path, [hashtable]$vars) {
     return $text
 }
 
+function Run-Claude($prompt, $logFile, $agentName) {
+    # Stream claude -p output: save to file + show key progress lines
+    $output = New-Object System.Text.StringBuilder
+    $lineNum = 0
+    $lastReport = Get-Date
+    "" | Set-Content $logFile -Encoding UTF8
+    claude -p $prompt --dangerously-skip-permissions 2>&1 | ForEach-Object {
+        $line = [string]$_
+        [void]$output.AppendLine($line)
+        $line | Add-Content $logFile -Encoding UTF8
+        $lineNum++
+        # Show key progress markers
+        if ($line -match 'Phase\s*\d|bsl_search|bsl_hybrid|get_metadata|execute_query|validate_query|analysis-report|METRIC|AUTORESEARCH|VERDICT|REASON|mcp__|search_in_code|read_method|write_module|get_module') {
+            $short = if ($line.Length -gt 140) { $line.Substring(0,140) + "..." } else { $line }
+            Write-Host "    [$agentName] $short" -ForegroundColor DarkGray
+        }
+        # Heartbeat every 60s
+        $now = Get-Date
+        if (($now - $lastReport).TotalSeconds -ge 60) {
+            Write-Host "    [$agentName] ... ${lineNum} lines, still working..." -ForegroundColor DarkGray
+            $lastReport = $now
+        }
+    }
+    return $output.ToString()
+}
+
 function Extract-Verdict($text) {
     if ($text -match 'VERDICT:\s*(KEEP|IMPROVE|REVERT)') { return $Matches[1] }
     if ($text -match '"verdict"\s*:\s*"(KEEP|IMPROVE|REVERT)"') { return $Matches[1] }
@@ -133,8 +159,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     }
 
     $executorPrompt = Load-Template "$templatesDir/1c-analysis-executor.md" $vars
-    $executorOutput = claude -p $executorPrompt --dangerously-skip-permissions 2>&1 | Out-String
-    $executorOutput | Set-Content "$logDir/executor_$i.txt" -Encoding UTF8
+    $executorOutput = Run-Claude $executorPrompt "$logDir/executor_$i.txt" "EXEC"
     $execSec = [math]::Round(((Get-Date) - $execStart).TotalSeconds)
     Write-Host "  [EXECUTOR] Done (${execSec}s)" -ForegroundColor Green
 
@@ -157,8 +182,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     Write-Host "  [REVIEWER] Verifying..." -ForegroundColor Yellow
     $vars.best_metric = $bestMetric
     $reviewerPrompt = Load-Template "$templatesDir/1c-analysis-reviewer.md" $vars
-    $reviewerOutput = claude -p $reviewerPrompt --dangerously-skip-permissions 2>&1 | Out-String
-    $reviewerOutput | Set-Content "$logDir/reviewer_$i.txt" -Encoding UTF8
+    $reviewerOutput = Run-Claude $reviewerPrompt "$logDir/reviewer_$i.txt" "REV"
     $revSec = [math]::Round(((Get-Date) - $revStart).TotalSeconds)
 
     $verdict = Extract-Verdict $reviewerOutput
@@ -209,8 +233,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
         $cmpStart = Get-Date
         Write-Host "  [COMPARATOR] Blind A/B..." -ForegroundColor Magenta
         $comparatorPrompt = Load-Template "$templatesDir/1c-analysis-comparator.md" $vars
-        $comparatorOutput = claude -p $comparatorPrompt --dangerously-skip-permissions 2>&1 | Out-String
-        $comparatorOutput | Set-Content "$logDir/comparator_$i.txt" -Encoding UTF8
+        $comparatorOutput = Run-Claude $comparatorPrompt "$logDir/comparator_$i.txt" "CMP"
         $cmpSec = [math]::Round(((Get-Date) - $cmpStart).TotalSeconds)
         Write-Host "  [COMPARATOR] Done (${cmpSec}s)" -ForegroundColor Magenta
     }
