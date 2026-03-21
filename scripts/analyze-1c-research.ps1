@@ -230,7 +230,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $total = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
     $bar = "#" * [math]::Min([math]::Max([math]::Round($bestMetric / 5), 0), 20)
     $gap = "." * (20 - $bar.Length)
-    Write-Host "`n  ---- Iter $i: $metric/$TargetScore [$bar$gap] $verdict E=${execSec}s R=${revSec}s C=${cmpSec}s T=${total}s ----" -ForegroundColor Cyan
+    Write-Host "`n  ---- Iter ${i} | ${metric}/${TargetScore} [$bar$gap] $verdict E=${execSec}s R=${revSec}s C=${cmpSec}s T=${total}s ----" -ForegroundColor Cyan
     Log "SUMMARY: $metric/$TargetScore $verdict ${total}s"
     "# Iter $i`nScore: $metric/$TargetScore | Best: $bestMetric | Verdict: $verdict`nExec: ${execSec}s | Rev: ${revSec}s | Cmp: ${cmpSec}s | Total: ${total}s" | Set-Content "$iterDir/summary.md" -Encoding UTF8
 
