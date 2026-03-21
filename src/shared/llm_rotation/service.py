@@ -22,6 +22,7 @@ from src.shared.llm_rotation.adaptive import AdaptiveScorer, BudgetTracker, PRIC
 from src.shared.llm_rotation.backoff import BackoffStrategy, RateLimitError
 from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.config import LLMRotationSettings, get_settings
+from src.shared.llm_rotation.rate_limiter import ProviderRateLimiter
 
 logger = logging.getLogger("llm-rotation")
 
@@ -246,6 +247,17 @@ class LLMRotationService:
             daily_budget=self._settings.daily_budget,
             alert_threshold=self._settings.budget_alert_threshold,
         )
+        self._rate_limiter = ProviderRateLimiter()
+        if self._settings.rate_limiting_enabled:
+            for cfg in configs:
+                self._rate_limiter.register(cfg.name, cfg.rate_limit_rpm)
+        # Load persisted state
+        if self._settings.persist_adaptive:
+            self._scorer.load(self._settings.adaptive_data_path)
+            budget_path = self._settings.adaptive_data_path.replace(
+                "adaptive", "budget"
+            )
+            self._budget.load(budget_path)
         self._session: aiohttp.ClientSession | None = None
         self._health_task: asyncio.Task | None = None
 
@@ -268,6 +280,8 @@ class LLMRotationService:
                 if not api_key:
                     continue
             available.append(state)
+        # Check daily budget auto-reset
+        self._budget.check_daily_reset()
         return sorted(available, key=lambda s: s.config.priority)
 
     def get_best_provider(self, exclude: list[str] | None = None) -> ProviderState | None:
@@ -290,6 +304,17 @@ class LLMRotationService:
             )
 
         return sorted(available, key=sort_key)[0]
+
+    def _save_state(self) -> None:
+        """Save adaptive scorer and budget state to disk."""
+        try:
+            self._scorer.save(self._settings.adaptive_data_path)
+            budget_path = self._settings.adaptive_data_path.replace(
+                "adaptive", "budget"
+            )
+            self._budget.save(budget_path)
+        except Exception as e:
+            logger.warning(f"Failed to save state: {e}")
 
     async def _make_request_openai(
         self,
@@ -488,6 +513,10 @@ class LLMRotationService:
         cost = total_tokens * price / 1000.0
         self._budget.record_cost(state.config.name, cost)
 
+        # Persist adaptive data periodically (every 10 requests)
+        if self._settings.persist_adaptive and state.requests_count % 10 == 0:
+            self._save_state()
+
         return {
             "provider": state.config.name,
             "model": data.get("model", model or state.config.default_model),
@@ -526,6 +555,13 @@ class LLMRotationService:
                 can_try = bool(os.environ.get(primary_state.config.api_key_env, ""))
 
             if can_try:
+                # Rate limit check for primary
+                if self._settings.rate_limiting_enabled:
+                    wait = self._rate_limiter.wait_time(primary_name)
+                    if wait > 0:
+                        logger.info(f"[{primary_name}] Rate limit: waiting {wait:.2f}s")
+                        await asyncio.sleep(wait)
+
                 for retry in range(self._settings.primary_max_retries):
                     if not primary_state.is_available():
                         logger.info(f"[{primary_name}] Unavailable, skipping to fallback")
@@ -585,6 +621,16 @@ class LLMRotationService:
 
             provider_name = state.config.name
             tried.append(provider_name)
+
+            # Rate limit check: wait if needed
+            if self._settings.rate_limiting_enabled:
+                wait = self._rate_limiter.wait_time(provider_name)
+                if wait > 0:
+                    logger.info(f"[{provider_name}] Rate limit: waiting {wait:.2f}s")
+                    await asyncio.sleep(wait)
+                if not self._rate_limiter.can_request(provider_name):
+                    logger.info(f"[{provider_name}] Rate limited, skipping")
+                    continue
 
             # Level 2: try default model, then alternative models
             models_to_try = [model or state.config.default_model] + [
@@ -674,6 +720,8 @@ class LLMRotationService:
             }
             if self._settings.adaptive_routing:
                 provider_stats["adaptive"] = self._scorer.get_stats(name)
+            if self._settings.rate_limiting_enabled:
+                provider_stats["rate_limit"] = self._rate_limiter.get_stats(name)
             stats[name] = provider_stats
         if self._settings.adaptive_routing:
             stats["_budget"] = self._budget.get_stats()
@@ -762,8 +810,10 @@ class LLMRotationService:
                 )
 
     async def close(self) -> None:
-        """Close the HTTP session and stop health checks."""
+        """Close the HTTP session, stop health checks, save state."""
         self.stop_health_checks()
+        if self._settings.persist_adaptive:
+            self._save_state()
         if self._session and not self._session.closed:
             await self._session.close()
 

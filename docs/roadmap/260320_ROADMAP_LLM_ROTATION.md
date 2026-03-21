@@ -1,10 +1,10 @@
 # Roadmap: LLM Rotation Service Improvements
 
-**Date:** 2026-03-20 | **Status:** COMPLETE (All 5 iterations DONE)
+**Date:** 2026-03-20 | **Status:** COMPLETE (All 8 iterations DONE)
 
-**Goal:** Улучшить LLM Rotation Service на основе GitHub best practices: circuit breaker, exponential backoff, health checks, multi-level failover, adaptive routing.
+**Goal:** Улучшить LLM Rotation Service на основе GitHub best practices: circuit breaker, exponential backoff, health checks, multi-level failover, adaptive routing, rate limiting, persistence, dashboard.
 
-**Code:** `src/shared/llm_rotation/service.py`, `config.py`, `adapter.py`, `mcp.py`
+**Code:** `src/shared/llm_rotation/service.py`, `config.py`, `adapter.py`, `mcp.py`, `rate_limiter.py`, `adaptive.py`
 
 ---
 
@@ -355,6 +355,53 @@ PRICE_PER_1K_TOKENS = {
 
 **Acceptance:** Provider selection учитывает quality + cost + latency, бюджет с алертами.
 
+### Iteration 6: Token Bucket Rate Limiting (2026-03-21) DONE
+
+**Цель:** Proactive rate limiting — проверка ПЕРЕД запросом, а не после 429.
+
+| Task | Deliverable | Status |
+|------|-------------|--------|
+| 6.1 `TokenBucket` class | Token bucket с refill по monotonic clock | DONE |
+| 6.2 `ProviderRateLimiter` | Per-provider buckets из `rate_limit_rpm` | DONE |
+| 6.3 Integration in `complete()` | Wait + check before each provider call | DONE |
+| 6.4 Config: `rate_limiting_enabled` | On/off toggle in settings | DONE |
+
+**Files:** `rate_limiter.py` (new), `service.py` (integration), `config.py` (+1 setting).
+
+**Acceptance:** Provider с RPM=30 блокируется после 30 запросов/мин, wait_time показывает сколько ждать.
+
+### Iteration 7: Persistence + Auto Daily Reset (2026-03-21) DONE
+
+**Цель:** AdaptiveScorer и BudgetTracker сохраняют состояние на диск, бюджет сбрасывается автоматически при смене дня.
+
+| Task | Deliverable | Status |
+|------|-------------|--------|
+| 7.1 `AdaptiveScorer.save/load` | JSON round-trip (window_size per provider) | DONE |
+| 7.2 `BudgetTracker.save/load` | JSON with reset_date, auto-reset on load | DONE |
+| 7.3 `check_daily_reset()` | Auto-reset при `date.today() != _reset_date` | DONE |
+| 7.4 Integration in service | Load on init, save every 10 requests + on close | DONE |
+| 7.5 Config: `persist_adaptive`, `adaptive_data_path` | Settings | DONE |
+
+**Files:** `adaptive.py` (+save/load/daily_reset), `service.py` (+init load, periodic save), `config.py` (+2 settings).
+
+**Acceptance:** Перезапуск сервиса сохраняет adaptive scores. Новый день = budget reset.
+
+### Iteration 8: Provider Comparison Dashboard (2026-03-21) DONE
+
+**Цель:** CLI для анализа performance провайдеров.
+
+| Task | Deliverable | Status |
+|------|-------------|--------|
+| 8.1 JSONL parser | Reads `data/llm-rotation-completions.jsonl` | DONE |
+| 8.2 Per-provider stats | Requests, Errors, Err%, AvgTime, P95, AvgTokens, Cost | DONE |
+| 8.3 Summary | Total requests/errors/cost, date range | DONE |
+| 8.4 `--json` flag | JSON output | DONE |
+| 8.5 `--last N` flag | Last N entries only | DONE |
+
+**Files:** `scripts/llm-rotation-dashboard.py` (new, stdlib only).
+
+**Tests:** 56 unit tests (new) + 34 integration tests (existing) = 90 total, all passing.
+
 ---
 
 ## Dependency Graph
@@ -375,24 +422,38 @@ Iter 4 (Multi-level Failover)
   │  + depends on Iter 2 (backoff per level)
   ▼
 Iter 5 (Adaptive Routing + Cost)
-     + llm-use learned routing
-     + NadirClaw cost tracking
-     + depends on Iter 1-4 (all infrastructure)
+  │  + llm-use learned routing
+  │  + NadirClaw cost tracking
+  │  + depends on Iter 1-4 (all infrastructure)
+  ▼
+Iter 6 (Token Bucket Rate Limiting)
+  │  + proactive RPM enforcement
+  ▼
+Iter 7 (Persistence + Daily Reset)
+  │  + JSON state save/load
+  │  + depends on Iter 5 (AdaptiveScorer/BudgetTracker)
+  ▼
+Iter 8 (Dashboard CLI)
+     + JSONL analytics
+     + independent (reads log file)
 ```
 
 ---
 
 ## Метрики успеха
 
-| Metric | Current | Iter 1 | Iter 3 | Iter 5 |
-|--------|---------|--------|--------|--------|
-| Auto-recovery | Manual only | CB Half-Open | Health probe | Auto + learned |
-| Retry strategy | Fixed delay | Exp backoff + jitter | + retry-after | + adaptive |
-| Failover levels | 2 | 2 + CB | 2 + CB + health | 3 (instance/model/provider) |
-| Provider downtime | Until manual reset | ~60s (CB timeout) | ~120s (probe) | ~30s (adaptive) |
-| Cost tracking | None | None | None | Per-request + budget |
-| Routing intelligence | Static priority | Priority + CB | + health status | Adaptive (quality+cost+latency) |
-| Thundering herd risk | High (no jitter) | Low (jitter) | Low | Low |
+| Metric | Current | Iter 1 | Iter 3 | Iter 5 | Iter 6-8 |
+|--------|---------|--------|--------|--------|----------|
+| Auto-recovery | Manual only | CB Half-Open | Health probe | Auto + learned | + persistent |
+| Retry strategy | Fixed delay | Exp backoff + jitter | + retry-after | + adaptive | + rate limit |
+| Failover levels | 2 | 2 + CB | 2 + CB + health | 3 (inst/model/prov) | + proactive RL |
+| Provider downtime | Until manual reset | ~60s (CB timeout) | ~120s (probe) | ~30s (adaptive) | ~30s |
+| Cost tracking | None | None | None | Per-request + budget | + daily reset |
+| Routing intelligence | Static priority | Priority + CB | + health status | Adaptive (q+c+l) | + persistent |
+| Thundering herd risk | High (no jitter) | Low (jitter) | Low | Low | Low |
+| Rate limiting | None | None | None | None | Token Bucket |
+| State persistence | None | None | None | In-memory | JSON on disk |
+| Analytics | None | None | None | None | CLI dashboard |
 
 ---
 
@@ -400,10 +461,10 @@ Iter 5 (Adaptive Routing + Cost)
 
 | Package | Iteration | License | Purpose | Required |
 |---------|-----------|---------|---------|----------|
-| (none — pure Python) | 1-4 | — | CB, backoff, health — no external deps | — |
-| `sentence-transformers` | 5 (optional) | Apache 2.0 | Learned routing (quality signal) | Optional |
+| (none — pure Python) | 1-8 | — | CB, backoff, health, rate limiter, persistence, dashboard — no external deps | — |
+| `sentence-transformers` | future (optional) | Apache 2.0 | Learned routing (quality signal) | Optional |
 
-Iterations 1-4 не требуют новых зависимостей — всё реализуется на чистом Python + asyncio.
+All 8 iterations use only stdlib (Python + asyncio). No new pip dependencies.
 
 ---
 
@@ -412,7 +473,7 @@ Iterations 1-4 не требуют новых зависимостей — вс�
 **Каждый уровень защиты дополняет предыдущий:**
 
 ```
-Circuit Breaker (fast fail) → Backoff (smart retry) → Health Check (auto-recover) → Multi-level (exhaustive) → Adaptive (intelligent)
+Circuit Breaker (fast fail) → Backoff (smart retry) → Health Check (auto-recover) → Multi-level (exhaustive) → Adaptive (intelligent) → Rate Limit (proactive) → Persistence (durable) → Dashboard (observable)
 ```
 
 Не "провайдер упал — ждём manual reset", а "CB изолировал → backoff с jitter → health probe восстановил → если persistent failure, alternative model → если всё плохо, adaptive scorer выбирает лучший fallback по реальным метрикам".
