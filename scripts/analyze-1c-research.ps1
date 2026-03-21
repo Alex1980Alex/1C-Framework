@@ -11,7 +11,10 @@ param(
     [string]$SessionDir,
     [int]$TargetScore = 85,
     [int]$MaxIterations = 7,
-    [int]$CompareEvery = 3
+    [int]$CompareEvery = 3,
+    [int]$AgentTimeoutMin = 15,
+    [int]$AgentMaxTurns = 50,
+    [int]$IdleTimeoutMin = 5
 )
 
 # --- UTF-8 Setup ---
@@ -89,51 +92,175 @@ function Load-Template($path, [hashtable]$vars) {
 }
 
 function Run-Claude($prompt, $logFile, $agentName) {
-    Log-Progress "$agentName START"
+    Log-Progress "$agentName START (timeout=${AgentTimeoutMin}m, idle=${IdleTimeoutMin}m, max-turns=$AgentMaxTurns)"
     $agentStart = Get-Date
 
-    # Run claude -p with JSON output, capture result
-    $output = claude -p $prompt --dangerously-skip-permissions --output-format json 2>&1 | Out-String
+    # Create status file
+    $statusFile = $logFile -replace '\.txt$', '_status.md'
+    @"
+# $agentName — RUNNING
+Started: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTurns
+"@ | Set-Content $statusFile -Encoding UTF8
+
+    # Snapshot: files in session dir before launch
+    $sessionFiles = @{}
+    if (Test-Path $script:SessionDirPath) {
+        Get-ChildItem $script:SessionDirPath -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $sessionFiles[$_.FullName] = $_.LastWriteTime
+        }
+    }
+
+    # Launch claude -p as background job
+    $jsonOutFile = "$logFile.json"
+    $job = Start-Job -ScriptBlock {
+        param($p, $mt, $outFile)
+        $result = claude -p $p --dangerously-skip-permissions --output-format json --max-turns $mt 2>&1 | Out-String
+        $result | Set-Content $outFile -Encoding UTF8
+        return $result
+    } -ArgumentList $prompt, $AgentMaxTurns, $jsonOutFile
+
+    # Monitor loop: check for activity
+    $lastActivity = Get-Date
+    $deadline = (Get-Date).AddMinutes($AgentTimeoutMin)
+    $pollInterval = 5
+    $activityCount = 0
+
+    while ($job.State -eq "Running") {
+        Start-Sleep -Seconds $pollInterval
+
+        # Check for file activity in session dir
+        $newActivity = $false
+        if (Test-Path $script:SessionDirPath) {
+            Get-ChildItem $script:SessionDirPath -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+                $prev = $sessionFiles[$_.FullName]
+                if (-not $prev -or $_.LastWriteTime -gt $prev) {
+                    $newActivity = $true
+                    $sessionFiles[$_.FullName] = $_.LastWriteTime
+                    $activityCount++
+                    $shortName = $_.Name
+                    Log-Progress "$agentName | file changed: $shortName"
+                }
+            }
+        }
+
+        # Check git for new commits
+        $currentCommit = git rev-parse --short HEAD 2>$null
+        if ($script:LastKnownCommit -and $currentCommit -ne $script:LastKnownCommit) {
+            $newActivity = $true
+            $activityCount++
+            Log-Progress "$agentName | new commit: $currentCommit"
+            $script:LastKnownCommit = $currentCommit
+        }
+
+        if ($newActivity) {
+            $lastActivity = Get-Date
+        }
+
+        # Periodic heartbeat
+        $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
+        $idleSec = [math]::Round(((Get-Date) - $lastActivity).TotalSeconds)
+        if ($elapsed % 30 -lt $pollInterval) {
+            Log-Progress "$agentName | elapsed=${elapsed}s activity=$activityCount idle=${idleSec}s"
+        }
+
+        # Update status file
+        @"
+# $agentName — RUNNING
+Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
+Elapsed: ${elapsed}s | Activity: $activityCount events | Idle: ${idleSec}s
+"@ | Set-Content $statusFile -Encoding UTF8
+
+        # IDLE TIMEOUT: no activity for IdleTimeoutMin
+        if ($idleSec -ge ($IdleTimeoutMin * 60)) {
+            Log-Progress "$agentName IDLE TIMEOUT: no activity for ${IdleTimeoutMin}m — killing"
+            Stop-Job $job -ErrorAction SilentlyContinue
+            Remove-Job $job -Force -ErrorAction SilentlyContinue
+            @"
+# $agentName — IDLE TIMEOUT
+Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
+Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Reason: No file activity for ${IdleTimeoutMin} minutes
+Activity events before timeout: $activityCount
+"@ | Set-Content $statusFile -Encoding UTF8
+            "" | Set-Content $logFile -Encoding UTF8
+            return ""
+        }
+
+        # HARD DEADLINE: absolute max time
+        if ((Get-Date) -gt $deadline) {
+            if ($idleSec -lt 60) {
+                # Recent activity — extend by 5 min
+                $deadline = (Get-Date).AddMinutes(5)
+                Log-Progress "$agentName | deadline extended +5m (recent activity ${idleSec}s ago)"
+            } else {
+                Log-Progress "$agentName HARD TIMEOUT: ${AgentTimeoutMin}m exceeded, idle=${idleSec}s — killing"
+                Stop-Job $job -ErrorAction SilentlyContinue
+                Remove-Job $job -Force -ErrorAction SilentlyContinue
+                @"
+# $agentName — HARD TIMEOUT
+Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
+Killed: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Reason: Hard timeout ${AgentTimeoutMin}m exceeded (idle ${idleSec}s)
+Activity events: $activityCount
+"@ | Set-Content $statusFile -Encoding UTF8
+                "" | Set-Content $logFile -Encoding UTF8
+                return ""
+            }
+        }
+    }
+
+    # Job completed — collect result
+    $output = Receive-Job $job 2>&1 | Out-String
+    Remove-Job $job -Force -ErrorAction SilentlyContinue
+
+    # If output empty, try reading from json file
+    if (-not $output -and (Test-Path $jsonOutFile)) {
+        $output = Get-Content $jsonOutFile -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+    }
 
     # Parse JSON result
     $resultText = ""
     $toolCount = 0
     $cost = ""
-    $duration = ""
+    $numTurns = 0
     try {
         $json = $output | ConvertFrom-Json -ErrorAction Stop
         $resultText = $json.result
-        $duration = "$([math]::Round($json.duration_ms / 1000))s"
-        $cost = "$([math]::Round($json.total_cost_usd, 3))$"
-        # Extract tool count from usage iterations
-        if ($json.usage -and $json.usage.iterations) {
-            foreach ($iter in $json.usage.iterations) {
-                if ($iter.tool_uses) { $toolCount += $iter.tool_uses }
-            }
-        }
-        # Fallback: count from num_turns
-        if ($toolCount -eq 0 -and $json.num_turns) { $toolCount = $json.num_turns }
+        $cost = "$([math]::Round($json.total_cost_usd, 3))"
+        $numTurns = if ($json.num_turns) { $json.num_turns } else { 0 }
     } catch {
-        # Not JSON — raw text output
         $resultText = $output
     }
 
     $elapsed = [math]::Round(((Get-Date) - $agentStart).TotalSeconds)
-    Log-Progress "$agentName DONE: ${elapsed}s, turns=$toolCount, cost=$cost"
+    Log-Progress "$agentName DONE: ${elapsed}s, turns=$numTurns, cost=$cost, activity=$activityCount"
 
     # Detect phases from result text
     $phases = @()
-    foreach ($phaseName in $script:PhaseOrder) {
-        $phaseNum = $phaseName.Substring(0, 7)  # "Phase N"
-        if ($resultText -match $phaseNum) { $phases += $phaseName }
-    }
-    if ($phases.Count -gt 0) {
-        Log-Progress "$agentName phases: $($phases -join ' -> ')"
+    if ($resultText) {
+        foreach ($phaseName in $script:PhaseOrder) {
+            $phaseNum = $phaseName.Substring(0, 7)
+            if ($resultText -match $phaseNum) { $phases += $phaseName }
+        }
+        if ($phases.Count -gt 0) {
+            Log-Progress "$agentName phases: $($phases -join ' -> ')"
+        }
     }
 
-    # Save full output to log
+    # Update status file
+    @"
+# $agentName — DONE
+Started: $($agentStart.ToString("yyyy-MM-dd HH:mm:ss"))
+Finished: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Duration: ${elapsed}s | Turns: $numTurns | Cost: $cost
+Activity events: $activityCount
+Phases: $($phases -join ', ')
+Output: $($resultText.Length) chars
+"@ | Set-Content $statusFile -Encoding UTF8
+
+    # Save result
     $resultText | Set-Content $logFile -Encoding UTF8
-    # Save raw JSON next to it
     $output | Set-Content "$logFile.json" -Encoding UTF8
 
     return $resultText
@@ -192,8 +319,10 @@ $logDir = "$SessionDir/logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force > $null }
 $jsonlPath = "$SessionDir/autoresearch.jsonl"
 
-# --- Init progress log ---
+# --- Init progress log and monitoring ---
 $script:ProgressFile = "$SessionDir/progress.log"
+$script:SessionDirPath = $SessionDir
+$script:LastKnownCommit = (git rev-parse --short HEAD 2>$null)
 "" | Set-Content $script:ProgressFile -Encoding UTF8
 
 # --- Read State ---
@@ -211,7 +340,7 @@ $taskContent = Get-Content "$SessionDir/task.md" -Raw -Encoding UTF8
 # --- Banner ---
 Write-Host "=== Analyze-1C-Research: Three-Agent Engine ===" -ForegroundColor Cyan
 Write-Host "Session:  $SessionDir"
-Write-Host "Target:   $TargetScore | Max iterations: $MaxIterations"
+Write-Host "Target:   $TargetScore | Max iterations: $MaxIterations | Agent timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | Max turns: $AgentMaxTurns"
 Write-Host "Start:    iter=$startIter best=$bestMetric plateau=$plateauCount baseline=$baselineCommit"
 Write-Host "Progress: $script:ProgressFile"
 Write-Host ""
