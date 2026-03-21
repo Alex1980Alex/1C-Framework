@@ -98,9 +98,13 @@ function Run-Claude($prompt, $logFile, $agentName) {
 
     Log-Progress "$agentName START"
 
-    $proc = Start-Process -FilePath "claude" `
-        -ArgumentList "-p","-","--dangerously-skip-permissions","--output-format","stream-json" `
-        -RedirectStandardInput $promptFile -RedirectStandardOutput $streamFile -RedirectStandardError $errFile `
+    # claude is an npm script — pipe prompt via cmd.exe type on Windows
+    $promptFileWin = $promptFile.Replace("/", "\")
+    $streamFileWin = $streamFile.Replace("/", "\")
+    $errFileWin = $errFile.Replace("/", "\")
+    $cmdLine = "type `"$promptFileWin`" | claude -p - --dangerously-skip-permissions --output-format stream-json > `"$streamFileWin`" 2> `"$errFileWin`""
+    $proc = Start-Process -FilePath "cmd.exe" `
+        -ArgumentList "/c",$cmdLine `
         -NoNewWindow -PassThru
 
     $lastPos = 0
