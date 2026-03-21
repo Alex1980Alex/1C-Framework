@@ -184,6 +184,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/factory-enforcer.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/delegation-outcome-tracker.py",
+            "timeout": 3
           }
         ]
       },
@@ -272,6 +277,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/auto-git-save.py",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/delegation-outcome-stop.py",
+            "timeout": 3
           },
           {
             "type": "command",

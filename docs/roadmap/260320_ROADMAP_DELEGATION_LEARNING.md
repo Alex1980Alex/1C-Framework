@@ -74,16 +74,18 @@
 | 1.5 Зарегистрировать в `skill-router-config.json` | Bundle entry | DONE |
 | 1.6 Первая запись outcome | JSONL entry | DONE |
 
-### Iteration 2: Outcome Tracking Hook (1 day)
+### Iteration 2: Outcome Tracking Hook (2026-03-21) DONE
 
 **Цель:** Автоматическая запись outcomes при каждом Write > 15 строк.
 
-| Task | Deliverable | Effort |
+| Task | Deliverable | Status |
 |------|-------------|--------|
-| 2.1 Hook `delegation-outcome-tracker.py` (PreToolUse:Write) | Записывает estimated fields в JSONL | 2h |
-| 2.2 Интеграция с SessionState | Track: delegated=true если был llm_complete | 1h |
-| 2.3 Stop hook addition: summary append | При Stop — дописать actual_lines, rewrite_pct | 1h |
-| 2.4 Structured outcome format (паттерн TensorZero) | Формат с reward signal для bandit | 30 min |
+| 2.1 Hook `delegation-outcome-tracker.py` (PreToolUse:Write) | Записывает estimated fields в JSONL | DONE |
+| 2.2 Интеграция с SessionState | Track: delegated=true если был llm_complete | DONE (already existed) |
+| 2.3 Stop hook `delegation-outcome-stop.py` | При Stop — session summary в JSONL | DONE |
+| 2.4 Structured outcome format (паттерн TensorZero) | Формат с reward signal для bandit | DONE |
+
+**Files:** `delegation-outcome-tracker.py` (PreToolUse:Write), `delegation-outcome-stop.py` (Stop), `settings.json` (+2 hooks).
 
 **Логика:**
 ```
@@ -327,7 +329,7 @@ def compute_reward(outcome: dict) -> float:
 Iter 1 (Foundation) --- DONE
          |
          v
-Iter 2 (Outcome Hook)
+Iter 2 (Outcome Hook) --- DONE
          |  + TensorZero structured format
          v
 Iter 3 (Contextual Bandit)
