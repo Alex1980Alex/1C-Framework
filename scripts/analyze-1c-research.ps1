@@ -106,13 +106,14 @@ Started: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTurns
 "@ | Set-Content $statusFile -Encoding UTF8
 
-    # --- Launch via System.Diagnostics.Process with programmatic stdin ---
-    # Use node directly (cmd.exe corrupts stdin pipe)
-    $claudeCliJs = "$env:APPDATA/npm/node_modules/@anthropic-ai/claude-code/cli.js"
+    # --- Launch via bash pipe (cmd.exe/node corrupt stdin on Windows) ---
+    $promptFile = "$logFile.prompt"
+    $prompt | Set-Content $promptFile -Encoding UTF8
+    $promptFileUnix = $promptFile.Replace('\', '/')
+
     $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "node"
-    $psi.Arguments = "`"$claudeCliJs`" -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns"
-    $psi.RedirectStandardInput = $true
+    $psi.FileName = "bash"
+    $psi.Arguments = "-c `"cat '$promptFileUnix' | claude -p - --dangerously-skip-permissions --output-format stream-json --max-turns $AgentMaxTurns`""
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
@@ -121,10 +122,6 @@ Timeout: ${AgentTimeoutMin}m | Idle: ${IdleTimeoutMin}m | MaxTurns: $AgentMaxTur
     $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
 
     $proc = [System.Diagnostics.Process]::Start($psi)
-
-    # Write prompt to stdin then close to signal EOF
-    $proc.StandardInput.Write($prompt)
-    $proc.StandardInput.Close()
 
     # --- Async stderr reader to prevent deadlock ---
     $stderrTask = $proc.StandardError.ReadToEndAsync()
@@ -353,6 +350,7 @@ $($toolLog -join "`n")
     $resultText | Set-Content $logFile -Encoding UTF8
 
     # Cleanup temp
+    Remove-Item $promptFile -ErrorAction SilentlyContinue
     Remove-Item $streamLog -ErrorAction SilentlyContinue
 
     return $resultText
