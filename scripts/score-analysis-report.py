@@ -61,11 +61,15 @@ def parse_report(text: str) -> dict:
                 in_sql_block = False
             continue
 
-        # Requirements (section 1.1)
+        # Requirements (section 1.1) — numbered, bulleted, or table rows
         if section == "1.1":
-            if re.match(r"^\d+\.", stripped) or stripped.startswith("- "):
-                if stripped:
-                    requirements.append(stripped)
+            is_req = (
+                re.match(r"^\d+\.", stripped)
+                or stripped.startswith("- ")
+                or re.match(r"^\|\s*\d+\s*\|", stripped)
+            )
+            if is_req and stripped and not stripped.startswith("|---"):
+                requirements.append(stripped)
 
         # Open questions (section 6)
         if section == "6":
