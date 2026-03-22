@@ -9,7 +9,8 @@ param(
     [int]$MaxIterations = 7,
     [int]$CompareEvery = 3,
     [int]$PhaseTimeoutMin = 8,
-    [int]$PhaseMaxTurns = 30
+    [int]$PhaseMaxTurns = 30,
+    [switch]$SkipMcpCheck
 )
 
 chcp 65001 > $null 2>&1
@@ -210,13 +211,45 @@ Write-Host ""
 Log "=== START target=$TargetScore max=$MaxIterations ==="
 
 # --- Pre-flight MCP health check ---
-Write-Host "  [PRE-FLIGHT] Checking MCP servers..." -ForegroundColor Cyan
-$mcpOk = Test-MCP
-if (-not $mcpOk) {
-    Write-Host "  [PRE-FLIGHT] Some MCP servers are down. Continue anyway? Phases may fail." -ForegroundColor Yellow
+if ($SkipMcpCheck) {
+    Write-Host "  [PRE-FLIGHT] MCP check SKIPPED (-SkipMcpCheck)" -ForegroundColor Yellow
+    $mcpOk = $true
+} else {
+    Write-Host "  [PRE-FLIGHT] Checking MCP servers..." -ForegroundColor Cyan
+    $mcpOk = Test-MCP
 }
-# Clean health check files from phases
 Get-ChildItem $phasesDir -Filter "mcp_check*" -ErrorAction SilentlyContinue | Remove-Item -Force
+
+if (-not $mcpOk) {
+    $healthFile = "$SessionDir/MCP_FAILED.md"
+    $failed = Get-Content "$phasesDir/mcp_health.md" -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+    @"
+# MCP SERVERS UNAVAILABLE
+
+Analysis STOPPED. Some MCP servers are not responding.
+
+$failed
+
+## Options:
+1. Fix MCP servers and re-run the script
+2. Run with -SkipMcpCheck to analyze without MCP (reduced quality)
+
+Re-run command:
+``powershell
+.\scripts\analyze-1c-research.ps1 -SessionDir "$SessionDir"
+``
+"@ | Set-Content $healthFile -Encoding UTF8
+
+    Write-Host ""
+    Write-Host "  ============================================" -ForegroundColor Red
+    Write-Host "  MCP SERVERS UNAVAILABLE - ANALYSIS STOPPED" -ForegroundColor Red
+    Write-Host "  ============================================" -ForegroundColor Red
+    Write-Host "  Fix MCP servers and re-run, or use -SkipMcpCheck" -ForegroundColor Yellow
+    Write-Host "  Details: $healthFile" -ForegroundColor Yellow
+    Write-Host ""
+    Log "STOPPED: MCP health check failed"
+    exit 1
+}
 Write-Host ""
 
 for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
