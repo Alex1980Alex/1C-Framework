@@ -46,10 +46,22 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
     Log "$phaseName START"
     Write-Utf8 "$outputFile.status" "# $phaseName - RUNNING"
 
+    # Save prompt to file to avoid command-line length limits + pass UTF-8
+    $promptFile = "$outputFile.prompt"
+    Write-Utf8 $promptFile $prompt
+
     $job = Start-Job -ScriptBlock {
-        param($p, $mt)
-        claude -p $p --dangerously-skip-permissions --output-format json --max-turns $mt 2>&1 | Out-String
-    } -ArgumentList $prompt, $maxTurns
+        param($pFile, $mt)
+        chcp 65001 > $null 2>&1
+        $env:PYTHONIOENCODING = "utf-8"
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $p = [System.IO.File]::ReadAllText($pFile, [System.Text.Encoding]::UTF8)
+        $r = claude -p $p --dangerously-skip-permissions --output-format json --max-turns $mt 2>&1 | Out-String
+        # Write raw result to file to bypass Receive-Job encoding issues
+        $outPath = $pFile -replace '\.prompt$', '.raw'
+        [System.IO.File]::WriteAllText($outPath, $r, [System.Text.UTF8Encoding]::new($false))
+        return "DONE"
+    } -ArgumentList $promptFile, $maxTurns
 
     $deadlineSec = $PhaseTimeoutMin * 60
     $waited = 0
@@ -72,8 +84,15 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
         return ""
     }
 
-    $raw = Receive-Job $job 2>&1 | Out-String
+    Receive-Job $job > $null 2>&1
     Remove-Job $job -Force -ErrorAction SilentlyContinue
+
+    # Read result from .raw file (bypasses Receive-Job cp1251 encoding)
+    $rawFile = "$outputFile.raw"
+    $raw = ""
+    if (Test-Path $rawFile) {
+        $raw = [System.IO.File]::ReadAllText($rawFile, [System.Text.Encoding]::UTF8)
+    }
 
     $resultText = ""; $turns = 0; $cost = ""
     try {
@@ -89,6 +108,11 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
     Write-Utf8 $outputFile $resultText
     Write-Utf8 "$outputFile.json" $raw
     Write-Utf8 "$outputFile.status" "# $phaseName - DONE ${elapsed}s turns=$turns cost=$cost"
+
+    # Cleanup temp files
+    Remove-Item $promptFile -ErrorAction SilentlyContinue
+    Remove-Item $rawFile -ErrorAction SilentlyContinue
+
     return $resultText
 }
 
@@ -161,10 +185,10 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $p3 = Run-Phase "EXEC-P3" "You are analyzing a 1C:Enterprise task. Find code patterns.`nTask: $taskContent`nRequirements:`n$p1`nObjects found:`n$p2`n`nInstructions:`n1. Use bsl_hybrid_search or search_in_code to find similar implementations`n2. For each requirement, find existing code patterns in the configuration`n3. List code patterns with module names and brief description`n4. Note reusable patterns vs new code needed" "$phasesDir/phase3_patterns.md" $PhaseMaxTurns
 
     Write-Host "  [EXEC] Phase 4/5: Plan..." -ForegroundColor Yellow
-    $p4 = Run-Phase "EXEC-P4" "You are analyzing a 1C:Enterprise task. Create modification plan.`nTask: $taskContent`nRequirements:`n$p1`nObjects:`n$p2`nPatterns:`n$p3`n`nInstructions:`n1. Create numbered modification plan`n2. Each point: [REQ-N] Module > Method > What to change`n3. Include SQL queries needed`n4. Write complete analysis report to $SessionDir/analysis-report.md using Write tool`n5. Then run: git add $SessionDir/analysis-report.md && git commit -m '[AR-$i] Analysis report'" "$phasesDir/phase4_plan.md" $PhaseMaxTurns
+    $p4 = Run-Phase "EXEC-P4" "You are analyzing a 1C:Enterprise task. Create modification plan.`nTask: $taskContent`n`nPrevious phases wrote results to files. Read them:`n- Requirements: Read file $phasesDir/phase1_requirements.md`n- Objects: Read file $phasesDir/phase2_objects.md`n- Patterns: Read file $phasesDir/phase3_patterns.md`n`nInstructions:`n1. Read all 3 phase files above`n2. Create numbered modification plan`n3. Each point: [REQ-N] Module > Method > What to change`n4. Include SQL queries needed`n5. Write complete analysis report to $SessionDir/analysis-report.md using Write tool`n6. Then run via Bash: git add -A && git commit -m '[AR-$i] Analysis report'" "$phasesDir/phase4_plan.md" $PhaseMaxTurns
 
     Write-Host "  [EXEC] Phase 5/5: Verification..." -ForegroundColor Yellow
-    $p5 = Run-Phase "EXEC-P5" "You are verifying a 1C:Enterprise analysis.`nTask: $taskContent`nPlan:`n$p4`n`nInstructions:`n1. For each SQL query in the plan: call validate_query or execute_query to verify`n2. For each field name: call get_metadata to confirm it exists`n3. List verification results: PASS or FAIL for each check`n4. Update $SessionDir/analysis-report.md with verification markers`n5. Commit: git add -A && git commit -m '[AR-$i] Verification'" "$phasesDir/phase5_verification.md" $PhaseMaxTurns
+    $p5 = Run-Phase "EXEC-P5" "You are verifying a 1C:Enterprise analysis.`nTask: $taskContent`n`nRead the analysis report: Read file $SessionDir/analysis-report.md`nIf it does not exist, read $phasesDir/phase4_plan.md instead.`n`nInstructions:`n1. For each SQL query in the plan: call validate_query or execute_query to verify`n2. For each field name: call get_metadata to confirm it exists`n3. List verification results: PASS or FAIL for each check`n4. Update $SessionDir/analysis-report.md with verification markers using Write tool`n5. Commit via Bash: git add -A && git commit -m '[AR-$i] Verification'" "$phasesDir/phase5_verification.md" $PhaseMaxTurns
 
     $execSec = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
     Write-Host "  [EXEC] All 5 phases: ${execSec}s" -ForegroundColor Green
