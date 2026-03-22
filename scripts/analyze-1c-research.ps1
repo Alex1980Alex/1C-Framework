@@ -8,7 +8,6 @@ param(
     [int]$TargetScore = 85,
     [int]$MaxIterations = 7,
     [int]$CompareEvery = 3,
-    [int]$PhaseTimeoutMin = 8,
     [int]$PhaseMaxTurns = 30,
     [switch]$SkipMcpCheck
 )
@@ -102,9 +101,10 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
         return "DONE"
     } -ArgumentList $promptFile, $maxTurns
 
-    $deadlineSec = $PhaseTimeoutMin * 60
+    # Wait for completion — no timeout, only --max-turns protects from infinite loops
+    # Heartbeat every 30s shows agent is alive
     $waited = 0
-    while ($job.State -eq "Running" -and $waited -lt $deadlineSec) {
+    while ($job.State -eq "Running") {
         Start-Sleep -Seconds 5
         $waited += 5
         if ($waited % 30 -lt 6) {
@@ -112,15 +112,6 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
             Log "$phaseName | ${waited}s cpu=$cpu"
             Write-Utf8 "$outputFile.status" "# $phaseName - RUNNING ${waited}s cpu=$cpu"
         }
-    }
-
-    if ($job.State -eq "Running") {
-        Log "$phaseName TIMEOUT ${PhaseTimeoutMin}m - killing"
-        Stop-Job $job -ErrorAction SilentlyContinue
-        Remove-Job $job -Force -ErrorAction SilentlyContinue
-        Write-Utf8 "$outputFile.status" "# $phaseName - TIMEOUT"
-        Write-Utf8 $outputFile ""
-        return ""
     }
 
     Receive-Job $job > $null 2>&1
@@ -210,7 +201,7 @@ $taskContent = Get-Content "$SessionDir/task.md" -Raw -Encoding UTF8
 
 Write-Host "=== Analyze-1C-Research v4: Micro-Agent ===" -ForegroundColor Cyan
 Write-Host "Session:  $SessionDir"
-Write-Host "Target:   $TargetScore | Max: $MaxIterations | Phase: ${PhaseTimeoutMin}m/${PhaseMaxTurns}t"
+Write-Host "Target:   $TargetScore | Max: $MaxIterations | MaxTurns/phase: $PhaseMaxTurns | No timeout"
 Write-Host ""
 Log "=== START target=$TargetScore max=$MaxIterations ==="
 
