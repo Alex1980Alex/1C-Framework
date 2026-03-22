@@ -375,7 +375,8 @@
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/code-review-enforcer.py\")",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/task-protocol-observer.py\")",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/bulk-action-guard.py\")",
-      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/factory-enforcer.py\")"
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/factory-enforcer.py\")",
+      "Bash(MSYS_NO_PATHCONV=1 tasklist.exe //FI 'IMAGENAME eq python.exe' //FO CSV)"
     ]
   },
   "enableAllProjectMcpServers": true,
