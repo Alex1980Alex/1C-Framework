@@ -45,6 +45,11 @@ _EXEMPT_PREFIXES = [
     "data/",
 ]
 
+# Paths within data/ that ARE enforced for large .md files (not exempt)
+_ENFORCED_DATA_PATHS = [
+    "data/analyze-1c-research/",
+]
+
 # Line threshold for delegation (strict: 15 lines forces more through Z.AI)
 _LINE_THRESHOLD = 15
 
@@ -69,10 +74,14 @@ class ZAIWriteGuard(BaseHook):
         line_count = content.count("\n") + 1
 
         # Large .md files outside .claude/ and data/ are NOT exempt (docs can be delegated)
+        # Exception: specific data/ subdirs ARE enforced (see _ENFORCED_DATA_PATHS)
         _LARGE_MD_THRESHOLD = 50
         is_large_md = (ext == ".md" and line_count > _LARGE_MD_THRESHOLD
                        and not any(fp.startswith(p) or f"/{p}" in fp
-                                   for p in [".claude/", "data/"]))
+                                   for p in [".claude/"]))
+        # data/ is generally exempt for .md, EXCEPT enforced paths
+        if is_large_md and (fp.startswith("data/") or "/data/" in fp):
+            is_large_md = any(p in fp for p in _ENFORCED_DATA_PATHS)
 
         if not is_large_md:
             # Skip non-code files

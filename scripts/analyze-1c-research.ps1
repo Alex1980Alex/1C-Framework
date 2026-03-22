@@ -497,6 +497,35 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     Start-Sleep -Seconds 2
 }
 
+# --- Post-iteration: Format analysis report via Z.AI ---
+$reportPath = "$SessionDir/analysis-report.md"
+if (Test-Path $reportPath) {
+    Write-Host "`n  [FORMAT] Formatting analysis report via Z.AI..." -ForegroundColor Cyan
+    $formatPrompt = @"
+You are formatting a 1C analysis report for readability. Use llm_complete to delegate formatting.
+
+1. Read file: $reportPath
+2. Prepare a prompt for mcp__llm-rotation__llm_complete with the full report content and these instructions:
+   - Add executive summary (3-5 bullet points) at the top
+   - Ensure consistent [REQ-N] markers throughout
+   - Align tables, fix broken markdown formatting
+   - Do NOT change any technical content, field names, or SQL queries
+3. Call mcp__llm-rotation__llm_complete(prompt=<your prompt with report content>, max_tokens=8192)
+4. Review the Z.AI result: verify field names and references match the original
+5. Write the formatted version to $reportPath using Write tool
+"@
+    $formatResult = Run-Phase "FORMAT" $formatPrompt "$phasesDir/format_report.md" 15
+    if ($formatResult -and $formatResult.Length -gt 100) {
+        Write-Host "  [FORMAT] Done" -ForegroundColor Green
+        Log "FORMAT: report formatted via Z.AI"
+        git add "$reportPath" 2>$null
+        git commit -m "[AR-FMT] Format analysis report via Z.AI" 2>$null
+    } else {
+        Write-Host "  [FORMAT] Skipped (no result)" -ForegroundColor Yellow
+        Log "FORMAT: skipped"
+    }
+}
+
 $sessionTotal = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
 Write-Host "`n=== COMPLETE ===" -ForegroundColor Cyan
 $st = if ($bestMetric -ge $TargetScore) { "TARGET" } else { "STOPPED" }
