@@ -9,7 +9,8 @@ param(
     [int]$MaxIterations = 7,
     [int]$CompareEvery = 3,
     [int]$PhaseMaxTurns = 30,
-    [switch]$SkipMcpCheck
+    [switch]$SkipMcpCheck,
+    [string]$ResumeFrom = ""  # auto, EXEC-P1..P5, REV-S1..S3, CMP
 )
 
 chcp 65001 > $null 2>&1
@@ -32,6 +33,46 @@ function Log($msg) {
 # Write file without BOM (PowerShell 5.1 Set-Content adds BOM)
 function Write-Utf8($path, $text) {
     [System.IO.File]::WriteAllText($path, $text, [System.Text.UTF8Encoding]::new($false))
+}
+
+# Phase order for resume detection
+$script:AllPhases = @("EXEC-P1","EXEC-P2","EXEC-P3","EXEC-P4","EXEC-P5","REV-S1","REV-S2","REV-S3","CMP")
+$script:PhaseFileMap = @{
+    "EXEC-P1" = "phase1_requirements.md"; "EXEC-P2" = "phase2_objects.md"
+    "EXEC-P3" = "phase3_patterns.md"; "EXEC-P4" = "phase4_plan.md"
+    "EXEC-P5" = "phase5_verification.md"
+    "REV-S1" = "review1_scoring.md"; "REV-S2" = "review2_verification.md"
+    "REV-S3" = "review3_verdict.md"; "CMP" = "compare1_analysis.md"
+}
+# For iter>1 incremental mode
+$script:IncrPhases = @("EXEC-FIX","EXEC-VERIFY","REV-S1","REV-S2","REV-S3","CMP")
+$script:IncrPhaseFileMap = @{
+    "EXEC-FIX" = "phase4_fix.md"; "EXEC-VERIFY" = "phase5_verify.md"
+    "REV-S1" = "review1_scoring.md"; "REV-S2" = "review2_verification.md"
+    "REV-S3" = "review3_verdict.md"; "CMP" = "compare1_analysis.md"
+}
+
+function Detect-ResumePhase($dir, $isIncremental) {
+    # Find the first phase that has NO completed output file
+    $phases = if ($isIncremental) { $script:IncrPhases } else { $script:AllPhases }
+    $fileMap = if ($isIncremental) { $script:IncrPhaseFileMap } else { $script:PhaseFileMap }
+    foreach ($ph in $phases) {
+        $f = Join-Path $dir $fileMap[$ph]
+        $sf = "$f.status"
+        # Phase is done if file exists AND status contains DONE
+        $isDone = (Test-Path $f) -and (Test-Path $sf) -and ((Get-Content $sf -Raw -ErrorAction SilentlyContinue) -match "DONE")
+        if (-not $isDone) { return $ph }
+    }
+    return $null  # all phases done
+}
+
+function Should-Skip($currentPhase, $resumeFrom, $isIncremental) {
+    if (-not $resumeFrom) { return $false }
+    $phases = if ($isIncremental) { $script:IncrPhases } else { $script:AllPhases }
+    $currentIdx = [array]::IndexOf($phases, $currentPhase)
+    $resumeIdx = [array]::IndexOf($phases, $resumeFrom)
+    if ($resumeIdx -lt 0) { return $false }
+    return $currentIdx -lt $resumeIdx
 }
 
 function Extract-TaskId($path) {
@@ -253,42 +294,78 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     Write-Host "`n=== Iteration $i / $MaxIterations [$ts] ===" -ForegroundColor Cyan
     Log "=== ITERATION $i ==="
 
-    Get-ChildItem $phasesDir -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse
     $commitBefore = (git rev-parse --short HEAD 2>$null)
     $script:PhaseTimes = @{}
     $script:PhaseCosts = @{}
+    $isIncr = ($i -gt 1)
 
-    # ===== EXECUTOR =====
+    # Determine resume point
+    $resumePhase = $null
+    if ($ResumeFrom -eq "auto" -or ($ResumeFrom -eq "" -and $i -eq $startIter + 1)) {
+        # Auto-detect: check existing phase files
+        $detected = Detect-ResumePhase $phasesDir $isIncr
+        if ($detected -and $ResumeFrom -eq "auto") {
+            $resumePhase = $detected
+            Write-Host "  [RESUME] Auto-detected: starting from $resumePhase" -ForegroundColor Cyan
+            Log "RESUME: auto-detected $resumePhase"
+        }
+    } elseif ($ResumeFrom -ne "") {
+        $resumePhase = $ResumeFrom
+        Write-Host "  [RESUME] Manual: starting from $resumePhase" -ForegroundColor Cyan
+        Log "RESUME: manual $resumePhase"
+    }
+
+    # Only clean phases if starting fresh (no resume)
+    if (-not $resumePhase) {
+        Get-ChildItem $phasesDir -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse
+    }
+    # Clear ResumeFrom after first iteration (only applies once)
+    $ResumeFrom = ""
+
     # Read reviewer feedback from previous iteration
     $feedbackContext = ""
     $feedbackFile = "$SessionDir/reviewer_feedback.json"
-    if ($i -gt 1 -and (Test-Path $feedbackFile)) {
+    if ($isIncr -and (Test-Path $feedbackFile)) {
         $feedbackContext = Get-Content $feedbackFile -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 
-    if ($i -eq 1) {
+    if (-not $isIncr) {
         # --- ITERATION 1: Full 5-phase analysis ---
-        Write-Host "  [EXEC] Phase 1/5: Requirements..." -ForegroundColor Yellow
-        $p1 = Run-Phase "EXEC-P1" "You are analyzing a 1C:Enterprise task. Parse requirements ONLY.`nTask: $taskContent`n`nInstructions:`n1. Read the task description carefully`n2. Extract numbered requirements [REQ-1], [REQ-2], etc.`n3. For each requirement: one sentence describing what needs to be done`n4. Output a numbered markdown list of requirements" "$phasesDir/phase1_requirements.md" 10
+        if (-not (Should-Skip "EXEC-P1" $resumePhase $false)) {
+            Write-Host "  [EXEC] Phase 1/5: Requirements..." -ForegroundColor Yellow
+            $p1 = Run-Phase "EXEC-P1" "You are analyzing a 1C:Enterprise task. Parse requirements ONLY.`nTask: $taskContent`n`nInstructions:`n1. Read the task description carefully`n2. Extract numbered requirements [REQ-1], [REQ-2], etc.`n3. For each requirement: one sentence describing what needs to be done`n4. Output a numbered markdown list of requirements" "$phasesDir/phase1_requirements.md" 10
+        } else { Write-Host "  [EXEC] Phase 1/5: SKIPPED (resume)" -ForegroundColor DarkGray }
 
-        Write-Host "  [EXEC] Phase 2/5: Objects..." -ForegroundColor Yellow
-        $p2 = Run-Phase "EXEC-P2" "You are analyzing a 1C:Enterprise task. Find configuration objects.`nTask: $taskContent`nRequirements found:`n$p1`n`nInstructions:`n1. Use bsl_search to find relevant configuration objects`n2. Use get_metadata to verify object structure and fields`n3. List each found object with type, name, and relevant fields`n4. Mark verified fields with checkmark" "$phasesDir/phase2_objects.md" $PhaseMaxTurns
+        if (-not (Should-Skip "EXEC-P2" $resumePhase $false)) {
+            Write-Host "  [EXEC] Phase 2/5: Objects..." -ForegroundColor Yellow
+            $p2 = Run-Phase "EXEC-P2" "You are analyzing a 1C:Enterprise task. Find configuration objects.`nTask: $taskContent`n`nRequirements are in file: Read file $phasesDir/phase1_requirements.md`n`nInstructions:`n1. Use bsl_search to find relevant configuration objects`n2. Use get_metadata to verify object structure and fields`n3. List each found object with type, name, and relevant fields`n4. Mark verified fields with checkmark" "$phasesDir/phase2_objects.md" $PhaseMaxTurns
+        } else { Write-Host "  [EXEC] Phase 2/5: SKIPPED (resume)" -ForegroundColor DarkGray }
 
-        Write-Host "  [EXEC] Phase 3/5: Patterns..." -ForegroundColor Yellow
-        $p3 = Run-Phase "EXEC-P3" "You are analyzing a 1C:Enterprise task. Find code patterns.`nTask: $taskContent`nRequirements:`n$p1`nObjects found:`n$p2`n`nInstructions:`n1. Use bsl_hybrid_search or search_in_code to find similar implementations`n2. For each requirement, find existing code patterns in the configuration`n3. List code patterns with module names and brief description`n4. Note reusable patterns vs new code needed" "$phasesDir/phase3_patterns.md" $PhaseMaxTurns
+        if (-not (Should-Skip "EXEC-P3" $resumePhase $false)) {
+            Write-Host "  [EXEC] Phase 3/5: Patterns..." -ForegroundColor Yellow
+            $p3 = Run-Phase "EXEC-P3" "You are analyzing a 1C:Enterprise task. Find code patterns.`nTask: $taskContent`n`nRequirements: Read file $phasesDir/phase1_requirements.md`nObjects: Read file $phasesDir/phase2_objects.md`n`nInstructions:`n1. Use bsl_hybrid_search or search_in_code to find similar implementations`n2. For each requirement, find existing code patterns in the configuration`n3. List code patterns with module names and brief description`n4. Note reusable patterns vs new code needed" "$phasesDir/phase3_patterns.md" $PhaseMaxTurns
+        } else { Write-Host "  [EXEC] Phase 3/5: SKIPPED (resume)" -ForegroundColor DarkGray }
 
-        Write-Host "  [EXEC] Phase 4/5: Plan..." -ForegroundColor Yellow
-        $p4 = Run-Phase "EXEC-P4" "You are analyzing a 1C:Enterprise task. Create modification plan.`nTask: $taskContent`n`nPrevious phases wrote results to files. Read them:`n- Requirements: Read file $phasesDir/phase1_requirements.md`n- Objects: Read file $phasesDir/phase2_objects.md`n- Patterns: Read file $phasesDir/phase3_patterns.md`n`nInstructions:`n1. Read all 3 phase files above`n2. Create numbered modification plan`n3. Each point: [REQ-N] Module > Method > What to change`n4. Include SQL queries needed`n5. Write complete analysis report to $SessionDir/analysis-report.md using Write tool" "$phasesDir/phase4_plan.md" $PhaseMaxTurns
+        if (-not (Should-Skip "EXEC-P4" $resumePhase $false)) {
+            Write-Host "  [EXEC] Phase 4/5: Plan..." -ForegroundColor Yellow
+            $p4 = Run-Phase "EXEC-P4" "You are analyzing a 1C:Enterprise task. Create modification plan.`nTask: $taskContent`n`nPrevious phases wrote results to files. Read them:`n- Requirements: Read file $phasesDir/phase1_requirements.md`n- Objects: Read file $phasesDir/phase2_objects.md`n- Patterns: Read file $phasesDir/phase3_patterns.md`n`nInstructions:`n1. Read all 3 phase files above`n2. Create numbered modification plan`n3. Each point: [REQ-N] Module > Method > What to change`n4. Include SQL queries needed`n5. Write complete analysis report to $SessionDir/analysis-report.md using Write tool" "$phasesDir/phase4_plan.md" $PhaseMaxTurns
+        } else { Write-Host "  [EXEC] Phase 4/5: SKIPPED (resume)" -ForegroundColor DarkGray }
 
-        Write-Host "  [EXEC] Phase 5/5: Verification..." -ForegroundColor Yellow
-        $p5 = Run-Phase "EXEC-P5" "You are verifying a 1C:Enterprise analysis.`nTask: $taskContent`n`nRead the analysis report: Read file $SessionDir/analysis-report.md`nIf it does not exist, read $phasesDir/phase4_plan.md instead.`n`nInstructions:`n1. For each SQL query in the plan: call validate_query or execute_query to verify`n2. For each field name: call get_metadata to confirm it exists`n3. List verification results: PASS or FAIL for each check`n4. Update $SessionDir/analysis-report.md with verification markers using Write tool" "$phasesDir/phase5_verification.md" $PhaseMaxTurns
+        if (-not (Should-Skip "EXEC-P5" $resumePhase $false)) {
+            Write-Host "  [EXEC] Phase 5/5: Verification..." -ForegroundColor Yellow
+            $p5 = Run-Phase "EXEC-P5" "You are verifying a 1C:Enterprise analysis.`nTask: $taskContent`n`nRead the analysis report: Read file $SessionDir/analysis-report.md`nIf it does not exist, read $phasesDir/phase4_plan.md instead.`n`nInstructions:`n1. For each SQL query in the plan: call validate_query or execute_query to verify`n2. For each field name: call get_metadata to confirm it exists`n3. List verification results: PASS or FAIL for each check`n4. Update $SessionDir/analysis-report.md with verification markers using Write tool" "$phasesDir/phase5_verification.md" $PhaseMaxTurns
+        } else { Write-Host "  [EXEC] Phase 5/5: SKIPPED (resume)" -ForegroundColor DarkGray }
     } else {
         # --- ITERATION N > 1: Incremental improvement based on feedback ---
-        Write-Host "  [EXEC] Incremental: Fix gaps from reviewer feedback..." -ForegroundColor Yellow
-        $p4 = Run-Phase "EXEC-FIX" "You are IMPROVING an existing 1C analysis report. Iteration ${i}.`nTask: $taskContent`n`nCurrent report: Read file $SessionDir/analysis-report.md`nReviewer feedback: $feedbackContext`n`nInstructions:`n1. Read the current analysis-report.md`n2. Read the reviewer feedback carefully - it lists specific GAPS to fix`n3. Fix ONE or TWO gaps from the feedback:`n   - requirement_gap: add missing [REQ-N] markers or requirements section`n   - field_unverified: call get_metadata to verify the field, add checkmark`n   - pattern_missing: call bsl_search to find pattern, add to report`n   - query_invalid: call execute_query to validate SQL, add marker`n4. Update $SessionDir/analysis-report.md with improvements using Write tool`n5. Keep all existing content, only ADD or FIX the gaps" "$phasesDir/phase4_fix.md" $PhaseMaxTurns
+        if (-not (Should-Skip "EXEC-FIX" $resumePhase $true)) {
+            Write-Host "  [EXEC] Incremental: Fix gaps..." -ForegroundColor Yellow
+            $p4 = Run-Phase "EXEC-FIX" "You are IMPROVING an existing 1C analysis report. Iteration ${i}.`nTask: $taskContent`n`nCurrent report: Read file $SessionDir/analysis-report.md`nReviewer feedback: $feedbackContext`n`nInstructions:`n1. Read the current analysis-report.md`n2. Read the reviewer feedback carefully - it lists specific GAPS to fix`n3. Fix ONE or TWO gaps from the feedback:`n   - requirement_gap: add missing [REQ-N] markers or requirements section`n   - field_unverified: call get_metadata to verify the field, add checkmark`n   - pattern_missing: call bsl_search to find pattern, add to report`n   - query_invalid: call execute_query to validate SQL, add marker`n4. Update $SessionDir/analysis-report.md with improvements using Write tool`n5. Keep all existing content, only ADD or FIX the gaps" "$phasesDir/phase4_fix.md" $PhaseMaxTurns
+        } else { Write-Host "  [EXEC] Fix: SKIPPED (resume)" -ForegroundColor DarkGray }
 
-        Write-Host "  [EXEC] Verify fixes..." -ForegroundColor Yellow
-        $p5 = Run-Phase "EXEC-VERIFY" "Verify the fixes made to the analysis report.`nTask: $taskContent`n`nRead: $SessionDir/analysis-report.md`n`n1. Check if the gaps mentioned in feedback were fixed`n2. For any new SQL queries: call validate_query`n3. For any new fields: call get_metadata`n4. Update report with verification markers using Write tool" "$phasesDir/phase5_verify.md" $PhaseMaxTurns
+        if (-not (Should-Skip "EXEC-VERIFY" $resumePhase $true)) {
+            Write-Host "  [EXEC] Verify fixes..." -ForegroundColor Yellow
+            $p5 = Run-Phase "EXEC-VERIFY" "Verify the fixes made to the analysis report.`nTask: $taskContent`n`nRead: $SessionDir/analysis-report.md`n`n1. Check if the gaps mentioned in feedback were fixed`n2. For any new SQL queries: call validate_query`n3. For any new fields: call get_metadata`n4. Update report with verification markers using Write tool" "$phasesDir/phase5_verify.md" $PhaseMaxTurns
+        } else { Write-Host "  [EXEC] Verify: SKIPPED (resume)" -ForegroundColor DarkGray }
     }
 
     $execSec = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
@@ -320,14 +397,20 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     # ===== REVIEWER 3 PHASES =====
     $revStart = Get-Date
 
-    Write-Host "  [REV] Step 1/3: Scoring..." -ForegroundColor Yellow
-    $r1 = Run-Phase "REV-S1" "You are scoring a 1C analysis report.`nRun: python $projectRoot/scripts/score-analysis-report.py $SessionDir/analysis-report.md`nParse and output: METRIC, BREAKDOWN, GAPS" "$phasesDir/review1_scoring.md" 10
+    if (-not (Should-Skip "REV-S1" $resumePhase $isIncr)) {
+        Write-Host "  [REV] Step 1/3: Scoring..." -ForegroundColor Yellow
+        $r1 = Run-Phase "REV-S1" "You are scoring a 1C analysis report.`nRun: python $projectRoot/scripts/score-analysis-report.py $SessionDir/analysis-report.md`nParse and output: METRIC, BREAKDOWN, GAPS" "$phasesDir/review1_scoring.md" 10
+    } else { Write-Host "  [REV] Step 1/3: SKIPPED (resume)" -ForegroundColor DarkGray; $r1 = Get-Content "$phasesDir/review1_scoring.md" -Raw -Encoding UTF8 -ErrorAction SilentlyContinue }
 
-    Write-Host "  [REV] Step 2/3: MCP Verify..." -ForegroundColor Yellow
-    $r2 = Run-Phase "REV-S2" "You are verifying a 1C analysis report via MCP.`nScorer results:`n$r1`n`n1. Pick up to 3 unverified fields, call get_metadata`n2. Pick up to 2 SQL queries, call execute_query`n3. Report which passed, which failed" "$phasesDir/review2_verification.md" 15
+    if (-not (Should-Skip "REV-S2" $resumePhase $isIncr)) {
+        Write-Host "  [REV] Step 2/3: MCP Verify..." -ForegroundColor Yellow
+        $r2 = Run-Phase "REV-S2" "You are verifying a 1C analysis report via MCP.`nScorer results:`n$r1`n`n1. Pick up to 3 unverified fields, call get_metadata`n2. Pick up to 2 SQL queries, call execute_query`n3. Report which passed, which failed" "$phasesDir/review2_verification.md" 15
+    } else { Write-Host "  [REV] Step 2/3: SKIPPED (resume)" -ForegroundColor DarkGray; $r2 = Get-Content "$phasesDir/review2_verification.md" -Raw -Encoding UTF8 -ErrorAction SilentlyContinue }
 
-    Write-Host "  [REV] Step 3/3: Verdict + Feedback..." -ForegroundColor Yellow
-    $r3 = Run-Phase "REV-S3" "You MUST output EXACTLY these 3 lines FIRST:`nMETRIC: 55`nVERDICT: IMPROVE`nREASON: Requirements section missing`n`nNow decide real values for iteration ${i}:`n- Previous best: $bestMetric. Target: $TargetScore.`n- Scorer: $r1`n- Verification: $r2`n`nRules: score > best = KEEP. score > best but gaps = IMPROVE. score <= best = REVERT.`n`nAfter the 3 lines, save reviewer feedback for next iteration:`nWrite file $SessionDir/reviewer_feedback.json with JSON:`n{`"iteration`": ${i}, `"score`": NUMBER, `"gaps`": [{`"type`": `"requirement_gap|field_unverified|pattern_missing|query_invalid`", `"detail`": `"what to fix`"}]}`n`nThis feedback will be used by the next iteration to fix specific gaps." "$phasesDir/review3_verdict.md" 15
+    if (-not (Should-Skip "REV-S3" $resumePhase $isIncr)) {
+        Write-Host "  [REV] Step 3/3: Verdict + Feedback..." -ForegroundColor Yellow
+        $r3 = Run-Phase "REV-S3" "You MUST output EXACTLY these 3 lines FIRST:`nMETRIC: 55`nVERDICT: IMPROVE`nREASON: Requirements section missing`n`nNow decide real values for iteration ${i}:`n- Previous best: $bestMetric. Target: $TargetScore.`n- Scorer: $r1`n- Verification: $r2`n`nRules: score > best = KEEP. score > best but gaps = IMPROVE. score <= best = REVERT.`n`nAfter the 3 lines, save reviewer feedback for next iteration:`nWrite file $SessionDir/reviewer_feedback.json with JSON:`n{`"iteration`": ${i}, `"score`": NUMBER, `"gaps`": [{`"type`": `"requirement_gap|field_unverified|pattern_missing|query_invalid`", `"detail`": `"what to fix`"}]}`n`nThis feedback will be used by the next iteration to fix specific gaps." "$phasesDir/review3_verdict.md" 15
+    } else { Write-Host "  [REV] Step 3/3: SKIPPED (resume)" -ForegroundColor DarkGray; $r3 = Get-Content "$phasesDir/review3_verdict.md" -Raw -Encoding UTF8 -ErrorAction SilentlyContinue }
 
     $revSec = [math]::Round(((Get-Date) - $revStart).TotalSeconds)
 
