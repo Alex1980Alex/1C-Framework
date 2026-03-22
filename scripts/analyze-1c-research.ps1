@@ -40,6 +40,44 @@ function Extract-TaskId($path) {
     return "task-$(Get-Date -f 'yyyyMMdd-HHmmss')"
 }
 
+# =============================================================
+# MCP Health Check: quick test before MCP-dependent phases
+# =============================================================
+function Test-MCP() {
+    Log "MCP HEALTH CHECK..."
+    $checks = @{}
+    $allOk = $true
+
+    # 1. bsl-semantic-search: bsl_stats is cheapest ping
+    $r1 = Run-Phase "MCP-BSL" "Call bsl_stats tool. Output only the result." "$phasesDir/mcp_check_bsl.md" 3
+    if ($r1 -and $r1.Length -gt 20) { $checks["bsl-semantic-search"] = "OK"; Log "  bsl-semantic-search: OK" }
+    else { $checks["bsl-semantic-search"] = "FAIL"; $allOk = $false; Log "  bsl-semantic-search: FAIL" }
+
+    # 2. 1c-mcp-toolkit: get_metadata is cheapest
+    $r2 = Run-Phase "MCP-1C" "Call get_metadata with object_type='Configuration' and object_name=''. Output only the result." "$phasesDir/mcp_check_1c.md" 3
+    if ($r2 -and $r2.Length -gt 20) { $checks["1c-mcp-toolkit"] = "OK"; Log "  1c-mcp-toolkit: OK" }
+    else { $checks["1c-mcp-toolkit"] = "FAIL"; $allOk = $false; Log "  1c-mcp-toolkit: FAIL" }
+
+    # 3. bsl-platform-context: search is cheapest
+    $r3 = Run-Phase "MCP-API" "Call the bsl-platform-context search tool with query 'Справочник'. Output only the result." "$phasesDir/mcp_check_api.md" 3
+    if ($r3 -and $r3.Length -gt 10) { $checks["bsl-platform-context"] = "OK"; Log "  bsl-platform-context: OK" }
+    else { $checks["bsl-platform-context"] = "FAIL"; $allOk = $false; Log "  bsl-platform-context: FAIL" }
+
+    # Write health report
+    $report = "# MCP Health Check`n"
+    foreach ($k in $checks.Keys) { $report += "- $k : $($checks[$k])`n" }
+    Write-Utf8 "$phasesDir/mcp_health.md" $report
+
+    if ($allOk) {
+        Write-Host "  [MCP] All 3 servers OK" -ForegroundColor Green
+    } else {
+        $failed = ($checks.GetEnumerator() | Where-Object { $_.Value -eq "FAIL" } | ForEach-Object { $_.Key }) -join ", "
+        Write-Host "  [MCP] FAILED: $failed" -ForegroundColor Red
+        Write-Host "  [MCP] Analysis will continue but MCP-dependent phases may fail" -ForegroundColor Yellow
+    }
+    return $allOk
+}
+
 function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
     if (-not $maxTurns) { $maxTurns = $PhaseMaxTurns }
     $start = Get-Date
@@ -170,6 +208,16 @@ Write-Host "Session:  $SessionDir"
 Write-Host "Target:   $TargetScore | Max: $MaxIterations | Phase: ${PhaseTimeoutMin}m/${PhaseMaxTurns}t"
 Write-Host ""
 Log "=== START target=$TargetScore max=$MaxIterations ==="
+
+# --- Pre-flight MCP health check ---
+Write-Host "  [PRE-FLIGHT] Checking MCP servers..." -ForegroundColor Cyan
+$mcpOk = Test-MCP
+if (-not $mcpOk) {
+    Write-Host "  [PRE-FLIGHT] Some MCP servers are down. Continue anyway? Phases may fail." -ForegroundColor Yellow
+}
+# Clean health check files from phases
+Get-ChildItem $phasesDir -Filter "mcp_check*" -ErrorAction SilentlyContinue | Remove-Item -Force
+Write-Host ""
 
 for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $iterStart = Get-Date
