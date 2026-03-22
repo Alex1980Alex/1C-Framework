@@ -311,7 +311,7 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $r2 = Run-Phase "REV-S2" "You are verifying a 1C analysis report via MCP.`nScorer results:`n$r1`n`n1. Pick up to 3 unverified fields, call get_metadata`n2. Pick up to 2 SQL queries, call execute_query`n3. Report which passed, which failed" "$phasesDir/review2_verification.md" 15
 
     Write-Host "  [REV] Step 3/3: Verdict..." -ForegroundColor Yellow
-    $r3 = Run-Phase "REV-S3" "You MUST output EXACTLY these 3 lines as your FIRST output, nothing before them:`nMETRIC: 55`nVERDICT: IMPROVE`nREASON: Requirements section missing`n`nNow decide the real values for iteration $i:`n- Previous best score: $bestMetric`n- Target: $TargetScore`n- Scorer output: $r1`n- Verification: $r2`n`nRules:`n- If score > previous best AND no critical failures: VERDICT: KEEP`n- If score > previous best BUT gaps remain: VERDICT: IMPROVE`n- If score <= previous best: VERDICT: REVERT`n`nOutput your 3 lines: METRIC, VERDICT, REASON. Nothing else before them." "$phasesDir/review3_verdict.md" 10
+    $r3 = Run-Phase "REV-S3" "You MUST output EXACTLY these 3 lines as your FIRST output, nothing before them:`nMETRIC: 55`nVERDICT: IMPROVE`nREASON: Requirements section missing`n`nNow decide the real values for iteration ${i}:`n- Previous best score: $bestMetric`n- Target: $TargetScore`n- Scorer output: $r1`n- Verification: $r2`n`nRules:`n- If score > previous best AND no critical failures: VERDICT: KEEP`n- If score > previous best BUT gaps remain: VERDICT: IMPROVE`n- If score <= previous best: VERDICT: REVERT`n`nOutput your 3 lines: METRIC, VERDICT, REASON. Nothing else before them." "$phasesDir/review3_verdict.md" 10
 
     $revSec = [math]::Round(((Get-Date) - $revStart).TotalSeconds)
 
