@@ -267,34 +267,53 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $script:PhaseTimes = @{}
     $script:PhaseCosts = @{}
 
-    # ===== EXECUTOR 5 PHASES =====
-    Write-Host "  [EXEC] Phase 1/5: Requirements..." -ForegroundColor Yellow
-    $p1 = Run-Phase "EXEC-P1" "You are analyzing a 1C:Enterprise task. Parse requirements ONLY.`nTask: $taskContent`n`nInstructions:`n1. Read the task description carefully`n2. Extract numbered requirements [REQ-1], [REQ-2], etc.`n3. For each requirement: one sentence describing what needs to be done`n4. Output a numbered markdown list of requirements" "$phasesDir/phase1_requirements.md" 10
+    # ===== EXECUTOR =====
+    # Read reviewer feedback from previous iteration
+    $feedbackContext = ""
+    $feedbackFile = "$SessionDir/reviewer_feedback.json"
+    if ($i -gt 1 -and (Test-Path $feedbackFile)) {
+        $feedbackContext = Get-Content $feedbackFile -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+    }
 
-    Write-Host "  [EXEC] Phase 2/5: Objects..." -ForegroundColor Yellow
-    $p2 = Run-Phase "EXEC-P2" "You are analyzing a 1C:Enterprise task. Find configuration objects.`nTask: $taskContent`nRequirements found:`n$p1`n`nInstructions:`n1. Use bsl_search to find relevant configuration objects`n2. Use get_metadata to verify object structure and fields`n3. List each found object with type, name, and relevant fields`n4. Mark verified fields with checkmark" "$phasesDir/phase2_objects.md" $PhaseMaxTurns
+    if ($i -eq 1) {
+        # --- ITERATION 1: Full 5-phase analysis ---
+        Write-Host "  [EXEC] Phase 1/5: Requirements..." -ForegroundColor Yellow
+        $p1 = Run-Phase "EXEC-P1" "You are analyzing a 1C:Enterprise task. Parse requirements ONLY.`nTask: $taskContent`n`nInstructions:`n1. Read the task description carefully`n2. Extract numbered requirements [REQ-1], [REQ-2], etc.`n3. For each requirement: one sentence describing what needs to be done`n4. Output a numbered markdown list of requirements" "$phasesDir/phase1_requirements.md" 10
 
-    Write-Host "  [EXEC] Phase 3/5: Patterns..." -ForegroundColor Yellow
-    $p3 = Run-Phase "EXEC-P3" "You are analyzing a 1C:Enterprise task. Find code patterns.`nTask: $taskContent`nRequirements:`n$p1`nObjects found:`n$p2`n`nInstructions:`n1. Use bsl_hybrid_search or search_in_code to find similar implementations`n2. For each requirement, find existing code patterns in the configuration`n3. List code patterns with module names and brief description`n4. Note reusable patterns vs new code needed" "$phasesDir/phase3_patterns.md" $PhaseMaxTurns
+        Write-Host "  [EXEC] Phase 2/5: Objects..." -ForegroundColor Yellow
+        $p2 = Run-Phase "EXEC-P2" "You are analyzing a 1C:Enterprise task. Find configuration objects.`nTask: $taskContent`nRequirements found:`n$p1`n`nInstructions:`n1. Use bsl_search to find relevant configuration objects`n2. Use get_metadata to verify object structure and fields`n3. List each found object with type, name, and relevant fields`n4. Mark verified fields with checkmark" "$phasesDir/phase2_objects.md" $PhaseMaxTurns
 
-    Write-Host "  [EXEC] Phase 4/5: Plan..." -ForegroundColor Yellow
-    $p4 = Run-Phase "EXEC-P4" "You are analyzing a 1C:Enterprise task. Create modification plan.`nTask: $taskContent`n`nPrevious phases wrote results to files. Read them:`n- Requirements: Read file $phasesDir/phase1_requirements.md`n- Objects: Read file $phasesDir/phase2_objects.md`n- Patterns: Read file $phasesDir/phase3_patterns.md`n`nInstructions:`n1. Read all 3 phase files above`n2. Create numbered modification plan`n3. Each point: [REQ-N] Module > Method > What to change`n4. Include SQL queries needed`n5. Write complete analysis report to $SessionDir/analysis-report.md using Write tool`n6. Then run via Bash: git add -A && git commit -m '[AR-$i] Analysis report'" "$phasesDir/phase4_plan.md" $PhaseMaxTurns
+        Write-Host "  [EXEC] Phase 3/5: Patterns..." -ForegroundColor Yellow
+        $p3 = Run-Phase "EXEC-P3" "You are analyzing a 1C:Enterprise task. Find code patterns.`nTask: $taskContent`nRequirements:`n$p1`nObjects found:`n$p2`n`nInstructions:`n1. Use bsl_hybrid_search or search_in_code to find similar implementations`n2. For each requirement, find existing code patterns in the configuration`n3. List code patterns with module names and brief description`n4. Note reusable patterns vs new code needed" "$phasesDir/phase3_patterns.md" $PhaseMaxTurns
 
-    Write-Host "  [EXEC] Phase 5/5: Verification..." -ForegroundColor Yellow
-    $p5 = Run-Phase "EXEC-P5" "You are verifying a 1C:Enterprise analysis.`nTask: $taskContent`n`nRead the analysis report: Read file $SessionDir/analysis-report.md`nIf it does not exist, read $phasesDir/phase4_plan.md instead.`n`nInstructions:`n1. For each SQL query in the plan: call validate_query or execute_query to verify`n2. For each field name: call get_metadata to confirm it exists`n3. List verification results: PASS or FAIL for each check`n4. Update $SessionDir/analysis-report.md with verification markers using Write tool`n5. Commit via Bash: git add -A && git commit -m '[AR-$i] Verification'" "$phasesDir/phase5_verification.md" $PhaseMaxTurns
+        Write-Host "  [EXEC] Phase 4/5: Plan..." -ForegroundColor Yellow
+        $p4 = Run-Phase "EXEC-P4" "You are analyzing a 1C:Enterprise task. Create modification plan.`nTask: $taskContent`n`nPrevious phases wrote results to files. Read them:`n- Requirements: Read file $phasesDir/phase1_requirements.md`n- Objects: Read file $phasesDir/phase2_objects.md`n- Patterns: Read file $phasesDir/phase3_patterns.md`n`nInstructions:`n1. Read all 3 phase files above`n2. Create numbered modification plan`n3. Each point: [REQ-N] Module > Method > What to change`n4. Include SQL queries needed`n5. Write complete analysis report to $SessionDir/analysis-report.md using Write tool" "$phasesDir/phase4_plan.md" $PhaseMaxTurns
+
+        Write-Host "  [EXEC] Phase 5/5: Verification..." -ForegroundColor Yellow
+        $p5 = Run-Phase "EXEC-P5" "You are verifying a 1C:Enterprise analysis.`nTask: $taskContent`n`nRead the analysis report: Read file $SessionDir/analysis-report.md`nIf it does not exist, read $phasesDir/phase4_plan.md instead.`n`nInstructions:`n1. For each SQL query in the plan: call validate_query or execute_query to verify`n2. For each field name: call get_metadata to confirm it exists`n3. List verification results: PASS or FAIL for each check`n4. Update $SessionDir/analysis-report.md with verification markers using Write tool" "$phasesDir/phase5_verification.md" $PhaseMaxTurns
+    } else {
+        # --- ITERATION N > 1: Incremental improvement based on feedback ---
+        Write-Host "  [EXEC] Incremental: Fix gaps from reviewer feedback..." -ForegroundColor Yellow
+        $p4 = Run-Phase "EXEC-FIX" "You are IMPROVING an existing 1C analysis report. Iteration ${i}.`nTask: $taskContent`n`nCurrent report: Read file $SessionDir/analysis-report.md`nReviewer feedback: $feedbackContext`n`nInstructions:`n1. Read the current analysis-report.md`n2. Read the reviewer feedback carefully - it lists specific GAPS to fix`n3. Fix ONE or TWO gaps from the feedback:`n   - requirement_gap: add missing [REQ-N] markers or requirements section`n   - field_unverified: call get_metadata to verify the field, add checkmark`n   - pattern_missing: call bsl_search to find pattern, add to report`n   - query_invalid: call execute_query to validate SQL, add marker`n4. Update $SessionDir/analysis-report.md with improvements using Write tool`n5. Keep all existing content, only ADD or FIX the gaps" "$phasesDir/phase4_fix.md" $PhaseMaxTurns
+
+        Write-Host "  [EXEC] Verify fixes..." -ForegroundColor Yellow
+        $p5 = Run-Phase "EXEC-VERIFY" "Verify the fixes made to the analysis report.`nTask: $taskContent`n`nRead: $SessionDir/analysis-report.md`n`n1. Check if the gaps mentioned in feedback were fixed`n2. For any new SQL queries: call validate_query`n3. For any new fields: call get_metadata`n4. Update report with verification markers using Write tool" "$phasesDir/phase5_verify.md" $PhaseMaxTurns
+    }
 
     $execSec = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
     Write-Host "  [EXEC] All 5 phases: ${execSec}s" -ForegroundColor Green
     Log "EXECUTOR: ${execSec}s"
 
-    # Orchestrator commits if agent didn't (agent may lack Bash access)
+    # Orchestrator commits report + phases
     $commitAfter = (git rev-parse --short HEAD 2>$null)
     if ($commitAfter -eq $commitBefore) {
         $reportPath = "$SessionDir/analysis-report.md"
         if (Test-Path $reportPath) {
-            Log "Orchestrator: committing analysis-report.md"
-            git add -A 2>$null
-            git commit -m "[AR-$i] Analysis report" 2>$null
+            Log "Orchestrator: committing report"
+            git add "$SessionDir/analysis-report.md" 2>$null
+            git add "$SessionDir/phases/" 2>$null
+            git add "$SessionDir/reviewer_feedback.json" 2>$null
+            git commit -m "[AR-${i}] Analysis report" 2>$null
             $commitAfter = (git rev-parse --short HEAD 2>$null)
         }
     }
@@ -316,8 +335,8 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     Write-Host "  [REV] Step 2/3: MCP Verify..." -ForegroundColor Yellow
     $r2 = Run-Phase "REV-S2" "You are verifying a 1C analysis report via MCP.`nScorer results:`n$r1`n`n1. Pick up to 3 unverified fields, call get_metadata`n2. Pick up to 2 SQL queries, call execute_query`n3. Report which passed, which failed" "$phasesDir/review2_verification.md" 15
 
-    Write-Host "  [REV] Step 3/3: Verdict..." -ForegroundColor Yellow
-    $r3 = Run-Phase "REV-S3" "You MUST output EXACTLY these 3 lines as your FIRST output, nothing before them:`nMETRIC: 55`nVERDICT: IMPROVE`nREASON: Requirements section missing`n`nNow decide the real values for iteration ${i}:`n- Previous best score: $bestMetric`n- Target: $TargetScore`n- Scorer output: $r1`n- Verification: $r2`n`nRules:`n- If score > previous best AND no critical failures: VERDICT: KEEP`n- If score > previous best BUT gaps remain: VERDICT: IMPROVE`n- If score <= previous best: VERDICT: REVERT`n`nOutput your 3 lines: METRIC, VERDICT, REASON. Nothing else before them." "$phasesDir/review3_verdict.md" 10
+    Write-Host "  [REV] Step 3/3: Verdict + Feedback..." -ForegroundColor Yellow
+    $r3 = Run-Phase "REV-S3" "You MUST output EXACTLY these 3 lines FIRST:`nMETRIC: 55`nVERDICT: IMPROVE`nREASON: Requirements section missing`n`nNow decide real values for iteration ${i}:`n- Previous best: $bestMetric. Target: $TargetScore.`n- Scorer: $r1`n- Verification: $r2`n`nRules: score > best = KEEP. score > best but gaps = IMPROVE. score <= best = REVERT.`n`nAfter the 3 lines, save reviewer feedback for next iteration:`nWrite file $SessionDir/reviewer_feedback.json with JSON:`n{`"iteration`": ${i}, `"score`": NUMBER, `"gaps`": [{`"type`": `"requirement_gap|field_unverified|pattern_missing|query_invalid`", `"detail`": `"what to fix`"}]}`n`nThis feedback will be used by the next iteration to fix specific gaps." "$phasesDir/review3_verdict.md" 15
 
     $revSec = [math]::Round(((Get-Date) - $revStart).TotalSeconds)
 
