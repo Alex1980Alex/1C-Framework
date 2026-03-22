@@ -148,6 +148,10 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
     Write-Utf8 "$outputFile.json" $raw
     Write-Utf8 "$outputFile.status" "# $phaseName - DONE ${elapsed}s turns=$turns cost=$cost"
 
+    # Record timing for summary
+    if ($script:PhaseTimes) { $script:PhaseTimes[$phaseName] = $elapsed }
+    if ($script:PhaseCosts) { $script:PhaseCosts[$phaseName] = $cost }
+
     # Cleanup temp files
     Remove-Item $promptFile -ErrorAction SilentlyContinue
     Remove-Item $rawFile -ErrorAction SilentlyContinue
@@ -260,6 +264,8 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
 
     Get-ChildItem $phasesDir -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse
     $commitBefore = (git rev-parse --short HEAD 2>$null)
+    $script:PhaseTimes = @{}
+    $script:PhaseCosts = @{}
 
     # ===== EXECUTOR 5 PHASES =====
     Write-Host "  [EXEC] Phase 1/5: Requirements..." -ForegroundColor Yellow
@@ -360,19 +366,62 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     $total = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
     $bar = "#" * [math]::Min([math]::Max([math]::Round($bestMetric / 5), 0), 20)
     $gap = "." * (20 - $bar.Length)
-    Write-Host "`n  ---- Iter ${i} | ${metric}/${TargetScore} [$bar$gap] $verdict E=${execSec}s R=${revSec}s C=${cmpSec}s T=${total}s ----" -ForegroundColor Cyan
-    Log "SUMMARY: $metric/$TargetScore $verdict ${total}s"
-    Write-Utf8 "$iterDir/summary.md" "# Iter $i`nScore: $metric/$TargetScore | Best: $bestMetric | Verdict: $verdict`nExec: ${execSec}s | Rev: ${revSec}s | Cmp: ${cmpSec}s | Total: ${total}s"
+    # Phase timing table
+    Write-Host "`n  ---- Iter ${i} | Score: ${metric}/${TargetScore} [$bar$gap] $verdict ----" -ForegroundColor Cyan
+    Write-Host "  Phase Timings:" -ForegroundColor White
+    $totalCost = 0.0
+    foreach ($pk in @("EXEC-P1","EXEC-P2","EXEC-P3","EXEC-P4","EXEC-P5","REV-S1","REV-S2","REV-S3","CMP")) {
+        $pt = if ($script:PhaseTimes.ContainsKey($pk)) { $script:PhaseTimes[$pk] } else { "-" }
+        $pc = if ($script:PhaseCosts.ContainsKey($pk)) { $script:PhaseCosts[$pk] } else { "-" }
+        if ($pc -ne "-") { try { $totalCost += [double]$pc } catch {} }
+        if ($pt -ne "-") {
+            $label = switch ($pk) {
+                "EXEC-P1" { "Requirements" } "EXEC-P2" { "Objects    " } "EXEC-P3" { "Patterns   " }
+                "EXEC-P4" { "Plan       " } "EXEC-P5" { "Verify     " }
+                "REV-S1"  { "Scoring    " } "REV-S2"  { "MCP Verify " } "REV-S3"  { "Verdict    " }
+                "CMP"     { "Comparator " } default { $pk }
+            }
+            Write-Host "    $label  ${pt}s  `$$pc" -ForegroundColor DarkGray
+        }
+    }
+    Write-Host "    TOTAL        ${total}s  `$$([math]::Round($totalCost, 2))" -ForegroundColor White
+    Write-Host "  -------------------------------------------" -ForegroundColor Cyan
+
+    Log "SUMMARY: $metric/$TargetScore $verdict ${total}s cost=`$$([math]::Round($totalCost, 2))"
+
+    # Save detailed summary
+    $timingLines = "# Iter $i`nScore: $metric/$TargetScore | Best: $bestMetric | Verdict: $verdict`n`n| Phase | Time | Cost |`n|-------|------|------|`n"
+    foreach ($pk in @("EXEC-P1","EXEC-P2","EXEC-P3","EXEC-P4","EXEC-P5","REV-S1","REV-S2","REV-S3","CMP")) {
+        $pt = if ($script:PhaseTimes.ContainsKey($pk)) { "$($script:PhaseTimes[$pk])s" } else { "-" }
+        $pc = if ($script:PhaseCosts.ContainsKey($pk)) { "`$$($script:PhaseCosts[$pk])" } else { "-" }
+        $timingLines += "| $pk | $pt | $pc |`n"
+    }
+    $timingLines += "| **TOTAL** | **${total}s** | **`$$([math]::Round($totalCost, 2))** |`n"
+    Write-Utf8 "$iterDir/summary.md" $timingLines
 
     if ($bestMetric -ge $TargetScore) { Write-Host "`n  TARGET: $bestMetric >= $TargetScore" -ForegroundColor Green; break }
     if ($plateauCount -ge 3) { Write-Host "`n  PLATEAU" -ForegroundColor Yellow; break }
     Start-Sleep -Seconds 2
 }
 
+$sessionTotal = [math]::Round(((Get-Date) - $iterStart).TotalSeconds)
 Write-Host "`n=== COMPLETE ===" -ForegroundColor Cyan
 $st = if ($bestMetric -ge $TargetScore) { "TARGET" } else { "STOPPED" }
-Write-Host "  Best: $bestMetric/$TargetScore | $st"
+Write-Host "  Iterations: $i/$MaxIterations | Best: $bestMetric/$TargetScore | Status: $st"
 Write-Host "  Report:  $SessionDir/analysis-report.md"
 Write-Host "  Phases:  $phasesDir/"
 Write-Host "  Results: $SessionDir/results/"
+
+# Final timing report
+$finalReport = "# Analyze-1C-Research: Final Report`n`nTask: $taskId`nScore: $bestMetric/$TargetScore | Status: $st`nIterations: $i`n`n"
+$finalReport += "## Iteration Summaries`n`n"
+for ($j = 1; $j -le $i; $j++) {
+    $sf = "$SessionDir/results/iter$j/summary.md"
+    if (Test-Path $sf) {
+        $finalReport += (Get-Content $sf -Raw -Encoding UTF8) + "`n---`n"
+    }
+}
+Write-Utf8 "$SessionDir/final-report.md" $finalReport
+Write-Host "  Final:   $SessionDir/final-report.md"
+
 Log "=== END $bestMetric $st ==="
