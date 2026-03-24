@@ -142,7 +142,7 @@ function Run-Phase($phaseName, $prompt, $outputFile, $maxTurns) {
         return "DONE"
     } -ArgumentList $promptFile, $maxTurns
 
-    # Wait for completion — no timeout, only --max-turns protects from infinite loops
+    # Wait for completion - no timeout, only --max-turns protects from infinite loops
     # Heartbeat every 30s shows agent is alive
     $waited = 0
     while ($job.State -eq "Running") {
@@ -372,11 +372,11 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     Write-Host "  [EXEC] All 5 phases: ${execSec}s" -ForegroundColor Green
     Log "EXECUTOR: ${execSec}s"
 
-    # Check report exists (file-based — data/ may be gitignored)
+    # Check report exists (file-based - data/ may be gitignored)
     $reportPath = "$SessionDir/analysis-report.md"
     if (-not (Test-Path $reportPath)) {
         # Fallback: assemble report from phase files
-        Write-Host "  [ASSEMBLE] Agent didn't write report — assembling from phases..." -ForegroundColor Yellow
+        Write-Host "  [ASSEMBLE] Agent didn't write report - assembling from phases..." -ForegroundColor Yellow
         Log "ASSEMBLE: building from phases"
         $assembledContent = "# Analysis Report`n`n"
         $phaseFiles = if ($isIncr) { @("phase4_fix.md","phase5_verify.md") } else { @("phase1_requirements.md","phase2_objects.md","phase3_patterns.md","phase4_plan.md","phase5_verification.md") }
@@ -391,8 +391,9 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
         }
         if ($assembledContent.Length -gt 200) {
             Write-Utf8 $reportPath $assembledContent
-            Write-Host "  [ASSEMBLE] Report assembled ($($assembledContent.Length) chars)" -ForegroundColor Green
-            Log "ASSEMBLE: done $($assembledContent.Length) chars"
+            $aLen = $assembledContent.Length
+            Write-Host "  [ASSEMBLE] Report assembled: ${aLen} chars" -ForegroundColor Green
+            Log "ASSEMBLE: done ${aLen} chars"
         }
     }
 
@@ -417,8 +418,9 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
         Write-Host "  [EXEC] Committed: $commitAfter" -ForegroundColor Green
         Log "Committed: $commitAfter"
     } else {
-        Write-Host "  [EXEC] Report exists ($([math]::Round((Get-Item $reportPath).Length / 1024))KB)" -ForegroundColor Green
-        Log "Report exists, git skipped (gitignored)"
+        $rptKB = [math]::Round((Get-Item $reportPath).Length / 1024)
+        Write-Host "  [EXEC] Report exists: ${rptKB}KB" -ForegroundColor Green
+        Log "Report exists: ${rptKB}KB, git skipped"
     }
 
     # ===== REVIEWER 3 PHASES =====
