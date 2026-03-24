@@ -380,7 +380,8 @@
       "Bash(MSYS_NO_PATHCONV=1 cmd //C \"tasklist /FI \\\\\"IMAGENAME eq 1cv8.exe\\\\\" /FO CSV\" 2>/dev/null)",
       "Bash(rm -rf \"/c/Users/AlexT/AppData/Local/1C/1cv8/29edc536-8c91-4e37-ae0a-b557911e412a/ConfigSave\")",
       "Bash(rm -rf \"/c/Users/AlexT/AppData/Local/1C/1cv8/29edc536-8c91-4e37-ae0a-b557911e412a/Config\")",
-      "Bash(rm -rf \"/c/Users/AlexT/AppData/Local/1C/1cv8/29edc536-8c91-4e37-ae0a-b557911e412a/cgf-cache\")"
+      "Bash(rm -rf \"/c/Users/AlexT/AppData/Local/1C/1cv8/29edc536-8c91-4e37-ae0a-b557911e412a/cgf-cache\")",
+      "Bash(xxd \"D:/1С-Framework/scripts/analyze-1c-research.ps1\")"
     ]
   },
   "enableAllProjectMcpServers": true,

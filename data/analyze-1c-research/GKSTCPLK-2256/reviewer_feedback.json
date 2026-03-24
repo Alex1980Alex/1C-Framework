@@ -1,14 +1,18 @@
 {
-  "iteration": 1,
+  "iteration": 2,
   "score": 55,
+  "verdict": "IMPROVE",
+  "reason": "Requirements section missing — this is the largest scoring gap. Score equals previous best (55), gaps remain.",
+  "target": 85,
+  "previous_best": 55,
   "gaps": [
     {
       "type": "requirement_gap",
-      "detail": "Requirements section (req) scores 0/30 — the report is missing the full requirements analysis section entirely"
+      "detail": "Requirements section (req) still scores 0/30 — the report is missing the full requirements analysis section entirely. This is the single largest gap and must be added to reach the 85 target."
     },
     {
       "type": "query_invalid",
-      "detail": "At least 1 SQL query was not validated via execute_query, causing SQL category to score 0/15"
+      "detail": "SQL queries not validated via execute_query — SQL category scores 0/15. All queries must be run and confirmed valid."
     }
   ],
   "priority_fixes": [
@@ -19,5 +23,12 @@
     "fields: 25/25",
     "patterns: 20/20",
     "questions: 10/10"
-  ]
+  ],
+  "scorer_breakdown_target": {
+    "req": "30/30",
+    "fields": "25/25",
+    "patterns": "20/20",
+    "sql": "15/15",
+    "questions": "10/10"
+  }
 }
