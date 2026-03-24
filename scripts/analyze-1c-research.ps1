@@ -372,27 +372,54 @@ for ($i = $startIter + 1; $i -le $MaxIterations; $i++) {
     Write-Host "  [EXEC] All 5 phases: ${execSec}s" -ForegroundColor Green
     Log "EXECUTOR: ${execSec}s"
 
-    # Orchestrator commits report + phases
-    $commitAfter = (git rev-parse --short HEAD 2>$null)
-    if ($commitAfter -eq $commitBefore) {
-        $reportPath = "$SessionDir/analysis-report.md"
-        if (Test-Path $reportPath) {
-            Log "Orchestrator: committing report"
-            git add "$SessionDir/analysis-report.md" 2>$null
-            git add "$SessionDir/phases/" 2>$null
-            git add "$SessionDir/reviewer_feedback.json" 2>$null
-            git commit -m "[AR-${i}] Analysis report" 2>$null
-            $commitAfter = (git rev-parse --short HEAD 2>$null)
+    # Check report exists (file-based — data/ may be gitignored)
+    $reportPath = "$SessionDir/analysis-report.md"
+    if (-not (Test-Path $reportPath)) {
+        # Fallback: assemble report from phase files
+        Write-Host "  [ASSEMBLE] Agent didn't write report — assembling from phases..." -ForegroundColor Yellow
+        Log "ASSEMBLE: building from phases"
+        $assembledContent = "# Analysis Report`n`n"
+        $phaseFiles = if ($isIncr) { @("phase4_fix.md","phase5_verify.md") } else { @("phase1_requirements.md","phase2_objects.md","phase3_patterns.md","phase4_plan.md","phase5_verification.md") }
+        foreach ($ph in $phaseFiles) {
+            $phFile = "$phasesDir/$ph"
+            if (Test-Path $phFile) {
+                $phContent = Get-Content $phFile -Raw -Encoding UTF8
+                if ($phContent -and $phContent.Length -gt 10) {
+                    $assembledContent += $phContent + "`n`n---`n`n"
+                }
+            }
+        }
+        if ($assembledContent.Length -gt 200) {
+            Write-Utf8 $reportPath $assembledContent
+            Write-Host "  [ASSEMBLE] Report assembled ($($assembledContent.Length) chars)" -ForegroundColor Green
+            Log "ASSEMBLE: done $($assembledContent.Length) chars"
         }
     }
-    if ($commitAfter -eq $commitBefore) {
+
+    if (-not (Test-Path $reportPath)) {
         Write-Host "  [SKIP] No report created." -ForegroundColor Yellow
         Log "SKIP: no report"
         $plateauCount++
         continue
     }
-    Write-Host "  [EXEC] Committed: $commitAfter" -ForegroundColor Green
-    Log "Committed: $commitAfter"
+
+    # Try to commit (git add -f to bypass gitignore for data/)
+    $commitAfter = (git rev-parse --short HEAD 2>$null)
+    if ($commitAfter -eq $commitBefore) {
+        Log "Orchestrator: committing report"
+        git add -f "$reportPath" 2>$null
+        git add -f "$SessionDir/phases/" 2>$null
+        git add -f "$SessionDir/reviewer_feedback.json" 2>$null
+        git commit -m "[AR-${i}] Analysis report" 2>$null
+        $commitAfter = (git rev-parse --short HEAD 2>$null)
+    }
+    if ($commitAfter -ne $commitBefore) {
+        Write-Host "  [EXEC] Committed: $commitAfter" -ForegroundColor Green
+        Log "Committed: $commitAfter"
+    } else {
+        Write-Host "  [EXEC] Report exists ($([math]::Round((Get-Item $reportPath).Length / 1024))KB)" -ForegroundColor Green
+        Log "Report exists, git skipped (gitignored)"
+    }
 
     # ===== REVIEWER 3 PHASES =====
     $revStart = Get-Date
