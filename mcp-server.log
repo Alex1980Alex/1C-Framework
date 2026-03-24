@@ -1107,3 +1107,30 @@ Update your application's configuration. The following values are valid:
 2026-03-24 16:32:31.267 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
 2026-03-24 16:32:31.267 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
 2026-03-24 16:32:31.285 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 2.671 seconds (process running for 3.602)
+16:32:39.106 INFO  - Starting MainKt v0.5.1 using Java 17.0.13 with PID 17196 (D:\1С-Framework\tools\mcp-jars\mcp-yaxunit-runner-0.5.1.jar started by AlexT in D:\1С-Framework)
+16:32:39.107 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
+16:32:39.108 INFO  - The following 2 profiles are active: "mcp", "testdb"
+16:32:40.329 WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'designerBuildAction' defined in URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/application/actions/build/DesignerBuildAction.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'platformDsl' defined in URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/infrastructure/platform/dsl/PlatformDsl.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'platformUtilities' defined in URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/infrastructure/platform/dsl/common/PlatformUtilities.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'app-io.github.alkoleft.mcp.configuration.properties.ApplicationProperties': Could not bind properties to 'ApplicationProperties' : prefix=app, ignoreInvalidFields=false, ignoreUnknownFields=true
+16:32:40.361 ERROR - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to bind properties under 'app.source-set[1].purpose[0]' to io.github.alkoleft.mcp.configuration.properties.SourceSetPurpose:
+
+    Property: app.source-set[1].purpose[0]
+    Value: "TESTING"
+    Origin: URL [file:D:/1С-Framework/tools/mcp-jars/application-testdb.yml] - 14:18
+    Reason: failed to convert java.lang.String to io.github.alkoleft.mcp.configuration.properties.SourceSetPurpose (caused by java.lang.IllegalArgumentException: No enum constant io.github.alkoleft.mcp.configuration.properties.SourceSetPurpose.TESTING)
+
+Action:
+
+Update your application's configuration. The following values are valid:
+
+    MAIN
+    TESTS
+    YAXUNIT
+
