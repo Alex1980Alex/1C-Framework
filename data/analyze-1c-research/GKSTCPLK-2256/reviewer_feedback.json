@@ -1,0 +1,23 @@
+{
+  "iteration": 1,
+  "score": 55,
+  "gaps": [
+    {
+      "type": "requirement_gap",
+      "detail": "Requirements section (req) scores 0/30 — the report is missing the full requirements analysis section entirely"
+    },
+    {
+      "type": "query_invalid",
+      "detail": "At least 1 SQL query was not validated via execute_query, causing SQL category to score 0/15"
+    }
+  ],
+  "priority_fixes": [
+    "Add a complete Requirements section to the report to recover 30 points",
+    "Validate all SQL queries by running them through execute_query to recover 15 points"
+  ],
+  "categories_ok": [
+    "fields: 25/25",
+    "patterns: 20/20",
+    "questions: 10/10"
+  ]
+}
