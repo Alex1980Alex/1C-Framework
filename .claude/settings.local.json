@@ -397,7 +397,8 @@
       "Bash(wmic path:*)",
       "Bash(nvidia-smi)",
       "mcp__edt-mcp__find_references",
-      "Bash(git -C:*)"
+      "Bash(git -C:*)",
+      "mcp__edt-mcp__update_database"
     ]
   },
   "enableAllProjectMcpServers": true,
