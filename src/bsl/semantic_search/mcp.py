@@ -695,17 +695,20 @@ def _get_hybrid_pipeline():
         except Exception:
             qdrant = None
 
-        # E5-large embedder (fast, 1024d) — wraps sentence-transformers
+        # E5-large embedder via FastEmbed ONNX (~3s load vs ~40s for PyTorch)
         embedder = None
         if qdrant:
             try:
-                from sentence_transformers import SentenceTransformer
+                import warnings
+                warnings.filterwarnings("ignore", category=UserWarning)
+                from fastembed import TextEmbedding
 
                 class _E5Embedder:
                     def __init__(self):
-                        self._model = SentenceTransformer("intfloat/multilingual-e5-large")
+                        self._model = TextEmbedding("intfloat/multilingual-e5-large")
                     def embed_query(self, text: str) -> list[float]:
-                        return self._model.encode(f"query: {text}").tolist()
+                        results = list(self._model.query_embed(text))
+                        return results[0].tolist()
 
                 embedder = _E5Embedder()
             except ImportError:
