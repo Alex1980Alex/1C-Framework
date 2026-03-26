@@ -398,7 +398,8 @@
       "Bash(nvidia-smi)",
       "mcp__edt-mcp__find_references",
       "Bash(git -C:*)",
-      "mcp__edt-mcp__update_database"
+      "mcp__edt-mcp__update_database",
+      "Bash(submodule_path=\"D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\")"
     ]
   },
   "enableAllProjectMcpServers": true,
