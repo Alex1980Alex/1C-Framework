@@ -402,7 +402,8 @@
       "Bash(submodule_path=\"D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\")",
       "Bash(wmic cpu:*)",
       "Bash(wmic baseboard:*)",
-      "Bash(wmic diskdrive:*)"
+      "Bash(wmic diskdrive:*)",
+      "Bash(wmic computersystem:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
