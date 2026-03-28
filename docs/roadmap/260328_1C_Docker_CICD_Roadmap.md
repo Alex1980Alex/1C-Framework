@@ -2,9 +2,26 @@
 
 ## Адаптированная под текущий ПК и фреймворк D:\1С-Framework
 
-**Версия:** 2.0 (2026-03-28)
+**Версия:** 2.1 (2026-03-28)
 **Конфигурация:** УправлениеТранспортомНаПЛК v2026.1.1.0 (91 справочник, 27 документов, 190 регистров сведений)
 **Подход:** Windows-нативный CI (GitHub Actions + Self-Hosted Runner)
+
+---
+
+## Прогресс реализации
+
+| Фаза | Описание | Статус | Дата |
+|------|----------|:------:|------|
+| **Фаза 0** | Быстрые победы | ✅ **ВЫПОЛНЕНО** | 2026-03-28 |
+| 0.1 | Allure CLI v2.38.1 | ✅ | 2026-03-28 |
+| 0.2 | BSL Language Server v0.22.0 (Java 17) | ✅ | 2026-03-28 |
+| 0.3 | Docker cleanup (92→20 ГБ, -73 ГБ) | ✅ | 2026-03-28 |
+| 0.4 | BSL LS анализ: 2027 файлов, 55030 диагностик | ✅ | 2026-03-28 |
+| 0.5 | Каталоги CI (.github/workflows/, build/) | ✅ | 2026-03-28 |
+| **Фаза 1** | Статический анализ (SonarQube) | ⬜ TODO | — |
+| **Фаза 2** | GitHub Actions Self-Hosted Runner | ⬜ TODO | — |
+| **Фаза 3** | Полное тестирование (YAxUnit/BDD/Coverage) | ⬜ TODO | — |
+| **Фаза 4** | Docker-образы 1С (требует DEB) | ⬜ Будущее | — |
 
 ---
 
@@ -88,14 +105,14 @@ GitHub PR: ✅/❌ статусы + комментарий с результат
 
 ### 1.3. Что нужно установить
 
-| Компонент | Сложность | Действие |
-|-----------|:---------:|----------|
-| BSL Language Server | 🟢 Низкая | Скачать JAR с GitHub → `tools\bsl-ls\` |
-| Allure CLI | 🟢 Низкая | `npm install -g allure-commandline` |
-| GitHub Actions Runner | 🟢 Низкая | Скачать, зарегистрировать как Windows Service |
-| SonarQube | 🟡 Средняя | Docker-контейнер + BSL-плагин |
-| sonar-scanner CLI | 🟡 Средняя | Скачать ZIP, добавить в PATH |
-| Coverage41C | 🟡 Средняя | Скачать JAR, настроить dbgs |
+| Компонент | Сложность | Действие | Статус |
+|-----------|:---------:|----------|:------:|
+| BSL Language Server | 🟢 Низкая | Скачать JAR с GitHub → `tools\bsl-ls\` | ✅ Выполнено (v0.22.0) |
+| Allure CLI | 🟢 Низкая | `npm install -g allure-commandline` | ✅ Выполнено (v2.38.1) |
+| GitHub Actions Runner | 🟢 Низкая | Скачать, зарегистрировать как Windows Service | ⬜ TODO |
+| SonarQube | 🟡 Средняя | Docker-контейнер + BSL-плагин | ⬜ TODO |
+| sonar-scanner CLI | 🟡 Средняя | Скачать ZIP, добавить в PATH | ⬜ TODO |
+| Coverage41C | 🟡 Средняя | Скачать JAR, настроить dbgs | ⬜ TODO |
 
 ### 1.4. Системные требования vs текущее железо
 
@@ -103,26 +120,27 @@ GitHub PR: ✅/❌ статусы + комментарий с результат
 |--------|-----------------|-------------------|:------:|
 | CPU | 4+ ядра | AMD Ryzen 7 5700G (8 ядер / 16 потоков) | ✅ |
 | RAM | 16 ГБ мин, 32 ГБ рек. | 32 ГБ DDR4 | ✅ |
-| Диск C: | 50+ ГБ свободно | 256 ГБ NVMe, 53 ГБ свободно | ⚠️ Docker занимает 93 ГБ |
+| Диск C: | 50+ ГБ свободно | 256 ГБ NVMe, ~126 ГБ свободно после очистки | ✅ Docker очищен (92→20 ГБ) |
 | Диск D: | 100+ ГБ | 2 ТБ NVMe ADATA LEGEND 960, 155 ГБ свободно | ✅ |
 | Windows | 10/11 Pro/Enterprise | Windows 11 IoT Enterprise | ✅ |
 
-**Рекомендация:** Перенести WSL2 дистрибутив Docker на диск D: и выполнить `docker system prune` (77 ГБ reclaimable).
+**Выполнено (2026-03-28):** `docker image prune -a -f` + `docker builder prune -a -f` — освобождено **73 ГБ** (142→11 образов, 92.85→20.17 ГБ). Рекомендация на будущее: перенести WSL2 дистрибутив Docker на диск D:.
 
 ---
 
 ## Часть 2. Фазы реализации
 
-### Фаза 0: Быстрые победы (1 день)
+### Фаза 0: Быстрые победы (1 день) ✅ ВЫПОЛНЕНО 2026-03-28
 
-#### 0.1 Установка Allure CLI
+#### 0.1 Установка Allure CLI ✅
 
 ```powershell
 npm install -g allure-commandline
 allure --version
+# Результат: 2.38.1
 ```
 
-#### 0.2 Скачивание BSL Language Server
+#### 0.2 Скачивание BSL Language Server ✅
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "D:\1С-Framework\tools\bsl-ls"
@@ -133,34 +151,62 @@ Invoke-WebRequest -Uri $bslUrl -OutFile "D:\1С-Framework\tools\bsl-ls\bsl-langu
 
 # Проверка
 java -jar "D:\1С-Framework\tools\bsl-ls\bsl-language-server.jar" --version
+# Результат: version: 0.22.0 (90 МБ, совместим с Java 17)
 ```
 
-#### 0.3 Очистка Docker (освобождение ~77 ГБ)
+> **Важно:** BSL LS v0.29.0 требует Java 21 (class file version 65.0). На текущем ПК Java 17 → используем v0.22.0.
+
+#### 0.3 Очистка Docker ✅
 
 ```powershell
-# Проверка текущего состояния
-docker system df
-
-# Очистка неиспользуемых образов (НЕ удаляет активные контейнеры)
 docker image prune -a -f
-
-# Проверка результата
+docker builder prune -a -f
 docker system df
+# Результат: 142→11 образов, 92.85→20.17 ГБ, освобождено ~73 ГБ
 ```
 
-#### 0.4 Первый запуск BSL LS анализа
+#### 0.4 Первый запуск BSL LS анализа ✅
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "D:\1С-Framework\build\bsl-report"
 
 java -jar "D:\1С-Framework\tools\bsl-ls\bsl-language-server.jar" `
     --analyze `
-    --srcDir "D:\1С-Framework\src\bsl" `
+    --srcDir "D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src" `
     --reporter json `
     --outputDir "D:\1С-Framework\build\bsl-report"
 ```
 
-#### 0.5 Создание структуры каталогов
+**Результаты первого анализа (2026-03-28):**
+
+| Метрика | Значение |
+|---------|----------|
+| Файлов проанализировано | 2 027 |
+| Время анализа | 40 секунд |
+| Всего диагностик | **55 030** |
+| Error | 810 |
+| Warning | 17 515 |
+| Information | 20 502 |
+| Hint | 16 203 |
+
+**Top-10 правил:**
+
+| Правило | Количество | Описание |
+|---------|-----------|----------|
+| LineLength | 10 148 | Длина строки превышает лимит |
+| MissingSpace | 6 217 | Пропущен пробел |
+| MissingParameterDescription | 4 850 | Нет описания параметра |
+| Typo | 3 840 | Опечатка |
+| UsingServiceTag | 3 591 | Использование служебных тегов |
+| DuplicateStringLiteral | 2 532 | Дублирование строковых литералов |
+| IfElseIfEndsWithElse | 2 391 | Отсутствует ветка Иначе |
+| MagicNumber | 2 379 | Магические числа |
+| NestedFunctionInParameters | 2 246 | Вложенные функции в параметрах |
+| CognitiveComplexity | 2 182 | Высокая когнитивная сложность |
+
+> **Путь к отчёту:** `build/bsl-report/bsl-json.json` (66 МБ)
+
+#### 0.5 Создание структуры каталогов ✅
 
 ```powershell
 $dirs = @(
