@@ -1,1275 +1,892 @@
-# Дорожная карта: CI/CD для 1С с Docker — от коммита до продуктива
+# Дорожная карта: CI/CD для 1С — от коммита до продуктива
 
-## Полная техническая документация для разработчика 1С на Windows
+## Адаптированная под текущий ПК и фреймворк D:\1С-Framework
 
----
-
-## Часть 1. Архитектура конвейера
-
-### 1.1. Общая схема: что происходит от нажатия git push до обновления рабочей базы
-
-Весь конвейер непрерывной интеграции и доставки (CI/CD) для 1С можно описать как цепочку автоматических действий, которые запускаются каждый раз, когда разработчик фиксирует изменения в системе контроля версий.
-
-**Полный жизненный цикл изменения:**
-
-```
-Разработчик (EDT/Конфигуратор)
-    │
-    ▼
-Git-репозиторий (GitLab/GitHub)
-    │ ← триггер: push / merge request
-    ▼
-CI-сервер (GitLab CI / Jenkins)
-    │ ← читает .gitlab-ci.yml / Jenkinsfile
-    ▼
-Docker Runner (поднимает контейнер из образа)
-    │
-    ╔══════════════════════════════════════════════════╗
-    ║  Docker-контейнер (изолированная среда)          ║
-    ║                                                  ║
-    ║  ┌─────────────────────────────────────────┐     ║
-    ║  │ Платформа 1С 8.3.x                      │     ║
-    ║  │ OneScript + opm                          │     ║
-    ║  │ vanessa-runner                           │     ║
-    ║  │ BSL Language Server                      │     ║
-    ║  │ PostgreSQL (для временных ИБ)            │     ║
-    ║  │ Xvfb (виртуальный дисплей для тестов)    │     ║
-    ║  └─────────────────────────────────────────┘     ║
-    ║                                                  ║
-    ║  Этап 1: Конвертация исходников (EDT → XML)      ║
-    ║  Этап 2: Сборка информационной базы (XML → CF)   ║
-    ║  Этап 3: Синтаксическая проверка платформой      ║
-    ║  Этап 4: Статический анализ (BSL LS → SonarQube) ║
-    ║  Этап 5: Модульные тесты (xUnit / YAxUnit)       ║
-    ║  Этап 6: Дымовые тесты (Vanessa ADD)             ║
-    ║  Этап 7: Сценарные BDD-тесты (Vanessa Automation)║
-    ║  Этап 8: Замер покрытия кода (Coverage41C)        ║
-    ╚══════════════════════════════════════════════════╝
-    │
-    ▼ Артефакты: CF-файл, отчёты SonarQube, Allure, покрытие
-    │
-    ▼
-Деплой на тестовую базу (автоматический)
-    │ ← проверка: тесты на тестовой базе прошли?
-    ▼
-Деплой на продуктивную базу (по кнопке или автоматический)
-```
-
-### 1.2. Что находится внутри Docker-образа
-
-Docker-образ — это «снимок» файловой системы Linux со всем установленным ПО. Он описывается текстовым файлом Dockerfile. Для конвейера 1С типичный образ содержит следующие компоненты:
-
-**Базовый слой** — Ubuntu 22.04 или Debian 11 (легковесная Linux-система).
-
-**Платформа 1С** — сервер и/или клиент 1С:Предприятия нужной версии, установленные из DEB-пакетов. Файлы скачиваются с releases.1c.ru по учётным данным партнёра/клиента. Ключевые пакеты: `1c-enterprise-8.3.x.y-common`, `1c-enterprise-8.3.x.y-server`, `1c-enterprise-8.3.x.y-client`. Клиент нужен для запуска тестов с GUI.
-
-**PostgreSQL** — СУБД для создания временных информационных баз. Используется сборка от PostgresPro с патчами для 1С (поддержка кластерного индекса, коллаций и т.д.). Может быть в том же контейнере или в отдельном.
-
-**OneScript** — скриптовый движок с синтаксисом 1С. Устанавливается из DEB-пакета или через скрипт установки. После установки через пакетный менеджер `opm` доводятся библиотеки: `vanessa-runner`, `gitsync`, `deployka` и другие.
-
-**BSL Language Server** — Java-приложение (JAR-файл) для статического анализа кода 1С. Требует JRE 11+.
-
-**EDT (опционально)** — среда разработки 1С, нужна если проект хранится в формате EDT (а не конфигуратора). Используется headless-режим для конвертации исходников.
-
-**Xvfb** — виртуальный фреймбуфер (эмулятор дисплея). Обязателен для сценарных тестов, потому что Vanessa Automation работает с GUI 1С — ей нужен «экран», даже если физического монитора нет.
-
-### 1.3. Системные требования для Windows-машины разработчика
-
-Для полноценной работы конвейера на локальном ПК с Windows 10/11:
-
-**Оперативная память.** Минимум 16 ГБ, рекомендуется 32 ГБ. Распределение при полной нагрузке: WSL2 (подсистема Linux для Docker) — 4–6 ГБ; контейнер с 1С и PostgreSQL — 2–4 ГБ на каждый; SonarQube — 2–3 ГБ; сама Windows и IDE — 4–6 ГБ. При 32 ГБ можно комфортно запускать 2–3 контейнера параллельно.
-
-**Диск.** SSD обязателен — образы 1С весят 3–8 ГБ каждый, а сборка конфигурации активно работает с диском. На HDD процесс сборки может занять в 5–10 раз больше времени. Свободного места нужно минимум 50 ГБ (образы + временные базы + кэш Docker).
-
-**Процессор.** 4+ ядра. Виртуализация (VT-x/AMD-V) должна быть включена в BIOS — без неё WSL2 не запустится.
-
-**Версия Windows.** Windows 10 версии 2004+ или Windows 11. Необходима поддержка WSL2.
+**Версия:** 2.0 (2026-03-28)
+**Конфигурация:** УправлениеТранспортомНаПЛК v2026.1.1.0 (91 справочник, 27 документов, 190 регистров сведений)
+**Подход:** Windows-нативный CI (GitHub Actions + Self-Hosted Runner)
 
 ---
 
-## Часть 2. Пошаговая установка и настройка
+## Содержание
 
-### 2.1. Этап 1: Установка Docker Desktop и WSL2
+1. [Текущее состояние и архитектура конвейера](#часть-1-текущее-состояние-и-архитектура-конвейера)
+2. [Фазы реализации](#часть-2-фазы-реализации)
+3. [Архитектура тестирования: 3 слоя логики 1С](#часть-3-архитектура-тестирования-3-слоя-логики-1с)
+4. [Типичные проблемы и решения](#часть-4-типичные-проблемы-и-решения-windows-специфичные)
+5. [Будущее развитие — Docker-образы 1С](#часть-5-будущее-развитие--docker-образы-1с)
+6. [Ресурсы](#часть-6-ресурсы)
 
-Docker на Windows работает через WSL2 (Windows Subsystem for Linux) — легковесную виртуальную машину с ядром Linux, встроенную в Windows. Docker Desktop при установке сам предложит включить WSL2.
+---
 
-**Шаг 1.** Включите компоненты Windows. Откройте PowerShell от администратора:
+## Часть 1. Текущее состояние и архитектура конвейера
+
+### 1.1. Общая архитектура конвейера
+
+Архитектура **гибридная**: оркестрация и вспомогательные сервисы (SonarQube, Allure) работают в Docker, а сборка, анализ кода и тестирование выполняются в нативной среде Windows.
+
+**Схема процесса:**
+
+```
+git push / PR
+    │
+    ▼
+GitHub Actions (облако)
+    │ ← читает .github/workflows/ci-1c.yml
+    ▼
+Self-Hosted Runner (этот ПК, Windows 11)
+    │
+    ╔══════════════════════════════════════════════════════╗
+    ║  Нативное окружение Windows                          ║
+    ║                                                      ║
+    ║  ┌─────────────────────────────────────────────┐     ║
+    ║  │ 1С 8.3.27.1859 (x64)                        │     ║
+    ║  │ OneScript 2.0.0 + vanessa-runner 2.6.0       │     ║
+    ║  │ BSL Language Server (Java 17)                │     ║
+    ║  │ MS SQL 2022 (localhost)                       │     ║
+    ║  └─────────────────────────────────────────────┘     ║
+    ║                                                      ║
+    ║  Этап 1: Статический анализ (BSL LS → SonarQube)     ║
+    ║  Этап 2: Модульные тесты (YAxUnit — Слой 3)         ║
+    ║  Этап 3: Дымовые тесты (Vanessa ADD — Smoke)        ║
+    ║  Этап 4: Сценарные BDD-тесты (Vanessa Automation)   ║
+    ║  Этап 5: Генерация отчёта (Allure)                   ║
+    ╚══════════════════════════════════════════════════════╝
+    │
+    ▼ Артефакты: SonarQube дашборд, JUnit XML, Allure HTML
+    │
+    ▼
+GitHub PR: ✅/❌ статусы + комментарий с результатами
+```
+
+**Почему Windows-нативный, а не Docker для 1С:**
+
+1. **Нет Linux-пакетов 1С** — DEB-пакеты отсутствуют, Docker-образ с 1С собрать невозможно.
+2. **GUI-тесты стабильнее** — Vanessa Automation работает с тонким клиентом 1С напрямую, без эмуляции дисплея (Xvfb).
+3. **Лицензирование** — HASP-ключи и сетевые лицензии доступны нативно.
+4. **Производительность** — нет накладных расходов на виртуализацию ОС для тяжёлой конфигурации (190 регистров).
+
+### 1.2. Текущее состояние: что готово
+
+| Компонент | Статус | Версия / Расположение |
+|-----------|:------:|----------------------|
+| ОС и WSL2 | ✅ | Windows 11 IoT Enterprise, WSL2 (Ubuntu + docker-desktop) |
+| Docker Desktop | ✅ | Работает, 13 контейнеров |
+| Платформа 1С | ✅ | 8.3.27.1859 (x64), `C:\Program Files\1cv8\8.3.27.1859\bin` |
+| 1С EDT | ✅ | `C:\Program Files\1C\1CE` |
+| Git | ✅ | 2.53.0 + GitHub CLI 2.63.2 |
+| Java | ✅ | OpenJDK 17.0.13 (Zulu) |
+| OneScript | ✅ | 2.0.0, `C:\Tools\OneScript\bin\oscript.exe` |
+| vanessa-runner | ✅ | v2.6.0, `C:\Tools\OneScript\lib\vanessa-runner\` |
+| YAxUnit | ✅ | v25.12, 690 тестов (80.3% pass), `tools\vanessa\YAxUnit-25.12.cfe` |
+| Smoke (Vanessa ADD) | ✅ | v0.2.1, `tools\vanessa\Smoke-25.12.cfe` |
+| Vanessa Automation | ✅ | v1.2.043.1, `tools\vanessa\vanessa-automation-single.epf` |
+| BDD features | ✅ | 3 файла в `features\` |
+| BDD скрипт запуска | ✅ | `tools\vanessa\run-bdd.ps1` |
+| MS SQL | ✅ | 2022, БД `testdb1c` |
+| Qdrant, Neo4j, Prometheus, Grafana | ✅ | Docker-контейнеры |
+
+### 1.3. Что нужно установить
+
+| Компонент | Сложность | Действие |
+|-----------|:---------:|----------|
+| BSL Language Server | 🟢 Низкая | Скачать JAR с GitHub → `tools\bsl-ls\` |
+| Allure CLI | 🟢 Низкая | `npm install -g allure-commandline` |
+| GitHub Actions Runner | 🟢 Низкая | Скачать, зарегистрировать как Windows Service |
+| SonarQube | 🟡 Средняя | Docker-контейнер + BSL-плагин |
+| sonar-scanner CLI | 🟡 Средняя | Скачать ZIP, добавить в PATH |
+| Coverage41C | 🟡 Средняя | Скачать JAR, настроить dbgs |
+
+### 1.4. Системные требования vs текущее железо
+
+| Ресурс | Требования CI/CD | Текущее состояние | Статус |
+|--------|-----------------|-------------------|:------:|
+| CPU | 4+ ядра | AMD Ryzen 7 5700G (8 ядер / 16 потоков) | ✅ |
+| RAM | 16 ГБ мин, 32 ГБ рек. | 32 ГБ DDR4 | ✅ |
+| Диск C: | 50+ ГБ свободно | 256 ГБ NVMe, 53 ГБ свободно | ⚠️ Docker занимает 93 ГБ |
+| Диск D: | 100+ ГБ | 2 ТБ NVMe ADATA LEGEND 960, 155 ГБ свободно | ✅ |
+| Windows | 10/11 Pro/Enterprise | Windows 11 IoT Enterprise | ✅ |
+
+**Рекомендация:** Перенести WSL2 дистрибутив Docker на диск D: и выполнить `docker system prune` (77 ГБ reclaimable).
+
+---
+
+## Часть 2. Фазы реализации
+
+### Фаза 0: Быстрые победы (1 день)
+
+#### 0.1 Установка Allure CLI
 
 ```powershell
-wsl --install
+npm install -g allure-commandline
+allure --version
 ```
 
-Эта команда включит WSL2 и установит Ubuntu. После перезагрузки создайте пользователя Linux (логин и пароль).
-
-**Шаг 2.** Скачайте и установите Docker Desktop с docker.com. При установке убедитесь, что опция «Use WSL 2 based engine» включена. После установки Docker Desktop появится в системном трее.
-
-**Шаг 3.** Проверьте установку. Откройте PowerShell (обычный, не от администратора):
+#### 0.2 Скачивание BSL Language Server
 
 ```powershell
-docker --version
-docker run hello-world
+New-Item -ItemType Directory -Force -Path "D:\1С-Framework\tools\bsl-ls"
+
+$bslVersion = "0.22.0"
+$bslUrl = "https://github.com/1c-syntax/bsl-language-server/releases/download/v$bslVersion/bsl-language-server-$bslVersion-exec.jar"
+Invoke-WebRequest -Uri $bslUrl -OutFile "D:\1С-Framework\tools\bsl-ls\bsl-language-server.jar"
+
+# Проверка
+java -jar "D:\1С-Framework\tools\bsl-ls\bsl-language-server.jar" --version
 ```
 
-Если вы увидели сообщение «Hello from Docker!» — всё работает.
-
-**Шаг 4.** Настройте ресурсы. В Docker Desktop: Settings → Resources → WSL Integration — убедитесь, что ваш дистрибутив Ubuntu включён. В разделе Resources → Advanced можно ограничить потребление памяти (рекомендуется выделить 8–12 ГБ из ваших 32 ГБ).
-
-**Шаг 5.** Установите Portainer для визуального управления контейнерами:
+#### 0.3 Очистка Docker (освобождение ~77 ГБ)
 
 ```powershell
-docker volume create portainer_data
-docker run -d -p 9443:9443 --name portainer --restart=always ^
-  -v /var/run/docker.sock:/var/run/docker.sock ^
-  -v portainer_data:/data portainer/portainer-ce:latest
+# Проверка текущего состояния
+docker system df
+
+# Очистка неиспользуемых образов (НЕ удаляет активные контейнеры)
+docker image prune -a -f
+
+# Проверка результата
+docker system df
 ```
 
-Откройте https://localhost:9443 — появится веб-интерфейс для управления контейнерами.
-
-### 2.2. Этап 2: Установка Git и базовые навыки
-
-**Шаг 1.** Скачайте и установите Git for Windows с git-scm.com. При установке оставьте настройки по умолчанию.
-
-**Шаг 2.** Настройте Git (PowerShell):
+#### 0.4 Первый запуск BSL LS анализа
 
 ```powershell
-git config --global user.name "Ваше Имя"
-git config --global user.email "your@email.com"
+New-Item -ItemType Directory -Force -Path "D:\1С-Framework\build\bsl-report"
+
+java -jar "D:\1С-Framework\tools\bsl-ls\bsl-language-server.jar" `
+    --analyze `
+    --srcDir "D:\1С-Framework\src\bsl" `
+    --reporter json `
+    --outputDir "D:\1С-Framework\build\bsl-report"
 ```
 
-**Шаг 3.** Создайте тестовый репозиторий на GitHub (github.com → New repository). Склонируйте его:
+#### 0.5 Создание структуры каталогов
 
 ```powershell
-git clone https://github.com/ваш-логин/test-repo.git
-cd test-repo
+$dirs = @(
+    "D:\1С-Framework\.github\workflows",
+    "D:\1С-Framework\build\bsl-report",
+    "D:\1С-Framework\build\reports",
+    "D:\1С-Framework\build\allure-results"
+)
+$dirs | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ }
 ```
 
-**Шаг 4.** Освойте базовый цикл работы:
+---
 
-```powershell
-# Создайте файл
-echo "Hello" > test.txt
+### Фаза 1: Статический анализ (2-3 дня)
 
-# Добавьте в отслеживание
-git add test.txt
+#### 1.1 SonarQube в Docker
 
-# Зафиксируйте изменение
-git commit -m "Первый коммит"
-
-# Отправьте на сервер
-git push
-```
-
-**Шаг 5.** Базовые команды Linux через WSL2. Откройте терминал Ubuntu (из меню Пуск):
-
-```bash
-# Навигация
-cd /home           # перейти в папку
-ls -la             # список файлов с подробностями
-pwd                # текущая директория
-
-# Работа с файлами
-cat file.txt       # показать содержимое файла
-mkdir mydir        # создать папку
-cp file1 file2     # копировать файл
-rm file.txt        # удалить файл
-
-# Установка пакетов
-sudo apt update              # обновить список пакетов
-sudo apt install -y curl     # установить программу
-```
-
-### 2.3. Этап 3: Сборка Docker-образа с платформой 1С
-
-Это ключевой этап — вы создадите образ, содержащий платформу 1С, пригодный для использования в CI/CD.
-
-**Шаг 1.** Скачайте дистрибутив платформы 1С для Linux (DEB-пакеты) с https://releases.1c.ru. Вам нужны файлы: `1c-enterprise-8.3.x.y-common_amd64.deb`, `1c-enterprise-8.3.x.y-server_amd64.deb`, `1c-enterprise-8.3.x.y-client_amd64.deb`.
-
-**Шаг 2.** Склонируйте репозиторий с Dockerfile:
-
-```powershell
-# Вариант А: репозиторий от Первого Бита (более полная коллекция образов)
-git clone https://github.com/firstBitMarksistskaya/onec-docker.git
-
-# Вариант Б: экосистема thedemoncat (модульные образы, публикуются в ghcr.io)
-git clone https://github.com/thedemoncat/onec-base.git
-```
-
-**Шаг 3.** Поместите скачанные DEB-пакеты в папку `distr/` (для onec-docker) и запустите сборку:
-
-```powershell
-# Пример для onec-docker (Первый Бит)
-cd onec-docker
-docker build -t onec-server:8.3.25 -f server/Dockerfile .
-docker build -t onec-client:8.3.25 -f client/Dockerfile .
-```
-
-Сборка займёт 5–15 минут. На выходе вы получите Docker-образы с установленной платформой.
-
-**Шаг 4.** Проверьте, что образ работает:
-
-```powershell
-docker run --rm onec-client:8.3.25 /opt/1cv8/x86_64/8.3.25.1257/1cv8 --version
-```
-
-Если отобразилась версия платформы — образ собран корректно.
-
-### 2.4. Этап 4: Статический анализ кода (SonarQube + BSL Language Server)
-
-Статический анализ — это проверка кода без его запуска. BSL Language Server анализирует код 1С по 150+ правилам и находит типичные ошибки: запросы в цикле, избыточную вложенность, высокую цикломатическую сложность, неиспользуемые переменные и многое другое.
-
-**Шаг 1.** Запустите SonarQube с предустановленными плагинами для 1С. Создайте файл `docker-compose.yml`:
+Добавить в существующий `docker-compose.yml` или создать отдельный:
 
 ```yaml
-version: '3.8'
-
 services:
   sonarqube:
     image: sonarqube:lts-community
-    container_name: sonarqube
+    container_name: sonarqube-1c
     ports:
       - "9000:9000"
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     volumes:
       - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
+    mem_limit: 4g
 
 volumes:
   sonarqube_data:
-  sonarqube_logs:
   sonarqube_extensions:
 ```
 
-Запустите:
+```powershell
+docker compose up -d sonarqube
+# Дождаться запуска (~2-3 минуты), открыть http://localhost:9000
+# Логин: admin / admin → сменить пароль
+```
+
+#### 1.2 Установка BSL-плагина для SonarQube
 
 ```powershell
-docker compose up -d
+$pluginVersion = "0.15.2"
+$pluginUrl = "https://github.com/1c-syntax/sonar-bsl-plugin-community/releases/download/v$pluginVersion/sonar-bsl-plugin-community-$pluginVersion.jar"
+
+Invoke-WebRequest -Uri $pluginUrl -OutFile "sonar-bsl-plugin.jar"
+docker cp sonar-bsl-plugin.jar sonarqube-1c:/opt/sonarqube/extensions/plugins/
+docker restart sonarqube-1c
 ```
 
-Откройте http://localhost:9000 (логин: admin, пароль: admin).
+#### 1.3 Конфигурация sonar-project.properties
 
-**Шаг 2.** Установите плагин для 1С. Скачайте JAR-файл sonar-bsl-plugin-community из релизов https://github.com/1c-syntax/sonar-bsl-plugin-community/releases и поместите в папку extensions/plugins контейнера:
+Файл `D:\1С-Framework\sonar-project.properties`:
+
+```properties
+sonar.projectKey=upravlenie-transportom-plk
+sonar.projectName=УправлениеТранспортомНаПЛК
+sonar.projectVersion=2026.1.1.0
+
+sonar.sources=src/bsl
+sonar.sourceEncoding=UTF-8
+sonar.language=bsl
+
+sonar.bsl.languageserver.reportPath=build/bsl-report/bsl-ls-report.json
+
+# Будущее: покрытие кода
+# sonar.coverageReportPaths=build/reports/coverage.xml
+```
+
+#### 1.4 Установка sonar-scanner CLI
 
 ```powershell
-docker cp sonar-bsl-plugin-community-0.x.x.jar sonarqube:/opt/sonarqube/extensions/plugins/
-docker restart sonarqube
+$scannerVersion = "6.2.1.4610"
+$scannerUrl = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$scannerVersion-windows-x64.zip"
+
+Invoke-WebRequest -Uri $scannerUrl -OutFile "D:\1С-Framework\tools\sonar-scanner.zip"
+Expand-Archive "D:\1С-Framework\tools\sonar-scanner.zip" -DestinationPath "D:\1С-Framework\tools" -Force
+
+# Добавить в PATH
+[Environment]::SetEnvironmentVariable("Path",
+    $env:Path + ";D:\1С-Framework\tools\sonar-scanner-$scannerVersion-windows-x64\bin", "User")
 ```
 
-**Шаг 3.** Скачайте BSL Language Server (JAR-файл) из https://github.com/1c-syntax/bsl-language-server/releases.
-
-**Шаг 4.** Запустите анализ вашего кода 1С (исходники в формате XML или BSL-файлы):
+#### 1.5 Полный цикл анализа
 
 ```powershell
-java -jar bsl-language-server.jar --analyze ^
-  --srcDir "C:\path\to\your\1c\sources" ^
-  --reporter json
+# Скрипт: scripts/run-sonar-analysis.ps1
+
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$ProjectRoot = "D:\1С-Framework"
+
+# 1. BSL Language Server → JSON отчёт
+Write-Host "[1/2] BSL Language Server..." -ForegroundColor Cyan
+java -jar "$ProjectRoot\tools\bsl-ls\bsl-language-server.jar" `
+    --analyze `
+    --srcDir "$ProjectRoot\src\bsl" `
+    --reporter json `
+    --outputDir "$ProjectRoot\build\bsl-report"
+
+# 2. Sonar Scanner → отправка в SonarQube
+Write-Host "[2/2] Sonar Scanner..." -ForegroundColor Cyan
+sonar-scanner `
+    -Dsonar.host.url="http://localhost:9000" `
+    -Dsonar.token="$env:SONAR_TOKEN"
+
+Write-Host "Отчёт: http://localhost:9000/dashboard?id=upravlenie-transportom-plk" -ForegroundColor Green
 ```
-
-На выходе — JSON-файл с результатами, который загружается в SonarQube.
-
-**Что вы увидите в SonarQube.** Дашборд с метриками: количество багов, code smells, дублирование кода, покрытие тестами, цикломатическая сложность. Каждая проблема с описанием, указанием файла и строки, рекомендацией по исправлению.
-
-### 2.5. Этап 5: Автоматическая сборка релиза (CI/CD)
-
-На этом этапе вы настраиваете полноценный конвейер: при каждом push в Git автоматически собирается CF-файл, прогоняется анализ и формируются артефакты.
-
-**Вариант А: GitLab CI (рекомендуется для начала).**
-
-Зарегистрируйтесь на gitlab.com (бесплатный аккаунт включает 400 минут CI/CD в месяц) или разверните GitLab CE локально в Docker:
-
-```powershell
-docker run -d --name gitlab ^
-  -p 8443:443 -p 8080:80 -p 2222:22 ^
-  -v gitlab_config:/etc/gitlab ^
-  -v gitlab_logs:/var/log/gitlab ^
-  -v gitlab_data:/var/opt/gitlab ^
-  gitlab/gitlab-ce:latest
-```
-
-**Шаг 1.** Установите и зарегистрируйте GitLab Runner:
-
-```powershell
-docker run -d --name gitlab-runner --restart always ^
-  -v /var/run/docker.sock:/var/run/docker.sock ^
-  -v gitlab-runner-config:/etc/gitlab-runner ^
-  gitlab/gitlab-runner:latest
-```
-
-Зарегистрируйте раннер с Docker executor:
-
-```powershell
-docker exec -it gitlab-runner gitlab-runner register ^
-  --url "https://gitlab.com" ^
-  --token "ваш-токен-из-настроек-проекта" ^
-  --executor "docker" ^
-  --docker-image "onec-client:8.3.25"
-```
-
-**Шаг 2.** Создайте файл `.gitlab-ci.yml` в корне вашего репозитория:
-
-```yaml
-stages:
-  - build
-  - analyze
-  - test
-  - deploy
-
-variables:
-  ONEC_VERSION: "8.3.25.1257"
-
-# ────────────────────────────────────────────
-# Этап 1: Сборка CF из исходников
-# ────────────────────────────────────────────
-build_cf:
-  stage: build
-  image: onec-client:${ONEC_VERSION}
-  script:
-    # Конвертация из формата EDT в формат конфигуратора (если проект на EDT)
-    - ring edt workspace export
-        --workspace-location "$CI_PROJECT_DIR"
-        --project "$CI_PROJECT_DIR"
-        --configuration-files "$CI_PROJECT_DIR/build/cf"
-
-    # Создание временной ИБ
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 CREATEINFOBASE
-        File="$CI_PROJECT_DIR/build/ib"
-
-    # Загрузка конфигурации из файлов
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F "$CI_PROJECT_DIR/build/ib"
-        /LoadConfigFromFiles "$CI_PROJECT_DIR/build/cf"
-        /UpdateDBCfg
-
-    # Выгрузка CF-файла
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F "$CI_PROJECT_DIR/build/ib"
-        /DumpCfg "$CI_PROJECT_DIR/build/1cv8.cf"
-  artifacts:
-    paths:
-      - build/1cv8.cf
-    expire_in: 7 days
-
-# ────────────────────────────────────────────
-# Этап 2: Синтаксическая проверка
-# ────────────────────────────────────────────
-syntax_check:
-  stage: analyze
-  image: onec-client:${ONEC_VERSION}
-  needs: ["build_cf"]
-  script:
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F "$CI_PROJECT_DIR/build/ib"
-        /CheckConfig
-        -Server -ThinClient -WebClient
-        -ExternalConnection -ExternalConnectionServer
-        -ThickClientOrdinaryApplication
-  allow_failure: true
-
-# ────────────────────────────────────────────
-# Этап 3: Статический анализ BSL Language Server
-# ────────────────────────────────────────────
-static_analysis:
-  stage: analyze
-  image: openjdk:17-slim
-  script:
-    - java -jar /tools/bsl-language-server.jar
-        --analyze
-        --srcDir "$CI_PROJECT_DIR/src"
-        --reporter sonarGenericIssue
-        --outputDir "$CI_PROJECT_DIR/build/bsl-reports"
-  artifacts:
-    paths:
-      - build/bsl-reports/
-    expire_in: 7 days
-
-# ────────────────────────────────────────────
-# Этап 4: Отправка результатов в SonarQube
-# ────────────────────────────────────────────
-sonarqube:
-  stage: analyze
-  image: sonarsource/sonar-scanner-cli:latest
-  needs: ["static_analysis"]
-  script:
-    - sonar-scanner
-        -Dsonar.projectKey=my-1c-project
-        -Dsonar.sources=src
-        -Dsonar.host.url=$SONAR_HOST_URL
-        -Dsonar.token=$SONAR_TOKEN
-        -Dsonar.externalIssuesReportPaths=build/bsl-reports/genericIssue.json
-
-# ────────────────────────────────────────────
-# Этап 5: Деплой на тестовую базу
-# ────────────────────────────────────────────
-deploy_test:
-  stage: deploy
-  needs: ["build_cf", "syntax_check"]
-  script:
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /S "test-server\test_db"
-        /N "Администратор" /P ""
-        /LoadCfg "$CI_PROJECT_DIR/build/1cv8.cf"
-        /UpdateDBCfg -Dynamic+
-  when: manual  # запускается по кнопке
-
-# ────────────────────────────────────────────
-# Этап 6: Деплой на продуктивную базу
-# ────────────────────────────────────────────
-deploy_prod:
-  stage: deploy
-  needs: ["deploy_test"]
-  script:
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /S "prod-server\prod_db"
-        /N "Администратор" /P "$PROD_PASSWORD"
-        /LoadCfg "$CI_PROJECT_DIR/build/1cv8.cf"
-        /UpdateDBCfg
-  when: manual
-  only:
-    - main
-```
-
-**Как это работает на практике.** Вы пишете код в EDT, коммитите в Git, нажимаете push. GitLab видит коммит, читает `.gitlab-ci.yml`, обращается к раннеру. Раннер поднимает Docker-контейнер из вашего образа с 1С. Внутри контейнера последовательно выполняются все этапы. Если этап завершился ошибкой — пайплайн останавливается, вы получаете уведомление (email, Telegram-бот, Slack). Готовый CF-файл сохраняется как артефакт сборки — его можно скачать из интерфейса GitLab.
 
 ---
 
-## Часть 3. Тестирование — полная автоматизация
+### Фаза 2: GitHub Actions Self-Hosted Runner (2-3 дня)
 
-Это самая объёмная и технически сложная часть конвейера. Тестирование в 1С включает несколько уровней, каждый из которых решает свою задачу.
+#### 2.1 Установка и регистрация Runner
 
-### 3.1. Уровни тестирования: что проверяет каждый
+```powershell
+# Создать каталог
+New-Item -ItemType Directory -Force -Path "D:\actions-runner"
+Set-Location "D:\actions-runner"
 
-**Модульные тесты (Unit tests)** проверяют отдельные функции и процедуры в изоляции. Например: правильно ли рассчитывается скидка? Корректно ли работает алгоритм распределения оплаты по заказам? Инструменты: YAxUnit (современный, рекомендуемый), xUnitFor1C (устаревший, но ещё используется).
+# Скачать (версию проверить на github.com/actions/runner/releases)
+$runnerVersion = "2.322.0"
+Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/v$runnerVersion/actions-runner-win-x64-$runnerVersion.zip" -OutFile "runner.zip"
+Expand-Archive "runner.zip" -DestinationPath "." -Force
 
-**Дымовые тесты (Smoke tests)** проверяют, что приложение в принципе работоспособно после обновления: все формы открываются, все документы проводятся, основные отчёты формируются. Это автоматическая проверка — система сама перебирает все метаданные и пытается открыть каждую форму, создать и провести каждый документ. Инструмент: Vanessa ADD (модуль smoke-тестов).
+# Регистрация (токен взять из Settings → Actions → Runners → New self-hosted runner)
+.\config.cmd `
+    --url "https://github.com/YOUR_ORG/YOUR_REPO" `
+    --token "YOUR_RUNNER_TOKEN" `
+    --name "windows-1c-runner" `
+    --labels "self-hosted,windows-11,1c,bsl" `
+    --work "D:\actions-runner\work" `
+    --runasservice
+```
 
-**Сценарные BDD-тесты (Behavior-Driven Development)** проверяют бизнес-логику по сценариям. Пишутся на языке Gherkin (русскоязычный, понятный бизнес-аналитику). Например: «Когда пользователь создаёт заказ покупателя с двумя товарами и нажимает Провести, тогда должны сформироваться движения по регистру Остатки товаров.» Инструмент: Vanessa Automation.
+#### 2.2 GitHub Secrets и переменные
 
-**Замер покрытия кода (Code Coverage)** показывает, какой процент кода 1С выполнялся во время тестов. Позволяет увидеть «мёртвый код» и непротестированные ветки. Инструмент: Coverage41C.
+**Settings → Secrets and variables → Actions → Secrets:**
 
-### 3.2. Модульное тестирование с YAxUnit
+| Секрет | Значение | Описание |
+|--------|----------|----------|
+| `USER_1C_LOGIN` | `a.terletskiy@sodru.com` | Логин 1С |
+| `USER_1C_PASS` | `****` | Пароль 1С |
+| `SONAR_TOKEN` | `****` | Токен SonarQube |
 
-YAxUnit — это современный фреймворк модульного тестирования для 1С, созданный как расширение конфигурации. Он работает внутри платформы 1С и не требует внешних инструментов для написания тестов.
+**Settings → Variables:**
 
-**Установка.** YAxUnit поставляется как расширение конфигурации (CFE-файл). Его нужно установить в вашу конфигурацию через конфигуратор или программно (vanessa-runner умеет это автоматизировать). Репозиторий: https://github.com/bia-technologies/yaxunit.
+| Переменная | Значение | Описание |
+|------------|----------|----------|
+| `SRV_1C` | `KOMPUTER` | Имя сервера 1С (НЕ localhost!) |
+| `DB_NAME` | `testdb1c` | Имя базы данных |
+| `ONEC_VERSION` | `8.3.27.1859` | Версия платформы |
 
-**Принцип работы.** Вы создаёте модули с тестами прямо в расширении конфигурации. Каждый тест — это процедура, которая вызывает тестируемый код и проверяет результат через утверждения (assertions).
+#### 2.3 GitHub Actions Workflow
 
-**Пример теста:**
+Файл `.github/workflows/ci-1c.yml`:
+
+```yaml
+name: CI 1C:Enterprise
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  ONEC_PATH: "C:\\Program Files\\1cv8\\8.3.27.1859\\bin"
+  OSCRIPT_PATH: "C:\\Tools\\OneScript\\bin\\oscript.exe"
+  PROJECT_PATH: "D:\\1С-Framework"
+  IB_CONNECTION: "/SKOMPUTER\\testdb1c"
+
+jobs:
+  # ═══════════════════════════════════════
+  # Статический анализ BSL (параллельно)
+  # ═══════════════════════════════════════
+  bsl-analysis:
+    name: BSL Analysis
+    runs-on: [self-hosted, windows-11, 1c]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run BSL Language Server
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          java -jar "${{ env.PROJECT_PATH }}\tools\bsl-ls\bsl-language-server.jar" `
+            --analyze `
+            --srcDir "${{ env.PROJECT_PATH }}\src\bsl" `
+            --reporter json `
+            --outputDir "${{ env.PROJECT_PATH }}\build\bsl-report"
+
+      - name: Run Sonar Scanner
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner `
+            -Dsonar.host.url="http://localhost:9000" `
+            -Dsonar.token="$env:SONAR_TOKEN" `
+            -Dsonar.projectBaseDir="${{ env.PROJECT_PATH }}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bsl-report
+          path: build/bsl-report/
+
+  # ═══════════════════════════════════════
+  # YAxUnit модульные тесты (параллельно)
+  # ═══════════════════════════════════════
+  yaxunit-tests:
+    name: YAxUnit Tests
+    runs-on: [self-hosted, windows-11, 1c]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run YAxUnit
+        shell: pwsh
+        env:
+          USER_1C: ${{ secrets.USER_1C_LOGIN }}
+          PASS_1C: ${{ secrets.USER_1C_PASS }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          $env:MSYS_NO_PATHCONV = "1"
+
+          & "${{ env.OSCRIPT_PATH }}" `
+            "C:\Tools\OneScript\lib\vanessa-runner\vanessa-runner.os" `
+            run `
+            --ibconnection "${{ env.IB_CONNECTION }}" `
+            --db-user "$env:USER_1C" `
+            --db-pwd "$env:PASS_1C" `
+            --command "RunUnitTests" `
+            --execute "${{ env.PROJECT_PATH }}\tools\vanessa\YAxUnit-25.12.cfe" `
+            --settings "${{ env.PROJECT_PATH }}\tools\yaxunit.json"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: yaxunit-report
+          path: build/reports/junit.xml
+
+  # ═══════════════════════════════════════
+  # Smoke тесты (параллельно)
+  # ═══════════════════════════════════════
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: [self-hosted, windows-11, 1c]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Smoke Tests
+        shell: pwsh
+        env:
+          USER_1C: ${{ secrets.USER_1C_LOGIN }}
+          PASS_1C: ${{ secrets.USER_1C_PASS }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+
+          & "${{ env.OSCRIPT_PATH }}" `
+            "C:\Tools\OneScript\lib\vanessa-runner\vanessa-runner.os" `
+            run `
+            --ibconnection "${{ env.IB_CONNECTION }}" `
+            --db-user "$env:USER_1C" `
+            --db-pwd "$env:PASS_1C" `
+            --command "RunSmokeTests" `
+            --execute "${{ env.PROJECT_PATH }}\tools\vanessa\vanessa-automation-single.epf" `
+            --settings "${{ env.PROJECT_PATH }}\tools\vanessa\vanessa.json"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: build/reports/smoke-junit.xml
+
+  # ═══════════════════════════════════════
+  # BDD тесты Vanessa Automation
+  # ═══════════════════════════════════════
+  bdd-tests:
+    name: BDD Tests
+    runs-on: [self-hosted, windows-11, 1c]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run BDD Tests
+        shell: pwsh
+        env:
+          USER_1C: ${{ secrets.USER_1C_LOGIN }}
+          PASS_1C: ${{ secrets.USER_1C_PASS }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+
+          # BDD через PowerShell скрипт (обходит проблему кириллического пути)
+          powershell -File "${{ env.PROJECT_PATH }}\tools\vanessa\run-bdd.ps1"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bdd-report
+          path: |
+            build/reports/bdd-junit.xml
+            build/reports/screenshots/
+
+  # ═══════════════════════════════════════
+  # Allure отчёт (после всех тестов)
+  # ═══════════════════════════════════════
+  allure-report:
+    name: Allure Report
+    runs-on: [self-hosted, windows-11, 1c]
+    needs: [bsl-analysis, yaxunit-tests, smoke-tests, bdd-tests]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: build/allure-results
+          merge-multiple: true
+
+      - name: Generate Allure Report
+        shell: pwsh
+        run: |
+          allure generate build/allure-results -o build/allure-report --clean
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: build/allure-report/
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Результаты CI 1С\n\n| Этап | Статус |\n|------|--------|\n| BSL Analysis | ${{ needs.bsl-analysis.result }} |\n| YAxUnit | ${{ needs.yaxunit-tests.result }} |\n| Smoke | ${{ needs.smoke-tests.result }} |\n| BDD | ${{ needs.bdd-tests.result }} |\n\nAllure отчёт доступен в артефактах сборки.`
+            })
+```
+
+---
+
+### Фаза 3: Полное тестирование (5-7 дней)
+
+#### 3.1 Написание YAxUnit тестов для бизнес-логики
+
+Ключевые тесты для модуля `гкс_ВходнойКонтрольКачества`:
 
 ```bsl
-// Модуль: ТестыРасчётаСкидок
+// Тест: каскадная блокировка по группе ТС
+Процедура ТестБлокировкаЦепочкиПоГруппе() Экспорт
 
-Процедура ТестСкидкаДляОптовогоКлиента() Экспорт
+    // Подготовка: 3 ТС одного поставщика
+    Регистрация1 = СоздатьРегистрацию("ТС-001", "Поставщик1", "Пшеница");
+    Регистрация2 = СоздатьРегистрацию("ТС-002", "Поставщик1", "Пшеница");
+    Регистрация3 = СоздатьРегистрацию("ТС-003", "Поставщик1", "Пшеница");
 
-    // Подготовка
-    Клиент = ЮТест.Данные().СоздатьЭлемент(Справочники.Контрагенты);
-    Клиент.ВидЦенообразования = Перечисления.ВидыЦенообразования.Оптовый;
-    Клиент.Записать();
+    // Действие: ТС-001 получило КачествоНеПринято
+    гкс_ВходнойКонтрольКачества.ОбработатьРезультатАнализа(
+        Регистрация1, "Клейковина",
+        Перечисления.гкс_СостоянияКачества.КачествоНеПринято);
 
-    Товар = ЮТест.Данные().СоздатьЭлемент(Справочники.Номенклатура);
-    Товар.Цена = 1000;
-    Товар.Записать();
-
-    // Действие
-    РезультатСкидки = МодульРасчётаСкидок.РассчитатьСкидку(Клиент, Товар, 100);
-
-    // Проверка
-    ЮТест.ОжидаетЧто(РезультатСкидки)
-        .Равно(10)  // ожидаем 10% скидку для оптовиков
-        .Описание("Скидка для оптового клиента должна быть 10%");
+    // Проверка: ТС-002 и ТС-003 заблокированы
+    ЮТест.ОжидаетЧто(Заблокирована(Регистрация2)).Равно(Истина)
+        .Описание("ТС-002 должно быть заблокировано каскадом");
+    ЮТест.ОжидаетЧто(Заблокирована(Регистрация3)).Равно(Истина)
+        .Описание("ТС-003 должно быть заблокировано каскадом");
 
 КонецПроцедуры
 
-Процедура ТестНетСкидкиДляРозничногоКлиента() Экспорт
+// Тест: разблокировка при принятии качества
+Процедура ТестРазблокировкаЦепочки() Экспорт
 
-    Клиент = ЮТест.Данные().СоздатьЭлемент(Справочники.Контрагенты);
-    Клиент.ВидЦенообразования = Перечисления.ВидыЦенообразования.Розничный;
-    Клиент.Записать();
+    // Подготовка: заблокированная цепочка
+    // ... (создание данных) ...
 
-    Товар = ЮТест.Данные().СоздатьЭлемент(Справочники.Номенклатура);
-    Товар.Цена = 1000;
-    Товар.Записать();
+    // Действие: разблокировка головного ТС
+    гкс_ВходнойКонтрольКачества.РазблокироватьРегистрацию(Регистрация1);
 
-    РезультатСкидки = МодульРасчётаСкидок.РассчитатьСкидку(Клиент, Товар, 1);
+    // Проверка: вся цепочка разблокирована
+    ЮТест.ОжидаетЧто(Заблокирована(Регистрация2)).Равно(Ложь);
+    ЮТест.ОжидаетЧто(Заблокирована(Регистрация3)).Равно(Ложь);
 
-    ЮТест.ОжидаетЧто(РезультатСкидки)
-        .Равно(0)
-        .Описание("Розничный клиент не должен получать скидку");
+КонецПроцедуры
+
+// Тест: NULL в SQL фильтре
+Процедура ТестФильтрНеЗаблокированныхБезNULL() Экспорт
+
+    // Подготовка: запись без явного значения Разблокировано
+    СоздатьЗаписьБлокировки(Регистрация, Неопределено); // NULL
+
+    // Действие: получить заблокированные
+    Результат = гкс_ВходнойКонтрольКачества.ПолучитьЗаблокированные(Контрагент);
+
+    // Проверка: NULL не пропущен фильтром
+    ЮТест.ОжидаетЧто(Результат.Количество()).БольшеИлиРавно(1)
+        .Описание("Записи с NULL в поле Разблокировано должны считаться заблокированными");
 
 КонецПроцедуры
 ```
 
-**Запуск в Docker.** YAxUnit запускается через vanessa-runner или напрямую через 1С в пакетном режиме:
-
-```bash
-# Внутри Docker-контейнера
-/opt/1cv8/x86_64/$ONEC_VERSION/1cv8 ENTERPRISE \
-    /F "/workspace/build/ib" \
-    /Execute "/workspace/tools/yaxunit-launcher.epf" \
-    /C "RunTests;ExitAfter" \
-    /Out "/workspace/build/test-results/yaxunit.log"
-```
-
-**Этап в .gitlab-ci.yml:**
-
-```yaml
-unit_tests:
-  stage: test
-  image: onec-client:${ONEC_VERSION}
-  needs: ["build_cf"]
-  services:
-    - postgres:15-1c  # PostgreSQL с патчами для 1С в отдельном контейнере
-  variables:
-    POSTGRES_DB: test_db
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-  script:
-    # Создание ИБ на PostgreSQL
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 CREATEINFOBASE
-        Srvr="postgres";Ref="test_db";DBMS="PostgreSQL";
-        DBSrvr="postgres";DB="test_db";
-        DBUID="postgres";DBPwd="postgres"
-
-    # Загрузка конфигурации
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /S "postgres\test_db"
-        /LoadCfg "$CI_PROJECT_DIR/build/1cv8.cf"
-        /UpdateDBCfg
-
-    # Установка расширения YAxUnit
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /S "postgres\test_db"
-        /LoadCfg "$CI_PROJECT_DIR/tools/yaxunit.cfe"
-        /UpdateDBCfg
-
-    # Запуск тестов
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 ENTERPRISE
-        /S "postgres\test_db"
-        /Execute "$CI_PROJECT_DIR/tools/yaxunit-launcher.epf"
-        /C "RunTests;JUnitReport=$CI_PROJECT_DIR/build/reports/junit.xml"
-        /DisableStartupMessages
-        /DisableStartupDialogs
-  artifacts:
-    reports:
-      junit: build/reports/junit.xml
-    expire_in: 7 days
-```
-
-### 3.3. Дымовые тесты с Vanessa ADD
-
-Дымовые тесты — это «автопилот», который автоматически обходит все метаданные вашей конфигурации и проверяет базовую работоспособность без написания тестовых сценариев вручную.
-
-**Что проверяют дымовые тесты:**
-
-Открытие всех форм — система перебирает каждый справочник, документ, отчёт, обработку и пытается открыть их основную форму. Если форма падает с ошибкой — тест фиксирует проблему.
-
-Создание и проведение документов — для каждого вида документов система создаёт новый документ с минимальным заполнением обязательных реквизитов и пытается его провести.
-
-Формирование отчётов — открытие и формирование каждого отчёта с настройками по умолчанию.
-
-Проверка макетов печатных форм — открытие каждого макета.
-
-**Установка Vanessa ADD.** Vanessa ADD (Automation Driven Development) устанавливается через opm:
-
-```bash
-opm install add
-```
-
-Репозиторий: https://github.com/vanessa-opensource/add
-
-**Настройка.** Vanessa ADD использует файл конфигурации `env.json`:
-
-```json
-{
-    "Открытие формы объектов тестовыми данными": true,
-    "Открытие форм ролями": false,
-    "Формирование отчетов": true,
-    "ТипБазы": "File",
-    "КаталогИБ": "/workspace/build/ib",
-    "КаталогОтчетовJUnit": "/workspace/build/reports/smoke",
-    "ЗагружатьФикстуры": true,
-    "КаталогФикстур": "/workspace/tests/fixtures"
-}
-```
-
-**Запуск в Docker:**
-
-```bash
-# Запуск виртуального дисплея (обязателен для GUI-тестов)
-export DISPLAY=:1
-Xvfb :1 -screen 0 1920x1080x24 &
-
-# Запуск дымовых тестов через vanessa-runner
-vanessa-runner run \
-    --ibconnection "File=/workspace/build/ib" \
-    --command "RunSmokeTests" \
-    --execute "/workspace/tools/vanessa-add.epf" \
-    --settings "/workspace/tests/smoke-settings.json" \
-    --reportjunit "/workspace/build/reports/smoke-junit.xml"
-```
-
-**Этап в .gitlab-ci.yml:**
-
-```yaml
-smoke_tests:
-  stage: test
-  image: onec-client-vnc:${ONEC_VERSION}  # образ с Xvfb и VNC
-  needs: ["build_cf"]
-  script:
-    # Запуск виртуального дисплея
-    - export DISPLAY=:1
-    - Xvfb :1 -screen 0 1920x1080x24 -ac &
-    - sleep 2
-
-    # Создание ИБ и загрузка конфигурации
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 CREATEINFOBASE
-        File="/workspace/build/ib"
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F "/workspace/build/ib"
-        /LoadCfg "$CI_PROJECT_DIR/build/1cv8.cf"
-        /UpdateDBCfg
-
-    # Загрузка тестовых данных (фикстуры)
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F "/workspace/build/ib"
-        /RestoreIB "$CI_PROJECT_DIR/tests/fixtures/test-data.dt"
-
-    # Запуск дымовых тестов
-    - vanessa-runner run
-        --ibconnection "File=/workspace/build/ib"
-        --command "RunSmokeTests"
-        --execute "$CI_PROJECT_DIR/tools/vanessa-add.epf"
-        --settings "$CI_PROJECT_DIR/tests/smoke-settings.json"
-        --reportjunit "$CI_PROJECT_DIR/build/reports/smoke-junit.xml"
-        --reportallure "$CI_PROJECT_DIR/build/reports/allure"
-  artifacts:
-    reports:
-      junit: build/reports/smoke-junit.xml
-    paths:
-      - build/reports/allure/
-    when: always  # сохранять отчёты даже если тесты упали
-    expire_in: 7 days
-```
-
-### 3.4. Сценарное BDD-тестирование с Vanessa Automation
-
-Vanessa Automation — самый мощный и самый сложный инструмент тестирования в экосистеме 1С. Он позволяет описывать тесты на языке Gherkin (русскоязычный), записывать действия пользователя и воспроизводить их автоматически.
-
-**Архитектура.** Vanessa Automation работает как внешняя обработка (EPF), которая запускается внутри клиента 1С. Она управляет интерфейсом 1С программно — нажимает кнопки, заполняет поля, читает табличные части. Для этого ей нужен работающий GUI, что в Docker обеспечивается через Xvfb (виртуальный дисплей).
-
-**Установка:**
-
-```bash
-# Через opm (пакетный менеджер OneScript)
-opm install vanessa-automation
-
-# Или скачать EPF-файл из релизов
-# https://github.com/Pr-Mex/vanessa-automation/releases
-```
-
-**Язык сценариев (Gherkin).** Тесты пишутся в файлах с расширением `.feature` на естественном языке:
+#### 3.2 BDD feature-файлы для критичных сценариев
 
 ```gherkin
 # language: ru
+# Файл: features/blocked_ts_cascade.feature
 
-Функциональность: Создание заказа покупателя
-    Как менеджер по продажам
-    Я хочу создавать заказы покупателей
-    Чтобы фиксировать потребности клиентов
+Функционал: Каскадная блокировка транспортных средств
+    Как оператор ПЛК
+    Я хочу видеть автоматическую блокировку ТС
+    Чтобы не пропустить некачественное сырьё
 
     Контекст:
-        Допустим я подключаю TestClient "Тонкий клиент" логин "Менеджер" пароль ""
+        Допустим я подключаю TestClient "Тонкий клиент"
 
-    Сценарий: Создание заказа с двумя товарами и проведение
-        # Открытие формы нового документа
-        Когда я открываю навигационную ссылку "e1cib/command/Документ.ЗаказПокупателя.Создать"
-        Тогда открылась форма "Заказ покупателя (создание)"
+    Сценарий: Блокировка цепочки при КачествоНеПринято
+        Когда я открываю навигационную ссылку "e1cib/command/Обработка.гкс_ПриемкаТранспорта"
+        Тогда открылась форма "*правление транспорто*"
 
-        # Заполнение шапки
-        И я нажимаю на гиперссылку "Контрагент"
-        И в поле "Контрагент" я выбираю по строке "ООО Альфа"
-        И я нажимаю кнопку выбора у поля "Договор"
-        И в таблице "СписокДоговоров" я выбираю текущую строку
+        # Выбор регистрации с результатом анализа
+        И в таблице "СписокРегистраций" я выбираю строку с "ТС-001"
+        И я вижу что колонка "СостояниеКачества" равна "КачествоНеПринято"
 
-        # Добавление товаров в табличную часть
-        И в табличном документе "Товары" я нажимаю на кнопку "Добавить"
-        И в поле "Номенклатура" текущей строки я выбираю по строке "Кирпич красный"
-        И в поле "Количество" текущей строки я ввожу текст "100"
-        И в поле "Цена" текущей строки я ввожу текст "15.50"
+        # Проверка каскадной блокировки
+        И в таблице "ЗаблокированныеТС" я вижу строку с "ТС-002"
+        И в таблице "ЗаблокированныеТС" я вижу строку с "ТС-003"
 
-        И в табличном документе "Товары" я нажимаю на кнопку "Добавить"
-        И в поле "Номенклатура" текущей строки я выбираю по строке "Цемент М500"
-        И в поле "Количество" текущей строки я ввожу текст "50"
-        И в поле "Цена" текущей строки я ввожу текст "320.00"
-
-        # Проведение документа
-        И я нажимаю на кнопку "Провести и закрыть"
-        Тогда у меня нет ошибок в журнале регистрации
-
-    Сценарий: Проверка запрета проведения без товаров
-        Когда я открываю навигационную ссылку "e1cib/command/Документ.ЗаказПокупателя.Создать"
-        И в поле "Контрагент" я выбираю по строке "ООО Альфа"
-        И я нажимаю на кнопку "Провести"
-        Тогда я вижу предупреждение с текстом "Табличная часть Товары не заполнена"
-        И я нажимаю кнопку "OK"
+    Сценарий: Разблокировка через АРМ
+        Когда я открываю навигационную ссылку "e1cib/command/Обработка.гкс_ПриемкаТранспорта"
+        И я выбираю регистрацию "ТС-001"
+        И я нажимаю кнопку "Разблокировать"
+        Тогда в таблице "ЗаблокированныеТС" отсутствует строка с "ТС-002"
+        И у меня нет ошибок в журнале регистрации
 ```
 
-**Запись сценариев.** Vanessa Automation имеет режим записи — вы запускаете её в интерактивном режиме, выполняете действия в 1С руками, а она записывает каждый шаг в формате Gherkin. Потом записанный сценарий можно отредактировать и использовать для автоматического тестирования.
-
-**Файл настроек Vanessa Automation (VanessaAutomation.json):**
-
-```json
-{
-    "feature-files-paths": [
-        "/workspace/tests/features"
-    ],
-    "report-path": "/workspace/build/reports/allure",
-    "report-format": "Allure",
-    "junit-report-path": "/workspace/build/reports/bdd-junit.xml",
-    "screenshots-path": "/workspace/build/reports/screenshots",
-    "make-screenshots-on-error": true,
-    "stop-on-first-error": false,
-    "testclient": {
-        "additional-launch-parameters": "/DisableStartupMessages /DisableStartupDialogs"
-    }
-}
-```
-
-**Запуск в Docker — полный скрипт:**
-
-```bash
-#!/bin/bash
-# run-bdd-tests.sh — запуск BDD-тестов в Docker-контейнере
-
-set -e
-
-# ═══════════════════════════════════════════════
-# 1. Запуск виртуального дисплея
-# ═══════════════════════════════════════════════
-export DISPLAY=:99
-Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset &
-XVFB_PID=$!
-sleep 3
-
-# Опционально: запуск VNC-сервера для отладки
-# x11vnc -display :99 -forever -nopw &
-
-# ═══════════════════════════════════════════════
-# 2. Запуск сервера 1С и создание ИБ
-# ═══════════════════════════════════════════════
-# Запуск PostgreSQL (если в том же контейнере)
-pg_ctlcluster 15 main start
-
-# Создание информационной базы
-/opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 CREATEINFOBASE \
-    Srvr="localhost";Ref="test_bdd";DBMS="PostgreSQL"; \
-    DBSrvr="localhost";DB="test_bdd"; \
-    DBUID="postgres";DBPwd="postgres"
-
-# Загрузка конфигурации
-/opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER \
-    /S "localhost\test_bdd" \
-    /LoadCfg "/workspace/build/1cv8.cf" \
-    /UpdateDBCfg
-
-# Загрузка тестовых данных
-/opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER \
-    /S "localhost\test_bdd" \
-    /RestoreIB "/workspace/tests/fixtures/bdd-data.dt"
-
-# ═══════════════════════════════════════════════
-# 3. Запуск тестового клиента 1С
-# ═══════════════════════════════════════════════
-# 1С должна быть запущена как клиент, к которому подключится Vanessa
-/opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 ENTERPRISE \
-    /S "localhost\test_bdd" \
-    /N "Администратор" /P "" \
-    /TestClient -TPort 48050 \
-    /DisableStartupMessages \
-    /DisableStartupDialogs &
-CLIENT_PID=$!
-sleep 10  # ждём запуска клиента
-
-# ═══════════════════════════════════════════════
-# 4. Запуск Vanessa Automation
-# ═══════════════════════════════════════════════
-/opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 ENTERPRISE \
-    /S "localhost\test_bdd" \
-    /N "Администратор" /P "" \
-    /Execute "/workspace/tools/vanessa-automation.epf" \
-    /C "StartFeaturePlayer;Settings=/workspace/tests/VanessaAutomation.json" \
-    /TestManager -TPort 48051 \
-    /DisableStartupMessages \
-    /DisableStartupDialogs
-
-EXIT_CODE=$?
-
-# ═══════════════════════════════════════════════
-# 5. Остановка процессов
-# ═══════════════════════════════════════════════
-kill $CLIENT_PID 2>/dev/null || true
-kill $XVFB_PID 2>/dev/null || true
-
-exit $EXIT_CODE
-```
-
-**Этап в .gitlab-ci.yml:**
-
-```yaml
-bdd_tests:
-  stage: test
-  image: onec-client-vnc:${ONEC_VERSION}
-  needs: ["build_cf"]
-  services:
-    - name: postgres:15-1c
-      alias: postgres
-  variables:
-    POSTGRES_DB: test_bdd
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-    DISPLAY: ":99"
-  before_script:
-    # Запуск виртуального дисплея
-    - Xvfb :99 -screen 0 1920x1080x24 -ac &
-    - sleep 3
-  script:
-    - chmod +x tests/run-bdd-tests.sh
-    - tests/run-bdd-tests.sh
-  after_script:
-    # Сохранение скриншотов и видео при ошибках
-    - cp -r /workspace/build/reports/screenshots $CI_PROJECT_DIR/build/ || true
-  artifacts:
-    reports:
-      junit: build/reports/bdd-junit.xml
-    paths:
-      - build/reports/allure/
-      - build/reports/screenshots/
-    when: always
-    expire_in: 14 days
-```
-
-### 3.5. Замер покрытия кода (Coverage41C)
-
-Coverage41C — инструмент, который показывает, какие строки кода 1С были выполнены во время тестов. Это даёт объективную метрику: «из 10 000 строк кода тестами покрыто 3 500 (35%)».
-
-**Принцип работы.** Coverage41C подключается к отладочному серверу 1С (dbgs) и отслеживает, какие строки кода выполнялись. После завершения тестов формирует отчёт в формате GenericCoverage (совместим с SonarQube).
-
-**Репозиторий:** https://github.com/1c-syntax/Coverage41C
-
-**Интеграция с тестами:**
-
-```bash
-# 1. Запуск сервера отладки 1С
-/opt/1cv8/x86_64/${ONEC_VERSION}/dbgs --addr=localhost --port=1550 &
-sleep 5
-
-# 2. Запуск Coverage41C — он подключится к серверу отладки
-java -jar coverage41c.jar start \
-    --debugger "localhost:1550" \
-    --output "/workspace/build/reports/coverage.xml" \
-    --format "genericCoverage" \
-    --projectDir "/workspace/src" &
-
-# 3. Запуск тестов (модульных, дымовых, BDD — любых)
-# ... (тесты выполняются, Coverage41C собирает данные) ...
-
-# 4. Остановка Coverage41C — генерация отчёта
-java -jar coverage41c.jar stop
-```
-
-**Загрузка отчёта в SonarQube** (добавляется к шагу sonarqube в пайплайне):
-
-```bash
-sonar-scanner \
-    -Dsonar.coverageReportPaths=build/reports/coverage.xml
-```
-
-### 3.6. Отладка упавших тестов: VNC-доступ к контейнеру
-
-Когда сценарные тесты падают, бывает сложно понять причину по логам — нужно увидеть, что происходит на «экране» 1С. Для этого используется VNC-доступ к работающему контейнеру.
-
-**Настройка VNC в Docker-образе.** Добавьте в Dockerfile:
-
-```dockerfile
-RUN apt-get update && apt-get install -y \
-    x11vnc \
-    xvfb \
-    novnc \
-    websockify
-
-# Запуск noVNC (доступ через браузер)
-EXPOSE 6080
-CMD ["bash", "-c", "Xvfb :1 -screen 0 1920x1080x24 & \
-     x11vnc -display :1 -forever -nopw & \
-     websockify --web /usr/share/novnc/ 6080 localhost:5900"]
-```
-
-**Использование.** При запуске контейнера пробросьте порт 6080:
+#### 3.3 Coverage41C (замер покрытия)
 
 ```powershell
-docker run -d -p 6080:6080 onec-client-vnc:8.3.25
+# Скачать Coverage41C
+$coverageUrl = "https://github.com/1c-syntax/Coverage41C/releases/latest"
+# Скачать JAR → tools/coverage41c/
+
+# Запуск сервера отладки 1С
+& "$env:ONEC_PATH\dbgs.exe" --addr=localhost --port=1550
+
+# Запуск Coverage41C
+java -jar "tools\coverage41c\coverage41c.jar" start `
+    --debugger "localhost:1550" `
+    --output "build\reports\coverage.xml" `
+    --format "genericCoverage" `
+    --projectDir "src\bsl"
+
+# Запуск тестов (YAxUnit, Smoke, BDD)
+# ... тесты выполняются ...
+
+# Остановка — генерация отчёта
+java -jar "tools\coverage41c\coverage41c.jar" stop
+
+# Загрузка в SonarQube
+sonar-scanner -Dsonar.coverageReportPaths=build/reports/coverage.xml
 ```
 
-Откройте http://localhost:6080 в браузере — вы увидите рабочий стол Linux с запущенным клиентом 1С. Можно наблюдать за выполнением тестов в реальном времени.
+---
 
-Образы от thedemoncat (onec-client) уже включают NoVNC на порту 6080.
+## Часть 3. Архитектура тестирования: 3 слоя логики 1С
 
-### 3.7. Allure-отчёты: визуализация результатов тестирования
+### 3.1 Три слоя логики
 
-Allure — система отчётности, которая собирает результаты всех видов тестов в единый красивый HTML-отчёт с графиками, скриншотами и историей.
+В 1С логика распределена по трём слоям. Непонимание этого — главная причина пропущенных багов и хрупких тестов.
 
-**Генерация отчёта** (после выполнения тестов):
+```
+┌─────────────────────────────────────────────────┐
+│  СЛОЙ 1: Форма (клиент)                         │
+│  ПриИзменении(), ОбработкаВыбора(),             │
+│  команды формы, видимость элементов              │
+│                                                  │
+│  Тестируется: ТОЛЬКО Vanessa Automation (BDD)    │
+│  YAxUnit: ❌ НЕ видит этот слой                  │
+├─────────────────────────────────────────────────┤
+│  СЛОЙ 2: Форма (сервер)                         │
+│  ПередЗаписьюНаСервере(), ПриСозданииНаСервере()│
+│  ОбработкаПроверкиЗаполненияНаСервере()         │
+│                                                  │
+│  Тестируется: ТОЛЬКО Vanessa Automation (BDD)    │
+│  YAxUnit: ❌ НЕ видит — срабатывает только       │
+│  при записи через форму                          │
+├─────────────────────────────────────────────────┤
+│  СЛОЙ 3: Объект и общие модули (сервер)         │
+│  ОбработкаПроведения(), ПередЗаписью() объекта, │
+│  гкс_ВходнойКонтрольКачества (общий модуль)     │
+│                                                  │
+│  Тестируется: YAxUnit ✅ И Vanessa Automation ✅  │
+│  YAxUnit вызывает напрямую без формы             │
+└─────────────────────────────────────────────────┘
+```
+
+**Ключевой вывод:**
+
+- **YAxUnit** вызывает серверный код напрямую: `ДокументОбъект.Записать(РежимЗаписиДокумента.Проведение)` — это вызывает `ОбработкаПроведения()` БЕЗ формы.
+- **BDD** проводит документ нажатием кнопки "Провести" в GUI — это вызывает ВСЕ три слоя.
+
+### 3.2 YAxUnit: серверная логика (Слой 3, ~70% багов)
+
+| Что тестирует | Пример |
+|---------------|--------|
+| Общие модули | `гкс_ВходнойКонтрольКачества.ОбработатьРезультатАнализа()` |
+| Проведение документов | `Документ.гкс_ЛабораторныйАнализ` → запись в РС |
+| SQL-запросы | Фильтрация NULL, каскадные обновления |
+| Алгоритмы | Группировка ТС, определение первого ТС |
+
+**Преимущества:** быстро (секунды), без GUI, легко писать и поддерживать.
+**Ограничения:** не видит Слои 1-2 (клиентские обработчики форм).
+
+### 3.3 BDD с Vanessa Automation: полное покрытие (Слои 1-3, ~30% дополнительных багов)
+
+**Архитектура запуска:**
+
+```
+TestManager (Vanessa Automation)
+    │ ← ENTERPRISE /Execute vanessa-automation-single.epf
+    │    /C "StartFeaturePlayer;DisableFirstRunHelper;VAParams=..."
+    │
+    ▼ подключается по TCP
+TestClient (Тонкий клиент 1С)
+    │ ← ENTERPRISE /TestClient -TPort 1538
+    │    /N "user" /P "pass"
+    │    /DisableStartupMessages /DisableStartupDialogs
+    ▼
+Действия в GUI: нажимает кнопки, заполняет поля, читает таблицы
+```
+
+**Критичные настройки (баги 1С 8.3.27):**
+
+| Параметр | Значение | Почему |
+|----------|----------|--------|
+| Порт TestClient | **1538** | Нестандартные порты ломают подключение |
+| Имя сервера | **KOMPUTER** | `localhost` вызывает ошибку "определение принадлежности" |
+| DisableFirstRunHelper | Обязательно | Без него VA зависает 10+ минут |
+| Таймаут старта | ~25 сек | Клиент долго инициализируется |
+
+**Преимущества:** тестирует всю цепочку UI → сервер → БД.
+**Ограничения:** медленнее (минуты), требует GUI, хрупче при изменении интерфейса.
+
+### 3.4 Smoke тесты: автоматический обход форм
+
+Smoke тесты автоматически перебирают ВСЕ метаданные конфигурации:
+- **91 справочник** — открытие формы списка и элемента
+- **27 документов** — открытие формы, создание, попытка проведения
+- **Отчёты и обработки** — открытие
+
+**Что ловит:** сломанные формы, ошибки `ПриСозданииНаСервере`, битые динамические списки.
+**Что НЕ ловит:** бизнес-логику.
+
+### 3.5 Какие баги ловит каждый уровень
+
+Конкретные примеры из задачи "Заблокированные ТС":
+
+| Тип бага | Кто ловит | Пример |
+|----------|-----------|--------|
+| SQL с NULL | **YAxUnit** | `WHERE Разблокировано = ЛОЖЬ` пропускает записи с NULL |
+| Каскад не дошёл до 3-го ТС | **YAxUnit** | Ошибка в цикле обхода цепочки в общем модуле |
+| Проведение не создало запись блокировки | **YAxUnit** | `ОбработкаПроведения` ЛабАнализа пропускает условие |
+| Кнопка "Разблокировать" вызывает не тот метод | **BDD** | Copy-paste ошибка в команде формы |
+| ПриИзменении контрагента не очищает группу ТС | **BDD** | Клиентский обработчик формы (Слой 1) |
+| ПередЗаписьюНаСервере заполняет реквизит неверно | **BDD** | Серверный обработчик формы (Слой 2) |
+| Форма АРМ не открывается | **Smoke** | Битая ссылка в динамическом списке |
+
+**Итого:** YAxUnit (~70%) + BDD (~25%) + Smoke (~5%) = **>95% покрытие логических багов**.
+
+---
+
+## Часть 4. Типичные проблемы и решения (Windows-специфичные)
+
+### 4.1 Кириллический путь D:\1С-Framework
+
+| Проблема | Симптом | Решение |
+|----------|---------|---------|
+| vrunner / OneScript | "Файл не найден" при парсинге .feature | `run-bdd.ps1` копирует features в `D:\va-test` |
+| Git Bash | Конвертация путей ломает кириллицу | `$env:MSYS_NO_PATHCONV = "1"` |
+| Python | `UnicodeEncodeError` | `$env:PYTHONIOENCODING = "utf-8"` |
+| curl | Broken UTF-8 | Использовать Python `requests` |
+
+### 4.2 TestClient 1С 8.3.27
+
+| Проблема | Решение |
+|----------|---------|
+| Нестандартные порты не работают | **Только порт 1538** |
+| `localhost` → ошибка "определение принадлежности" | Использовать **KOMPUTER** |
+| Окно "Настройка первоначальных возможностей" | `/DisableFirstRunHelper` или env `VANESSA_DisableFirstRunHelper=true` |
+| Модальные диалоги | `/DisableStartupMessages /DisableStartupDialogs` |
+| Медленный старт | `Start-Sleep -Seconds 25` перед подключением VA |
+
+### 4.3 Docker на диске C:
+
+```powershell
+# Очистка неиспользуемых образов
+docker image prune -a -f
+
+# Перенос WSL2 на диск D: (раз и навсегда)
+wsl --shutdown
+wsl --export docker-desktop-data "D:\wsl-backup\docker-data.tar"
+wsl --unregister docker-desktop-data
+wsl --import docker-desktop-data "D:\wsl\data" "D:\wsl-backup\docker-data.tar"
+
+# Ограничение RAM для WSL2 (файл %USERPROFILE%\.wslconfig)
+# [wsl2]
+# memory=8GB
+```
+
+### 4.4 Кодировки UTF-8 vs CP1251
+
+```powershell
+# В начале КАЖДОГО PowerShell скрипта
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+```
+
+```python
+# Python хуки — чтение stdin
+import sys
+data = sys.stdin.buffer.read().decode("utf-8")  # НЕ sys.stdin.read()
+```
 
 ```bash
-# Установка Allure CLI
-npm install -g allure-commandline
-
-# Генерация HTML-отчёта
-allure generate build/reports/allure -o build/reports/allure-html --clean
-
-# Открытие отчёта
-allure open build/reports/allure-html
+# Git — отображение кириллицы
+git config --global core.quotepath false
 ```
 
-**Публикация в GitLab Pages** (добавьте этап в .gitlab-ci.yml):
+### 4.5 YAxUnit на Windows
 
-```yaml
-pages:
-  stage: deploy
-  needs: ["smoke_tests", "bdd_tests"]
-  script:
-    - allure generate build/reports/allure -o public --clean
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
-```
-
-После этого отчёт доступен по адресу `https://ваш-логин.gitlab.io/ваш-проект/`.
+| Проблема | Решение |
+|----------|---------|
+| Пути в yaxunit.json | Только `\\` (обратные слэши), НЕ `/` |
+| ДымовыеТесты | `{"Использовать": true, "ОткрытиеФорм": true}` — НЕ просто `true` |
+| Git Bash конвертирует пути | `$env:MSYS_NO_PATHCONV = "1"` |
+| Путь `ЭтоАбсолютныйПутьWindows` | Проверяет наличие `\` — forward slash не пройдёт |
 
 ---
 
-## Часть 4. Полная автоматизация: от коммита до продуктива
+## Часть 5. Будущее развитие — Docker-образы 1С
 
-### 4.1. Итоговый .gitlab-ci.yml — полный конвейер
+### 5.1 Что даст переход на Docker
 
-```yaml
-# ═══════════════════════════════════════════════════════
-# CI/CD конвейер для 1С:Предприятие
-# Полный цикл: сборка → анализ → тесты → деплой
-# ═══════════════════════════════════════════════════════
+| Характеристика | Сейчас (Windows Runner) | Docker |
+|----------------|------------------------|--------|
+| Изоляция | Глобальная БД, конфликты | Чистый контейнер на каждый запуск |
+| Воспроизводимость | Зависит от обновлений ОС | Идентичный образ везде |
+| Масштабирование | 1 runner = 1 тест | 5-10 контейнеров параллельно |
+| Версионность | Одна версия 1С | Теги образов `:8.3.27`, `:8.3.26` |
 
-stages:
-  - build
-  - analyze
-  - test
-  - report
-  - deploy
+### 5.2 Что требуется
 
-variables:
-  ONEC_VERSION: "8.3.25.1257"
-  POSTGRES_DB: "ci_test_db"
-  POSTGRES_USER: "postgres"
-  POSTGRES_PASSWORD: "postgres"
+1. **DEB-пакеты 1С** с releases.1c.ru (подписка ИТС)
+2. **Dockerfile** из `firstBitMarksistskaya/onec-docker` или `thedemoncat/onec-base`
+3. **PostgreSQL для 1С** (PostgresPro с патчами) — отдельный контейнер
+4. **Xvfb** — виртуальный дисплей для GUI-тестов в Linux
 
-# ─── Общие настройки ───────────────────────────
-default:
-  before_script:
-    - export DISPLAY=:99
-    - Xvfb :99 -screen 0 1920x1080x24 -ac &>/dev/null &
-    - sleep 2
+### 5.3 План перехода
 
-# ═══════════════════════════════════════════════
-# ЭТАП 1: СБОРКА
-# ═══════════════════════════════════════════════
-build:
-  stage: build
-  image: onec-client:${ONEC_VERSION}
-  script:
-    # Конвертация EDT → формат конфигуратора
-    - ring edt workspace export
-        --workspace-location .
-        --project .
-        --configuration-files build/cf-xml
-
-    # Создание ИБ и загрузка
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 CREATEINFOBASE
-        File="build/ib"
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F build/ib
-        /LoadConfigFromFiles build/cf-xml
-        /UpdateDBCfg
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F build/ib
-        /DumpCfg build/1cv8.cf
-  artifacts:
-    paths: [build/1cv8.cf, build/ib/]
-    expire_in: 3 days
-
-# ═══════════════════════════════════════════════
-# ЭТАП 2: АНАЛИЗ КОДА
-# ═══════════════════════════════════════════════
-syntax_check:
-  stage: analyze
-  image: onec-client:${ONEC_VERSION}
-  needs: [build]
-  script:
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /F build/ib
-        /CheckConfig -Server -ThinClient -WebClient
-        -ExternalConnection -ExternalConnectionServer
-
-bsl_analysis:
-  stage: analyze
-  image: openjdk:17-slim
-  script:
-    - java -jar /tools/bsl-ls.jar --analyze
-        --srcDir src --reporter sonarGenericIssue
-        --outputDir build/bsl-reports
-  artifacts:
-    paths: [build/bsl-reports/]
-
-sonarqube:
-  stage: analyze
-  image: sonarsource/sonar-scanner-cli
-  needs: [bsl_analysis]
-  script:
-    - sonar-scanner
-        -Dsonar.projectKey=${CI_PROJECT_NAME}
-        -Dsonar.sources=src
-        -Dsonar.host.url=${SONAR_HOST_URL}
-        -Dsonar.token=${SONAR_TOKEN}
-        -Dsonar.externalIssuesReportPaths=build/bsl-reports/genericIssue.json
-
-# ═══════════════════════════════════════════════
-# ЭТАП 3: ТЕСТИРОВАНИЕ
-# ═══════════════════════════════════════════════
-unit_tests:
-  stage: test
-  image: onec-client:${ONEC_VERSION}
-  needs: [build]
-  services:
-    - postgres:15-1c
-  script:
-    - vanessa-runner init-ib
-        --db-server postgres --db-name $POSTGRES_DB
-        --db-user $POSTGRES_USER --db-pwd $POSTGRES_PASSWORD
-    - vanessa-runner load-cf --cf build/1cv8.cf
-    - vanessa-runner load-ext --ext tools/yaxunit.cfe --name YAxUnit
-    - vanessa-runner run-yaxunit
-        --reportjunit build/reports/unit-junit.xml
-  artifacts:
-    reports: { junit: build/reports/unit-junit.xml }
-    when: always
-
-smoke_tests:
-  stage: test
-  image: onec-client-vnc:${ONEC_VERSION}
-  needs: [build]
-  services:
-    - postgres:15-1c
-  script:
-    - vanessa-runner init-ib
-        --db-server postgres --db-name "${POSTGRES_DB}_smoke"
-        --db-user $POSTGRES_USER --db-pwd $POSTGRES_PASSWORD
-    - vanessa-runner load-cf --cf build/1cv8.cf
-    - vanessa-runner load-dt --dt tests/fixtures/smoke-data.dt
-    - vanessa-runner run-smoke
-        --settings tests/smoke-settings.json
-        --reportjunit build/reports/smoke-junit.xml
-        --reportallure build/reports/allure-smoke
-  artifacts:
-    reports: { junit: build/reports/smoke-junit.xml }
-    paths: [build/reports/allure-smoke/]
-    when: always
-
-bdd_tests:
-  stage: test
-  image: onec-client-vnc:${ONEC_VERSION}
-  needs: [build]
-  services:
-    - postgres:15-1c
-  script:
-    - vanessa-runner init-ib
-        --db-server postgres --db-name "${POSTGRES_DB}_bdd"
-        --db-user $POSTGRES_USER --db-pwd $POSTGRES_PASSWORD
-    - vanessa-runner load-cf --cf build/1cv8.cf
-    - vanessa-runner load-dt --dt tests/fixtures/bdd-data.dt
-    - vanessa-runner run-vanessa
-        --settings tests/VanessaAutomation.json
-        --reportjunit build/reports/bdd-junit.xml
-        --reportallure build/reports/allure-bdd
-  artifacts:
-    reports: { junit: build/reports/bdd-junit.xml }
-    paths: [build/reports/allure-bdd/, build/reports/screenshots/]
-    when: always
-
-# ═══════════════════════════════════════════════
-# ЭТАП 4: ОТЧЁТНОСТЬ
-# ═══════════════════════════════════════════════
-allure_report:
-  stage: report
-  image: node:18-slim
-  needs: [unit_tests, smoke_tests, bdd_tests]
-  script:
-    - npm install -g allure-commandline
-    - mkdir -p build/allure-combined
-    - cp -r build/reports/allure-smoke/* build/allure-combined/ || true
-    - cp -r build/reports/allure-bdd/* build/allure-combined/ || true
-    - allure generate build/allure-combined -o public --clean
-  artifacts:
-    paths: [public/]
-  when: always
-
-# ═══════════════════════════════════════════════
-# ЭТАП 5: ДЕПЛОЙ
-# ═══════════════════════════════════════════════
-deploy_test:
-  stage: deploy
-  image: onec-client:${ONEC_VERSION}
-  needs: [unit_tests, smoke_tests, bdd_tests]
-  script:
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /S "${TEST_SERVER}\${TEST_DB}"
-        /N "Администратор" /P "${TEST_PASSWORD}"
-        /LoadCfg build/1cv8.cf
-        /UpdateDBCfg -Dynamic+
-  environment:
-    name: testing
-  when: manual
-
-deploy_prod:
-  stage: deploy
-  image: onec-client:${ONEC_VERSION}
-  needs: [deploy_test]
-  script:
-    # Блокировка начала сеансов
-    - vanessa-runner session-lock
-        --server "${PROD_SERVER}" --db "${PROD_DB}"
-        --admin-user "Администратор" --admin-pwd "${PROD_PASSWORD}"
-        --lock-message "Обновление конфигурации"
-        --lock-uc "UpdateCode123"
-
-    # Завершение активных сеансов
-    - vanessa-runner session-kill
-        --server "${PROD_SERVER}" --db "${PROD_DB}"
-        --uc "UpdateCode123"
-
-    # Загрузка конфигурации
-    - /opt/1cv8/x86_64/${ONEC_VERSION}/1cv8 DESIGNER
-        /S "${PROD_SERVER}\${PROD_DB}"
-        /N "Администратор" /P "${PROD_PASSWORD}"
-        /UC "UpdateCode123"
-        /LoadCfg build/1cv8.cf
-        /UpdateDBCfg
-
-    # Снятие блокировки
-    - vanessa-runner session-unlock
-        --server "${PROD_SERVER}" --db "${PROD_DB}"
-        --admin-user "Администратор" --admin-pwd "${PROD_PASSWORD}"
-  environment:
-    name: production
-  when: manual
-  only:
-    - main
+```
+Этап 1: Получить DEB-пакеты → собрать образы onec-server, onec-client
+Этап 2: Собрать образ onec-client-vnc (с Xvfb и VNC для отладки)
+Этап 3: Адаптировать скрипты PowerShell → Bash
+Этап 4: Перевести CI на Docker executor
+Этап 5: Windows Runner остаётся как fallback
 ```
 
-### 4.2. Логика автоматического деплоя
-
-Полностью автоматический деплой без ручного вмешательства (то, к чему стремился Иосиф в подкасте) выглядит следующим образом.
-
-**Правило двух успешных раскаток.** Конфигурация автоматически деплоится на тестовую базу. Если на тестовой базе после двух последовательных успешных обновлений не зафиксировано ошибок (через мониторинг журнала регистрации), конфигурация автоматически раскатывается на продуктив.
-
-Для этого `when: manual` заменяется на `when: on_success` с добавлением условий:
+**Пример будущего workflow:**
 
 ```yaml
-deploy_prod:
-  stage: deploy
-  needs: [deploy_test]
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: on_success  # автоматически, если все предыдущие этапы прошли
-  script:
-    # ... деплой на продуктив ...
-```
-
-**Технологическое окно.** Деплой на продуктив можно привязать к расписанию через GitLab Schedules — например, запускать только по будням с 23:00 до 01:00, когда нагрузка минимальна.
-
-### 4.3. Мониторинг после деплоя
-
-После автоматического обновления продуктивной базы рекомендуется настроить мониторинг:
-
-**Проверка журнала регистрации** — скрипт на OneScript, который через 10–15 минут после деплоя проверяет журнал регистрации на наличие ошибок. Если ошибки обнаружены — отправляет уведомление в Telegram и откатывает конфигурацию.
-
-**Проверка доступности** — простой HTTP-запрос к веб-публикации 1С. Если публикация не отвечает — алерт.
-
-**Пример скрипта мониторинга (OneScript):**
-
-```bsl
-// monitoring.os — проверка после деплоя
-
-ЧтениеЖР = Новый ЧтениеЖурналаРегистрации();
-ЧтениеЖР.УстановитьФильтр(
-    Новый Структура("НачалоПериода, Уровень",
-        ТекущаяДата() - 900,  // последние 15 минут
-        "Ошибка"
-    )
-);
-
-КоличествоОшибок = 0;
-Пока ЧтениеЖР.Прочитать() Цикл
-    КоличествоОшибок = КоличествоОшибок + 1;
-КонецЦикла;
-
-Если КоличествоОшибок > 0 Тогда
-    // Отправка уведомления в Telegram
-    Телеграм = Новый HTTPСоединение("api.telegram.org");
-    Телеграм.ОтправитьСообщение(
-        "ВНИМАНИЕ: после деплоя обнаружено " + КоличествоОшибок + " ошибок!"
-    );
-КонецЕсли;
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/your-org/onec-client:8.3.27
+    services:
+      postgres:
+        image: postgrespro/postgrespro-1c:15
+    steps:
+      - name: Create test DB
+        run: |
+          /opt/1cv8/x86_64/8.3.27.1859/1cv8 CREATEINFOBASE \
+            Srvr="postgres";Ref="test_db";DBMS="PostgreSQL"
+      - name: Run YAxUnit
+        run: |
+          xvfb-run -a /opt/1cv8/x86_64/8.3.27.1859/1cv8 ENTERPRISE \
+            /S "postgres\test_db" \
+            /Execute tools/yaxunit-launcher.epf
 ```
 
 ---
 
-## Часть 5. Типичные проблемы и их решение
+## Часть 6. Ресурсы
 
-### 5.1. Docker на Windows — специфические проблемы
+### Репозитории
 
-**Проблема:** Docker Desktop не запускается, ошибка «WSL 2 requires an update».
-**Решение:** Скачайте обновление ядра WSL2 с https://aka.ms/wsl2kernel и установите. Затем выполните `wsl --set-default-version 2`.
+| Назначение | Репозиторий |
+|------------|------------|
+| Docker-образы 1С | `firstBitMarksistskaya/onec-docker`, `thedemoncat/onec-base` |
+| BSL Language Server | `1c-syntax/bsl-language-server` |
+| SonarQube BSL плагин | `1c-syntax/sonar-bsl-plugin-community` |
+| YAxUnit | `bia-technologies/yaxunit` |
+| Vanessa Automation | `Pr-Mex/vanessa-automation` |
+| Vanessa ADD | `vanessa-opensource/add` |
+| vanessa-runner | `oscript-library/vanessa-runner` |
+| Coverage41C | `1c-syntax/Coverage41C` |
+| OneScript | `EvilBeaver/OneScript` |
+| GitHub Actions Runner | `actions/runner` |
 
-**Проблема:** Низкая скорость работы с файлами.
-**Причина:** Файлы, расположенные на NTFS-разделе Windows, работают через WSL2 медленно (операции ввода-вывода проходят через прослойку). Решение — хранить проектные файлы внутри файловой системы WSL2 (в `/home/`), а не в `/mnt/c/`.
+### Текущая конфигурация проекта
 
-**Проблема:** Контейнер с 1С не запускается, ошибка «shared memory».
-**Решение:** Увеличьте shared memory: `docker run --shm-size=512m ...`
-
-### 5.2. Проблемы с тестированием
-
-**Проблема:** Сценарные тесты падают с ошибкой «Не удалось подключить TestClient».
-**Причина:** 1С-клиент не успел запуститься до подключения Vanessa Automation. Решение — увеличьте `sleep` перед подключением или используйте скрипт с проверкой готовности.
-
-**Проблема:** Тесты проходят локально, но падают в Docker.
-**Причина:** Разрешение виртуального дисплея отличается от реального монитора. Элементы интерфейса могут быть расположены иначе. Решение — используйте Xvfb с разрешением 1920x1080 и проверяйте через VNC.
-
-**Проблема:** Дымовые тесты падают на формах, требующих заполнения обязательных реквизитов.
-**Решение:** Подготовьте файл фикстур (DT-файл) с минимальным набором данных: организация, контрагент, склад, номенклатура. Загружайте его перед запуском тестов.
-
----
-
-## Часть 6. Ресурсы для изучения
-
-### Репозитории на GitHub
-
-Docker-образы: `firstBitMarksistskaya/onec-docker`, `thedemoncat/onec-base`, `alexanderfefelov/docker-1c-server`. OneScript: `EvilBeaver/OneScript` (oscript.io). Тестирование: `Pr-Mex/vanessa-automation`, `vanessa-opensource/add`, `bia-technologies/yaxunit`. CI/CD: `firstBitMarksistskaya/jenkins-lib`, `oscript-library/vanessa-ci-scripts`. Анализ: `1c-syntax/bsl-language-server`, `1c-syntax/sonar-bsl-plugin-community`. SonarQube для 1С: `Daabramov/Sonarqube-for-1c-docker`. Покрытие: `1c-syntax/Coverage41C`.
-
-### Обучающие материалы
-
-Статья «Docker для 1Сника» на Infostart (infostart.ru/1c/articles/1454888/). Руководство от 1С-Рарус «Docker для 1С» в двух частях (2025–2026). Курс OTUS «DevOps 1C» — полный курс по автоматизации. Доклады Владимира Кирбабы (BIA Technologies) на Infostart Event.
-
-### Telegram-каналы
-
-`@pravets_it` — Иосиф Правец: ИТ-дневник (автор подкаста). `@sergsyp` — подкаст «Мир 1С». «Менеджер Хранилищ, DevOps 1C и около» — профильный чат по DevOps в 1С. «OneScript и библиотеки» — сообщество разработчиков OneScript. Полный реестр: `SeiOkami/links-one-s` на GitHub.
+| Параметр | Значение |
+|----------|----------|
+| Проект | `D:\1С-Framework` |
+| Конфигурация | УправлениеТранспортомНаПЛК v2026.1.1.0 |
+| Платформа | 1С 8.3.27.1859 (x64) |
+| Сервер 1С | KOMPUTER |
+| СУБД | MS SQL 2022, БД testdb1c |
+| YAxUnit | v25.12, 690 тестов |
+| Vanessa Automation | v1.2.043.1 |
+| CI | GitHub Actions, Self-Hosted Windows Runner |
