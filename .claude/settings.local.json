@@ -404,7 +404,18 @@
       "Bash(wmic baseboard:*)",
       "Bash(wmic diskdrive:*)",
       "Bash(wmic computersystem:*)",
-      "Bash(reg delete:*)"
+      "Bash(reg delete:*)",
+      "Bash(systeminfo)",
+      "Bash(wsl --list --verbose)",
+      "Bash(wsl --status)",
+      "Bash(wmic logicaldisk:*)",
+      "Bash(C:/Tools/OneScript/lib/vanessa-runner/vanessa-runner.os)",
+      "Bash(gh --version)",
+      "Bash(allure --version)",
+      "Read(//c/Tools/**)",
+      "Bash(powershell -Command \"docker ps -a --format ''''table {{.Names}}\\\\t{{.Image}}\\\\t{{.Status}}''''\")",
+      "Bash(powershell -Command \"docker images --format ''''table {{.Repository}}\\\\t{{.Tag}}\\\\t{{.Size}}''''\")",
+      "Bash(powershell -Command \"docker images --format ''''{{.Size}}''''\")"
     ]
   },
   "enableAllProjectMcpServers": true,
