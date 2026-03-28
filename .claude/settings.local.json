@@ -403,7 +403,8 @@
       "Bash(wmic cpu:*)",
       "Bash(wmic baseboard:*)",
       "Bash(wmic diskdrive:*)",
-      "Bash(wmic computersystem:*)"
+      "Bash(wmic computersystem:*)",
+      "Bash(reg delete:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
