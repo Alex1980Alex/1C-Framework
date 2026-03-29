@@ -261,6 +261,11 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-web-cache.py",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/knowledge-cache-reminder.py",
+            "timeout": 5
           }
         ]
       },
@@ -270,6 +275,21 @@
           {
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-quality-feedback.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__llm-rotation__llm_complete",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-delegation-tracker.py",
             "timeout": 3
           }
         ]
@@ -313,11 +333,6 @@
             "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/delegation-outcome-stop.py",
             "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/knowledge-cache-reminder.py",
-            "timeout": 5
           }
         ]
       }

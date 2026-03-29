@@ -184,7 +184,7 @@
         "domain": "devops"
       },
       {
-        "pattern": "eslint|prettier|black\\s+\\.|ruff",
+        "pattern": "eslint|prettier|black\\s+\\.|\\bruff\\b\\s+(check|format)",
         "skill": "code-quality",
         "label": "Code Quality Tools",
         "domain": "quality"

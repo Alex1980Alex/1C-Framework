@@ -10,9 +10,8 @@ Purpose: After web search/fetch, remind Claude to save research findings
          - Arch results -> .claude/skills/architecture-research/cache/ (Phase 5)
          Cache lives in project-level .claude/skills/.
          Creates mandatory task in hook-todos.json.
+         Uses hookSpecificOutput for PostToolUse feedback.
 Timeout: 5s
-
-Adapted from 1C-Enterprise_Framework documentation-blocker.py.
 """
 
 import sys
@@ -111,7 +110,7 @@ class KnowledgeCacheReminder(BaseHook):
                     created_by=HOOK_ID,
                 )
 
-            return HookOutput().system_message(
+            return HookOutput().hook_context(
                 "[CACHE-REMINDER] Обнаружены результаты исследования "
                 "по 1С/документации.\n"
                 "ОБЯЗАТЕЛЬНО выполни Фазу 5 skill `1c-doc-research`:\n"
@@ -137,7 +136,7 @@ class KnowledgeCacheReminder(BaseHook):
                     created_by=HOOK_ID,
                 )
 
-            return HookOutput().system_message(
+            return HookOutput().hook_context(
                 "[CACHE-REMINDER] Обнаружены результаты исследования "
                 "архитектурных подходов / best practices.\n"
                 "ОБЯЗАТЕЛЬНО выполни Фазу 5 skill `architecture-research`:\n"
@@ -161,7 +160,7 @@ class KnowledgeCacheReminder(BaseHook):
                     created_by=HOOK_ID,
                 )
 
-            return HookOutput().system_message(
+            return HookOutput().hook_context(
                 "[CACHE-REMINDER] Обнаружены результаты исследования "
                 "по технологиям RAG/ML/Python.\n"
                 "ОБЯЗАТЕЛЬНО выполни Фазу 5 skill `tech-research`:\n"
@@ -175,7 +174,7 @@ class KnowledgeCacheReminder(BaseHook):
         # Light hint for borderline cases
         total_score = c1_score + tech_score
         if total_score >= 1 or len(str(tool_result)) > 1000:
-            return HookOutput().system_message(
+            return HookOutput().hook_context(
                 "[CACHE-HINT] Найдена информация через "
                 f"{tool_name}.\n"
                 "Если это полезное знание — рассмотри сохранение в кеш:\n"

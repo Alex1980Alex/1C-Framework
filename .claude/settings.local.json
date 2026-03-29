@@ -440,7 +440,9 @@
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/posttooluse-web-cache.py\")",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py\")",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-web-cache.py)",
-      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-docs-tracker.py)"
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-docs-tracker.py)",
+      "Bash(D:/1С-Framework/.venv/Scripts/ruff.exe check:*)",
+      "Bash(D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-quality-feedback.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
