@@ -1,0 +1,186 @@
+name: CI 1C:Enterprise
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/projects/**'
+      - 'src/bsl/**'
+      - 'features/**'
+      - 'tools/vanessa/**'
+      - 'tools/yaxunit.json'
+      - '.github/workflows/ci-1c.yml'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  ONEC_PATH: 'C:\Program Files\1cv8\8.3.27.1859\bin'
+  OSCRIPT_PATH: 'C:\Tools\OneScript\bin\oscript.exe'
+  PROJECT_PATH: 'D:\1С-Framework'
+  BSL_SRC: 'D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src'
+  IB_CONNECTION: '/SKOMPUTER\testdb1c'
+
+jobs:
+  # ═══════════════════════════════════════════════
+  # BSL Static Analysis (BSL LS + SonarQube)
+  # ═══════════════════════════════════════════════
+  bsl-analysis:
+    name: BSL Static Analysis
+    runs-on: [self-hosted, windows-11, 1c]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run BSL Language Server
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          New-Item -ItemType Directory -Force -Path "${{ env.PROJECT_PATH }}\build\bsl-report" | Out-Null
+          java -jar "${{ env.PROJECT_PATH }}\tools\bsl-ls\bsl-language-server.jar" `
+            --analyze `
+            --srcDir "${{ env.BSL_SRC }}" `
+            --reporter json `
+            --outputDir "${{ env.PROJECT_PATH }}\build\bsl-report"
+
+      - name: Run Sonar Scanner
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          $scannerBin = "${{ env.PROJECT_PATH }}\tools\sonar-scanner-6.2.1.4610-windows-x64\bin\sonar-scanner.bat"
+          if (Test-Path $scannerBin) {
+            & $scannerBin `
+              "-Dsonar.host.url=http://localhost:9000" `
+              "-Dsonar.token=$env:SONAR_TOKEN" `
+              "-Dsonar.projectBaseDir=${{ env.PROJECT_PATH }}"
+          } else {
+            Write-Host "sonar-scanner not found, skipping SonarQube upload" -ForegroundColor Yellow
+          }
+
+      - name: Upload BSL Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bsl-report
+          path: build/bsl-report/
+
+  # ═══════════════════════════════════════════════
+  # YAxUnit Unit Tests (Layer 3: server logic)
+  # ═══════════════════════════════════════════════
+  yaxunit-tests:
+    name: YAxUnit Tests
+    runs-on: [self-hosted, windows-11, 1c]
+    env:
+      MSYS_NO_PATHCONV: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run YAxUnit
+        shell: pwsh
+        env:
+          USER_1C: ${{ secrets.USER_1C_LOGIN }}
+          PASS_1C: ${{ secrets.USER_1C_PASS }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          & "${{ env.OSCRIPT_PATH }}" `
+            "C:\Tools\OneScript\lib\vanessa-runner\vanessa-runner.os" `
+            run `
+            --ibconnection "${{ env.IB_CONNECTION }}" `
+            --db-user "$env:USER_1C" `
+            --db-pwd "$env:PASS_1C" `
+            --command "RunUnitTests" `
+            --execute "${{ env.PROJECT_PATH }}\tools\vanessa\YAxUnit-25.12.cfe" `
+            --settings "${{ env.PROJECT_PATH }}\tools\yaxunit.json"
+
+      - name: Upload YAxUnit Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yaxunit-report
+          path: build/reports/junit.xml
+
+  # ═══════════════════════════════════════════════
+  # BDD Tests (Vanessa Automation — Layers 1-3)
+  # ═══════════════════════════════════════════════
+  bdd-tests:
+    name: BDD Tests
+    runs-on: [self-hosted, windows-11, 1c]
+    continue-on-error: true  # BDD tests are less stable (GUI-dependent)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run BDD Tests
+        shell: pwsh
+        env:
+          USER_1C: ${{ secrets.USER_1C_LOGIN }}
+          PASS_1C: ${{ secrets.USER_1C_PASS }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          powershell -File "${{ env.PROJECT_PATH }}\tools\vanessa\run-bdd.ps1"
+
+      - name: Upload BDD Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bdd-report
+          path: |
+            build/reports/bdd-junit.xml
+            build/reports/screenshots/
+
+  # ═══════════════════════════════════════════════
+  # Allure Report (aggregates all test results)
+  # ═══════════════════════════════════════════════
+  allure-report:
+    name: Allure Report
+    runs-on: [self-hosted, windows-11, 1c]
+    needs: [bsl-analysis, yaxunit-tests, bdd-tests]
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/allure-results
+          merge-multiple: true
+
+      - name: Generate Allure Report
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          allure generate build/allure-results -o build/allure-report --clean
+
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: build/allure-report/
+
+      - name: Comment PR with Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              'BSL Analysis': '${{ needs.bsl-analysis.result }}',
+              'YAxUnit Tests': '${{ needs.yaxunit-tests.result }}',
+              'BDD Tests': '${{ needs.bdd-tests.result }}'
+            };
+
+            let table = '| Job | Result |\n|-----|--------|\n';
+            for (const [job, result] of Object.entries(results)) {
+              const emoji = result === 'success' ? '✅' : result === 'failure' ? '❌' : '⚠️';
+              table += `| ${job} | ${emoji} ${result} |\n`;
+            }
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## CI 1C:Enterprise Results\n\n${table}\n\nAllure report available in build artifacts.`
+            });
