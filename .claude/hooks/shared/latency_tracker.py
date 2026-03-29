@@ -42,24 +42,44 @@ def track_latency(func):
 
 
 def _log_latency(hook_name: str, tool_name: str, elapsed_ms: float):
-    """Append latency record to JSONL."""
-    entry = {
-        "ts": datetime.now().isoformat(),
-        "hook": hook_name,
-        "tool": tool_name,
-        "latency_ms": round(elapsed_ms, 1),
-        "over_budget": elapsed_ms > _BUDGET_MS,
-    }
+    """Log latency to SQLite (fallback: JSONL)."""
     try:
-        os.makedirs(os.path.dirname(_LATENCY_LOG), exist_ok=True)
-        with open(_LATENCY_LOG, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except OSError:
-        pass
+        from shared.db_writer import log_latency as db_log_latency
+        db_log_latency(
+            hook_name=hook_name,
+            tool_name=tool_name,
+            latency_ms=elapsed_ms,
+            over_budget=elapsed_ms > _BUDGET_MS,
+        )
+    except Exception:
+        # Fallback to JSONL
+        entry = {
+            "ts": datetime.now().isoformat(),
+            "hook": hook_name,
+            "tool": tool_name,
+            "latency_ms": round(elapsed_ms, 1),
+            "over_budget": elapsed_ms > _BUDGET_MS,
+        }
+        try:
+            os.makedirs(os.path.dirname(_LATENCY_LOG), exist_ok=True)
+            with open(_LATENCY_LOG, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except OSError:
+            pass
 
 
 def get_latency_stats(last_n: int = 100) -> dict:
-    """Get latency statistics from the log."""
+    """Get latency statistics from SQLite (fallback: JSONL)."""
+    # Try SQLite first
+    try:
+        from shared.db_writer import get_latency_stats as db_get_stats
+        result = db_get_stats(last_n)
+        if result.get("count", 0) > 0:
+            return result
+    except Exception:
+        pass
+
+    # Fallback to JSONL
     try:
         entries = []
         if not os.path.isfile(_LATENCY_LOG):
