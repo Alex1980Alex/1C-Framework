@@ -426,7 +426,12 @@
       "Bash(gh repo:*)",
       "Bash(GITHUB_TOKEN=\"\" gh auth status)",
       "Bash(GITHUB_TOKEN=\"\" gh repo list Alex1980Alex --limit 10 2>&1)",
-      "Bash(GITHUB_TOKEN=\"\" gh api repos/Alex1980Alex/1C-Enterprise_Framework/actions/runners/registration-token -X POST -q .token 2>&1)"
+      "Bash(GITHUB_TOKEN=\"\" gh api repos/Alex1980Alex/1C-Enterprise_Framework/actions/runners/registration-token -X POST -q .token 2>&1)",
+      "Bash(GITHUB_TOKEN=\"\" gh secret set USER_1C_LOGIN --repo Alex1980Alex/1C-Enterprise_Framework --body \"a.terletskiy@sodru.com\" 2>&1)",
+      "Bash(GITHUB_TOKEN=\"\" gh secret set USER_1C_PASS --repo Alex1980Alex/1C-Enterprise_Framework --body \"Alex80Alex\" 2>&1)",
+      "Bash(GITHUB_TOKEN=\"\" gh secret list --repo Alex1980Alex/1C-Enterprise_Framework 2>&1)",
+      "Bash(GITHUB_TOKEN=\"\" gh secret set SONAR_TOKEN --repo Alex1980Alex/1C-Enterprise_Framework --body \"squ_7e49682aa8e170f0eb8ea35546c9914b008ece91\")",
+      "Bash(GITHUB_TOKEN=\"\" gh secret list --repo Alex1980Alex/1C-Enterprise_Framework)"
     ]
   },
   "enableAllProjectMcpServers": true,
