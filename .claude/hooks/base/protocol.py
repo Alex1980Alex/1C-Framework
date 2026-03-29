@@ -29,7 +29,7 @@ class HookInput:
         # PreToolUse / PostToolUse
         self.tool_name = raw.get("tool_name", "")
         self.tool_input = raw.get("tool_input") or {}
-        self.tool_result = raw.get("tool_result", "")
+        self.tool_result = raw.get("tool_response", raw.get("tool_result", ""))
         # Stop
         self.transcript = raw.get("transcript", "")
         self.reason = raw.get("reason", "")
@@ -105,6 +105,20 @@ class HookOutput:
             "hook_name": hook_name,
             "prompt": prompt,
             "priority": priority,
+        }
+        return self
+
+    def hook_context(self, message: str) -> "HookOutput":
+        """PostToolUse: inject context into Claude via hookSpecificOutput wrapper.
+
+        This is the ONLY working PostToolUse feedback mechanism (confirmed 2026-03-29).
+        Plain additionalContext doesn't work (#18427). The hookSpecificOutput wrapper
+        delivers the message as a system-reminder "PostToolUse:Tool hook additional context".
+        Exit code must be 0 (not blocking).
+        """
+        self._data["hookSpecificOutput"] = {
+            "hookEventName": "PostToolUse",
+            "additionalContext": message,
         }
         return self
 

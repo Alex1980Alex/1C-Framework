@@ -23,7 +23,9 @@ description: "Известные баги хуков Claude Code и обходн
 
 **Обновление 2026-03-29:** Canary-тест на Windows + v2.1.87 подтвердил: **PreToolUse и PostToolUse оба работают**. Процесс запускается, stdin содержит полные данные (tool_name, tool_input, tool_response). Fix #25981 (Git Bash вместо cmd.exe) решил проблему на Windows. Issue #6305 формально OPEN, но на Windows — исправлен.
 
-**Вывод:** На Windows v2.1.87+ можно использовать все типы событий. WSL2/Termux — не проверены.
+**Обновление 2026-03-29 (hookSpecificOutput):** PostToolUse feedback **РАБОТАЕТ** через `hookSpecificOutput` wrapper. Обычный `additionalContext` не работает (#18427, closed "not planned"), но если обернуть: `{"hookSpecificOutput": {"hookEventName":"PostToolUse","additionalContext":"..."}}` — текст попадает в контекст Claude как system-reminder "PostToolUse:Tool hook additional context". Подтверждено canary-тестом. Источник: binary analysis issue #24788.
+
+**Вывод:** На Windows v2.1.87+ можно использовать все типы событий + PostToolUse feedback через hookSpecificOutput. WSL2/Termux — не проверены.
 
 ---
 
@@ -123,11 +125,12 @@ UserPromptSubmit (уровень 1) + Stop (уровень 2)
 
 ## Чеклист при создании нового хука
 
-1. **НЕ полагайся на PostToolUse** — он не работает (#6305)
-2. **Дублируй критичную логику** на UserPromptSubmit + Stop
-3. **Обрабатывай пустой stdin** — на Windows может быть пуст (#10450)
-4. **Используй matcher с pipe** — `"Write|Edit"`, не `"*"` (#3148)
-5. **Canary-тест** — перед регистрацией проверь что хук вообще запускается
+1. **PostToolUse feedback** → используй `{"hookSpecificOutput": {"hookEventName":"PostToolUse","additionalContext":"..."}}` (exit 0)
+2. **PostToolUse side effects** → exit 0 без stdout (логирование, кеширование)
+3. **Дублируй критичную логику** на UserPromptSubmit + Stop (для надёжности)
+4. **Обрабатывай пустой stdin** — на Windows может быть пуст (#10450)
+5. **Используй matcher с pipe** — `"Write|Edit"`, не `"*"` (#3148)
+6. **Canary-тест** — перед регистрацией проверь что хук вообще запускается
 
 ---
 
