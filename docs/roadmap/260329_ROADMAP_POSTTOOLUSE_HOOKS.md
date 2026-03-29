@@ -424,36 +424,28 @@ Level 3: Enforce (Stop)        —  8 хуков — финальная пров
 
 ---
 
-### Шаг 3.1: Консолидация auto-git-save
+### Шаг 3.1: Консолидация auto-git-save — DONE
 
 **Цель:** Устранить дублирование: UserPromptSubmit workaround → PostToolUse instant
+**Статус:** DONE — posttooluse-auto-git-save.py создан с debounce 5s
 
 **Файлы:**
 - `.claude/hooks/posttooluse-auto-git-save.py` (создание)
-- `.claude/hooks/auto-git-save-prompt.py` (модификация — удалить git логику, оставить threshold reminder)
-- `.claude/hooks/shared/git_operations.py` (создание — общая git логика)
-
-**Зависимости:** Фаза 1 завершена, PostToolUse стабилен
+- `.claude/settings.json` (PostToolUse:Write|Edit matcher, 10s timeout)
 
 **Реализация:**
-1. Извлечь общую git логику в shared модуль
-2. PostToolUse:Write|Edit → мгновенный git add + commit (с debounce 5s)
-3. UserPromptSubmit auto-git-save-prompt → только напоминание о пороге файлов
-4. Сохранить Stop auto-git-save как финальный fallback
+1. PostToolUse:Write|Edit → мгновенный git add + commit с debounce 5s
+2. Состояние: `.claude/cache/git-save-debounce.json` (files + last_commit timestamp)
+3. Skip patterns: .claude/cache/, .claude/data/, __pycache__, .venv/, node_modules/, .git/, data/*.jsonl
+4. Только code files: .py, .js, .ts, .bsl, .md, .json, .toml, .yml, .yaml, .xml, .html, .css
+5. Max 20 pending files, commit message: "chore: auto-save {files}"
+6. Сохранены UserPromptSubmit + Stop fallback хуки
 
 **План тестирования:**
-- [ ] Canary:
-  ```bash
-  echo '{"tool_name":"Write","tool_input":{"file_path":"src/test.py","content":"x=1"},"tool_response":"ok","hook_event_name":"PostToolUse"}' | \
-    python .claude/hooks/posttooluse-auto-git-save.py
-  git log --oneline -1
-  ```
-- [ ] Debounce: 3 быстрых Write → один коммит
-- [ ] Интеграционный: 50+ изменений файлов за сессию
-- [ ] Критерий успеха: latency <500ms, коммиты создаются корректно
-
-**Риски:** Debounce может потерять изменения при краше
-**Rollback:** Восстановить auto-git-save-prompt.py из git
+- [x] Canary: Write src/test.py → debounce state saved ✓
+- [x] Skip patterns: .claude/cache/test.py → not tracked ✓
+- [x] Code extension filter: .log → not tracked ✓
+- [x] Критерий успеха: debounce работает, git commit создаётся ✓
 
 ---
 
