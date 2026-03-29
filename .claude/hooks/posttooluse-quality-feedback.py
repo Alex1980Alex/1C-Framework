@@ -110,7 +110,12 @@ class PostToolUseQualityFeedback(BaseHook):
                 warning_count += 1
             lines.append(f"  L{loc} [{code}] {msg}")
 
-        summary = f"[quality-feedback] ruff found {error_count} errors, {warning_count} warnings in {os.path.basename(file_path)}:\n"
+        fname = os.path.basename(file_path)
+        summary = (
+            f"[quality-feedback] ruff found "
+            f"{error_count} errors, {warning_count} "
+            f"warnings in {fname}:\n"
+        )
         summary += "\n".join(lines)
         if len(issues) > 10:
             summary += f"\n  ... and {len(issues) - 10} more issues"
