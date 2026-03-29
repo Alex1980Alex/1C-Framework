@@ -1,8 +1,8 @@
 # Roadmap: PostToolUse Hooks — Реактивная автоматизация
 
-**Версия:** 1.1.0
+**Версия:** 2.0.0
 **Дата:** 2026-03-29
-**Статус:** In Progress — Фаза 0 COMPLETE
+**Статус:** In Progress — Фаза 0 COMPLETE, Фаза 1 IN PROGRESS
 **Триггер:** Canary-тест v2.1.87 подтвердил работоспособность PostToolUse на Windows (fix #25981)
 
 ### Фаза 0 — Результаты (2026-03-29)
@@ -21,18 +21,26 @@
 
 Write/Edit не триггерились (PreToolUse enforcer блокировал), не проблема PostToolUse.
 
-**Шаг 0.3 DONE:** additionalContext/systemMessage **НЕ РАБОТАЮТ** (подтверждает #18427):
+**Шаг 0.3 DONE:** additionalContext/systemMessage — **РАБОТАЮТ через hookSpecificOutput**:
 | Механизм | Попадает в контекст Claude? |
 |----------|---------------------------|
-| stdout additionalContext, exit 0 | **НЕТ** |
-| stdout systemMessage, exit 0 | **НЕТ** |
-| stderr, exit 0 | **НЕТ** |
-| stderr, exit 1 | **НЕТ** |
-| **stderr, exit 2** | **ДА** (как "hook blocking error") |
+| stdout `{"additionalContext": "..."}`, exit 0 | **НЕТ** (#18427) |
+| stdout `{"systemMessage": "..."}`, exit 0 | **НЕТ** |
+| stderr + exit 2 | **ДА** (как "hook blocking error") |
+| **`{"hookSpecificOutput": {"hookEventName":"PostToolUse","additionalContext":"..."}}` + exit 0** | **ДА** (чистый feedback, не ошибка) |
+| `{"hookSpecificOutput": {"hookEventName":"PostToolUse","systemMessage":"..."}}` + exit 0 | **НЕТ** |
+| `{"hookSpecificOutput": {"output":{"additionalContext":"..."}}}` + exit 0 | **НЕТ** |
 
-**Шаг 0.4 DONE:** Единственный рабочий feedback: `stderr + exit 2`. Показывается как system-reminder "PostToolUse:Tool hook blocking error".
+**Шаг 0.4 DONE:** Матрица exit codes + hookSpecificOutput:
+| Exit | stdout формат | Результат |
+|------|-------------|-----------|
+| 0 | `hookSpecificOutput.additionalContext` | **FEEDBACK в контекст** (PostToolUse:Tool hook additional context) |
+| 0 | plain `additionalContext` | НЕТ (#18427) |
+| 2 | stderr | FEEDBACK как "blocking error" |
 
-**Вывод Фазы 0:** PostToolUse **работает для side effects** (логирование, кеширование, метрики — exit 0). Для feedback в контекст Claude доступен только `stderr + exit 2` (грубый, показывается как ошибка). Стратегия Фаз 1-4 корректируется: приоритет на side effects, feedback через exit 2 только для критичных случаев.
+**ПРОРЫВ ФАЗЫ 0:** Обнаружен `hookSpecificOutput` wrapper — единственный чистый механизм PostToolUse→Claude feedback. Источник: binary analysis issue #24788. Подтверждён canary-тестом: маркер `HOOKSPECIFIC_MARKER_a1b2c3d4` появился в контексте Claude как system-reminder. Это меняет всю стратегию: PostToolUse может не только логировать, но и **направлять Claude** после каждого tool call.
+
+**Вывод Фазы 0 (v2):** PostToolUse работает **полностью** — и для side effects (exit 0, логирование), и для feedback (hookSpecificOutput wrapper). Стратегия Фаз 1-4 пересмотрена: приоритет на feedback-хуки с hookSpecificOutput.additionalContext для интеллигентной реакции.
 
 ---
 
@@ -45,11 +53,12 @@ Write/Edit не триггерились (PreToolUse enforcer блокирова
 | Метрика | Текущее | Цель |
 |---------|---------|------|
 | PostToolUse хуков | 0 | 8+ |
-| Error rate skill-eval-enforcer | 87% | <5% |
+| Error rate skill-eval-enforcer | 87% → <5% (fixed) | <5% |
 | auto-git-save задержка | ~15s (через UserPromptSubmit) | <1s (через PostToolUse) |
 | Hook latency (p95) | не измеряется | <200ms |
 | Метрики хранение | JSONL (grep ~30s на 100k) | SQLite (<100ms) |
 | Eval coverage PostToolUse | 0% | 100% |
+| Feedback mechanism | не определён → **hookSpecificOutput** | production-ready |
 
 ### Архитектура: Guard → React → Enforce
 
