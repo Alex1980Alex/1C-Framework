@@ -438,7 +438,9 @@
       "Bash(D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-skill-metrics.py)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-skill-metrics.py)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/posttooluse-web-cache.py\")",
-      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py\")"
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py\")",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-web-cache.py)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-docs-tracker.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
