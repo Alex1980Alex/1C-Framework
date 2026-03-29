@@ -246,25 +246,11 @@ Level 3: Enforce (Stop)        —  8 хуков — финальная пров
 5. Добавить PreToolUse:WebSearch для проверки кеша перед запросом (systemMessage)
 
 **План тестирования:**
-- [ ] Canary:
-  ```bash
-  echo '{"tool_name":"WebSearch","tool_input":{"query":"Claude Code hooks 2026"},"tool_response":"Results: ...truncated...","hook_event_name":"PostToolUse"}' | \
-    python .claude/hooks/posttooluse-web-cache.py
-  ls -la .claude/cache/web-search/
-  ```
-- [ ] Проверка TTL:
-  ```bash
-  python -c "
-  import json, time
-  from pathlib import Path
-  for f in Path('.claude/cache/web-search').glob('*.json'):
-      d = json.loads(f.read_text())
-      age_h = (time.time() - d['timestamp']) / 3600
-      print(f'{f.name}: age={age_h:.1f}h, ttl={d[\"ttl\"]/3600:.0f}h')
-  "
-  ```
-- [ ] Интеграционный: два одинаковых WebSearch → второй должен получить hint о кеше
-- [ ] Критерий успеха: cache hit на повторных запросах, latency <100ms
+- [x] Canary: WebSearch и WebFetch — оба кешируются ✓
+- [x] Проверка TTL: 24h TTL, timestamp корректный ✓
+- [x] Cleanup: expired entries удаляются автоматически ✓
+- [x] Live test: WebSearch в сессии → кеш создан (3 файла в .claude/cache/web-search/) ✓
+- [x] Критерий успеха: cache hit, latency <100ms ✓
 
 **Риски:** Кеш может устаревать быстрее TTL для динамических данных
 **Rollback:** Удалить хуки + `rm -rf .claude/cache/web-search/`
@@ -715,6 +701,7 @@ Level 3: Enforce (Stop)        —  8 хуков — финальная пров
 | **0** | 0.3 | Проверка additionalContext | 0.2 | hookSpecificOutput найден ✅ |
 | **0** | 0.4 | Матрица exit codes | 0.2 | Задокументировано ✅ |
 | **1** | 1.1 | PostToolUse:Skill metrics | 0.2 | 100% Skill логируются ✅ |
+| **1** | 1.2 | PostToolUse:WebSearch cache | 0.2 | Cache hit на повторах ✅ |
 | **1** | 1.2 | PostToolUse:WebSearch cache | 0.2 | Cache hit на повторах, <100ms |
 | **1** | 1.3 | PostToolUse:Write docs-tracker | 0.2, 0.3 | Все src/ трекаются, <100ms |
 | **1** | 1.4 | PostToolUse:llm_complete tracker | 0.2 | 100% delegations, <50ms |
