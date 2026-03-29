@@ -1,10 +1,49 @@
 # Roadmap v2: PostToolUse Hooks — Resilience & Performance
 
-**Версия:** 1.0.0
+**Версия:** 1.1.0
 **Дата:** 2026-03-29
-**Статус:** PLANNED
+**Статус:** NEAR-COMPLETE
 **Предшественник:** 260329_ROADMAP_POSTTOOLUSE_HOOKS.md (v3.0.0 — COMPLETE)
 **Триггер:** Анализ GitHub issues (#18427, #24788, #36121, #6371) и community patterns (Lefthook, Aider, Resilience4j)
+
+### Прогресс реализации (2026-03-29)
+
+| Компонент | Статус | Файлы |
+|-----------|--------|-------|
+| Circuit Breaker (6.1) | **DONE** | `shared/circuit_breaker.py` — CLOSED/OPEN/HALF_OPEN, JSON persistence, `@with_circuit_breaker` decorator |
+| CB → delegation-tracker | **DONE** | `posttooluse-delegation-tracker.py` — `@with_circuit_breaker("posttooluse-delegation-tracker")` |
+| CB → auto-git-save | **DONE** | `auto-git-save.py` — `@with_circuit_breaker("auto-git-save")` |
+| db_writer SQLite (7.2) | **DONE** | `shared/db_writer.py` — WAL mode, 5 tables, JSONL fallback |
+| Migration: delegation-tracker | **DONE** | `_log_outcome()` → `db_writer.log_delegation()` with JSONL fallback |
+| Migration: skill-metrics | **DONE** | `_log_confirmed()` + `_log_accuracy_confirmed()` → `db_writer.log_skill_usage()` |
+| Migration: latency_tracker | **DONE** | `_log_latency()` + `get_latency_stats()` → `db_writer.log_latency()` |
+| Latency benchmark | **DONE** | `scripts/measure-hook-latency.py` — reads SQLite + JSONL + invocations |
+| Latency baseline measured | **DONE** | See "Measured Latency" below |
+
+### Measured Latency (baseline, 15262 Write|Edit invocations)
+
+| Hook | n | p50 | p95 | max | Notes |
+|------|---|-----|-----|-----|-------|
+| AutoGitSave | 1727 | 795ms | 3653ms | 11519ms | **Bottleneck** — git ops. CB will auto-disable on repeated failures |
+| DocsChangeTracker | 2298 | 2ms | 108ms | 386ms | Near KPI |
+| CodeSkillEnforcer | 3807 | 3ms | 10ms | 382ms | OK |
+| TaskProtocolEnforcer | 2049 | 16ms | 31ms | 282ms | OK |
+| CodeReviewEnforcer | 1523 | 17ms | 33ms | 243ms | OK |
+| PostToolUseQualityFeedback | 61 | 17ms | 52ms | 124ms | OK |
+| All others | — | <20ms | <40ms | <212ms | OK |
+
+**Excluding AutoGitSave: p95 ~108ms** — near KPI target of <100ms.
+With `async: true` on AutoGitSave (step 5.3): effective sync p95 will be <100ms.
+
+### Remaining TODO
+- [ ] Step 5.1: stdin consumption fix (8 hooks) — LOW effort
+- [ ] Step 5.2: `if` field conditional hooks — needs Claude Code v2.1.86+ verification
+- [ ] Step 5.3: `async: true` for 4 logging hooks — LOW effort, will achieve <100ms KPI
+- [ ] Step 5.4: PostToolUseFailure handler — LOW effort
+- [ ] Step 6.2: Reflected Message Loop (quality auto-fix) — MEDIUM effort
+- [ ] Step 7.1: Priority groups restructuring — depends on 5.2+5.3
+- [ ] Step 8.1: PostCompact context restore — LOW effort
+- [ ] Migration: quality-feedback → db_writer — not yet switched (ruff results)
 
 ---
 
