@@ -9,9 +9,7 @@ DB path: data/hooks.db
 """
 
 import json
-import os
 import sqlite3
-import time
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
