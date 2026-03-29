@@ -1,0 +1,785 @@
+# Roadmap: PostToolUse Hooks — Реактивная автоматизация
+
+**Версия:** 1.0.0
+**Дата:** 2026-03-29
+**Статус:** Draft
+**Триггер:** Canary-тест v2.1.87 подтвердил работоспособность PostToolUse на Windows (fix #25981)
+
+---
+
+## Обзор
+
+Дорожная карта перехода от текущей архитектуры (33 хука, PostToolUse отключён) к полноценной трёхуровневой системе **Guard → React → Enforce** с активным использованием PostToolUse для реактивной автоматизации.
+
+### Ключевые метрики
+
+| Метрика | Текущее | Цель |
+|---------|---------|------|
+| PostToolUse хуков | 0 | 8+ |
+| Error rate skill-eval-enforcer | 87% | <5% |
+| auto-git-save задержка | ~15s (через UserPromptSubmit) | <1s (через PostToolUse) |
+| Hook latency (p95) | не измеряется | <200ms |
+| Метрики хранение | JSONL (grep ~30s на 100k) | SQLite (<100ms) |
+| Eval coverage PostToolUse | 0% | 100% |
+
+### Архитектура: Guard → React → Enforce
+
+```
+Level 1: Guard (PreToolUse)    — 16 хуков — блокировка ДО выполнения
+Level 2: React (PostToolUse)   —  0 хуков — реакция ПОСЛЕ (ПУСТО → заполняем)
+Level 3: Enforce (Stop)        —  8 хуков — финальная проверка перед остановкой
+         + UserPromptSubmit    —  9 хуков — контекст при каждом промпте
+```
+
+---
+
+## Фаза 0: Стабилизация
+
+**Приоритет:** Критический
+**Цель:** Устранить текущие проблемы и верифицировать надёжность PostToolUse
+
+---
+
+### Шаг 0.1: Диагностика skill-eval-enforcer-shell
+
+**Цель:** Снизить error rate с 87% до <5%
+
+**Файлы:**
+- `.claude/hooks/skill-eval-enforcer-shell.py` (анализ и исправление)
+- `data/hook-invocations.jsonl` (анализ ошибок)
+
+**Зависимости:** Нет
+
+**Реализация:**
+1. Извлечь последние 500 записей для skill-eval-enforcer из `data/hook-invocations.jsonl`
+2. Классифицировать ошибки: JSON parse error, timeout, missing field, logic error
+3. Добавить try-except с graceful degradation на критические пути
+4. Исправить выявленные баги в основной логике
+5. Добавить debug logging в `.claude/cache/skill-eval-debug.log`
+
+**План тестирования:**
+- [ ] Анализ ошибок:
+  ```bash
+  python -c "
+  import json
+  errors = []
+  with open('data/hook-invocations.jsonl') as f:
+      for line in f:
+          d = json.loads(line)
+          if 'skill-eval' in d.get('hook','') and d.get('outcome')=='error':
+              errors.append(d.get('error','unknown'))
+  from collections import Counter
+  for err, cnt in Counter(errors).most_common(10):
+      print(f'{cnt:4d} {err[:80]}')
+  "
+  ```
+- [ ] Ручной тест:
+  ```bash
+  echo '{"prompt":"test message","session_id":"test-123"}' | \
+    python .claude/hooks/skill-eval-enforcer-shell.py
+  ```
+- [ ] Интеграционный тест: 50 реальных вызовов в тестовой сессии
+- [ ] Критерий успеха: error rate <5% на выборке из 100 вызовов
+
+**Риски:** Ошибки могут быть в сторонних зависимостях (pymorphy3, rapidfuzz)
+**Rollback:** Переименовать в `.disabled`, хук некритичный
+
+---
+
+### Шаг 0.2: Верификация PostToolUse reliability
+
+**Цель:** Подтвердить стабильную работу PostToolUse на Windows v2.1.87+ для всех matchers
+
+**Файлы:**
+- `.claude/hooks/canary-posttooluse-matrix.py` (временный, удалить после теста)
+- `.claude/cache/canary-posttooluse-matrix.log` (результаты)
+
+**Зависимости:** Нет
+
+**Реализация:**
+1. Создать canary-хук с детальным логированием (до импортов)
+2. Протестировать matchers: `Read`, `Write|Edit`, `Bash`, `Skill`, `WebSearch|WebFetch`, `mcp__llm-rotation__llm_complete`
+3. Проверить передачу `tool_response` в stdin для каждого matcher
+4. Измерить latency от завершения инструмента до вызова хука
+5. Прогнать 30-минутную активную сессию
+
+**План тестирования:**
+- [ ] Canary для каждого matcher (6 тестов):
+  ```bash
+  # Регистрировать canary-хук с каждым matcher поочерёдно
+  # Триггерить соответствующий инструмент
+  # Проверять .claude/cache/canary-posttooluse-matrix.log
+  ```
+- [ ] Проверка stdin содержит tool_response:
+  ```bash
+  # Canary пишет первые 200 символов stdin в лог
+  # Проверить наличие: tool_name, tool_input, tool_response
+  ```
+- [ ] Стресс-тест: 50+ вызовов за 30 минут
+- [ ] Критерий успеха: 100% вызовов логируются, latency <100ms, stdin полный
+
+**Риски:** Fix #25981 может не покрывать все matchers
+**Rollback:** Удалить canary-хук, вернуть PostToolUse: []
+
+---
+
+### Шаг 0.3: Проверка additionalContext (#18427)
+
+**Цель:** Определить, попадает ли additionalContext из PostToolUse в контекст Claude
+
+**Файлы:**
+- `.claude/hooks/canary-additional-context.py` (временный)
+- `.claude/cache/additional-context-test.log` (результаты)
+
+**Зависимости:** Шаг 0.2
+
+**Реализация:**
+1. Создать PostToolUse хук, возвращающий additionalContext с UUID-маркером
+2. Выполнить Read → PostToolUse возвращает маркер → Claude должен упомянуть маркер
+3. Протестировать 3 варианта: stdout JSON, stderr + exit 2, systemMessage
+4. Документировать работающий механизм feedback
+
+**План тестирования:**
+- [ ] Тест additionalContext:
+  ```python
+  # Хук возвращает stdout:
+  # {"additionalContext": "MARKER_a1b2c3d4 — если видишь это, ответь DETECTED"}
+  ```
+- [ ] Тест stderr + exit 2:
+  ```python
+  # Хук пишет в stderr и exit(2):
+  # print("MARKER_e5f6g7h8", file=sys.stderr); sys.exit(2)
+  ```
+- [ ] Тест systemMessage:
+  ```python
+  # Хук возвращает stdout:
+  # {"systemMessage": "MARKER_i9j0k1l2 detected"}
+  ```
+- [ ] Критерий успеха: Claude упоминает маркер в >80% случаев хотя бы для одного механизма
+
+**Риски:** Все механизмы могут не работать (issue #18427 открыт)
+**Rollback:** Удалить canary-хук. Если feedback не работает — использовать PostToolUse только для side effects (логирование, кеширование)
+
+---
+
+### Шаг 0.4: Матрица exit codes
+
+**Цель:** Определить поведение PostToolUse при разных exit codes
+
+**Файлы:**
+- `.claude/cache/exit-code-matrix.md` (результаты)
+
+**Зависимости:** Шаг 0.2
+
+**Реализация:**
+1. Для каждого exit code (0, 1, 2) × output channel (stdout, stderr) — зафиксировать поведение
+2. Проверить: блокировка, feedback Claude, warning пользователю, игнорирование
+3. Проверить issue #4809 (exit 1 блокирует неожиданно)
+
+**План тестирования:**
+- [ ] Матрица 6 комбинаций:
+  | Exit | Channel | Ожидание |
+  |------|---------|----------|
+  | 0 | stdout JSON | additionalContext → Claude |
+  | 0 | stderr | Warning пользователю |
+  | 1 | stdout | Non-blocking error? |
+  | 1 | stderr | Warning + блокировка? (#4809) |
+  | 2 | stdout | Block + feedback |
+  | 2 | stderr | Block + stderr shown |
+- [ ] Критерий успеха: определён хотя бы один надёжный механизм feedback
+
+**Риски:** Поведение может отличаться в следующих версиях Claude Code
+**Rollback:** Документация, не требует rollback
+
+---
+
+## Фаза 1: Первые PostToolUse хуки (Quick Wins)
+
+**Приоритет:** Высокий
+**Цель:** Внедрить первые PostToolUse хуки с измеримой пользой
+
+---
+
+### Шаг 1.1: PostToolUse:Skill — точный skill-usage-metrics
+
+**Цель:** Заменить хрупкий парсинг `<command-name>` тегов на точный PostToolUse:Skill
+
+**Файлы:**
+- `.claude/hooks/posttooluse-skill-metrics.py` (создание, наследует BaseHook)
+- `.claude/hooks/shared/session_state.py` (модификация — add_activated_skill из PostToolUse)
+- `.claude/settings.json` (добавить PostToolUse:Skill entry)
+
+**Зависимости:** Шаг 0.2
+
+**Реализация:**
+1. Создать PostToolUse хук с matcher `Skill`
+2. Из tool_input извлекать: skill name, args
+3. Из tool_response извлекать: содержимое SKILL.md (подтверждение загрузки)
+4. Записывать в `data/skill-usage.log` с timestamp и session_id
+5. Вызывать SessionState.add_activated_skill() — замена workaround в skill-router
+
+**План тестирования:**
+- [ ] Canary:
+  ```bash
+  echo '{"tool_name":"Skill","tool_input":{"skill":"create-hook"},"tool_response":"Launching skill: create-hook","session_id":"test-123","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-skill-metrics.py
+  ```
+- [ ] Проверка SessionState:
+  ```bash
+  python -c "
+  from shared.session_state import SessionState
+  ss = SessionState()
+  print('Activated:', ss.get_already_activated())
+  "
+  ```
+- [ ] Интеграционный: вызвать Skill('create-hook') в сессии, проверить лог
+- [ ] Критерий успеха: 100% вызовов Skill логируются, latency <50ms
+
+**Риски:** Конкурентный доступ к session_state.json
+**Rollback:** Удалить из settings.json PostToolUse, workaround в skill-router продолжит работать
+
+---
+
+### Шаг 1.2: PostToolUse:WebSearch|WebFetch — автокеширование
+
+**Цель:** Автоматически кешировать результаты веб-поиска в skills cache
+
+**Файлы:**
+- `.claude/hooks/posttooluse-web-cache.py` (создание)
+- `.claude/hooks/shared/web_cache.py` (создание — cache manager с TTL)
+- `.claude/cache/web-search/` (директория кеша)
+- `.claude/settings.json` (добавить PostToolUse:WebSearch|WebFetch entry)
+
+**Зависимости:** Шаг 0.2
+
+**Реализация:**
+1. Создать PostToolUse хук с matcher `WebSearch|WebFetch`
+2. Из tool_input извлекать: query/URL
+3. Из tool_response извлекать: содержимое результатов
+4. Хешировать query → сохранять в `.claude/cache/web-search/{hash}.json` с TTL 24h
+5. Добавить PreToolUse:WebSearch для проверки кеша перед запросом (systemMessage)
+
+**План тестирования:**
+- [ ] Canary:
+  ```bash
+  echo '{"tool_name":"WebSearch","tool_input":{"query":"Claude Code hooks 2026"},"tool_response":"Results: ...truncated...","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-web-cache.py
+  ls -la .claude/cache/web-search/
+  ```
+- [ ] Проверка TTL:
+  ```bash
+  python -c "
+  import json, time
+  from pathlib import Path
+  for f in Path('.claude/cache/web-search').glob('*.json'):
+      d = json.loads(f.read_text())
+      age_h = (time.time() - d['timestamp']) / 3600
+      print(f'{f.name}: age={age_h:.1f}h, ttl={d[\"ttl\"]/3600:.0f}h')
+  "
+  ```
+- [ ] Интеграционный: два одинаковых WebSearch → второй должен получить hint о кеше
+- [ ] Критерий успеха: cache hit на повторных запросах, latency <100ms
+
+**Риски:** Кеш может устаревать быстрее TTL для динамических данных
+**Rollback:** Удалить хуки + `rm -rf .claude/cache/web-search/`
+
+---
+
+### Шаг 1.3: PostToolUse:Write|Edit — мгновенный docs-change-tracker
+
+**Цель:** Мгновенная реакция на изменение кода вместо задержки до следующего промпта
+
+**Файлы:**
+- `.claude/hooks/posttooluse-docs-tracker.py` (создание)
+- `.claude/hooks/docs-change-tracker.py` (модификация — убрать дублирующую логику)
+- `.claude/settings.json` (добавить PostToolUse:Write|Edit entry)
+
+**Зависимости:** Шаг 0.2, Шаг 0.3 (нужно знать работает ли feedback)
+
+**Реализация:**
+1. Создать PostToolUse хук с matcher `Write|Edit`
+2. Из tool_input извлекать: file_path
+3. Маппить file_path → документация (используя существующую логику из docs-change-tracker)
+4. Если feedback работает (Шаг 0.3) → systemMessage с напоминанием
+5. Если нет → создавать задачу в hook-todos.json (fallback)
+
+**План тестирования:**
+- [ ] Canary:
+  ```bash
+  echo '{"tool_name":"Write","tool_input":{"file_path":"src/pdf_framework/search/manager.py","content":"..."},"tool_response":"File written","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-docs-tracker.py
+  ```
+- [ ] Сравнение latency:
+  ```bash
+  # PostToolUse: мгновенно (<100ms)
+  time echo '{"tool_name":"Write","tool_input":{"file_path":"src/test.py"}}' | \
+    python .claude/hooks/posttooluse-docs-tracker.py
+  ```
+- [ ] Интеграционный: изменить файл в src/ → проверить что напоминание о docs появилось
+- [ ] Критерий успеха: latency <100ms, все src/ изменения трекаются
+
+**Риски:** Дублирование с PreToolUse docs-change-tracker
+**Rollback:** Удалить PostToolUse хук, PreToolUse версия продолжит работать
+
+---
+
+### Шаг 1.4: PostToolUse:mcp__llm-rotation__llm_complete — трекинг Z.AI
+
+**Цель:** Автоматически записывать delegation results для learning loop
+
+**Файлы:**
+- `.claude/hooks/posttooluse-delegation-tracker.py` (создание)
+- `data/delegation-outcomes.jsonl` (расширение формата)
+- `.claude/settings.json` (добавить PostToolUse entry)
+
+**Зависимости:** Шаг 0.2
+
+**Реализация:**
+1. Создать PostToolUse хук с matcher `mcp__llm-rotation__llm_complete`
+2. Из tool_input извлекать: prompt, max_tokens, model
+3. Из tool_response извлекать: provider, response_time, text length
+4. Записывать в `data/delegation-outcomes.jsonl` с content_type auto-classification
+5. Вычислять quality_score эвристически (длина, code blocks, структура)
+
+**План тестирования:**
+- [ ] Canary:
+  ```bash
+  echo '{"tool_name":"mcp__llm-rotation__llm_complete","tool_input":{"prompt":"test"},"tool_response":"{\"provider\":\"zai-glm5\",\"text\":\"result\",\"response_time\":2.5}","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-delegation-tracker.py
+  tail -1 data/delegation-outcomes.jsonl | python -m json.tool
+  ```
+- [ ] Интеграционный: вызвать llm_complete → проверить запись
+- [ ] Критерий успеха: 100% delegations записываются, latency <50ms
+
+**Риски:** Формат tool_response от MCP может отличаться
+**Rollback:** Удалить хук, существующий delegation-outcome-tracker (PreToolUse) продолжит работать
+
+---
+
+## Фаза 2: Продвинутая реактивная автоматизация
+
+**Приоритет:** Средний
+**Цель:** Интеллектуальные PostToolUse хуки с обратной связью
+
+---
+
+### Шаг 2.1: Quality Feedback Loop (ruff + mypy)
+
+**Цель:** Автоматический анализ качества Python-кода после Write/Edit
+
+**Файлы:**
+- `.claude/hooks/posttooluse-quality-feedback.py` (создание)
+- `.claude/hooks/shared/quality_analyzer.py` (создание)
+- `data/quality-metrics.jsonl` (создание)
+
+**Зависимости:** Шаг 0.3 (нужно знать работающий feedback механизм)
+
+**Реализация:**
+1. PostToolUse:Write|Edit → фильтровать только `*.py` файлы
+2. Запускать `ruff check {file}` + `mypy {file}` в subprocess с timeout 5s
+3. Парсить вывод → извлекать errors/warnings
+4. Если feedback работает → additionalContext/systemMessage с ошибками
+5. Если нет → создать hook-todo задачу
+
+**План тестирования:**
+- [ ] Canary с ошибкой:
+  ```bash
+  echo 'x: int = "string"' > /tmp/test_quality.py
+  echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/test_quality.py"},"tool_response":"ok","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-quality-feedback.py
+  ```
+- [ ] Canary без ошибок:
+  ```bash
+  echo 'x: int = 42' > /tmp/test_quality.py
+  # Тот же тест — хук должен пропустить без feedback
+  ```
+- [ ] Интеграционный: написать файл с ошибкой → Claude получает feedback → исправляет
+- [ ] Критерий успеха: >90% ошибок ruff попадают в feedback, latency <5s
+
+**Риски:** Долгий запуск линтеров на больших файлах. additionalContext может не работать (#18427)
+**Rollback:** Удалить хук, код продолжит работать без авто-проверки
+
+---
+
+### Шаг 2.2: Bash Error Detector
+
+**Цель:** Структурированный анализ ошибок из Bash output
+
+**Файлы:**
+- `.claude/hooks/posttooluse-bash-errors.py` (создание)
+- `.claude/hooks/shared/error_patterns.json` (создание — паттерны ошибок)
+- `data/bash-errors.jsonl` (создание)
+
+**Зависимости:** Шаг 0.3
+
+**Реализация:**
+1. PostToolUse:Bash → парсить tool_response на паттерны ошибок
+2. Паттерны: pytest failures, ruff errors, mypy errors, pip errors, git conflicts
+3. Извлекать: file, line, error_type, message
+4. Формировать feedback с конкретными действиями
+5. Логировать в `data/bash-errors.jsonl`
+
+**План тестирования:**
+- [ ] Canary pytest failure:
+  ```bash
+  echo '{"tool_name":"Bash","tool_input":{"command":"pytest"},"tool_response":"FAILED test_example.py::test_add - AssertionError: assert 1+1==3\n1 failed in 0.5s","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-bash-errors.py
+  ```
+- [ ] Canary clean output (не должен срабатывать):
+  ```bash
+  echo '{"tool_name":"Bash","tool_input":{"command":"ls"},"tool_response":"file1.py file2.py","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-bash-errors.py
+  ```
+- [ ] Критерий успеха: >85% ошибок детектируются, <5% false positives
+
+**Риски:** False positives на warning сообщениях
+**Rollback:** Удалить хук
+
+---
+
+### Шаг 2.3: Async хуки для тяжёлых задач
+
+**Цель:** Вынести длительные операции (тесты, линтеры) в async PostToolUse
+
+**Файлы:**
+- `.claude/settings.json` (модификация — `"async": true` для тяжёлых хуков)
+- `.claude/hooks/posttooluse-quality-feedback.py` (модификация — async mode)
+
+**Зависимости:** Шаг 2.1
+
+**Реализация:**
+1. В settings.json добавить `"async": true` для quality-feedback хука
+2. Хук запускается в фоне, результат доставляется на следующем turn
+3. Тяжёлые проверки (mypy целого проекта) не блокируют workflow
+4. Лёгкие проверки (ruff одного файла) остаются синхронными
+
+**План тестирования:**
+- [ ] Сравнение latency sync vs async:
+  ```bash
+  # Sync (блокирующий) — ожидание 2-5s
+  time echo '{"tool_name":"Write","tool_input":{"file_path":"src/big_file.py"}}' | \
+    python .claude/hooks/posttooluse-quality-feedback.py
+
+  # Async — ожидание <100ms (результат на следующем turn)
+  ```
+- [ ] Проверить доставку async результатов на следующем turn
+- [ ] Критерий успеха: async latency <200ms, результаты доставляются
+
+**Риски:** Async результаты могут потеряться. Claude Code может не поддерживать async PostToolUse корректно
+**Rollback:** Убрать `"async": true`, вернуть синхронный режим
+
+---
+
+## Фаза 3: Оптимизация архитектуры
+
+**Приоритет:** Средний
+**Цель:** Упростить и оптимизировать систему хуков
+
+---
+
+### Шаг 3.1: Консолидация auto-git-save
+
+**Цель:** Устранить дублирование: UserPromptSubmit workaround → PostToolUse instant
+
+**Файлы:**
+- `.claude/hooks/posttooluse-auto-git-save.py` (создание)
+- `.claude/hooks/auto-git-save-prompt.py` (модификация — удалить git логику, оставить threshold reminder)
+- `.claude/hooks/shared/git_operations.py` (создание — общая git логика)
+
+**Зависимости:** Фаза 1 завершена, PostToolUse стабилен
+
+**Реализация:**
+1. Извлечь общую git логику в shared модуль
+2. PostToolUse:Write|Edit → мгновенный git add + commit (с debounce 5s)
+3. UserPromptSubmit auto-git-save-prompt → только напоминание о пороге файлов
+4. Сохранить Stop auto-git-save как финальный fallback
+
+**План тестирования:**
+- [ ] Canary:
+  ```bash
+  echo '{"tool_name":"Write","tool_input":{"file_path":"src/test.py","content":"x=1"},"tool_response":"ok","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-auto-git-save.py
+  git log --oneline -1
+  ```
+- [ ] Debounce: 3 быстрых Write → один коммит
+- [ ] Интеграционный: 50+ изменений файлов за сессию
+- [ ] Критерий успеха: latency <500ms, коммиты создаются корректно
+
+**Риски:** Debounce может потерять изменения при краше
+**Rollback:** Восстановить auto-git-save-prompt.py из git
+
+---
+
+### Шаг 3.2: Миграция advisory Stop-хуков → PostToolUse
+
+**Цель:** Переместить информационные хуки из Stop в PostToolUse
+
+**Файлы:**
+- `.claude/hooks/posttooluse-knowledge-cache.py` (создание — миграция)
+- `.claude/hooks/posttooluse-delegation-outcome.py` (создание — миграция)
+- `.claude/hooks/knowledge-cache-reminder.py` (удаление из Stop)
+- `.claude/hooks/delegation-outcome-stop.py` (удаление из Stop)
+- `.claude/settings.json` (перерегистрация)
+
+**Зависимости:** Шаг 0.3, Фаза 1
+
+**Реализация:**
+1. Идентифицировать advisory Stop-хуки (не блокирующие, exit 0 always):
+   - `knowledge-cache-reminder.py` → PostToolUse:WebSearch|WebFetch
+   - `delegation-outcome-stop.py` → PostToolUse:mcp__llm-rotation__llm_complete (+ Stop summary)
+2. Адаптировать логику для работы с tool_response вместо transcript
+3. Мигрировать с сохранением функциональности
+4. Удалить Stop-версии после подтверждения стабильности
+
+**План тестирования:**
+- [ ] knowledge-cache-reminder — canary после WebSearch:
+  ```bash
+  echo '{"tool_name":"WebSearch","tool_input":{"query":"test"},"tool_response":"results...","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-knowledge-cache.py
+  ```
+- [ ] delegation-outcome — canary после llm_complete:
+  ```bash
+  echo '{"tool_name":"mcp__llm-rotation__llm_complete","tool_input":{"prompt":"test"},"tool_response":"{\"text\":\"...\"}","hook_event_name":"PostToolUse"}' | \
+    python .claude/hooks/posttooluse-delegation-outcome.py
+  ```
+- [ ] Критерий успеха: 100% advisory messages доставляются, latency <150ms
+
+**Риски:** Потеря session summary (delegation-outcome-stop генерирует итог сессии)
+**Rollback:** Восстановить Stop-хуки из git
+
+---
+
+### Шаг 3.3: Performance budget
+
+**Цель:** Мониторинг latency <200ms для всех PostToolUse хуков
+
+**Файлы:**
+- `.claude/hooks/shared/latency_tracker.py` (создание)
+- `data/hook-latency.jsonl` (создание)
+
+**Зависимости:** Фаза 1 + Шаги 3.1-3.2
+
+**Реализация:**
+1. Создать `@track_latency` декоратор для BaseHook.execute()
+2. Записывать latency каждого вызова в JSONL
+3. В invocation_logger добавить поле `latency_ms`
+4. Скрипт анализа: `scripts/hook-latency-report.py`
+5. Warning в stderr при превышении 80% бюджета (160ms для 200ms budget)
+
+**План тестирования:**
+- [ ] Unit: проверить что декоратор добавляет <5ms overhead
+- [ ] Интеграционный: запустить все PostToolUse хуки, собрать p50/p95/p99
+- [ ] Отчёт:
+  ```bash
+  python scripts/hook-latency-report.py --last 24h
+  # Ожидание: таблица с p50, p95, p99 для каждого хука
+  ```
+- [ ] Критерий успеха: p95 <200ms для всех PostToolUse хуков
+
+**Риски:** Overhead от monitoring может влиять на latency
+**Rollback:** Удалить декоратор, хуки работают без мониторинга
+
+---
+
+### Шаг 3.4: SQLite вместо JSONL для hook-invocations
+
+**Цель:** Улучшить query performance и аналитику метрик
+
+**Файлы:**
+- `src/pdf_framework/observability/hook_metrics_db.py` (расширение — уже существует!)
+- `scripts/migrate-invocations-to-sqlite.py` (создание)
+- `data/hooks.db` (создание)
+
+**Зависимости:** Шаг 3.3
+
+**Реализация:**
+1. Расширить существующий `hook_metrics_db.py` таблицей `hook_invocations`
+2. Schema: id, timestamp, session_id, hook_name, hook_type, tool_name, latency_ms, status, metadata
+3. Создать миграционный скрипт JSONL → SQLite (batch insert 1000 rows)
+4. Обновить `shared/invocation_logger.py` для записи в SQLite
+5. Сохранить JSONL как fallback на переходный период
+
+**План тестирования:**
+- [ ] Миграция:
+  ```bash
+  python scripts/migrate-invocations-to-sqlite.py --dry-run
+  python scripts/migrate-invocations-to-sqlite.py --input data/hook-invocations.jsonl --output data/hooks.db
+  # Сравнить count записей
+  ```
+- [ ] Query performance:
+  ```bash
+  python -c "
+  import sqlite3, time
+  conn = sqlite3.connect('data/hooks.db')
+  t0 = time.time()
+  r = conn.execute('SELECT hook_name, COUNT(*), AVG(latency_ms) FROM hook_invocations GROUP BY hook_name').fetchall()
+  print(f'Query: {(time.time()-t0)*1000:.1f}ms, {len(r)} hooks')
+  "
+  ```
+- [ ] Критерий успеха: миграция без потери данных, query 10x faster vs JSONL
+
+**Риски:** SQLite concurrency (WAL mode решает)
+**Rollback:** Вернуть JSONL writing, удалить hooks.db
+
+---
+
+## Фаза 4: Полная трёхуровневая архитектура
+
+**Приоритет:** Низкий (документация + качество)
+**Цель:** Документировать, тестировать, визуализировать
+
+---
+
+### Шаг 4.1: Документация Guard → React → Enforce
+
+**Цель:** Обновить архитектурную документацию
+
+**Файлы:**
+- `docs/architecture/hooks-reference.md` (обновление)
+- `.claude/skills/multi-level-hook-architecture/SKILL.md` (обновление)
+
+**Зависимости:** Фаза 3
+
+**Реализация:**
+1. Обновить hooks-reference.md с полным списком PostToolUse хуков
+2. Обновить таблицу уровней: Guard (PreToolUse) → React (PostToolUse) → Enforce (Stop)
+3. Добавить decision matrix: когда какой уровень использовать
+4. Обновить mermaid диаграмму потока
+5. Обновить SKILL.md — убрать пометку "PostToolUse сломан"
+
+**План тестирования:**
+- [ ] Review: новый разработчик понимает архитектуру за 15 минут
+- [ ] Все примеры кода — executable
+- [ ] Критерий успеха: 100% хуков документированы
+
+**Риски:** Документация может устареть
+**Rollback:** Git revert
+
+---
+
+### Шаг 4.2: Eval suite для PostToolUse
+
+**Цель:** Расширить `scripts/eval-hooks.py` для автоматического тестирования PostToolUse
+
+**Файлы:**
+- `scripts/eval-hooks.py` (расширение)
+- `tests/eval/hook_prompts.json` (расширение — добавить PostToolUse test cases)
+
+**Зависимости:** Шаг 4.1
+
+**Реализация:**
+1. Добавить PostToolUse test cases в `tests/eval/hook_prompts.json`
+2. Для каждого PostToolUse хука: fixture (stdin JSON), expected (output/side effect)
+3. Автоматический прогон: subprocess с timeout
+4. Проверка: exit code, stdout JSON schema, side effects (файлы, JSONL записи)
+5. Отчёт: pass/fail + latency + coverage
+
+**План тестирования:**
+- [ ] Прогон eval suite:
+  ```bash
+  python scripts/eval-hooks.py --suite posttooluse --verbose
+  ```
+- [ ] CI интеграция: добавить в `.github/workflows/ci.yml`
+- [ ] Критерий успеха: 100% PostToolUse хуков покрыты, все тесты pass, <5 минут
+
+**Риски:** Flaky tests из-за timing
+**Rollback:** Отключить PostToolUse suite в eval config
+
+---
+
+### Шаг 4.3: Dashboard визуализация
+
+**Цель:** Добавить PostToolUse метрики в существующий dashboard
+
+**Файлы:**
+- `scripts/hook-dashboard.py` (расширение — уже существует)
+- `src/ui/pages/hook_dashboard.py` (расширение — Streamlit, уже существует)
+
+**Зависимости:** Шаг 3.4 (SQLite)
+
+**Реализация:**
+1. В CLI dashboard (`scripts/hook-dashboard.py`) добавить секцию PostToolUse
+2. В Streamlit dashboard добавить вкладку PostToolUse с графиками
+3. Метрики: invocations/hour, latency p95, error rate, top triggered tools
+4. Budget violations: таблица превышений latency
+
+**План тестирования:**
+- [ ] CLI dashboard:
+  ```bash
+  python scripts/hook-dashboard.py --section posttooluse
+  ```
+- [ ] Streamlit:
+  ```bash
+  streamlit run src/ui/pages/hook_dashboard.py
+  # Открыть в браузере, проверить вкладку PostToolUse
+  ```
+- [ ] Критерий успеха: все PostToolUse метрики отображаются, обновляются
+
+**Риски:** Зависимость от SQLite (Шаг 3.4)
+**Rollback:** Скрыть PostToolUse вкладку в dashboard
+
+---
+
+## Сводная таблица
+
+| Фаза | Шаг | Название | Зависит от | Критерий успеха |
+|------|-----|----------|------------|-----------------|
+| **0** | 0.1 | Диагностика skill-eval-enforcer | — | Error rate <5% |
+| **0** | 0.2 | Верификация PostToolUse reliability | — | 100% matchers работают |
+| **0** | 0.3 | Проверка additionalContext | 0.2 | Определён рабочий feedback |
+| **0** | 0.4 | Матрица exit codes | 0.2 | Задокументировано поведение |
+| **1** | 1.1 | PostToolUse:Skill metrics | 0.2 | 100% Skill логируются, <50ms |
+| **1** | 1.2 | PostToolUse:WebSearch cache | 0.2 | Cache hit на повторах, <100ms |
+| **1** | 1.3 | PostToolUse:Write docs-tracker | 0.2, 0.3 | Все src/ трекаются, <100ms |
+| **1** | 1.4 | PostToolUse:llm_complete tracker | 0.2 | 100% delegations, <50ms |
+| **2** | 2.1 | Quality Feedback Loop | 0.3 | >90% ошибок ruff, <5s |
+| **2** | 2.2 | Bash Error Detector | 0.3 | >85% ошибок, <5% FP |
+| **2** | 2.3 | Async хуки | 2.1 | Async latency <200ms |
+| **3** | 3.1 | Консолидация auto-git-save | Фаза 1 | <500ms, коммиты корректны |
+| **3** | 3.2 | Миграция advisory Stop→PostToolUse | 0.3, Фаза 1 | Messages доставляются, <150ms |
+| **3** | 3.3 | Performance budget | Фаза 1 + 3.1-3.2 | p95 <200ms все хуки |
+| **3** | 3.4 | SQLite metrics | 3.3 | Query 10x faster, 0 data loss |
+| **4** | 4.1 | Документация архитектуры | Фаза 3 | 100% хуков документированы |
+| **4** | 4.2 | Eval suite PostToolUse | 4.1 | 100% coverage, all pass |
+| **4** | 4.3 | Dashboard визуализация | 3.4 | Метрики отображаются |
+
+---
+
+## Метрики успеха всего Roadmap
+
+### До (Baseline)
+
+| Метрика | Значение |
+|---------|----------|
+| PostToolUse хуков | 0 |
+| Advisory Stop-хуков (workaround) | 2 |
+| auto-git-save задержка | ~15s |
+| skill-eval-enforcer errors | 87% |
+| Hook latency monitoring | нет |
+| Metrics query (100k records) | ~30s (grep) |
+| PostToolUse eval coverage | 0% |
+| Feedback mechanism | не определён |
+
+### После (Target)
+
+| Метрика | Значение |
+|---------|----------|
+| PostToolUse хуков | 8+ |
+| Advisory Stop-хуков | 0 (мигрированы) |
+| auto-git-save задержка | <1s |
+| skill-eval-enforcer errors | <5% |
+| Hook latency monitoring | 100% coverage, p95 <200ms |
+| Metrics query (100k records) | <100ms (SQLite) |
+| PostToolUse eval coverage | 100% |
+| Feedback mechanism | задокументирован и протестирован |
+
+### Формула завершения
+
+```
+Roadmap DONE когда:
+  ✓ Фаза 0: все 4 шага зелёные
+  ✓ Фаза 1: минимум 3 из 4 PostToolUse хуков в production
+  ✓ Фаза 2: хотя бы 1 feedback loop работает
+  ✓ Фаза 3: advisory хуки мигрированы, latency <200ms
+  ✓ Фаза 4: документация + eval обновлены
+```
