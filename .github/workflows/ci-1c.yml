@@ -2,7 +2,7 @@ name: CI 1C:Enterprise
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
     paths:
       - 'src/projects/**'
       - 'src/bsl/**'
@@ -11,7 +11,7 @@ on:
       - 'tools/yaxunit.json'
       - '.github/workflows/ci-1c.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
   workflow_dispatch:
 
 env:
