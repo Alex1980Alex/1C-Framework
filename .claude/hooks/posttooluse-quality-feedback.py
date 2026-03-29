@@ -76,7 +76,11 @@ class PostToolUseQualityFeedback(BaseHook):
 
         # Skip non-project files
         normalized = file_path.replace("\\", "/")
-        skip = (".claude/cache/", "__pycache__", ".venv/", "node_modules/")
+        skip = (
+            ".claude/cache/", ".claude/hooks/",
+            "__pycache__", ".venv/", "node_modules/",
+            "build/", "dist/",
+        )
         if any(s in normalized for s in skip):
             return None
 
