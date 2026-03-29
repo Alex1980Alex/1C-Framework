@@ -433,7 +433,10 @@
       "Bash(GITHUB_TOKEN=\"\" gh secret set SONAR_TOKEN --repo Alex1980Alex/1C-Enterprise_Framework --body \"squ_7e49682aa8e170f0eb8ea35546c9914b008ece91\")",
       "Bash(GITHUB_TOKEN=\"\" gh secret list --repo Alex1980Alex/1C-Enterprise_Framework)",
       "Bash(GITHUB_TOKEN=\"\" git push --force origin master)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" \"D:/1С-Framework/.claude/hooks/posttooluse-skill-metrics.py\")",
+      "Bash(D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-skill-metrics.py)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-skill-metrics.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
