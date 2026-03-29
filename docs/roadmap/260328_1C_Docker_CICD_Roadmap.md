@@ -18,8 +18,16 @@
 | 0.3 | Docker cleanup (92→20 ГБ, -73 ГБ) | ✅ | 2026-03-28 |
 | 0.4 | BSL LS анализ: 2027 файлов, 55030 диагностик | ✅ | 2026-03-28 |
 | 0.5 | Каталоги CI (.github/workflows/, build/) | ✅ | 2026-03-28 |
-| **Фаза 1** | Статический анализ (SonarQube) | ⬜ TODO | — |
-| **Фаза 2** | GitHub Actions Self-Hosted Runner | ⬜ TODO | — |
+| **Фаза 1** | Статический анализ (SonarQube) | ✅ **ВЫПОЛНЕНО** | 2026-03-29 |
+| 1.1 | SonarQube Docker (`docker/docker-compose.sonarqube.yml`) | ✅ | 2026-03-29 |
+| 1.2 | BSL-плагин (автоустановка в `setup-sonar.ps1`) | ✅ | 2026-03-29 |
+| 1.3 | `sonar-project.properties` | ✅ | 2026-03-29 |
+| 1.4 | sonar-scanner CLI (автоустановка в `setup-sonar.ps1`) | ✅ | 2026-03-29 |
+| 1.5 | Скрипт анализа (`scripts/run-sonar-analysis.ps1`) | ✅ | 2026-03-29 |
+| **Фаза 2** | GitHub Actions Self-Hosted Runner | ✅ **ВЫПОЛНЕНО** | 2026-03-29 |
+| 2.1 | Установка и регистрация Runner | ⬜ Ручной шаг | — |
+| 2.2 | GitHub Secrets и переменные | ⬜ Ручной шаг | — |
+| 2.3 | Workflow `ci-1c.yml` | ✅ | 2026-03-29 |
 | **Фаза 3** | Полное тестирование (YAxUnit/BDD/Coverage) | ⬜ TODO | — |
 | **Фаза 4** | Docker-образы 1С (требует DEB) | ⬜ Будущее | — |
 
