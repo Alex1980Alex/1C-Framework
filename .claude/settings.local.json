@@ -417,7 +417,13 @@
       "Bash(powershell -Command \"docker images --format ''''table {{.Repository}}\\\\t{{.Tag}}\\\\t{{.Size}}''''\")",
       "Bash(powershell -Command \"docker images --format ''''{{.Size}}''''\")",
       "Bash(winget search:*)",
-      "Bash(docker-compose version:*)"
+      "Bash(docker-compose version:*)",
+      "Bash(mkdir -p coverage41c)",
+      "Bash(rm coverage41c.zip)",
+      "Bash(\"D:/1С-Framework/tools/coverage41c/Coverage41C-2.7.3/bin/Coverage41C.bat\" --help)",
+      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \"import sys; print\\('encoding:', sys.stdout.encoding\\); print\\('version:', sys.version\\)\" 2>&1)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
