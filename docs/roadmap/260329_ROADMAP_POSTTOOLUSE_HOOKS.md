@@ -1,9 +1,38 @@
 # Roadmap: PostToolUse Hooks — Реактивная автоматизация
 
-**Версия:** 1.0.0
+**Версия:** 1.1.0
 **Дата:** 2026-03-29
-**Статус:** Draft
+**Статус:** In Progress — Фаза 0 COMPLETE
 **Триггер:** Canary-тест v2.1.87 подтвердил работоспособность PostToolUse на Windows (fix #25981)
+
+### Фаза 0 — Результаты (2026-03-29)
+
+**Шаг 0.1 DONE:** skill-eval-enforcer-shell error rate 87% → root cause: `UnicodeEncodeError` на `→` (U+2192) в cp1251. Fix: заменить на `->`. Хук некритичный (graceful degradation).
+
+**Шаг 0.2 DONE:** PostToolUse матрица matchers — 6/6 tool types работают:
+| Tool | Fires | has_response |
+|------|-------|-------------|
+| Bash | 24x | True |
+| Grep | 2x | True |
+| TaskUpdate | 2x | True |
+| Skill | 1x | True |
+| Read | 1x | True |
+| Glob | 1x | True |
+
+Write/Edit не триггерились (PreToolUse enforcer блокировал), не проблема PostToolUse.
+
+**Шаг 0.3 DONE:** additionalContext/systemMessage **НЕ РАБОТАЮТ** (подтверждает #18427):
+| Механизм | Попадает в контекст Claude? |
+|----------|---------------------------|
+| stdout additionalContext, exit 0 | **НЕТ** |
+| stdout systemMessage, exit 0 | **НЕТ** |
+| stderr, exit 0 | **НЕТ** |
+| stderr, exit 1 | **НЕТ** |
+| **stderr, exit 2** | **ДА** (как "hook blocking error") |
+
+**Шаг 0.4 DONE:** Единственный рабочий feedback: `stderr + exit 2`. Показывается как system-reminder "PostToolUse:Tool hook blocking error".
+
+**Вывод Фазы 0:** PostToolUse **работает для side effects** (логирование, кеширование, метрики — exit 0). Для feedback в контекст Claude доступен только `stderr + exit 2` (грубый, показывается как ошибка). Стратегия Фаз 1-4 корректируется: приоритет на side effects, feedback через exit 2 только для критичных случаев.
 
 ---
 
