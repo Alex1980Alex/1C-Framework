@@ -63,7 +63,7 @@ def migrate_jsonl(jsonl_path: str, db_path: str, dry_run: bool = False) -> int:
         return 0
 
     rows = []
-    with open(jsonl_path, "r", encoding="utf-8") as f:
+    with open(jsonl_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
