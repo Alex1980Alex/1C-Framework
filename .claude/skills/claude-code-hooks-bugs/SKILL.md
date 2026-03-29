@@ -7,7 +7,7 @@ description: "Известные баги хуков Claude Code и обходн
 
 ## Обзор
 
-Справочник известных багов хуков Claude Code, собранный из реальной отладки проекта и GitHub issues. Актуален по состоянию на февраль 2026.
+Справочник известных багов хуков Claude Code, собранный из реальной отладки проекта и GitHub issues. Актуален по состоянию на март 2026.
 
 ---
 
@@ -17,11 +17,13 @@ description: "Известные баги хуков Claude Code и обходн
 |---------|---------|-------|-------|------|--------|
 | **UserPromptSubmit** | OK | OK | OK | OK | OK |
 | **Stop** | OK | OK | OK | OK | OK |
-| **PreToolUse** | НЕТ | ? | ? | НЕТ | НЕТ |
-| **PostToolUse** | НЕТ | ? | ? | НЕТ | НЕТ |
+| **PreToolUse** | **OK (v2.1.87+)** | ? | ? | НЕТ | НЕТ |
+| **PostToolUse** | **OK (v2.1.87+)** | ? | ? | НЕТ | НЕТ |
 | **Notification** | OK | OK | OK | OK | OK |
 
-**Вывод:** Для критичной автоматизации использовать ТОЛЬКО `UserPromptSubmit` и `Stop`.
+**Обновление 2026-03-29:** Canary-тест на Windows + v2.1.87 подтвердил: **PreToolUse и PostToolUse оба работают**. Процесс запускается, stdin содержит полные данные (tool_name, tool_input, tool_response). Fix #25981 (Git Bash вместо cmd.exe) решил проблему на Windows. Issue #6305 формально OPEN, но на Windows — исправлен.
+
+**Вывод:** На Windows v2.1.87+ можно использовать все типы событий. WSL2/Termux — не проверены.
 
 ---
 
