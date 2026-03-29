@@ -135,6 +135,7 @@ ignore = [
     "E722",   # bare-except — legacy code
     "N806",   # non-lowercase-variable-in-function — 1C naming
     "N817",   # camelcase-imported-as-acronym
+    "UP042",  # replace-str-enum — requires StrEnum (3.11+)
 ]
 
 [tool.pytest.ini_options]
