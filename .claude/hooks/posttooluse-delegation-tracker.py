@@ -86,6 +86,7 @@ def _log_outcome(entry: dict) -> None:
 class PostToolUseDelegationTracker(BaseHook):
     """PostToolUse hook for mcp__llm-rotation__llm_complete: track delegation outcomes."""
 
+    @with_circuit_breaker("posttooluse-delegation-tracker")
     def execute(self, inp: HookInput) -> HookOutput | None:
         tool_input = inp.tool_input
         if isinstance(tool_input, str):
