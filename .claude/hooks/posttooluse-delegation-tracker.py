@@ -145,7 +145,7 @@ class PostToolUseDelegationTracker(BaseHook):
             "attempt": attempt,
             "prompt_tokens": int(usage.get("prompt_tokens", 0) or 0),
             "completion_tokens": int(usage.get("completion_tokens", 0) or 0),
-            "session_id": inp.session_id[:16] if inp.session_id else "unknown",
+            "session_id": (inp.session_id or "unknown")[:16],
             "source": "posttooluse",
         }
 
@@ -154,11 +154,20 @@ class PostToolUseDelegationTracker(BaseHook):
         # Feedback on anomalies
         messages = []
         if not text:
-            messages.append("Z.AI returned empty response. Consider retrying or using a different provider.")
+            messages.append(
+                "Z.AI returned empty response. "
+                "Consider retrying or using a different provider."
+            )
         elif response_time > 15.0:
-            messages.append(f"Z.AI response was slow ({response_time:.1f}s from {provider}). Consider switching provider.")
-        elif quality["score"] < 0.3:
-            messages.append(f"Z.AI quality score low ({quality['score']:.2f}). Response may need review.")
+            messages.append(
+                f"Z.AI response was slow ({response_time:.1f}s "
+                f"from {provider}). Consider switching provider."
+            )
+        elif quality["score"] < 0.4:
+            messages.append(
+                f"Z.AI quality score low ({quality['score']:.2f}). "
+                "Response may need review."
+            )
 
         if messages:
             return HookOutput().hook_context(
