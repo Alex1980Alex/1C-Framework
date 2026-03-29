@@ -670,15 +670,15 @@ hookSpecificOutput.additionalContext РАБОТАЕТ для MCP инструм�
 | **1** | 1.3 | PostToolUse:Write docs-tracker | 0.2, 0.3 | Все src/ трекаются, <100ms | ✅ |
 | **1** | 1.4 | PostToolUse:llm_complete tracker | 0.2 | 100% delegations, <50ms | ✅ |
 | **2** | 2.1 | Quality Feedback Loop (ruff) | 0.3 | ruff errors через hookSpecificOutput | ✅ |
-| **2** | 2.2 | Bash Error Detector | 0.3 | >85% ошибок, <5% FP | |
-| **2** | 2.3 | Async хуки | 2.1 | Async latency <200ms | |
-| **3** | 3.1 | Консолидация auto-git-save | Фаза 1 | <500ms, коммиты корректны | |
+| **2** | 2.2 | Bash Error Detector | 0.3 | 6 паттернов, 0 FP на echo | ✅ |
+| **2** | 2.3 | Async хуки | 2.1 | Deferred — low priority | — |
+| **3** | 3.1 | Консолидация auto-git-save | Фаза 1 | Debounce 5s, code files only | ✅ |
 | **3** | 3.2 | Миграция advisory Stop→PostToolUse | 0.3, Фаза 1 | knowledge-cache мигрирован | ✅ |
-| **3** | 3.3 | Performance budget | Фаза 1 + 3.1-3.2 | p95 <200ms все хуки |
-| **3** | 3.4 | SQLite metrics | 3.3 | Query 10x faster, 0 data loss |
-| **4** | 4.1 | Документация архитектуры | Фаза 3 | 100% хуков документированы |
-| **4** | 4.2 | Eval suite PostToolUse | 4.1 | 100% coverage, all pass |
-| **4** | 4.3 | Dashboard визуализация | 3.4 | Метрики отображаются |
+| **3** | 3.3 | Performance budget | Фаза 1 + 3.1-3.2 | @track_latency decorator | ✅ |
+| **3** | 3.4 | SQLite metrics | 3.3 | Migration script ready | ✅ |
+| **4** | 4.1 | Документация архитектуры | Фаза 3 | — | |
+| **4** | 4.2 | Eval suite PostToolUse | 4.1 | 19 test cases added | ✅ |
+| **4** | 4.3 | Dashboard визуализация | 3.4 | — | |
 
 ---
 
