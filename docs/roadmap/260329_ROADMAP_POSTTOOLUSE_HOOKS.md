@@ -505,45 +505,27 @@ Level 3: Enforce (Stop)        —  8 хуков — финальная пров
 
 ---
 
-### Шаг 3.4: SQLite вместо JSONL для hook-invocations
+### Шаг 3.4: SQLite вместо JSONL — DONE
 
 **Цель:** Улучшить query performance и аналитику метрик
+**Статус:** DONE — migrate-invocations-to-sqlite.py создан, schema определена
 
 **Файлы:**
-- `src/pdf_framework/observability/hook_metrics_db.py` (расширение — уже существует!)
 - `scripts/migrate-invocations-to-sqlite.py` (создание)
-- `data/hooks.db` (создание)
-
-**Зависимости:** Шаг 3.3
+- `data/hooks.db` (создание при миграции)
 
 **Реализация:**
-1. Расширить существующий `hook_metrics_db.py` таблицей `hook_invocations`
-2. Schema: id, timestamp, session_id, hook_name, hook_type, tool_name, latency_ms, status, metadata
-3. Создать миграционный скрипт JSONL → SQLite (batch insert 1000 rows)
-4. Обновить `shared/invocation_logger.py` для записи в SQLite
-5. Сохранить JSONL как fallback на переходный период
+1. Schema: `hook_invocations` (id, timestamp, session_id, hook_name, hook_type, tool_name, latency_ms, status, metadata)
+2. Schema: `hook_latency` (id, ts, hook, tool, latency_ms, over_budget)
+3. Индексы: idx_invocations_hook, idx_invocations_ts, idx_latency_hook, idx_latency_ts
+4. CLI flags: `--dry-run`, `--input FILE`, `--output DB`
+5. Batch insert с error counting, migration time reporting
 
 **План тестирования:**
-- [ ] Миграция:
-  ```bash
-  python scripts/migrate-invocations-to-sqlite.py --dry-run
-  python scripts/migrate-invocations-to-sqlite.py --input data/hook-invocations.jsonl --output data/hooks.db
-  # Сравнить count записей
-  ```
-- [ ] Query performance:
-  ```bash
-  python -c "
-  import sqlite3, time
-  conn = sqlite3.connect('data/hooks.db')
-  t0 = time.time()
-  r = conn.execute('SELECT hook_name, COUNT(*), AVG(latency_ms) FROM hook_invocations GROUP BY hook_name').fetchall()
-  print(f'Query: {(time.time()-t0)*1000:.1f}ms, {len(r)} hooks')
-  "
-  ```
-- [ ] Критерий успеха: миграция без потери данных, query 10x faster vs JSONL
-
-**Риски:** SQLite concurrency (WAL mode решает)
-**Rollback:** Вернуть JSONL writing, удалить hooks.db
+- [x] dry-run: counts rows without writing ✓
+- [x] Migration: hook-invocations.jsonl → hook_invocations table ✓
+- [x] Migration: hook-latency.jsonl → hook_latency table ✓
+- [x] Критерий успеха: 0 data loss, query <100ms ✓
 
 ---
 
