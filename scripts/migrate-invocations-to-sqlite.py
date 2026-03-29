@@ -168,9 +168,7 @@ def main():
             path = os.path.join(PROJECT_ROOT, "data", name)
             if os.path.isfile(path):
                 t0 = time.time()
-                count = migrate_jsonl(
-                    path, args.output, args.dry_run
-                )
+                migrate_jsonl(path, args.output, args.dry_run)
                 elapsed = (time.time() - t0) * 1000
                 print(f"  Migration time: {elapsed:.0f}ms")
 
