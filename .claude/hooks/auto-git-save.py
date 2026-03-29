@@ -398,6 +398,7 @@ class AutoGitSave(BaseHook):
     Every call: sync zombie tasks.
     """
 
+    @with_circuit_breaker("auto-git-save")
     def execute(self, inp: HookInput) -> HookOutput | None:
         tool_name = inp.tool_name or ""
         tool_input = inp.tool_input or {}
