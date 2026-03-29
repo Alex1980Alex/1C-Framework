@@ -416,7 +416,8 @@
       "Bash(powershell -Command \"docker ps -a --format ''''table {{.Names}}\\\\t{{.Image}}\\\\t{{.Status}}''''\")",
       "Bash(powershell -Command \"docker images --format ''''table {{.Repository}}\\\\t{{.Tag}}\\\\t{{.Size}}''''\")",
       "Bash(powershell -Command \"docker images --format ''''{{.Size}}''''\")",
-      "Bash(winget search:*)"
+      "Bash(winget search:*)",
+      "Bash(docker-compose version:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
