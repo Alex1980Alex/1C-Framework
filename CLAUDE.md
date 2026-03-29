@@ -156,6 +156,7 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   factory-enforcer.py       # PreToolUse:Write: factory steps enforcement for .claude/ files (migrated from PostToolUse)
   bulk-action-guard.py      # PreToolUse:Bash: detects destructive commands BEFORE execution (migrated from PostToolUse, now proactive)
   skill-usage-metrics.py    # PreToolUse:Skill: logs skill invocations (migrated from PostToolUse)
+  posttooluse-skill-metrics.py # PostToolUse:Skill: confirmed activation logging + hookSpecificOutput feedback
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
