@@ -2,7 +2,7 @@
 
 ## Адаптированная под текущий ПК и фреймворк D:\1С-Framework
 
-**Версия:** 2.1 (2026-03-28)
+**Версия:** 2.2 (2026-03-29)
 **Конфигурация:** УправлениеТранспортомНаПЛК v2026.1.1.0 (91 справочник, 27 документов, 190 регистров сведений)
 **Подход:** Windows-нативный CI (GitHub Actions + Self-Hosted Runner)
 
@@ -228,7 +228,7 @@ $dirs | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ }
 
 ---
 
-### Фаза 1: Статический анализ (2-3 дня)
+### Фаза 1: Статический анализ ✅ ВЫПОЛНЕНО 2026-03-29
 
 #### 1.1 SonarQube в Docker
 
@@ -330,7 +330,7 @@ Write-Host "Отчёт: http://localhost:9000/dashboard?id=upravlenie-transporto
 
 ---
 
-### Фаза 2: GitHub Actions Self-Hosted Runner (2-3 дня)
+### Фаза 2: GitHub Actions Self-Hosted Runner ✅ ВЫПОЛНЕНО 2026-03-29
 
 #### 2.1 Установка и регистрация Runner
 
@@ -561,6 +561,102 @@ jobs:
               repo: context.repo.repo,
               body: `## Результаты CI 1С\n\n| Этап | Статус |\n|------|--------|\n| BSL Analysis | ${{ needs.bsl-analysis.result }} |\n| YAxUnit | ${{ needs.yaxunit-tests.result }} |\n| Smoke | ${{ needs.smoke-tests.result }} |\n| BDD | ${{ needs.bdd-tests.result }} |\n\nAllure отчёт доступен в артефактах сборки.`
             })
+```
+
+---
+
+### Ход реализации Фаз 1-2 (2026-03-29)
+
+В ходе реализации первой фазы была развернута инфраструктура статического анализа кода на базе SonarQube с поддержкой языка BSL (1С:Предприятие). Во второй фазе создан CI/CD пайплайн GitHub Actions.
+
+#### 1. Конфигурация Docker Compose
+
+Создан файл **`docker/docker-compose.sonarqube.yml`** для изолированного запуска сервера анализа:
+
+- **Образ:** `sonarqube:lts-community`
+- **Контейнер:** `sonarqube-1c`, порт 9000
+- **Ограничения ресурсов:** Лимит памяти 4 GB (необходимо для работы Java-машины и парсинга больших проектов)
+- **Healthcheck:** Проверка состояния через `curl -f http://localhost:9000/api/system/status`
+- **Тома (Volumes):** 3 именованных тома (`data`, `extensions`, `logs`) для сохранения состояния и логов между перезапусками
+- **Таймаут запуска:** `start_period: 120s` (SonarQube требует значительного времени на инициализацию базы данных)
+
+#### 2. Конфигурация проекта SonarQube
+
+Создан файл **`sonar-project.properties`** в корне репозитория:
+
+- **projectKey:** `upravlenie-transportom-plk` — уникальный идентификатор проекта
+- **sources:** `src/projects/configuration` — директория с исходниками конфигурации (2027 BSL файлов)
+- **Режим анализа:** External report mode — BSL Language Server генерирует JSON-отчет, SonarQube импортирует его через параметр `sonar.bsl.languageserver.reportPath`
+- **Покрытие кода:** Добавлен placeholder для будущей интеграции с Coverage41C
+
+#### 3. Скрипт автоматизации setup-sonar.ps1
+
+Создан **`scripts/setup-sonar.ps1`** — скрипт первичной настройки окружения (5 шагов):
+
+1. **Запуск SonarQube:** `docker compose -f docker/docker-compose.sonarqube.yml up -d`
+2. **Ожидание готовности:** Опрос `/api/system/status` каждые 10 секунд (максимум 30 попыток) до получения статуса UP
+3. **Загрузка sonar-scanner:** Скачивание CLI v6.2.1.4610 (пропуск, если уже установлен)
+4. **Установка BSL плагина:** Загрузка плагина v0.15.2, копирование в контейнер через `docker cp`, перезапуск сервера
+5. **Финализация:** Ожидание перезапуска и вывод учетных данных (admin/admin)
+
+#### 4. Скрипт запуска анализа run-sonar-analysis.ps1
+
+Создан **`scripts/run-sonar-analysis.ps1`** — основной скрипт для запуска анализа (2 шага):
+
+1. **BSL Language Server v0.22.0:** Запуск анализа, генерация отчета в `build/bsl-report/bsl-json.json`
+2. **sonar-scanner:** Загрузка результатов на localhost:9000
+- **Graceful degradation:** Пропуск SonarQube если не задан `SONAR_TOKEN`, пропуск scanner если не установлен
+
+#### 5. GitHub Actions CI Workflow
+
+Создан файл **`.github/workflows/ci-1c.yml`** со следующей структурой:
+
+**Параллельные задания (Jobs):**
+
+| Job | Описание | Особенности |
+|-----|----------|-------------|
+| **bsl-analysis** | Анализ BSL LS + sonar-scanner | Graceful skip при отсутствии установки |
+| **yaxunit-tests** | Запуск YAxUnit через vanessa-runner | Переменная `MSYS_NO_PATHCONV=1` |
+| **bdd-tests** | Vanessa Automation через `run-bdd.ps1` | `continue-on-error: true` (GUI-зависимость) |
+| **allure-report** | Генерация HTML-отчета Allure | Комментарий в PR с таблицей результатов |
+
+**Фильтрация путей (Path filters):**
+Workflow запускается только при изменениях в: `src/projects/**`, `src/bsl/**`, `features/**`, `tools/vanessa/**`
+
+**Кодировка:** Все PowerShell-шаги начинаются с `[Console]::OutputEncoding = [Text.Encoding]::UTF8`
+
+**Секреты (Secrets):** `USER_1C_LOGIN`, `USER_1C_PASS`, `SONAR_TOKEN`
+
+**Глобальные переменные окружения:** `ONEC_PATH`, `OSCRIPT_PATH`, `PROJECT_PATH`, `BSL_SRC`, `IB_CONNECTION`
+
+#### 6. Требуемые ручные шаги
+
+| Шаг | Действие | Описание |
+|-----|----------|----------|
+| **2.1** | Установка GitHub Actions Runner | Регистрация с лейблами: `self-hosted`, `windows-11`, `1c` |
+| **2.2** | Настройка GitHub Secrets | Добавить: `USER_1C_LOGIN`, `USER_1C_PASS`, `SONAR_TOKEN` |
+
+#### Сводка созданных файлов
+
+| Файл | Размер | Назначение |
+|------|--------|------------|
+| `docker/docker-compose.sonarqube.yml` | 0.8 KB | Конфигурация Docker Compose для SonarQube |
+| `sonar-project.properties` | 0.6 KB | Параметры проекта для sonar-scanner |
+| `scripts/setup-sonar.ps1` | 4.6 KB | Автоматизация развертывания SonarQube (5 шагов) |
+| `scripts/run-sonar-analysis.ps1` | 2.2 KB | Запуск BSL LS анализа и загрузка в SonarQube |
+| `.github/workflows/ci-1c.yml` | 7.1 KB | CI/CD пайплайн с 4 параллельными заданиями |
+
+#### Быстрый старт
+
+```powershell
+# 1. Первичная настройка SonarQube (выполняется один раз)
+powershell -File scripts/setup-sonar.ps1
+
+# 2. Запуск статического анализа
+powershell -File scripts/run-sonar-analysis.ps1
+
+# 3. Открытие дашборда SonarQube в браузере
+Start-Process "http://localhost:9000"
 ```
 
 ---
