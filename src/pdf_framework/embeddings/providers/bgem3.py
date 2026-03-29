@@ -32,6 +32,7 @@ class BGEM3Output:
         sparse: Sparse embedding dict (token_id → weight)
         colbert: ColBERT multi-token vectors
     """
+
     dense: list[float] | np.ndarray | None = None
     sparse: dict[int, float] | None = None
     colbert: list[list[float]] | np.ndarray | None = None
@@ -81,9 +82,7 @@ class BGEM3Provider:
         self._model = None
         self._tokenizer = None
 
-        logger.info(
-            f"[BGE-M3] Initializing {model_name} on {self._device}"
-        )
+        logger.info(f"[BGE-M3] Initializing {model_name} on {self._device}")
 
     @property
     def model(self) -> Any:
@@ -119,8 +118,7 @@ class BGEM3Provider:
 
         except ImportError:
             raise ImportError(
-                "FlagEmbedding is not installed. "
-                "Install with: pip install -U FlagEmbedding"
+                "FlagEmbedding is not installed. Install with: pip install -U FlagEmbedding"
             )
         except Exception as e:
             logger.error(f"[BGE-M3] Failed to load model: {e}")
@@ -265,11 +263,13 @@ class BGEM3Provider:
 
         outputs = []
         for i in range(len(texts)):
-            outputs.append(BGEM3Output(
-                dense=result["dense_vecs"][i].tolist(),
-                sparse=result["lexical_weights"][i],
-                colbert=result["colbert_vecs"][i].tolist(),
-            ))
+            outputs.append(
+                BGEM3Output(
+                    dense=result["dense_vecs"][i].tolist(),
+                    sparse=result["lexical_weights"][i],
+                    colbert=result["colbert_vecs"][i].tolist(),
+                )
+            )
 
         return outputs[0] if single else outputs
 
@@ -295,10 +295,7 @@ class BGEM3Provider:
             List of dense embedding vectors
         """
         outputs = self.embed_multi(texts)
-        return [
-            out.dense if isinstance(out.dense, list) else out.dense.tolist()
-            for out in outputs
-        ]
+        return [out.dense if isinstance(out.dense, list) else out.dense.tolist() for out in outputs]
 
     def get_model_name(self) -> str:
         """Return the model name."""

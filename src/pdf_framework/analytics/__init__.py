@@ -7,8 +7,8 @@ Components:
 - AnalyticsDashboard: aggregated metrics
 """
 
-from src.pdf_framework.analytics.tracker import QueryTracker
-from src.pdf_framework.analytics.cost import CostTracker
 from src.pdf_framework.analytics.audit import AuditLogger
+from src.pdf_framework.analytics.cost import CostTracker
+from src.pdf_framework.analytics.tracker import QueryTracker
 
 __all__ = ["QueryTracker", "CostTracker", "AuditLogger"]

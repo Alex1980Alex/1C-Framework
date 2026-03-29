@@ -53,7 +53,8 @@ class PageCoverageVerifier:
         if missing:
             logger.warning(
                 "[COVERAGE] Missing %d/%d pages: %s",
-                len(missing), total_pages,
+                len(missing),
+                total_pages,
                 missing[:20] if len(missing) > 20 else missing,
             )
         else:
@@ -80,12 +81,14 @@ class PageCoverageVerifier:
         try:
             for page_num in missing_pages:
                 if page_num < 1 or page_num > len(doc):
-                    diagnostics.append({
-                        "page": page_num,
-                        "type": "out_of_range",
-                        "text_chars": 0,
-                        "image_count": 0,
-                    })
+                    diagnostics.append(
+                        {
+                            "page": page_num,
+                            "type": "out_of_range",
+                            "text_chars": 0,
+                            "image_count": 0,
+                        }
+                    )
                     continue
 
                 page = doc[page_num - 1]
@@ -101,12 +104,14 @@ class PageCoverageVerifier:
                 else:
                     page_type = "has_text"
 
-                diagnostics.append({
-                    "page": page_num,
-                    "type": page_type,
-                    "text_chars": len(text),
-                    "image_count": len(images),
-                })
+                diagnostics.append(
+                    {
+                        "page": page_num,
+                        "type": page_type,
+                        "text_chars": len(text),
+                        "image_count": len(images),
+                    }
+                )
         finally:
             doc.close()
 

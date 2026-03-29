@@ -34,8 +34,7 @@ def create_graph_query_tool(graph_store: BaseGraphStore):
         for entity in entities:
             subgraph = await graph_store.get_neighbors(entity.id, depth=depth)
             relations_str = ", ".join(
-                f"{r.relation_type} → {r.target_entity_id}"
-                for r in subgraph.relations[:5]
+                f"{r.relation_type} → {r.target_entity_id}" for r in subgraph.relations[:5]
             )
             parts.append(
                 f"• {entity.name} ({entity.entity_type})"

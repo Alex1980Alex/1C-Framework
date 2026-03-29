@@ -12,7 +12,7 @@ import hashlib
 import json
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -190,7 +190,7 @@ class DocumentVersionManager:
             await db.execute(
                 "INSERT OR REPLACE INTO file_versions (file_path, document_id, file_hash, updated_at) "
                 "VALUES (?, ?, ?, ?)",
-                (file_path, document_id, fhash, datetime.now(timezone.utc).timestamp()),
+                (file_path, document_id, fhash, datetime.now(UTC).timestamp()),
             )
             # Remove old chunk hashes for this file
             await db.execute("DELETE FROM chunk_hashes WHERE file_path = ?", (file_path,))
@@ -256,13 +256,9 @@ class DocumentVersionManager:
 
         added = [cid for cid in new_map if cid not in old_hashes]
         removed = [cid for cid in old_hashes if cid not in new_map]
-        modified = [
-            cid for cid in new_map
-            if cid in old_hashes and new_map[cid] != old_hashes[cid]
-        ]
+        modified = [cid for cid in new_map if cid in old_hashes and new_map[cid] != old_hashes[cid]]
         unchanged = sum(
-            1 for cid in new_map
-            if cid in old_hashes and new_map[cid] == old_hashes[cid]
+            1 for cid in new_map if cid in old_hashes and new_map[cid] == old_hashes[cid]
         )
 
         return ChunkDelta(
@@ -349,7 +345,9 @@ class DocumentVersionManager:
 
         logger.info(
             "[VERSION] Started indexing '%s' (%d batches, %d chunks)",
-            file_path, total_batches, total_chunks,
+            file_path,
+            total_batches,
+            total_chunks,
         )
         return None
 
@@ -415,7 +413,9 @@ class DocumentVersionManager:
 
         logger.debug(
             "[VERSION] Checkpoint saved: batch %d for '%s' (%d chunks)",
-            batch_index, file_path, len(batch_chunks),
+            batch_index,
+            file_path,
+            len(batch_chunks),
         )
 
     async def complete_indexing(
@@ -448,9 +448,7 @@ class DocumentVersionManager:
 
             await db.commit()
 
-        logger.info(
-            "[VERSION] Indexing completed: '%s' (%d chunks)", file_path, total_chunks
-        )
+        logger.info("[VERSION] Indexing completed: '%s' (%d chunks)", file_path, total_chunks)
 
     async def fail_indexing(self, file_path: str) -> None:
         """Mark indexing as failed."""
@@ -514,7 +512,7 @@ class DocumentVersionManager:
         latest_version = await self.get_latest_version(document_id)
 
         # Create version ID
-        version_id = f"{document_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')}"
+        version_id = f"{document_id}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S_%f')}"
 
         # Save chunks to cache for potential rollback
         cache_file = self._cache_dir / f"{version_id}.json"
@@ -531,7 +529,7 @@ class DocumentVersionManager:
             version_id=version_id,
             document_id=document_id,
             file_hash=file_hash,
-            indexed_at=datetime.now(timezone.utc).isoformat(),
+            indexed_at=datetime.now(UTC).isoformat(),
             chunk_count=len(chunks),
             previous_version_id=latest_version.version_id if latest_version else None,
             metadata=metadata or {},
@@ -540,21 +538,24 @@ class DocumentVersionManager:
 
         # Store in database
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute("""
+            await db.execute(
+                """
                 INSERT INTO document_versions
                 (version_id, document_id, file_hash, indexed_at, chunk_count,
                  previous_version_id, metadata, file_size_bytes)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                version_info.version_id,
-                version_info.document_id,
-                version_info.file_hash,
-                version_info.indexed_at,
-                version_info.chunk_count,
-                version_info.previous_version_id,
-                json.dumps(version_info.metadata),
-                version_info.file_size_bytes,
-            ))
+            """,
+                (
+                    version_info.version_id,
+                    version_info.document_id,
+                    version_info.file_hash,
+                    version_info.indexed_at,
+                    version_info.chunk_count,
+                    version_info.previous_version_id,
+                    json.dumps(version_info.metadata),
+                    version_info.file_size_bytes,
+                ),
+            )
             await db.commit()
 
         logger.info(
@@ -578,11 +579,14 @@ class DocumentVersionManager:
 
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute("""
+            cursor = await db.execute(
+                """
                 SELECT * FROM document_versions
                 WHERE document_id = ?
                 ORDER BY indexed_at DESC
-            """, (document_id,))
+            """,
+                (document_id,),
+            )
             rows = await cursor.fetchall()
 
             return [
@@ -626,9 +630,12 @@ class DocumentVersionManager:
 
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute("""
+            cursor = await db.execute(
+                """
                 SELECT * FROM document_versions WHERE version_id = ?
-            """, (version_id,))
+            """,
+                (version_id,),
+            )
             row = await cursor.fetchone()
 
             if row:
@@ -660,7 +667,7 @@ class DocumentVersionManager:
             return None
 
         try:
-            with open(cache_file, "r") as f:
+            with open(cache_file) as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"[VERSION] Error loading version chunks: {e}")
@@ -731,9 +738,12 @@ class DocumentVersionManager:
 
         # Delete from database
         async with aiosqlite.connect(self._db_path) as db:
-            cursor = await db.execute("""
+            cursor = await db.execute(
+                """
                 DELETE FROM document_versions WHERE document_id = ?
-            """, (document_id,))
+            """,
+                (document_id,),
+            )
             await db.commit()
             count = cursor.rowcount
 

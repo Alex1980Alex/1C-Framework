@@ -6,12 +6,11 @@ SQLite-backed for persistence.
 
 import logging
 import sqlite3
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ class QueryTracker:
         if self._conn is None:
             return {}
 
-        cutoff = datetime.now().isoformat()[:10]  # today
+        datetime.now().isoformat()[:10]  # today
         row = self._conn.execute("""
             SELECT
                 COUNT(*) as total_queries,
@@ -145,15 +144,9 @@ class QueryTracker:
             "total_tokens_output": row[3] or 0,
             "avg_quality": round(row[4] or 0, 3),
             "avg_results": round(row[5] or 0, 1),
-            "top_strategies": [
-                {"strategy": s[0], "count": s[1]} for s in strategies
-            ],
-            "top_agents": [
-                {"agent": a[0], "count": a[1]} for a in agents
-            ],
-            "popular_queries": [
-                {"query": q[0], "count": q[1]} for q in popular
-            ],
+            "top_strategies": [{"strategy": s[0], "count": s[1]} for s in strategies],
+            "top_agents": [{"agent": a[0], "count": a[1]} for a in agents],
+            "popular_queries": [{"query": q[0], "count": q[1]} for q in popular],
         }
 
     def get_recent(self, limit: int = 50) -> list[dict]:

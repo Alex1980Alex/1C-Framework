@@ -20,7 +20,6 @@ from src.pdf_framework.embeddings.providers.colpali import ColPaliProvider
 from src.pdf_framework.processing.page_renderer import (
     PageRenderer,
     RenderConfig,
-    RenderDPI,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,6 +37,7 @@ class VisualIndexConfig:
         store_thumbnails: Store page thumbnails
         thumbnail_size: Size for stored thumbnails (width, height)
     """
+
     collection_name: str = "visual_pages"
     model_name: str = "colpali-v1.3"
     render_dpi: int = 150
@@ -61,6 +61,7 @@ class VisualPage:
         indexed_at: Timestamp of indexing
         metadata: Additional metadata
     """
+
     page_id: str
     document_id: str
     page_number: int
@@ -127,9 +128,7 @@ class VisualIndexer:
 
         # Lazy-load dependencies
         if self._colpali is None:
-            self._colpali = ColPaliProvider(
-                model_name=self._config.model_name
-            )
+            self._colpali = ColPaliProvider(model_name=self._config.model_name)
 
         if self._renderer is None:
             render_config = RenderConfig(
@@ -188,9 +187,7 @@ class VisualIndexer:
             # Save thumbnail if enabled
             thumbnail_path = None
             if self._config.store_thumbnails and thumbnail_dir:
-                thumbnail_path = self._save_thumbnail(
-                    img, page_id, Path(thumbnail_dir)
-                )
+                thumbnail_path = self._save_thumbnail(img, page_id, Path(thumbnail_dir))
 
             # Create VisualPage
             visual_page = VisualPage(
@@ -209,10 +206,7 @@ class VisualIndexer:
 
             indexed_pages.append(visual_page)
 
-        logger.info(
-            f"[VISUAL_INDEXER] Indexed {len(indexed_pages)} pages "
-            f"from {pdf_path.name}"
-        )
+        logger.info(f"[VISUAL_INDEXER] Indexed {len(indexed_pages)} pages from {pdf_path.name}")
 
         return indexed_pages
 
@@ -303,12 +297,8 @@ class VisualIndexer:
         # Compute scores
         scores = []
         for page in indexed_pages:
-            doc_vectors = torch.from_numpy(page.embedding).to(
-                self._colpali.model.device
-            )
-            score = self._colpali.late_interaction_score(
-                query_vectors, doc_vectors
-            )
+            doc_vectors = torch.from_numpy(page.embedding).to(self._colpali.model.device)
+            score = self._colpali.late_interaction_score(query_vectors, doc_vectors)
             scores.append((page, score))
 
         # Sort by score descending

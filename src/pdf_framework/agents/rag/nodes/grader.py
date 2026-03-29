@@ -95,7 +95,9 @@ async def grade_documents(
                         "content_preview": content_preview[:100],
                     }
             except Exception as e:
-                logger.warning("[GRADE] Cheap LLM failed for %s, falling back: %s", result.chunk.id[:12], e)
+                logger.warning(
+                    "[GRADE] Cheap LLM failed for %s, falling back: %s", result.chunk.id[:12], e
+                )
             # Fall through to Claude on failure
 
         base_messages = [
@@ -114,10 +116,14 @@ async def grade_documents(
                 result_text = _parser.invoke(response).strip().lower()
 
                 # Validate: starts with yes/no/да/нет?
-                valid = any(result_text.startswith(w) for w in ["yes", "no", "да", "нет", "relevant", "not"])
+                valid = any(
+                    result_text.startswith(w) for w in ["yes", "no", "да", "нет", "relevant", "not"]
+                )
                 if not valid and attempt < 2:
                     feedback = f"Reply ONLY 'yes' or 'no'. Previous: '{result_text[:60]}'"
-                    logger.warning(f"[GRADE] Attempt {attempt}: unclear '{result_text[:40]}' for {result.chunk.id[:12]}")
+                    logger.warning(
+                        f"[GRADE] Attempt {attempt}: unclear '{result_text[:40]}' for {result.chunk.id[:12]}"
+                    )
                     continue
 
                 is_relevant = _parse_relevance(result_text)
@@ -149,13 +155,15 @@ async def grade_documents(
 
     # Append auto-rejected docs (no LLM call needed)
     for result in auto_rejected:
-        graded.append({
-            "chunk_id": result.chunk.id,
-            "is_relevant": False,
-            "reason": f"auto-rejected: score {result.score:.3f} < {score_threshold}",
-            "score": result.score,
-            "content_preview": result.chunk.content[:100],
-        })
+        graded.append(
+            {
+                "chunk_id": result.chunk.id,
+                "is_relevant": False,
+                "reason": f"auto-rejected: score {result.score:.3f} < {score_threshold}",
+                "score": result.score,
+                "content_preview": result.chunk.content[:100],
+            }
+        )
 
     relevant_count = sum(1 for g in graded if g["is_relevant"])
     ratio = relevant_count / len(graded) if graded else 0.0

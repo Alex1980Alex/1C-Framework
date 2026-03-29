@@ -35,7 +35,9 @@ class PyMuPDFLoader(BaseLoader):
         total_pages = len(doc)
         logger.info(
             "[LOADER] Opening '%s' (%d pages, %.1f MB)",
-            path.name, total_pages, path.stat().st_size / 1048576,
+            path.name,
+            total_pages,
+            path.stat().st_size / 1048576,
         )
 
         try:
@@ -50,7 +52,10 @@ class PyMuPDFLoader(BaseLoader):
                 if (page_idx + 1) % 50 == 0 or page_idx + 1 == total_pages:
                     logger.info(
                         "[LOADER] Страница %d/%d — %d символов (всего %d)",
-                        page_idx + 1, total_pages, len(page_text), total_chars,
+                        page_idx + 1,
+                        total_pages,
+                        len(page_text),
+                        total_chars,
                     )
 
             # Build page_offsets: list of (char_offset, page_number)
@@ -83,7 +88,10 @@ class PyMuPDFLoader(BaseLoader):
             elapsed = time.time() - t0
             logger.info(
                 "[LOADER] Готово: '%s' — %d стр, %d символов за %.2f сек (%.0f стр/сек)",
-                path.name, total_pages, len(raw_text), elapsed,
+                path.name,
+                total_pages,
+                len(raw_text),
+                elapsed,
                 total_pages / elapsed if elapsed > 0 else 0,
             )
             return ProcessedDocument(

@@ -36,11 +36,7 @@ class CompletenessMetric:
             return 0.0
 
         # Extract key terms from ground truth (words > 4 chars)
-        gt_terms = {
-            w.lower()
-            for w in re.findall(r"\w+", ground_truth)
-            if len(w) > 4
-        }
+        gt_terms = {w.lower() for w in re.findall(r"\w+", ground_truth) if len(w) > 4}
         if not gt_terms:
             return 1.0
 
@@ -100,9 +96,9 @@ class TablePresenceMetric:
 
         # Check for markdown table pattern: | ... | ... |
         table_lines = [
-            line for line in answer.split("\n")
-            if line.strip().startswith("|") and line.strip().endswith("|")
-            and line.count("|") >= 3
+            line
+            for line in answer.split("\n")
+            if line.strip().startswith("|") and line.strip().endswith("|") and line.count("|") >= 3
         ]
 
         return 1.0 if len(table_lines) >= 3 else 0.0
@@ -183,10 +179,7 @@ class CompositeMetric:
         prediction: Any,
     ) -> dict[str, float]:
         """Get per-metric scores."""
-        return {
-            name: metric(example, prediction)
-            for name, metric in self._metrics.items()
-        }
+        return {name: metric(example, prediction) for name, metric in self._metrics.items()}
 
 
 def _get_answer(prediction: Any) -> str:

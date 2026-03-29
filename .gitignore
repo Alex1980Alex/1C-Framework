@@ -81,3 +81,4 @@ infra/*/build/
 
 test_all_phases_results.json
 cache/
+.scannerwork/

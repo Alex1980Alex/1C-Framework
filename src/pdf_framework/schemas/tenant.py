@@ -4,7 +4,6 @@ Phase 60: Multi-tenant Isolation - tenant models and quotas.
 """
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -27,7 +26,7 @@ class TenantStats(BaseModel):
     queries_today: int = 0
     storage_used_mb: float = 0.0
     created_at: datetime
-    last_active: Optional[datetime] = None
+    last_active: datetime | None = None
 
 
 class Tenant(BaseModel):

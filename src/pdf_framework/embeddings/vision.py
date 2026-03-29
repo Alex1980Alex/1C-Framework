@@ -18,7 +18,6 @@ from typing import Any
 from anthropic import Anthropic
 
 from src.pdf_framework.schemas.images import (
-    ImageChunk,
     ImageDescriptionRequest,
     ImageDescriptionResponse,
 )
@@ -122,7 +121,7 @@ class ImageDescriber:
                                     "media_type": image_media_type,
                                     "data": image_data,
                                 },
-                            }
+                            },
                         ],
                     }
                 ],
@@ -183,10 +182,7 @@ class ImageDescriber:
 
         async def describe_all():
             loop = asyncio.get_event_loop()
-            tasks = [
-                loop.run_in_executor(None, self.describe, req)
-                for req in requests
-            ]
+            tasks = [loop.run_in_executor(None, self.describe, req) for req in requests]
             return await asyncio.gather(*tasks)
 
         return asyncio.run(describe_all())
@@ -213,9 +209,17 @@ class ImageDescriber:
         if detect_type and request.context:
             context_lower = request.context.lower()
 
-            if "скриншот" in context_lower or "интерфейс" in context_lower or "screenshot" in context_lower:
+            if (
+                "скриншот" in context_lower
+                or "интерфейс" in context_lower
+                or "screenshot" in context_lower
+            ):
                 return DEFAULT_PROMPTS["screenshot"]
-            if "диаграмм" in context_lower or "схем" in context_lower or "диаграмма" in context_lower:
+            if (
+                "диаграмм" in context_lower
+                or "схем" in context_lower
+                or "диаграмма" in context_lower
+            ):
                 return DEFAULT_PROMPTS["diagram"]
             if "таблиц" in context_lower or "table" in context_lower:
                 return DEFAULT_PROMPTS["table"]

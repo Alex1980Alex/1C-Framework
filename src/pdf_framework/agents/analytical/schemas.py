@@ -7,9 +7,6 @@ from typing import Any, TypedDict
 
 from pydantic import BaseModel, Field
 
-from src.pdf_framework.schemas.documents import SearchResponse
-
-
 # ---- Evidence & Analysis Models ----
 
 

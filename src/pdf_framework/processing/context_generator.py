@@ -153,7 +153,7 @@ class ContextGenerator:
                         "type": "text",
                         "text": (
                             "You generate brief context summaries for document chunks. "
-                            f"The document is titled \"{title}\".\n\n"
+                            f'The document is titled "{title}".\n\n'
                             f"<document>\n{doc_excerpt}\n</document>"
                         ),
                         "cache_control": {"type": "ephemeral"},
@@ -245,7 +245,9 @@ class ContextGenerator:
                     )
                     logger.warning(
                         "Context too short for chunk %s (attempt %d): %d chars",
-                        chunk.id, rw_attempt, len(context),
+                        chunk.id,
+                        rw_attempt,
+                        len(context),
                     )
                     continue
 
@@ -256,13 +258,17 @@ class ContextGenerator:
                         "Do not refuse. Summarize the chunk topic in 1-2 sentences. "
                         "The chunk is real document text."
                     )
-                    logger.warning("Context refusal for chunk %s (attempt %d)", chunk.id, rw_attempt)
+                    logger.warning(
+                        "Context refusal for chunk %s (attempt %d)", chunk.id, rw_attempt
+                    )
                     continue
 
                 return context
 
             except Exception as e:
-                logger.warning("Context generation attempt %d failed for chunk %s: %s", rw_attempt, chunk.id, e)
+                logger.warning(
+                    "Context generation attempt %d failed for chunk %s: %s", rw_attempt, chunk.id, e
+                )
                 rw_feedback = f"Previous call failed: {e}. Try again."
 
         return ""
@@ -286,7 +292,9 @@ class ContextGenerator:
             cached = self._cache.get(chunk.id)
             if cached is not None:
                 chunk.metadata["context"] = cached
-                chunk.metadata["contextual_content"] = f"{cached}\n\n{chunk.content}" if cached else chunk.content
+                chunk.metadata["contextual_content"] = (
+                    f"{cached}\n\n{chunk.content}" if cached else chunk.content
+                )
                 return
 
         # Generate via LLM
@@ -319,23 +327,27 @@ class ContextGenerator:
         use_prompt_caching = total > 5
 
         # Process all chunks concurrently (bounded by semaphore)
-        tasks = [
-            self._process_chunk(chunk, document, use_prompt_caching)
-            for chunk in chunks
-        ]
+        tasks = [self._process_chunk(chunk, document, use_prompt_caching) for chunk in chunks]
         await asyncio.gather(*tasks)
 
         # Stats
         generated = sum(1 for c in chunks if c.metadata.get("context"))
-        cached = sum(1 for c in chunks if c.metadata.get("context") and self._cache and self._cache.get(c.id))
+        cached = sum(
+            1 for c in chunks if c.metadata.get("context") and self._cache and self._cache.get(c.id)
+        )
         skipped = sum(1 for c in chunks if len(c.content.split()) < self._ctx.min_chunk_tokens)
         elapsed = time.time() - t0
 
         logger.info(
             "[CONTEXTUAL] Enriched %d/%d chunks in %.1fs "
             "(generated=%d, skipped_short=%d, model=%s, concurrency=%d)",
-            generated, total, elapsed, generated - cached, skipped,
-            self._model_name, self._ctx.batch_concurrency,
+            generated,
+            total,
+            elapsed,
+            generated - cached,
+            skipped,
+            self._model_name,
+            self._ctx.batch_concurrency,
         )
 
         return chunks

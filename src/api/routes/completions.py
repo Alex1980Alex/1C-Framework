@@ -8,9 +8,10 @@ Version: 1.0.0 - Phase 23: Production Hardening
 """
 
 import logging
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -156,9 +157,9 @@ async def _stream_completion(
     Yields:
         Server-sent events chunks
     """
+    import json
     import time
     import uuid
-    import json
 
     completion_id = f"chatcmpl-{uuid.uuid4().hex[:24]}"
     created = int(time.time())
@@ -320,8 +321,8 @@ async def create_embedding(
     import time
     import uuid
 
-    embedding_id = f"embedding-{uuid.uuid4().hex[:24]}"
-    created = int(time.time())
+    f"embedding-{uuid.uuid4().hex[:24]}"
+    int(time.time())
 
     try:
         # Generate embedding

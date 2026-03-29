@@ -56,14 +56,15 @@ class SourceFusion:
         """
         # Step 1: Search local documents
         local = await self._manager.search(
-            query=query, strategy=strategy, k=k, **kwargs,
+            query=query,
+            strategy=strategy,
+            k=k,
+            **kwargs,
         )
 
         # Step 2: Check confidence
         avg_score = (
-            sum(r.score for r in local.results) / len(local.results)
-            if local.results
-            else 0.0
+            sum(r.score for r in local.results) / len(local.results) if local.results else 0.0
         )
 
         # Tag local results with trust

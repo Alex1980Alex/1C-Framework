@@ -4,12 +4,12 @@ import json
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from src.api.dependencies.components import Components, get_components
 from src.api.dependencies.auth import get_current_user  # F3.2.4: Get user from JWT
+from src.api.dependencies.components import Components, get_components
 from src.pdf_framework.chains.qa.retrieval_qa import RetrievalQAChain
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -81,8 +81,12 @@ async def search_documents(
             else:
                 # Empty collection — return no results
                 return SearchResponseModel(
-                    query=request.query, results=[], total_found=0,
-                    search_type="collection_empty", elapsed_ms=0, metadata={"user_id": user_id},
+                    query=request.query,
+                    results=[],
+                    total_found=0,
+                    search_type="collection_empty",
+                    elapsed_ms=0,
+                    metadata={"user_id": user_id},
                 )
 
     effective_filter = search_filter or None
@@ -165,7 +169,6 @@ async def ask_question(
     t0 = time.perf_counter()
 
     # F3.2.4: Extract user_id for trace attribution
-    user_id = current_user or "anonymous"
 
     search_response = await components.search_manager.search(
         query=request.question,
@@ -190,6 +193,7 @@ async def ask_question(
     fast_llm = None
     if components.settings.self_rag.enrichment_enabled:
         from langchain_anthropic import ChatAnthropic as _ChatAnthropic
+
         _llm_kwargs: dict[str, Any] = {
             "model": components.settings.self_rag.grading_model,
             "temperature": 0.0,
@@ -222,10 +226,14 @@ async def ask_question(
         yield _sse_event("status", "searching_done", {"elapsed_ms": round(search_ms)})
 
         # Early source delivery — client gets sources before generation starts
-        yield _sse_event("sources", sources, {
-            "total_found": search_response.total_found,
-            "search_type": search_response.search_type,
-        })
+        yield _sse_event(
+            "sources",
+            sources,
+            {
+                "total_found": search_response.total_found,
+                "search_type": search_response.search_type,
+            },
+        )
 
         yield _sse_event("status", "generating")
 
@@ -244,18 +252,23 @@ async def ask_question(
         # Post-processing: append section refs if LLM didn't include them
         full_answer = "".join(collected)
         from src.pdf_framework.utils.section_refs import append_section_refs
+
         final_answer = append_section_refs(full_answer, search_response.results)
-        extra = final_answer[len(full_answer):]
+        extra = final_answer[len(full_answer) :]
         if extra:
             yield _sse_event("token", extra)
 
         elapsed = (time.perf_counter() - t0) * 1000
-        yield _sse_event("done", "", {
-            "elapsed_ms": round(elapsed),
-            "ttft_ms": round(ttft_ms) if ttft_sent else None,
-            "search_ms": round(search_ms),
-            "search_type": search_response.search_type,
-        })
+        yield _sse_event(
+            "done",
+            "",
+            {
+                "elapsed_ms": round(elapsed),
+                "ttft_ms": round(ttft_ms) if ttft_sent else None,
+                "search_ms": round(search_ms),
+                "search_type": search_response.search_type,
+            },
+        )
 
     return StreamingResponse(
         event_generator(),
@@ -472,10 +485,12 @@ async def multi_agent_question(
     )
 
     t0 = time.perf_counter()
-    result = await agent.ainvoke({
-        "question": request.question,
-        "max_iterations": request.max_iterations,
-    })
+    result = await agent.ainvoke(
+        {
+            "question": request.question,
+            "max_iterations": request.max_iterations,
+        }
+    )
     latency = (time.perf_counter() - t0) * 1000
 
     report = result.get("report", {})
@@ -541,7 +556,6 @@ async def visual_search(
     Phase 55: End-to-end visual retrieval without OCR.
     Searches page images by visual similarity.
     """
-    user_id = current_user or "anonymous"
     t0 = time.perf_counter()
 
     # Try to get visual strategy from search manager
@@ -645,10 +659,10 @@ async def plan_execute_query(
     Breaks down complex queries into 2-5 steps, executes each with appropriate tool,
     and synthesizes a final answer.
     """
-    from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
     from langchain_anthropic import ChatAnthropic
 
-    user_id = current_user or "anonymous"
+    from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
+
     t0 = time.perf_counter()
 
     # Create LLM for planning and synthesis
@@ -682,10 +696,12 @@ async def plan_execute_query(
     )
 
     # Run agent
-    result = await agent.ainvoke({
-        "query": request.query,
-        "max_iterations": request.max_iterations,
-    })
+    result = await agent.ainvoke(
+        {
+            "query": request.query,
+            "max_iterations": request.max_iterations,
+        }
+    )
 
     latency = (time.perf_counter() - t0) * 1000
 

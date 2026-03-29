@@ -9,7 +9,7 @@ Version: 1.1.0 - Phase 10.1: Layout Detection Provider
 import asyncio
 import hashlib
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -38,17 +38,10 @@ class LayoutElement(BaseModel):
     content: str = Field(description="Extracted text content")
     page_number: int = Field(description="Page number (1-based)")
     bbox: tuple[float, float, float, float] | None = Field(
-        default=None,
-        description="Bounding box (x0, y0, x1, y1) in PDF coordinates"
+        default=None, description="Bounding box (x0, y0, x1, y1) in PDF coordinates"
     )
-    element_id: str | None = Field(
-        default=None,
-        description="Unique identifier for deduplication"
-    )
-    metadata: dict = Field(
-        default_factory=dict,
-        description="Additional element attributes"
-    )
+    element_id: str | None = Field(default=None, description="Unique identifier for deduplication")
+    metadata: dict = Field(default_factory=dict, description="Additional element attributes")
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
@@ -104,9 +97,7 @@ class LayoutAwareLoader(BaseLoader):
         # Auto-downgrade hi_res → fast if Tesseract is not installed
         if self._unstructured_available and self._strategy == "hi_res":
             if not self._check_tesseract():
-                logger.warning(
-                    "[LAYOUT] Tesseract not found, downgrading strategy hi_res → fast"
-                )
+                logger.warning("[LAYOUT] Tesseract not found, downgrading strategy hi_res → fast")
                 self._strategy = "fast"
 
     @staticmethod
@@ -114,6 +105,7 @@ class LayoutAwareLoader(BaseLoader):
         """Check if unstructured library is available."""
         try:
             import unstructured  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -197,7 +189,7 @@ class LayoutAwareLoader(BaseLoader):
                     "layout_detection_method": "unstructured",
                     "layout_strategy": self._strategy,
                     "total_elements": len(layout_elements),
-                    "loaded_at": datetime.now(timezone.utc).isoformat(),
+                    "loaded_at": datetime.now(UTC).isoformat(),
                 },
             ),
         )
@@ -255,7 +247,7 @@ class LayoutAwareLoader(BaseLoader):
                     "layout_elements": [el.to_dict() for el in layout_elements],
                     "layout_detection_method": "pymupdf_fallback",
                     "total_elements": len(layout_elements),
-                    "loaded_at": datetime.now(timezone.utc).isoformat(),
+                    "loaded_at": datetime.now(UTC).isoformat(),
                 },
             ),
         )
@@ -319,9 +311,7 @@ class LayoutAwareLoader(BaseLoader):
                     pass
 
         # Generate element ID for deduplication
-        element_id = self._generate_element_id(
-            element_type, content, page_number
-        )
+        element_id = self._generate_element_id(element_type, content, page_number)
 
         # Extract additional metadata
         extra_metadata = {}

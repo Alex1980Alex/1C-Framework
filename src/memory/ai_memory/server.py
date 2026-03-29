@@ -15,12 +15,11 @@ import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
 from uuid import uuid4
 
-from mcp.server import Server
 from mcp import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.server import Server
+from mcp.types import TextContent, Tool
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,9 +50,13 @@ def ensure_db():
                 metadata TEXT
             )
         """)
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_importance ON important_messages(importance DESC)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_importance ON important_messages(importance DESC)"
+        )
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON important_messages(category)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_created ON important_messages(created_at DESC)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_created ON important_messages(created_at DESC)"
+        )
         conn.commit()
     logger.info(f"Database initialized: {DB_PATH}")
 
@@ -72,8 +75,16 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "limit": {"type": "integer", "description": "Maximum number of messages to return", "default": 10},
-                    "min_importance": {"type": "number", "description": "Minimum importance score (0.0-1.0)", "default": 0.5},
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of messages to return",
+                        "default": 10,
+                    },
+                    "min_importance": {
+                        "type": "number",
+                        "description": "Minimum importance score (0.0-1.0)",
+                        "default": 0.5,
+                    },
                     "category": {"type": "string", "description": "Filter by category (optional)"},
                 },
             },
@@ -85,9 +96,21 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "content": {"type": "string", "description": "The message content to save"},
-                    "importance": {"type": "number", "description": "Importance score (0.0-1.0)", "default": 0.7},
-                    "category": {"type": "string", "description": "Category for the message", "default": "general"},
-                    "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags for the message"},
+                    "importance": {
+                        "type": "number",
+                        "description": "Importance score (0.0-1.0)",
+                        "default": 0.7,
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Category for the message",
+                        "default": "general",
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Tags for the message",
+                    },
                 },
                 "required": ["content"],
             },
@@ -169,17 +192,26 @@ async def get_important_messages(args: dict) -> list[TextContent]:
 
     messages = []
     for row in rows:
-        messages.append({
-            "id": row[0],
-            "content": row[1],
-            "importance": row[2],
-            "category": row[3],
-            "tags": json.loads(row[4]) if row[4] else [],
-            "created_at": row[5],
-            "metadata": json.loads(row[6]) if row[6] else {},
-        })
+        messages.append(
+            {
+                "id": row[0],
+                "content": row[1],
+                "importance": row[2],
+                "category": row[3],
+                "tags": json.loads(row[4]) if row[4] else [],
+                "created_at": row[5],
+                "metadata": json.loads(row[6]) if row[6] else {},
+            }
+        )
 
-    return [TextContent(type="text", text=json.dumps({"count": len(messages), "messages": messages}, ensure_ascii=False, indent=2))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {"count": len(messages), "messages": messages}, ensure_ascii=False, indent=2
+            ),
+        )
+    ]
 
 
 async def save_important_message(args: dict) -> list[TextContent]:
@@ -204,7 +236,15 @@ async def save_important_message(args: dict) -> list[TextContent]:
         conn.commit()
 
     logger.info(f"Saved message {msg_id} with importance {importance}")
-    return [TextContent(type="text", text=json.dumps({"success": True, "id": msg_id, "importance": importance, "category": category}, ensure_ascii=False))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {"success": True, "id": msg_id, "importance": importance, "category": category},
+                ensure_ascii=False,
+            ),
+        )
+    ]
 
 
 async def search_messages(args: dict) -> list[TextContent]:
@@ -223,16 +263,27 @@ async def search_messages(args: dict) -> list[TextContent]:
 
     messages = []
     for row in rows:
-        messages.append({
-            "id": row[0],
-            "content": row[1],
-            "importance": row[2],
-            "category": row[3],
-            "tags": json.loads(row[4]) if row[4] else [],
-            "created_at": row[5],
-        })
+        messages.append(
+            {
+                "id": row[0],
+                "content": row[1],
+                "importance": row[2],
+                "category": row[3],
+                "tags": json.loads(row[4]) if row[4] else [],
+                "created_at": row[5],
+            }
+        )
 
-    return [TextContent(type="text", text=json.dumps({"query": query, "count": len(messages), "messages": messages}, ensure_ascii=False, indent=2))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {"query": query, "count": len(messages), "messages": messages},
+                ensure_ascii=False,
+                indent=2,
+            ),
+        )
+    ]
 
 
 async def delete_message(args: dict) -> list[TextContent]:
@@ -258,8 +309,14 @@ async def get_categories(args: dict) -> list[TextContent]:
         )
         rows = cursor.fetchall()
 
-    categories = [{"category": row[0], "count": row[1], "avg_importance": round(row[2], 2)} for row in rows]
-    return [TextContent(type="text", text=json.dumps({"categories": categories}, ensure_ascii=False, indent=2))]
+    categories = [
+        {"category": row[0], "count": row[1], "avg_importance": round(row[2], 2)} for row in rows
+    ]
+    return [
+        TextContent(
+            type="text", text=json.dumps({"categories": categories}, ensure_ascii=False, indent=2)
+        )
+    ]
 
 
 async def main():

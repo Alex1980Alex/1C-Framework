@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from src.pdf_framework.config import AgentSettings, SearchSettings
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
@@ -56,7 +56,8 @@ class SearchManager:
             from src.pdf_framework.search.query_expansion import QueryExpander
 
             self._query_expander = QueryExpander(
-                settings=self._agent_settings, api_key=self._api_key,
+                settings=self._agent_settings,
+                api_key=self._api_key,
             )
 
     def _create_reranker(self):
@@ -107,6 +108,7 @@ class SearchManager:
         st = metadata.get("section_title", "") or metadata.get("section", "")
         if st:
             import re
+
             cleaned = st.strip().strip("*")
             match = re.match(r"(\d+(?:\.\d+)*)", cleaned)
             if match:
@@ -142,9 +144,7 @@ class SearchManager:
         """
         if strategy not in self._strategies:
             available = list(self._strategies.keys())
-            raise ValueError(
-                f"Unknown search strategy '{strategy}'. Available: {available}"
-            )
+            raise ValueError(f"Unknown search strategy '{strategy}'. Available: {available}")
 
         # Phase 17: Semantic cache pre-check
         query_embedding: list[float] | None = None
@@ -168,10 +168,12 @@ class SearchManager:
                 from src.pdf_framework.search.query_expansion import QueryExpander
 
                 self._query_expander = QueryExpander(
-                    settings=self._agent_settings, api_key=self._api_key,
+                    settings=self._agent_settings,
+                    api_key=self._api_key,
                 )
             queries = await self._query_expander.expand(
-                query, method=self._search_settings.query_expansion_method,
+                query,
+                method=self._search_settings.query_expansion_method,
             )
             logger.debug("Expanded query into %d variants: %s", len(queries), queries)
 
@@ -185,10 +187,7 @@ class SearchManager:
             response = await strat.search(query=queries[0], k=retrieval_k, filter=filter, **kwargs)
         else:
             # Multi-query: search all expanded queries in parallel (Phase 26)
-            tasks = [
-                strat.search(query=q, k=retrieval_k, filter=filter, **kwargs)
-                for q in queries
-            ]
+            tasks = [strat.search(query=q, k=retrieval_k, filter=filter, **kwargs) for q in queries]
             responses = await asyncio.gather(*tasks)
 
             all_results: dict[str, SearchResult] = {}
@@ -216,7 +215,8 @@ class SearchManager:
         # Phase 29: Section-prefix post-filter
         if section_prefix and response.results:
             filtered = [
-                r for r in response.results
+                r
+                for r in response.results
                 if self._chunk_matches_section(r.chunk.metadata or {}, section_prefix)
             ]
             response.results = filtered
@@ -255,12 +255,20 @@ class SearchManager:
         """
         if self._section_first_pipeline is not None:
             return await self._section_first_pipeline.search(
-                query=query, k=k, filter=filter, **kwargs,
+                query=query,
+                k=k,
+                filter=filter,
+                **kwargs,
             )
         # Fallback: regular hybrid search
         logger.info("[SEARCH] Section-first pipeline not configured — using hybrid")
         return await self.search(
-            query=query, strategy="hybrid", k=k, filter=filter, rerank=True, **kwargs,
+            query=query,
+            strategy="hybrid",
+            k=k,
+            filter=filter,
+            rerank=True,
+            **kwargs,
         )
 
     @property

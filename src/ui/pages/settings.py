@@ -55,7 +55,9 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                 )
                 data_result = gr.Markdown("")
                 reset_all_btn = gr.Button(
-                    "Сбросить всё (вектор + граф + кэш)", variant="stop", size="lg",
+                    "Сбросить всё (вектор + граф + кэш)",
+                    variant="stop",
+                    size="lg",
                 )
 
             with gr.Tab("Сервер"):
@@ -143,7 +145,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     f'<div style="margin-bottom:12px;">'
                     f'<span class="status-dot" style="display:inline-block;width:12px;height:12px;'
                     f'border-radius:50%;background:{status_color};margin-right:8px;"></span>'
-                    f'<strong>Состояние системы: {status_text}</strong></div>',
+                    f"<strong>Состояние системы: {status_text}</strong></div>",
                     '<div style="margin-top:8px;"><strong>Компоненты:</strong><ul style="list-style:none;padding-left:0;">',
                 ]
 
@@ -160,17 +162,19 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     elif k == "llm":
                         extra = f" ({v.get('model', '')})"
                     elif k == "disk_space":
-                        free = v.get('free_gb', 0)
-                        extra = f" (свободно {free:.0f} ГБ)" if isinstance(free, (int, float)) else ""
+                        free = v.get("free_gb", 0)
+                        extra = (
+                            f" (свободно {free:.0f} ГБ)" if isinstance(free, int | float) else ""
+                        )
 
                     html_parts.append(
                         f'<li style="padding:4px 0;">'
                         f'<span style="display:inline-block;width:10px;height:10px;'
                         f'border-radius:50%;background:{dot_color};margin-right:8px;"></span>'
-                        f'{k}: {label}{extra}</li>'
+                        f"{k}: {label}{extra}</li>"
                     )
 
-                html_parts.append('</ul></div>')
+                html_parts.append("</ul></div>")
                 return "".join(html_parts)
 
             except requests.ConnectionError:
@@ -178,7 +182,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     '<div style="padding:12px;">'
                     '<span style="display:inline-block;width:12px;height:12px;'
                     'border-radius:50%;background:#ef4444;margin-right:8px;"></span>'
-                    '<strong>API сервер недоступен.</strong> Запустите backend: <code>make api</code></div>'
+                    "<strong>API сервер недоступен.</strong> Запустите backend: <code>make api</code></div>"
                 )
             except Exception as e:
                 return f'<div style="padding:12px;"><strong>Ошибка:</strong> {e}</div>'
@@ -214,10 +218,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
             logger.info("UI restart requested by user")
             python = sys.executable
             cwd = os.getcwd()
-            no_window = (
-                subprocess.CREATE_NEW_PROCESS_GROUP
-                | subprocess.CREATE_NO_WINDOW
-            )
+            no_window = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
             restart_script = (
                 "import time, subprocess;"
                 "time.sleep(3);"
@@ -228,6 +229,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
 
             def _do_restart():
                 import time
+
                 subprocess.Popen(
                     [python, "-c", restart_script],
                     creationflags=no_window,
@@ -237,6 +239,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                 os._exit(RESTART_EXIT_CODE)
 
             import threading
+
             threading.Thread(target=_do_restart, daemon=True).start()
             return
 

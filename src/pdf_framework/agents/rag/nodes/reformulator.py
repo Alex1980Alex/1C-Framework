@@ -83,7 +83,7 @@ def _parse_reformulated_query(response: str) -> str:
     # Remove common prefixes if present
     for prefix in ["Rewritten:", "Query:", "Answer:", "Reformulated:"]:
         if query.startswith(prefix):
-            query = query[len(prefix):].strip()
+            query = query[len(prefix) :].strip()
 
     # Remove quotes if entire response is quoted
     if query.startswith('"') and query.endswith('"'):

@@ -5,6 +5,7 @@ Version: 1.3.0 - Phase 12.3: JWT Authentication
 """
 
 import logging
+from datetime import UTC
 from typing import Annotated, Literal
 
 from fastapi import Depends, HTTPException, status
@@ -137,13 +138,13 @@ async def get_token_payload(
 
     # Auth disabled - return default payload
     if not settings.auth.enabled:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         return TokenPayload(
             tenant_id=settings.auth.default_tenant,
             role="admin",
-            exp=datetime.now(timezone.utc).replace(year=2099),
-            iat=datetime.now(timezone.utc),
+            exp=datetime.now(UTC).replace(year=2099),
+            iat=datetime.now(UTC),
         )
 
     # Auth enabled - verify token

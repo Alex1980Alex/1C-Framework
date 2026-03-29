@@ -73,7 +73,7 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
                 return (
                     '<div style="height: 400px; display: flex; align-items: center; justify-content: center;'
                     ' background: var(--block-background-fill); border-radius: 8px;">'
-                    '<p>Для визуализации установите: pip install networkx plotly</p></div>'
+                    "<p>Для визуализации установите: pip install networkx plotly</p></div>"
                 )
 
             try:
@@ -121,29 +121,41 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
             node_x = [pos[n][0] for n in G.nodes()]
             node_y = [pos[n][1] for n in G.nodes()]
             node_text = [G.nodes[n].get("label", n) for n in G.nodes()]
-            node_colors = [type_colors.get(G.nodes[n].get("node_type", "ENTITY"), "#94a3b8") for n in G.nodes()]
+            node_colors = [
+                type_colors.get(G.nodes[n].get("node_type", "ENTITY"), "#94a3b8") for n in G.nodes()
+            ]
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=edge_x, y=edge_y,
-                line=dict(width=0.5, color='#94a3b8'),
-                hoverinfo='none', mode='lines',
-            ))
-            fig.add_trace(go.Scatter(
-                x=node_x, y=node_y,
-                mode='markers+text', hoverinfo='text',
-                text=node_text, textposition="bottom center",
-                textfont=dict(size=9),
-                marker=dict(size=10, color=node_colors, line=dict(width=1.5, color='white')),
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=edge_x,
+                    y=edge_y,
+                    line=dict(width=0.5, color="#94a3b8"),
+                    hoverinfo="none",
+                    mode="lines",
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=node_x,
+                    y=node_y,
+                    mode="markers+text",
+                    hoverinfo="text",
+                    text=node_text,
+                    textposition="bottom center",
+                    textfont=dict(size=9),
+                    marker=dict(size=10, color=node_colors, line=dict(width=1.5, color="white")),
+                )
+            )
             fig.update_layout(
-                showlegend=False, hovermode='closest',
+                showlegend=False,
+                hovermode="closest",
                 margin=dict(b=0, l=0, r=0, t=0),
                 xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                 height=450,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
             )
             return fig.to_html(include_plotlyjs="cdn", full_html=False)
 
@@ -154,8 +166,8 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
                 resp.raise_for_status()
                 data = resp.json()
 
-                node_count = data.get('node_count', 0)
-                edge_count = data.get('edge_count', 0)
+                node_count = data.get("node_count", 0)
+                edge_count = data.get("edge_count", 0)
 
                 info = (
                     "**Статистика графа:**\n"
@@ -172,12 +184,12 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
                 if not viz_html:
                     viz_html = (
                         '<div class="empty-state" style="height: 400px; display: flex; flex-direction: column;'
-                        ' align-items: center; justify-content: center;'
-                        ' background: var(--block-background-fill); border-radius: 8px;'
+                        " align-items: center; justify-content: center;"
+                        " background: var(--block-background-fill); border-radius: 8px;"
                         ' border: 1px dashed var(--block-border-color);">'
                         '<div class="icon">&#128302;</div>'
-                        '<p><strong>Граф знаний пуст</strong></p>'
-                        '<p>Проиндексируйте документы с опцией «Граф знаний»</p></div>'
+                        "<p><strong>Граф знаний пуст</strong></p>"
+                        "<p>Проиндексируйте документы с опцией «Граф знаний»</p></div>"
                     )
 
                 # Fetch entities
@@ -193,7 +205,9 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
 
                 rows = []
                 for e in edata.get("entities", []):
-                    rows.append([e.get("name", ""), e.get("type", ""), e.get("source_document_id", "")])
+                    rows.append(
+                        [e.get("name", ""), e.get("type", ""), e.get("source_document_id", "")]
+                    )
 
                 return info, viz_html, rows
 
@@ -201,7 +215,7 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
                 empty = (
                     '<div class="empty-state" style="height: 400px; display: flex; align-items: center;'
                     ' justify-content: center; border-radius: 8px;">'
-                    '<p>API сервер недоступен</p></div>'
+                    "<p>API сервер недоступен</p></div>"
                 )
                 return "**API сервер недоступен.** Запустите backend: `make api`", empty, []
             except Exception as e:
@@ -223,10 +237,10 @@ def create_graph_page(api_url: str, app: gr.Blocks | None = None):
                 )
                 empty_viz = (
                     '<div class="empty-state" style="height: 400px; display: flex; flex-direction: column;'
-                    ' align-items: center; justify-content: center; border-radius: 8px;'
+                    " align-items: center; justify-content: center; border-radius: 8px;"
                     ' border: 1px dashed var(--block-border-color);">'
                     '<div class="icon">&#128302;</div>'
-                    '<p><strong>Граф очищен</strong></p></div>'
+                    "<p><strong>Граф очищен</strong></p></div>"
                 )
                 return info, empty_viz, []
             except requests.ConnectionError:

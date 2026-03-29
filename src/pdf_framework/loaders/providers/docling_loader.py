@@ -12,7 +12,7 @@ Version: 0.1.0 - Phase 15.1: Docling Integration
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -82,9 +82,7 @@ class DoclingLoader(BaseLoader):
                 backend=backend,
             )
 
-        self._converter = DocumentConverter(
-            format_options={InputFormat.PDF: format_opts}
-        )
+        self._converter = DocumentConverter(format_options={InputFormat.PDF: format_opts})
 
         backend_name = backend.__name__ if backend else "docling_parse"
         logger.info(
@@ -105,14 +103,15 @@ class DoclingLoader(BaseLoader):
         """
         try:
             from docling_parse.pdf_parser import pdf_parser_v2
+
             pdf_parser_v2(level="fatal")
             return None  # Use default docling_parse backend
         except (RuntimeError, OSError, ImportError) as e:
             logger.warning(
-                f"[DOCLING] docling_parse unavailable ({e}), "
-                "falling back to pypdfium2 backend"
+                f"[DOCLING] docling_parse unavailable ({e}), falling back to pypdfium2 backend"
             )
             from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+
             return PyPdfiumDocumentBackend
 
     def _create_ocr_options(self):
@@ -134,9 +133,7 @@ class DoclingLoader(BaseLoader):
             from docling.datamodel.pipeline_options import TesseractCliOcrOptions
 
             # Tesseract uses code "rus" for Russian
-            tess_lang = "+".join(
-                "rus" if l == "ru" else l for l in langs
-            )
+            tess_lang = "+".join("rus" if lang == "ru" else lang for lang in langs)
             return TesseractCliOcrOptions(
                 lang=tess_lang,
                 force_full_page_ocr=force_full,
@@ -149,7 +146,8 @@ class DoclingLoader(BaseLoader):
             )
 
     def _export_with_page_offsets(
-        self, doc: Any,
+        self,
+        doc: Any,
     ) -> tuple[str, list[tuple[int, int]]]:
         """Export markdown page-by-page, building page_offsets for chunk mapping.
 
@@ -186,7 +184,8 @@ class DoclingLoader(BaseLoader):
         raw_text = "\n\n".join(page_markdowns)
         logger.info(
             "[DOCLING] Page offsets: %d pages, %d chars",
-            len(page_offsets), len(raw_text),
+            len(page_offsets),
+            len(raw_text),
         )
         return raw_text, page_offsets
 
@@ -201,7 +200,8 @@ class DoclingLoader(BaseLoader):
 
     @staticmethod
     def _fallback_page_offsets(
-        doc: Any, sorted_pages: list[int],
+        doc: Any,
+        sorted_pages: list[int],
     ) -> tuple[str, list[tuple[int, int]]]:
         """Build page_offsets from item provenance when per-page export unavailable."""
         page_texts: dict[int, list[str]] = {p: [] for p in sorted_pages}
@@ -247,7 +247,8 @@ class DoclingLoader(BaseLoader):
         raw_text = "\n\n".join(parts)
         logger.info(
             "[DOCLING] Page offsets (fallback): %d pages, %d chars",
-            len(page_offsets), len(raw_text),
+            len(page_offsets),
+            len(raw_text),
         )
         return raw_text, page_offsets
 
@@ -299,7 +300,7 @@ class DoclingLoader(BaseLoader):
                 "layout_detection_method": "docling",
                 "tables": tables_info,
                 "element_counts": self._count_elements(layout_elements),
-                "loaded_at": datetime.now(timezone.utc).isoformat(),
+                "loaded_at": datetime.now(UTC).isoformat(),
                 "page_offsets": page_offsets,
             },
         )
@@ -371,17 +372,19 @@ class DoclingLoader(BaseLoader):
 
             element_type = type_mapping.get(label, "paragraph")
 
-            elements.append({
-                "type": element_type,
-                "content": content.strip(),
-                "page_number": page_number,
-                "bbox": bbox,
-                "element_id": f"{element_type}_{len(elements)}",
-                "metadata": {
-                    "docling_label": label,
-                    "level": level,
-                },
-            })
+            elements.append(
+                {
+                    "type": element_type,
+                    "content": content.strip(),
+                    "page_number": page_number,
+                    "bbox": bbox,
+                    "element_id": f"{element_type}_{len(elements)}",
+                    "metadata": {
+                        "docling_label": label,
+                        "level": level,
+                    },
+                }
+            )
 
         return elements
 

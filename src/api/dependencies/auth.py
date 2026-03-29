@@ -7,10 +7,10 @@ Version: 1.0.0 - F3.2.4: User attribution for tracing
 import logging
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from src.api.auth.jwt_handler import TokenPayload, get_jwt_handler
+from src.api.auth.jwt_handler import get_jwt_handler
 from src.pdf_framework.config import get_settings
 
 logger = logging.getLogger(__name__)

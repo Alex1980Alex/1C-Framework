@@ -82,35 +82,45 @@ class GraphRAGAutoStrategy:
         # Route to appropriate strategy
         if use_light:
             response = await self._light.search(
-                query=query, k=k, filter=filter, **kwargs,
+                query=query,
+                k=k,
+                filter=filter,
+                **kwargs,
             )
             response.search_type = "graphrag_auto_light"
         else:
             response = await self._global.search(
-                query=query, k=k, filter=filter, **kwargs,
+                query=query,
+                k=k,
+                filter=filter,
+                **kwargs,
             )
             response.search_type = "graphrag_auto_full"
 
         # Add routing metadata
         classify_ms = (time.perf_counter() - start) * 1000 - response.elapsed_ms
         response.metadata = response.metadata or {}
-        response.metadata.update({
-            "auto_route": "light" if use_light else "full",
-            "classification": {
-                "complexity": classification.complexity,
-                "query_type": classification.query_type,
-                "confidence": classification.confidence,
-                "reasoning": classification.reasoning,
-            },
-            "classify_ms": round(classify_ms, 1),
-        })
+        response.metadata.update(
+            {
+                "auto_route": "light" if use_light else "full",
+                "classification": {
+                    "complexity": classification.complexity,
+                    "query_type": classification.query_type,
+                    "confidence": classification.confidence,
+                    "reasoning": classification.reasoning,
+                },
+                "classify_ms": round(classify_ms, 1),
+            }
+        )
 
         total_ms = (time.perf_counter() - start) * 1000
         response.elapsed_ms = total_ms
 
         logger.info(
             "[GRAPHRAG_AUTO] Completed in %.0fms (classify: %.0fms, search: %.0fms)",
-            total_ms, classify_ms, total_ms - classify_ms,
+            total_ms,
+            classify_ms,
+            total_ms - classify_ms,
         )
 
         return response

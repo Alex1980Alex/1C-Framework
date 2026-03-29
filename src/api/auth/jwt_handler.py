@@ -5,7 +5,7 @@ Version: 1.3.0 - Phase 12.3: JWT Authentication
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 import jwt
@@ -63,7 +63,7 @@ class JWTHandler:
         Returns:
             JWT token string
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         exp = now + timedelta(hours=self._expire_hours)
 
         payload = {
@@ -100,12 +100,12 @@ class JWTHandler:
             payload = TokenPayload(
                 tenant_id=decoded["tenant_id"],
                 role=decoded["role"],
-                exp=datetime.fromtimestamp(decoded["exp"], tz=timezone.utc),
-                iat=datetime.fromtimestamp(decoded["iat"], tz=timezone.utc),
+                exp=datetime.fromtimestamp(decoded["exp"], tz=UTC),
+                iat=datetime.fromtimestamp(decoded["iat"], tz=UTC),
             )
 
             # Check expiration (JWT library does this, but double-check)
-            if payload.exp < datetime.now(timezone.utc):
+            if payload.exp < datetime.now(UTC):
                 logger.warning("[JWT] Token expired")
                 return None
 

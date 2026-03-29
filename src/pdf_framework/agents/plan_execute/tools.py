@@ -109,7 +109,7 @@ class CalculateTool:
             result = eval(
                 expression,
                 {"__builtins__": {}},
-                {"abs": abs, "min": min, "max": max, "sum": sum, "len": len}
+                {"abs": abs, "min": min, "max": max, "sum": sum, "len": len},
             )
             return {"result": result, "expression": expression}
         except Exception as e:

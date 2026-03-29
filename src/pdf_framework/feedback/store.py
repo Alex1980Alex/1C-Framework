@@ -113,9 +113,14 @@ class FeedbackStore:
 
         return [
             FeedbackEntry(
-                feedback_id=r[0], question=r[1], answer=r[2], score=r[3],
-                strategy=r[4] or "", chunk_ids=json.loads(r[5] or "[]"),
-                chunk_scores=json.loads(r[6] or "[]"), timestamp=r[7],
+                feedback_id=r[0],
+                question=r[1],
+                answer=r[2],
+                score=r[3],
+                strategy=r[4] or "",
+                chunk_ids=json.loads(r[5] or "[]"),
+                chunk_scores=json.loads(r[6] or "[]"),
+                timestamp=r[7],
                 comment=r[8] or "",
             )
             for r in rows

@@ -195,9 +195,7 @@ class WebSearchStrategy:
                             "trust": "web",
                         },
                     )
-                    results.append(
-                        SearchResult(chunk=chunk, score=score, source="web")
-                    )
+                    results.append(SearchResult(chunk=chunk, score=score, source="web"))
                 return results[:k]
 
         except Exception as e:

@@ -7,7 +7,7 @@ Version: 1.0.0 - Phase 9.1: Conversation Memory
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -18,19 +18,13 @@ logger = logging.getLogger(__name__)
 class Message(BaseModel):
     """Single message in conversation history."""
 
-    role: Literal["user", "assistant"] = Field(
-        description="Message sender role"
-    )
-    content: str = Field(
-        description="Message text content"
-    )
+    role: Literal["user", "assistant"] = Field(description="Message sender role")
+    content: str = Field(description="Message text content")
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="When the message was created"
+        default_factory=lambda: datetime.now(UTC), description="When the message was created"
     )
     metadata: dict = Field(
-        default_factory=dict,
-        description="Optional metadata (strategy, sources, latency, etc.)"
+        default_factory=dict, description="Optional metadata (strategy, sources, latency, etc.)"
     )
 
     def to_dict(self) -> dict:

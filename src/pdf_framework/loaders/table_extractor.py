@@ -78,7 +78,8 @@ class SmartTableExtractor:
                     if dedup and self._is_in_text(md, page_texts.get(page_num, "")):
                         logger.debug(
                             "[TABLE] Skipping duplicate table on page %d (%d rows)",
-                            page_num, rows,
+                            page_num,
+                            rows,
                         )
                         continue
 
@@ -88,18 +89,21 @@ class SmartTableExtractor:
                         if raw:
                             headers = [str(c) if c else "" for c in raw[0]]
 
-                    result.append(TableInfo(
-                        page_number=page_num,
-                        markdown=md,
-                        source="fitz",
-                        rows=rows,
-                        cols=cols,
-                        headers=headers,
-                    ))
+                    result.append(
+                        TableInfo(
+                            page_number=page_num,
+                            markdown=md,
+                            source="fitz",
+                            rows=rows,
+                            cols=cols,
+                            headers=headers,
+                        )
+                    )
 
             logger.info(
                 "[TABLE] fitz extracted %d new tables from %d pages",
-                len(result), len(doc),
+                len(result),
+                len(doc),
             )
         finally:
             doc.close()
@@ -129,7 +133,7 @@ class SmartTableExtractor:
             # Pad if fewer cells than header
             while len(cells) < len(header):
                 cells.append("")
-            lines.append("| " + " | ".join(cells[:len(header)]) + " |")
+            lines.append("| " + " | ".join(cells[: len(header)]) + " |")
 
         return "\n".join(lines)
 

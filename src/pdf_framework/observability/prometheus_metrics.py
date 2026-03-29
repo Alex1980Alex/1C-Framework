@@ -13,11 +13,17 @@ Version: 1.0.0 - Phase 46: Prometheus Metrics
 
 import logging
 import time
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable
 
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
-from prometheus_client import CollectorRegistry
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +135,7 @@ queue_depth = Gauge(
 # Decorators
 # =============================================================================
 
+
 def track_query(strategy: str = "unknown"):
     """
     Decorator to track query metrics.
@@ -223,7 +230,9 @@ def track_llm_call(model: str = "unknown"):
                         output_tokens = usage.get("output_tokens", 0)
 
                         token_usage_total.labels(model=model, token_type="input").inc(input_tokens)
-                        token_usage_total.labels(model=model, token_type="output").inc(output_tokens)
+                        token_usage_total.labels(model=model, token_type="output").inc(
+                            output_tokens
+                        )
 
                 return result
             except Exception as e:
@@ -251,7 +260,9 @@ def track_llm_call(model: str = "unknown"):
                         output_tokens = usage.get("output_tokens", 0)
 
                         token_usage_total.labels(model=model, token_type="input").inc(input_tokens)
-                        token_usage_total.labels(model=model, token_type="output").inc(output_tokens)
+                        token_usage_total.labels(model=model, token_type="output").inc(
+                            output_tokens
+                        )
 
                 return result
             except Exception as e:
@@ -278,6 +289,7 @@ def track_llm_call(model: str = "unknown"):
 # Metrics Endpoint
 # =============================================================================
 
+
 def get_metrics_text() -> bytes:
     """
     Generate Prometheus exposition format metrics text.
@@ -302,6 +314,7 @@ def get_content_type() -> str:
 # Cache Tracking
 # =============================================================================
 
+
 def record_cache_hit(cache_type: str) -> None:
     """Record a cache hit."""
     cache_hit_total.labels(cache_type=cache_type).inc()
@@ -320,6 +333,7 @@ def set_cache_size(cache_type: str, size: int) -> None:
 # =============================================================================
 # System Metrics
 # =============================================================================
+
 
 def set_active_connections(count: int) -> None:
     """Set number of active connections."""

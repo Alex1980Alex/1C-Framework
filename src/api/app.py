@@ -6,8 +6,25 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import analytics, auth, cache, chat, collections, documents, feedback, graph, health, jobs, metrics, optimization, search, tenants, toc, websocket
-from src.api.routes import openai_compat  # Phase 14: OpenAI-compatible API
+from src.api.routes import (
+    analytics,
+    auth,
+    cache,
+    chat,
+    collections,
+    documents,
+    feedback,
+    graph,
+    health,
+    jobs,
+    metrics,
+    openai_compat,  # Phase 14: OpenAI-compatible API
+    optimization,
+    search,
+    tenants,
+    toc,
+    websocket,
+)
 from src.pdf_framework.config import get_settings
 
 # Configure module-level logging so [LOADER], [PIPELINE], [INDEXER], etc. are visible
@@ -60,22 +77,46 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     openapi_tags = [
-        {"name": "health", "description": "Health checks, readiness/liveness probes for Kubernetes"},
+        {
+            "name": "health",
+            "description": "Health checks, readiness/liveness probes for Kubernetes",
+        },
         {"name": "auth", "description": "JWT authentication, token management, RBAC roles"},
-        {"name": "documents", "description": "PDF upload, indexing (sync/stream/batch/delta), document listing, BM25/sparse rebuild"},
-        {"name": "search", "description": "Vector, BM25, hybrid, section-aware search. RAG QA with LLM reranking"},
+        {
+            "name": "documents",
+            "description": "PDF upload, indexing (sync/stream/batch/delta), document listing, BM25/sparse rebuild",
+        },
+        {
+            "name": "search",
+            "description": "Vector, BM25, hybrid, section-aware search. RAG QA with LLM reranking",
+        },
         {"name": "chat", "description": "Conversational RAG with message history and streaming"},
-        {"name": "graph", "description": "Knowledge graph: entities, relations, neighbors, communities, LightRAG"},
+        {
+            "name": "graph",
+            "description": "Knowledge graph: entities, relations, neighbors, communities, LightRAG",
+        },
         {"name": "cache", "description": "Semantic search cache management"},
         {"name": "metrics", "description": "Prometheus metrics, evaluation results dashboard"},
         {"name": "openai_compat", "description": "OpenAI-compatible /v1/chat/completions endpoint"},
         {"name": "feedback", "description": "User feedback collection for self-learning retrieval"},
         {"name": "toc", "description": "Table of contents navigation, section summaries"},
-        {"name": "collections", "description": "Multi-document knowledge bases: collections, scoped search"},
+        {
+            "name": "collections",
+            "description": "Multi-document knowledge bases: collections, scoped search",
+        },
         {"name": "optimization", "description": "DSPy prompt optimization, A/B experiments"},
-        {"name": "analytics", "description": "Enterprise analytics: query tracking, cost analysis, audit logs"},
-        {"name": "jobs", "description": "Async job management: enqueue, status, progress streaming, cancellation"},
-        {"name": "tenants", "description": "Multi-tenant management: CRUD, quotas, usage stats, isolation"},
+        {
+            "name": "analytics",
+            "description": "Enterprise analytics: query tracking, cost analysis, audit logs",
+        },
+        {
+            "name": "jobs",
+            "description": "Async job management: enqueue, status, progress streaming, cancellation",
+        },
+        {
+            "name": "tenants",
+            "description": "Multi-tenant management: CRUD, quotas, usage stats, isolation",
+        },
     ]
 
     app = FastAPI(

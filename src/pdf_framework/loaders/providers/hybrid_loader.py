@@ -17,7 +17,7 @@ import asyncio
 import base64
 import logging
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -77,6 +77,7 @@ class HybridLoader(BaseLoader):
         if not self._api_key and self._settings.enable_vision_ocr:
             try:
                 from src.pdf_framework.config import get_settings
+
                 s = get_settings()
                 self._api_key = s.anthropic_api_key
                 self._base_url = self._base_url or s.agent.base_url
@@ -124,7 +125,8 @@ class HybridLoader(BaseLoader):
         # === Level 1: PyMuPDF4LLM text extraction ===
         logger.info("[HYBRID] Level 1: PyMuPDF4LLM text extraction")
         page_chunks: list[dict[str, Any]] = pymupdf4llm.to_markdown(
-            str(path), page_chunks=True,
+            str(path),
+            page_chunks=True,
         )  # type: ignore[assignment]  # page_chunks=True returns list[dict]
 
         page_texts: dict[int, str] = {}  # {page_num(1-based): text}
@@ -156,7 +158,8 @@ class HybridLoader(BaseLoader):
 
         logger.info(
             "[HYBRID] Level 1 done: %d pages, %d chars",
-            len(page_texts), len(raw_text),
+            len(page_texts),
+            len(raw_text),
         )
 
         # === Level 2: fitz table extraction ===
@@ -177,7 +180,9 @@ class HybridLoader(BaseLoader):
         # === Merge tables into text ===
         if tables:
             raw_text, page_offsets = self._merge_tables(
-                page_list, page_nums, tables,
+                page_list,
+                page_nums,
+                tables,
             )
 
         # === Coverage verification ===
@@ -187,7 +192,8 @@ class HybridLoader(BaseLoader):
             if not coverage["complete"]:
                 # Diagnose gaps
                 diagnostics = PageCoverageVerifier.diagnose_gaps(
-                    coverage["missing_pages"], path,
+                    coverage["missing_pages"],
+                    path,
                 )
                 coverage["diagnostics"] = diagnostics
                 # Count truly empty pages
@@ -221,7 +227,7 @@ class HybridLoader(BaseLoader):
                 "tables": all_tables_dicts,
                 "coverage": coverage,
                 "loader_stats": dict(self._stats),
-                "loaded_at": datetime.now(timezone.utc).isoformat(),
+                "loaded_at": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -250,11 +256,10 @@ class HybridLoader(BaseLoader):
 
         # Level 3: Docling tables (async, may be slow)
         if self._settings.enable_docling_tables:
-            existing_tables = [
-                TableInfo(**t) for t in doc.metadata.extra.get("tables", [])
-            ]
+            existing_tables = [TableInfo(**t) for t in doc.metadata.extra.get("tables", [])]
             docling_tables = await self._extract_docling_tables(
-                Path(source), existing_tables,
+                Path(source),
+                existing_tables,
             )
             if docling_tables:
                 # Re-merge with new tables
@@ -265,10 +270,13 @@ class HybridLoader(BaseLoader):
                 page_offsets = doc.metadata.extra.get("page_offsets", [])
                 # Parse page_list from raw_text using offsets
                 page_list, page_nums = self._split_by_offsets(
-                    doc.raw_text, page_offsets,
+                    doc.raw_text,
+                    page_offsets,
                 )
                 new_raw, new_offsets = self._merge_tables(
-                    page_list, page_nums, docling_tables,
+                    page_list,
+                    page_nums,
+                    docling_tables,
                 )
                 doc.raw_text = new_raw
                 doc.metadata.extra["page_offsets"] = new_offsets
@@ -366,17 +374,20 @@ class HybridLoader(BaseLoader):
                     ocr_results[page_num] = ocr_text
                     logger.info(
                         "[HYBRID] Level 4: page %d OCR'd — %d chars",
-                        page_num, len(ocr_text),
+                        page_num,
+                        len(ocr_text),
                     )
                 else:
                     logger.debug(
                         "[HYBRID] Level 4: page %d OCR returned insufficient text (%d chars)",
-                        page_num, len(ocr_text) if ocr_text else 0,
+                        page_num,
+                        len(ocr_text) if ocr_text else 0,
                     )
             except Exception as e:
                 logger.warning(
                     "[HYBRID] Level 4: Vision OCR failed on page %d: %s",
-                    page_num, e,
+                    page_num,
+                    e,
                 )
 
         if not ocr_results:
@@ -401,7 +412,8 @@ class HybridLoader(BaseLoader):
         # Update coverage (previously missing scanned pages now have text)
         if doc.metadata.extra.get("coverage"):
             coverage = PageCoverageVerifier.verify(
-                new_offsets, doc.metadata.page_count,
+                new_offsets,
+                doc.metadata.page_count,
             )
             doc.metadata.extra["coverage"] = coverage
 
@@ -423,7 +435,9 @@ class HybridLoader(BaseLoader):
         """
         # Render page to PNG
         image_bytes = await asyncio.to_thread(
-            self._render_page, pdf_path, page_num,
+            self._render_page,
+            pdf_path,
+            page_num,
         )
         if not image_bytes:
             return ""
@@ -441,7 +455,10 @@ class HybridLoader(BaseLoader):
         for attempt in range(1, self._settings.vision_max_retries + 1):
             try:
                 result = await asyncio.to_thread(
-                    self._call_vision_ocr, image_base64, media_type, feedback,
+                    self._call_vision_ocr,
+                    image_base64,
+                    media_type,
+                    feedback,
                 )
                 last_result = result
 
@@ -454,7 +471,9 @@ class HybridLoader(BaseLoader):
                     )
                     logger.warning(
                         "[HYBRID] Level 4: page %d attempt %d — too short (%d chars), retrying",
-                        page_num, attempt, len(result),
+                        page_num,
+                        attempt,
+                        len(result),
                     )
                     continue
 
@@ -467,7 +486,8 @@ class HybridLoader(BaseLoader):
                     )
                     logger.warning(
                         "[HYBRID] Level 4: page %d attempt %d — refusal, retrying",
-                        page_num, attempt,
+                        page_num,
+                        attempt,
                     )
                     continue
 
@@ -476,7 +496,9 @@ class HybridLoader(BaseLoader):
             except Exception as e:
                 logger.warning(
                     "[HYBRID] Level 4: Vision API error on page %d attempt %d: %s",
-                    page_num, attempt, e,
+                    page_num,
+                    attempt,
+                    e,
                 )
                 feedback = f"Предыдущий вызов завершился ошибкой: {e}. Попробуй ещё раз."
                 last_result = ""
@@ -521,23 +543,25 @@ class HybridLoader(BaseLoader):
             model=self._settings.vision_model,
             max_tokens=4096,
             system=_VISION_OCR_SYSTEM,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": image_base64,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": image_base64,
+                            },
                         },
-                    },
-                    {
-                        "type": "text",
-                        "text": prompt,
-                    },
-                ],
-            }],
+                        {
+                            "type": "text",
+                            "text": prompt,
+                        },
+                    ],
+                }
+            ],
         )
 
         content = response.content[0]
@@ -592,15 +616,14 @@ class HybridLoader(BaseLoader):
                     if attempt < self._settings.docling_max_retries:
                         logger.warning(
                             "[HYBRID] Docling attempt %d/%d: no tables found, retrying",
-                            attempt, self._settings.docling_max_retries,
+                            attempt,
+                            self._settings.docling_max_retries,
                         )
                         continue
                     break
 
                 # Convert to TableInfo and filter
-                existing_pages = {
-                    (t.page_number, t.markdown[:100]) for t in existing_tables
-                }
+                existing_pages = {(t.page_number, t.markdown[:100]) for t in existing_tables}
                 for raw_t in raw_tables:
                     md = raw_t.get("markdown", "")
                     page = raw_t.get("page_number", 0)
@@ -618,24 +641,29 @@ class HybridLoader(BaseLoader):
                     if key in existing_pages:
                         continue
 
-                    new_tables.append(TableInfo(
-                        page_number=page,
-                        markdown=md,
-                        source="docling",
-                        rows=raw_t.get("rows", 0),
-                        cols=raw_t.get("cols", 0),
-                        headers=raw_t.get("headers", []),
-                    ))
+                    new_tables.append(
+                        TableInfo(
+                            page_number=page,
+                            markdown=md,
+                            source="docling",
+                            rows=raw_t.get("rows", 0),
+                            cols=raw_t.get("cols", 0),
+                            headers=raw_t.get("headers", []),
+                        )
+                    )
 
                 logger.info(
                     "[HYBRID] Docling: %d raw tables, %d new after dedup",
-                    len(raw_tables), len(new_tables),
+                    len(raw_tables),
+                    len(new_tables),
                 )
                 break  # Success
 
             except Exception as e:
                 logger.warning(
-                    "[HYBRID] Docling attempt %d failed: %s", attempt, e,
+                    "[HYBRID] Docling attempt %d failed: %s",
+                    attempt,
+                    e,
                 )
                 if attempt < self._settings.docling_max_retries:
                     await asyncio.sleep(1)

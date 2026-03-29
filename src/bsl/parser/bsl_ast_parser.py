@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Dict, List, Optional, Tuple
 
 from .models import (
     BSLCall,
@@ -83,7 +82,7 @@ class BSLASTParser:
     """Regex-based BSL parser for symbol extraction."""
 
     def __init__(self) -> None:
-        self._cache: Dict[str, BSLModule] = {}
+        self._cache: dict[str, BSLModule] = {}
 
     def parse_file(self, file_path: str) -> BSLModule:
         """Parse a BSL file and return structured module data."""
@@ -116,7 +115,7 @@ class BSLASTParser:
 
         return module
 
-    def parse_files(self, file_paths: List[str]) -> List[BSLModule]:
+    def parse_files(self, file_paths: list[str]) -> list[BSLModule]:
         """Parse multiple BSL files."""
         return [self.parse_file(fp) for fp in file_paths]
 
@@ -125,30 +124,30 @@ class BSLASTParser:
 
     # --- Private methods ---
 
-    def _read_file(self, file_path: str) -> Optional[str]:
+    def _read_file(self, file_path: str) -> str | None:
         """Read file with encoding detection."""
         if not os.path.exists(file_path):
             return None
         for enc in _ENCODINGS:
             try:
-                with open(file_path, "r", encoding=enc) as f:
+                with open(file_path, encoding=enc) as f:
                     return f.read()
             except UnicodeDecodeError:
                 continue
         return None
 
-    def _extract_regions(self, content: str) -> List[BSLRegion]:
+    def _extract_regions(self, content: str) -> list[BSLRegion]:
         """Extract #Region/#EndRegion blocks."""
-        regions: List[BSLRegion] = []
-        stack: List[Tuple[str, int]] = []
+        regions: list[BSLRegion] = []
+        stack: list[tuple[str, int]] = []
 
         for m in _REGION_START_RE.finditer(content):
-            line = content[:m.start()].count("\n") + 1
+            line = content[: m.start()].count("\n") + 1
             stack.append((m.group("name").strip(), line))
 
         end_lines = []
         for m in _REGION_END_RE.finditer(content):
-            end_lines.append(content[:m.start()].count("\n") + 1)
+            end_lines.append(content[: m.start()].count("\n") + 1)
 
         for i, (name, start_line) in enumerate(stack):
             end_line = end_lines[i] if i < len(end_lines) else start_line
@@ -156,31 +155,33 @@ class BSLASTParser:
 
         return regions
 
-    def _extract_variables(self, content: str) -> List[BSLVariable]:
+    def _extract_variables(self, content: str) -> list[BSLVariable]:
         """Extract module-level Var declarations."""
-        variables: List[BSLVariable] = []
+        variables: list[BSLVariable] = []
         first_symbol = _SYMBOL_RE.search(content)
-        search_area = content[:first_symbol.start()] if first_symbol else content
+        search_area = content[: first_symbol.start()] if first_symbol else content
 
         for m in _VAR_RE.finditer(search_area):
-            line = content[:m.start()].count("\n") + 1
-            variables.append(BSLVariable(
-                name=m.group("name"),
-                line=line,
-                is_export=bool(m.group("export")),
-            ))
+            line = content[: m.start()].count("\n") + 1
+            variables.append(
+                BSLVariable(
+                    name=m.group("name"),
+                    line=line,
+                    is_export=bool(m.group("export")),
+                )
+            )
         return variables
 
     def _extract_symbols(
-        self, content: str, lines: List[str], regions: List[BSLRegion]
-    ) -> List[BSLSymbol]:
+        self, content: str, lines: list[str], regions: list[BSLRegion]
+    ) -> list[BSLSymbol]:
         """Extract all procedures and functions with their bodies."""
-        symbols: List[BSLSymbol] = []
+        symbols: list[BSLSymbol] = []
 
         # Collect directive positions for lookup
-        directives: Dict[int, str] = {}
+        directives: dict[int, str] = {}
         for m in _DIRECTIVE_RE.finditer(content):
-            line_num = content[:m.start()].count("\n") + 1
+            line_num = content[: m.start()].count("\n") + 1
             directives[line_num] = m.group(1)
 
         for m in _SYMBOL_RE.finditer(content):
@@ -215,25 +216,27 @@ class BSLASTParser:
             region = self._find_region(start_line, regions)
             calls = self._extract_calls(body, m.group("name"), start_line)
 
-            symbols.append(BSLSymbol(
-                name=m.group("name"),
-                symbol_type=symbol_type,
-                line_start=start_line,
-                line_end=end_line,
-                body=body,
-                is_export=bool(m.group("export")),
-                params=params,
-                compilation_directive=directive,
-                comment=comment,
-                region=region,
-                calls=calls,
-            ))
+            symbols.append(
+                BSLSymbol(
+                    name=m.group("name"),
+                    symbol_type=symbol_type,
+                    line_start=start_line,
+                    line_end=end_line,
+                    body=body,
+                    is_export=bool(m.group("export")),
+                    params=params,
+                    compilation_directive=directive,
+                    comment=comment,
+                    region=region,
+                    calls=calls,
+                )
+            )
 
         return symbols
 
-    def _parse_params(self, params_str: str) -> List[BSLParam]:
+    def _parse_params(self, params_str: str) -> list[BSLParam]:
         """Parse parameter list string into BSLParam objects."""
-        params: List[BSLParam] = []
+        params: list[BSLParam] = []
         if not params_str.strip():
             return params
 
@@ -260,9 +263,9 @@ class BSLASTParser:
 
         return params
 
-    def _extract_preceding_comment(self, lines: List[str], symbol_line_0based: int) -> str:
+    def _extract_preceding_comment(self, lines: list[str], symbol_line_0based: int) -> str:
         """Extract // comment block immediately before a symbol."""
-        comment_lines: List[str] = []
+        comment_lines: list[str] = []
         i = symbol_line_0based - 1
 
         # Skip directive line
@@ -279,16 +282,16 @@ class BSLASTParser:
 
         return "\n".join(comment_lines)
 
-    def _find_region(self, line: int, regions: List[BSLRegion]) -> Optional[str]:
+    def _find_region(self, line: int, regions: list[BSLRegion]) -> str | None:
         """Find which region a line belongs to."""
         for region in regions:
             if region.line_start <= line <= region.line_end:
                 return region.name
         return None
 
-    def _extract_calls(self, body: str, caller_name: str, base_line: int) -> List[BSLCall]:
+    def _extract_calls(self, body: str, caller_name: str, base_line: int) -> list[BSLCall]:
         """Extract method calls from a symbol body."""
-        calls: List[BSLCall] = []
+        calls: list[BSLCall] = []
         seen = set()
 
         for m in _QUALIFIED_CALL_RE.finditer(body):
@@ -297,20 +300,22 @@ class BSLASTParser:
             key = f"{module}.{method}"
             if key not in seen:
                 seen.add(key)
-                rel_line = body[:m.start()].count("\n")
-                calls.append(BSLCall(
-                    caller_name=caller_name,
-                    callee_module=module,
-                    callee_method=method,
-                    line=base_line + rel_line,
-                ))
+                rel_line = body[: m.start()].count("\n")
+                calls.append(
+                    BSLCall(
+                        caller_name=caller_name,
+                        callee_module=module,
+                        callee_method=method,
+                        line=base_line + rel_line,
+                    )
+                )
 
         return calls
 
     @staticmethod
-    def find_bsl_files(root_dir: str) -> List[str]:
+    def find_bsl_files(root_dir: str) -> list[str]:
         """Find all .bsl files under a directory."""
-        bsl_files: List[str] = []
+        bsl_files: list[str] = []
         for dirpath, _, filenames in os.walk(root_dir):
             for fn in filenames:
                 if fn.lower().endswith(".bsl"):

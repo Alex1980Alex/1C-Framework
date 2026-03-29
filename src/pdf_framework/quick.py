@@ -129,7 +129,9 @@ class QuickRAG:
         self._ensure_initialized()
         return self._loop.run_until_complete(self._asearch(query, k, strategy))
 
-    async def asearch(self, query: str, k: int = 5, strategy: str = "hybrid") -> list[dict[str, Any]]:
+    async def asearch(
+        self, query: str, k: int = 5, strategy: str = "hybrid"
+    ) -> list[dict[str, Any]]:
         """Async version of search()."""
         self._ensure_initialized()
         return await self._asearch(query, k, strategy)
@@ -145,10 +147,12 @@ class QuickRAG:
             api_key=self._components.settings.anthropic_api_key,
         )
 
-        result = await agent.ainvoke({
-            "question": question,
-            "search_strategy": strategy,
-        })
+        result = await agent.ainvoke(
+            {
+                "question": question,
+                "search_strategy": strategy,
+            }
+        )
 
         return result.get("answer", "No answer generated.")
 

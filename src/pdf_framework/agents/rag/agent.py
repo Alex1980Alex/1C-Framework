@@ -11,6 +11,7 @@ Version: 1.3.0 - Phase 43: Framework integration (checkpointing, ONNX, middlewar
 """
 
 import logging
+
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -45,9 +46,7 @@ def _create_cached_system_message(content: str) -> SystemMessage:
     # Only use caching for longer prompts (cost-effective threshold)
     if len(content) > 1024:
         return SystemMessage(
-            content=[
-                {"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}
-            ]
+            content=[{"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}]
         )
     return SystemMessage(content=content)
 
@@ -82,7 +81,7 @@ def create_rag_agent(
     self_rag_settings = self_rag_settings or SelfRAGSettings()
 
     # Phase 43: Token tracking middleware
-    from src.pdf_framework.agents.rag.middleware import TokenTracker, ContentGuard, with_middleware
+    from src.pdf_framework.agents.rag.middleware import ContentGuard, TokenTracker, with_middleware
 
     token_tracker = TokenTracker(node_name="init")
 
@@ -177,9 +176,7 @@ def create_rag_agent(
         logger.info(f"[SEARCH] strategy={strategy}, k={k}, query='{question[:50]}...'")
 
         try:
-            response = await search_manager.search(
-                query=question, strategy=strategy, k=k
-            )
+            response = await search_manager.search(query=question, strategy=strategy, k=k)
             context = _build_context(response)
             logger.info(f"[SEARCH] Found {len(response.results)} results")
             return {"search_response": response, "context": context}
@@ -204,9 +201,9 @@ def create_rag_agent(
             relevant_ids = {g["chunk_id"] for g in graded if g["is_relevant"]}
             if relevant_ids:
                 from src.pdf_framework.schemas.documents import SearchResponse
+
                 filtered_results = [
-                    r for r in search_response.results
-                    if r.chunk.id in relevant_ids
+                    r for r in search_response.results if r.chunk.id in relevant_ids
                 ]
                 if filtered_results:
                     filtered_response = SearchResponse(
@@ -310,11 +307,13 @@ def create_rag_agent(
                     continue
 
                 # Validate: Russian language?
-                cyrillic = sum(1 for ch in answer[:300] if '\u0400' <= ch <= '\u04ff')
-                latin = sum(1 for ch in answer[:300] if 'a' <= ch.lower() <= 'z')
+                cyrillic = sum(1 for ch in answer[:300] if "\u0400" <= ch <= "\u04ff")
+                latin = sum(1 for ch in answer[:300] if "a" <= ch.lower() <= "z")
                 if latin > cyrillic * 2 and len(answer) > 50:
                     feedback = "Ответ должен быть на РУССКОМ языке. Переведи и ответь заново."
-                    logger.warning(f"[GENERATE] Attempt {attempt}: not Russian (lat={latin}, cyr={cyrillic})")
+                    logger.warning(
+                        f"[GENERATE] Attempt {attempt}: not Russian (lat={latin}, cyr={cyrillic})"
+                    )
                     continue
 
                 # Valid answer — log cache savings and return
@@ -323,9 +322,15 @@ def create_rag_agent(
                     cache_read_tokens = getattr(usage, "cache_read_input_tokens", 0)
                     if cache_read_tokens > 0:
                         total_input_tokens = getattr(usage, "prompt_tokens", 0)
-                        savings_pct = (cache_read_tokens / total_input_tokens * 100) if total_input_tokens > 0 else 0
-                        logger.info(f"[GENERATE] Prompt cache saved {cache_read_tokens} tokens "
-                                   f"({savings_pct:.1f}% reduction from {total_input_tokens} total)")
+                        savings_pct = (
+                            (cache_read_tokens / total_input_tokens * 100)
+                            if total_input_tokens > 0
+                            else 0
+                        )
+                        logger.info(
+                            f"[GENERATE] Prompt cache saved {cache_read_tokens} tokens "
+                            f"({savings_pct:.1f}% reduction from {total_input_tokens} total)"
+                        )
 
                 logger.info(f"[GENERATE] Generated answer ({len(answer)} chars)")
                 break
@@ -341,6 +346,7 @@ def create_rag_agent(
         search_resp = state.get("search_response")
         if search_resp and search_resp.results:
             from src.pdf_framework.utils.section_refs import append_section_refs
+
             answer = append_section_refs(answer, search_resp.results)
 
         sources: list[str] = []
@@ -396,7 +402,7 @@ def create_rag_agent(
 
         # No relevant docs at all — try rewriting
         if retry_count < max_retries:
-            logger.info(f"[EDGE] relevance=0%, retry {retry_count+1}/{max_retries} → rewrite")
+            logger.info(f"[EDGE] relevance=0%, retry {retry_count + 1}/{max_retries} → rewrite")
             return "rewrite"
 
         logger.info(f"[EDGE] No relevant docs after {retry_count} retries → generate (best effort)")
@@ -412,7 +418,9 @@ def create_rag_agent(
         max_attempts = self_rag_settings.max_generation_attempts
 
         if is_hallucinated and attempts < max_attempts:
-            logger.info(f"[EDGE] hallucinated={is_hallucinated}, attempts={attempts} < {max_attempts} → regenerate")
+            logger.info(
+                f"[EDGE] hallucinated={is_hallucinated}, attempts={attempts} < {max_attempts} → regenerate"
+            )
             return "regenerate"
 
         return "end"
@@ -459,8 +467,9 @@ def create_rag_agent(
     compile_kwargs: dict = {}
     if settings.checkpointer == "sqlite":
         try:
-            from langgraph.checkpoint.sqlite import SqliteSaver
             import sqlite3
+
+            from langgraph.checkpoint.sqlite import SqliteSaver
 
             _ckpt_path = str(PROJECT_ROOT / "data" / "agent_checkpoints.db")
             conn = sqlite3.connect(_ckpt_path, check_same_thread=False)
@@ -491,6 +500,7 @@ def _extract_section_number(title: str) -> str:
     Handles bold markdown: '**5.9.Документы**' → '5.9'
     """
     import re
+
     clean = title.replace("*", "").strip()
     m = re.match(r"(\d+(?:\.\d+)*)", clean)
     return m.group(1) if m else ""

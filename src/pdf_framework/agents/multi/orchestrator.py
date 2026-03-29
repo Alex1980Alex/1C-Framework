@@ -91,10 +91,14 @@ def create_multi_agent(
             try:
                 if strategy == "section_first":
                     return await search_manager.search_section_first(
-                        query=question, k=5,
+                        query=question,
+                        k=5,
                     )
                 return await search_manager.search(
-                    query=question, strategy=strategy, k=5, rerank=True,
+                    query=question,
+                    strategy=strategy,
+                    k=5,
+                    rerank=True,
                 )
             except Exception as e:
                 logger.warning("[RETRIEVAL] %s failed: %s", strategy, e)
@@ -111,15 +115,17 @@ def create_multi_agent(
             for r in resp.results:
                 if r.chunk.id not in seen:
                     seen.add(r.chunk.id)
-                    chunks.append({
-                        "id": r.chunk.id,
-                        "content": r.chunk.content[:600],
-                        "score": round(r.score, 3),
-                        "source": r.chunk.metadata.get("source", ""),
-                        "page": r.chunk.metadata.get("page_number"),
-                        "section": r.chunk.metadata.get("section_title", "")
+                    chunks.append(
+                        {
+                            "id": r.chunk.id,
+                            "content": r.chunk.content[:600],
+                            "score": round(r.score, 3),
+                            "source": r.chunk.metadata.get("source", ""),
+                            "page": r.chunk.metadata.get("page_number"),
+                            "section": r.chunk.metadata.get("section_title", "")
                             or r.chunk.metadata.get("breadcrumb", ""),
-                    })
+                        }
+                    )
 
         retrieval = RetrievalResult(
             chunks=chunks,
@@ -127,11 +133,13 @@ def create_multi_agent(
             total_found=len(chunks),
         )
 
-        messages_log.append({
-            "from": "retrieval",
-            "to": "orchestrator",
-            "content": f"Found {len(chunks)} chunks via {strategies}",
-        })
+        messages_log.append(
+            {
+                "from": "retrieval",
+                "to": "orchestrator",
+                "content": f"Found {len(chunks)} chunks via {strategies}",
+            }
+        )
 
         logger.info(
             "[RETRIEVAL] %d chunks from %s",
@@ -165,10 +173,13 @@ def create_multi_agent(
             sec_raw = c.get("section", "")
             # Extract section number from "**5.9.Документы**" → "5.9"
             import re
+
             sec_clean = sec_raw.replace("*", "").strip()
             sec_match = re.match(r"(\d+(?:\.\d+)*)", sec_clean)
             sec_num = sec_match.group(1) if sec_match else ""
-            sec_label = f" §{sec_num} «{sec_clean}»" if sec_num else (f" [{sec_raw}]" if sec_raw else "")
+            sec_label = (
+                f" §{sec_num} «{sec_clean}»" if sec_num else (f" [{sec_raw}]" if sec_raw else "")
+            )
             context += f"[{i}] (стр.{c.get('page', '?')}{sec_label})\n{c['content']}\n\n"
 
         prompt = (
@@ -212,12 +223,14 @@ def create_multi_agent(
                 conclusions=["Недостаточно данных для выводов"],
             )
 
-        messages_log.append({
-            "from": "analysis",
-            "to": "orchestrator",
-            "content": f"{len(analysis.findings)} findings, "
-            f"{len(analysis.contradictions)} contradictions",
-        })
+        messages_log.append(
+            {
+                "from": "analysis",
+                "to": "orchestrator",
+                "content": f"{len(analysis.findings)} findings, "
+                f"{len(analysis.contradictions)} contradictions",
+            }
+        )
 
         logger.info(
             "[ANALYSIS] %d findings, %d contradictions, %d conclusions",
@@ -259,22 +272,14 @@ def create_multi_agent(
         prompt = (
             "Напиши структурированный отчёт на основе анализа.\n\n"
             f"Вопрос: {question}\n\n"
-            f"Ключевые факты ({len(findings)}):\n"
-            + "\n".join(f"- {f}" for f in findings)
-            + "\n\n"
-            f"Выводы:\n"
-            + "\n".join(f"- {c}" for c in conclusions)
-            + "\n\n"
+            f"Ключевые факты ({len(findings)}):\n" + "\n".join(f"- {f}" for f in findings) + "\n\n"
+            "Выводы:\n" + "\n".join(f"- {c}" for c in conclusions) + "\n\n"
         )
 
         if comp_table:
             prompt += f"Таблица сравнения:\n{comp_table}\n\n"
         if contradictions:
-            prompt += (
-                "Противоречия:\n"
-                + "\n".join(f"- {c}" for c in contradictions)
-                + "\n\n"
-            )
+            prompt += "Противоречия:\n" + "\n".join(f"- {c}" for c in contradictions) + "\n\n"
 
         prompt += corrections_text
 
@@ -306,9 +311,10 @@ def create_multi_agent(
         # Phase 41: Guaranteed section reference block
         if "Где найти в документации" not in report_text:
             from src.pdf_framework.utils.section_refs import (
-                extract_sections_from_chunks,
                 build_section_nav_block,
+                extract_sections_from_chunks,
             )
+
             sections = extract_sections_from_chunks(retrieval.get("chunks", []))
             nav = build_section_nav_block(sections)
             if nav:
@@ -326,11 +332,13 @@ def create_multi_agent(
             sources=sources,
         )
 
-        messages_log.append({
-            "from": "writing",
-            "to": "orchestrator",
-            "content": f"Report: {len(report_text)} chars, {len(sources)} sources",
-        })
+        messages_log.append(
+            {
+                "from": "writing",
+                "to": "orchestrator",
+                "content": f"Report: {len(report_text)} chars, {len(sources)} sources",
+            }
+        )
 
         logger.info("[WRITING] %d chars, %d sources", len(report_text), len(sources))
 
@@ -402,18 +410,19 @@ def create_multi_agent(
                 completeness=0.8,
             )
 
-        messages_log.append({
-            "from": "verification",
-            "to": "orchestrator",
-            "content": f"{'PASSED' if verification.passed else 'FAILED'}: "
-            f"groundedness={verification.groundedness:.0%}, "
-            f"completeness={verification.completeness:.0%}, "
-            f"issues={len(verification.issues)}",
-        })
+        messages_log.append(
+            {
+                "from": "verification",
+                "to": "orchestrator",
+                "content": f"{'PASSED' if verification.passed else 'FAILED'}: "
+                f"groundedness={verification.groundedness:.0%}, "
+                f"completeness={verification.completeness:.0%}, "
+                f"issues={len(verification.issues)}",
+            }
+        )
 
         logger.info(
-            "[VERIFY] %s: groundedness=%.0f%%, completeness=%.0f%%, "
-            "issues=%d, iteration=%d",
+            "[VERIFY] %s: groundedness=%.0f%%, completeness=%.0f%%, issues=%d, iteration=%d",
             "PASSED" if verification.passed else "FAILED",
             verification.groundedness * 100,
             verification.completeness * 100,

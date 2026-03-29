@@ -56,8 +56,11 @@ class DocumentToC:
             DocumentToC with tree structure and flat index.
         """
         root = ToCNode(
-            number="", title="root", full_title="root",
-            level=0, char_offset=0,
+            number="",
+            title="root",
+            full_title="root",
+            level=0,
+            char_offset=0,
         )
         flat: list[ToCNode] = []
         by_number: dict[str, ToCNode] = {}
@@ -82,7 +85,7 @@ class DocumentToC:
             if num_match:
                 number = num_match.group(1)
                 level = number.count(".") + 1
-                title_part = normalized[num_match.end():].lstrip(". ")
+                title_part = normalized[num_match.end() :].lstrip(". ")
                 full_title = f"{number}. {title_part}" if title_part else number
             elif normalized.lower().startswith("глава"):
                 number = ""
@@ -139,10 +142,7 @@ class DocumentToC:
         """
         if not prefix:
             return list(self.flat)
-        return [
-            n for n in self.flat
-            if n.number == prefix or n.number.startswith(prefix + ".")
-        ]
+        return [n for n in self.flat if n.number == prefix or n.number.startswith(prefix + ".")]
 
     def get_breadcrumb(self, section_number: str) -> str:
         """Build breadcrumb path for a section number.

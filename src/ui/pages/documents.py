@@ -234,22 +234,28 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
             return (
                 '<div class="progress-track" style="background:#e0e0e0;border-radius:8px;height:32px;overflow:hidden;">'
                 f'<div style="width:{percent}%;background:{color};height:100%;'
-                'transition:width 0.4s ease;display:flex;align-items:center;'
+                "transition:width 0.4s ease;display:flex;align-items:center;"
                 f'justify-content:center;color:white;font-weight:bold;font-size:14px;min-width:60px;">'
-                f'{percent}%{" — " + label if label else ""}'
-                '</div></div>'
+                f"{percent}%{' — ' + label if label else ''}"
+                "</div></div>"
             )
 
         _STEP_PCT = {
-            "load": 0.00, "load_done": 0.10,
+            "load": 0.00,
+            "load_done": 0.10,
             "dedup": 0.11,
-            "split": 0.12, "split_done": 0.25,
-            "images": 0.27, "images_done": 0.40,
+            "split": 0.12,
+            "split_done": 0.25,
+            "images": 0.27,
+            "images_done": 0.40,
             "images_error": 0.40,
-            "embed": 0.42, "embed_done": 0.80,
-            "graph": 0.82, "graph_done": 0.95,
+            "embed": 0.42,
+            "embed_done": 0.80,
+            "graph": 0.82,
+            "graph_done": 0.95,
             "graph_error": 0.95,
-            "done": 1.0, "error": 1.0,
+            "done": 1.0,
+            "error": 1.0,
         }
 
         _EMBED_START = 0.42
@@ -259,7 +265,14 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
             """Resolve actual options from preset or custom checkboxes."""
             if preset != "custom":
                 p = PRESETS[preset]
-                return p["build_graph"], p["contextual"], p["parent_child"], p["raptor"], p["summarize"], p["extract_images"]
+                return (
+                    p["build_graph"],
+                    p["contextual"],
+                    p["parent_child"],
+                    p["raptor"],
+                    p["summarize"],
+                    p["extract_images"],
+                )
             return graph, ctx, pc, rapt, summ, imgs
 
         def _format_options(loader, graph, ctx, pc, rapt, summ, imgs) -> list[str]:
@@ -305,7 +318,10 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                         except json.JSONDecodeError:
                             pass
             except requests.ConnectionError:
-                yield {"step": "error", "detail": "API сервер недоступен. Запустите backend: make api"}
+                yield {
+                    "step": "error",
+                    "detail": "API сервер недоступен. Запустите backend: make api",
+                }
             except requests.Timeout:
                 yield {"step": "error", "detail": "Таймаут соединения с API сервером"}
             except Exception as e:
@@ -315,8 +331,12 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
             file_paths: list[str] | str | None,
             loader: str,
             preset: str,
-            graph: bool, ctx: bool, pc: bool,
-            rapt: bool, summ: bool, imgs: bool,
+            graph: bool,
+            ctx: bool,
+            pc: bool,
+            rapt: bool,
+            summ: bool,
+            imgs: bool,
         ):
             """Upload files to backend and run indexing with streaming logs."""
             if not file_paths:
@@ -324,7 +344,9 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                 yield _progress_html(0), "Файлы не выбраны."
                 return
 
-            graph, ctx, pc, rapt, summ, imgs = _resolve_options(preset, graph, ctx, pc, rapt, summ, imgs)
+            graph, ctx, pc, rapt, summ, imgs = _resolve_options(
+                preset, graph, ctx, pc, rapt, summ, imgs
+            )
 
             if isinstance(file_paths, str):
                 file_paths = [file_paths]
@@ -358,7 +380,10 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
 
                 log_lines.append(f"\n[{i}/{total}] {filename}")
                 log_lines.append("  Загрузка на сервер...")
-                yield _progress_html(int(base_pct), f"[{i}/{total}] {filename}"), "\n".join(log_lines)
+                yield (
+                    _progress_html(int(base_pct), f"[{i}/{total}] {filename}"),
+                    "\n".join(log_lines),
+                )
 
                 try:
                     with open(file_path, "rb") as f:
@@ -372,16 +397,27 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                 except requests.ConnectionError:
                     log_lines.append("  API сервер недоступен")
                     gr.Error("API сервер недоступен. Запустите backend: make api")
-                    yield _progress_html(int(base_pct + upload_share), f"Ошибка: {filename}"), "\n".join(log_lines)
+                    yield (
+                        _progress_html(int(base_pct + upload_share), f"Ошибка: {filename}"),
+                        "\n".join(log_lines),
+                    )
                     continue
                 except Exception as e:
                     log_lines.append(f"  Ошибка загрузки: {e}")
                     gr.Warning(f"Ошибка загрузки {filename}")
-                    yield _progress_html(int(base_pct + upload_share), f"Ошибка: {filename}"), "\n".join(log_lines)
+                    yield (
+                        _progress_html(int(base_pct + upload_share), f"Ошибка: {filename}"),
+                        "\n".join(log_lines),
+                    )
                     continue
 
                 log_lines.append("  Загружен на сервер")
-                yield _progress_html(int(base_pct + upload_share), f"[{i}/{total}] Индексация {filename}..."), "\n".join(log_lines)
+                yield (
+                    _progress_html(
+                        int(base_pct + upload_share), f"[{i}/{total}] Индексация {filename}..."
+                    ),
+                    "\n".join(log_lines),
+                )
 
                 payload = {
                     "file_path": server_path,
@@ -422,7 +458,10 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
             )
             if success_count == total:
                 gr.Info(f"Индексация завершена: {total_chunks} чанков за {total_elapsed:.1f} сек")
-            yield _progress_html(100, f"Готово — {success_count}/{total} файлов"), "\n".join(log_lines)
+            yield (
+                _progress_html(100, f"Готово — {success_count}/{total} файлов"),
+                "\n".join(log_lines),
+            )
 
         def list_documents():
             """Fetch document list from API."""
@@ -437,7 +476,15 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                     doc_id = doc.get("id", "неизвестно")
                     filename = os.path.basename(doc.get("source_path", ""))
                     chunks = doc.get("chunk_count", 0)
-                    rows.append([doc_id, chunks, filename, doc.get("document_type", ""), doc.get("language", "")])
+                    rows.append(
+                        [
+                            doc_id,
+                            chunks,
+                            filename,
+                            doc.get("document_type", ""),
+                            doc.get("language", ""),
+                        ]
+                    )
                     label = f"{doc_id} — {filename} ({chunks} чанков)" if filename else doc_id
                     choices.append(label)
 
@@ -491,7 +538,9 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
 
         def reindex_all(loader, preset, graph, ctx, pc, rapt, summ, imgs):
             """Re-index ALL PDF files."""
-            graph, ctx, pc, rapt, summ, imgs = _resolve_options(preset, graph, ctx, pc, rapt, summ, imgs)
+            graph, ctx, pc, rapt, summ, imgs = _resolve_options(
+                preset, graph, ctx, pc, rapt, summ, imgs
+            )
             try:
                 resp = requests.get(f"{api_url}/documents/files", timeout=10)
                 resp.raise_for_status()
@@ -513,7 +562,11 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
             log_lines = [f"Найдено PDF: {total}"]
             log_lines.extend(_format_options(loader, graph, ctx, pc, rapt, summ, imgs))
 
-            loader_value = "smart" if loader == "auto (smart)" else (loader if loader in ["pymupdf", "docling", "pymupdf4llm"] else "default")
+            loader_value = (
+                "smart"
+                if loader == "auto (smart)"
+                else (loader if loader in ["pymupdf", "docling", "pymupdf4llm"] else "default")
+            )
             file_step = 100 / total
             yield _progress_html(0, "Переиндексация..."), "\n".join(log_lines)
 
@@ -525,18 +578,28 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                 base_pct = (i - 1) * file_step
                 filename = file_info["filename"]
                 log_lines.append(f"\n[{i}/{total}] {filename}")
-                yield _progress_html(int(base_pct), f"[{i}/{total}] {filename}"), "\n".join(log_lines)
+                yield (
+                    _progress_html(int(base_pct), f"[{i}/{total}] {filename}"),
+                    "\n".join(log_lines),
+                )
 
                 payload = {
-                    "file_path": file_info["file_path"], "loader": loader_value,
-                    "build_graph": graph, "contextual": ctx, "parent_child": pc,
-                    "raptor": rapt, "summarize": summ, "extract_images": imgs,
+                    "file_path": file_info["file_path"],
+                    "loader": loader_value,
+                    "build_graph": graph,
+                    "contextual": ctx,
+                    "parent_child": pc,
+                    "raptor": rapt,
+                    "summarize": summ,
+                    "extract_images": imgs,
                 }
                 for event in _iter_stream(payload):
                     ev_step = event.get("step", "")
                     detail = event.get("detail", "")
                     if ev_step == "batch":
-                        sub_pct = _EMBED_START + (event.get("progress_percent", 0) / 100) * (_EMBED_END - _EMBED_START)
+                        sub_pct = _EMBED_START + (event.get("progress_percent", 0) / 100) * (
+                            _EMBED_END - _EMBED_START
+                        )
                         log_lines.append(f"    {detail}")
                     else:
                         sub_pct = _STEP_PCT.get(ev_step, 0)
@@ -548,13 +611,17 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                         success_count += 1
 
             elapsed = time.time() - total_start
-            log_lines.append(f"\nИтого: {success_count}/{total} файлов, {total_chunks} чанков, {elapsed:.1f} сек")
+            log_lines.append(
+                f"\nИтого: {success_count}/{total} файлов, {total_chunks} чанков, {elapsed:.1f} сек"
+            )
             gr.Info(f"Переиндексация: {success_count}/{total} файлов")
             yield _progress_html(100, f"Готово — {success_count}/{total}"), "\n".join(log_lines)
 
         def incremental_index(loader, preset, graph, ctx, pc, rapt, summ, imgs):
             """Index only NEW PDF files."""
-            graph, ctx, pc, rapt, summ, imgs = _resolve_options(preset, graph, ctx, pc, rapt, summ, imgs)
+            graph, ctx, pc, rapt, summ, imgs = _resolve_options(
+                preset, graph, ctx, pc, rapt, summ, imgs
+            )
             try:
                 resp = requests.get(f"{api_url}/documents/files", timeout=10)
                 resp.raise_for_status()
@@ -570,21 +637,32 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
             try:
                 resp = requests.get(f"{api_url}/documents/", timeout=30)
                 resp.raise_for_status()
-                indexed_sources = {doc.get("source_path", "") for doc in resp.json().get("documents", [])}
+                indexed_sources = {
+                    doc.get("source_path", "") for doc in resp.json().get("documents", [])
+                }
             except Exception:
                 indexed_sources = set()
 
             new_files = [f for f in all_files if f["file_path"] not in indexed_sources]
             if not new_files:
                 gr.Info(f"Все {len(all_files)} PDF уже проиндексированы.")
-                yield _progress_html(100, "Всё готово"), f"Все {len(all_files)} PDF проиндексированы."
+                yield (
+                    _progress_html(100, "Всё готово"),
+                    f"Все {len(all_files)} PDF проиндексированы.",
+                )
                 return
 
             total = len(new_files)
-            log_lines = [f"Всего: {len(all_files)}, проиндексировано: {len(indexed_sources)}, новых: {total}"]
+            log_lines = [
+                f"Всего: {len(all_files)}, проиндексировано: {len(indexed_sources)}, новых: {total}"
+            ]
             log_lines.extend(_format_options(loader, graph, ctx, pc, rapt, summ, imgs))
 
-            loader_value = "smart" if loader == "auto (smart)" else (loader if loader in ["pymupdf", "docling", "pymupdf4llm"] else "default")
+            loader_value = (
+                "smart"
+                if loader == "auto (smart)"
+                else (loader if loader in ["pymupdf", "docling", "pymupdf4llm"] else "default")
+            )
             file_step = 100 / total
             yield _progress_html(0, "Доиндексация..."), "\n".join(log_lines)
 
@@ -596,18 +674,28 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                 base_pct = (i - 1) * file_step
                 filename = file_info["filename"]
                 log_lines.append(f"\n[{i}/{total}] {filename}")
-                yield _progress_html(int(base_pct), f"[{i}/{total}] {filename}"), "\n".join(log_lines)
+                yield (
+                    _progress_html(int(base_pct), f"[{i}/{total}] {filename}"),
+                    "\n".join(log_lines),
+                )
 
                 payload = {
-                    "file_path": file_info["file_path"], "loader": loader_value,
-                    "build_graph": graph, "contextual": ctx, "parent_child": pc,
-                    "raptor": rapt, "summarize": summ, "extract_images": imgs,
+                    "file_path": file_info["file_path"],
+                    "loader": loader_value,
+                    "build_graph": graph,
+                    "contextual": ctx,
+                    "parent_child": pc,
+                    "raptor": rapt,
+                    "summarize": summ,
+                    "extract_images": imgs,
                 }
                 for event in _iter_stream(payload):
                     ev_step = event.get("step", "")
                     detail = event.get("detail", "")
                     if ev_step == "batch":
-                        sub_pct = _EMBED_START + (event.get("progress_percent", 0) / 100) * (_EMBED_END - _EMBED_START)
+                        sub_pct = _EMBED_START + (event.get("progress_percent", 0) / 100) * (
+                            _EMBED_END - _EMBED_START
+                        )
                         log_lines.append(f"    {detail}")
                     else:
                         sub_pct = _STEP_PCT.get(ev_step, 0)
@@ -619,7 +707,9 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
                         success_count += 1
 
             elapsed = time.time() - total_start
-            log_lines.append(f"\nИтого: {success_count}/{total} новых, {total_chunks} чанков, {elapsed:.1f} сек")
+            log_lines.append(
+                f"\nИтого: {success_count}/{total} новых, {total_chunks} чанков, {elapsed:.1f} сек"
+            )
             gr.Info(f"Доиндексация: {success_count}/{total}")
             yield _progress_html(100, f"Готово — {success_count}/{total}"), "\n".join(log_lines)
 
@@ -720,17 +810,45 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
         # --- Wire up events ---
         index_btn.click(
             index_document,
-            [file_upload, loader_choice, preset_selector, build_graph, contextual, parent_child, raptor, summarize, extract_images],
+            [
+                file_upload,
+                loader_choice,
+                preset_selector,
+                build_graph,
+                contextual,
+                parent_child,
+                raptor,
+                summarize,
+                extract_images,
+            ],
             [progress_bar, progress_log],
         )
         incremental_btn.click(
             incremental_index,
-            [loader_choice, preset_selector, build_graph, contextual, parent_child, raptor, summarize, extract_images],
+            [
+                loader_choice,
+                preset_selector,
+                build_graph,
+                contextual,
+                parent_child,
+                raptor,
+                summarize,
+                extract_images,
+            ],
             [progress_bar, progress_log],
         )
         reindex_btn.click(
             reindex_all,
-            [loader_choice, preset_selector, build_graph, contextual, parent_child, raptor, summarize, extract_images],
+            [
+                loader_choice,
+                preset_selector,
+                build_graph,
+                contextual,
+                parent_child,
+                raptor,
+                summarize,
+                extract_images,
+            ],
             [progress_bar, progress_log],
             js=reindex_confirm_js,
         )
@@ -740,7 +858,9 @@ def create_documents_page(api_url: str, app: gr.Blocks | None = None):
         structure_btn.click(show_structure, [delete_id], [stats_box])
         rebuild_bm25_btn.click(rebuild_bm25, None, [stats_box])
         build_communities_btn.click(build_communities, None, [stats_box])
-        delete_btn.click(delete_doc, [delete_id], [delete_result, docs_df, delete_id], js=delete_confirm_js)
+        delete_btn.click(
+            delete_doc, [delete_id], [delete_result, docs_df, delete_id], js=delete_confirm_js
+        )
 
         if app is not None:
             app.load(list_documents, None, [docs_df, delete_id])

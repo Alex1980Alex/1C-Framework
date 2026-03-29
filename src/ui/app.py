@@ -14,11 +14,12 @@ Version: 2.0.0 - UX Overhaul: Theme, Dark Mode, Confirmations, Error Handling
 import logging
 
 import gradio as gr
+
 from src.pdf_framework.config import get_settings
 from src.ui.pages.chat import create_chat_page
-from src.ui.pages.search import create_search_page
 from src.ui.pages.documents import create_documents_page
 from src.ui.pages.graph import create_graph_page
+from src.ui.pages.search import create_search_page
 from src.ui.pages.settings import create_settings_page
 from src.ui.theme import CUSTOM_CSS, CUSTOM_JS, PDFFrameworkTheme
 
@@ -69,9 +70,7 @@ def create_app(api_url: str = "http://localhost:8000"):
             with gr.Tab("Настройки"):
                 create_settings_page(api_url, app=app)
 
-        gr.HTML(
-            f'<div class="footer-bar">PDF Vector & Graph Framework v{APP_VERSION}</div>'
-        )
+        gr.HTML(f'<div class="footer-bar">PDF Vector & Graph Framework v{APP_VERSION}</div>')
 
     return app
 

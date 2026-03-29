@@ -87,8 +87,7 @@ class ParentChildSplitter:
         all_child_chunks: list[DocumentChunk] = []
 
         logger.info(
-            f"[PARENT_CHILD] Splitting {document.id} into "
-            f"{len(parent_texts)} parent chunks"
+            f"[PARENT_CHILD] Splitting {document.id} into {len(parent_texts)} parent chunks"
         )
 
         for parent_idx, parent_text in enumerate(parent_texts):
@@ -115,7 +114,9 @@ class ParentChildSplitter:
             child_ids = []
 
             for child_idx, child_text in enumerate(child_texts):
-                child_id = generate_chunk_id(document.id, f"child_{parent_idx}_{child_idx}", child_text)
+                child_id = generate_chunk_id(
+                    document.id, f"child_{parent_idx}_{child_idx}", child_text
+                )
 
                 child_chunk = DocumentChunk(
                     id=child_id,
@@ -180,7 +181,8 @@ class ParentChildSplitter:
             clean_child = child.model_copy(
                 update={
                     "metadata": {
-                        k: v for k, v in child.metadata.items()
+                        k: v
+                        for k, v in child.metadata.items()
                         if k not in ("parent_id", "parent_index")
                     }
                 }
@@ -218,7 +220,9 @@ class ParentChildSplitter:
             "child_count": len(children),
             "avg_parent_size": sum(parent_sizes) / len(parent_sizes) if parent_sizes else 0,
             "avg_child_size": sum(child_sizes) / len(child_sizes) if child_sizes else 0,
-            "avg_children_per_parent": sum(children_per_parent) / len(children_per_parent) if children_per_parent else 0,
+            "avg_children_per_parent": sum(children_per_parent) / len(children_per_parent)
+            if children_per_parent
+            else 0,
             "min_children_per_parent": min(children_per_parent) if children_per_parent else 0,
             "max_children_per_parent": max(children_per_parent) if children_per_parent else 0,
         }

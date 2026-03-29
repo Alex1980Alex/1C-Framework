@@ -100,8 +100,8 @@ async def enqueue_job(request: JobCreateRequest) -> dict[str, str]:
         )
 
     try:
-        from arq.connections import RedisSettings
         from arq import create_pool
+        from arq.connections import RedisSettings
 
         redis = await create_pool(RedisSettings.from_dsn(settings.queue.redis_url))
 
@@ -134,7 +134,7 @@ async def enqueue_job(request: JobCreateRequest) -> dict[str, str]:
             mapping={
                 "status": "pending",
                 "progress": "0",
-            }
+            },
         )
         await redis.expire(f"job:{job_id}", settings.queue.job_timeout)
 
@@ -252,7 +252,7 @@ async def cancel_job(job_id: str) -> dict[str, str]:
             mapping={
                 "status": "cancelled",
                 "progress": "-1",
-            }
+            },
         )
 
         logger.info(f"[JOBS] Cancelled: {job_id}")
@@ -290,7 +290,7 @@ async def stream_job_progress(job_id: str):
                 data = await redis.hgetall(key, encoding="utf-8")
 
                 if not data:
-                    yield f"event: error\ndata: {{'message': 'Job not found'}}\n\n"
+                    yield "event: error\ndata: {'message': 'Job not found'}\n\n"
                     break
 
                 job_status = data.get("status", "pending")

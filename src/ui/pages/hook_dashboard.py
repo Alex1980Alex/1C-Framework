@@ -19,18 +19,16 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 5
 
 from __future__ import annotations
 
-import json
+# Add project root to path for imports
+import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
-import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
-# Add project root to path for imports
-import sys
+import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
@@ -85,6 +83,7 @@ if st.sidebar.button("🔄 Refresh Now"):
 st.sidebar.markdown("---")
 
 # --- Database initialization ---
+
 
 @st.cache_resource
 def get_db():
@@ -173,13 +172,15 @@ with col5:
 
 # --- Tabs ---
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📊 Hook Invocations",
-    "🎯 Skill Activations",
-    "⏱️ Latency Analysis",
-    "📋 Error Log",
-    "👤 Sessions",
-])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    [
+        "📊 Hook Invocations",
+        "🎯 Skill Activations",
+        "⏱️ Latency Analysis",
+        "📋 Error Log",
+        "👤 Sessions",
+    ]
+)
 
 # --- Tab 1: Hook Invocations ---
 
@@ -220,17 +221,21 @@ with tab1:
 
         # Outcome distribution
         outcome_counts = df[["count", "blocks", "errors"]].sum()
-        fig_pie = go.Figure(data=[
-            go.Pie(
-                labels=["Allow", "Block", "Error"],
-                values=[
-                    outcome_counts["count"] - outcome_counts["blocks"] - outcome_counts["errors"],
-                    outcome_counts["blocks"],
-                    outcome_counts["errors"],
-                ],
-                hole=0.4,
-            )
-        ])
+        fig_pie = go.Figure(
+            data=[
+                go.Pie(
+                    labels=["Allow", "Block", "Error"],
+                    values=[
+                        outcome_counts["count"]
+                        - outcome_counts["blocks"]
+                        - outcome_counts["errors"],
+                        outcome_counts["blocks"],
+                        outcome_counts["errors"],
+                    ],
+                    hole=0.4,
+                )
+            ]
+        )
         fig_pie.update_layout(title="Outcome Distribution")
         col_a, col_b = st.columns(2)
         with col_a:
@@ -245,24 +250,26 @@ with tab2:
 
     # Activation gauge
     activation_rate = skill_metrics["activation_rate"]
-    fig_gauge = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=activation_rate,
-        title={"text": "Activation Rate (%)"},
-        gauge={
-            "axis": {"range": [0, 100]},
-            "bar": {"color": "darkblue"},
-            "steps": [
-                {"range": [0, 50], "color": "lightgray"},
-                {"range": [50, 80], "color": "gray"},
-            ],
-            "threshold": {
-                "line": {"color": "red", "width": 4},
-                "thickness": 0.75,
-                "value": 80,
+    fig_gauge = go.Figure(
+        go.Indicator(
+            mode="gauge+number",
+            value=activation_rate,
+            title={"text": "Activation Rate (%)"},
+            gauge={
+                "axis": {"range": [0, 100]},
+                "bar": {"color": "darkblue"},
+                "steps": [
+                    {"range": [0, 50], "color": "lightgray"},
+                    {"range": [50, 80], "color": "gray"},
+                ],
+                "threshold": {
+                    "line": {"color": "red", "width": 4},
+                    "thickness": 0.75,
+                    "value": 80,
+                },
             },
-        },
-    ))
+        )
+    )
     st.plotly_chart(fig_gauge, use_container_width=True)
 
     # Source breakdown
@@ -278,18 +285,21 @@ with tab2:
     # Per-skill breakdown
     per_skill = skill_metrics.get("per_skill", {})
     if per_skill:
-        skill_df = pd.DataFrame([
-            {
-                "skill": skill,
-                "recommended": metrics["recommended"],
-                "activated": metrics["activated"],
-                "source": ", ".join(
-                    f"{s}:{c}" for s, c in sorted(metrics.get("sources", {}).items())
-                ) or "-",
-                "rate": metrics["rate"],
-            }
-            for skill, metrics in per_skill.items()
-        ]).sort_values("recommended", ascending=False)
+        skill_df = pd.DataFrame(
+            [
+                {
+                    "skill": skill,
+                    "recommended": metrics["recommended"],
+                    "activated": metrics["activated"],
+                    "source": ", ".join(
+                        f"{s}:{c}" for s, c in sorted(metrics.get("sources", {}).items())
+                    )
+                    or "-",
+                    "rate": metrics["rate"],
+                }
+                for skill, metrics in per_skill.items()
+            ]
+        ).sort_values("recommended", ascending=False)
 
         st.dataframe(
             skill_df,
@@ -374,9 +384,7 @@ with tab4:
 
     if errors:
         for err in errors:
-            with st.expander(
-                f"❌ {err['hook']} - {err['timestamp'][:19]}"
-            ):
+            with st.expander(f"❌ {err['hook']} - {err['timestamp'][:19]}"):
                 st.code(err["error"], language="text")
                 st.caption(f"Event: {err['event']} | Tool: {err.get('tool', 'N/A')}")
     else:
@@ -398,7 +406,9 @@ with tab5:
                 "session": st.column_config.TextColumn("Session", width="medium"),
                 "invocations": st.column_config.NumberColumn("Invocations", width="small"),
                 "hooks": st.column_config.NumberColumn("Unique Hooks", width="small"),
-                "duration_min": st.column_config.NumberColumn("Duration (min)", width="small", format="%.1f"),
+                "duration_min": st.column_config.NumberColumn(
+                    "Duration (min)", width="small", format="%.1f"
+                ),
             },
             hide_index=True,
             use_container_width=True,
@@ -412,7 +422,11 @@ with tab5:
             size="hooks",
             hover_name="session",
             title="Session Analysis",
-            labels={"duration_min": "Duration (min)", "invocations": "Invocations", "hooks": "Unique Hooks"},
+            labels={
+                "duration_min": "Duration (min)",
+                "invocations": "Invocations",
+                "hooks": "Unique Hooks",
+            },
         )
         st.plotly_chart(fig_sessions, use_container_width=True)
     else:

@@ -106,9 +106,7 @@ class StrategyRouter:
         # Check if strategy is available
         strategy = route_config.strategy
         if strategy not in self._available_strategies:
-            logger.warning(
-                f"[ROUTER] Strategy '{strategy}' not available, finding fallback..."
-            )
+            logger.warning(f"[ROUTER] Strategy '{strategy}' not available, finding fallback...")
             strategy = self._find_fallback_strategy(route_config)
             logger.info(f"[ROUTER] Fallback to strategy: {strategy}")
 
@@ -123,11 +121,13 @@ class StrategyRouter:
         )
 
         # Add classification metadata
-        decision.extra_params.update({
-            "classification_complexity": complexity,
-            "classification_query_type": query_type,
-            "classification_confidence": classification.confidence,
-        })
+        decision.extra_params.update(
+            {
+                "classification_complexity": complexity,
+                "classification_query_type": query_type,
+                "classification_confidence": classification.confidence,
+            }
+        )
 
         logger.info(
             f"[ROUTER] Routed {complexity}/{query_type} query → "

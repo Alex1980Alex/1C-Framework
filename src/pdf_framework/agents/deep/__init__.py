@@ -14,6 +14,8 @@ from src.pdf_framework.agents.deep.planner import ResearchPlan, ResearchPlanner
 from src.pdf_framework.agents.deep.quality import QualityResult, ResearchQualityChecker
 from src.pdf_framework.agents.deep.synthesizer import (
     CrossDocumentSynthesizer as ModularSynthesizer,
+)
+from src.pdf_framework.agents.deep.synthesizer import (
     SubResult,
 )
 

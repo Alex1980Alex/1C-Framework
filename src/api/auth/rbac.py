@@ -9,8 +9,7 @@ Version: 2.0.0 - Consolidated functional + class-based RBAC
 
 import functools
 import logging
-from typing import Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -181,7 +180,7 @@ class User(BaseModel):
     permissions: list[str] = Field(default_factory=list)
     is_active: bool = True
     created_at: datetime
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
 
 
 class Role(BaseModel):
@@ -282,7 +281,7 @@ class SSOManager:
         self,
         username: str,
         password: str,
-    ) -> Optional[User]:
+    ) -> User | None:
         # For demo: create user without LDAP
         return self.authenticate_local(username, password)
 
@@ -290,7 +289,7 @@ class SSOManager:
         self,
         username: str,
         password: str,
-    ) -> Optional[User]:
+    ) -> User | None:
         user = self._rbac.create_user(
             username=username,
             email=f"{username}@local",
@@ -300,7 +299,7 @@ class SSOManager:
 
 
 # Global SSO manager
-_sso_manager: Optional[SSOManager] = None
+_sso_manager: SSOManager | None = None
 
 
 def get_sso_manager() -> SSOManager:

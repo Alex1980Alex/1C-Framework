@@ -5,16 +5,15 @@ and content filtering on every request.
 """
 
 import logging
-import time
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from src.pdf_framework.guardrails.pii_detector import PIIDetector
-from src.pdf_framework.guardrails.injection_defense import InjectionDefense
 from src.pdf_framework.guardrails.content_filter import ContentFilter
+from src.pdf_framework.guardrails.injection_defense import InjectionDefense
+from src.pdf_framework.guardrails.pii_detector import PIIDetector
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +74,8 @@ class GuardrailsMiddleware(BaseHTTPMiddleware):
                     if pii_result.blocked:
                         pii_types = [m.pii_type.value for m in pii_result.matches]
                         logger.warning(
-                            "[GUARDRAILS] PII blocked: %s", pii_types,
+                            "[GUARDRAILS] PII blocked: %s",
+                            pii_types,
                         )
                         return JSONResponse(
                             status_code=400,

@@ -61,7 +61,9 @@ class Settings(BaseSettings):
     pdf: PDFSettings = Field(default_factory=PDFSettings)
     agent: AgentSettings = Field(default_factory=AgentSettings)
     search: SearchSettings = Field(default_factory=SearchSettings)
-    contextual_retrieval: ContextualRetrievalSettings = Field(default_factory=ContextualRetrievalSettings)
+    contextual_retrieval: ContextualRetrievalSettings = Field(
+        default_factory=ContextualRetrievalSettings
+    )
     two_stage: TwoStageSettings = Field(default_factory=TwoStageSettings)
     self_rag: SelfRAGSettings = Field(default_factory=SelfRAGSettings)  # Phase 5
     graph_rag: GraphRAGSettings = Field(default_factory=GraphRAGSettings)  # Phase 6
@@ -86,7 +88,9 @@ class Settings(BaseSettings):
     ragas_eval: RAGASSettings = Field(default_factory=RAGASSettings)  # Phase 21
     feedback: FeedbackSettings = Field(default_factory=FeedbackSettings)  # Phase 22
     hybrid_loader: HybridLoaderSettings = Field(default_factory=HybridLoaderSettings)  # Phase 28
-    hierarchical: HierarchicalSearchSettings = Field(default_factory=HierarchicalSearchSettings)  # Phase 30
+    hierarchical: HierarchicalSearchSettings = Field(
+        default_factory=HierarchicalSearchSettings
+    )  # Phase 30
     light_rag: LightRAGSettings = Field(default_factory=LightRAGSettings)  # Phase 38
     optimization: OptimizationSettings = Field(default_factory=OptimizationSettings)  # Phase 34
     external: ExternalSourcesSettings = Field(default_factory=ExternalSourcesSettings)  # Phase 37

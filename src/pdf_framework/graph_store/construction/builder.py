@@ -41,7 +41,8 @@ class GraphBuilder:
 
         logger.info(
             "Extracting entities from %d chunks (concurrency=%d)",
-            len(chunks), self._concurrency,
+            len(chunks),
+            self._concurrency,
         )
         results = await asyncio.gather(*[_extract_one(c) for c in chunks])
 

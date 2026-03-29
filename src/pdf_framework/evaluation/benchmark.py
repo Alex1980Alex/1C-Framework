@@ -68,9 +68,7 @@ class BenchmarkLoader:
         with dataset_file.open("r", encoding="utf-8") as f:
             data = json.load(f)
 
-        questions = [
-            BenchmarkQuestion(**q) for q in data.get("questions", [])
-        ]
+        questions = [BenchmarkQuestion(**q) for q in data.get("questions", [])]
 
         return BenchmarkDataset(
             name=data.get("name", name),
@@ -211,8 +209,8 @@ class BenchmarkLoader:
 
         return {
             "train": questions[:train_size],
-            "val": questions[train_size:train_size + val_size],
-            "test": questions[train_size + val_size:],
+            "val": questions[train_size : train_size + val_size],
+            "test": questions[train_size + val_size :],
         }
 
 

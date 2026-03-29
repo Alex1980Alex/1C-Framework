@@ -15,10 +15,9 @@ import logging
 from typing import Any
 
 from anthropic import Anthropic
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.pdf_framework.config import Settings, get_settings
-from src.pdf_framework.schemas.documents import SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -90,17 +89,11 @@ class RAGASEvaluator:
         t0 = time.time()
 
         # Evaluate each metric
-        context_precision = self._evaluate_context_precision(
-            question, retrieved_context
-        )
+        context_precision = self._evaluate_context_precision(question, retrieved_context)
 
-        faithfulness = self._evaluate_faithfulness(
-            question, retrieved_context, answer
-        )
+        faithfulness = self._evaluate_faithfulness(question, retrieved_context, answer)
 
-        answer_relevancy = self._evaluate_answer_relevancy(
-            question, answer
-        )
+        answer_relevancy = self._evaluate_answer_relevancy(question, answer)
 
         # Calculate average
         scores = [context_precision, faithfulness, answer_relevancy]
@@ -346,6 +339,7 @@ Return a JSON object:
             if start == -1 or end == 0:
                 # Try to extract number directly
                 import re
+
                 match = re.search(r'score["\s:]+([0-9.]+)', response)
                 if match:
                     return float(match.group(1))

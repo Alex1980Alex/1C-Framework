@@ -7,8 +7,8 @@ Implements standard IR metrics: Recall@k, Precision@k, MRR, nDCG.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -18,8 +18,8 @@ class EvalResult:
     query_id: str
     query: str
     category: str
-    expected: List[str]
-    retrieved: List[str]
+    expected: list[str]
+    retrieved: list[str]
     recall_5: float = 0.0
     recall_10: float = 0.0
     precision_5: float = 0.0
@@ -27,7 +27,7 @@ class EvalResult:
     ndcg_val: float = 0.0
 
 
-def recall_at_k(retrieved: List[str], expected: Set[str], k: int) -> float:
+def recall_at_k(retrieved: list[str], expected: set[str], k: int) -> float:
     """Fraction of expected results found in top-k retrieved."""
     if not expected:
         return 0.0
@@ -36,7 +36,7 @@ def recall_at_k(retrieved: List[str], expected: Set[str], k: int) -> float:
     return len(found) / len(expected)
 
 
-def precision_at_k(retrieved: List[str], expected: Set[str], k: int) -> float:
+def precision_at_k(retrieved: list[str], expected: set[str], k: int) -> float:
     """Fraction of top-k results that are relevant."""
     if k == 0:
         return 0.0
@@ -45,7 +45,7 @@ def precision_at_k(retrieved: List[str], expected: Set[str], k: int) -> float:
     return relevant / k
 
 
-def mrr(retrieved: List[str], expected: Set[str]) -> float:
+def mrr(retrieved: list[str], expected: set[str]) -> float:
     """Mean Reciprocal Rank — 1/rank of first relevant result."""
     for i, item in enumerate(retrieved):
         if item in expected:
@@ -53,7 +53,7 @@ def mrr(retrieved: List[str], expected: Set[str]) -> float:
     return 0.0
 
 
-def ndcg(retrieved: List[str], expected: Set[str], k: int = 10) -> float:
+def ndcg(retrieved: list[str], expected: set[str], k: int = 10) -> float:
     """Normalized Discounted Cumulative Gain at k."""
     if not expected:
         return 0.0
@@ -76,7 +76,7 @@ def _normalize(s: str) -> str:
     return s.strip().lower()
 
 
-def _fuzzy_match(retrieved_item: str, expected_set: Set[str]) -> bool:
+def _fuzzy_match(retrieved_item: str, expected_set: set[str]) -> bool:
     """Check if retrieved item matches any expected (substring or exact)."""
     r = _normalize(retrieved_item)
     for e in expected_set:
@@ -86,7 +86,7 @@ def _fuzzy_match(retrieved_item: str, expected_set: Set[str]) -> bool:
     return False
 
 
-def _build_fuzzy_set(retrieved: List[str], expected_set: Set[str]) -> List[str]:
+def _build_fuzzy_set(retrieved: list[str], expected_set: set[str]) -> list[str]:
     """Convert retrieved items: matched items become their expected name."""
     result = []
     for item in retrieved:
@@ -105,8 +105,8 @@ def evaluate_single(
     query_id: str,
     query: str,
     category: str,
-    retrieved: List[str],
-    expected: List[str],
+    retrieved: list[str],
+    expected: list[str],
 ) -> EvalResult:
     """Evaluate a single query against expected results."""
     expected_set = set(expected)
@@ -126,13 +126,15 @@ def evaluate_single(
     )
 
 
-def aggregate_results(results: List[EvalResult]) -> Dict[str, Any]:
+def aggregate_results(results: list[EvalResult]) -> dict[str, Any]:
     """Aggregate eval results into summary statistics."""
     if not results:
         return {"error": "No results to aggregate"}
 
     total = len(results)
-    avg = lambda vals: sum(vals) / len(vals) if vals else 0.0
+
+    def avg(vals):
+        return sum(vals) / len(vals) if vals else 0.0
 
     summary = {
         "total_queries": total,
@@ -145,7 +147,7 @@ def aggregate_results(results: List[EvalResult]) -> Dict[str, Any]:
     }
 
     # Per-category breakdown
-    categories: Dict[str, List[EvalResult]] = {}
+    categories: dict[str, list[EvalResult]] = {}
     for r in results:
         categories.setdefault(r.category, []).append(r)
 
@@ -162,7 +164,7 @@ def aggregate_results(results: List[EvalResult]) -> Dict[str, Any]:
     return summary
 
 
-def format_report(summary: Dict[str, Any], title: str = "BSL Search Eval") -> str:
+def format_report(summary: dict[str, Any], title: str = "BSL Search Eval") -> str:
     """Format summary as markdown report."""
     lines = [f"# {title}", ""]
 

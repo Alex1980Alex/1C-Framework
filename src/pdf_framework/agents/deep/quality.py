@@ -96,24 +96,32 @@ class ResearchQualityChecker:
         )
 
     async def _check_with_llm(
-        self, question: str, answer: str, sub_results: list[Any] | None,
+        self,
+        question: str,
+        answer: str,
+        sub_results: list[Any] | None,
     ) -> QualityResult:
         """Check quality using LLM."""
         try:
-            from langchain_core.messages import HumanMessage, SystemMessage
             import json
 
+            from langchain_core.messages import HumanMessage, SystemMessage
+
             messages = [
-                SystemMessage(content=(
-                    "Evaluate the quality of this research answer. Return JSON: "
-                    "{\"coverage_score\": 0.0-1.0, \"groundedness_score\": 0.0-1.0, "
-                    "\"needs_followup\": bool, \"gaps\": [\"...\"]}"
-                )),
+                SystemMessage(
+                    content=(
+                        "Evaluate the quality of this research answer. Return JSON: "
+                        '{"coverage_score": 0.0-1.0, "groundedness_score": 0.0-1.0, '
+                        '"needs_followup": bool, "gaps": ["..."]}'
+                    )
+                ),
                 HumanMessage(content=f"Question: {question}\n\nAnswer: {answer}"),
             ]
             response = await self._llm.ainvoke(messages)
-            text = response.content if isinstance(response.content, str) else response.content[0].text
-            data = json.loads(text[text.find("{"):text.rfind("}") + 1])
+            text = (
+                response.content if isinstance(response.content, str) else response.content[0].text
+            )
+            data = json.loads(text[text.find("{") : text.rfind("}") + 1])
 
             return QualityResult(
                 coverage_score=float(data.get("coverage_score", 0.5)),

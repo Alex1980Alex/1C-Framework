@@ -104,8 +104,7 @@ class AutoMergeStrategy:
                 orphan_children.append(result)
 
         logger.info(
-            f"[AUTO_MERGE] Grouped into {len(groups)} parent groups, "
-            f"{len(orphan_children)} orphans"
+            f"[AUTO_MERGE] Grouped into {len(groups)} parent groups, {len(orphan_children)} orphans"
         )
 
         # Step 3: Merge or keep children
@@ -139,7 +138,9 @@ class AutoMergeStrategy:
                 else:
                     # Parent not found, keep children
                     merged_results.extend(children)
-                    logger.warning(f"[AUTO_MERGE] Parent {parent_id} not found, keeping {group_size} children")
+                    logger.warning(
+                        f"[AUTO_MERGE] Parent {parent_id} not found, keeping {group_size} children"
+                    )
             else:
                 # Below threshold, keep individual children
                 merged_results.extend(children)

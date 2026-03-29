@@ -8,7 +8,8 @@ Version: 1.0.0 - Phase 57: Agentic RAG Plan-Execute
 
 import json
 import logging
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from src.pdf_framework.agents.plan_execute.state import PlanExecuteState
 

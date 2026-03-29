@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from uuid import uuid4
 
 
@@ -49,9 +49,9 @@ class EntityLink:
     strength: float
     created_at: datetime = field(default_factory=datetime.now)
     created_by: str = "system"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     bidirectional: bool = False
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
     def __post_init__(self):
         if not 0.0 <= self.strength <= 1.0:
@@ -66,7 +66,9 @@ class EntityLink:
             self.metadata = {}
 
     def __str__(self) -> str:
-        return f"{self.source_id} --[{self.link_type.value}:{self.strength:.2f}]--> {self.target_id}"
+        return (
+            f"{self.source_id} --[{self.link_type.value}:{self.strength:.2f}]--> {self.target_id}"
+        )
 
     def __eq__(self, other) -> bool:
         if isinstance(other, EntityLink):
@@ -76,7 +78,7 @@ class EntityLink:
     def __hash__(self) -> int:
         return hash(self.link_id)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "link_id": self.link_id,
             "source_id": self.source_id,
@@ -91,7 +93,7 @@ class EntityLink:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EntityLink":
+    def from_dict(cls, data: dict[str, Any]) -> "EntityLink":
         created_at = data.get("created_at")
         if isinstance(created_at, str):
             created_at = datetime.fromisoformat(created_at)
@@ -114,7 +116,9 @@ class EntityLink:
     @classmethod
     def from_row(cls, row: sqlite3.Row) -> "EntityLink":
         metadata = json.loads(row["metadata"]) if row["metadata"] else {}
-        created_at = datetime.fromisoformat(row["created_at"]) if row["created_at"] else datetime.now()
+        created_at = (
+            datetime.fromisoformat(row["created_at"]) if row["created_at"] else datetime.now()
+        )
         expires_at = datetime.fromisoformat(row["expires_at"]) if row["expires_at"] else None
         return cls(
             link_id=row["link_id"],
@@ -140,17 +144,17 @@ class RelatedEntity:
     """Result of graph traversal query."""
 
     entity_id: str
-    link_path: List[str]
+    link_path: list[str]
     total_strength: float
     depth: int
-    link_types: List[str]
+    link_types: list[str]
 
     @property
     def effective_strength(self) -> float:
         decay = 0.9 ** (self.depth - 1) if self.depth > 0 else 1.0
         return self.total_strength * decay
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "entity_id": self.entity_id,
             "link_path": self.link_path,
@@ -166,7 +170,7 @@ class LinkRegistry:
 
     SCHEMA_VERSION = 1
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         if db_path is None:
             data_dir = Path(__file__).parent.parent.parent.parent / "data"
             data_dir.mkdir(parents=True, exist_ok=True)
@@ -208,9 +212,15 @@ class LinkRegistry:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_source ON entity_links(source_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_target ON entity_links(target_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_type ON entity_links(link_type)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_strength ON entity_links(strength)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_source_type ON entity_links(source_id, link_type)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_target_type ON entity_links(target_id, link_type)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_links_strength ON entity_links(strength)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_links_source_type ON entity_links(source_id, link_type)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_links_target_type ON entity_links(target_id, link_type)"
+            )
 
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS link_history (
@@ -256,10 +266,10 @@ class LinkRegistry:
         target_id: str,
         link_type: LinkType,
         strength: float = 0.8,
-        metadata: Optional[Dict] = None,
+        metadata: dict | None = None,
         created_by: str = "system",
         bidirectional: bool = False,
-        expires_at: Optional[datetime] = None,
+        expires_at: datetime | None = None,
     ) -> EntityLink:
         link_id = str(uuid4())
         link = EntityLink(
@@ -282,26 +292,46 @@ class LinkRegistry:
                 (source_id, target_id, link_type.value),
             )
             if cursor.fetchone():
-                raise ValueError(f"Link already exists: {source_id} --[{link_type.value}]--> {target_id}")
+                raise ValueError(
+                    f"Link already exists: {source_id} --[{link_type.value}]--> {target_id}"
+                )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO entity_links
                 (link_id, source_id, target_id, link_type, strength, created_at,
                  created_by, metadata, bidirectional, expires_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                link.link_id, link.source_id, link.target_id,
-                link.link_type.value, link.strength, link.created_at.isoformat(),
-                link.created_by, json.dumps(link.metadata),
-                1 if link.bidirectional else 0,
-                link.expires_at.isoformat() if link.expires_at else None,
-            ))
+            """,
+                (
+                    link.link_id,
+                    link.source_id,
+                    link.target_id,
+                    link.link_type.value,
+                    link.strength,
+                    link.created_at.isoformat(),
+                    link.created_by,
+                    json.dumps(link.metadata),
+                    1 if link.bidirectional else 0,
+                    link.expires_at.isoformat() if link.expires_at else None,
+                ),
+            )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO link_history
                 (history_id, link_id, action, new_strength, changed_at, changed_by, reason)
                 VALUES (?, ?, 'create', ?, ?, ?, ?)
-            """, (str(uuid4()), link.link_id, link.strength, datetime.now().isoformat(), created_by, "Link created"))
+            """,
+                (
+                    str(uuid4()),
+                    link.link_id,
+                    link.strength,
+                    datetime.now().isoformat(),
+                    created_by,
+                    "Link created",
+                ),
+            )
 
             self._update_stats(cursor, source_id)
             self._update_stats(cursor, target_id)
@@ -309,7 +339,7 @@ class LinkRegistry:
 
         return link
 
-    def get_link(self, link_id: str) -> Optional[EntityLink]:
+    def get_link(self, link_id: str) -> EntityLink | None:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM entity_links WHERE link_id = ?", (link_id,))
@@ -319,8 +349,8 @@ class LinkRegistry:
     def update_link(
         self,
         link_id: str,
-        strength: Optional[float] = None,
-        metadata: Optional[Dict] = None,
+        strength: float | None = None,
+        metadata: dict | None = None,
         updated_by: str = "system",
         reason: str = "",
     ) -> bool:
@@ -336,11 +366,22 @@ class LinkRegistry:
             if strength is not None:
                 if not 0.0 <= strength <= 1.0:
                     raise ValueError(f"Strength must be between 0.0 and 1.0, got {strength}")
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO link_history
                     (history_id, link_id, action, old_strength, new_strength, changed_at, changed_by, reason)
                     VALUES (?, ?, 'update', ?, ?, ?, ?, ?)
-                """, (str(uuid4()), link_id, link.strength, strength, datetime.now().isoformat(), updated_by, reason))
+                """,
+                    (
+                        str(uuid4()),
+                        link_id,
+                        link.strength,
+                        strength,
+                        datetime.now().isoformat(),
+                        updated_by,
+                        reason,
+                    ),
+                )
                 updates.append("strength = ?")
                 params.append(strength)
 
@@ -353,7 +394,9 @@ class LinkRegistry:
                 return True
 
             params.append(link_id)
-            cursor.execute(f"UPDATE entity_links SET {', '.join(updates)} WHERE link_id = ?", params)
+            cursor.execute(
+                f"UPDATE entity_links SET {', '.join(updates)} WHERE link_id = ?", params
+            )
             self._update_stats(cursor, link.source_id)
             self._update_stats(cursor, link.target_id)
             conn.commit()
@@ -367,11 +410,21 @@ class LinkRegistry:
 
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO link_history
                 (history_id, link_id, action, old_strength, changed_at, changed_by, reason)
                 VALUES (?, ?, 'delete', ?, ?, ?, ?)
-            """, (str(uuid4()), link_id, link.strength, datetime.now().isoformat(), deleted_by, "Link deleted"))
+            """,
+                (
+                    str(uuid4()),
+                    link_id,
+                    link.strength,
+                    datetime.now().isoformat(),
+                    deleted_by,
+                    "Link deleted",
+                ),
+            )
             cursor.execute("DELETE FROM entity_links WHERE link_id = ?", (link_id,))
             self._update_stats(cursor, link.source_id)
             self._update_stats(cursor, link.target_id)
@@ -382,8 +435,11 @@ class LinkRegistry:
     # === Query ===
 
     def get_links_from(
-        self, entity_id: str, link_types: Optional[List[LinkType]] = None, min_strength: float = 0.0,
-    ) -> List[EntityLink]:
+        self,
+        entity_id: str,
+        link_types: list[LinkType] | None = None,
+        min_strength: float = 0.0,
+    ) -> list[EntityLink]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             query = "SELECT * FROM entity_links WHERE source_id = ? AND strength >= ?"
@@ -397,8 +453,11 @@ class LinkRegistry:
             return [EntityLink.from_row(row) for row in cursor.fetchall()]
 
     def get_links_to(
-        self, entity_id: str, link_types: Optional[List[LinkType]] = None, min_strength: float = 0.0,
-    ) -> List[EntityLink]:
+        self,
+        entity_id: str,
+        link_types: list[LinkType] | None = None,
+        min_strength: float = 0.0,
+    ) -> list[EntityLink]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             query = "SELECT * FROM entity_links WHERE target_id = ? AND strength >= ?"
@@ -412,16 +471,22 @@ class LinkRegistry:
             return [EntityLink.from_row(row) for row in cursor.fetchall()]
 
     def get_all_links(
-        self, entity_id: str, link_types: Optional[List[LinkType]] = None, min_strength: float = 0.0,
-    ) -> Dict[str, List[EntityLink]]:
+        self,
+        entity_id: str,
+        link_types: list[LinkType] | None = None,
+        min_strength: float = 0.0,
+    ) -> dict[str, list[EntityLink]]:
         return {
             "outgoing": self.get_links_from(entity_id, link_types, min_strength),
             "incoming": self.get_links_to(entity_id, link_types, min_strength),
         }
 
     def find_link(
-        self, source_id: str, target_id: str, link_type: Optional[LinkType] = None,
-    ) -> Optional[EntityLink]:
+        self,
+        source_id: str,
+        target_id: str,
+        link_type: LinkType | None = None,
+    ) -> EntityLink | None:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             if link_type:
@@ -442,23 +507,21 @@ class LinkRegistry:
     def get_related_entities(
         self,
         entity_id: str,
-        link_types: Optional[List[LinkType]] = None,
+        link_types: list[LinkType] | None = None,
         min_strength: float = 0.5,
         max_depth: int = 2,
         direction: str = "both",
-    ) -> List[RelatedEntity]:
+    ) -> list[RelatedEntity]:
         visited = {entity_id}
-        queue: List[Tuple[str, List[str], List[str], float, int]] = [
-            (entity_id, [], [], 1.0, 0)
-        ]
-        results: List[RelatedEntity] = []
+        queue: list[tuple[str, list[str], list[str], float, int]] = [(entity_id, [], [], 1.0, 0)]
+        results: list[RelatedEntity] = []
 
         while queue:
             current_id, path, types, cumulative_strength, depth = queue.pop(0)
             if depth >= max_depth:
                 continue
 
-            links: List[EntityLink] = []
+            links: list[EntityLink] = []
             if direction in ("outgoing", "both"):
                 links.extend(self.get_links_from(current_id, link_types, min_strength))
             if direction in ("incoming", "both"):
@@ -472,24 +535,29 @@ class LinkRegistry:
                     new_types = types + [link.link_type.value]
                     new_strength = cumulative_strength * link.strength
 
-                    results.append(RelatedEntity(
-                        entity_id=related_id,
-                        link_path=new_path,
-                        total_strength=new_strength,
-                        depth=depth + 1,
-                        link_types=new_types,
-                    ))
+                    results.append(
+                        RelatedEntity(
+                            entity_id=related_id,
+                            link_path=new_path,
+                            total_strength=new_strength,
+                            depth=depth + 1,
+                            link_types=new_types,
+                        )
+                    )
                     queue.append((related_id, new_path, new_types, new_strength, depth + 1))
 
         return sorted(results, key=lambda r: r.effective_strength, reverse=True)
 
     def find_path(
-        self, source_id: str, target_id: str, max_depth: int = 5,
-    ) -> Optional[List[EntityLink]]:
+        self,
+        source_id: str,
+        target_id: str,
+        max_depth: int = 5,
+    ) -> list[EntityLink] | None:
         if source_id == target_id:
             return []
         visited = {source_id}
-        queue: List[Tuple[str, List[str]]] = [(source_id, [])]
+        queue: list[tuple[str, list[str]]] = [(source_id, [])]
 
         while queue:
             current_id, path = queue.pop(0)
@@ -508,8 +576,10 @@ class LinkRegistry:
     # === Bulk ===
 
     def create_links_batch(
-        self, links: List[Tuple[str, str, LinkType, float]], created_by: str = "system",
-    ) -> List[EntityLink]:
+        self,
+        links: list[tuple[str, str, LinkType, float]],
+        created_by: str = "system",
+    ) -> list[EntityLink]:
         created = []
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -517,16 +587,25 @@ class LinkRegistry:
                 try:
                     link_id = str(uuid4())
                     now = datetime.now().isoformat()
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO entity_links
                         (link_id, source_id, target_id, link_type, strength, created_at, created_by, metadata, bidirectional)
                         VALUES (?, ?, ?, ?, ?, ?, ?, '{}', 0)
-                    """, (link_id, source_id, target_id, link_type.value, strength, now, created_by))
-                    created.append(EntityLink(
-                        link_id=link_id, source_id=source_id, target_id=target_id,
-                        link_type=link_type, strength=strength,
-                        created_at=datetime.fromisoformat(now), created_by=created_by,
-                    ))
+                    """,
+                        (link_id, source_id, target_id, link_type.value, strength, now, created_by),
+                    )
+                    created.append(
+                        EntityLink(
+                            link_id=link_id,
+                            source_id=source_id,
+                            target_id=target_id,
+                            link_type=link_type,
+                            strength=strength,
+                            created_at=datetime.fromisoformat(now),
+                            created_by=created_by,
+                        )
+                    )
                 except sqlite3.IntegrityError:
                     continue
             conn.commit()
@@ -535,7 +614,10 @@ class LinkRegistry:
     def delete_links_for_entity(self, entity_id: str) -> int:
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM entity_links WHERE source_id = ? OR target_id = ?", (entity_id, entity_id))
+            cursor.execute(
+                "DELETE FROM entity_links WHERE source_id = ? OR target_id = ?",
+                (entity_id, entity_id),
+            )
             deleted = cursor.rowcount
             conn.commit()
         return deleted
@@ -543,25 +625,33 @@ class LinkRegistry:
     # === Stats ===
 
     def _update_stats(self, cursor: sqlite3.Cursor, entity_id: str):
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO link_stats (entity_id, outgoing_count, incoming_count, avg_strength, last_updated)
             SELECT ?,
                 (SELECT COUNT(*) FROM entity_links WHERE source_id = ?),
                 (SELECT COUNT(*) FROM entity_links WHERE target_id = ?),
                 (SELECT COALESCE(AVG(strength), 0) FROM entity_links WHERE source_id = ? OR target_id = ?),
                 ?
-        """, (entity_id, entity_id, entity_id, entity_id, entity_id, datetime.now().isoformat()))
+        """,
+            (entity_id, entity_id, entity_id, entity_id, entity_id, datetime.now().isoformat()),
+        )
 
-    def get_entity_stats(self, entity_id: str) -> Dict[str, Any]:
+    def get_entity_stats(self, entity_id: str) -> dict[str, Any]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM link_stats WHERE entity_id = ?", (entity_id,))
             row = cursor.fetchone()
             if row:
                 return dict(row)
-            return {"entity_id": entity_id, "outgoing_count": 0, "incoming_count": 0, "avg_strength": 0.0}
+            return {
+                "entity_id": entity_id,
+                "outgoing_count": 0,
+                "incoming_count": 0,
+                "avg_strength": 0.0,
+            }
 
-    def get_registry_stats(self) -> Dict[str, Any]:
+    def get_registry_stats(self) -> dict[str, Any]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) as count FROM entity_links")
@@ -570,7 +660,10 @@ class LinkRegistry:
                 SELECT link_type, COUNT(*) as count, AVG(strength) as avg_strength
                 FROM entity_links GROUP BY link_type
             """)
-            by_type = {row["link_type"]: {"count": row["count"], "avg_strength": row["avg_strength"]} for row in cursor.fetchall()}
+            by_type = {
+                row["link_type"]: {"count": row["count"], "avg_strength": row["avg_strength"]}
+                for row in cursor.fetchall()
+            }
             cursor.execute("""
                 SELECT COUNT(DISTINCT entity_id) as count FROM (
                     SELECT source_id as entity_id FROM entity_links
@@ -590,7 +683,10 @@ class LinkRegistry:
     def cleanup_expired(self) -> int:
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM entity_links WHERE expires_at IS NOT NULL AND expires_at < ?", (datetime.now().isoformat(),))
+            cursor.execute(
+                "DELETE FROM entity_links WHERE expires_at IS NOT NULL AND expires_at < ?",
+                (datetime.now().isoformat(),),
+            )
             deleted = cursor.rowcount
             conn.commit()
         return deleted
@@ -599,14 +695,19 @@ class LinkRegistry:
         with self._get_connection() as conn:
             conn.execute("VACUUM")
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM entity_links")
             links = [EntityLink.from_row(row).to_dict() for row in cursor.fetchall()]
-            return {"version": self.SCHEMA_VERSION, "exported_at": datetime.now().isoformat(), "links": links, "stats": self.get_registry_stats()}
+            return {
+                "version": self.SCHEMA_VERSION,
+                "exported_at": datetime.now().isoformat(),
+                "links": links,
+                "stats": self.get_registry_stats(),
+            }
 
-    def import_links(self, data: Dict[str, Any], replace: bool = False) -> int:
+    def import_links(self, data: dict[str, Any], replace: bool = False) -> int:
         links_data = data.get("links", [])
         if not links_data:
             return 0
@@ -618,17 +719,26 @@ class LinkRegistry:
             for link_dict in links_data:
                 try:
                     link = EntityLink.from_dict(link_dict)
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT OR IGNORE INTO entity_links
                         (link_id, source_id, target_id, link_type, strength, created_at,
                          created_by, metadata, bidirectional, expires_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        link.link_id, link.source_id, link.target_id, link.link_type.value,
-                        link.strength, link.created_at.isoformat(), link.created_by,
-                        json.dumps(link.metadata), 1 if link.bidirectional else 0,
-                        link.expires_at.isoformat() if link.expires_at else None,
-                    ))
+                    """,
+                        (
+                            link.link_id,
+                            link.source_id,
+                            link.target_id,
+                            link.link_type.value,
+                            link.strength,
+                            link.created_at.isoformat(),
+                            link.created_by,
+                            json.dumps(link.metadata),
+                            1 if link.bidirectional else 0,
+                            link.expires_at.isoformat() if link.expires_at else None,
+                        ),
+                    )
                     if cursor.rowcount > 0:
                         imported += 1
                 except Exception:
@@ -636,15 +746,17 @@ class LinkRegistry:
             conn.commit()
         return imported
 
-    def get_link_history(self, link_id: str) -> List[Dict[str, Any]]:
+    def get_link_history(self, link_id: str) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM link_history WHERE link_id = ? ORDER BY changed_at DESC", (link_id,))
+            cursor.execute(
+                "SELECT * FROM link_history WHERE link_id = ? ORDER BY changed_at DESC", (link_id,)
+            )
             return [dict(row) for row in cursor.fetchall()]
 
 
 # Global registry instance
-_global_registry: Optional[LinkRegistry] = None
+_global_registry: LinkRegistry | None = None
 
 
 def get_link_registry() -> LinkRegistry:

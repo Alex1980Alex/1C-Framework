@@ -47,7 +47,10 @@ class LocalEmbeddingEngine(BaseEmbeddingEngine):
             t0 = time.time()
             logger.info(
                 "[EMBEDDING] Загрузка модели '%s' (%d dims) на %s, backend=%s...",
-                self._settings.model, self._settings.dimensions, device, backend,
+                self._settings.model,
+                self._settings.dimensions,
+                device,
+                backend,
             )
 
             # Phase 43: ONNX/OpenVINO acceleration
@@ -58,14 +61,18 @@ class LocalEmbeddingEngine(BaseEmbeddingEngine):
                 if device != "cpu":
                     logger.info(
                         "[EMBEDDING] Backend %s использует CPU (device=%s игнорируется)",
-                        backend, device,
+                        backend,
+                        device,
                     )
                     model_kwargs["device"] = "cpu"
 
             self._model = SentenceTransformer(self._settings.model, **model_kwargs)
             logger.info(
                 "[EMBEDDING] Модель загружена за %.2f сек (device=%s, backend=%s, CUDA=%s)",
-                time.time() - t0, model_kwargs["device"], backend, torch.cuda.is_available(),
+                time.time() - t0,
+                model_kwargs["device"],
+                backend,
+                torch.cuda.is_available(),
             )
         return self._model
 
@@ -101,7 +108,10 @@ class LocalEmbeddingEngine(BaseEmbeddingEngine):
         elapsed = time.time() - t0
         logger.info(
             "[EMBEDDING] %d текстов (%d символов) → %d эмбеддингов за %.2f сек (%.0f текстов/сек)",
-            len(texts), total_chars, len(result), elapsed,
+            len(texts),
+            total_chars,
+            len(result),
+            elapsed,
             len(texts) / elapsed if elapsed > 0 else 0,
         )
         return result

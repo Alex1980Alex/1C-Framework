@@ -115,15 +115,17 @@ class BSLHybridPipeline:
 
             results = []
             for rank, row in enumerate(rows):
-                results.append(BSLSearchResult(
-                    chunk_id=str(row["id"]),
-                    name=Path(row["path"] or "").stem if row["path"] else str(row["id"]),
-                    module_path=row["path"] or "",
-                    content=(row["content_preview"] or row["content"] or "")[:500],
-                    score=0.0,  # filled by RRF
-                    source="bm25",
-                    metadata={"doc_type": row["doc_type"] or "", "bm25_rank": rank},
-                ))
+                results.append(
+                    BSLSearchResult(
+                        chunk_id=str(row["id"]),
+                        name=Path(row["path"] or "").stem if row["path"] else str(row["id"]),
+                        module_path=row["path"] or "",
+                        content=(row["content_preview"] or row["content"] or "")[:500],
+                        score=0.0,  # filled by RRF
+                        source="bm25",
+                        metadata={"doc_type": row["doc_type"] or "", "bm25_rank": rank},
+                    )
+                )
             return results
 
         except Exception as e:
@@ -150,22 +152,24 @@ class BSLHybridPipeline:
             results = []
             for rank, hit in enumerate(hits):
                 p = hit.payload or {}
-                results.append(BSLSearchResult(
-                    chunk_id=p.get("chunk_id", str(hit.id)),
-                    name=p.get("name", ""),
-                    module_path=p.get("module_path", ""),
-                    content=p.get("content", "")[:500],
-                    score=0.0,  # filled by RRF
-                    source="vector",
-                    metadata={
-                        "symbol_type": p.get("symbol_type", ""),
-                        "object_type": p.get("object_type", ""),
-                        "object_name": p.get("object_name", ""),
-                        "is_export": p.get("is_export", False),
-                        "vector_score": hit.score,
-                        "vector_rank": rank,
-                    },
-                ))
+                results.append(
+                    BSLSearchResult(
+                        chunk_id=p.get("chunk_id", str(hit.id)),
+                        name=p.get("name", ""),
+                        module_path=p.get("module_path", ""),
+                        content=p.get("content", "")[:500],
+                        score=0.0,  # filled by RRF
+                        source="vector",
+                        metadata={
+                            "symbol_type": p.get("symbol_type", ""),
+                            "object_type": p.get("object_type", ""),
+                            "object_name": p.get("object_name", ""),
+                            "is_export": p.get("is_export", False),
+                            "vector_score": hit.score,
+                            "vector_rank": rank,
+                        },
+                    )
+                )
             return results
 
         except Exception as e:

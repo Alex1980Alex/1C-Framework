@@ -46,12 +46,12 @@ class RegressionTester:
     def save_baseline(self, metrics: dict[str, float]) -> None:
         """Save current metrics as new baseline."""
         self._baseline_path.parent.mkdir(parents=True, exist_ok=True)
-        self._baseline_path.write_text(
-            json.dumps(metrics, indent=2), encoding="utf-8"
-        )
+        self._baseline_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
     async def run_quick(
-        self, components: Any = None, dataset: Any = None,
+        self,
+        components: Any = None,
+        dataset: Any = None,
     ) -> RegressionResult:
         """Run a quick regression test.
 
@@ -71,7 +71,8 @@ class RegressionTester:
         )
 
     def compare_with_baseline(
-        self, current: dict[str, float] | None = None,
+        self,
+        current: dict[str, float] | None = None,
     ) -> RegressionResult:
         """Compare current metrics with saved baseline."""
         baseline = self._load_baseline()
@@ -91,19 +92,23 @@ class RegressionTester:
             diff = current_val - baseline_val
 
             if diff < -self._threshold:
-                regressions.append({
-                    "metric": metric,
-                    "baseline": baseline_val,
-                    "current": current_val,
-                    "diff": diff,
-                })
+                regressions.append(
+                    {
+                        "metric": metric,
+                        "baseline": baseline_val,
+                        "current": current_val,
+                        "diff": diff,
+                    }
+                )
             elif diff > self._threshold:
-                improvements.append({
-                    "metric": metric,
-                    "baseline": baseline_val,
-                    "current": current_val,
-                    "diff": diff,
-                })
+                improvements.append(
+                    {
+                        "metric": metric,
+                        "baseline": baseline_val,
+                        "current": current_val,
+                        "diff": diff,
+                    }
+                )
 
         passed = len(regressions) == 0
 

@@ -7,7 +7,6 @@ import hashlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from src.pdf_framework.config import get_settings
 
@@ -56,7 +55,7 @@ class GraphChangeDetector:
     - Deleted chunks (in hash database but not in current)
     """
 
-    def __init__(self, hash_db_path: Optional[Path] = None):
+    def __init__(self, hash_db_path: Path | None = None):
         """Initialize change detector.
 
         Args:
@@ -129,10 +128,7 @@ class GraphChangeDetector:
                 changes.added.append(chunk_id)
                 logger.debug(f"[CHANGE] New chunk: {chunk_id}")
 
-            elif (
-                stored.content_hash != content_hash
-                or stored.metadata_hash != metadata_hash
-            ):
+            elif stored.content_hash != content_hash or stored.metadata_hash != metadata_hash:
                 # Modified chunk
                 changes.modified.append(chunk_id)
                 logger.debug(f"[CHANGE] Modified chunk: {chunk_id}")
@@ -176,7 +172,10 @@ class GraphChangeDetector:
             chunk_id
             for chunk_id, stored in self._hashes.items()
             if stored.document_id == document_id
-            and chunk_id not in {c.get("id") or c.get("chunk_id") for c in chunks if c.get("id") or c.get("chunk_id")}
+            and chunk_id
+            not in {
+                c.get("id") or c.get("chunk_id") for c in chunks if c.get("id") or c.get("chunk_id")
+            }
         ]
 
         for chunk_id in to_delete:
@@ -210,7 +209,7 @@ class GraphChangeDetector:
             return
 
         try:
-            with open(self.hash_db_path, "r") as f:
+            with open(self.hash_db_path) as f:
                 data = json.load(f)
 
             for chunk_id, hash_data in data.items():
@@ -244,7 +243,7 @@ class GraphChangeDetector:
 
 
 # Singleton instance
-_change_detector: Optional[GraphChangeDetector] = None
+_change_detector: GraphChangeDetector | None = None
 
 
 def get_change_detector() -> GraphChangeDetector:

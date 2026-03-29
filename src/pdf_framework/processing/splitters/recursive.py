@@ -58,9 +58,7 @@ class RecursiveTextSplitter:
                 search_start = pos  # next search starts after this
 
             # Step 4: Get active heading hierarchy at this position
-            section_headers = (
-                self._get_headers_at_position(headings, pos) if pos >= 0 else []
-            )
+            section_headers = self._get_headers_at_position(headings, pos) if pos >= 0 else []
 
             # Step 5: Build section title (deepest heading)
             section_title = section_headers[-1] if section_headers else ""
@@ -121,7 +119,7 @@ class RecursiveTextSplitter:
             if num_match:
                 num_part = num_match.group(1)
                 depth = num_part.count(".") + 1
-                rest = normalized[num_match.end():].lstrip(". ")
+                rest = normalized[num_match.end() :].lstrip(". ")
                 clean_heading = f"{num_part}. {rest}" if rest else num_part
             elif normalized.lower().startswith("глава"):
                 depth = 1

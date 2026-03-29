@@ -4,7 +4,6 @@ Phase 60: Multi-tenant Isolation - tenant CRUD, stats, quotas.
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -15,8 +14,8 @@ from src.pdf_framework.schemas.tenant import (
     Tenant,
     TenantCreate,
     TenantStats,
-    TenantUsageResponse,
     TenantUpdate,
+    TenantUsageResponse,
 )
 
 logger = logging.getLogger(__name__)

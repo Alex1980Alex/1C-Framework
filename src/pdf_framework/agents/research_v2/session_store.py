@@ -128,11 +128,7 @@ class ResearchSessionStore:
     def _row_to_session(self, row: tuple) -> ResearchSession:
         """Convert a DB row to a ResearchSession."""
         plan = ResearchPlanTree(**json.loads(row[5])) if row[5] else None
-        evidence = (
-            EvidenceGraph(**json.loads(row[6]))
-            if row[6]
-            else EvidenceGraph()
-        )
+        evidence = EvidenceGraph(**json.loads(row[6])) if row[6] else EvidenceGraph()
         report = ResearchReport(**json.loads(row[7])) if row[7] else None
         return ResearchSession(
             session_id=row[0],

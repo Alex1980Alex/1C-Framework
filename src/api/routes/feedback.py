@@ -87,16 +87,18 @@ async def submit_feedback(
                 )
 
                 score_map = {"positive": 1, "negative": -1, "neutral": 0}
-                await components.feedback_store.add(AsyncFeedbackEntry(
-                    feedback_id=f"fb_{int(time.time() * 1000)}",
-                    question=request.query,
-                    answer=request.answer,
-                    score=score_map.get(request.feedback, 0),
-                    strategy=request.strategy,
-                    chunk_ids=request.sources,
-                    chunk_scores=[],
-                    comment=request.user_comment,
-                ))
+                await components.feedback_store.add(
+                    AsyncFeedbackEntry(
+                        feedback_id=f"fb_{int(time.time() * 1000)}",
+                        question=request.query,
+                        answer=request.answer,
+                        score=score_map.get(request.feedback, 0),
+                        strategy=request.strategy,
+                        chunk_ids=request.sources,
+                        chunk_scores=[],
+                        comment=request.user_comment,
+                    )
+                )
             except Exception as e:
                 logger.warning(f"[FEEDBACK] Async store write failed: {e}")
 

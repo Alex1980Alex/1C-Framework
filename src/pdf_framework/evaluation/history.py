@@ -4,7 +4,6 @@ Author: Claude Code
 Version: 1.0.0 - Phase 21: RAGAS Evaluation
 """
 
-import json
 import logging
 import time
 import uuid
@@ -12,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import aiosqlite
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +82,15 @@ class EvalHistoryStore:
         if metrics is None:
             metrics = {}
             if report is not None:
-                for attr in ["mrr", "recall", "precision", "f1", "faithfulness",
-                             "context_precision", "answer_relevancy"]:
+                for attr in [
+                    "mrr",
+                    "recall",
+                    "precision",
+                    "f1",
+                    "faithfulness",
+                    "context_precision",
+                    "answer_relevancy",
+                ]:
                     val = getattr(report, attr, None)
                     if val is not None:
                         metrics[attr] = float(val)
@@ -105,7 +111,9 @@ class EvalHistoryStore:
         return run_id
 
     async def get_history(
-        self, metric: str, days: int = 30,
+        self,
+        metric: str,
+        days: int = 30,
     ) -> list[HistoryPoint]:
         """Get history for a specific metric."""
         if not self._initialized:
@@ -124,8 +132,11 @@ class EvalHistoryStore:
 
         return [
             HistoryPoint(
-                run_id=r[0], metric=r[1], value=r[2],
-                version=r[3] or "", timestamp=r[4],
+                run_id=r[0],
+                metric=r[1],
+                value=r[2],
+                version=r[3] or "",
+                timestamp=r[4],
             )
             for r in rows
         ]

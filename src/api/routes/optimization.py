@@ -7,7 +7,7 @@ and comparing original vs optimized prompts.
 import logging
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.api.dependencies.components import get_components
 
@@ -90,13 +90,15 @@ async def add_evaluation_pairs(request: AddPairsRequest):
 
     optimizer.load_dataset()
     for pair in request.pairs:
-        optimizer.add_pair(EvaluationPair(
-            question=pair.question,
-            answer=pair.answer,
-            question_type=pair.question_type,
-            context=pair.context,
-            source=pair.source,
-        ))
+        optimizer.add_pair(
+            EvaluationPair(
+                question=pair.question,
+                answer=pair.answer,
+                question_type=pair.question_type,
+                context=pair.context,
+                source=pair.source,
+            )
+        )
     optimizer.save_dataset()
 
     return {"added": len(request.pairs), "total": optimizer.dataset_size}

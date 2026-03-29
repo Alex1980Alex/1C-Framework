@@ -17,12 +17,13 @@ import json
 import logging
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Generator, Literal
+from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class Span:
 
     name: str
     start_time: float = field(default_factory=time.perf_counter)
-    start_timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    start_timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     end_time: float | None = None
     status: SpanStatus = SpanStatus.OK
     attributes: dict = field(default_factory=dict)
@@ -66,7 +67,9 @@ class Span:
             "parent": self.parent.name if self.parent else None,
         }
 
-    def end(self, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end(
+        self, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None
+    ) -> None:
         """End the span."""
         self.end_time = time.perf_counter()
         self.status = status
@@ -83,7 +86,13 @@ class BaseTracer(ABC):
         pass
 
     @abstractmethod
-    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end_span(
+        self,
+        span: Span,
+        status: SpanStatus = SpanStatus.OK,
+        output: Any = None,
+        error: str | None = None,
+    ) -> None:
         """End a trace span and record it."""
         pass
 
@@ -141,7 +150,13 @@ class JsonFileTracer(BaseTracer):
         """Start a new span."""
         return Span(name=name, attributes=attributes or {})
 
-    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end_span(
+        self,
+        span: Span,
+        status: SpanStatus = SpanStatus.OK,
+        output: Any = None,
+        error: str | None = None,
+    ) -> None:
         """End span and write to buffer."""
         span.end(status=status, output=output, error=error)
 
@@ -158,7 +173,7 @@ class JsonFileTracer(BaseTracer):
             return
 
         # Get current file path (rotates daily)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         trace_file = self._trace_dir / f"{today}.jsonl"
 
         count = len(self._buffer)
@@ -197,6 +212,7 @@ class LangSmithTracer(BaseTracer):
         if self._enabled:
             try:
                 import langsmith
+
                 self._langsmith = langsmith
                 logger.info(f"[TRACE] LangSmith tracing enabled (project: {project_name})")
             except ImportError:
@@ -208,7 +224,13 @@ class LangSmithTracer(BaseTracer):
         # LangSmith handles tracing automatically when enabled
         return Span(name=name, attributes=attributes or {})
 
-    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end_span(
+        self,
+        span: Span,
+        status: SpanStatus = SpanStatus.OK,
+        output: Any = None,
+        error: str | None = None,
+    ) -> None:
         """End span (no-op for LangSmith, automatic)."""
         span.end(status=status, output=output, error=error)
         # LangSmith traces automatically via callbacks
@@ -254,8 +276,9 @@ class LangfuseTracer(BaseTracer):
 
         if self._enabled:
             try:
-                from langfuse import Langfuse
                 import os
+
+                from langfuse import Langfuse
 
                 key = public_key or os.environ.get("LANGFUSE_PUBLIC_KEY", "")
                 secret = secret_key or os.environ.get("LANGFUSE_SECRET_KEY", "")
@@ -279,7 +302,13 @@ class LangfuseTracer(BaseTracer):
         """Start a new span."""
         return Span(name=name, attributes=attributes or {})
 
-    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end_span(
+        self,
+        span: Span,
+        status: SpanStatus = SpanStatus.OK,
+        output: Any = None,
+        error: str | None = None,
+    ) -> None:
         """End span and flush to Langfuse."""
         span.end(status=status, output=output, error=error)
 
@@ -289,7 +318,7 @@ class LangfuseTracer(BaseTracer):
                 self._client.span(
                     name=span.name,
                     start_time=span.start_timestamp,
-                    end_time=datetime.now(timezone.utc).isoformat(),
+                    end_time=datetime.now(UTC).isoformat(),
                     level="ERROR" if status == SpanStatus.ERROR else "DEFAULT",
                     metadata=span.attributes,
                     output=str(output) if output else None,
@@ -387,7 +416,13 @@ class NoOpTracer(BaseTracer):
         """Start a span (no-op)."""
         return Span(name=name, attributes=attributes or {})
 
-    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end_span(
+        self,
+        span: Span,
+        status: SpanStatus = SpanStatus.OK,
+        output: Any = None,
+        error: str | None = None,
+    ) -> None:
         """End a span (no-op)."""
         span.end(status=status, output=output, error=error)
 
@@ -448,7 +483,8 @@ class HookTracer(BaseTracer):
             if hooks_dir.exists():
                 sys.path.insert(0, str(hooks_dir))
 
-            from shared.otel_exporter import configure_exporter
+            from shared.otel_exporter import configure_exporter  # noqa: F401
+
             return True
         except ImportError:
             logger.debug("[TRACE] OTLP exporter not available, hook tracing disabled")
@@ -465,6 +501,7 @@ class HookTracer(BaseTracer):
                 sys.path.insert(0, str(hooks_dir))
 
             from shared.otel_exporter import configure_exporter
+
             self._exporter = configure_exporter(
                 endpoint=self._endpoint,
                 service_name=self._service_name,
@@ -484,7 +521,13 @@ class HookTracer(BaseTracer):
         # Create span via OTLP exporter
         return exporter.start_span(name, **(attributes or {}))
 
-    def end_span(self, span: Span, status: SpanStatus = SpanStatus.OK, output: Any = None, error: str | None = None) -> None:
+    def end_span(
+        self,
+        span: Span,
+        status: SpanStatus = SpanStatus.OK,
+        output: Any = None,
+        error: str | None = None,
+    ) -> None:
         """End a hook trace span and export it."""
         if not self._enabled:
             return
@@ -564,7 +607,7 @@ class MetricsCollector:
         self._cache_misses = 0
         self._errors = 0
         self._strategies: dict[str, int] = {}
-        self._last_reset = datetime.now(timezone.utc)
+        self._last_reset = datetime.now(UTC)
 
         # Reset daily counters
         self._schedule_daily_reset()
@@ -615,7 +658,9 @@ class MetricsCollector:
         return {
             "queries_total": self._queries_total,
             "queries_today": self._queries_today,
-            "avg_latency_ms": sum(self._latencies) / len(self._latencies) if self._latencies else 0.0,
+            "avg_latency_ms": sum(self._latencies) / len(self._latencies)
+            if self._latencies
+            else 0.0,
             "p95_latency_ms": p95_latency,
             "cache_hit_rate": hit_rate,
             "error_rate": self._errors / self._queries_total if self._queries_total > 0 else 0.0,

@@ -40,16 +40,14 @@ class GraphSearchStrategy:
         for entity in entities:
             chunk_ids.update(entity.source_chunk_ids)
             if depth > 0:
-                subgraph = await self._graph_store.get_neighbors(
-                    entity.id, depth=depth
-                )
+                subgraph = await self._graph_store.get_neighbors(entity.id, depth=depth)
                 for neighbor in subgraph.entities:
                     chunk_ids.update(neighbor.source_chunk_ids)
 
         # Retrieve chunks from vector store
         results: list[SearchResult] = []
         if chunk_ids:
-            chunks = await self._vector_store.get_by_ids(list(chunk_ids)[:k * 3])
+            chunks = await self._vector_store.get_by_ids(list(chunk_ids)[: k * 3])
             for chunk in chunks[:k]:
                 results.append(
                     SearchResult(

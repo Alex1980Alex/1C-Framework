@@ -4,9 +4,7 @@ Phase 59: Async Processing Queue - worker processes jobs from Redis queue.
 """
 
 import logging
-from asyncio import sleep
 
-from arq import create_pool
 from arq.connections import RedisSettings
 from arq.worker import Worker, WorkerSettings
 

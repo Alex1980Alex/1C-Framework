@@ -9,8 +9,8 @@ Version: 1.0.1 - Phase 9.3: Streaming Pipeline (E7-1 fix)
 
 import json
 import logging
+from collections.abc import AsyncIterator
 from enum import Enum
-from typing import Any, AsyncIterator
 
 from src.pdf_framework.agents.rag.state import RAGState
 
@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 class StreamEventType(str, Enum):
     """Types of streaming events."""
 
-    TOKEN = "token"          # Single token from LLM
-    SOURCE = "source"        # Source document reference
-    STATUS = "status"        # Status update (searching, generating, etc.)
-    ERROR = "error"          # Error occurred
-    DONE = "done"            # Stream complete
+    TOKEN = "token"  # Single token from LLM
+    SOURCE = "source"  # Source document reference
+    STATUS = "status"  # Status update (searching, generating, etc.)
+    ERROR = "error"  # Error occurred
+    DONE = "done"  # Stream complete
 
 
 class StreamEvent:
@@ -77,11 +77,13 @@ def _format_sources(sources: list) -> list[dict]:
     formatted = []
     for s in sources:
         if isinstance(s, dict):
-            formatted.append({
-                "id": s.get("id", ""),
-                "score": s.get("score", 0.0),
-                "metadata": s.get("metadata", {}),
-            })
+            formatted.append(
+                {
+                    "id": s.get("id", ""),
+                    "score": s.get("score", 0.0),
+                    "metadata": s.get("metadata", {}),
+                }
+            )
         else:
             # RAGState.sources is list[str] (file paths)
             formatted.append({"id": str(s), "score": 0.0, "metadata": {}})
@@ -185,10 +187,7 @@ class StreamingRAGRunner:
                         content = chunk.content
                         # content can be str or list[ContentBlock]
                         if isinstance(content, list):
-                            content = "".join(
-                                getattr(block, "text", "")
-                                for block in content
-                            )
+                            content = "".join(getattr(block, "text", "") for block in content)
                         if content:
                             answer_parts.append(content)
                             yield StreamEvent(
@@ -228,7 +227,9 @@ class StreamingRAGRunner:
                 },
             )
 
-            logger.info(f"[STREAM] Stream complete: {len(answer_parts)} tokens, {len(sources)} sources")
+            logger.info(
+                f"[STREAM] Stream complete: {len(answer_parts)} tokens, {len(sources)} sources"
+            )
 
         except Exception as e:
             logger.error(f"[STREAM] Error during streaming: {e}")

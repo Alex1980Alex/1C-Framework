@@ -35,8 +35,7 @@ class TextCleaner:
     def remove_control_chars(text: str) -> str:
         """Remove control characters except newlines and tabs."""
         return "".join(
-            c for c in text
-            if c in ("\n", "\t") or not unicodedata.category(c).startswith("C")
+            c for c in text if c in ("\n", "\t") or not unicodedata.category(c).startswith("C")
         )
 
     @staticmethod

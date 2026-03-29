@@ -4,22 +4,18 @@ Each tenant gets a separate ChromaDB collection for complete data isolation.
 Phase 60: Added quota enforcement and tenant management API.
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import Optional
-
-from src.pdf_framework.schemas.tenant import TenantQuota
-
 import asyncio
 import logging
 import re
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import AsyncIterator
 
 import aiosqlite
 from pydantic import BaseModel
 
 from src.pdf_framework.config import VectorStoreSettings
+from src.pdf_framework.schemas.tenant import TenantQuota
 from src.pdf_framework.vector_store.base import BaseVectorStore
 
 logger = logging.getLogger(__name__)
@@ -150,28 +146,36 @@ class TenantVectorStoreManager:
             await self._ensure_metadata_table()
             await self._register_tenant(tenant_id, collection_name)
 
-            logger.info(f"[TENANT] Created vector store for tenant '{tenant_id}' (collection: {collection_name})")
+            logger.info(
+                f"[TENANT] Created vector store for tenant '{tenant_id}' (collection: {collection_name})"
+            )
 
             return store
 
     async def _register_tenant(self, tenant_id: str, collection_name: str) -> None:
         """Register tenant in metadata database."""
         async with aiosqlite.connect(self._metadata_db) as db:
-            now = datetime.now(timezone.utc).isoformat()
-            await db.execute("""
+            now = datetime.now(UTC).isoformat()
+            await db.execute(
+                """
                 INSERT OR IGNORE INTO tenants
                 (tenant_id, collection_name, created_at, last_activity)
                 VALUES (?, ?, ?, ?)
-            """, (tenant_id, collection_name, now, now))
+            """,
+                (tenant_id, collection_name, now, now),
+            )
             await db.commit()
 
     async def _update_last_activity(self, tenant_id: str) -> None:
         """Update last activity timestamp for tenant."""
         async with aiosqlite.connect(self._metadata_db) as db:
-            now = datetime.now(timezone.utc).isoformat()
-            await db.execute("""
+            now = datetime.now(UTC).isoformat()
+            await db.execute(
+                """
                 UPDATE tenants SET last_activity = ? WHERE tenant_id = ?
-            """, (now, tenant_id))
+            """,
+                (now, tenant_id),
+            )
             await db.commit()
 
     async def create_tenant(self, tenant_id: str) -> TenantMetadata:
@@ -237,9 +241,12 @@ class TenantVectorStoreManager:
         await self._ensure_metadata_table()
         async with aiosqlite.connect(self._metadata_db) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute("""
+            cursor = await db.execute(
+                """
                 SELECT * FROM tenants WHERE tenant_id = ?
-            """, (tenant_id,))
+            """,
+                (tenant_id,),
+            )
             row = await cursor.fetchone()
 
             if row:
@@ -316,14 +323,16 @@ class TenantVectorStoreManager:
                 pass  # Column already exists
 
         # Store quota as JSON
-        import json
         async with aiosqlite.connect(self._metadata_db) as db:
-            await db.execute("""
+            await db.execute(
+                """
                 UPDATE tenants SET quota_json = ? WHERE tenant_id = ?
-            """, (quota.model_dump_json(), tenant_id))
+            """,
+                (quota.model_dump_json(), tenant_id),
+            )
             await db.commit()
 
-    async def get_quota(self, tenant_id: str) -> Optional[TenantQuota]:
+    async def get_quota(self, tenant_id: str) -> TenantQuota | None:
         """Get quota for tenant.
 
         Args:
@@ -332,12 +341,14 @@ class TenantVectorStoreManager:
         Returns:
             TenantQuota or default quota
         """
-        import json
         async with aiosqlite.connect(self._metadata_db) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute("""
+            cursor = await db.execute(
+                """
                 SELECT quota_json FROM tenants WHERE tenant_id = ?
-            """, (tenant_id,))
+            """,
+                (tenant_id,),
+            )
             row = await cursor.fetchone()
 
             if row and row["quota_json"]:
@@ -381,7 +392,7 @@ class TenantVectorStoreManager:
         quota = await self.get_quota(tenant_id)
 
         # Check daily query quota
-        today = datetime.now(timezone.utc).date().isoformat()
+        today = datetime.now(UTC).date().isoformat()
 
         async with aiosqlite.connect(self._metadata_db) as db:
             # Ensure query_stats table exists
@@ -395,10 +406,13 @@ class TenantVectorStoreManager:
             """)
 
             # Get current count
-            cursor = await db.execute("""
+            cursor = await db.execute(
+                """
                 SELECT query_count FROM tenant_query_stats
                 WHERE tenant_id = ? AND date = ?
-            """, (tenant_id, today))
+            """,
+                (tenant_id, today),
+            )
             row = await cursor.fetchone()
 
             current_count = row[0] if row else 0
@@ -407,12 +421,15 @@ class TenantVectorStoreManager:
                 return False
 
             # Increment count
-            await db.execute("""
+            await db.execute(
+                """
                 INSERT INTO tenant_query_stats (tenant_id, date, query_count)
                 VALUES (?, ?, 1)
                 ON CONFLICT (tenant_id, date) DO UPDATE SET
                 query_count = query_count + 1
-            """, (tenant_id, today))
+            """,
+                (tenant_id, today),
+            )
             await db.commit()
 
         return True

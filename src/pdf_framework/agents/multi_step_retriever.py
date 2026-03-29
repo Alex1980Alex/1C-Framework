@@ -10,12 +10,11 @@ Version: 1.0.0 - Phase 19: Deep Research Agent
 """
 
 import logging
-from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.pdf_framework.config import Settings, get_settings
-from src.pdf_framework.schemas.documents import SearchResult, SearchResponse
+from src.pdf_framework.schemas.documents import SearchResult
 from src.pdf_framework.search.manager import SearchManager
 
 logger = logging.getLogger(__name__)
@@ -129,7 +128,9 @@ class MultiStepRetriever:
                 step_number=step_idx + 1,
                 query=query,
                 results=results,
-                context_used=accumulated_context[:200] + "..." if len(accumulated_context) > 200 else accumulated_context,
+                context_used=accumulated_context[:200] + "..."
+                if len(accumulated_context) > 200
+                else accumulated_context,
                 new_findings=new_findings,
                 sources_count=len(results),
             )

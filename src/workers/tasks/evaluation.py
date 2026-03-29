@@ -29,7 +29,7 @@ async def update_progress(ctx: dict, job_id: str, progress: int, status: str) ->
             mapping={
                 "progress": str(progress),
                 "status": status,
-            }
+            },
         )
         await redis.expire(key, settings.queue.job_timeout)
     except Exception as e:

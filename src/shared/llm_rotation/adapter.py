@@ -57,8 +57,7 @@ def _get_enabled_components() -> set[str]:
     else:
         # Default: all Category 1 components
         _enabled_components = {
-            name for name, cfg in COMPONENT_REGISTRY.items()
-            if cfg["category"] == 1
+            name for name, cfg in COMPONENT_REGISTRY.items() if cfg["category"] == 1
         }
 
     if _enabled_components:
@@ -80,8 +79,14 @@ def is_cheap_llm_enabled(component: str) -> bool:
     return component in _get_enabled_components()
 
 
-def _log_metric(component: str, provider: str, response_time: float,
-                success: bool, fallback: bool, text_len: int) -> None:
+def _log_metric(
+    component: str,
+    provider: str,
+    response_time: float,
+    success: bool,
+    fallback: bool,
+    text_len: int,
+) -> None:
     """Append metric entry to JSONL log."""
     try:
         _METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -145,14 +150,19 @@ async def cheap_llm_call(
         if not text.strip():
             logger.warning(
                 "[CHEAP-LLM] %s: empty response from %s (%.1fs)",
-                component, provider, elapsed,
+                component,
+                provider,
+                elapsed,
             )
             _log_metric(component, provider, elapsed, success=False, fallback=False, text_len=0)
             return ""
 
         logger.debug(
             "[CHEAP-LLM] %s: %s responded in %.1fs (%d chars)",
-            component, provider, elapsed, len(text),
+            component,
+            provider,
+            elapsed,
+            len(text),
         )
         _log_metric(component, provider, elapsed, success=True, fallback=False, text_len=len(text))
         return text
@@ -253,8 +263,11 @@ def evaluate_response(component: str, response: str, original_input: str = "") -
     min_len = criteria.get("min_length", 1)
 
     if len(text) < min_len:
-        return {"passed": False, "metric": "min_length",
-                "reason": f"Too short: {len(text)} < {min_len}"}
+        return {
+            "passed": False,
+            "metric": "min_length",
+            "reason": f"Too short: {len(text)} < {min_len}",
+        }
 
     metric = criteria.get("metric", "min_length")
 
@@ -262,16 +275,19 @@ def evaluate_response(component: str, response: str, original_input: str = "") -
         expected = criteria.get("expected_format", "")
         options = [o.strip() for o in expected.split("|")]
         if text.lower() not in options:
-            return {"passed": False, "metric": metric,
-                    "reason": f"Expected one of {options}, got '{text[:50]}'"}
+            return {
+                "passed": False,
+                "metric": metric,
+                "reason": f"Expected one of {options}, got '{text[:50]}'",
+            }
 
     elif metric == "different_from_input":
         if original_input and text.lower().strip() == original_input.lower().strip():
-            return {"passed": False, "metric": metric,
-                    "reason": "Response identical to input"}
+            return {"passed": False, "metric": metric, "reason": "Response identical to input"}
 
     elif metric == "valid_json":
         import json as _json
+
         try:
             _json.loads(text)
         except _json.JSONDecodeError:
@@ -284,15 +300,18 @@ def evaluate_response(component: str, response: str, original_input: str = "") -
             try:
                 _json.loads(cleaned)
             except _json.JSONDecodeError:
-                return {"passed": False, "metric": metric,
-                        "reason": "Not valid JSON"}
+                return {"passed": False, "metric": metric, "reason": "Not valid JSON"}
 
     elif metric == "valid_classification":
         import re
+
         pattern = criteria.get("expected_format", "")
         if pattern and not re.match(pattern, text):
-            return {"passed": False, "metric": metric,
-                    "reason": "Doesn't match classification pattern"}
+            return {
+                "passed": False,
+                "metric": metric,
+                "reason": "Doesn't match classification pattern",
+            }
 
     return {"passed": True, "metric": metric, "reason": "OK"}
 
@@ -300,6 +319,7 @@ def evaluate_response(component: str, response: str, original_input: str = "") -
 # ---------------------------------------------------------------------------
 # Auto-discovery: find LLM components not yet in COMPONENT_REGISTRY
 # ---------------------------------------------------------------------------
+
 
 def discover_unregistered_components() -> list[dict[str, str]]:
     """Scan framework source for ChatAnthropic/Anthropic usage not in COMPONENT_REGISTRY.
@@ -319,12 +339,21 @@ def discover_unregistered_components() -> list[dict[str, str]]:
 
     # Files already covered by COMPONENT_REGISTRY integrations
     known_files = {
-        "grader.py", "hallucination_checker.py", "rewriter.py",
-        "query_expansion.py", "hyde.py", "classifier.py",
-        "section_summary.py", "context_generator.py",
-        "entity_extractor.py", "summarizer.py",
+        "grader.py",
+        "hallucination_checker.py",
+        "rewriter.py",
+        "query_expansion.py",
+        "hyde.py",
+        "classifier.py",
+        "section_summary.py",
+        "context_generator.py",
+        "entity_extractor.py",
+        "summarizer.py",
         # Infrastructure (not candidates)
-        "adapter.py", "service.py", "zai_proxy.py", "mcp.py",
+        "adapter.py",
+        "service.py",
+        "zai_proxy.py",
+        "mcp.py",
     }
 
     candidates: list[dict[str, str]] = []
@@ -346,11 +375,13 @@ def discover_unregistered_components() -> list[dict[str, str]]:
                 rel = str(py_file.relative_to(src_root))
                 if rel not in seen_files:
                     seen_files.add(rel)
-                    candidates.append({
-                        "file": rel,
-                        "pattern": pattern.pattern,
-                        "suggestion": f"Review {py_file.name} for cheap LLM integration",
-                    })
+                    candidates.append(
+                        {
+                            "file": rel,
+                            "pattern": pattern.pattern,
+                            "suggestion": f"Review {py_file.name} for cheap LLM integration",
+                        }
+                    )
                 break
 
     return candidates

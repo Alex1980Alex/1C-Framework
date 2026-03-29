@@ -18,7 +18,7 @@ from typing import Any
 
 import aiohttp
 
-from src.shared.llm_rotation.adaptive import AdaptiveScorer, BudgetTracker, PRICE_PER_1K_TOKENS
+from src.shared.llm_rotation.adaptive import PRICE_PER_1K_TOKENS, AdaptiveScorer, BudgetTracker
 from src.shared.llm_rotation.backoff import BackoffStrategy, RateLimitError
 from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.config import LLMRotationSettings, get_settings
@@ -52,6 +52,7 @@ def _parse_retry_after(value: str | None) -> float | None:
 
 class ProviderStatus(str, Enum):
     """Provider health status."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNAVAILABLE = "unavailable"
@@ -61,6 +62,7 @@ class ProviderStatus(str, Enum):
 @dataclass
 class ProviderConfig:
     """Configuration for a single LLM provider."""
+
     name: str
     base_url: str
     api_key_env: str
@@ -76,6 +78,7 @@ class ProviderConfig:
 @dataclass
 class ProviderState:
     """Runtime state tracking for a provider."""
+
     config: ProviderConfig
     status: ProviderStatus = ProviderStatus.HEALTHY
     requests_count: int = 0
@@ -101,7 +104,10 @@ class ProviderState:
             self.avg_response_time = (self.avg_response_time * 0.8) + (response_time * 0.2)
 
     def record_error(
-        self, error: str, cooldown_seconds: int = 300, rate_limit_cooldown: int = 60,
+        self,
+        error: str,
+        cooldown_seconds: int = 300,
+        rate_limit_cooldown: int = 60,
     ) -> None:
         """Record an error. CB handles state transitions."""
         self.errors_count += 1
@@ -343,8 +349,9 @@ class LLMRotationService:
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
-        async with session.post(url, json=payload, headers=headers,
-                               timeout=self._request_timeout(timeout)) as resp:
+        async with session.post(
+            url, json=payload, headers=headers, timeout=self._request_timeout(timeout)
+        ) as resp:
             if resp.status == 429:
                 retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
                 text = await resp.text()
@@ -384,18 +391,19 @@ class LLMRotationService:
             },
         }
 
-        async with session.post(url, json=payload,
-                               timeout=self._request_timeout(timeout)) as resp:
+        async with session.post(url, json=payload, timeout=self._request_timeout(timeout)) as resp:
             if resp.status != 200:
                 text = await resp.text()
                 raise RuntimeError(f"HTTP {resp.status}: {text[:200]}")
             data = await resp.json()
             # Convert Ollama format to OpenAI-like response
             return {
-                "choices": [{
-                    "message": {"content": data.get("message", {}).get("content", "")},
-                    "finish_reason": "stop",
-                }],
+                "choices": [
+                    {
+                        "message": {"content": data.get("message", {}).get("content", "")},
+                        "finish_reason": "stop",
+                    }
+                ],
                 "model": data.get("model", ""),
                 "usage": {
                     "prompt_tokens": data.get("prompt_eval_count", 0),
@@ -441,8 +449,9 @@ class LLMRotationService:
             "anthropic-version": "2023-06-01",
         }
 
-        async with session.post(url, json=payload, headers=headers,
-                               timeout=self._request_timeout(timeout)) as resp:
+        async with session.post(
+            url, json=payload, headers=headers, timeout=self._request_timeout(timeout)
+        ) as resp:
             if resp.status == 429:
                 retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
                 text_resp = await resp.text()
@@ -458,10 +467,12 @@ class LLMRotationService:
         usage = data.get("usage", {})
 
         return {
-            "choices": [{
-                "message": {"content": "\n".join(text_parts)},
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "message": {"content": "\n".join(text_parts)},
+                    "finish_reason": "stop",
+                }
+            ],
             "model": data.get("model", ""),
             "usage": {
                 "prompt_tokens": usage.get("input_tokens", 0),
@@ -511,7 +522,9 @@ class LLMRotationService:
         quality = 0.0
         if text:
             length_score = min(1.0, len(text) / 100.0)
-            error_penalty = 0.5 if any(kw in text.lower() for kw in ("error", "sorry", "i cannot")) else 0.0
+            error_penalty = (
+                0.5 if any(kw in text.lower() for kw in ("error", "sorry", "i cannot")) else 0.0
+            )
             quality = max(0.0, length_score - error_penalty)
         self._scorer.record(state.config.name, elapsed, total_tokens, quality)
 
@@ -558,16 +571,18 @@ class LLMRotationService:
         # Auto-select timeout by max_tokens tier
         if timeout is None:
             if max_tokens > 3000:
-                timeout = self._settings.timeout_heavy       # 180s
+                timeout = self._settings.timeout_heavy  # 180s
             elif max_tokens > 1024:
                 timeout = self._settings.timeout_generation  # 90s
             else:
-                timeout = self._settings.timeout             # 60s
+                timeout = self._settings.timeout  # 60s
 
         # Budget advisory check
         self._budget.check_daily_reset()
         if self._budget.is_over_budget:
-            logger.warning(f"Daily budget exceeded (${self._budget.total_spent:.4f}/${self._budget.daily_budget})")
+            logger.warning(
+                f"Daily budget exceeded (${self._budget.total_spent:.4f}/${self._budget.daily_budget})"
+            )
 
         # --- Phase 1: Force-retry primary provider ---
         if self._settings.force_primary and primary_name in self._providers:
@@ -593,15 +608,23 @@ class LLMRotationService:
                     primary_retries += 1
                     try:
                         result = await self._call_provider(
-                            primary_state, prompt, system_prompt, model,
-                            temperature, max_tokens, timeout=timeout,
+                            primary_state,
+                            prompt,
+                            system_prompt,
+                            model,
+                            temperature,
+                            max_tokens,
+                            timeout=timeout,
                         )
                         result["attempt"] = total_attempts
                         usage = result.get("usage", {})
                         _log_completion(
-                            provider=result["provider"], model=result["model"],
-                            response_time=result["response_time"], attempt=total_attempts,
-                            primary_retries=primary_retries, fallback=False,
+                            provider=result["provider"],
+                            model=result["model"],
+                            response_time=result["response_time"],
+                            attempt=total_attempts,
+                            primary_retries=primary_retries,
+                            fallback=False,
                             prompt_tokens=usage.get("prompt_tokens", 0),
                             completion_tokens=usage.get("completion_tokens", 0),
                         )
@@ -656,22 +679,29 @@ class LLMRotationService:
 
             # Level 2: try default model, then alternative models
             models_to_try = [model or state.config.default_model] + [
-                m for m in state.config.models
-                if m != (model or state.config.default_model)
+                m for m in state.config.models if m != (model or state.config.default_model)
             ]
             for model_idx, try_model in enumerate(models_to_try):
                 total_attempts += 1
                 try:
                     result = await self._call_provider(
-                        state, prompt, system_prompt, try_model,
-                        temperature, max_tokens, timeout=timeout,
+                        state,
+                        prompt,
+                        system_prompt,
+                        try_model,
+                        temperature,
+                        max_tokens,
+                        timeout=timeout,
                     )
                     result["attempt"] = total_attempts
                     usage = result.get("usage", {})
                     _log_completion(
-                        provider=result["provider"], model=result["model"],
-                        response_time=result["response_time"], attempt=total_attempts,
-                        primary_retries=primary_retries, fallback=True,
+                        provider=result["provider"],
+                        model=result["model"],
+                        response_time=result["response_time"],
+                        attempt=total_attempts,
+                        primary_retries=primary_retries,
+                        fallback=True,
                         prompt_tokens=usage.get("prompt_tokens", 0),
                         completion_tokens=usage.get("completion_tokens", 0),
                     )
@@ -682,8 +712,7 @@ class LLMRotationService:
                     is_transient = self._is_transient(e)
                     if model_idx < len(models_to_try) - 1 and is_transient:
                         logger.warning(
-                            f"[{provider_name}/{try_model}] Failed, "
-                            f"trying alt model: {error_msg}"
+                            f"[{provider_name}/{try_model}] Failed, trying alt model: {error_msg}"
                         )
                         continue
                     state.record_error(
@@ -699,8 +728,12 @@ class LLMRotationService:
 
         if total_attempts == 0:
             _log_completion(
-                provider="none", model="none", response_time=0,
-                attempt=0, primary_retries=0, fallback=False,
+                provider="none",
+                model="none",
+                response_time=0,
+                attempt=0,
+                primary_retries=0,
+                fallback=False,
                 error="No available providers",
             )
             raise RuntimeError(
@@ -708,14 +741,15 @@ class LLMRotationService:
                 "Check API keys and provider availability."
             )
         _log_completion(
-            provider="none", model="none", response_time=0,
-            attempt=total_attempts, primary_retries=primary_retries,
-            fallback=True, error=f"All failed. Tried: {tried}",
+            provider="none",
+            model="none",
+            response_time=0,
+            attempt=total_attempts,
+            primary_retries=primary_retries,
+            fallback=True,
+            error=f"All failed. Tried: {tried}",
         )
-        raise RuntimeError(
-            f"All providers failed after {total_attempts} attempts. "
-            f"Tried: {tried}"
-        )
+        raise RuntimeError(f"All providers failed after {total_attempts} attempts. Tried: {tried}")
 
     def get_stats(self) -> dict[str, Any]:
         """Return statistics for all providers."""
@@ -723,7 +757,8 @@ class LLMRotationService:
         for name, state in self._providers.items():
             api_key = (
                 os.environ.get(state.config.api_key_env, "")
-                if state.config.requires_key else "(not needed)"
+                if state.config.requires_key
+                else "(not needed)"
             )
             cb = state.circuit_breaker
             provider_stats: dict[str, Any] = {
@@ -772,11 +807,21 @@ class LLMRotationService:
     def _is_transient(error: Exception) -> bool:
         """Check if error is transient (retry-worthy)."""
         msg = str(error).lower()
-        return any(kw in msg for kw in (
-            "timeout", "timed out", "429", "rate limit",
-            "500", "502", "503", "504",
-            "connection", "temporarily",
-        ))
+        return any(
+            kw in msg
+            for kw in (
+                "timeout",
+                "timed out",
+                "429",
+                "rate limit",
+                "500",
+                "502",
+                "503",
+                "504",
+                "connection",
+                "temporarily",
+            )
+        )
 
     def start_health_checks(self) -> None:
         """Start background health check loop (if enabled in settings)."""
@@ -816,17 +861,24 @@ class LLMRotationService:
                 await self._call_provider(state, "ping", max_tokens=5)
                 logger.info(f"[{name}] Health check PASSED, recovered")
                 _log_completion(
-                    provider=name, model=state.config.default_model,
-                    response_time=0, attempt=0, health_check=True,
+                    provider=name,
+                    model=state.config.default_model,
+                    response_time=0,
+                    attempt=0,
+                    health_check=True,
                     result="recovered",
                 )
             except Exception as e:
                 state.record_error(str(e)[:200])
                 logger.info(f"[{name}] Health check FAILED: {e}")
                 _log_completion(
-                    provider=name, model=state.config.default_model,
-                    response_time=0, attempt=0, health_check=True,
-                    result="failed", error=str(e)[:200],
+                    provider=name,
+                    model=state.config.default_model,
+                    response_time=0,
+                    attempt=0,
+                    health_check=True,
+                    result="failed",
+                    error=str(e)[:200],
                 )
 
     async def close(self) -> None:

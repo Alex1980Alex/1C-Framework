@@ -8,7 +8,7 @@ Each procedure/function becomes a separate chunk.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .models import BSLModule, BSLSymbol, SymbolType
 
@@ -19,7 +19,7 @@ class BSLChunk:
 
     chunk_id: str
     content: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -41,9 +41,9 @@ class BSLChunker:
         self.include_module_summary = include_module_summary
         self.max_context_lines = max_context_lines
 
-    def chunk_module(self, module: BSLModule) -> List[BSLChunk]:
+    def chunk_module(self, module: BSLModule) -> list[BSLChunk]:
         """Convert a parsed BSL module into indexable chunks."""
-        chunks: List[BSLChunk] = []
+        chunks: list[BSLChunk] = []
 
         # Module summary chunk
         if self.include_module_summary:
@@ -58,14 +58,14 @@ class BSLChunker:
 
         return chunks
 
-    def chunk_modules(self, modules: List[BSLModule]) -> List[BSLChunk]:
+    def chunk_modules(self, modules: list[BSLModule]) -> list[BSLChunk]:
         """Convert multiple modules into chunks."""
-        all_chunks: List[BSLChunk] = []
+        all_chunks: list[BSLChunk] = []
         for module in modules:
             all_chunks.extend(self.chunk_module(module))
         return all_chunks
 
-    def _build_module_summary(self, module: BSLModule) -> Optional[BSLChunk]:
+    def _build_module_summary(self, module: BSLModule) -> BSLChunk | None:
         """Create a summary chunk for the entire module."""
         if not module.symbols:
             return None
@@ -111,7 +111,7 @@ class BSLChunker:
     def _build_symbol_chunk(self, symbol: BSLSymbol, module: BSLModule) -> BSLChunk:
         """Create a chunk for a single symbol (procedure/function)."""
         # Build enriched content: comment + signature context + body
-        parts: List[str] = []
+        parts: list[str] = []
 
         # Module context line
         parts.append(f"// Module: {module.module_name} ({module.module_type.value})")
@@ -163,4 +163,5 @@ class BSLChunker:
 def _safe_id(s: str) -> str:
     """Convert string to a safe ID component."""
     import re as _re
+
     return _re.sub(r"[^\w]", "_", s).strip("_")[:80]

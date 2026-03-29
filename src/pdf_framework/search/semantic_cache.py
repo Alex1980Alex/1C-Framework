@@ -81,6 +81,7 @@ class SemanticSearchCache:
             return
 
         import asyncio
+
         await asyncio.to_thread(self._init_sync)
         self._initialized = True
 
@@ -122,7 +123,8 @@ class SemanticSearchCache:
 
             logger.info(
                 "[SEMANTIC_CACHE] Loaded %d entries from %s",
-                len(self._cache_ids), Path(self._db_path).name,
+                len(self._cache_ids),
+                Path(self._db_path).name,
             )
         finally:
             conn.close()
@@ -177,6 +179,7 @@ class SemanticSearchCache:
 
         # Load full response from SQLite
         import asyncio
+
         response = await asyncio.to_thread(self._load_response, best_cache_id)
         if response is None:
             self._misses += 1
@@ -193,7 +196,9 @@ class SemanticSearchCache:
         self._hits += 1
         logger.debug(
             "[SEMANTIC_CACHE] HIT (sim=%.4f) for strategy=%s k=%d",
-            best_sim, strategy, k,
+            best_sim,
+            strategy,
+            k,
         )
         return response
 
@@ -230,8 +235,16 @@ class SemanticSearchCache:
             await self.initialize()
 
         import asyncio
+
         await asyncio.to_thread(
-            self._set_sync, query, query_embedding, strategy, k, filter, rerank, response,
+            self._set_sync,
+            query,
+            query_embedding,
+            strategy,
+            k,
+            filter,
+            rerank,
+            response,
         )
 
     def _set_sync(
@@ -251,11 +264,7 @@ class SemanticSearchCache:
         filter_hash = self._hash_filter(filter)
 
         # Extract document_ids for invalidation tracking
-        doc_ids = list({
-            r.chunk.document_id
-            for r in response.results
-            if r.chunk.document_id
-        })
+        doc_ids = list({r.chunk.document_id for r in response.results if r.chunk.document_id})
 
         emb_array = np.array(query_embedding, dtype=np.float32)
         emb_blob = emb_array.tobytes()
@@ -269,9 +278,17 @@ class SemanticSearchCache:
                 "rerank, response_json, document_ids, created_at, expires_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    cache_id, query, emb_blob, strategy, k, filter_hash,
-                    int(rerank), response_json, json.dumps(doc_ids),
-                    now, expires,
+                    cache_id,
+                    query,
+                    emb_blob,
+                    strategy,
+                    k,
+                    filter_hash,
+                    int(rerank),
+                    response_json,
+                    json.dumps(doc_ids),
+                    now,
+                    expires,
                 ),
             )
             conn.commit()
@@ -325,6 +342,7 @@ class SemanticSearchCache:
     async def invalidate_by_document(self, document_id: str) -> int:
         """Remove all cached entries that contain results from this document."""
         import asyncio
+
         return await asyncio.to_thread(self._invalidate_by_doc_sync, document_id)
 
     def _invalidate_by_doc_sync(self, document_id: str) -> int:
@@ -352,9 +370,7 @@ class SemanticSearchCache:
 
         # Remove from in-memory index
         remove_set = set(to_remove)
-        keep_indices = [
-            i for i, cid in enumerate(self._cache_ids) if cid not in remove_set
-        ]
+        keep_indices = [i for i, cid in enumerate(self._cache_ids) if cid not in remove_set]
         self._cache_ids = [self._cache_ids[i] for i in keep_indices]
         if self._embeddings is not None and keep_indices:
             self._embeddings = self._embeddings[keep_indices]
@@ -365,13 +381,15 @@ class SemanticSearchCache:
 
         logger.info(
             "[SEMANTIC_CACHE] Invalidated %d entries for document %s",
-            len(to_remove), document_id,
+            len(to_remove),
+            document_id,
         )
         return len(to_remove)
 
     async def invalidate_all(self) -> int:
         """Clear entire cache."""
         import asyncio
+
         return await asyncio.to_thread(self._invalidate_all_sync)
 
     def _invalidate_all_sync(self) -> int:

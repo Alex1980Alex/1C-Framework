@@ -133,8 +133,7 @@ class SubQuestionDecomposer:
             logger.error(f"[DECOMPOSER] Error synthesizing: {e}")
             # Fallback: join sub-answers
             return "\n\n".join(
-                f"Sub-question {i + 1}: {answer}"
-                for i, answer in enumerate(sub_answers)
+                f"Sub-question {i + 1}: {answer}" for i, answer in enumerate(sub_answers)
             )
 
     def _get_decomposition_prompt(self, query: str) -> str:
@@ -203,8 +202,7 @@ Be precise and specific. Each sub-question should stand alone."""
     def _get_synthesis_prompt(self, original_query: str, sub_answers: list[str]) -> str:
         """Build synthesis prompt."""
         answers_text = "\n\n".join(
-            f"Sub-question {i + 1}: {answer}"
-            for i, answer in enumerate(sub_answers)
+            f"Sub-question {i + 1}: {answer}" for i, answer in enumerate(sub_answers)
         )
 
         return f"""Synthesize the sub-question answers into a comprehensive response to the original question.
@@ -251,7 +249,4 @@ Provide the synthesized answer:"""
             True if decomposition is recommended
         """
         # Decompose for complex queries with high confidence
-        return (
-            classification.complexity == "complex"
-            and classification.confidence > 0.7
-        )
+        return classification.complexity == "complex" and classification.confidence > 0.7

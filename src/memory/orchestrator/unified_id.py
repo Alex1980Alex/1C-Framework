@@ -14,13 +14,13 @@ Example: episodic:memory-ai:550e8400-e29b-41d4-a716-446655440000
 Migrated from D:\\1C-Enterprise_Framework\\memory-orchestrator\\src\\unified_id.py
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from typing import Optional, Dict, Any, List
 import hashlib
 import re
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class MemoryType(Enum):
@@ -81,7 +81,7 @@ class UnifiedID:
     source: SourceServer
     identifier: str
     created_at: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     _IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z0-9_:\-]+$")
 
@@ -118,8 +118,7 @@ class UnifiedID:
         parts = unified_id.split(":", 2)
         if len(parts) != 3:
             raise ValueError(
-                f"Invalid unified ID format: {unified_id}. "
-                "Expected format: type:source:identifier"
+                f"Invalid unified ID format: {unified_id}. Expected format: type:source:identifier"
             )
         return cls(
             memory_type=MemoryType.from_string(parts[0]),
@@ -132,7 +131,7 @@ class UnifiedID:
         cls,
         source: SourceServer,
         original_id: str,
-        memory_type: Optional[MemoryType] = None,
+        memory_type: MemoryType | None = None,
     ) -> "UnifiedID":
         return cls(
             memory_type=memory_type or source.memory_type,
@@ -144,7 +143,7 @@ class UnifiedID:
     def generate(
         cls,
         source: SourceServer,
-        memory_type: Optional[MemoryType] = None,
+        memory_type: MemoryType | None = None,
     ) -> "UnifiedID":
         return cls(
             memory_type=memory_type or source.memory_type,
@@ -157,7 +156,7 @@ class UnifiedID:
         cls,
         source: SourceServer,
         path: str,
-        project_id: Optional[str] = None,
+        project_id: str | None = None,
     ) -> "UnifiedID":
         input_str = f"{project_id}:{path}" if project_id else path
         hash_id = hashlib.sha256(input_str.encode()).hexdigest()[:16]
@@ -179,7 +178,7 @@ class UnifiedID:
             metadata={**self.metadata, **kwargs},
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "unified_id": self.unified,
             "memory_type": self.memory_type.value,
@@ -190,7 +189,7 @@ class UnifiedID:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "UnifiedID":
+    def from_dict(cls, data: dict[str, Any]) -> "UnifiedID":
         return cls(
             memory_type=MemoryType.from_string(data["memory_type"]),
             source=SourceServer.from_string(data["source"]),
@@ -209,11 +208,11 @@ class IDRegistry:
     """
 
     def __init__(self):
-        self._unified_to_original: Dict[str, str] = {}
-        self._original_to_unified: Dict[str, str] = {}
-        self._metadata: Dict[str, Dict[str, Any]] = {}
+        self._unified_to_original: dict[str, str] = {}
+        self._original_to_unified: dict[str, str] = {}
+        self._metadata: dict[str, dict[str, Any]] = {}
 
-    def register(self, unified_id: UnifiedID, original_id: Optional[str] = None) -> str:
+    def register(self, unified_id: UnifiedID, original_id: str | None = None) -> str:
         uid_str = unified_id.unified
         orig_id = original_id or unified_id.identifier
 
@@ -221,8 +220,7 @@ class IDRegistry:
             existing = self._unified_to_original[uid_str]
             if existing != orig_id:
                 raise ValueError(
-                    f"Unified ID {uid_str} already mapped to {existing}, "
-                    f"cannot remap to {orig_id}"
+                    f"Unified ID {uid_str} already mapped to {existing}, cannot remap to {orig_id}"
                 )
 
         self._unified_to_original[uid_str] = orig_id
@@ -231,10 +229,10 @@ class IDRegistry:
         self._metadata[uid_str] = unified_id.to_dict()
         return uid_str
 
-    def resolve(self, unified_id: str) -> Optional[str]:
+    def resolve(self, unified_id: str) -> str | None:
         return self._unified_to_original.get(unified_id)
 
-    def lookup(self, source: SourceServer, original_id: str) -> Optional[str]:
+    def lookup(self, source: SourceServer, original_id: str) -> str | None:
         source_key = f"{source.value}:{original_id}"
         return self._original_to_unified.get(source_key)
 
@@ -242,7 +240,7 @@ class IDRegistry:
         self,
         source: SourceServer,
         original_id: str,
-        memory_type: Optional[MemoryType] = None,
+        memory_type: MemoryType | None = None,
     ) -> UnifiedID:
         existing = self.lookup(source, original_id)
         if existing:
@@ -251,30 +249,28 @@ class IDRegistry:
         self.register(unified_id, original_id)
         return unified_id
 
-    def batch_register(
-        self, items: List[tuple]
-    ) -> List[UnifiedID]:
+    def batch_register(self, items: list[tuple]) -> list[UnifiedID]:
         results = []
         for source, original_id, memory_type in items:
             unified_id = self.get_or_create(source, original_id, memory_type)
             results.append(unified_id)
         return results
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         return {
             "unified_to_original": self._unified_to_original,
             "original_to_unified": self._original_to_unified,
             "metadata": self._metadata,
         }
 
-    def import_state(self, state: Dict[str, Any]):
+    def import_state(self, state: dict[str, Any]):
         self._unified_to_original = state.get("unified_to_original", {})
         self._original_to_unified = state.get("original_to_unified", {})
         self._metadata = state.get("metadata", {})
 
-    def stats(self) -> Dict[str, Any]:
-        by_type: Dict[str, int] = {}
-        by_source: Dict[str, int] = {}
+    def stats(self) -> dict[str, Any]:
+        by_type: dict[str, int] = {}
+        by_source: dict[str, int] = {}
 
         for uid_str in self._unified_to_original:
             try:
@@ -293,6 +289,7 @@ class IDRegistry:
 
 # Convenience functions
 
+
 def create_episodic_id(source: SourceServer) -> UnifiedID:
     if source.memory_type != MemoryType.EPISODIC:
         raise ValueError(f"Server {source.value} is not an episodic memory source")
@@ -303,7 +300,7 @@ def create_semantic_id() -> UnifiedID:
     return UnifiedID.generate(SourceServer.VECTOR_MEMORY, MemoryType.SEMANTIC)
 
 
-def create_doc_id(path: str, project_id: Optional[str] = None) -> UnifiedID:
+def create_doc_id(path: str, project_id: str | None = None) -> UnifiedID:
     return UnifiedID.from_path(SourceServer.PDF_DOCS, path, project_id)
 
 

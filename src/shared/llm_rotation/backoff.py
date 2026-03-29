@@ -43,7 +43,7 @@ class BackoffStrategy:
         if retry_after is not None and retry_after > 0:
             return retry_after + random.uniform(0, self.jitter)
         delay = min(
-            self.base_delay * (self.multiplier ** attempt),
+            self.base_delay * (self.multiplier**attempt),
             self.max_delay,
         )
         return delay + random.uniform(0, self.jitter)

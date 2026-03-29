@@ -2,12 +2,14 @@
 Fine-tuning Qwen2.5-Coder на BSL коде с Unsloth
 Оптимизировано для GPU с 8GB+ VRAM
 """
-from unsloth import FastLanguageModel
-from datasets import load_dataset
-from trl import SFTTrainer
-from transformers import TrainingArguments
-import torch
+
 import os
+
+import torch
+from datasets import load_dataset
+from transformers import TrainingArguments
+from trl import SFTTrainer
+from unsloth import FastLanguageModel
 
 # Конфигурация
 MAX_SEQ_LENGTH = 2048
@@ -47,8 +49,15 @@ def main():
     model = FastLanguageModel.get_peft_model(
         model,
         r=16,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"],
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ],
         lora_alpha=16,
         lora_dropout=0,
         bias="none",
@@ -77,11 +86,7 @@ def main():
         outputs = examples["output"]
         texts = []
         for instruction, input_text, output in zip(instructions, inputs, outputs):
-            text = alpaca_prompt.format(
-                instruction=instruction,
-                input=input_text,
-                output=output
-            )
+            text = alpaca_prompt.format(instruction=instruction, input=input_text, output=output)
             texts.append(text)
         return {"text": texts}
 
@@ -144,19 +149,15 @@ def main():
     # Экспорт в GGUF для Ollama
     print(f"\n7. Экспорт в GGUF: {GGUF_OUTPUT}")
     os.makedirs(GGUF_OUTPUT, exist_ok=True)
-    model.save_pretrained_gguf(
-        GGUF_OUTPUT,
-        tokenizer,
-        quantization_method="q4_k_m"
-    )
+    model.save_pretrained_gguf(GGUF_OUTPUT, tokenizer, quantization_method="q4_k_m")
 
     print("\n" + "=" * 60)
     print("Обучение завершено!")
     print("=" * 60)
-    print(f"\nФайлы:")
+    print("\nФайлы:")
     print(f"  LoRA адаптеры: {MODEL_OUTPUT}")
     print(f"  GGUF модель: {GGUF_OUTPUT}")
-    print(f"\nДля загрузки в Ollama:")
+    print("\nДля загрузки в Ollama:")
     print(f"  ollama create bsl-coder -f {BASE_DIR}/data/models/Modelfile")
 
 

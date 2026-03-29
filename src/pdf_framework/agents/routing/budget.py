@@ -6,7 +6,7 @@ when budget limits are reached.
 
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class CostBudget:
     def __init__(
         self,
         per_query_limit: float = 0.10,  # USD
-        daily_limit: float = 50.0,      # USD
+        daily_limit: float = 50.0,  # USD
     ):
         self.per_query_limit = per_query_limit
         self.daily_limit = daily_limit
@@ -92,13 +92,15 @@ class CostBudget:
     def record_usage(self, model: str, input_tokens: int, output_tokens: int) -> float:
         """Record actual usage and return cost."""
         cost = self.estimate_cost(model, input_tokens, output_tokens)
-        self._records.append(CostRecord(
-            model=model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            cost_usd=cost,
-            timestamp=time.time(),
-        ))
+        self._records.append(
+            CostRecord(
+                model=model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cost_usd=cost,
+                timestamp=time.time(),
+            )
+        )
         return cost
 
     def check_budget(self, requested_model: str) -> str:
@@ -124,7 +126,10 @@ class CostBudget:
                     if cheaper != requested_model:
                         logger.info(
                             "[BUDGET] Downgraded %s → %s (est $%.4f > limit $%.2f)",
-                            requested_model, cheaper, est_cost, self.per_query_limit,
+                            requested_model,
+                            cheaper,
+                            est_cost,
+                            self.per_query_limit,
                         )
                     return cheaper
             return _DOWNGRADE_ORDER[-1]
@@ -140,7 +145,9 @@ class CostBudget:
                     downgraded = _DOWNGRADE_ORDER[idx + 1]
                     logger.info(
                         "[BUDGET] Low daily budget ($%.2f remaining), downgraded %s → %s",
-                        remaining, requested_model, downgraded,
+                        remaining,
+                        requested_model,
+                        downgraded,
                     )
                     return downgraded
 

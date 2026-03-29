@@ -64,9 +64,7 @@ async def rewrite_query(
     new_strategy = current_strategy
     if settings.strategy_escalation_enabled and new_retry_count >= 2:
         new_strategy = STRATEGY_ESCALATION.get(current_strategy, "hybrid")
-        logger.info(
-            f"[REWRITE] Strategy escalated: {current_strategy} → {new_strategy}"
-        )
+        logger.info(f"[REWRITE] Strategy escalated: {current_strategy} → {new_strategy}")
     else:
         logger.debug(f"[REWRITE] Keeping strategy: {current_strategy}")
 
@@ -79,7 +77,9 @@ async def rewrite_query(
             if irrelevant:
                 irrelevant_context = (
                     "\n\nPrevious search found these irrelevant topics:\n"
-                    + "\n".join(f"- {d.get('content_preview', 'N/A')[:80]}..." for d in irrelevant[:3])
+                    + "\n".join(
+                        f"- {d.get('content_preview', 'N/A')[:80]}..." for d in irrelevant[:3]
+                    )
                 )
         user_prompt = (
             f"Original question: {original_question}{irrelevant_context}\n\n"
@@ -155,12 +155,8 @@ async def _rewrite_via_llm(
     if graded_docs:
         irrelevant = [d for d in graded_docs if not d["is_relevant"]]
         if irrelevant:
-            irrelevant_context = (
-                "\n\nPrevious search found these irrelevant topics:\n"
-                + "\n".join(
-                    f"- {d.get('content_preview', 'N/A')[:80]}..."
-                    for d in irrelevant[:3]
-                )
+            irrelevant_context = "\n\nPrevious search found these irrelevant topics:\n" + "\n".join(
+                f"- {d.get('content_preview', 'N/A')[:80]}..." for d in irrelevant[:3]
             )
 
     system_prompt = (
@@ -189,9 +185,13 @@ async def _rewrite_via_llm(
     max_rw_retries = 2
     rw_feedback = ""
     bad_prefixes = [
-        "Rewritten:", "Rewritten question:", "Revised:",
-        "Here is the rewritten question:", "The rewritten question is:",
-        "Переформулированный вопрос:", "Переписанный вопрос:",
+        "Rewritten:",
+        "Rewritten question:",
+        "Revised:",
+        "Here is the rewritten question:",
+        "The rewritten question is:",
+        "Переформулированный вопрос:",
+        "Переписанный вопрос:",
     ]
 
     for rw_attempt in range(1, max_rw_retries + 1):
@@ -206,11 +206,13 @@ async def _rewrite_via_llm(
             # Clean prefixes
             for prefix in bad_prefixes:
                 if rewritten.lower().startswith(prefix.lower()):
-                    rewritten = rewritten[len(prefix):].strip()
+                    rewritten = rewritten[len(prefix) :].strip()
 
             # Validate: non-empty, not identical, not too long
             if not rewritten or len(rewritten) < 5:
-                rw_feedback = "Return ONLY the rewritten question, nothing else. It must not be empty."
+                rw_feedback = (
+                    "Return ONLY the rewritten question, nothing else. It must not be empty."
+                )
                 logger.warning(f"[REWRITE] Attempt {rw_attempt}: empty result")
                 continue
 

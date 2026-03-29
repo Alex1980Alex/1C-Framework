@@ -59,8 +59,7 @@ class Neo4jGraphStore(BaseGraphStore):
             )
             # Index on entity type for filtered queries
             await session.run(
-                "CREATE INDEX entity_type_idx IF NOT EXISTS "
-                "FOR (e:Entity) ON (e.entity_type)"
+                "CREATE INDEX entity_type_idx IF NOT EXISTS FOR (e:Entity) ON (e.entity_type)"
             )
             # Fulltext index on entity name for search
             try:
@@ -265,12 +264,12 @@ class Neo4jGraphStore(BaseGraphStore):
             rel_filter = "{relation_type: $relation_type}"
             params["relation_type"] = relation_type
 
-        cypher = f"""
-        MATCH (start:Entity {{entity_id: $entity_id}})
-        CALL apoc.path.subgraphAll(start, {{
+        cypher = """
+        MATCH (start:Entity {entity_id: $entity_id})
+        CALL apoc.path.subgraphAll(start, {
             maxLevel: $depth,
             relationshipFilter: 'RELATES_TO'
-        }})
+        })
         YIELD nodes, relationships
         RETURN nodes, relationships
         """
@@ -302,9 +301,7 @@ class Neo4jGraphStore(BaseGraphStore):
                 if not record:
                     return SubGraph()
                 entities = [self._record_to_entity(record["start"])]
-                entities.extend(
-                    self._record_to_entity(n) for n in record["neighbors"]
-                )
+                entities.extend(self._record_to_entity(n) for n in record["neighbors"])
                 relations = [self._record_to_relation(r) for r in record["all_rels"]]
 
         center = await self.get_entity(entity_id)
@@ -317,12 +314,12 @@ class Neo4jGraphStore(BaseGraphStore):
         max_depth: int = 5,
     ) -> SubGraph:
         """Find shortest path between two entities."""
-        cypher = """
+        cypher = f"""
         MATCH path = shortestPath(
-            (a:Entity {entity_id: $source_id})-[*..%d]-(b:Entity {entity_id: $target_id})
+            (a:Entity {{entity_id: $source_id}})-[*..{max_depth}]-(b:Entity {{entity_id: $target_id}})
         )
         RETURN nodes(path) AS nodes, relationships(path) AS rels
-        """ % max_depth
+        """
 
         async with self._driver.session() as session:
             result = await session.run(cypher, source_id=source_id, target_id=target_id)
@@ -388,12 +385,6 @@ class Neo4jGraphStore(BaseGraphStore):
             await session.run(cypher, entity_id=entity_id)
 
     async def delete_by_document(self, document_id: str) -> int:
-        cypher = """
-        MATCH (e:Entity {source_document_id: $doc_id})
-        WITH e, count(e) AS cnt
-        DETACH DELETE e
-        RETURN cnt
-        """
         async with self._driver.session() as session:
             # Two-step: count then delete, since DETACH DELETE doesn't return count easily
             count_result = await session.run(

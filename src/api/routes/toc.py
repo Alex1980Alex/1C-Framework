@@ -7,7 +7,6 @@ REST endpoints for navigating document structure:
 """
 
 import re
-from collections import defaultdict
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -264,10 +263,7 @@ async def generate_section_summaries(
                 title = title_match.group(1) if title_match else last_part
             sections_map[section_num] = title
 
-    sections = [
-        {"number": num, "title": title}
-        for num, title in sorted(sections_map.items())
-    ]
+    sections = [{"number": num, "title": title} for num, title in sorted(sections_map.items())]
 
     # Convert chunks to dicts for summary service
     chunk_dicts = [

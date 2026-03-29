@@ -8,7 +8,6 @@ Version: 0.7.0 - Phase 6.2: Community Summaries
 """
 
 import logging
-from typing import Any
 
 import networkx as nx
 from langchain_anthropic import ChatAnthropic
@@ -112,11 +111,15 @@ class CommunitySummarizer:
                     logger.info(
                         "[SUMMARY] Generated summary for community %d via cheap LLM "
                         "(%d entities, %d relations)",
-                        community_id, len(entities), len(relations),
+                        community_id,
+                        len(entities),
+                        len(relations),
                     )
                     return formatted
             except Exception as e:
-                logger.warning("[SUMMARY] Cheap LLM failed for community %d, falling back: %s", community_id, e)
+                logger.warning(
+                    "[SUMMARY] Cheap LLM failed for community %d, falling back: %s", community_id, e
+                )
 
         messages = [
             SystemMessage(content=self._get_system_prompt()),
@@ -142,7 +145,9 @@ class CommunitySummarizer:
                         f"Summary must be 2-4 sentences. Mention key entities: "
                         f"{', '.join(entity_names)}."
                     )
-                    logger.warning(f"[SUMMARY] Attempt {rw_attempt}: too short ({len(summary)} chars)")
+                    logger.warning(
+                        f"[SUMMARY] Attempt {rw_attempt}: too short ({len(summary)} chars)"
+                    )
                     continue
 
                 formatted_summary = f"[Community {community_id} (level {level})] {summary}"

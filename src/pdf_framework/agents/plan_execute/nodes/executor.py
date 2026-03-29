@@ -86,9 +86,7 @@ def execute_step(search_manager: Any, tools: dict[str, Any]):
         except Exception as e:
             logger.error(f"[EXECUTOR] Step failed: {e}")
             updated_plan = plan.copy()
-            updated_plan[step_idx] = PlanStep(
-                **{**step_to_execute.__dict__, "status": "failed"}
-            )
+            updated_plan[step_idx] = PlanStep(**{**step_to_execute.__dict__, "status": "failed"})
 
             return {
                 "plan": updated_plan,
@@ -125,10 +123,7 @@ async def _execute_tool(
         return {
             "tool": "search",
             "query": query,
-            "results": [
-                {"content": r.chunk.content, "score": r.score}
-                for r in response.results
-            ],
+            "results": [{"content": r.chunk.content, "score": r.score} for r in response.results],
         }
 
     elif tool == "graph_query":

@@ -173,13 +173,11 @@ class HookMetricsDB:
         cursor = conn.cursor()
 
         # Get last timestamp to avoid re-ingesting
-        last_ts = cursor.execute(
-            "SELECT MAX(timestamp) FROM invocations"
-        ).fetchone()[0]
+        last_ts = cursor.execute("SELECT MAX(timestamp) FROM invocations").fetchone()[0]
 
         count = 0
         try:
-            with open(INVOCATIONS_LOG, "r", encoding="utf-8") as f:
+            with open(INVOCATIONS_LOG, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -225,13 +223,11 @@ class HookMetricsDB:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        last_ts = cursor.execute(
-            "SELECT MAX(timestamp) FROM skill_recommendations"
-        ).fetchone()[0]
+        last_ts = cursor.execute("SELECT MAX(timestamp) FROM skill_recommendations").fetchone()[0]
 
         count = 0
         try:
-            with open(SKILL_ROUTER_LOG, "r", encoding="utf-8") as f:
+            with open(SKILL_ROUTER_LOG, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -279,13 +275,11 @@ class HookMetricsDB:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        last_ts = cursor.execute(
-            "SELECT MAX(timestamp) FROM skill_activations"
-        ).fetchone()[0]
+        last_ts = cursor.execute("SELECT MAX(timestamp) FROM skill_activations").fetchone()[0]
 
         count = 0
         try:
-            with open(SKILL_USAGE_LOG, "r", encoding="utf-8") as f:
+            with open(SKILL_USAGE_LOG, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -337,13 +331,11 @@ class HookMetricsDB:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        last_ts = cursor.execute(
-            "SELECT MAX(timestamp) FROM skill_accuracy"
-        ).fetchone()[0]
+        last_ts = cursor.execute("SELECT MAX(timestamp) FROM skill_accuracy").fetchone()[0]
 
         count = 0
         try:
-            with open(SKILL_ACCURACY_LOG, "r", encoding="utf-8") as f:
+            with open(SKILL_ACCURACY_LOG, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -431,14 +423,16 @@ class HookMetricsDB:
 
         results = []
         for row in cursor.fetchall():
-            results.append({
-                "hook": row["hook"],
-                "count": row["count"],
-                "avg_ms": round(row["avg_ms"] or 0, 1),
-                "max_ms": row["max_ms"] or 0,
-                "blocks": row["blocks"],
-                "errors": row["errors"],
-            })
+            results.append(
+                {
+                    "hook": row["hook"],
+                    "count": row["count"],
+                    "avg_ms": round(row["avg_ms"] or 0, 1),
+                    "max_ms": row["max_ms"] or 0,
+                    "blocks": row["blocks"],
+                    "errors": row["errors"],
+                }
+            )
 
         # Compute p95 per hook
         cursor.execute(
@@ -622,9 +616,7 @@ class HookMetricsDB:
                 skill: {
                     "recommended": skill_rec[skill],
                     "activated": skill_act.get(skill, 0),
-                    "precision": round(
-                        skill_act.get(skill, 0) / skill_rec[skill] * 100, 1
-                    ),
+                    "precision": round(skill_act.get(skill, 0) / skill_rec[skill] * 100, 1),
                 }
                 for skill in sorted(skill_rec.keys())
             },
@@ -665,13 +657,15 @@ class HookMetricsDB:
             except (ValueError, TypeError):
                 duration_min = 0
 
-            results.append({
-                "session": row["session"][:12] + "...",
-                "full_session": row["session"],
-                "invocations": row["invocations"],
-                "hooks": row["hooks"],
-                "duration_min": duration_min,
-            })
+            results.append(
+                {
+                    "session": row["session"][:12] + "...",
+                    "full_session": row["session"],
+                    "invocations": row["invocations"],
+                    "hooks": row["hooks"],
+                    "duration_min": duration_min,
+                }
+            )
         return results
 
     def get_error_log(self, limit: int = 50) -> list[dict[str, Any]]:

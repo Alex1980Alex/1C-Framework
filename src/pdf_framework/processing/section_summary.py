@@ -75,8 +75,7 @@ class SectionSummaryService:
                 """
             )
             conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_summaries_doc "
-                "ON section_summaries(document_id)"
+                "CREATE INDEX IF NOT EXISTS idx_summaries_doc ON section_summaries(document_id)"
             )
             conn.commit()
         finally:
@@ -116,8 +115,11 @@ class SectionSummaryService:
 
             # Find chunks belonging to this section
             section_chunks = [
-                c for c in chunks
-                if (c.get("metadata", {}).get("section_number", "") or "").startswith(section_number)
+                c
+                for c in chunks
+                if (c.get("metadata", {}).get("section_number", "") or "").startswith(
+                    section_number
+                )
             ]
             if not section_chunks:
                 continue
@@ -127,21 +129,27 @@ class SectionSummaryService:
             summary = await self._summarize(full_title, section_chunks)
             if summary:
                 await self._store(
-                    document_id, section_number, section_title,
-                    summary, len(section_chunks),
+                    document_id,
+                    section_number,
+                    section_title,
+                    summary,
+                    len(section_chunks),
                 )
                 generated += 1
 
         logger.info(
             "[SUMMARY] Generated %d summaries for document %s",
-            generated, document_id,
+            generated,
+            document_id,
         )
         return generated
 
     async def get_summary(self, document_id: str, section_number: str) -> str | None:
         """Get cached summary for a specific section."""
         return await asyncio.to_thread(
-            self._get_summary_sync, document_id, section_number,
+            self._get_summary_sync,
+            document_id,
+            section_number,
         )
 
     def _get_summary_sync(self, document_id: str, section_number: str) -> str | None:
@@ -223,7 +231,11 @@ class SectionSummaryService:
     ) -> None:
         await asyncio.to_thread(
             self._store_sync,
-            document_id, section_number, section_title, summary, chunk_count,
+            document_id,
+            section_number,
+            section_title,
+            summary,
+            chunk_count,
         )
 
     def _store_sync(
@@ -240,8 +252,14 @@ class SectionSummaryService:
                 "INSERT OR REPLACE INTO section_summaries "
                 "(document_id, section_number, section_title, summary, chunk_count, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (document_id, section_number, section_title, summary, chunk_count,
-                 datetime.utcnow().isoformat()),
+                (
+                    document_id,
+                    section_number,
+                    section_title,
+                    summary,
+                    chunk_count,
+                    datetime.utcnow().isoformat(),
+                ),
             )
             conn.commit()
         finally:
@@ -290,7 +308,9 @@ class SectionSummaryService:
 
         try:
             result = await asyncio.to_thread(
-                self._call_summary_api, title, content,
+                self._call_summary_api,
+                title,
+                content,
             )
             return result
         except Exception as e:
@@ -307,14 +327,16 @@ class SectionSummaryService:
                 "раздела документации (2-3 предложения). Отвечай ТОЛЬКО на русском языке. "
                 "Не используй формулировки вроде 'В этом разделе...' — сразу описывай суть."
             ),
-            messages=[{
-                "role": "user",
-                "content": (
-                    f"Раздел: {title}\n\n"
-                    f"Содержание:\n{content}\n\n"
-                    f"Напиши краткое описание этого раздела (2-3 предложения)."
-                ),
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        f"Раздел: {title}\n\n"
+                        f"Содержание:\n{content}\n\n"
+                        f"Напиши краткое описание этого раздела (2-3 предложения)."
+                    ),
+                }
+            ],
         )
         block = response.content[0]
         return getattr(block, "text", str(block)).strip()

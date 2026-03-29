@@ -30,6 +30,7 @@ PRICE_PER_1K_TOKENS: dict[str, float] = {
 @dataclass
 class RequestOutcome:
     """Single request outcome for adaptive scoring."""
+
     latency: float
     tokens: int
     quality: float  # 0.0-1.0
@@ -67,7 +68,7 @@ class AdaptiveScorer:
         if len(records) < self.min_samples:
             return self.default_score
 
-        recent = records[-self.window_size:]
+        recent = records[-self.window_size :]
         avg_quality = sum(r.quality for r in recent) / len(recent)
         avg_latency = sum(r.latency for r in recent) / len(recent)
         avg_cost = sum(r.cost for r in recent) / len(recent)
@@ -86,7 +87,7 @@ class AdaptiveScorer:
         records = self.history.get(provider, [])
         if not records:
             return {"samples": 0, "score": self.default_score}
-        recent = records[-self.window_size:]
+        recent = records[-self.window_size :]
         return {
             "samples": len(records),
             "score": round(self.score(provider), 4),
@@ -101,10 +102,9 @@ class AdaptiveScorer:
         """Save history to JSON file (last window_size per provider)."""
         data = {}
         for provider, records in self.history.items():
-            recent = records[-self.window_size:]
+            recent = records[-self.window_size :]
             data[provider] = [
-                {"latency": r.latency, "tokens": r.tokens,
-                 "quality": r.quality, "cost": r.cost}
+                {"latency": r.latency, "tokens": r.tokens, "quality": r.quality, "cost": r.cost}
                 for r in recent
             ]
         p = Path(path)
@@ -119,9 +119,7 @@ class AdaptiveScorer:
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
             for provider, records in data.items():
-                self.history[provider] = [
-                    RequestOutcome(**r) for r in records
-                ]
+                self.history[provider] = [RequestOutcome(**r) for r in records]
         except (json.JSONDecodeError, TypeError, KeyError):
             logger.warning(f"Failed to load adaptive data from {path}")
 

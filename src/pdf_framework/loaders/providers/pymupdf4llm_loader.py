@@ -40,7 +40,8 @@ class PyMuPDF4LLMLoader(BaseLoader):
 
         # Extract markdown per page (page_chunks=True)
         page_chunks: list[dict[str, Any]] = pymupdf4llm.to_markdown(
-            str(path), page_chunks=True,
+            str(path),
+            page_chunks=True,
         )  # type: ignore[assignment]  # page_chunks=True returns list[dict]
 
         # Build page_offsets and raw_text
@@ -84,7 +85,10 @@ class PyMuPDF4LLMLoader(BaseLoader):
 
         logger.info(
             "[PYMUPDF4LLM] Done: %s — %d pages, %d chars, %d page_offsets",
-            path.name, page_count, len(raw_text), len(page_offsets),
+            path.name,
+            page_count,
+            len(raw_text),
+            len(page_offsets),
         )
 
         return ProcessedDocument(

@@ -5,9 +5,9 @@ Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
 import logging
-from typing import List, Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Issue:
     """Проблема в коде"""
+
     rule: str
     file: str
     line: int
@@ -25,10 +26,11 @@ class Issue:
 @dataclass
 class AnalysisReport:
     """Отчёт анализа"""
+
     project_key: str
     timestamp: datetime
-    issues: List[Issue]
-    metrics: Dict[str, Any]
+    issues: list[Issue]
+    metrics: dict[str, Any]
     quality_gate: bool
 
 
@@ -38,7 +40,7 @@ class ReportGenerator:
     def __init__(self, config=None):
         self.config = config
 
-    def generate(self, issues: List[Issue]) -> AnalysisReport:
+    def generate(self, issues: list[Issue]) -> AnalysisReport:
         """Генерация отчёта"""
         metrics = self._calculate_metrics(issues)
         quality_gate = self._check_quality_gate(issues)
@@ -48,10 +50,10 @@ class ReportGenerator:
             timestamp=datetime.now(),
             issues=issues,
             metrics=metrics,
-            quality_gate=quality_gate
+            quality_gate=quality_gate,
         )
 
-    def _calculate_metrics(self, issues: List[Issue]) -> Dict[str, Any]:
+    def _calculate_metrics(self, issues: list[Issue]) -> dict[str, Any]:
         """Расчёт метрик"""
         return {
             "total_issues": len(issues),
@@ -62,7 +64,7 @@ class ReportGenerator:
             "info": len([i for i in issues if i.severity == "INFO"]),
         }
 
-    def _check_quality_gate(self, issues: List[Issue]) -> bool:
+    def _check_quality_gate(self, issues: list[Issue]) -> bool:
         """Проверка Quality Gate"""
         # Базовое условие: нет blocker и critical
         blocker_count = len([i for i in issues if i.severity == "BLOCKER"])
@@ -73,27 +75,29 @@ class ReportGenerator:
     def export_markdown(self, report: AnalysisReport) -> str:
         """Экспорт в Markdown"""
         lines = [
-            f"# SonarQube Analysis Report",
-            f"",
+            "# SonarQube Analysis Report",
+            "",
             f"**Project:** {report.project_key}",
             f"**Date:** {report.timestamp.isoformat()}",
             f"**Quality Gate:** {'✅ PASSED' if report.quality_gate else '❌ FAILED'}",
-            f"",
-            f"## Metrics",
-            f"",
-            f"| Metric | Value |",
-            f"|--------|-------|",
+            "",
+            "## Metrics",
+            "",
+            "| Metric | Value |",
+            "|--------|-------|",
         ]
 
         for key, value in report.metrics.items():
             lines.append(f"| {key} | {value} |")
 
         if report.issues:
-            lines.extend([
-                f"",
-                f"## Issues ({len(report.issues)})",
-                f"",
-            ])
+            lines.extend(
+                [
+                    "",
+                    f"## Issues ({len(report.issues)})",
+                    "",
+                ]
+            )
 
             for issue in report.issues[:50]:  # Ограничение
                 lines.append(

@@ -8,13 +8,12 @@ Version: 1.5.0 - Phase 14.3: OpenAI-Compatible API
 """
 
 import logging
-import json
 import uuid
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Header
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.api.dependencies.components import Components, get_components
 from src.pdf_framework.agents.rag.agent import create_rag_agent
@@ -106,6 +105,7 @@ async def chat_completions(
 
     if not settings.openai_compat.enabled:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="OpenAI-compatible API is disabled")
 
     # Extract the last user message as the query
@@ -117,6 +117,7 @@ async def chat_completions(
 
     if not query:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="No user message found")
 
     # Generate unique ID for this completion
@@ -147,11 +148,13 @@ async def chat_completions(
                         id=completion_id,
                         created=created,
                         model=settings.openai_compat.model_name,
-                        choices=[{
-                            "index": 0,
-                            "delta": {"content": token},
-                            "finish_reason": None,
-                        }],
+                        choices=[
+                            {
+                                "index": 0,
+                                "delta": {"content": token},
+                                "finish_reason": None,
+                            }
+                        ],
                     )
                     yield f"data: {chunk.model_dump_json()}\n\n"
 
@@ -164,11 +167,13 @@ async def chat_completions(
                 id=completion_id,
                 created=created,
                 model=settings.openai_compat.model_name,
-                choices=[{
-                    "index": 0,
-                    "delta": {},
-                    "finish_reason": "stop",
-                }],
+                choices=[
+                    {
+                        "index": 0,
+                        "delta": {},
+                        "finish_reason": "stop",
+                    }
+                ],
             )
             yield f"data: {final_chunk.model_dump_json()}\n\n"
             yield "data: [DONE]\n\n"
@@ -209,10 +214,12 @@ async def _run_rag(query: str, components: Components) -> str:
         api_key=components.settings.anthropic_api_key,
     )
 
-    result = await agent.ainvoke({
-        "question": query,
-        "search_strategy": "hybrid",
-    })
+    result = await agent.ainvoke(
+        {
+            "question": query,
+            "search_strategy": "hybrid",
+        }
+    )
 
     return result.get("answer", "No answer generated.")
 
@@ -231,6 +238,7 @@ async def create_embeddings(
 
     if not settings.openai_compat.enabled:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="OpenAI-compatible API is disabled")
 
     # Normalize input to list
@@ -264,6 +272,7 @@ async def list_models() -> ModelsResponse:
 
     if not settings.openai_compat.enabled:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="OpenAI-compatible API is disabled")
 
     return ModelsResponse(

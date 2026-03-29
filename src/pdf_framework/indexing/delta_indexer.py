@@ -234,9 +234,7 @@ class DeltaIndexer:
         elapsed = time.time() - t0
         delta = DeltaDetection(unchanged, added, modified, deleted)
 
-        logger.info(
-            f"[DELTA_INDEXER] Delta detection in {elapsed:.1f}s: {delta.summary()}"
-        )
+        logger.info(f"[DELTA_INDEXER] Delta detection in {elapsed:.1f}s: {delta.summary()}")
 
         return delta
 
@@ -378,17 +376,20 @@ class DeltaIndexer:
 
             # Update added and modified documents
             for doc_hash in delta.added + delta.modified:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT OR REPLACE INTO document_hashes
                     (file_path, sha256, file_size, modified_time, indexed_at)
                     VALUES (?, ?, ?, ?, ?)
-                """, (
-                    doc_hash.file_path,
-                    doc_hash.sha256,
-                    doc_hash.file_size,
-                    doc_hash.modified_time,
-                    time.time(),
-                ))
+                """,
+                    (
+                        doc_hash.file_path,
+                        doc_hash.sha256,
+                        doc_hash.file_size,
+                        doc_hash.modified_time,
+                        time.time(),
+                    ),
+                )
 
             # Remove deleted documents
             for file_path in delta.deleted:
@@ -412,13 +413,15 @@ class DeltaIndexer:
 
             hashes = []
             for row in rows:
-                hashes.append(DocumentHash(
-                    file_path=row[0],
-                    sha256=row[1],
-                    file_size=row[2],
-                    modified_time=row[3],
-                    indexed_at=row[4],
-                ))
+                hashes.append(
+                    DocumentHash(
+                        file_path=row[0],
+                        sha256=row[1],
+                        file_size=row[2],
+                        modified_time=row[3],
+                        indexed_at=row[4],
+                    )
+                )
 
             return hashes
         finally:

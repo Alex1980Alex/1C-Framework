@@ -7,12 +7,10 @@ Version: 1.2.0 - Phase 11.4: Document Processing Cache
 """
 
 import hashlib
-import json
 import logging
 import pickle
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -144,7 +142,7 @@ class DocumentProcessingCache:
             chunks=chunks,
             embeddings=embeddings,
             metadata=metadata,
-            cached_at=datetime.now(timezone.utc).isoformat(),
+            cached_at=datetime.now(UTC).isoformat(),
             file_size_bytes=file_path.stat().st_size,
         )
 

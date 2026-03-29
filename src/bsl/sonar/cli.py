@@ -7,12 +7,11 @@ Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
 import argparse
-import sys
 import logging
+import sys
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -20,8 +19,7 @@ logger = logging.getLogger(__name__)
 def create_parser() -> argparse.ArgumentParser:
     """Создание парсера аргументов"""
     parser = argparse.ArgumentParser(
-        prog="bsl-sonar",
-        description="SonarQube Integration for BSL Code"
+        prog="bsl-sonar", description="SonarQube Integration for BSL Code"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -44,8 +42,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 def cmd_analyze(args):
     """Команда анализа"""
-    from .rules_manager import RulesManager
-    from .report_generator import ReportGenerator, Issue
+    from .report_generator import ReportGenerator
 
     logger.info(f"Analyzing BSL code at: {args.path}")
 
