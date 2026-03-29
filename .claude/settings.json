@@ -253,6 +253,16 @@
             "timeout": 3
           }
         ]
+      },
+      {
+        "matcher": "WebSearch|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-web-cache.py",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "Stop": [
