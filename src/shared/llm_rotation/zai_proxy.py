@@ -24,7 +24,7 @@ logger = logging.getLogger("zai-proxy")
 # Configuration
 ZAI_API_KEY = os.getenv("ZAI_API_KEY", os.getenv("LLM_ROTATION_ZAI_API_KEY", ""))
 ZAI_BASE_URL = os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/anthropic")
-ZAI_DEFAULT_MODEL = os.getenv("ZAI_DEFAULT_MODEL", "glm-5")
+ZAI_DEFAULT_MODEL = os.getenv("ZAI_DEFAULT_MODEL", "glm-5.1")
 
 # GLM-5 limits
 GLM_5_MAX_TOKENS = 128_000
@@ -315,6 +315,7 @@ class ZAIProxy:
         return web.json_response({
             "object": "list",
             "data": [
+                {"id": "glm-5.1", "object": "model", "owned_by": "zhipu"},
                 {"id": "glm-5", "object": "model", "owned_by": "zhipu"},
                 {"id": "glm-4.6", "object": "model", "owned_by": "zhipu"},
                 {"id": "glm-4.5-air", "object": "model", "owned_by": "zhipu"},
