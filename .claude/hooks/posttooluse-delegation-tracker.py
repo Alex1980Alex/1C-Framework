@@ -18,6 +18,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
+from shared.circuit_breaker import with_circuit_breaker
 
 
 def _classify_content(text: str) -> str:
