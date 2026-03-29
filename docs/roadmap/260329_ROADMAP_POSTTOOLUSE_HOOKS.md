@@ -702,6 +702,33 @@ Level 3: Enforce (Stop)        —  8 хуков — финальная пров
 | **0** | 0.4 | Матрица exit codes | 0.2 | Задокументировано ✅ |
 | **1** | 1.1 | PostToolUse:Skill metrics | 0.2 | 100% Skill логируются ✅ |
 | **1** | 1.2 | PostToolUse:WebSearch cache | 0.2 | Cache hit на повторах ✅ |
+| **1** | 1.3 | PostToolUse:Write docs-tracker | 0.2, 0.3 | Мгновенный feedback ✅ |
+| **MCP** | — | MCP+hookSpecificOutput verified | — | **РАБОТАЕТ для MCP tools! ✅** |
+
+### MCP+PostToolUse Verification (2026-03-29)
+
+**Тест:** Canary PostToolUse хук с matcher `mcp__llm-rotation__llm_complete` → hookSpecificOutput feedback.
+
+**Результат:**
+- Canary file создан ✓ (процесс стартовал)
+- Log: `tool=mcp__llm-rotation__llm_complete has_response=True stdin_len=723` ✓
+- hookSpecificOutput feedback прошёл в контекст Claude как system-reminder ✓
+- Маркер `MCP_CANARY_MARKER_z9x8c7v6` виден Claude ✓
+
+**Вывод:** Issue #24788 (MCP+hookSpecificOutput не работает) НЕ воспроизводится на Windows v2.1.87.
+hookSpecificOutput.additionalContext РАБОТАЕТ для MCP инструментов на нашей конфигурации.
+Возможно баг был исправлен в последующих версиях Claude Code.
+
+### Полная матрица matcher×feedback (verified 2026-03-29)
+
+| Matcher Type | tool_name | PostToolUse fires | hookSpecificOutput works | Tested |
+|-------------|-----------|-------------------|-------------------------|--------|
+| Native tools | Skill | ✅ | ✅ | ✅ |
+| Native tools | Grep, Glob, Read | ✅ | ✅ | ✅ |
+| Native tools | Bash | ✅ | ✅ | ✅ |
+| Native tools | Write, Edit | ✅ | ✅ | ✅ |
+| Native tools | TaskUpdate, TaskList | ✅ | ✅ | ✅ |
+| **MCP tools** | **mcp__llm-rotation__llm_complete** | **✅** | **✅** | **✅** |
 | **1** | 1.2 | PostToolUse:WebSearch cache | 0.2 | Cache hit на повторах, <100ms |
 | **1** | 1.3 | PostToolUse:Write docs-tracker | 0.2, 0.3 | Все src/ трекаются, <100ms |
 | **1** | 1.4 | PostToolUse:llm_complete tracker | 0.2 | 100% delegations, <50ms |
