@@ -21,36 +21,54 @@ from base import BaseHook, HookInput, HookOutput
 
 
 def _log_confirmed(skill_name: str, session_id: str, loaded: bool) -> None:
-    """Append confirmed skill activation to data/skill-usage.log."""
+    """Log confirmed skill activation to SQLite (fallback: plain log)."""
     try:
-        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
-        log_path = os.path.join(project_dir, "data", "skill-usage.log")
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        status = "confirmed" if loaded else "failed"
-        line = f"{ts} | skill={skill_name} | session={session_id[:16] if session_id else 'unknown'} | posttooluse={status}\n"
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(line)
+        from shared.db_writer import log_skill_usage
+        log_skill_usage(
+            skill_name=skill_name,
+            session_id=session_id,
+            loaded=loaded,
+        )
     except Exception:
-        pass
+        # Fallback to plain log
+        try:
+            project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+            log_path = os.path.join(project_dir, "data", "skill-usage.log")
+            os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            status = "confirmed" if loaded else "failed"
+            line = f"{ts} | skill={skill_name} | session={session_id[:16] if session_id else 'unknown'} | posttooluse={status}\n"
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(line)
+        except Exception:
+            pass
 
 
 def _log_accuracy_confirmed(prompt_id: str, skill_name: str, loaded: bool) -> None:
-    """Write confirmed event to data/skill-accuracy.jsonl."""
+    """Log accuracy event to SQLite (fallback: JSONL)."""
     try:
-        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
-        log_path = os.path.join(project_dir, "data", "skill-accuracy.jsonl")
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        entry = {
-            "ts": datetime.now().isoformat(),
-            "type": "confirmed" if loaded else "failed",
-            "prompt_id": prompt_id,
-            "skill": skill_name,
-        }
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        from shared.db_writer import log_skill_usage
+        log_skill_usage(
+            skill_name=skill_name,
+            loaded=loaded,
+            prompt_id=prompt_id,
+        )
     except Exception:
-        pass
+        # Fallback to JSONL
+        try:
+            project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+            log_path = os.path.join(project_dir, "data", "skill-accuracy.jsonl")
+            os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            entry = {
+                "ts": datetime.now().isoformat(),
+                "type": "confirmed" if loaded else "failed",
+                "prompt_id": prompt_id,
+                "skill": skill_name,
+            }
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
 
 class PostToolUseSkillMetrics(BaseHook):
