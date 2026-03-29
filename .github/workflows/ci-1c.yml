@@ -17,8 +17,9 @@ on:
 env:
   ONEC_PATH: 'C:\Program Files\1cv8\8.3.27.1859\bin'
   OSCRIPT_PATH: 'C:\Tools\OneScript\bin\oscript.exe'
-  PROJECT_PATH: 'D:\1С-Framework'
-  BSL_SRC: 'D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src'
+  VRUNNER_PATH: 'C:\Tools\OneScript\bin\vrunner.bat'
+  PROJECT_PATH: 'D:\1C-FW'
+  BSL_SRC: 'D:\1C-FW\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src'
   IB_CONNECTION: '/SKOMPUTER\testdb1c'
 
 jobs:
@@ -85,8 +86,7 @@ jobs:
           PASS_1C: ${{ secrets.USER_1C_PASS }}
         run: |
           [Console]::OutputEncoding = [Text.Encoding]::UTF8
-          & "${{ env.OSCRIPT_PATH }}" `
-            "C:\Tools\OneScript\lib\vanessa-runner\vanessa-runner.os" `
+          & "${{ env.VRUNNER_PATH }}" `
             run `
             --ibconnection "${{ env.IB_CONNECTION }}" `
             --db-user "$env:USER_1C" `
@@ -177,8 +177,7 @@ jobs:
           java -jar $jar start --debugger "localhost:1550" --output "${{ env.PROJECT_PATH }}\build\reports\coverage.xml" --format "genericCoverage" --projectDir "${{ env.BSL_SRC }}"
 
           # Run YAxUnit with coverage
-          & "${{ env.OSCRIPT_PATH }}" `
-            "C:\Tools\OneScript\lib\vanessa-runner\vanessa-runner.os" `
+          & "${{ env.VRUNNER_PATH }}" `
             run `
             --ibconnection "${{ env.IB_CONNECTION }}" `
             --db-user "$env:USER_1C" `
