@@ -33,7 +33,7 @@ description: "Используй этот скилл для понимания �
 | `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
 | `search-optimizer.py` | Bash | Оптимизация параметров Search API |
 
-#### PostToolUse (10)
+#### PostToolUse (13)
 
 | Hook | Matcher | Назначение |
 |------|---------|-----------|
@@ -46,6 +46,10 @@ description: "Используй этот скилл для понимания �
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
 | `code-verify-reminder.py` | Write\|Edit | Advisory напоминание запустить code-verify (15 мин cooldown) |
+| `posttooluse-quality-feedback.py` | Write\|Edit | ruff check *.py → hookSpecificOutput feedback (Phase 2.1) |
+| `posttooluse-delegation-tracker.py` | mcp__llm-rotation__llm_complete | Z.AI delegation outcomes → delegation-outcomes.jsonl (Phase 1.4) |
+| `posttooluse-web-cache.py` | WebSearch\|WebFetch | Кеширование результатов веб-поиска 24h TTL |
+| `posttooluse-docs-tracker.py` | Write\|Edit | Мгновенный docs-change reminder (Phase 1.3) |
 
 #### Stop (4)
 
