@@ -263,6 +263,16 @@
             "timeout": 3
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "Stop": [
