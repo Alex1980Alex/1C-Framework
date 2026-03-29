@@ -117,9 +117,9 @@ def main():
         "   Auto-classified as: {complexity}\n"
         "2. IF NOT trivial: DECOMPOSE via TaskCreate\n"
         "3. SKILL CHECK (ALL tasks including trivial!):\n"
-        "   Search skills → activate via Skill() or Skill('learning-loop')\n"
+        "   Search skills -> activate via Skill() or Skill('learning-loop')\n"
         "   Write/Edit is BLOCKED until Skill() is called.\n"
-        "4. Execute → TaskUpdate completed\n"
+        "4. Execute -> TaskUpdate completed\n"
         "5. VERIFY: Skill('code-verify') after code changes\n"
         "CRITICAL: Skill() call is REQUIRED before any Write/Edit.".format(
             complexity=complexity
