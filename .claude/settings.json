@@ -249,8 +249,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/canary-matrix-test.py",
-            "timeout": 3
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/canary-feedback-test.py",
+            "timeout": 5
           }
         ]
       }
