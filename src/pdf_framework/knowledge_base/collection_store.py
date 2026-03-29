@@ -112,9 +112,7 @@ class CollectionStore:
         import hashlib
 
         now = time.time()
-        collection_id = hashlib.sha256(
-            f"{name}_{now}".encode()
-        ).hexdigest()[:12]
+        collection_id = hashlib.sha256(f"{name}_{now}".encode()).hexdigest()[:12]
         tags_list = tags or []
 
         try:
@@ -144,9 +142,7 @@ class CollectionStore:
 
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(
-                "SELECT * FROM collections WHERE id = ?", (collection_id,)
-            )
+            cursor = await db.execute("SELECT * FROM collections WHERE id = ?", (collection_id,))
             row = await cursor.fetchone()
 
             if row is None:
@@ -176,9 +172,7 @@ class CollectionStore:
 
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(
-                "SELECT * FROM collections WHERE name = ?", (name,)
-            )
+            cursor = await db.execute("SELECT * FROM collections WHERE name = ?", (name,))
             row = await cursor.fetchone()
 
             if row is None:
@@ -266,9 +260,7 @@ class CollectionStore:
 
         async with aiosqlite.connect(self._db_path) as db:
             # CASCADE handles collection_documents
-            cursor = await db.execute(
-                "DELETE FROM collections WHERE id = ?", (collection_id,)
-            )
+            cursor = await db.execute("DELETE FROM collections WHERE id = ?", (collection_id,))
             await db.commit()
             deleted = cursor.rowcount > 0
 
@@ -351,6 +343,7 @@ def _parse_tags(raw: str) -> list[str]:
         return []
     try:
         import ast
+
         result = ast.literal_eval(raw)
         return result if isinstance(result, list) else []
     except (ValueError, SyntaxError):

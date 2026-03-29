@@ -7,7 +7,7 @@ Version: 1.0.0 - Phase 22: Self-Learning Feedback
 import logging
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class FewShotProvider:
                     answer=p.answer,
                     similarity=0.5,
                 )
-                for p in positive[:self._max_examples]
+                for p in positive[: self._max_examples]
             ]
 
         # Compute similarities
@@ -64,14 +64,19 @@ class FewShotProvider:
                 sim = sum(a * b for a, b in zip(query_emb, p_emb))
 
                 if sim >= self._threshold:
-                    examples_with_sim.append((sim, FewShotExample(
-                        question=p.question,
-                        answer=p.answer,
-                        similarity=sim,
-                    )))
+                    examples_with_sim.append(
+                        (
+                            sim,
+                            FewShotExample(
+                                question=p.question,
+                                answer=p.answer,
+                                similarity=sim,
+                            ),
+                        )
+                    )
 
             examples_with_sim.sort(key=lambda x: x[0], reverse=True)
-            return [ex for _, ex in examples_with_sim[:self._max_examples]]
+            return [ex for _, ex in examples_with_sim[: self._max_examples]]
 
         except Exception as e:
             logger.warning(f"[FEW_SHOT] Embedding failed: {e}")

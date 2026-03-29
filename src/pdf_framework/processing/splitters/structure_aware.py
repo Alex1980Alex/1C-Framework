@@ -95,12 +95,14 @@ class StructureAwareSplitter:
             if el_type in ("title", "section_header"):
                 # Flush current section if any
                 if current_section_content:
-                    chunks.extend(self._create_section_chunks(
-                        current_section_title,
-                        current_section_content,
-                        last_page_number,
-                        doc_id,
-                    ))
+                    chunks.extend(
+                        self._create_section_chunks(
+                            current_section_title,
+                            current_section_content,
+                            last_page_number,
+                            doc_id,
+                        )
+                    )
                     current_section_content = []
 
                 current_section_title = content
@@ -110,73 +112,89 @@ class StructureAwareSplitter:
             if el_type == "table":
                 # Flush current section first
                 if current_section_content:
-                    chunks.extend(self._create_section_chunks(
-                        current_section_title,
-                        current_section_content,
-                        page_number,
-                        doc_id,
-                    ))
+                    chunks.extend(
+                        self._create_section_chunks(
+                            current_section_title,
+                            current_section_content,
+                            page_number,
+                            doc_id,
+                        )
+                    )
                     current_section_content = []
 
-                chunks.append(self._create_chunk(
-                    text=content,
-                    element_type="table",
-                    page_number=page_number,
-                    doc_id=doc_id,
-                    section_title=current_section_title,
-                    bbox=bbox,
-                ))
+                chunks.append(
+                    self._create_chunk(
+                        text=content,
+                        element_type="table",
+                        page_number=page_number,
+                        doc_id=doc_id,
+                        section_title=current_section_title,
+                        bbox=bbox,
+                    )
+                )
                 continue
 
             # Handle images
             if el_type == "image":
                 # Flush current section first
                 if current_section_content:
-                    chunks.extend(self._create_section_chunks(
-                        current_section_title,
-                        current_section_content,
-                        page_number,
-                        doc_id,
-                    ))
+                    chunks.extend(
+                        self._create_section_chunks(
+                            current_section_title,
+                            current_section_content,
+                            page_number,
+                            doc_id,
+                        )
+                    )
                     current_section_content = []
 
-                chunks.append(self._create_chunk(
-                    text=content,
-                    element_type="image",
-                    page_number=page_number,
-                    doc_id=doc_id,
-                    section_title=current_section_title,
-                    bbox=bbox,
-                ))
+                chunks.append(
+                    self._create_chunk(
+                        text=content,
+                        element_type="image",
+                        page_number=page_number,
+                        doc_id=doc_id,
+                        section_title=current_section_title,
+                        bbox=bbox,
+                    )
+                )
                 continue
 
             # Handle lists and paragraphs — accumulate in current section
-            current_section_content.append({
-                "type": el_type,
-                "content": content,
-            })
+            current_section_content.append(
+                {
+                    "type": el_type,
+                    "content": content,
+                }
+            )
 
             # Check if section exceeds max size
             section_text = self._format_section_content(current_section_content)
             if len(section_text) > self._max_chunk_size:
-                chunks.extend(self._create_section_chunks(
-                    current_section_title,
-                    current_section_content,
-                    page_number,
-                    doc_id,
-                ))
+                chunks.extend(
+                    self._create_section_chunks(
+                        current_section_title,
+                        current_section_content,
+                        page_number,
+                        doc_id,
+                    )
+                )
                 current_section_content = []
 
         # Flush remaining content
         if current_section_content:
-            chunks.extend(self._create_section_chunks(
-                current_section_title,
-                current_section_content,
-                last_page_number,
-                doc_id,
-            ))
+            chunks.extend(
+                self._create_section_chunks(
+                    current_section_title,
+                    current_section_content,
+                    last_page_number,
+                    doc_id,
+                )
+            )
 
-        logger.info(f"[STRUCTURE] Created {len(chunks)} chunks from {len(layout_elements)} elements")
+        logger.info(
+            f"[STRUCTURE] Created {len(chunks)} chunks from {len(layout_elements)} elements"
+        )
 
         return chunks
 
@@ -216,13 +234,15 @@ class StructureAwareSplitter:
 
         # If section is small enough, single chunk
         if len(text) <= self._max_chunk_size:
-            return [self._create_chunk(
-                text=text,
-                element_type="section",
-                page_number=page_number,
-                doc_id=doc_id,
-                section_title=title,
-            )]
+            return [
+                self._create_chunk(
+                    text=text,
+                    element_type="section",
+                    page_number=page_number,
+                    doc_id=doc_id,
+                    section_title=title,
+                )
+            ]
 
         # Split large section using text splitter
         sub_texts = self._text_splitter.split_text(text)

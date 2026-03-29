@@ -24,7 +24,6 @@ import numpy as np
 
 from src.pdf_framework.config import TwoStageSettings
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
-from src.pdf_framework.search.reranking.cross_encoder import CrossEncoderReranker
 from src.pdf_framework.search.reranking.flashrank import FlashRankReranker
 
 
@@ -81,7 +80,9 @@ class TwoStagePipeline:
         # Optional: MMR diversity
         if self._settings.stage2_use_mmr and len(reranked) > k:
             reranked = self._apply_mmr(
-                query, reranked, k=k * 2,  # Keep more for potential FlashRank
+                query,
+                reranked,
+                k=k * 2,  # Keep more for potential FlashRank
                 lambda_mult=self._settings.stage2_mmr_lambda,
             )
 

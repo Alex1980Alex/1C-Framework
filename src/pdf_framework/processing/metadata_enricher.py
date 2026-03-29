@@ -43,15 +43,17 @@ class MetadataEnricher:
         language = MetadataEnricher._detect_language(chunk.content)
 
         # Enrich metadata
-        chunk.metadata.update({
-            "document_type": document_type,
-            "language": language,
-            "version": version,
-            "source": document.source_path,
-            "title": doc_title,
-            "page_number": chunk.page_number,
-            "section": chunk.section,
-        })
+        chunk.metadata.update(
+            {
+                "document_type": document_type,
+                "language": language,
+                "version": version,
+                "source": document.source_path,
+                "title": doc_title,
+                "page_number": chunk.page_number,
+                "section": chunk.section,
+            }
+        )
 
         return chunk
 
@@ -95,7 +97,7 @@ class MetadataEnricher:
         - "Python 3.11 Guide" -> "3.11"
         """
         # Pattern for version numbers: X.Y or X.Y.Z
-        pattern = r'(\d+\.\d+(?:\.\d+)?)'
+        pattern = r"(\d+\.\d+(?:\.\d+)?)"
         match = re.search(pattern, filename)
         if match:
             return match.group(1)
@@ -108,7 +110,7 @@ class MetadataEnricher:
         Simple heuristic: Check for Cyrillic characters.
         """
         # Count Cyrillic characters
-        cyrillic_count = sum(1 for char in text if '\u0400' <= char <= '\u04FF')
+        cyrillic_count = sum(1 for char in text if "\u0400" <= char <= "\u04ff")
         total_alpha = sum(1 for char in text if char.isalpha())
 
         if total_alpha == 0:

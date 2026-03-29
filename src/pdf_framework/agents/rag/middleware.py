@@ -16,7 +16,6 @@ Usage:
 
 import logging
 import time
-from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -29,6 +28,7 @@ logger = logging.getLogger(__name__)
 # Try to import Langfuse callback (Phase 46)
 try:
     from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
+
     LANGFUSE_AVAILABLE = True
 except ImportError:
     LANGFUSE_AVAILABLE = False
@@ -38,6 +38,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # 1. Token Tracker — accumulates usage across all LLM calls in a session
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class TokenUsage:
@@ -115,10 +116,12 @@ class TokenTracker(AsyncCallbackHandler):
                     self.usage.input_tokens += usage.get("input_tokens", 0)
                     self.usage.output_tokens += usage.get("output_tokens", 0)
                     self.usage.cache_read_tokens += usage.get(
-                        "cache_read_input_tokens", 0,
+                        "cache_read_input_tokens",
+                        0,
                     )
                     self.usage.cache_creation_tokens += usage.get(
-                        "cache_creation_input_tokens", 0,
+                        "cache_creation_input_tokens",
+                        0,
                     )
 
         # Per-node tracking
@@ -130,8 +133,10 @@ class TokenTracker(AsyncCallbackHandler):
 
         logger.debug(
             "[MIDDLEWARE] LLM call in '%s': %.0fms, in=%d, out=%d",
-            node, latency_ms,
-            self.usage.input_tokens, self.usage.output_tokens,
+            node,
+            latency_ms,
+            self.usage.input_tokens,
+            self.usage.output_tokens,
         )
 
     async def on_llm_error(self, error: BaseException, **kwargs: Any) -> None:
@@ -142,6 +147,7 @@ class TokenTracker(AsyncCallbackHandler):
 # ---------------------------------------------------------------------------
 # 2. Content Guard — validates LLM outputs for safety/format
 # ---------------------------------------------------------------------------
+
 
 class ContentGuard(AsyncCallbackHandler):
     """Callback handler that logs warnings for suspicious LLM outputs."""
@@ -156,13 +162,15 @@ class ContentGuard(AsyncCallbackHandler):
                 if len(text) > self._max_output * 4:  # ~4 chars per token
                     logger.warning(
                         "[GUARD] Unusually long output: %d chars (limit ~%d)",
-                        len(text), self._max_output * 4,
+                        len(text),
+                        self._max_output * 4,
                     )
 
 
 # ---------------------------------------------------------------------------
 # 3. Helper: attach middleware to LLM
 # ---------------------------------------------------------------------------
+
 
 def with_middleware(
     llm: Any,
@@ -200,10 +208,7 @@ def with_middleware(
 
 
 def create_traced_llm(
-    llm: Any,
-    user_id: str | None = None,
-    session_id: str | None = None,
-    **llm_kwargs
+    llm: Any, user_id: str | None = None, session_id: str | None = None, **llm_kwargs
 ) -> Any:
     """
     F3.2.2: Create LLM with Langfuse tracing enabled.

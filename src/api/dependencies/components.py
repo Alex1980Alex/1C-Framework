@@ -1,7 +1,6 @@
 """FastAPI dependency injection for framework components."""
 
-from functools import lru_cache
-
+from src.pdf_framework.agents.memory.conversation import ConversationMemory
 from src.pdf_framework.config import Settings, get_settings
 from src.pdf_framework.embeddings import get_embedding_engine
 from src.pdf_framework.embeddings.engine import BaseEmbeddingEngine
@@ -9,29 +8,28 @@ from src.pdf_framework.graph_store import get_graph_store
 from src.pdf_framework.graph_store.base import BaseGraphStore
 from src.pdf_framework.loaders import get_loader
 from src.pdf_framework.loaders.base import BaseLoader
+from src.pdf_framework.processing.image_extractor import ImageExtractor
 from src.pdf_framework.processing.pipeline import ProcessingPipeline
+from src.pdf_framework.search.bm25_store import BM25Store
 from src.pdf_framework.search.manager import SearchManager
-from src.pdf_framework.search.strategies.graph_search import GraphSearchStrategy
-from src.pdf_framework.search.strategies.hybrid_search import HybridSearchStrategy
 from src.pdf_framework.search.pipelines.two_stage import TwoStagePipeline
 from src.pdf_framework.search.reranking.cross_encoder import CrossEncoderReranker
 from src.pdf_framework.search.reranking.flashrank import FlashRankReranker
-from src.pdf_framework.agents.memory.conversation import ConversationMemory
+from src.pdf_framework.search.semantic_cache import SemanticSearchCache
 from src.pdf_framework.search.strategies.adaptive import AdaptiveSearchStrategy
 from src.pdf_framework.search.strategies.auto_merge import AutoMergeStrategy
+from src.pdf_framework.search.strategies.bm25_search import BM25SearchStrategy
+from src.pdf_framework.search.strategies.graph_search import GraphSearchStrategy
 from src.pdf_framework.search.strategies.graphrag_global import GraphRAGGlobalStrategy
 from src.pdf_framework.search.strategies.graphrag_local import GraphRAGLocalStrategy
+from src.pdf_framework.search.strategies.hybrid_search import HybridSearchStrategy
 from src.pdf_framework.search.strategies.mmr_search import MMRSearchStrategy
 from src.pdf_framework.search.strategies.raptor_search import RAPTORSearchStrategy
 from src.pdf_framework.search.strategies.vector_search import VectorSearchStrategy
-from src.pdf_framework.processing.image_extractor import ImageExtractor
 from src.pdf_framework.vector_store import get_vector_store
 from src.pdf_framework.vector_store.base import BaseVectorStore
 from src.pdf_framework.vector_store.indexing.indexer import DocumentIndexer
 from src.pdf_framework.vector_store.parent_store import ParentDocumentStore
-from src.pdf_framework.search.bm25_store import BM25Store
-from src.pdf_framework.search.strategies.bm25_search import BM25SearchStrategy
-from src.pdf_framework.search.semantic_cache import SemanticSearchCache
 
 
 class Components:
@@ -101,7 +99,8 @@ class Components:
         bm25_strategy = None
         if self.bm25_store is not None:
             bm25_strategy = BM25SearchStrategy(
-                self.bm25_store, self.vector_store,
+                self.bm25_store,
+                self.vector_store,
                 use_two_pass=self.settings.search.bm25_two_pass,
             )
             self.search_manager.register_strategy("bm25", bm25_strategy)
@@ -272,8 +271,8 @@ class Components:
         self.web_search_strategy = None
         self.source_fusion = None
         if self.settings.external.web_search_enabled:
-            from src.pdf_framework.search.strategies.web_search import WebSearchStrategy
             from src.pdf_framework.search.external_sources.source_fusion import SourceFusion
+            from src.pdf_framework.search.strategies.web_search import WebSearchStrategy
 
             self.web_search_strategy = WebSearchStrategy(
                 tavily_api_key=self.settings.external.tavily_api_key,
@@ -302,7 +301,7 @@ class Components:
             pass
 
         # Phase 40: Enterprise Analytics
-        from src.pdf_framework.analytics import QueryTracker, CostTracker, AuditLogger
+        from src.pdf_framework.analytics import AuditLogger, CostTracker, QueryTracker
 
         self.query_tracker: QueryTracker = QueryTracker(
             db_path=self.settings.data_dir / "analytics.db",
@@ -339,10 +338,10 @@ class Components:
         self.content_booster = None
         if self.settings.feedback.enabled:
             try:
-                from src.pdf_framework.feedback.store import FeedbackStore
-                from src.pdf_framework.feedback.few_shot import FewShotProvider
                 from src.pdf_framework.feedback.boost import ContentBooster
                 from src.pdf_framework.feedback.collector import FeedbackCollector
+                from src.pdf_framework.feedback.few_shot import FewShotProvider
+                from src.pdf_framework.feedback.store import FeedbackStore
 
                 self.feedback_store = FeedbackStore(
                     db_path=self.settings.feedback.async_db_path,

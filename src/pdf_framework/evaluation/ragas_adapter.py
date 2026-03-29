@@ -7,8 +7,6 @@ Version: 1.0.0 - Phase 21: RAGAS Evaluation
 import logging
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 logger = logging.getLogger(__name__)
 
 

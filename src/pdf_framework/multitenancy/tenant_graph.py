@@ -120,10 +120,7 @@ class TenantGraphStore(BaseGraphStore):
             entity_type=entity_type,
             limit=limit * 3,
         )
-        return [
-            e for e in results
-            if e.properties.get("tenant_id") == self._tenant_id
-        ][:limit]
+        return [e for e in results if e.properties.get("tenant_id") == self._tenant_id][:limit]
 
     async def get_neighbors(
         self,
@@ -137,18 +134,14 @@ class TenantGraphStore(BaseGraphStore):
         if not entity:
             return SubGraph()
 
-        subgraph = await self._base_store.get_neighbors(
-            entity_id, relation_type, depth
-        )
+        subgraph = await self._base_store.get_neighbors(entity_id, relation_type, depth)
 
         # Filter by tenant_id
         subgraph.entities = [
-            e for e in subgraph.entities
-            if e.properties.get("tenant_id") == self._tenant_id
+            e for e in subgraph.entities if e.properties.get("tenant_id") == self._tenant_id
         ]
         subgraph.relations = [
-            r for r in subgraph.relations
-            if r.properties.get("tenant_id") == self._tenant_id
+            r for r in subgraph.relations if r.properties.get("tenant_id") == self._tenant_id
         ]
         return subgraph
 
@@ -178,12 +171,10 @@ class TenantGraphStore(BaseGraphStore):
 
         # Filter results by tenant_id
         result.entities = [
-            e for e in result.entities
-            if e.properties.get("tenant_id") == self._tenant_id
+            e for e in result.entities if e.properties.get("tenant_id") == self._tenant_id
         ]
         result.relations = [
-            r for r in result.relations
-            if r.properties.get("tenant_id") == self._tenant_id
+            r for r in result.relations if r.properties.get("tenant_id") == self._tenant_id
         ]
         return result
 
@@ -195,11 +186,13 @@ class TenantGraphStore(BaseGraphStore):
         try:
             graph = self._base_store._graph
             tenant_nodes = [
-                n for n, attrs in graph.nodes(data=True)
+                n
+                for n, attrs in graph.nodes(data=True)
                 if attrs.get("properties", {}).get("tenant_id") == self._tenant_id
             ]
             tenant_edges = [
-                (u, v) for u, v, attrs in graph.edges(data=True)
+                (u, v)
+                for u, v, attrs in graph.edges(data=True)
                 if attrs.get("properties", {}).get("tenant_id") == self._tenant_id
             ]
 

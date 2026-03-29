@@ -146,15 +146,25 @@ class GraphRAGLocalStrategy:
 
             # Regex fallback for Latin capitalized phrases and acronyms
             patterns = [
-                r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b',
-                r'\b[A-Z]{2,}\b',
+                r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b",
+                r"\b[A-Z]{2,}\b",
             ]
             for pattern in patterns:
                 matches = re.findall(pattern, content)
                 for match in matches:
                     if match.lower() not in {
-                        "the", "and", "this", "that", "with", "from",
-                        "but", "not", "are", "was", "were", "been",
+                        "the",
+                        "and",
+                        "this",
+                        "that",
+                        "with",
+                        "from",
+                        "but",
+                        "not",
+                        "are",
+                        "was",
+                        "were",
+                        "been",
                     }:
                         entities.add(match)
 

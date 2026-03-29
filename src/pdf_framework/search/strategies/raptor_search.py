@@ -6,13 +6,13 @@ Author: Claude Code
 Version: 1.4.0 - Phase 13.2: RAPTOR Search Strategy
 """
 
-import time
 import logging
+import time
 from typing import Any
 
 from pydantic import BaseModel
 
-from src.pdf_framework.schemas.documents import SearchResult, SearchResponse
+from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
 
 logger = logging.getLogger(__name__)
 

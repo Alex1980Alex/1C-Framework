@@ -21,14 +21,18 @@ class ProcessingPipeline:
     Phase 24.1: Page-aware chunk mapping.
     """
 
-    def __init__(self, settings: PDFSettings | None = None, enable_metadata_enrichment: bool = True):
+    def __init__(
+        self, settings: PDFSettings | None = None, enable_metadata_enrichment: bool = True
+    ):
         self._settings = settings or PDFSettings()
         self._splitter = self._create_splitter()
         self._enable_metadata_enrichment = enable_metadata_enrichment
 
     def _create_splitter(self) -> RecursiveTextSplitter:
         if self._settings.splitter == "semantic":
-            from src.pdf_framework.processing.splitters.semantic_splitter import SemanticTextSplitter
+            from src.pdf_framework.processing.splitters.semantic_splitter import (
+                SemanticTextSplitter,
+            )
 
             return SemanticTextSplitter(  # type: ignore[return-value]
                 chunk_size=self._settings.chunk_size,
@@ -74,7 +78,7 @@ class ProcessingPipeline:
                 if search_text.startswith("Раздел: "):
                     nl_pos = search_text.find("\n\n")
                     if nl_pos > 0:
-                        search_text = search_text[nl_pos + 2:]
+                        search_text = search_text[nl_pos + 2 :]
                 pos = document.raw_text.find(search_text[:200])
             if pos is None or pos < 0:
                 continue
@@ -99,7 +103,9 @@ class ProcessingPipeline:
         if len(result) < len(chunks):
             logger.info(
                 "[PIPELINE] Дедупликация: %d → %d чанков (%d дубликатов удалено)",
-                len(chunks), len(result), len(chunks) - len(result),
+                len(chunks),
+                len(result),
+                len(chunks) - len(result),
             )
         return result
 
@@ -144,7 +150,8 @@ class ProcessingPipeline:
         if inherited:
             logger.info(
                 "[PIPELINE] Image sections: %d/%d image chunks inherited section from text",
-                inherited, len(image_chunks),
+                inherited,
+                len(image_chunks),
             )
         return image_chunks
 
@@ -157,15 +164,18 @@ class ProcessingPipeline:
         t0 = time.time()
         logger.info(
             "[PIPELINE] Разбиение '%s' (splitter=%s, chunk_size=%d, overlap=%d)",
-            document.source_path, self._settings.splitter,
-            self._settings.chunk_size, self._settings.chunk_overlap,
+            document.source_path,
+            self._settings.splitter,
+            self._settings.chunk_size,
+            self._settings.chunk_overlap,
         )
 
         chunks = self._splitter.split(document)
         t_split = time.time() - t0
         logger.info(
             "[PIPELINE] Сплиттер создал %d чанков за %.2f сек (avg %d символов/чанк)",
-            len(chunks), t_split,
+            len(chunks),
+            t_split,
             sum(len(c.content) for c in chunks) // max(len(chunks), 1),
         )
 
@@ -175,7 +185,9 @@ class ProcessingPipeline:
         unique_pages = len({c.page_number for c in chunks if c.page_number and c.page_number > 0})
         logger.info(
             "[PIPELINE] Страницы назначены: %d/%d чанков, %d уникальных страниц",
-            pages_assigned, len(chunks), unique_pages,
+            pages_assigned,
+            len(chunks),
+            unique_pages,
         )
 
         # Deduplicate by content hash (Phase 29)
@@ -188,7 +200,8 @@ class ProcessingPipeline:
         elapsed = time.time() - t0
         logger.info(
             "[PIPELINE] Готово: %d чанков за %.2f сек",
-            len(chunks), elapsed,
+            len(chunks),
+            elapsed,
         )
 
         document.chunks = chunks

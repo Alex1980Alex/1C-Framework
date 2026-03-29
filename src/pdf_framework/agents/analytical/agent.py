@@ -131,8 +131,10 @@ def create_analytical_agent(
 
         logger.info(
             "[PLAN] type=%s, aspects=%d, queries=%d, entities=%s",
-            plan.question_type, len(plan.aspects),
-            len(plan.search_queries), plan.entities_to_compare or "none",
+            plan.question_type,
+            len(plan.aspects),
+            len(plan.search_queries),
+            plan.entities_to_compare or "none",
         )
 
         return {
@@ -171,17 +173,16 @@ def create_analytical_agent(
         async def _search_one(query: str, strategy: str):
             try:
                 return await search_manager.search(
-                    query=query, strategy=strategy, k=5, rerank=True,
+                    query=query,
+                    strategy=strategy,
+                    k=5,
+                    rerank=True,
                 )
             except Exception as e:
                 logger.warning("[RETRIEVE] %s/%s failed: %s", strategy, query[:30], e)
                 return None
 
-        tasks = [
-            _search_one(q, s)
-            for q in queries
-            for s in strategies
-        ]
+        tasks = [_search_one(q, s) for q in queries for s in strategies]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for r in results:
@@ -204,17 +205,22 @@ def create_analytical_agent(
 
         logger.info(
             "[RETRIEVE] Round %d: %d queries x %d strategies = %d unique chunks",
-            current_round + 1, len(queries), len(strategies), len(unique_chunks),
+            current_round + 1,
+            len(queries),
+            len(strategies),
+            len(unique_chunks),
         )
 
         # Store responses for evidence collection
         stored = state.get("search_responses", [])
         for resp in all_results:
-            stored.append({
-                "query": resp.query,
-                "search_type": resp.search_type,
-                "result_count": len(resp.results),
-            })
+            stored.append(
+                {
+                    "query": resp.query,
+                    "search_type": resp.search_type,
+                    "result_count": len(resp.results),
+                }
+            )
 
         return {
             "search_responses": stored,
@@ -226,7 +232,7 @@ def create_analytical_agent(
                     "source": sr.chunk.metadata.get("source", ""),
                     "page": sr.chunk.metadata.get("page_number", ""),
                     "section": sr.chunk.metadata.get("section_title", "")
-                        or sr.chunk.metadata.get("breadcrumb", ""),
+                    or sr.chunk.metadata.get("breadcrumb", ""),
                 }
                 for sr in unique_chunks
             ],
@@ -300,7 +306,9 @@ def create_analytical_agent(
 
         logger.info(
             "[EVIDENCE] Round %d: extracted %d new facts (total: %d)",
-            state.get("round", 0) + 1, len(facts_raw), len(existing_evidence),
+            state.get("round", 0) + 1,
+            len(facts_raw),
+            len(existing_evidence),
         )
 
         return {
@@ -368,7 +376,8 @@ def create_analytical_agent(
 
         logger.info(
             "[COMPARE] Generated table: %d entities x %d criteria",
-            len(table.entities), len(table.rows),
+            len(table.entities),
+            len(table.rows),
         )
 
         return {"comparison_table": table.model_dump()}
@@ -398,7 +407,9 @@ def create_analytical_agent(
 
         logger.info(
             "[COVERAGE] %.0f%% covered (%d/%d aspects), uncovered: %s",
-            coverage * 100, len(covered_aspects), len(aspects),
+            coverage * 100,
+            len(covered_aspects),
+            len(aspects),
             uncovered[:3] if uncovered else "none",
         )
 
@@ -419,7 +430,9 @@ def create_analytical_agent(
         # Build evidence summary for LLM
         evidence_text = ""
         for i, ev in enumerate(evidence, 1):
-            src = f" (p.{ev.get('source', '?')}, {ev.get('section', '')})" if ev.get("source") else ""
+            src = (
+                f" (p.{ev.get('source', '?')}, {ev.get('section', '')})" if ev.get("source") else ""
+            )
             evidence_text += f"[{i}] {ev.get('fact', '')}{src}\n"
 
         comp_table_md = ""
@@ -490,7 +503,10 @@ def create_analytical_agent(
 
         logger.info(
             "[SYNTHESIZE] Generated: %d chars, %d sources, %d evidence, %d rounds",
-            len(analysis_text), len(sources), len(evidence), rounds_used,
+            len(analysis_text),
+            len(sources),
+            len(evidence),
+            rounds_used,
         )
 
         return {
@@ -509,7 +525,11 @@ def create_analytical_agent(
         uncovered = state.get("uncovered_aspects", [])
 
         if coverage >= _COVERAGE_THRESHOLD:
-            logger.info("[EDGE] Coverage %.0f%% >= %.0f%% -> synthesize", coverage * 100, _COVERAGE_THRESHOLD * 100)
+            logger.info(
+                "[EDGE] Coverage %.0f%% >= %.0f%% -> synthesize",
+                coverage * 100,
+                _COVERAGE_THRESHOLD * 100,
+            )
             return "synthesize"
 
         if current_round >= max_rounds:
@@ -519,7 +539,12 @@ def create_analytical_agent(
         if not uncovered:
             return "synthesize"
 
-        logger.info("[EDGE] Coverage %.0f%%, round %d/%d -> retrieve_more", coverage * 100, current_round, max_rounds)
+        logger.info(
+            "[EDGE] Coverage %.0f%%, round %d/%d -> retrieve_more",
+            coverage * 100,
+            current_round,
+            max_rounds,
+        )
         return "retrieve_more"
 
     def should_compare_or_synthesize(state: AnalyticalState) -> str:

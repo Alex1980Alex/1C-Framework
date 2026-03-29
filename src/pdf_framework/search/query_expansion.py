@@ -88,7 +88,8 @@ class QueryExpander:
                 )
                 if result:
                     alternatives = [
-                        line.strip() for line in result.strip().split("\n")
+                        line.strip()
+                        for line in result.strip().split("\n")
                         if line.strip() and len(line.strip()) > 3
                     ][:n]
                     if alternatives:
@@ -109,7 +110,9 @@ class QueryExpander:
                     messages.append(HumanMessage(content=f"\u26a0\ufe0f {rw_feedback}"))
 
                 response = await self._llm.ainvoke(messages)
-                content = response.content if isinstance(response.content, str) else str(response.content)
+                content = (
+                    response.content if isinstance(response.content, str) else str(response.content)
+                )
 
                 alternatives = [
                     line.strip()
@@ -119,7 +122,9 @@ class QueryExpander:
 
                 # Validate: at least 1 alternative
                 if not alternatives:
-                    rw_feedback = f"Return {n} alternative phrasings, one per line. No numbering or bullets."
+                    rw_feedback = (
+                        f"Return {n} alternative phrasings, one per line. No numbering or bullets."
+                    )
                     logger.warning(f"[EXPAND] Attempt {rw_attempt}: no alternatives generated")
                     continue
 
@@ -190,13 +195,19 @@ class QueryExpander:
                     messages.append(HumanMessage(content=f"\u26a0\ufe0f {rw_feedback}"))
 
                 response = await self._llm.ainvoke(messages)
-                content = response.content if isinstance(response.content, str) else str(response.content)
+                content = (
+                    response.content if isinstance(response.content, str) else str(response.content)
+                )
                 hypothetical = content.strip()
 
                 # Validate: non-empty and substantive
                 if len(hypothetical) < 30:
-                    rw_feedback = "Write a passage of 3-5 sentences answering the question. Do not refuse."
-                    logger.warning(f"[HyDE] Attempt {rw_attempt}: too short ({len(hypothetical)} chars)")
+                    rw_feedback = (
+                        "Write a passage of 3-5 sentences answering the question. Do not refuse."
+                    )
+                    logger.warning(
+                        f"[HyDE] Attempt {rw_attempt}: too short ({len(hypothetical)} chars)"
+                    )
                     continue
 
                 return hypothetical

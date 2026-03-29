@@ -7,7 +7,7 @@ import shutil
 import time
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -32,7 +32,8 @@ async def _remove_existing_document(components: "Components", source_path: str) 
         doc_ids: set[str] = set()
         try:
             existing_chunks = await components.vector_store.scroll(
-                filter={"source": source_path}, limit=10000,
+                filter={"source": source_path},
+                limit=10000,
             )
             doc_ids = {c.document_id for c in existing_chunks if c.document_id}
         except Exception as e:
@@ -175,11 +176,18 @@ async def index_document(
 
         if request.loader != "default":
             # Validate loader choice
-            valid_loaders = ["pymupdf", "pdfplumber", "unstructured", "docling", "pymupdf4llm", "smart"]
+            valid_loaders = [
+                "pymupdf",
+                "pdfplumber",
+                "unstructured",
+                "docling",
+                "pymupdf4llm",
+                "smart",
+            ]
             if request.loader not in valid_loaders:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid loader: {request.loader}. Valid: {valid_loaders}"
+                    detail=f"Invalid loader: {request.loader}. Valid: {valid_loaders}",
                 )
             # Create settings with selected loader using model_validate
             loader_settings = PDFSettings.model_validate({"loader": request.loader})
@@ -207,10 +215,13 @@ async def index_document(
                     )
                     # Phase 29: Inherit section metadata from nearest text chunk
                     from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
                     ProcessingPipeline._inherit_image_sections(chunks, img_chunks)
                     chunks.extend(img_chunks)
                     image_chunk_count = len(img_chunks)
-                    logger.info(f"[IMAGE] Added {image_chunk_count} image chunks for {Path(request.file_path).name}")
+                    logger.info(
+                        f"[IMAGE] Added {image_chunk_count} image chunks for {Path(request.file_path).name}"
+                    )
             except Exception as e:
                 logger.warning(f"[IMAGE] Image extraction failed (text indexing continues): {e}")
 
@@ -231,14 +242,17 @@ async def index_document(
         if request.build_graph:
             try:
                 from src.pdf_framework.graph_store.construction.builder import GraphBuilder
-                from src.pdf_framework.processing.extractors.entity_extractor import LLMEntityExtractor
+                from src.pdf_framework.processing.extractors.entity_extractor import (
+                    LLMEntityExtractor,
+                )
 
                 extractor = LLMEntityExtractor(
                     settings=components.settings.agent,
                     api_key=components.settings.anthropic_api_key,
                 )
                 builder = GraphBuilder(
-                    extractor, components.graph_store,
+                    extractor,
+                    components.graph_store,
                     concurrency=components.settings.agent.graph_concurrency,
                 )
                 graph_result = await builder.build_from_chunks(chunks)
@@ -307,7 +321,14 @@ async def index_document_stream(
             from src.pdf_framework.loaders import get_loader
 
             if request.loader != "default":
-                valid_loaders = ["pymupdf", "pdfplumber", "unstructured", "docling", "pymupdf4llm", "smart"]
+                valid_loaders = [
+                    "pymupdf",
+                    "pdfplumber",
+                    "unstructured",
+                    "docling",
+                    "pymupdf4llm",
+                    "smart",
+                ]
                 if request.loader not in valid_loaders:
                     yield send("error", f"Invalid loader: {request.loader}")
                     return
@@ -317,8 +338,11 @@ async def index_document_stream(
                 loader = components.loader
 
             document = await loader.load(request.file_path)
-            yield send("load_done", f"PDF загружен за {time.time() - t0:.1f} сек",
-                        pages=getattr(document, 'page_count', 0))
+            yield send(
+                "load_done",
+                f"PDF загружен за {time.time() - t0:.1f} сек",
+                pages=getattr(document, "page_count", 0),
+            )
 
             # Step 1.5: Dedup — remove old chunks for this file
             removed = await _remove_existing_document(components, document.source_path)
@@ -329,8 +353,11 @@ async def index_document_stream(
             yield send("split", "Разбиение на чанки...")
             t1 = time.time()
             chunks = components.pipeline.process(document)
-            yield send("split_done", f"{len(chunks)} чанков за {time.time() - t1:.1f} сек",
-                        chunk_count=len(chunks))
+            yield send(
+                "split_done",
+                f"{len(chunks)} чанков за {time.time() - t1:.1f} сек",
+                chunk_count=len(chunks),
+            )
 
             # Step 2.5: Extract images (Phase 15)
             image_chunk_count = 0
@@ -338,7 +365,9 @@ async def index_document_stream(
                 yield send("images", "Извлечение изображений из PDF (Claude Vision)...")
                 t_img = time.time()
                 try:
-                    img_descriptions = await components.image_extractor.extract_all(request.file_path)
+                    img_descriptions = await components.image_extractor.extract_all(
+                        request.file_path
+                    )
                     if img_descriptions:
                         img_chunks = components.image_extractor.to_document_chunks(
                             img_descriptions,
@@ -347,12 +376,15 @@ async def index_document_stream(
                         )
                         # Phase 29: Inherit section metadata from nearest text chunk
                         from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
                         ProcessingPipeline._inherit_image_sections(chunks, img_chunks)
                         chunks.extend(img_chunks)
                         image_chunk_count = len(img_chunks)
-                        yield send("images_done",
-                                    f"{image_chunk_count} изображений описано за {time.time() - t_img:.1f} сек",
-                                    image_chunks=image_chunk_count)
+                        yield send(
+                            "images_done",
+                            f"{image_chunk_count} изображений описано за {time.time() - t_img:.1f} сек",
+                            image_chunks=image_chunk_count,
+                        )
                     else:
                         yield send("images_done", "Изображений не найдено", image_chunks=0)
                 except Exception as e:
@@ -362,11 +394,15 @@ async def index_document_stream(
             if request.contextual or components.settings.contextual_retrieval.enabled:
                 yield send("contextual", f"Генерация контекста для {len(chunks)} чанков...")
                 t_ctx = time.time()
-                chunks = await _enrich_contextual(chunks, document, components, force=request.contextual)
+                chunks = await _enrich_contextual(
+                    chunks, document, components, force=request.contextual
+                )
                 ctx_count = sum(1 for c in chunks if c.metadata.get("context"))
-                yield send("contextual_done",
-                            f"Контекст добавлен: {ctx_count}/{len(chunks)} чанков за {time.time() - t_ctx:.1f} сек",
-                            contextual_chunks=ctx_count)
+                yield send(
+                    "contextual_done",
+                    f"Контекст добавлен: {ctx_count}/{len(chunks)} чанков за {time.time() - t_ctx:.1f} сек",
+                    contextual_chunks=ctx_count,
+                )
 
             # Step 3: Embed + store (with checkpointing + real-time batch streaming)
             yield send("embed", f"Вычисление эмбеддингов для {len(chunks)} чанков...")
@@ -378,12 +414,17 @@ async def index_document_stream(
 
             async def _on_batch(batch_idx: int, total: int, stored: int, elapsed: float):
                 pct = (batch_idx + 1) / total * 100 if total > 0 else 100
-                await batch_queue.put(send(
-                    "batch", f"Батч {batch_idx + 1}/{total}: {stored} чанков за {elapsed:.1f} сек",
-                    batch=batch_idx + 1, total_batches=total,
-                    chunks_in_batch=stored, batch_seconds=round(elapsed, 2),
-                    progress_percent=round(pct, 1),
-                ))
+                await batch_queue.put(
+                    send(
+                        "batch",
+                        f"Батч {batch_idx + 1}/{total}: {stored} чанков за {elapsed:.1f} сек",
+                        batch=batch_idx + 1,
+                        total_batches=total,
+                        chunks_in_batch=stored,
+                        batch_seconds=round(elapsed, 2),
+                        progress_percent=round(pct, 1),
+                    )
+                )
 
             async def _run_indexing():
                 try:
@@ -413,10 +454,12 @@ async def index_document_stream(
                 raise _indexing_exc[0]
             result = task.result()
 
-            yield send("embed_done",
-                        f"{result.embeddings_computed} эмбеддингов за {time.time() - t2:.1f} сек",
-                        chunks_stored=result.chunks_stored,
-                        embeddings_computed=result.embeddings_computed)
+            yield send(
+                "embed_done",
+                f"{result.embeddings_computed} эмбеддингов за {time.time() - t2:.1f} сек",
+                chunks_stored=result.chunks_stored,
+                embeddings_computed=result.embeddings_computed,
+            )
 
             entities_added = 0
             relations_added = 0
@@ -427,23 +470,29 @@ async def index_document_stream(
                 t3 = time.time()
                 try:
                     from src.pdf_framework.graph_store.construction.builder import GraphBuilder
-                    from src.pdf_framework.processing.extractors.entity_extractor import LLMEntityExtractor
+                    from src.pdf_framework.processing.extractors.entity_extractor import (
+                        LLMEntityExtractor,
+                    )
 
                     extractor = LLMEntityExtractor(
                         settings=components.settings.agent,
                         api_key=components.settings.anthropic_api_key,
                     )
                     builder = GraphBuilder(
-                        extractor, components.graph_store,
+                        extractor,
+                        components.graph_store,
                         concurrency=components.settings.agent.graph_concurrency,
                     )
                     graph_result = await builder.build_from_chunks(chunks)
                     entities_added = graph_result.get("entities_added", 0)
                     relations_added = graph_result.get("relations_added", 0)
-                    yield send("graph_done",
-                                f"{entities_added} сущностей, {relations_added} связей "
-                                f"за {time.time() - t3:.1f} сек",
-                                entities=entities_added, relations=relations_added)
+                    yield send(
+                        "graph_done",
+                        f"{entities_added} сущностей, {relations_added} связей "
+                        f"за {time.time() - t3:.1f} сек",
+                        entities=entities_added,
+                        relations=relations_added,
+                    )
                 except Exception as e:
                     yield send("graph_error", f"Ошибка графа: {e}")
 
@@ -470,13 +519,16 @@ async def index_document_stream(
                         logger.warning("[COLLECTIONS] Assignment failed: %s", e)
 
             # Done
-            yield send("done", "Индексация завершена",
-                        document_id=result.document_id,
-                        chunks_stored=result.chunks_stored,
-                        embeddings_computed=result.embeddings_computed,
-                        graph_entities=entities_added,
-                        graph_relations=relations_added,
-                        image_chunks=image_chunk_count)
+            yield send(
+                "done",
+                "Индексация завершена",
+                document_id=result.document_id,
+                chunks_stored=result.chunks_stored,
+                embeddings_computed=result.embeddings_computed,
+                graph_entities=entities_added,
+                graph_relations=relations_added,
+                image_chunks=image_chunk_count,
+            )
 
         except Exception as e:
             yield send("error", str(e))
@@ -508,13 +560,16 @@ async def index_batch_stream(
         file_results: list[dict] = []
         total_files = len(request.file_paths)
 
-        yield send("batch_start", f"Batch indexing: {total_files} files",
-                    total_files=total_files)
+        yield send("batch_start", f"Batch indexing: {total_files} files", total_files=total_files)
 
         for file_idx, file_path in enumerate(request.file_paths):
             fname = Path(file_path).name
-            yield send("file_start", f"[{file_idx + 1}/{total_files}] {fname}",
-                        file_index=file_idx, filename=fname)
+            yield send(
+                "file_start",
+                f"[{file_idx + 1}/{total_files}] {fname}",
+                file_index=file_idx,
+                filename=fname,
+            )
 
             file_result = {
                 "file_path": file_path,
@@ -554,8 +609,12 @@ async def index_batch_stream(
                 # Dedup
                 removed = await _remove_existing_document(components, document.source_path)
                 if removed:
-                    yield send("file_dedup", f"Removed {removed} old chunks",
-                                file_index=file_idx, removed=removed)
+                    yield send(
+                        "file_dedup",
+                        f"Removed {removed} old chunks",
+                        file_index=file_idx,
+                        removed=removed,
+                    )
 
                 # Split
                 chunks = components.pipeline.process(document)
@@ -572,12 +631,14 @@ async def index_batch_stream(
                                 source_path=document.source_path,
                             )
                             from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
                             ProcessingPipeline._inherit_image_sections(chunks, img_chunks)
                             chunks.extend(img_chunks)
                             image_chunk_count = len(img_chunks)
                     except Exception as e:
-                        yield send("file_warn", f"Image extraction failed: {e}",
-                                    file_index=file_idx)
+                        yield send(
+                            "file_warn", f"Image extraction failed: {e}", file_index=file_idx
+                        )
 
                 # Phase 50: Contextual Retrieval
                 chunks = await _enrich_contextual(chunks, document, components)
@@ -614,27 +675,32 @@ async def index_batch_stream(
                 if request.build_graph:
                     try:
                         from src.pdf_framework.graph_store.construction.builder import GraphBuilder
-                        from src.pdf_framework.processing.extractors.entity_extractor import LLMEntityExtractor
+                        from src.pdf_framework.processing.extractors.entity_extractor import (
+                            LLMEntityExtractor,
+                        )
 
                         extractor = LLMEntityExtractor(
                             settings=components.settings.agent,
                             api_key=components.settings.anthropic_api_key,
                         )
                         builder = GraphBuilder(
-                            extractor, components.graph_store,
+                            extractor,
+                            components.graph_store,
                             concurrency=components.settings.agent.graph_concurrency,
                         )
                         await builder.build_from_chunks(chunks)
                     except Exception as e:
-                        yield send("file_warn", f"Graph build failed: {e}",
-                                    file_index=file_idx)
+                        yield send("file_warn", f"Graph build failed: {e}", file_index=file_idx)
 
                 elapsed = time.time() - t_file
                 file_result["elapsed_seconds"] = round(elapsed, 1)
-                yield send("file_done",
-                            f"[{file_idx + 1}/{total_files}] {fname}: "
-                            f"{result.chunks_stored} chunks in {elapsed:.1f}s",
-                            file_index=file_idx, **file_result)
+                yield send(
+                    "file_done",
+                    f"[{file_idx + 1}/{total_files}] {fname}: "
+                    f"{result.chunks_stored} chunks in {elapsed:.1f}s",
+                    file_index=file_idx,
+                    **file_result,
+                )
 
             except Exception as e:
                 elapsed = time.time() - t_file
@@ -647,9 +713,12 @@ async def index_batch_stream(
                 if doc_registry is not None and file_result["document_id"]:
                     await doc_registry.update_status(file_result["document_id"], "failed")
 
-                yield send("file_error",
-                            f"[{file_idx + 1}/{total_files}] {fname}: {e}",
-                            file_index=file_idx, error=str(e))
+                yield send(
+                    "file_error",
+                    f"[{file_idx + 1}/{total_files}] {fname}: {e}",
+                    file_index=file_idx,
+                    error=str(e),
+                )
 
             file_results.append(file_result)
 
@@ -658,11 +727,14 @@ async def index_batch_stream(
         failed = sum(1 for r in file_results if r["status"] == "error")
         total_chunks = sum(r["chunks_stored"] for r in file_results)
 
-        yield send("batch_done",
-                    f"Batch complete: {done}/{total_files} files, "
-                    f"{total_chunks} chunks, {failed} errors",
-                    files_done=done, files_failed=failed,
-                    total_chunks=total_chunks, results=file_results)
+        yield send(
+            "batch_done",
+            f"Batch complete: {done}/{total_files} files, {total_chunks} chunks, {failed} errors",
+            files_done=done,
+            files_failed=failed,
+            total_chunks=total_chunks,
+            results=file_results,
+        )
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")
 
@@ -674,7 +746,11 @@ async def list_pdf_files():
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         files = sorted(
             [
-                {"filename": f.name, "file_path": str(f.resolve()), "size_mb": round(f.stat().st_size / 1048576, 2)}
+                {
+                    "filename": f.name,
+                    "file_path": str(f.resolve()),
+                    "size_mb": round(f.stat().st_size / 1048576, 2),
+                }
                 for f in UPLOAD_DIR.iterdir()
                 if f.is_file() and f.suffix.lower() == ".pdf"
             ],
@@ -720,7 +796,10 @@ async def update_document_metadata(
         raise HTTPException(status_code=501, detail="Document registry not available")
 
     updated = await doc_registry.update_metadata(
-        document_id, title=title, description=description, tags=tags,
+        document_id,
+        title=title,
+        description=description,
+        tags=tags,
     )
     if updated is None:
         raise HTTPException(status_code=404, detail="Document not found in registry")
@@ -799,7 +878,8 @@ async def clear_vector_store(
             # ChromaDB-specific fallback: remove persist dir
             persist_dir = getattr(
                 getattr(components.vector_store, "_settings", None),
-                "persist_dir", None,
+                "persist_dir",
+                None,
             )
             if persist_dir and Path(str(persist_dir)).exists():
                 shutil.rmtree(str(persist_dir), ignore_errors=True)
@@ -884,14 +964,17 @@ async def rebuild_bm25(
         indexed = 0
 
         for i in range(0, len(all_chunks), batch_size):
-            batch = all_chunks[i:i + batch_size]
+            batch = all_chunks[i : i + batch_size]
             added = await bm25_store.add_chunks(
                 chunk_ids=[c.id for c in batch],
                 contents=[c.content for c in batch],
                 document_ids=[c.document_id for c in batch],
                 sources=[c.metadata.get("source", "") for c in batch],
                 sections=[
-                    c.metadata.get("breadcrumb", "") or c.section or c.metadata.get("section_title", "") or ""
+                    c.metadata.get("breadcrumb", "")
+                    or c.section
+                    or c.metadata.get("section_title", "")
+                    or ""
                     for c in batch
                 ],
             )
@@ -902,7 +985,9 @@ async def rebuild_bm25(
 
         logger.info(
             "[BM25] Rebuild complete: %d -> %d chunks (%.1fs)",
-            old_count, new_count, elapsed,
+            old_count,
+            new_count,
+            elapsed,
         )
 
         return {
@@ -926,9 +1011,7 @@ async def _cascade_delete_document(components: "Components", document_id: str) -
 
     # 1. Vector Store (chunks + RAPTOR summaries live here)
     try:
-        deleted = await components.vector_store.delete_by_filter(
-            {"document_id": document_id}
-        )
+        deleted = await components.vector_store.delete_by_filter({"document_id": document_id})
         report["vector_store"] = deleted
     except Exception as e:
         logger.warning("[CASCADE] Vector store delete failed: %s", e)
@@ -992,9 +1075,7 @@ async def _cascade_delete_document(components: "Components", document_id: str) -
 
     # 8. Collection Store (remove from all collections)
     try:
-        collection_ids = await components.collection_store.get_collections_for_document(
-            document_id
-        )
+        collection_ids = await components.collection_store.get_collections_for_document(document_id)
         for cid in collection_ids:
             await components.collection_store.remove_document(cid, document_id)
         report["collections_removed"] = len(collection_ids)
@@ -1046,6 +1127,7 @@ async def delete_document(
 
 
 # ========== Phase 18: Incremental Indexing ==========
+
 
 class DeltaIndexRequest(BaseModel):
     """Request for incremental indexing (Phase 18)."""
@@ -1116,7 +1198,9 @@ async def index_delta(
             # Phase 15: Extract images if enabled
             if request.extract_images and components.settings.pdf.extract_images:
                 try:
-                    img_descriptions = await components.image_extractor.extract_all(document.source_path)
+                    img_descriptions = await components.image_extractor.extract_all(
+                        document.source_path
+                    )
                     if img_descriptions:
                         img_chunks = components.image_extractor.to_document_chunks(
                             img_descriptions,
@@ -1125,6 +1209,7 @@ async def index_delta(
                         )
                         # Phase 29: Inherit section metadata from nearest text chunk
                         from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
                         ProcessingPipeline._inherit_image_sections(chunks, img_chunks)
                         chunks.extend(img_chunks)
                 except Exception as e:
@@ -1247,7 +1332,7 @@ async def index_document_async(
             mapping={
                 "status": "pending",
                 "progress": "0",
-            }
+            },
         )
         await redis.expire(f"job:{job_id}", components.settings.queue.job_timeout)
 
@@ -1262,5 +1347,3 @@ async def index_document_async(
     except Exception as e:
         logger.error(f"[ASYNC] Failed to enqueue indexing: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-

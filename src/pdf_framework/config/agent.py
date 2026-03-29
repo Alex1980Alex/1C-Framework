@@ -15,7 +15,9 @@ class AgentSettings(BaseSettings):
 
     # Reranking configuration (Phase 1.1 / Phase 25)
     reranker_enabled: bool = True
-    reranker_type: Literal["cross_encoder", "llm", "colbert"] = "llm"  # "llm" = Claude, "cross_encoder" = local, "colbert" = ColBERT
+    reranker_type: Literal["cross_encoder", "llm", "colbert"] = (
+        "llm"  # "llm" = Claude, "cross_encoder" = local, "colbert" = ColBERT
+    )
     reranker_model: str = "BAAI/bge-reranker-v2-m3"  # For cross_encoder type
     colbert_model: str = "jinaai/jina-colbert-v2"  # For colbert type (Phase 35)
     reranker_llm_model: str = "claude-sonnet-4-5-20250929"  # For llm type

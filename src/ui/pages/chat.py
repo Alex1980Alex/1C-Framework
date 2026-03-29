@@ -39,10 +39,14 @@ def _render_sources_html(sources: list[dict]) -> str:
         content = s.get("content", "")
         if len(content) > 150:
             content = content[:150] + "..."
-        breadcrumb = s.get("metadata", {}).get("breadcrumb", "") if isinstance(s.get("metadata"), dict) else ""
+        breadcrumb = (
+            s.get("metadata", {}).get("breadcrumb", "")
+            if isinstance(s.get("metadata"), dict)
+            else ""
+        )
 
-        score_width = max(5, min(100, int(score * 100))) if isinstance(score, (int, float)) else 50
-        score_display = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
+        score_width = max(5, min(100, int(score * 100))) if isinstance(score, int | float) else 50
+        score_display = f"{score:.3f}" if isinstance(score, int | float) else str(score)
 
         card = f"""<div class="source-card">
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -82,9 +86,7 @@ def create_chat_page(api_url: str):
             )
             clear_btn = gr.Button("Очистить историю", scale=1)
 
-        strategy_hint = gr.Markdown(
-            f"*{STRATEGY_HINTS['adaptive']}*"
-        )
+        strategy_hint = gr.Markdown(f"*{STRATEGY_HINTS['adaptive']}*")
 
         chatbot = gr.Chatbot(
             height=500,
@@ -92,11 +94,11 @@ def create_chat_page(api_url: str):
             placeholder=(
                 '<div class="empty-state">'
                 '<div class="icon">&#128214;</div>'
-                '<p><strong>Чат с документами</strong></p>'
-                '<p>Задайте вопрос по проиндексированным PDF-файлам</p>'
+                "<p><strong>Чат с документами</strong></p>"
+                "<p>Задайте вопрос по проиндексированным PDF-файлам</p>"
                 '<p style="font-size:0.85em;margin-top:8px;color:#94a3b8;">'
-                'Если документы ещё не загружены, перейдите на вкладку «Документы»</p>'
-                '</div>'
+                "Если документы ещё не загружены, перейдите на вкладку «Документы»</p>"
+                "</div>"
             ),
         )
 
@@ -142,6 +144,7 @@ def create_chat_page(api_url: str):
                             continue
                         try:
                             import json
+
                             chunk = json.loads(line)
                             if chunk.get("type") == "token":
                                 answer += chunk.get("content", "")
@@ -185,11 +188,17 @@ def create_chat_page(api_url: str):
 
             except requests.ConnectionError:
                 gr.Error("API сервер недоступен. Запустите backend: make api")
-                history[-1] = {"role": "assistant", "content": "API сервер недоступен. Запустите backend: `make api`"}
+                history[-1] = {
+                    "role": "assistant",
+                    "content": "API сервер недоступен. Запустите backend: `make api`",
+                }
                 yield history, "", ""
             except requests.Timeout:
                 gr.Warning("Превышено время ожидания ответа.")
-                history[-1] = {"role": "assistant", "content": "Превышено время ожидания. Попробуйте упростить вопрос."}
+                history[-1] = {
+                    "role": "assistant",
+                    "content": "Превышено время ожидания. Попробуйте упростить вопрос.",
+                }
                 yield history, "", ""
             except Exception as e:
                 logger.error(f"Chat error: {e}")

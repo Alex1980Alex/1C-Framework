@@ -18,7 +18,7 @@ from langchain_core.output_parsers import StrOutputParser
 from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.embeddings.engine import BaseEmbeddingEngine
 from src.pdf_framework.graph_store.base import BaseGraphStore
-from src.pdf_framework.schemas.documents import SearchResponse, SearchResult, DocumentChunk
+from src.pdf_framework.schemas.documents import DocumentChunk, SearchResponse, SearchResult
 from src.pdf_framework.vector_store.base import BaseVectorStore
 
 logger = logging.getLogger(__name__)
@@ -114,9 +114,7 @@ class GraphRAGGlobalStrategy:
 
         # Step 2: Rank communities by relevance (optional)
         if self.settings.global_search_rank_by_similarity:
-            ranked_communities = await self._rank_communities(
-                query, community_summaries, max_comm
-            )
+            ranked_communities = await self._rank_communities(query, community_summaries, max_comm)
         else:
             ranked_communities = list(community_summaries.values())[:max_comm]
 
@@ -264,7 +262,9 @@ class GraphRAGGlobalStrategy:
                 response = await self._map_llm.ainvoke(messages)
                 answer = self._parser.invoke(response).strip()
                 partial_answers.append(answer)
-                logger.debug(f"[GLOBAL_SEARCH] Map phase: community {i + 1}/{len(community_summaries)}")
+                logger.debug(
+                    f"[GLOBAL_SEARCH] Map phase: community {i + 1}/{len(community_summaries)}"
+                )
             except Exception as e:
                 logger.error(f"[GLOBAL_SEARCH] Map phase error for community {i}: {e}")
                 partial_answers.append("")  # Empty answer for failed communities
@@ -289,7 +289,9 @@ class GraphRAGGlobalStrategy:
         prompt = self._get_reduce_prompt(query, partial_answers)
 
         messages = [
-            SystemMessage(content="You are an expert synthesizer of information from multiple sources."),
+            SystemMessage(
+                content="You are an expert synthesizer of information from multiple sources."
+            ),
             HumanMessage(content=prompt),
         ]
 
@@ -318,8 +320,7 @@ Guidelines:
     def _get_reduce_prompt(self, query: str, partial_answers: list[str]) -> str:
         """Get the prompt for reduce phase."""
         answers_text = "\n\n".join(
-            f"Partial Answer {i + 1}:\n{ans}"
-            for i, ans in enumerate(partial_answers)
+            f"Partial Answer {i + 1}:\n{ans}" for i, ans in enumerate(partial_answers)
         )
 
         return f"""Synthesize the following partial answers into a comprehensive response to the user's query.
@@ -339,7 +340,8 @@ Provide a well-structured, comprehensive answer that:
         """Extract community ID from summary string."""
         # Summary format: "[Community X (level Y)] ..."
         import re
-        match = re.search(r'\[Community (\d+)', summary)
+
+        match = re.search(r"\[Community (\d+)", summary)
         return match.group(1) if match else "unknown"
 
     def _empty_response(self, query: str, start_time: float) -> SearchResponse:

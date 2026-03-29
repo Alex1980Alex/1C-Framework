@@ -102,33 +102,35 @@ class RAGEvaluator:
             return 0.0
 
     async def evaluate_context_relevance(
-        self, query: str, contexts: list[str],
+        self,
+        query: str,
+        contexts: list[str],
     ) -> float:
         """Rate how relevant retrieved contexts are to the query."""
         if not contexts:
             return 0.0
-        contexts_text = "\n---\n".join(
-            f"[{i+1}] {c[:500]}" for i, c in enumerate(contexts)
-        )
+        contexts_text = "\n---\n".join(f"[{i + 1}] {c[:500]}" for i, c in enumerate(contexts))
         return await self._judge(
             _CONTEXT_RELEVANCE_PROMPT.format(query=query, contexts=contexts_text),
         )
 
     async def evaluate_groundedness(
-        self, answer: str, contexts: list[str],
+        self,
+        answer: str,
+        contexts: list[str],
     ) -> float:
         """Rate how well the answer is supported by the contexts."""
         if not answer or not contexts:
             return 0.0
-        contexts_text = "\n---\n".join(
-            f"[{i+1}] {c[:500]}" for i, c in enumerate(contexts)
-        )
+        contexts_text = "\n---\n".join(f"[{i + 1}] {c[:500]}" for i, c in enumerate(contexts))
         return await self._judge(
             _GROUNDEDNESS_PROMPT.format(answer=answer, contexts=contexts_text),
         )
 
     async def evaluate_answer_relevance(
-        self, query: str, answer: str,
+        self,
+        query: str,
+        answer: str,
     ) -> float:
         """Rate how relevant the answer is to the query."""
         if not answer:

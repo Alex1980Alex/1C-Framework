@@ -13,9 +13,9 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .link_registry import LinkRegistry, get_link_registry
+from .link_registry import LinkRegistry
 from .unified_id import MemoryType, SourceServer
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class LinkedEntity:
     strength: float
     direction: str = "outgoing"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "target_id": self.target_id,
             "link_type": self.link_type,
@@ -61,7 +61,7 @@ class SourceError:
     error: str
     duration_ms: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {"source": self.source, "error": self.error, "duration_ms": self.duration_ms}
 
 
@@ -73,19 +73,19 @@ class SearchResultItem:
     source: SourceServer
     memory_type: MemoryType
     content: str
-    title: Optional[str] = None
-    snippet: Optional[str] = None
+    title: str | None = None
+    snippet: str | None = None
     raw_score: float = 0.5
     normalized_score: float = 0.5
     final_score: float = 0.5
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    linked_entities: List[LinkedEntity] = field(default_factory=list)
-    duplicate_sources: List[str] = field(default_factory=list)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    linked_entities: list[LinkedEntity] = field(default_factory=list)
+    duplicate_sources: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "unified_id": self.unified_id,
             "source": self.source.value,
@@ -110,13 +110,13 @@ class UnifiedSearchResult:
 
     query: str
     total_results: int
-    results: List[SearchResultItem]
+    results: list[SearchResultItem]
     search_time_ms: float
-    sources_searched: List[str]
-    sources_failed: List[SourceError] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    sources_searched: list[str]
+    sources_failed: list[SourceError] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
             "total_results": self.total_results,
@@ -132,14 +132,10 @@ class BaseSearchAdapter(ABC):
     """Protocol for pluggable search sources."""
 
     @abstractmethod
-    async def search(
-        self, query: str, limit: int = 10, **kwargs
-    ) -> List[SearchResultItem]:
-        ...
+    async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]: ...
 
     @abstractmethod
-    def source_name(self) -> str:
-        ...
+    def source_name(self) -> str: ...
 
 
 class ScoreNormalizer:
@@ -170,9 +166,10 @@ class Deduplicator:
     """Deduplicate results using content hashing."""
 
     def deduplicate(
-        self, items: List[SearchResultItem],
-    ) -> List[SearchResultItem]:
-        seen_hashes: Dict[str, SearchResultItem] = {}
+        self,
+        items: list[SearchResultItem],
+    ) -> list[SearchResultItem]:
+        seen_hashes: dict[str, SearchResultItem] = {}
         result = []
 
         for item in items:
@@ -190,8 +187,10 @@ class Reranker:
     """Rerank results with diversity enforcement."""
 
     def rerank(
-        self, items: List[SearchResultItem], options: SearchOptions,
-    ) -> List[SearchResultItem]:
+        self,
+        items: list[SearchResultItem],
+        options: SearchOptions,
+    ) -> list[SearchResultItem]:
         sorted_items = sorted(items, key=lambda x: x.final_score, reverse=True)
 
         if not options.diversity_enabled:
@@ -199,7 +198,7 @@ class Reranker:
 
         # Ensure source diversity: don't let one source dominate top results
         reranked = []
-        source_counts: Dict[str, int] = {}
+        source_counts: dict[str, int] = {}
         remaining = list(sorted_items)
 
         while remaining:
@@ -222,12 +221,15 @@ class Reranker:
 class LinkEnricher:
     """Enrich results with cross-references from Link Registry."""
 
-    def __init__(self, link_registry: Optional[LinkRegistry] = None):
+    def __init__(self, link_registry: LinkRegistry | None = None):
         self._registry = link_registry
 
     def enrich(
-        self, items: List[SearchResultItem], max_depth: int = 1, min_strength: float = 0.5,
-    ) -> List[SearchResultItem]:
+        self,
+        items: list[SearchResultItem],
+        max_depth: int = 1,
+        min_strength: float = 0.5,
+    ) -> list[SearchResultItem]:
         if not self._registry:
             return items
 
@@ -235,19 +237,23 @@ class LinkEnricher:
             try:
                 all_links = self._registry.get_all_links(item.unified_id, min_strength=min_strength)
                 for link in all_links.get("outgoing", []):
-                    item.linked_entities.append(LinkedEntity(
-                        target_id=link.target_id,
-                        link_type=link.link_type.value,
-                        strength=link.strength,
-                        direction="outgoing",
-                    ))
+                    item.linked_entities.append(
+                        LinkedEntity(
+                            target_id=link.target_id,
+                            link_type=link.link_type.value,
+                            strength=link.strength,
+                            direction="outgoing",
+                        )
+                    )
                 for link in all_links.get("incoming", []):
-                    item.linked_entities.append(LinkedEntity(
-                        target_id=link.source_id,
-                        link_type=link.link_type.value,
-                        strength=link.strength,
-                        direction="incoming",
-                    ))
+                    item.linked_entities.append(
+                        LinkedEntity(
+                            target_id=link.source_id,
+                            link_type=link.link_type.value,
+                            strength=link.strength,
+                            direction="incoming",
+                        )
+                    )
             except Exception as e:
                 logger.warning(f"Failed to enrich {item.unified_id}: {e}")
 
@@ -257,8 +263,8 @@ class LinkEnricher:
 class UnifiedSearchEngine:
     """Orchestrates federated search across all memory subsystems."""
 
-    def __init__(self, link_registry: Optional[LinkRegistry] = None):
-        self._adapters: Dict[str, BaseSearchAdapter] = {}
+    def __init__(self, link_registry: LinkRegistry | None = None):
+        self._adapters: dict[str, BaseSearchAdapter] = {}
         self._normalizer = ScoreNormalizer()
         self._deduplicator = Deduplicator()
         self._reranker = Reranker()
@@ -273,12 +279,12 @@ class UnifiedSearchEngine:
     async def search(
         self,
         query: str,
-        sources: Optional[List[SourceServer]] = None,
-        memory_types: Optional[List[MemoryType]] = None,
+        sources: list[SourceServer] | None = None,
+        memory_types: list[MemoryType] | None = None,
         min_score: float = 0.3,
         limit: int = 20,
         include_links: bool = True,
-        options: Optional[SearchOptions] = None,
+        options: SearchOptions | None = None,
     ) -> UnifiedSearchResult:
         options = options or SearchOptions()
         start = time.time()
@@ -299,7 +305,7 @@ class UnifiedSearchEngine:
                 )
             )
 
-        all_results: List[SearchResultItem] = []
+        all_results: list[SearchResultItem] = []
         sources_searched = []
         sources_failed = []
 
@@ -309,13 +315,17 @@ class UnifiedSearchEngine:
                 results = await task
                 all_results.extend(results)
                 sources_searched.append(name)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 duration_ms = (time.time() - task_start) * 1000
-                sources_failed.append(SourceError(source=name, error="timeout", duration_ms=duration_ms))
+                sources_failed.append(
+                    SourceError(source=name, error="timeout", duration_ms=duration_ms)
+                )
                 logger.warning(f"Search timeout for {name} ({duration_ms:.0f}ms)")
             except Exception as e:
                 duration_ms = (time.time() - task_start) * 1000
-                sources_failed.append(SourceError(source=name, error=str(e), duration_ms=duration_ms))
+                sources_failed.append(
+                    SourceError(source=name, error=str(e), duration_ms=duration_ms)
+                )
                 logger.error(f"Search error for {name}: {e}")
 
         # Filter by memory type
@@ -341,7 +351,9 @@ class UnifiedSearchEngine:
         # Enrich with links
         if include_links:
             all_results = self._enricher.enrich(
-                all_results, options.max_link_depth, options.min_link_strength,
+                all_results,
+                options.max_link_depth,
+                options.min_link_strength,
             )
 
         # Limit results
@@ -361,7 +373,7 @@ class UnifiedSearchEngine:
 
 
 # Global engine instance
-_global_engine: Optional[UnifiedSearchEngine] = None
+_global_engine: UnifiedSearchEngine | None = None
 
 
 def get_search_engine() -> UnifiedSearchEngine:
@@ -378,12 +390,12 @@ def set_search_engine(engine: UnifiedSearchEngine):
 
 async def federated_search(
     query: str,
-    sources: Optional[List[SourceServer]] = None,
-    memory_types: Optional[List[MemoryType]] = None,
+    sources: list[SourceServer] | None = None,
+    memory_types: list[MemoryType] | None = None,
     min_score: float = 0.3,
     limit: int = 20,
     include_links: bool = True,
-    search_options: Optional[SearchOptions] = None,
+    search_options: SearchOptions | None = None,
 ) -> UnifiedSearchResult:
     """Convenience function for federated search using global engine."""
     engine = get_search_engine()

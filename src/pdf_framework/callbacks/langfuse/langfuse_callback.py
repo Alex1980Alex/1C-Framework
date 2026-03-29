@@ -11,10 +11,9 @@ Version: 1.0.0 - Phase 46: Langfuse Integration
 """
 
 import logging
-from typing import Any, Literal
+from typing import Any
 
 from langchain_core.callbacks import BaseCallbackHandler
-from langchain_core.messages import BaseMessage
 from langchain_core.outputs import LLMResult
 
 logger = logging.getLogger(__name__)
@@ -57,8 +56,9 @@ class LangfuseCallbackHandler(BaseCallbackHandler):
     def _initialize_client(self) -> None:
         """Initialize Langfuse client."""
         try:
-            from langfuse import Langfuse
             import os
+
+            from langfuse import Langfuse
 
             public_key = os.environ.get("LANGFUSE_PUBLIC_KEY", "")
             secret_key = os.environ.get("LANGFUSE_SECRET_KEY", "")
@@ -133,7 +133,11 @@ class LangfuseCallbackHandler(BaseCallbackHandler):
             generations = response.flatten()
             if generations:
                 first_generation = generations[0]
-                output_text = first_generation.text if hasattr(first_generation, "text") else str(first_generation)
+                output_text = (
+                    first_generation.text
+                    if hasattr(first_generation, "text")
+                    else str(first_generation)
+                )
 
                 # Get token usage if available
                 usage = response.llm_output.get("token_usage", {}) if response.llm_output else {}
@@ -152,7 +156,9 @@ class LangfuseCallbackHandler(BaseCallbackHandler):
                     metadata={
                         "user_id": self._user_id,
                         "session_id": self._session_id,
-                        "model": response.llm_output.get("model", "unknown") if response.llm_output else "unknown",
+                        "model": response.llm_output.get("model", "unknown")
+                        if response.llm_output
+                        else "unknown",
                     },
                 )
 

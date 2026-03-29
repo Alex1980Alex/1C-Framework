@@ -91,19 +91,14 @@ class MetadataExtractor:
         self._cache = objects
         return objects
 
-    def _build_object_info(
-        self, obj_folder: Path, obj_type: str, src_path: Path
-    ) -> ObjectInfo:
+    def _build_object_info(self, obj_folder: Path, obj_type: str, src_path: Path) -> ObjectInfo:
         rel_path = str(obj_folder.relative_to(src_path)).replace("\\", "/")
         modules = [
-            str(f.relative_to(obj_folder)).replace("\\", "/")
-            for f in obj_folder.rglob("*.bsl")
+            str(f.relative_to(obj_folder)).replace("\\", "/") for f in obj_folder.rglob("*.bsl")
         ]
         forms_dir = obj_folder / "Forms"
         form_names = (
-            sorted(d.name for d in forms_dir.iterdir() if d.is_dir())
-            if forms_dir.is_dir()
-            else []
+            sorted(d.name for d in forms_dir.iterdir() if d.is_dir()) if forms_dir.is_dir() else []
         )
         return ObjectInfo(
             name=obj_folder.name,

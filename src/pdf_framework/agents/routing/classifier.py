@@ -7,7 +7,6 @@ Simple → Haiku, Moderate → Sonnet, Complex → Opus.
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
 
 
 class ComplexityLevel(str, Enum):
@@ -33,19 +32,48 @@ DEFAULT_MODEL_MAP: dict[ComplexityLevel, str] = {
 
 # Keywords that signal higher complexity
 _COMPLEX_KEYWORDS = {
-    "сравни", "сравнение", "проанализируй", "анализ", "объясни подробно",
-    "различия между", "преимущества и недостатки", "плюсы и минусы",
-    "как устроен", "архитектура", "в чём разница",
-    "compare", "analyze", "explain in detail", "differences between",
-    "pros and cons", "architecture", "how does it work internally",
-    "step by step", "пошагово", "все варианты", "все способы",
+    "сравни",
+    "сравнение",
+    "проанализируй",
+    "анализ",
+    "объясни подробно",
+    "различия между",
+    "преимущества и недостатки",
+    "плюсы и минусы",
+    "как устроен",
+    "архитектура",
+    "в чём разница",
+    "compare",
+    "analyze",
+    "explain in detail",
+    "differences between",
+    "pros and cons",
+    "architecture",
+    "how does it work internally",
+    "step by step",
+    "пошагово",
+    "все варианты",
+    "все способы",
 }
 
 _MODERATE_KEYWORDS = {
-    "как", "почему", "зачем", "когда использовать", "пример",
-    "how to", "why", "when to use", "example", "tutorial",
-    "покажи", "опиши", "расскажи", "объясни",
-    "show", "describe", "explain",
+    "как",
+    "почему",
+    "зачем",
+    "когда использовать",
+    "пример",
+    "how to",
+    "why",
+    "when to use",
+    "example",
+    "tutorial",
+    "покажи",
+    "опиши",
+    "расскажи",
+    "объясни",
+    "show",
+    "describe",
+    "explain",
 }
 
 
@@ -95,19 +123,23 @@ class ModelRoutingClassifier:
         moderate_hits = sum(1 for kw in _MODERATE_KEYWORDS if kw in query_lower)
 
         # Check for sub-questions (multiple sentences ending with ?)
-        sub_questions = len(re.findall(r'[?？]', query))
+        sub_questions = len(re.findall(r"[?？]", query))
 
         # Check for enumeration requests
-        has_enumeration = bool(re.search(
-            r'(?:перечисли|список|все\s+(?:виды|типы|варианты)|list\s+all|enumerate)',
-            query_lower,
-        ))
+        has_enumeration = bool(
+            re.search(
+                r"(?:перечисли|список|все\s+(?:виды|типы|варианты)|list\s+all|enumerate)",
+                query_lower,
+            )
+        )
 
         # Check for code requests
-        has_code_request = bool(re.search(
-            r'(?:код|пример кода|code|snippet|покажи как написать|напиши)',
-            query_lower,
-        ))
+        has_code_request = bool(
+            re.search(
+                r"(?:код|пример кода|code|snippet|покажи как написать|напиши)",
+                query_lower,
+            )
+        )
 
         return {
             "word_count": word_count,

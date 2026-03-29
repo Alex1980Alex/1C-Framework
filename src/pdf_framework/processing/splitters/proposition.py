@@ -10,8 +10,8 @@ Version: 1.0.0 - Phase 58: Proposition Chunking
 import logging
 from typing import Any
 
-from langchain_anthropic import ChatAnthropic
 from langchain.text_splitter import TextSplitter
+from langchain_anthropic import ChatAnthropic
 
 from src.pdf_framework.schemas.documents import DocumentChunk
 
@@ -98,9 +98,7 @@ class PropositionSplitter(TextSplitter):
 
         if len(propositions) < self._min_propositions:
             # Ralph Wiggum retry: got too few propositions
-            logger.debug(
-                f"[PROPOSITION] Too few propositions ({len(propositions)}), retrying"
-            )
+            logger.debug(f"[PROPOSITION] Too few propositions ({len(propositions)}), retrying")
             propositions = self._extract_with_retry(text)
 
         return propositions
@@ -115,9 +113,9 @@ class PropositionSplitter(TextSplitter):
             List of propositions
         """
         try:
-            response = self._llm.invoke([
-                {"role": "user", "content": PROPOSITION_PROMPT.format(text=text)}
-            ])
+            response = self._llm.invoke(
+                [{"role": "user", "content": PROPOSITION_PROMPT.format(text=text)}]
+            )
 
             content = response.content.strip()
 
@@ -148,14 +146,14 @@ Text: {text}
 Extract facts:"""
 
         try:
-            response = self._llm.invoke([
-                {"role": "user", "content": retry_prompt.format(text=text)}
-            ])
+            response = self._llm.invoke(
+                [{"role": "user", "content": retry_prompt.format(text=text)}]
+            )
 
             content = response.content.strip()
             lines = [line.strip() for line in content.split("\n") if line.strip()]
 
-            return lines[:self._max_propositions]
+            return lines[: self._max_propositions]
 
         except Exception as e:
             logger.warning(f"[PROPOSITION] Retry failed: {e}")
@@ -211,14 +209,18 @@ Extract facts:"""
                 chunk = DocumentChunk(
                     id=f"{doc.id if hasattr(doc, 'id') else doc.get('id', 'unk')}_prop_{i}",
                     content=prop,
-                    document_id=doc.document_id if hasattr(doc, 'document_id') else doc.get('document_id', ''),
-                    page_number=doc.page_number if hasattr(doc, 'page_number') else doc.get('page_number'),
+                    document_id=doc.document_id
+                    if hasattr(doc, "document_id")
+                    else doc.get("document_id", ""),
+                    page_number=doc.page_number
+                    if hasattr(doc, "page_number")
+                    else doc.get("page_number"),
                     section="proposition",
                     chunk_index=i,
                     metadata={
                         **metadata,
                         "chunk_type": "proposition",
-                        "original_chunk_id": doc.id if hasattr(doc, 'id') else doc.get('id', ''),
+                        "original_chunk_id": doc.id if hasattr(doc, "id") else doc.get("id", ""),
                         "proposition_index": i,
                         "total_propositions": len(propositions),
                     },
@@ -246,11 +248,14 @@ Extract facts:"""
         results = []
 
         for i in range(0, len(documents), self._batch_size):
-            batch = documents[i:i + self._batch_size]
+            batch = documents[i : i + self._batch_size]
 
             # Process batch in parallel
             tasks = [
-                asyncio.to_thread(self.split_text, doc.content if hasattr(doc, 'content') else doc.get('content', ''))
+                asyncio.to_thread(
+                    self.split_text,
+                    doc.content if hasattr(doc, "content") else doc.get("content", ""),
+                )
                 for doc in batch
             ]
 
@@ -262,12 +267,20 @@ Extract facts:"""
                     chunk = DocumentChunk(
                         id=f"{doc.id if hasattr(doc, 'id') else doc.get('id', 'unk')}_prop_{j}",
                         content=prop,
-                        document_id=doc.document_id if hasattr(doc, 'document_id') else doc.get('document_id', ''),
-                        page_number=doc.page_number if hasattr(doc, 'page_number') else doc.get('page_number'),
+                        document_id=doc.document_id
+                        if hasattr(doc, "document_id")
+                        else doc.get("document_id", ""),
+                        page_number=doc.page_number
+                        if hasattr(doc, "page_number")
+                        else doc.get("page_number"),
                         section="proposition",
                         chunk_index=j,
                         metadata={
-                            **(doc.metadata if hasattr(doc, 'metadata') else doc.get('metadata', {})),
+                            **(
+                                doc.metadata
+                                if hasattr(doc, "metadata")
+                                else doc.get("metadata", {})
+                            ),
                             "chunk_type": "proposition",
                             "proposition_index": j,
                             "total_propositions": len(propositions),

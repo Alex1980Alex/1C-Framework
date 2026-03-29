@@ -7,8 +7,6 @@ Version: 1.0.0 - Phase 22: Self-Learning Feedback
 import logging
 from typing import Any
 
-from pydantic import BaseModel
-
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +66,9 @@ class ContentBooster:
             chunk_id = r.chunk.id if hasattr(r, "chunk") else ""
             factor = self._boost_map.get(chunk_id, 1.0)
             # Create a copy-like structure with boosted score
-            boosted.append({"result": r, "original_score": r.score, "boosted_score": r.score * factor})
+            boosted.append(
+                {"result": r, "original_score": r.score, "boosted_score": r.score * factor}
+            )
 
         boosted.sort(key=lambda x: x["boosted_score"], reverse=True)
 

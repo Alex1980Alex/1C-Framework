@@ -7,7 +7,7 @@ Version: 1.4.0 - Phase 13.4: Document Summary Index
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -71,8 +71,8 @@ class DocumentSummaryIndex:
         if self._initialized:
             return
 
-        from src.pdf_framework.vector_store.providers.chroma import ChromaVectorStore
         from src.pdf_framework.config import VectorStoreSettings
+        from src.pdf_framework.vector_store.providers.chroma import ChromaVectorStore
 
         settings = VectorStoreSettings(
             provider="chroma",
@@ -120,7 +120,7 @@ class DocumentSummaryIndex:
             title=title or document_id,
             chunk_count=len(chunks),
             embedding=embedding,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             metadata=metadata or {},
         )
 
@@ -183,15 +183,17 @@ class DocumentSummaryIndex:
         summaries = []
         for result in results:
             metadata = result.chunk.metadata
-            summaries.append(DocumentSummary(
-                document_id=metadata.get("summary_id", ""),
-                summary=result.chunk.content,
-                title=metadata.get("title", ""),
-                chunk_count=metadata.get("chunk_count", 0),
-                embedding=None,
-                created_at=metadata.get("created_at", ""),
-                metadata=metadata,
-            ))
+            summaries.append(
+                DocumentSummary(
+                    document_id=metadata.get("summary_id", ""),
+                    summary=result.chunk.content,
+                    title=metadata.get("title", ""),
+                    chunk_count=metadata.get("chunk_count", 0),
+                    embedding=None,
+                    created_at=metadata.get("created_at", ""),
+                    metadata=metadata,
+                )
+            )
 
         return summaries
 
@@ -261,9 +263,7 @@ Summary:"""
 
             content = response.content
             if isinstance(content, list):
-                summary = " ".join(
-                    getattr(block, "text", str(block)) for block in content
-                ).strip()
+                summary = " ".join(getattr(block, "text", str(block)) for block in content).strip()
             else:
                 summary = content.strip()
 

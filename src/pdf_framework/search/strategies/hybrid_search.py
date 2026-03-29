@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from src.pdf_framework.config import SearchSettings
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
@@ -51,8 +51,12 @@ class HybridSearchStrategy:
 
         # Use settings from config if provided, otherwise use defaults
         self._settings = search_settings or SearchSettings()
-        self._vector_weight = vector_weight if vector_weight is not None else self._settings.hybrid_vector_weight
-        self._graph_weight = graph_weight if graph_weight is not None else self._settings.hybrid_graph_weight
+        self._vector_weight = (
+            vector_weight if vector_weight is not None else self._settings.hybrid_vector_weight
+        )
+        self._graph_weight = (
+            graph_weight if graph_weight is not None else self._settings.hybrid_graph_weight
+        )
         self._rrf_k = rrf_k if rrf_k is not None else self._settings.hybrid_rrf_k
         self._bm25_weight = bm25_weight if bm25_weight is not None else self._settings.bm25_weight
 

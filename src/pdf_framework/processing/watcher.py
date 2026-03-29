@@ -8,8 +8,9 @@ Version: 1.0.0 - Phase 18: Incremental Indexing
 
 import asyncio
 import logging
+from collections.abc import Callable, Coroutine
 from pathlib import Path
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ class PDFFileWatcher:
         # Snapshot existing files
         self._known_files = self._scan()
         self._task = asyncio.create_task(self._poll_loop())
-        logger.info(f"[WATCHER] Started watching {self._watch_dir} ({len(self._known_files)} existing files)")
+        logger.info(
+            f"[WATCHER] Started watching {self._watch_dir} ({len(self._known_files)} existing files)"
+        )
 
     async def stop(self) -> None:
         """Stop watching and flush pending events."""

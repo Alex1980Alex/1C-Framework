@@ -9,20 +9,18 @@ SQLite FTS5 fallback когда Qdrant недоступен.
 Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
-import asyncio
 import logging
+import os
 import sqlite3
 import sys
-import os
 from pathlib import Path as FilePath
-from typing import List, Dict, Any
+from typing import Any
 
 # Добавляем родительские директории в путь для импортов
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -34,9 +32,9 @@ except ImportError:
     sys.exit(1)
 
 # Импорты сервисов
-from .services.search import BSLSearchService, SearchRequest, SearchMode
-from .services.embedding import EmbeddingService
 from .config import get_bsl_settings
+from .services.embedding import EmbeddingService
+from .services.search import BSLSearchService, SearchMode, SearchRequest
 
 # Создаем FastMCP server
 mcp = FastMCP("BSL Semantic Search")
@@ -56,6 +54,7 @@ def _check_qdrant() -> bool:
     """Быстрая проверка доступности Qdrant (таймаут 2с)"""
     try:
         from qdrant_client import QdrantClient as QC
+
         settings = get_bsl_settings()
         client = QC(host=settings.qdrant_host, port=settings.qdrant_port, timeout=2)
         client.get_collections()
@@ -93,21 +92,17 @@ async def ensure_services():
         if _SQLITE_DB.exists():
             logger.info(f"SQLite DB: {_SQLITE_DB} ({_SQLITE_DB.stat().st_size // 1024 // 1024} MB)")
         else:
-            logger.warning(f"SQLite DB не найдена. Запустите: scripts/index-folder.bat")
+            logger.warning("SQLite DB не найдена. Запустите: scripts/index-folder.bat")
 
     # Embedding Service
     embedding_service = EmbeddingService(
-        ollama_host=settings.ollama_host,
-        model=settings.embedding_model
+        ollama_host=settings.ollama_host, model=settings.embedding_model
     )
     logger.info("Embedding Service OK")
 
     # BSL Search Service
     search_service = BSLSearchService(
-        qdrant_service=None,
-        neo4j_service=None,
-        hybrid_engine=None,
-        llm_service=None
+        qdrant_service=None, neo4j_service=None, hybrid_engine=None, llm_service=None
     )
     logger.info("BSL Search Service OK")
 
@@ -119,11 +114,7 @@ async def ensure_services():
 # Tool 1: bsl_search - Семантический поиск по BSL коду
 # ================================================================
 @mcp.tool()
-async def bsl_search(
-    query: str,
-    limit: int = 10,
-    mode: str = "semantic"
-) -> str:
+async def bsl_search(query: str, limit: int = 10, mode: str = "semantic") -> str:
     """
     Семантический поиск по BSL коду
 
@@ -146,14 +137,12 @@ async def bsl_search(
             "graph": SearchMode.GRAPH_ONLY,
             "hybrid": SearchMode.HYBRID,
             "intelligent": SearchMode.INTELLIGENT,
-            "multi_stage": SearchMode.MULTI_STAGE
+            "multi_stage": SearchMode.MULTI_STAGE,
         }
 
         # Создаем запрос
         request = SearchRequest(
-            query=query,
-            mode=mode_map.get(mode, SearchMode.SEMANTIC_ONLY),
-            limit=min(limit, 50)
+            query=query, mode=mode_map.get(mode, SearchMode.SEMANTIC_ONLY), limit=min(limit, 50)
         )
 
         # Выполняем поиск (Qdrant или SQLite fallback)
@@ -180,7 +169,7 @@ async def bsl_search(
 **Функций**: {result.functions_count}
 
 **Описание**:
-{result.summary[:500]}{'...' if len(result.summary) > 500 else ''}
+{result.summary[:500]}{"..." if len(result.summary) > 500 else ""}
 
 {"**LLM анализ**: " + result.reasoning if result.reranked and result.reasoning else ""}
 """)
@@ -202,10 +191,7 @@ async def bsl_search(
 # Tool 2: bsl_similar - Поиск похожих модулей
 # ================================================================
 @mcp.tool()
-async def bsl_similar(
-    file_path: str,
-    limit: int = 5
-) -> str:
+async def bsl_similar(file_path: str, limit: int = 5) -> str:
     """
     Поиск модулей, похожих на указанный
 
@@ -236,10 +222,7 @@ async def bsl_similar(
 # Tool 3: bsl_context - Контекст модуля
 # ================================================================
 @mcp.tool()
-async def bsl_context(
-    file_path: str,
-    include_dependencies: bool = True
-) -> str:
+async def bsl_context(file_path: str, include_dependencies: bool = True) -> str:
     """
     Получение контекста модуля: зависимости, функции, метаданные
 
@@ -265,7 +248,7 @@ async def bsl_context(
                     cur.execute(
                         """SELECT path, doc_type, content, content_preview
                            FROM documents WHERE path LIKE ? LIMIT 1""",
-                        (like_path,)
+                        (like_path,),
                     )
                     row = cur.fetchone()
                 finally:
@@ -273,9 +256,9 @@ async def bsl_context(
 
                 if row:
                     content_preview = (row["content"] or "")[:2000]
-                    return f"""## Контекст модуля: {row['path']}
+                    return f"""## Контекст модуля: {row["path"]}
 
-**Тип**: {row['doc_type']}
+**Тип**: {row["doc_type"]}
 **Источник**: SQLite FTS5
 
 **Содержимое** (первые 2000 символов):
@@ -317,6 +300,7 @@ async def bsl_stats() -> str:
         if _qdrant_available:
             try:
                 from qdrant_client import QdrantClient as QC
+
                 client = QC(host=settings.qdrant_host, port=settings.qdrant_port, timeout=5)
                 collection_info = client.get_collection(settings.collection_name)
 
@@ -344,7 +328,9 @@ async def bsl_stats() -> str:
                 cur.execute("SELECT COUNT(*) FROM documents")
                 total_docs = cur.fetchone()[0]
 
-                cur.execute("SELECT doc_type, COUNT(*) as cnt FROM documents GROUP BY doc_type ORDER BY cnt DESC")
+                cur.execute(
+                    "SELECT doc_type, COUNT(*) as cnt FROM documents GROUP BY doc_type ORDER BY cnt DESC"
+                )
                 type_rows = cur.fetchall()
 
                 db_size_mb = _SQLITE_DB.stat().st_size / 1024 / 1024
@@ -395,7 +381,7 @@ async def _sqlite_fts_search(query: str, limit: int = 10):
                        SELECT id FROM documents_fts WHERE documents_fts MATCH ?
                    )
                    LIMIT ?""",
-                (query, limit * 3)
+                (query, limit * 3),
             )
         except Exception:
             # Fallback: простой LIKE поиск
@@ -405,7 +391,7 @@ async def _sqlite_fts_search(query: str, limit: int = 10):
                    FROM documents d
                    WHERE d.content LIKE ? OR d.path LIKE ?
                    LIMIT ?""",
-                (like_q, like_q, limit * 3)
+                (like_q, like_q, limit * 3),
             )
 
         rows = cur.fetchall()
@@ -422,15 +408,17 @@ async def _sqlite_fts_search(query: str, limit: int = 10):
         seen_paths.add(fp)
 
         summary = (row["content_preview"] or row["content"] or "")[:500]
-        results.append(SearchResult(
-            file_path=fp,
-            module_type=row["doc_type"] or "bsl",
-            score=0.8,
-            original_score=0.8,
-            summary=summary,
-            functions_count=0,
-            source="sqlite_fts5",
-        ))
+        results.append(
+            SearchResult(
+                file_path=fp,
+                module_type=row["doc_type"] or "bsl",
+                score=0.8,
+                original_score=0.8,
+                summary=summary,
+                functions_count=0,
+                source="sqlite_fts5",
+            )
+        )
 
         if len(results) >= limit:
             break
@@ -453,6 +441,7 @@ def _get_call_graph():
     global _call_graph_store
     if _call_graph_store is None:
         from src.bsl.call_graph.store import CallGraphStore
+
         if not _CALL_GRAPH_DB.exists():
             raise FileNotFoundError(
                 f"Call graph DB not found: {_CALL_GRAPH_DB}. "
@@ -467,6 +456,7 @@ def _get_metadata_extractor(project_root: str | None = None):
     global _metadata_extractor
     if _metadata_extractor is None:
         from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
+
         if project_root:
             root = FilePath(project_root)
         else:
@@ -487,7 +477,7 @@ def bsl_call_graph(
     symbol_name: str,
     direction: str = "both",
     module: str | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Query BSL call graph: find callers and/or callees of a symbol.
 
     Args:
@@ -499,7 +489,7 @@ def bsl_call_graph(
         Dict with callers and/or callees lists
     """
     store = _get_call_graph()
-    result: Dict[str, Any] = {"symbol": symbol_name}
+    result: dict[str, Any] = {"symbol": symbol_name}
 
     if direction in ("callers", "both"):
         callers = store.callers_of(symbol_name, module)
@@ -550,7 +540,7 @@ def bsl_impact_analysis(
     symbol_name: str,
     depth: int = 3,
     module: str | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Transitive impact analysis: find all symbols affected by changing a given symbol.
 
     Uses BFS to traverse the call graph upward (callers of callers).
@@ -566,14 +556,16 @@ def bsl_impact_analysis(
     store = _get_call_graph()
     affected = store.impact_analysis(symbol_name, module, depth=depth)
 
-    by_depth: Dict[int, list] = {}
+    by_depth: dict[int, list] = {}
     for item in affected:
         d = item.get("_depth", 0)
-        by_depth.setdefault(d, []).append({
-            "name": item["name"],
-            "module": item["module_path"],
-            "type": item["type"],
-        })
+        by_depth.setdefault(d, []).append(
+            {
+                "name": item["name"],
+                "module": item["module_path"],
+                "type": item["type"],
+            }
+        )
 
     return {
         "symbol": symbol_name,
@@ -584,7 +576,7 @@ def bsl_impact_analysis(
 
 
 @mcp.tool()
-def bsl_dead_code(limit: int = 50) -> Dict[str, Any]:
+def bsl_dead_code(limit: int = 50) -> dict[str, Any]:
     """Find exported BSL symbols that are never called anywhere.
 
     Returns:
@@ -614,7 +606,7 @@ def bsl_dead_code(limit: int = 50) -> Dict[str, Any]:
 def bsl_object_info(
     object_name: str,
     project_root: str | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get 1C Enterprise object metadata from EDT folder structure.
 
     Args:
@@ -630,12 +622,12 @@ def bsl_object_info(
     if obj is None:
         # Try partial match
         all_objects = extractor.extract_objects()
-        matches = [
-            o for o in all_objects
-            if object_name.lower() in o.name.lower()
-        ]
+        matches = [o for o in all_objects if object_name.lower() in o.name.lower()]
         if not matches:
-            return {"error": f"Object '{object_name}' not found", "hint": "Use exact object folder name"}
+            return {
+                "error": f"Object '{object_name}' not found",
+                "hint": "Use exact object folder name",
+            }
         # Return first partial match
         obj = matches[0]
         if len(matches) > 1:
@@ -644,7 +636,7 @@ def bsl_object_info(
                 "matches": [{"name": m.name, "type": m.object_type} for m in matches[:10]],
             }
 
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "name": obj.name,
         "object_type": obj.object_type,
         "path": obj.path,
@@ -661,9 +653,7 @@ def bsl_object_info(
         exports_count = 0
         for mp in module_paths:
             cur = store._conn.cursor()
-            cur.execute(
-                "SELECT COUNT(*) FROM symbols WHERE module_path = ?", (mp,)
-            )
+            cur.execute("SELECT COUNT(*) FROM symbols WHERE module_path = ?", (mp,))
             symbols_count += cur.fetchone()[0]
             cur.execute(
                 "SELECT COUNT(*) FROM symbols WHERE module_path = ? AND is_export = 1",
@@ -690,6 +680,7 @@ def _get_hybrid_pipeline():
         qdrant = None
         try:
             from qdrant_client import QdrantClient
+
             qdrant = QdrantClient(host="localhost", port=6333, timeout=10)
             qdrant.get_collections()  # connectivity check
         except Exception:
@@ -700,12 +691,14 @@ def _get_hybrid_pipeline():
         if qdrant:
             try:
                 import warnings
+
                 warnings.filterwarnings("ignore", category=UserWarning)
                 from fastembed import TextEmbedding
 
                 class _E5Embedder:
                     def __init__(self):
                         self._model = TextEmbedding("intfloat/multilingual-e5-large")
+
                     def embed_query(self, text: str) -> list[float]:
                         results = list(self._model.query_embed(text))
                         return results[0].tolist()
@@ -735,7 +728,7 @@ def bsl_hybrid_search(
     query: str,
     limit: int = 10,
     fetch_k: int = 50,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Hybrid BSL code search: BM25 + Vector + RRF fusion + Call Graph boost.
 
     Combines text search (SQLite FTS5) with semantic search (Qdrant vectors)
@@ -778,7 +771,7 @@ def bsl_coding_context(
     task_description: str = "",
     include_style: bool = True,
     similar_limit: int = 3,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get full coding context for writing BSL code for a 1C object.
 
     Aggregates: object metadata, module structure, similar code,
@@ -794,7 +787,7 @@ def bsl_coding_context(
     Returns:
         Dict with object info, modules, dependencies, style rules, similar code
     """
-    result: Dict[str, Any] = {"object_name": object_name}
+    result: dict[str, Any] = {"object_name": object_name}
 
     # 1. Object metadata
     try:

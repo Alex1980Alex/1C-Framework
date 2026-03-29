@@ -32,7 +32,8 @@ def _entity_text(name: str, entity_type: str, properties: dict[str, Any]) -> str
     parts = [f"{name} ({entity_type})"]
     if properties:
         props = ", ".join(
-            f"{k}={v}" for k, v in properties.items()
+            f"{k}={v}"
+            for k, v in properties.items()
             if k not in ("source_document_id", "source_chunk_ids", "confidence")
             and v  # skip empty values
         )
@@ -54,7 +55,8 @@ def _relation_text(
     parts = [f"{source_name} -[{relation_type}]-> {target_name}"]
     if properties:
         props = ", ".join(
-            f"{k}={v}" for k, v in properties.items()
+            f"{k}={v}"
+            for k, v in properties.items()
             if k not in ("source_chunk_id", "confidence") and v
         )
         if props:
@@ -109,7 +111,8 @@ class EntityEmbeddingBuilder:
         if self._collection_name not in names:
             logger.info(
                 "[LIGHTRAG] Creating collection: %s (dims=%d)",
-                self._collection_name, self._dimensions,
+                self._collection_name,
+                self._dimensions,
             )
             await client.create_collection(
                 collection_name=self._collection_name,
@@ -225,11 +228,13 @@ class EntityEmbeddingBuilder:
 
             for i in range(batch_start, batch_end):
                 eid, _text, payload = all_items[i]
-                points.append(PointStruct(
-                    id=eid,
-                    vector=embeddings[i],
-                    payload=payload,
-                ))
+                points.append(
+                    PointStruct(
+                        id=eid,
+                        vector=embeddings[i],
+                        payload=payload,
+                    )
+                )
 
             await client.upsert(
                 collection_name=self._collection_name,
@@ -239,7 +244,8 @@ class EntityEmbeddingBuilder:
             if total > batch_size:
                 logger.info(
                     "[LIGHTRAG] Upserted %d/%d points...",
-                    min(batch_end, total), total,
+                    min(batch_end, total),
+                    total,
                 )
 
         stats = {
@@ -249,7 +255,9 @@ class EntityEmbeddingBuilder:
         }
         logger.info(
             "[LIGHTRAG] Build complete: %d entities + %d relations = %d points",
-            stats["entity_count"], stats["relation_count"], stats["total_points"],
+            stats["entity_count"],
+            stats["relation_count"],
+            stats["total_points"],
         )
         return stats
 
@@ -290,13 +298,15 @@ class EntityEmbeddingBuilder:
         """
         client = await self._get_client()
 
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         search_filter = None
         if type_filter:
-            search_filter = Filter(must=[
-                FieldCondition(key="type", match=MatchValue(value=type_filter)),
-            ])
+            search_filter = Filter(
+                must=[
+                    FieldCondition(key="type", match=MatchValue(value=type_filter)),
+                ]
+            )
 
         result = await client.query_points(
             collection_name=self._collection_name,
@@ -306,10 +316,7 @@ class EntityEmbeddingBuilder:
             with_payload=True,
         )
 
-        return [
-            {**point.payload, "score": point.score}
-            for point in result.points
-        ]
+        return [{**point.payload, "score": point.score} for point in result.points]
 
     # Phase 61: Incremental update methods
 
@@ -424,7 +431,7 @@ class EntityEmbeddingBuilder:
         Returns:
             Number of points deleted.
         """
-        from qdrant_client.models import Filter, FieldCondition, MatchValue, PointIdsList
+        from qdrant_client.models import FieldCondition, Filter, MatchValue, PointIdsList
 
         client = await self._get_client()
 
@@ -460,7 +467,8 @@ class EntityEmbeddingBuilder:
         )
         logger.info(
             "[LIGHTRAG] Deleted %d entity embeddings for document %s",
-            len(point_ids), document_id,
+            len(point_ids),
+            document_id,
         )
         return len(point_ids)
 

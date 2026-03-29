@@ -13,7 +13,7 @@ import json
 import logging
 import sqlite3
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -115,22 +115,25 @@ class FeedbackCollector:
         conn = sqlite3.connect(self._db_path)
         try:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO feedback (
                     query, answer, feedback, strategy, score, sources,
                     timestamp, user_comment, metadata
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                entry.query,
-                entry.answer,
-                entry.feedback,
-                entry.strategy,
-                entry.score,
-                json.dumps(entry.sources),
-                entry.timestamp,
-                entry.user_comment,
-                json.dumps(entry.metadata),
-            ))
+            """,
+                (
+                    entry.query,
+                    entry.answer,
+                    entry.feedback,
+                    entry.strategy,
+                    entry.score,
+                    json.dumps(entry.sources),
+                    entry.timestamp,
+                    entry.user_comment,
+                    json.dumps(entry.metadata),
+                ),
+            )
             conn.commit()
             return cursor.lastrowid
         finally:
@@ -332,7 +335,7 @@ class FeedbackCollector:
         entries = self.get_feedback(limit=10000)
 
         data = {
-            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
             "total_entries": len(entries),
             "entries": [e.model_dump() for e in entries],
         }

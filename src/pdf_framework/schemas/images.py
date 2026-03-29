@@ -78,7 +78,9 @@ class ImageDescriptionRequest(BaseModel):
     image_format: str
     page_number: int
     context: str = ""  # Surrounding text for better description
-    prompt: str = "Describe this image in detail. What does it show? What information does it convey?"
+    prompt: str = (
+        "Describe this image in detail. What does it show? What information does it convey?"
+    )
 
 
 class ImageDescriptionResponse(BaseModel):

@@ -129,6 +129,13 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
+ignore = [
+    "E501",   # line-too-long — handled by formatter
+    "E402",   # module-import-not-at-top — conditional imports
+    "E722",   # bare-except — legacy code
+    "N806",   # non-lowercase-variable-in-function — 1C naming
+    "N817",   # camelcase-imported-as-acronym
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

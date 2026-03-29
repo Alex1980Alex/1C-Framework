@@ -81,7 +81,6 @@ class CostTracker:
     ) -> float:
         """Estimate cost without recording."""
         pricing = _PRICING.get(model, _PRICING["claude-sonnet-4-5-20250929"])
-        return (
-            (input_tokens / 1_000_000) * pricing["input"]
-            + (output_tokens / 1_000_000) * pricing["output"]
-        )
+        return (input_tokens / 1_000_000) * pricing["input"] + (
+            output_tokens / 1_000_000
+        ) * pricing["output"]

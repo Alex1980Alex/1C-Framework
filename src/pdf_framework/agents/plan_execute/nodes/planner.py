@@ -6,8 +6,8 @@ Author: Claude Code
 Version: 1.0.0 - Phase 57: Agentic RAG Plan-Execute
 """
 
-import logging
 import json
+import logging
 from typing import Any
 
 from src.pdf_framework.agents.plan_execute.state import PlanExecuteState, PlanStep
@@ -59,9 +59,9 @@ def create_plan(llm: Any):
         logger.info(f"[PLANNER] Creating plan for: {state.query[:50]}...")
 
         # Generate plan
-        response = await llm.ainvoke([
-            {"role": "user", "content": PLANNER_PROMPT.format(query=state.query)}
-        ])
+        response = await llm.ainvoke(
+            [{"role": "user", "content": PLANNER_PROMPT.format(query=state.query)}]
+        )
 
         # Parse JSON response
         try:

@@ -10,7 +10,6 @@ Version: 1.0.0 - Phase 19: Deep Research Agent
 """
 
 import logging
-from typing import Any
 
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
@@ -255,10 +254,8 @@ class CrossDocumentSynthesizer:
             citations = []
             for cit in data.get("citations", []):
                 # Find matching search result
-                matching_result = None
                 for sr in search_results:
                     if sr.chunk.id == cit.get("chunk_id"):
-                        matching_result = sr
                         break
 
                 citation = SourceCitation(
@@ -297,10 +294,9 @@ class CrossDocumentSynthesizer:
             Basic SynthesizedAnswer
         """
         # Combine top results
-        combined_text = "\n\n".join([
-            f"[{i + 1}] {r.chunk.content}"
-            for i, r in enumerate(results[:3])
-        ])
+        combined_text = "\n\n".join(
+            [f"[{i + 1}] {r.chunk.content}" for i, r in enumerate(results[:3])]
+        )
 
         citations = [
             SourceCitation(

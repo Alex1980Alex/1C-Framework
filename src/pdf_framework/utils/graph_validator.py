@@ -127,9 +127,7 @@ def validate_graph(
     # ------------------------------------------------------------------
     for node in sorted(user_nodes):
         if not adjacency.get(node):
-            errors.append(
-                f"Node '{node}' has no outgoing edges and is not END (dangling)"
-            )
+            errors.append(f"Node '{node}' has no outgoing edges and is not END (dangling)")
 
     # ------------------------------------------------------------------
     # 3. Cycles without conditional exit (infinite loop detection)
@@ -148,14 +146,9 @@ def validate_graph(
 
         cycle_repr = " -> ".join(cycle + [cycle[0]])
         if not has_conditional_exit:
-            errors.append(
-                f"Cycle without conditional exit (potential infinite loop): "
-                f"{cycle_repr}"
-            )
+            errors.append(f"Cycle without conditional exit (potential infinite loop): {cycle_repr}")
         else:
-            warnings.append(
-                f"Cycle detected (has conditional exit, OK): {cycle_repr}"
-            )
+            warnings.append(f"Cycle detected (has conditional exit, OK): {cycle_repr}")
 
     # ------------------------------------------------------------------
     # 4. Required state fields

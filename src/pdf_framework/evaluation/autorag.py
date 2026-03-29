@@ -137,7 +137,7 @@ class AutoRAGOptimizer:
                                 reranker_enabled=reranker,
                                 k=k,
                                 description=f"chunk={chunk_size}, overlap={overlap}, "
-                                           f"strategy={strategy}, k={k}, reranker={reranker}",
+                                f"strategy={strategy}, k={k}, reranker={reranker}",
                             )
                             configs.append(config)
                             config_id += 1
@@ -190,10 +190,7 @@ class AutoRAGOptimizer:
         best_result = max(results, key=lambda r: r.f1 if r.f1 > 0 else r.accuracy)
 
         # Baseline score (default config)
-        baseline = next(
-            (r for r in results if r.config.name == "baseline"),
-            None
-        )
+        baseline = next((r for r in results if r.config.name == "baseline"), None)
         baseline_score = baseline.f1 if baseline else 0.0
 
         report = OptimizationReport(
@@ -261,9 +258,7 @@ class AutoRAGOptimizer:
         async def run_one(config: RAGConfig) -> ExperimentResult:
             return await self._run_experiment(config, benchmark_dataset)
 
-        results = await asyncio.gather(*[
-            run_one(config) for config in configs
-        ])
+        results = await asyncio.gather(*[run_one(config) for config in configs])
 
         return list(results)
 
@@ -281,10 +276,8 @@ class AutoRAGOptimizer:
         Returns:
             ExperimentResult with metrics
         """
-        import asyncio
 
         t0 = time.time()
-        errors: list[str] = []
 
         # This is a simplified implementation
         # In production, would actually run RAG with this config
@@ -299,6 +292,7 @@ class AutoRAGOptimizer:
                 # In production: run actual RAG and compare
                 # For now: random accuracy based on config parameters
                 import random
+
                 if random.random() > 0.3:
                     correct += 1
 
@@ -380,25 +374,29 @@ class AutoRAGOptimizer:
         new_lines = existing_lines[:autorag_section_start]
 
         # AutoRAG section header
-        new_lines.extend([
-            "# === AutoRAG Optimized Config ===",
-            f"# Optimized at: {report.timestamp}",
-            f"# Best F1 Score: {report.best_score:.3f}",
-            f"# Improvement: {report.improvement:+.3f}",
-            "",
-        ])
+        new_lines.extend(
+            [
+                "# === AutoRAG Optimized Config ===",
+                f"# Optimized at: {report.timestamp}",
+                f"# Best F1 Score: {report.best_score:.3f}",
+                f"# Improvement: {report.improvement:+.3f}",
+                "",
+            ]
+        )
 
         # Config values
         config = report.best_config
-        new_lines.extend([
-            f"PDF__CHUNK_SIZE={config.chunk_size}",
-            f"PDF__CHUNK_OVERLAP={config.chunk_overlap}",
-            f"SEARCH__DEFAULT_STRATEGY={config.strategy}",
-            f"AGENT__RERANKER_ENABLED={'true' if config.reranker_enabled else 'false'}",
-            f"AGENT__SEARCH_K={config.k}",
-            "# === End AutoRAG ===",
-            "",
-        ])
+        new_lines.extend(
+            [
+                f"PDF__CHUNK_SIZE={config.chunk_size}",
+                f"PDF__CHUNK_OVERLAP={config.chunk_overlap}",
+                f"SEARCH__DEFAULT_STRATEGY={config.strategy}",
+                f"AGENT__RERANKER_ENABLED={'true' if config.reranker_enabled else 'false'}",
+                f"AGENT__SEARCH_K={config.k}",
+                "# === End AutoRAG ===",
+                "",
+            ]
+        )
 
         # Add remaining lines
         new_lines.extend(existing_lines[autorag_section_end:])
@@ -477,7 +475,9 @@ def run_autorag(
 
     optimizer = AutoRAGOptimizer(output_dir=Path(output_dir))
 
-    return asyncio.run(optimizer.optimize(
-        benchmark_dataset=benchmark_dataset,
-        max_experiments=max_experiments,
-    ))
+    return asyncio.run(
+        optimizer.optimize(
+            benchmark_dataset=benchmark_dataset,
+            max_experiments=max_experiments,
+        )
+    )

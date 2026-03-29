@@ -117,9 +117,12 @@ class JinaEmbeddingEngine(BaseEmbeddingEngine):
         logger.info(
             "[EMBEDDING] Jina v3: %d текстов → %d эмбеддингов за %.2f сек "
             "(%.0f текстов/сек, model=%s, task=%s, dims=%s, late_chunking=%s)",
-            len(texts), len(all_embeddings), elapsed,
+            len(texts),
+            len(all_embeddings),
+            elapsed,
             len(texts) / elapsed if elapsed > 0 else 0,
-            self._model, task,
+            self._model,
+            task,
             self._settings.jina_truncate_dim or self._settings.dimensions,
             self._settings.late_chunking,
         )
@@ -138,7 +141,9 @@ class JinaEmbeddingEngine(BaseEmbeddingEngine):
         return all_embeddings
 
     async def _embed_late_chunking(
-        self, texts: list[str], task: str,
+        self,
+        texts: list[str],
+        task: str,
     ) -> list[list[float]]:
         """Late Chunking: group consecutive texts into token windows.
 
@@ -154,25 +159,32 @@ class JinaEmbeddingEngine(BaseEmbeddingEngine):
         windows = self._group_into_windows(texts, max_chars)
         logger.info(
             "[EMBEDDING] Late Chunking: %d текстов → %d окон (макс %d токенов/окно)",
-            len(texts), len(windows), max_tokens,
+            len(texts),
+            len(windows),
+            max_tokens,
         )
 
         all_embeddings: list[list[float]] = []
         for window_idx, window_texts in enumerate(windows):
             window_embeddings = await self._call_api(
-                window_texts, task=task, late_chunking=True,
+                window_texts,
+                task=task,
+                late_chunking=True,
             )
             all_embeddings.extend(window_embeddings)
             logger.debug(
                 "[EMBEDDING] Late Chunking окно %d/%d: %d чанков",
-                window_idx + 1, len(windows), len(window_texts),
+                window_idx + 1,
+                len(windows),
+                len(window_texts),
             )
 
         return all_embeddings
 
     @staticmethod
     def _group_into_windows(
-        texts: list[str], max_chars: int,
+        texts: list[str],
+        max_chars: int,
     ) -> list[list[str]]:
         """Group consecutive texts into windows within max_chars limit.
 

@@ -88,11 +88,14 @@ class ImageProcessor:
             logger.info(f"[IMAGE_PROCESSOR] Describing {len(images)} images with Claude Vision")
             descriptions = self._describe_batch(images)
         else:
-            descriptions = [ImageDescriptionResponse(
-                description="[Description disabled]",
-                model_used="none",
-                success=True,
-            ) for _ in images]
+            descriptions = [
+                ImageDescriptionResponse(
+                    description="[Description disabled]",
+                    model_used="none",
+                    success=True,
+                )
+                for _ in images
+            ]
 
         # Create processed images
         processed: list[ProcessedImage] = []
@@ -132,11 +135,14 @@ class ImageProcessor:
         if self._enable_description and self._describer:
             descriptions = self._describe_batch(image_chunks)
         else:
-            descriptions = [ImageDescriptionResponse(
-                description="[Description disabled]",
-                model_used="none",
-                success=True,
-            ) for _ in image_chunks]
+            descriptions = [
+                ImageDescriptionResponse(
+                    description="[Description disabled]",
+                    model_used="none",
+                    success=True,
+                )
+                for _ in image_chunks
+            ]
 
         # Create processed images
         processed: list[ProcessedImage] = []
@@ -290,6 +296,7 @@ def create_image_processor(
 
     # Create embedder
     from src.pdf_framework.embeddings import get_embedding
+
     embedder = get_embedding(model=embedding_model)
 
     # Create extractor

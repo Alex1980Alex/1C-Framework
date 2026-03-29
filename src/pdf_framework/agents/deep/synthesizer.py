@@ -54,7 +54,9 @@ class CrossDocumentSynthesizer:
         return self._synthesize_heuristic(original_question, sub_results)
 
     def _synthesize_heuristic(
-        self, question: str, sub_results: list[SubResult],
+        self,
+        question: str,
+        sub_results: list[SubResult],
     ) -> tuple[str, list[Citation]]:
         """Synthesize without LLM using template merging."""
         parts: list[str] = []
@@ -72,7 +74,10 @@ class CrossDocumentSynthesizer:
         return answer, citations
 
     async def _synthesize_with_llm(
-        self, question: str, sub_results: list[SubResult], context: str,
+        self,
+        question: str,
+        sub_results: list[SubResult],
+        context: str,
     ) -> tuple[str, list[Citation]]:
         """Synthesize using LLM."""
         try:
@@ -83,15 +88,21 @@ class CrossDocumentSynthesizer:
                 context_parts.append(f"[{i}] {sr.sub_question}: {sr.answer}")
 
             messages = [
-                SystemMessage(content=(
-                    "Synthesize the following research findings into a comprehensive answer. "
-                    "Use citation numbers [1], [2], etc. to reference sources. "
-                    "Answer in Russian."
-                )),
-                HumanMessage(content=f"Question: {question}\n\nFindings:\n" + "\n".join(context_parts)),
+                SystemMessage(
+                    content=(
+                        "Synthesize the following research findings into a comprehensive answer. "
+                        "Use citation numbers [1], [2], etc. to reference sources. "
+                        "Answer in Russian."
+                    )
+                ),
+                HumanMessage(
+                    content=f"Question: {question}\n\nFindings:\n" + "\n".join(context_parts)
+                ),
             ]
             response = await self._llm.ainvoke(messages)
-            text = response.content if isinstance(response.content, str) else response.content[0].text
+            text = (
+                response.content if isinstance(response.content, str) else response.content[0].text
+            )
             citations = self._extract_citations(text, sub_results)
             return text, citations
         except Exception as e:
@@ -99,13 +110,17 @@ class CrossDocumentSynthesizer:
             return self._synthesize_heuristic(question, sub_results)
 
     async def build_citation_chain(
-        self, answer: str, sub_results: list[SubResult],
+        self,
+        answer: str,
+        sub_results: list[SubResult],
     ) -> list[Citation]:
         """Extract citation references from an answer."""
         return self._extract_citations(answer, sub_results)
 
     def _extract_citations(
-        self, text: str, sub_results: list[SubResult],
+        self,
+        text: str,
+        sub_results: list[SubResult],
     ) -> list[Citation]:
         """Parse [N] citations from text."""
         citations: list[Citation] = []

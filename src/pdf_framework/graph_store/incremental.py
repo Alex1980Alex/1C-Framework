@@ -8,9 +8,9 @@ Version: 0.7.0 - Phase 6.5: Incremental Updates
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 import networkx as nx
+
 from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.graph_store.community import CommunityDetector
 from src.pdf_framework.graph_store.summarizer import CommunitySummarizer
@@ -244,7 +244,9 @@ class IncrementalGraphUpdater:
         # Apply new assignments
         await self._detector.apply_to_graph(subgraph, new_communities)
 
-        logger.info(f"[INCREMENTAL] Updated community assignments for {len(entities_to_reassign)} entities")
+        logger.info(
+            f"[INCREMENTAL] Updated community assignments for {len(entities_to_reassign)} entities"
+        )
 
     async def _regenerate_summaries(
         self,

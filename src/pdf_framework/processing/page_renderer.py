@@ -11,7 +11,6 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 import fitz  # PyMuPDF
 from PIL import Image
@@ -24,10 +23,11 @@ class RenderDPI(Enum):
 
     Higher DPI = better quality but slower processing and larger images.
     """
-    THUMBNAIL = 72   # Fast previews, ~600x800 px
-    STANDARD = 150   # Standard quality, ~1200x1600 px
-    HIGH = 200       # High quality, ~1600x2100 px
-    ULTRA = 300      # Maximum quality, ~2400x3200 px
+
+    THUMBNAIL = 72  # Fast previews, ~600x800 px
+    STANDARD = 150  # Standard quality, ~1200x1600 px
+    HIGH = 200  # High quality, ~1600x2100 px
+    ULTRA = 300  # Maximum quality, ~2400x3200 px
 
 
 @dataclass
@@ -43,6 +43,7 @@ class RenderConfig:
         max_width: Maximum width (0 = no limit)
         max_height: Maximum height (0 = no limit)
     """
+
     dpi: int = 150
     format: str = "PNG"
     color_space: str = "RGB"
@@ -113,8 +114,7 @@ class PageRenderer:
         self._matrix = config.to_matrix()
 
         logger.debug(
-            f"[PAGE_RENDERER] Initialized: {config.dpi} DPI, "
-            f"{config.format}, {config.color_space}"
+            f"[PAGE_RENDERER] Initialized: {config.dpi} DPI, {config.format}, {config.color_space}"
         )
 
     def render_page(
@@ -135,9 +135,7 @@ class PageRenderer:
             IndexError: If page_number is out of range
         """
         if page_number < 0 or page_number >= len(doc):
-            raise IndexError(
-                f"Page {page_number} out of range (0-{len(doc) - 1})"
-            )
+            raise IndexError(f"Page {page_number} out of range (0-{len(doc) - 1})")
 
         page = doc[page_number]
 
@@ -213,7 +211,7 @@ class PageRenderer:
             pages_to_render = list(range(total_pages))
 
         if not pages_to_render:
-            logger.warning(f"[PAGE_RENDERER] No valid pages to render")
+            logger.warning("[PAGE_RENDERER] No valid pages to render")
             return []
 
         logger.debug(
@@ -228,15 +226,11 @@ class PageRenderer:
                 img = self.render_page(doc, page_num)
                 results.append((page_num, img))
             except Exception as e:
-                logger.error(
-                    f"[PAGE_RENDERER] Failed to render page {page_num}: {e}"
-                )
+                logger.error(f"[PAGE_RENDERER] Failed to render page {page_num}: {e}")
 
         doc.close()
 
-        logger.info(
-            f"[PAGE_RENDERER] Rendered {len(results)}/{len(pages_to_render)} pages"
-        )
+        logger.info(f"[PAGE_RENDERER] Rendered {len(results)}/{len(pages_to_render)} pages")
 
         return results
 
@@ -300,9 +294,7 @@ class PageRenderer:
             img.save(filepath, format=self._format)
             saved_paths.append(filepath)
 
-        logger.info(
-            f"[PAGE_RENDERER] Saved {len(saved_paths)} pages to {output_dir}"
-        )
+        logger.info(f"[PAGE_RENDERER] Saved {len(saved_paths)} pages to {output_dir}")
 
         return saved_paths
 

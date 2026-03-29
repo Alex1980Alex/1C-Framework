@@ -51,9 +51,7 @@ class VisualSearchStrategy:
         self._vector_store = vector_store
         self._visual_collection = visual_collection
 
-        logger.info(
-            f"[VISUAL_SEARCH] Initialized with collection={visual_collection}"
-        )
+        logger.info(f"[VISUAL_SEARCH] Initialized with collection={visual_collection}")
 
     async def search(
         self,
@@ -79,7 +77,6 @@ class VisualSearchStrategy:
         query_vectors = self._colpali.embed_query(query)
 
         # Mean pool multi-vector to single 128-dim vector
-        import torch
         query_vector = query_vectors.mean(dim=0).cpu().tolist()
 
         # Build filter if document_id specified
@@ -240,11 +237,13 @@ class VisualSearchStrategy:
         for chunk_id in sorted_ids:
             result = result_map[chunk_id]
             # Update score with RRF score
-            fused.append(SearchResult(
-                chunk=result.chunk,
-                score=scores[chunk_id],
-                source=f"{result.source}_rrf",
-            ))
+            fused.append(
+                SearchResult(
+                    chunk=result.chunk,
+                    score=scores[chunk_id],
+                    source=f"{result.source}_rrf",
+                )
+            )
 
         return fused
 

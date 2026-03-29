@@ -18,18 +18,23 @@ __all__ = [
     "SearchResult",
 ]
 
+
 def __getattr__(name):
     """Lazy import of services to avoid circular dependencies"""
     if name == "BSLSearchService":
         from .services.search import BSLSearchService
+
         return BSLSearchService
     elif name == "SearchRequest":
         from .services.search import SearchRequest
+
         return SearchRequest
     elif name == "SearchMode":
         from .services.search import SearchMode
+
         return SearchMode
     elif name == "SearchResult":
         from .services.search import SearchResult
+
         return SearchResult
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

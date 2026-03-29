@@ -4,7 +4,6 @@ SonarQube Configuration Manager
 Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
-from typing import Dict, Any, Optional
 from pydantic import BaseModel
 
 
@@ -28,9 +27,9 @@ class SonarQubeConfig(BaseModel):
 class ConfigManager:
     """Менеджер конфигурации SonarQube"""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         self.config_path = config_path
-        self._config: Optional[SonarQubeConfig] = None
+        self._config: SonarQubeConfig | None = None
 
     def load(self) -> SonarQubeConfig:
         """Загрузка конфигурации"""

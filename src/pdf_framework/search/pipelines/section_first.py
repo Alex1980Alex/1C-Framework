@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from src.pdf_framework.schemas.documents import SearchResponse
 
@@ -87,7 +87,8 @@ class SectionFirstPipeline:
             # Not enough results in section — fall through to full search
             logger.info(
                 "[SECTION-FIRST] Section '%s' yielded only %d results — falling back",
-                top_section, len(response.results),
+                top_section,
+                len(response.results),
             )
 
         # Fallback: regular hybrid search (no section constraint)
@@ -102,7 +103,8 @@ class SectionFirstPipeline:
         )
 
     async def _extract_dominant_section(
-        self, hits: list[tuple[str, float]],
+        self,
+        hits: list[tuple[str, float]],
     ) -> str | None:
         """Find the most common section_number prefix among top BM25 hits.
 
@@ -146,7 +148,9 @@ class SectionFirstPipeline:
 
         logger.debug(
             "[SECTION-FIRST] Section distribution: %s (dominant: '%s' at %.0f%%)",
-            dict(counter), most_common, ratio * 100,
+            dict(counter),
+            most_common,
+            ratio * 100,
         )
 
         if ratio >= self.DOMINANCE_THRESHOLD:

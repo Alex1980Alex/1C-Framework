@@ -11,10 +11,14 @@ _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 class PDFSettings(BaseSettings):
     """PDF processing configuration."""
 
-    loader: Literal["pymupdf", "pdfplumber", "unstructured", "docling", "pymupdf4llm", "smart", "hybrid"] = "pymupdf"
+    loader: Literal[
+        "pymupdf", "pdfplumber", "unstructured", "docling", "pymupdf4llm", "smart", "hybrid"
+    ] = "pymupdf"
     chunk_size: int = 1000
     chunk_overlap: int = 200
-    splitter: Literal["recursive", "semantic", "by_heading", "by_page", "parent_child", "structure_aware"] = "recursive"
+    splitter: Literal[
+        "recursive", "semantic", "by_heading", "by_page", "parent_child", "structure_aware"
+    ] = "recursive"
     extract_tables: bool = True
     extract_images: bool = True
 

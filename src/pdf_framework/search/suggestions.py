@@ -104,7 +104,7 @@ class QuerySuggester:
 
         try:
             # Get top entities by degree
-            stats = await graph_store.get_statistics()
+            await graph_store.get_statistics()
 
             # Extract entities (this would depend on graph store implementation)
             # For now, return generic suggestions
@@ -173,7 +173,7 @@ Questions:'''
                 clean = line.strip()
                 for prefix in [f"{i}." for i in range(1, 10)] + ["- ", "* "]:
                     if clean.startswith(prefix):
-                        clean = clean[len(prefix):].strip()
+                        clean = clean[len(prefix) :].strip()
                 if clean and len(clean) > 5:
                     suggestions.append(clean)
 

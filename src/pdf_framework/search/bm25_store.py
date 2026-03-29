@@ -19,12 +19,49 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # Common Russian stop-words — filtered from BM25 queries to improve recall
-RUSSIAN_STOP_WORDS = frozenset({
-    "и", "в", "на", "с", "к", "о", "у", "а", "но", "или", "не", "ни",
-    "же", "бы", "ли", "что", "как", "это", "для", "по", "из", "от",
-    "до", "за", "при", "все", "его", "так", "она", "он", "они",
-    "мы", "вы", "ее", "их", "том", "тем", "нет", "да",
-})
+RUSSIAN_STOP_WORDS = frozenset(
+    {
+        "и",
+        "в",
+        "на",
+        "с",
+        "к",
+        "о",
+        "у",
+        "а",
+        "но",
+        "или",
+        "не",
+        "ни",
+        "же",
+        "бы",
+        "ли",
+        "что",
+        "как",
+        "это",
+        "для",
+        "по",
+        "из",
+        "от",
+        "до",
+        "за",
+        "при",
+        "все",
+        "его",
+        "так",
+        "она",
+        "он",
+        "они",
+        "мы",
+        "вы",
+        "ее",
+        "их",
+        "том",
+        "тем",
+        "нет",
+        "да",
+    }
+)
 
 # Word boundary pattern for lemmatization
 _WORD_RE = re.compile(r"[а-яёА-ЯЁa-zA-Z0-9_]+")
@@ -34,6 +71,7 @@ def _init_morph() -> Any:
     """Lazy-init pymorphy3 MorphAnalyzer (singleton)."""
     try:
         import pymorphy3
+
         return pymorphy3.MorphAnalyzer()
     except ImportError:
         logger.info("[BM25] pymorphy3 not installed — using prefix stemming fallback")
@@ -107,7 +145,9 @@ class BM25Store:
         has_morph = _get_morph() is not None
         logger.info(
             "[BM25] Initialized: %s (%d chunks, lemmatization=%s, multi-column=true)",
-            self._db_path, count, has_morph,
+            self._db_path,
+            count,
+            has_morph,
         )
 
     def _create_tables(self) -> None:
@@ -156,12 +196,8 @@ class BM25Store:
                     "ALTER TABLE chunk_meta ADD COLUMN section_title TEXT NOT NULL DEFAULT ''"
                 )
                 logger.info("[BM25] Migrated chunk_meta: added section_title column")
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_chunk_meta_doc ON chunk_meta(document_id)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_chunk_meta_source ON chunk_meta(source)"
-            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_chunk_meta_doc ON chunk_meta(document_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_chunk_meta_source ON chunk_meta(source)")
             conn.commit()
         finally:
             conn.close()
@@ -250,9 +286,7 @@ class BM25Store:
                     "VALUES (?, ?, ?, ?, ?)",
                     (cid, doc_id, source, original, section_title),
                 )
-                cursor.execute(
-                    "DELETE FROM chunks_fts WHERE chunk_id = ?", (cid,)
-                )
+                cursor.execute("DELETE FROM chunks_fts WHERE chunk_id = ?", (cid,))
                 cursor.execute(
                     "INSERT INTO chunks_fts (chunk_id, title, body, document_id, source) "
                     "VALUES (?, ?, ?, ?, ?)",
@@ -327,7 +361,9 @@ class BM25Store:
             conn.close()
 
     async def search_two_pass(
-        self, query: str, k: int = 10,
+        self,
+        query: str,
+        k: int = 10,
     ) -> list[tuple[str, float]]:
         """Two-pass search: title-only + body-only merged via RRF.
 
@@ -402,7 +438,10 @@ class BM25Store:
             conn.close()
 
     async def search_by_section(
-        self, query: str, section_prefix: str, k: int = 10,
+        self,
+        query: str,
+        section_prefix: str,
+        k: int = 10,
     ) -> list[tuple[str, float]]:
         """Search within a specific section by prefix match on title column (Phase 29).
 
@@ -414,11 +453,17 @@ class BM25Store:
         if not query or not query.strip():
             return []
         return await asyncio.to_thread(
-            self._search_by_section_sync, query, section_prefix, k,
+            self._search_by_section_sync,
+            query,
+            section_prefix,
+            k,
         )
 
     def _search_by_section_sync(
-        self, query: str, section_prefix: str, k: int,
+        self,
+        query: str,
+        section_prefix: str,
+        k: int,
     ) -> list[tuple[str, float]]:
         conn = sqlite3.connect(str(self._db_path))
         try:
@@ -451,12 +496,13 @@ class BM25Store:
             if min_score == 0:
                 return [(cid, 1.0) for cid, _ in results[:k]]
             return [
-                (cid, abs(min_score / score) if score != 0 else 0)
-                for cid, score in results[:k]
+                (cid, abs(min_score / score) if score != 0 else 0) for cid, score in results[:k]
             ]
 
         except sqlite3.OperationalError as e:
-            logger.warning("[BM25] Section search error: %s (query=%r, section=%r)", e, query, section_prefix)
+            logger.warning(
+                "[BM25] Section search error: %s (query=%r, section=%r)", e, query, section_prefix
+            )
             return []
         finally:
             conn.close()
@@ -477,9 +523,30 @@ class BM25Store:
         """Crude Russian stemming fallback (used when pymorphy3 is not available)."""
         t = token.lower()
         if len(t) > 4 and any("\u0400" <= c <= "\u04ff" for c in t):
-            if t.endswith(("ов", "ев", "ей", "ий", "ый", "ой", "ая", "яя",
-                           "ое", "ее", "ых", "их", "ам", "ям", "ом", "ем",
-                           "ах", "ях", "ую", "юю")):
+            if t.endswith(
+                (
+                    "ов",
+                    "ев",
+                    "ей",
+                    "ий",
+                    "ый",
+                    "ой",
+                    "ая",
+                    "яя",
+                    "ое",
+                    "ее",
+                    "ых",
+                    "их",
+                    "ам",
+                    "ям",
+                    "ом",
+                    "ем",
+                    "ах",
+                    "ях",
+                    "ую",
+                    "юю",
+                )
+            ):
                 return t[:-2]
             if t.endswith(("а", "я", "о", "е", "и", "ы", "у", "ю", "ь")):
                 return t[:-1]
@@ -545,18 +612,14 @@ class BM25Store:
         conn = sqlite3.connect(str(self._db_path))
         try:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT chunk_id FROM chunk_meta WHERE source = ?", (source,)
-            )
+            cursor.execute("SELECT chunk_id FROM chunk_meta WHERE source = ?", (source,))
             ids = [row[0] for row in cursor.fetchall()]
             if not ids:
                 return 0
             for cid in ids:
                 cursor.execute("DELETE FROM chunks_fts WHERE chunk_id = ?", (cid,))
             placeholders = ",".join("?" * len(ids))
-            cursor.execute(
-                f"DELETE FROM chunk_meta WHERE chunk_id IN ({placeholders})", ids
-            )
+            cursor.execute(f"DELETE FROM chunk_meta WHERE chunk_id IN ({placeholders})", ids)
             conn.commit()
             logger.info("[BM25] Deleted %d chunks for source %s", len(ids), Path(source).name)
             return len(ids)
@@ -575,18 +638,14 @@ class BM25Store:
         conn = sqlite3.connect(str(self._db_path))
         try:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT chunk_id FROM chunk_meta WHERE document_id = ?", (document_id,)
-            )
+            cursor.execute("SELECT chunk_id FROM chunk_meta WHERE document_id = ?", (document_id,))
             ids = [row[0] for row in cursor.fetchall()]
             if not ids:
                 return 0
             for cid in ids:
                 cursor.execute("DELETE FROM chunks_fts WHERE chunk_id = ?", (cid,))
             placeholders = ",".join("?" * len(ids))
-            cursor.execute(
-                f"DELETE FROM chunk_meta WHERE chunk_id IN ({placeholders})", ids
-            )
+            cursor.execute(f"DELETE FROM chunk_meta WHERE chunk_id IN ({placeholders})", ids)
             conn.commit()
             logger.info("[BM25] Deleted %d chunks for document %s", len(ids), document_id)
             return len(ids)
@@ -616,7 +675,8 @@ class BM25Store:
             conn.close()
 
     async def get_chunks_by_ids(
-        self, chunk_ids: list[str],
+        self,
+        chunk_ids: list[str],
     ) -> list[dict[str, Any]]:
         """Get original content + metadata for chunk IDs from chunk_meta.
 
@@ -639,13 +699,15 @@ class BM25Store:
             )
             results = []
             for row in cursor.fetchall():
-                results.append({
-                    "chunk_id": row[0],
-                    "document_id": row[1],
-                    "source": row[2],
-                    "original_content": row[3] or "",
-                    "section_title": row[4] or "",
-                })
+                results.append(
+                    {
+                        "chunk_id": row[0],
+                        "document_id": row[1],
+                        "source": row[2],
+                        "original_content": row[3] or "",
+                        "section_title": row[4] or "",
+                    }
+                )
             return results
         except sqlite3.OperationalError as e:
             logger.warning("[BM25] Error getting chunks by IDs: %s", e)

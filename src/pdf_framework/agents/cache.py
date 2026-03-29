@@ -6,14 +6,13 @@ Author: Claude Code
 Version: 1.2.0 - Phase 11.3: LLM Response Cache
 """
 
-import aiosqlite
 import hashlib
 import json
 import logging
-import time
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+
+import aiosqlite
 
 logger = logging.getLogger(__name__)
 
@@ -117,12 +116,15 @@ class LLMResponseCache:
             async with aiosqlite.connect(self._db_path) as db:
                 db.row_factory = aiosqlite.Row
 
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     SELECT response, expires_at
                     FROM llm_cache
                     WHERE cache_key = ?
                     AND expires_at > datetime('now', 'utc')
-                """, (key,))
+                """,
+                    (key,),
+                )
 
                 row = await cursor.fetchone()
 
@@ -167,15 +169,25 @@ class LLMResponseCache:
         key = self._generate_key(model, messages, temperature)
 
         # Calculate expiration
-        expires_at = datetime.now(timezone.utc) + timedelta(seconds=self._ttl_seconds)
+        expires_at = datetime.now(UTC) + timedelta(seconds=self._ttl_seconds)
 
         try:
             async with aiosqlite.connect(self._db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT OR REPLACE INTO llm_cache
                     (cache_key, response, model, created_at, expires_at, prompt_tokens, completion_tokens)
                     VALUES (?, ?, ?, datetime('now', 'utc'), ?, ?, ?)
-                """, (key, response, model, expires_at.isoformat(), prompt_tokens, completion_tokens))
+                """,
+                    (
+                        key,
+                        response,
+                        model,
+                        expires_at.isoformat(),
+                        prompt_tokens,
+                        completion_tokens,
+                    ),
+                )
 
                 await db.commit()
 
@@ -198,10 +210,13 @@ class LLMResponseCache:
 
         try:
             async with aiosqlite.connect(self._db_path) as db:
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     DELETE FROM llm_cache
                     WHERE cache_key LIKE ?
-                """, (pattern,))
+                """,
+                    (pattern,),
+                )
 
                 await db.commit()
 

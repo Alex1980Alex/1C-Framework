@@ -102,10 +102,14 @@ class RetrievalQAChain:
                 check = await check_completeness(question, answer_text, fast_llm)
                 if not check["is_complete"]:
                     sub_queries = await generate_sub_queries(
-                        question, check["gaps"], fast_llm,
+                        question,
+                        check["gaps"],
+                        fast_llm,
                     )
                     enriched = await enrich_search_results(
-                        search_response.results, sub_queries, search_manager,
+                        search_response.results,
+                        sub_queries,
+                        search_manager,
                     )
                     # Regenerate with enriched context
                     enriched_context = self._build_context(enriched)
@@ -118,13 +122,15 @@ class RetrievalQAChain:
                     search_response = enriched  # for section refs below
                     logger.info(
                         "[ENRICHMENT] Regenerated with %d chunks (was %d)",
-                        enriched.total_found, len(search_response.results),
+                        enriched.total_found,
+                        len(search_response.results),
                     )
             except Exception:
                 logger.exception("[ENRICHMENT] Enrichment loop failed, using initial answer")
 
         # Phase 41: Guaranteed section reference block
         from src.pdf_framework.utils.section_refs import append_section_refs
+
         return append_section_refs(answer_text, search_response.results)
 
     async def stream_answer(
@@ -142,9 +148,7 @@ class RetrievalQAChain:
             content = chunk.content
             # Handle both str and list[ContentBlock]
             if isinstance(content, list):
-                content = "".join(
-                    getattr(block, "text", "") for block in content
-                )
+                content = "".join(getattr(block, "text", "") for block in content)
             if content:
                 yield content
 

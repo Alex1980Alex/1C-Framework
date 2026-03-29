@@ -55,14 +55,9 @@ class BSLContextEnricher:
                 obj_info = self._extractor.get_object_by_name(obj_name)
                 if obj_info and obj_info.has_forms:
                     chunk.metadata["forms"] = obj_info.form_names
-                    context_lines.append(
-                        f"// Forms: {', '.join(obj_info.form_names[:5])}"
-                    )
+                    context_lines.append(f"// Forms: {', '.join(obj_info.form_names[:5])}")
 
-        if (
-            self._call_graph
-            and chunk.metadata.get("chunk_type") == "symbol"
-        ):
+        if self._call_graph and chunk.metadata.get("chunk_type") == "symbol":
             symbol_name = chunk.metadata.get("name", "")
             if symbol_name:
                 self._add_call_context(chunk, symbol_name, module_path, context_lines)

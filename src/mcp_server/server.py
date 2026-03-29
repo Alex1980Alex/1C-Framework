@@ -51,11 +51,22 @@ async def list_tools() -> list[Tool]:
                     "query": {"type": "string", "description": "Search query"},
                     "strategy": {
                         "type": "string",
-                        "enum": ["vector", "graph", "hybrid", "bm25", "section_first", "graphrag_local", "graphrag_light"],
+                        "enum": [
+                            "vector",
+                            "graph",
+                            "hybrid",
+                            "bm25",
+                            "section_first",
+                            "graphrag_local",
+                            "graphrag_light",
+                        ],
                         "default": "hybrid",
                     },
                     "k": {"type": "integer", "default": 5, "description": "Number of results"},
-                    "section": {"type": "string", "description": "Filter by section prefix (e.g. '5.14')"},
+                    "section": {
+                        "type": "string",
+                        "description": "Filter by section prefix (e.g. '5.14')",
+                    },
                 },
                 "required": ["query"],
             },
@@ -177,7 +188,10 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Text description of visual content"},
+                    "query": {
+                        "type": "string",
+                        "description": "Text description of visual content",
+                    },
                     "k": {"type": "integer", "default": 5},
                     "document_id": {"type": "string", "description": "Filter by document"},
                 },
@@ -223,16 +237,22 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         document = await components.loader.load(file_path)
         chunks = components.pipeline.process(document)
         result = await components.indexer.index_chunks(
-            chunks, document_id=document.id, source_path=document.source_path,
+            chunks,
+            document_id=document.id,
+            source_path=document.source_path,
         )
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "document_id": result.document_id,
-                "chunks_stored": result.chunks_stored,
-                "embeddings_computed": result.embeddings_computed,
-            }),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "document_id": result.document_id,
+                        "chunks_stored": result.chunks_stored,
+                        "embeddings_computed": result.embeddings_computed,
+                    }
+                ),
+            )
+        ]
 
     elif name == "search_documents":
         section = arguments.get("section")
@@ -285,15 +305,18 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         results = []
         for entity in entities:
             subgraph = await components.graph_store.get_neighbors(
-                entity.id, depth=arguments.get("depth", 1),
+                entity.id,
+                depth=arguments.get("depth", 1),
             )
-            results.append({
-                "entity": {"id": entity.id, "name": entity.name, "type": entity.entity_type},
-                "relations": [
-                    {"type": r.relation_type, "target": r.target_entity_id}
-                    for r in subgraph.relations[:10]
-                ],
-            })
+            results.append(
+                {
+                    "entity": {"id": entity.id, "name": entity.name, "type": entity.entity_type},
+                    "relations": [
+                        {"type": r.relation_type, "target": r.target_entity_id}
+                        for r in subgraph.relations[:10]
+                    ],
+                }
+            )
         return [TextContent(type="text", text=json.dumps(results, ensure_ascii=False))]
 
     elif name == "analyze":
@@ -304,10 +327,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             settings=components.settings.agent,
             api_key=components.settings.anthropic_api_key,
         )
-        result = await agent.ainvoke({
-            "question": arguments["question"],
-            "max_rounds": arguments.get("max_rounds", 3),
-        })
+        result = await agent.ainvoke(
+            {
+                "question": arguments["question"],
+                "max_rounds": arguments.get("max_rounds", 3),
+            }
+        )
         return [TextContent(type="text", text=result.get("answer", ""))]
 
     elif name == "research":
@@ -318,16 +343,22 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             settings=components.settings.agent,
             api_key=components.settings.anthropic_api_key,
         )
-        result = await agent.ainvoke({
-            "question": arguments["question"],
-            "max_rounds": arguments.get("max_rounds", 5),
-        })
+        result = await agent.ainvoke(
+            {
+                "question": arguments["question"],
+                "max_rounds": arguments.get("max_rounds", 5),
+            }
+        )
         return [TextContent(type="text", text=result.get("answer", ""))]
 
     elif name == "web_search":
         web = getattr(components, "web_search_strategy", None)
         if web is None:
-            return [TextContent(type="text", text="Web search not configured. Set EXTERNAL__TAVILY_API_KEY.")]
+            return [
+                TextContent(
+                    type="text", text="Web search not configured. Set EXTERNAL__TAVILY_API_KEY."
+                )
+            ]
         response = await web.search(
             query=arguments["query"],
             k=arguments.get("k", 5),
@@ -374,20 +405,24 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         if coll_store is None:
             return [TextContent(type="text", text="[]")]
         collections = await coll_store.list_all()
-        return [TextContent(
-            type="text",
-            text=json.dumps([c.model_dump() for c in collections], ensure_ascii=False),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps([c.model_dump() for c in collections], ensure_ascii=False),
+            )
+        ]
 
     elif name == "list_documents":
         registry = getattr(components, "document_registry", None)
         if registry is None:
             return [TextContent(type="text", text="[]")]
         docs = await registry.list_all()
-        return [TextContent(
-            type="text",
-            text=json.dumps([d.model_dump() for d in docs], ensure_ascii=False, default=str),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps([d.model_dump() for d in docs], ensure_ascii=False, default=str),
+            )
+        ]
 
     elif name == "get_toc":
         from src.pdf_framework.processing.toc_parser import DocumentToC
@@ -400,18 +435,27 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             fields=["section_number", "section_title", "breadcrumb", "page_number"],
         )
         toc = DocumentToC.build_from_chunks(chunks_data)
-        return [TextContent(
-            type="text",
-            text=json.dumps(toc.to_dict(), ensure_ascii=False),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(toc.to_dict(), ensure_ascii=False),
+            )
+        ]
 
     elif name == "get_stats":
         vector_count = await components.vector_store.count()
         graph_stats = await components.graph_store.get_statistics()
-        return [TextContent(type="text", text=json.dumps({
-            "vector_store": {"document_count": vector_count},
-            "graph_store": graph_stats,
-        }))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "vector_store": {"document_count": vector_count},
+                        "graph_store": graph_stats,
+                    }
+                ),
+            )
+        ]
 
     elif name == "visual_search":
         response = await components.search_manager.search_visual(
@@ -449,15 +493,24 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             for r in response.results
         ]
         metadata = response.metadata or {}
-        return [TextContent(type="text", text=json.dumps({
-            "results": results,
-            "visual_count": metadata.get("visual_count", 0),
-            "text_count": metadata.get("text_count", 0),
-        }, ensure_ascii=False))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "results": results,
+                        "visual_count": metadata.get("visual_count", 0),
+                        "text_count": metadata.get("text_count", 0),
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        ]
 
     elif name == "plan_execute":
-        from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
         from langchain_anthropic import ChatAnthropic
+
+        from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
 
         llm_kwargs = {
             "model": components.settings.agent.model,
@@ -486,10 +539,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             max_iterations=arguments.get("max_iterations", 5),
         )
 
-        result = await agent.ainvoke({
-            "query": arguments["query"],
-            "max_iterations": arguments.get("max_iterations", 5),
-        })
+        result = await agent.ainvoke(
+            {
+                "query": arguments["query"],
+                "max_iterations": arguments.get("max_iterations", 5),
+            }
+        )
 
         steps = [
             {
@@ -502,12 +557,20 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             for s in result.plan
         ]
 
-        return [TextContent(type="text", text=json.dumps({
-            "query": arguments["query"],
-            "answer": result.final_answer,
-            "steps": steps,
-            "iterations": result.iterations,
-        }, ensure_ascii=False))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "query": arguments["query"],
+                        "answer": result.final_answer,
+                        "steps": steps,
+                        "iterations": result.iterations,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        ]
 
     else:
         return [TextContent(type="text", text=f"Unknown tool: {name}")]

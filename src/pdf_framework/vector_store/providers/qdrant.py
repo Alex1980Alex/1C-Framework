@@ -21,7 +21,14 @@ logger = logging.getLogger(__name__)
 _QDRANT_NS = uuid.UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
 
 # Standard fields stored directly in DocumentChunk (not in metadata)
-_STANDARD_PAYLOAD_FIELDS = {"content", "document_id", "page_number", "section", "chunk_index", "original_id"}
+_STANDARD_PAYLOAD_FIELDS = {
+    "content",
+    "document_id",
+    "page_number",
+    "section",
+    "chunk_index",
+    "original_id",
+}
 
 
 def _to_qdrant_id(string_id: str) -> str:
@@ -35,6 +42,7 @@ def _to_qdrant_id(string_id: str) -> str:
         return string_id
     except ValueError:
         return str(uuid.uuid5(_QDRANT_NS, string_id))
+
 
 # Max batch size for Qdrant upsert (avoid too-large requests)
 _UPSERT_BATCH_SIZE = 256
@@ -61,7 +69,7 @@ class QdrantVectorStore(BaseVectorStore):
         """Initialize async Qdrant connection and create collection if needed."""
         try:
             from qdrant_client import AsyncQdrantClient
-            from qdrant_client.models import Distance, VectorParams, SparseVectorParams, Modifier
+            from qdrant_client.models import Distance, Modifier, SparseVectorParams, VectorParams
 
             api_key = self._settings.qdrant_api_key or None
             self._client = AsyncQdrantClient(
@@ -76,7 +84,9 @@ class QdrantVectorStore(BaseVectorStore):
             bm25_enabled = getattr(self._settings, "qdrant_bm25_enabled", False)
 
             if self._collection_name not in collection_names:
-                logger.info(f"[QDRANT] Creating collection: {self._collection_name} (dims={self._settings.dimensions}, bm25={bm25_enabled})")
+                logger.info(
+                    f"[QDRANT] Creating collection: {self._collection_name} (dims={self._settings.dimensions}, bm25={bm25_enabled})"
+                )
 
                 create_kwargs = {
                     "collection_name": self._collection_name,
@@ -116,7 +126,10 @@ class QdrantVectorStore(BaseVectorStore):
 
                 # Check for sparse vectors support
                 sparse_config = info.config.params.sparse_vectors
-                self._has_sparse = bool(sparse_config and "bm25" in (sparse_config if isinstance(sparse_config, dict) else {}))
+                self._has_sparse = bool(
+                    sparse_config
+                    and "bm25" in (sparse_config if isinstance(sparse_config, dict) else {})
+                )
                 if bm25_enabled and not self._has_sparse:
                     logger.warning(
                         "[QDRANT] Collection exists without sparse BM25 vectors. "
@@ -129,7 +142,10 @@ class QdrantVectorStore(BaseVectorStore):
 
             # Determine sparse support after init
             sparse_config = info.config.params.sparse_vectors
-            self._has_sparse = bool(sparse_config and "bm25" in (sparse_config if isinstance(sparse_config, dict) else {}))
+            self._has_sparse = bool(
+                sparse_config
+                and "bm25" in (sparse_config if isinstance(sparse_config, dict) else {})
+            )
 
             status = f"{count} points"
             if self._has_sparse:
@@ -138,8 +154,7 @@ class QdrantVectorStore(BaseVectorStore):
 
         except ImportError:
             raise ImportError(
-                "qdrant-client is not installed. "
-                "Install it with: pip install qdrant-client"
+                "qdrant-client is not installed. Install it with: pip install qdrant-client"
             )
 
     async def add_documents(
@@ -160,7 +175,9 @@ class QdrantVectorStore(BaseVectorStore):
         # Prepare BM25 config if sparse vectors are enabled
         bm25_doc_fn = None
         if self._has_sparse:
-            from qdrant_client.models import Document as QdrantDocument, Bm25Config
+            from qdrant_client.models import Bm25Config
+            from qdrant_client.models import Document as QdrantDocument
+
             lang = getattr(self._settings, "qdrant_bm25_language", "russian")
             bm25_k = getattr(self._settings, "qdrant_bm25_k", 1.2)
             bm25_b = getattr(self._settings, "qdrant_bm25_b", 0.75)
@@ -224,7 +241,7 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         # Build filter if provided
         search_filter = None
@@ -263,7 +280,7 @@ class QdrantVectorStore(BaseVectorStore):
             await self.initialize()
 
         import numpy as np
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         search_filter = None
         if filter:
@@ -302,7 +319,9 @@ class QdrantVectorStore(BaseVectorStore):
 
         # Normalize
         query_norm = query_arr / (np.linalg.norm(query_arr) + 1e-10)
-        cand_norms = candidate_vecs / (np.linalg.norm(candidate_vecs, axis=1, keepdims=True) + 1e-10)
+        cand_norms = candidate_vecs / (
+            np.linalg.norm(candidate_vecs, axis=1, keepdims=True) + 1e-10
+        )
         query_sim = cand_norms @ query_norm
 
         selected_indices: list[int] = []
@@ -391,15 +410,17 @@ class QdrantVectorStore(BaseVectorStore):
 
             metadata = {k: v for k, v in payload.items() if k not in _STANDARD_PAYLOAD_FIELDS}
 
-            chunks.append(DocumentChunk(
-                id=original_id,
-                content=payload.get("content", ""),
-                document_id=payload.get("document_id", ""),
-                page_number=page_number,
-                section=payload.get("section", ""),
-                chunk_index=payload.get("chunk_index", 0),
-                metadata=metadata,
-            ))
+            chunks.append(
+                DocumentChunk(
+                    id=original_id,
+                    content=payload.get("content", ""),
+                    document_id=payload.get("document_id", ""),
+                    page_number=page_number,
+                    section=payload.get("section", ""),
+                    chunk_index=payload.get("chunk_index", 0),
+                    metadata=metadata,
+                )
+            )
 
         return chunks
 
@@ -426,7 +447,7 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import Filter, FieldCondition, MatchValue, PayloadSelectorInclude
+        from qdrant_client.models import FieldCondition, Filter, MatchValue, PayloadSelectorInclude
 
         scroll_filter = None
         if filter:
@@ -462,15 +483,17 @@ class QdrantVectorStore(BaseVectorStore):
                 page_number = int(page_num_raw) if page_num_raw and page_num_raw != 0 else None
                 metadata = {k: v for k, v in payload.items() if k not in _STANDARD_PAYLOAD_FIELDS}
 
-                all_chunks.append(DocumentChunk(
-                    id=original_id,
-                    content=payload.get("content", ""),
-                    document_id=payload.get("document_id", ""),
-                    page_number=page_number,
-                    section=payload.get("section", ""),
-                    chunk_index=payload.get("chunk_index", 0),
-                    metadata=metadata,
-                ))
+                all_chunks.append(
+                    DocumentChunk(
+                        id=original_id,
+                        content=payload.get("content", ""),
+                        document_id=payload.get("document_id", ""),
+                        page_number=page_number,
+                        section=payload.get("section", ""),
+                        chunk_index=payload.get("chunk_index", 0),
+                        metadata=metadata,
+                    )
+                )
 
             if next_offset is None or not results:
                 break
@@ -483,15 +506,14 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         if not filter:
             return 0
 
         # Count before delete
         conditions = [
-            FieldCondition(key=key, match=MatchValue(value=value))
-            for key, value in filter.items()
+            FieldCondition(key=key, match=MatchValue(value=value)) for key, value in filter.items()
         ]
         qdrant_filter = Filter(must=conditions)
 
@@ -504,6 +526,7 @@ class QdrantVectorStore(BaseVectorStore):
 
         if count > 0:
             from qdrant_client.models import FilterSelector
+
             await self._client.delete(
                 collection_name=self._collection_name,
                 points_selector=FilterSelector(filter=qdrant_filter),
@@ -517,7 +540,7 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import Distance, VectorParams, SparseVectorParams, Modifier
+        from qdrant_client.models import Distance, Modifier, SparseVectorParams, VectorParams
 
         bm25_enabled = getattr(self._settings, "qdrant_bm25_enabled", False)
 
@@ -565,13 +588,22 @@ class QdrantVectorStore(BaseVectorStore):
             await self.initialize()
 
         if not self._has_sparse:
-            logger.warning("[QDRANT] hybrid_search called but no sparse vectors — falling back to dense")
+            logger.warning(
+                "[QDRANT] hybrid_search called but no sparse vectors — falling back to dense"
+            )
             return await self.search(query_embedding, k, filter)
 
         from qdrant_client.models import (
-            Filter, FieldCondition, MatchValue,
-            Prefetch, FusionQuery, Fusion,
-            Document as QdrantDocument, Bm25Config,
+            Bm25Config,
+            FieldCondition,
+            Filter,
+            Fusion,
+            FusionQuery,
+            MatchValue,
+            Prefetch,
+        )
+        from qdrant_client.models import (
+            Document as QdrantDocument,
         )
 
         # Build filter
@@ -626,7 +658,8 @@ class QdrantVectorStore(BaseVectorStore):
                 "Clear and re-create collection with qdrant_bm25_enabled=true first."
             )
 
-        from qdrant_client.models import PointStruct, Document as QdrantDocument, Bm25Config
+        from qdrant_client.models import Bm25Config, PointStruct
+        from qdrant_client.models import Document as QdrantDocument
 
         lang = getattr(self._settings, "qdrant_bm25_language", "russian")
         bm25_k = getattr(self._settings, "qdrant_bm25_k", 1.2)
@@ -659,11 +692,13 @@ class QdrantVectorStore(BaseVectorStore):
 
                 bm25_doc = QdrantDocument(text=content, model="Qdrant/bm25", options=bm25_opts)
 
-                points.append(PointStruct(
-                    id=point.id,
-                    vector={"dense": dense_vec, "bm25": bm25_doc},
-                    payload=payload,
-                ))
+                points.append(
+                    PointStruct(
+                        id=point.id,
+                        vector={"dense": dense_vec, "bm25": bm25_doc},
+                        payload=payload,
+                    )
+                )
 
             await self._client.upsert(
                 collection_name=self._collection_name,
@@ -698,7 +733,7 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import Distance, VectorParams, SparseVectorParams
+        from qdrant_client.models import Distance, SparseVectorParams, VectorParams
 
         await self._client.create_collection(
             collection_name=collection_name,
@@ -730,8 +765,8 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import PointStruct
         import numpy as np
+        from qdrant_client.models import PointStruct
 
         ids = []
         points = []
@@ -740,29 +775,34 @@ class QdrantVectorStore(BaseVectorStore):
             # Mean pool ColBERT to single vector
             colbert_pooled = np.mean(output.colbert, axis=0).tolist()
 
-            points.append(PointStruct(
-                id=_to_qdrant_id(chunk.id),
-                vector={
-                    "dense": output.dense,
-                    "sparse": output.sparse,
-                    "colbert": colbert_pooled,
-                },
-                payload={
-                    "original_id": chunk.id,
-                    "content": chunk.content,
-                    "document_id": chunk.document_id,
-                    "page_number": chunk.page_number or 0,
-                    "section": chunk.section,
-                    "chunk_index": chunk.chunk_index,
-                    **{k: v for k, v in chunk.metadata.items()
-                       if k not in _STANDARD_PAYLOAD_FIELDS},
-                },
-            ))
+            points.append(
+                PointStruct(
+                    id=_to_qdrant_id(chunk.id),
+                    vector={
+                        "dense": output.dense,
+                        "sparse": output.sparse,
+                        "colbert": colbert_pooled,
+                    },
+                    payload={
+                        "original_id": chunk.id,
+                        "content": chunk.content,
+                        "document_id": chunk.document_id,
+                        "page_number": chunk.page_number or 0,
+                        "section": chunk.section,
+                        "chunk_index": chunk.chunk_index,
+                        **{
+                            k: v
+                            for k, v in chunk.metadata.items()
+                            if k not in _STANDARD_PAYLOAD_FIELDS
+                        },
+                    },
+                )
+            )
             ids.append(chunk.id)
 
         # Batch upsert
         for i in range(0, len(points), _UPSERT_BATCH_SIZE):
-            batch = points[i:i + _UPSERT_BATCH_SIZE]
+            batch = points[i : i + _UPSERT_BATCH_SIZE]
             await self._client.upsert(
                 collection_name=self._collection_name,
                 points=batch,
@@ -825,8 +865,8 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import PointStruct
         import numpy as np
+        from qdrant_client.models import PointStruct
 
         # Ensure collection exists
         await self.create_visual_collection(collection_name)
@@ -842,24 +882,26 @@ class QdrantVectorStore(BaseVectorStore):
 
             qdrant_id = _to_qdrant_id(page.page_id)
 
-            points.append(PointStruct(
-                id=qdrant_id,
-                vector=single_vec,
-                payload={
-                    "page_id": page.page_id,
-                    "document_id": page.document_id,
-                    "page_number": page.page_number,
-                    "n_tokens": multi_vec.shape[0],
-                    "thumbnail_path": page.thumbnail_path,
-                    "indexed_at": page.indexed_at.isoformat(),
-                    **page.metadata,
-                },
-            ))
+            points.append(
+                PointStruct(
+                    id=qdrant_id,
+                    vector=single_vec,
+                    payload={
+                        "page_id": page.page_id,
+                        "document_id": page.document_id,
+                        "page_number": page.page_number,
+                        "n_tokens": multi_vec.shape[0],
+                        "thumbnail_path": page.thumbnail_path,
+                        "indexed_at": page.indexed_at.isoformat(),
+                        **page.metadata,
+                    },
+                )
+            )
             ids.append(page.page_id)
 
         # Batch upsert
         for i in range(0, len(points), _UPSERT_BATCH_SIZE):
-            batch = points[i:i + _UPSERT_BATCH_SIZE]
+            batch = points[i : i + _UPSERT_BATCH_SIZE]
             await self._client.upsert(
                 collection_name=collection_name,
                 points=batch,
@@ -889,7 +931,7 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         search_filter = None
         if filter:
@@ -911,22 +953,24 @@ class QdrantVectorStore(BaseVectorStore):
         results = []
         for point in result.points:
             payload = point.payload or {}
-            results.append(SearchResult(
-                chunk=DocumentChunk(
-                    id=payload.get("page_id", str(point.id)),
-                    content=f"Visual page {payload.get('page_number', 0)}",
-                    document_id=payload.get("document_id", ""),
-                    page_number=payload.get("page_number", 0),
-                    section="visual",
-                    chunk_index=payload.get("page_number", 0),
-                    metadata={
-                        "chunk_type": "visual",
-                        "thumbnail_path": payload.get("thumbnail_path"),
-                        "n_tokens": payload.get("n_tokens", 0),
-                    },
-                ),
-                score=point.score,
-                source="qdrant_visual",
-            ))
+            results.append(
+                SearchResult(
+                    chunk=DocumentChunk(
+                        id=payload.get("page_id", str(point.id)),
+                        content=f"Visual page {payload.get('page_number', 0)}",
+                        document_id=payload.get("document_id", ""),
+                        page_number=payload.get("page_number", 0),
+                        section="visual",
+                        chunk_index=payload.get("page_number", 0),
+                        metadata={
+                            "chunk_type": "visual",
+                            "thumbnail_path": payload.get("thumbnail_path"),
+                            "n_tokens": payload.get("n_tokens", 0),
+                        },
+                    ),
+                    score=point.score,
+                    source="qdrant_visual",
+                )
+            )
 
         return results

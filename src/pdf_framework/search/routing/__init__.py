@@ -6,9 +6,9 @@ Provides:
 - SubQuestionDecomposer: Complex query decomposition for multi-search
 """
 
-from src.pdf_framework.search.routing.classifier import QueryClassifier, QueryClassification
+from src.pdf_framework.search.routing.classifier import QueryClassification, QueryClassifier
 from src.pdf_framework.search.routing.decomposer import SubQuestionDecomposer
-from src.pdf_framework.search.routing.router import RoutingDecision, RouteConfig, StrategyRouter
+from src.pdf_framework.search.routing.router import RouteConfig, RoutingDecision, StrategyRouter
 
 __all__ = [
     # Core components

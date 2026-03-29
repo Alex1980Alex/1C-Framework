@@ -29,20 +29,20 @@ def _repair_truncated_json(text: str) -> dict | None:
     # Find the last complete object boundary: "}," or "}\n" before truncation
     # Remove everything after the last complete object
     last_complete = -1
-    for m in re.finditer(r'\}\s*,', text):
+    for m in re.finditer(r"\}\s*,", text):
         last_complete = m.end()
 
     if last_complete == -1:
         return None
 
     # Take text up to last complete object, close arrays and root object
-    truncated = text[:last_complete - 1]  # remove trailing comma
+    truncated = text[: last_complete - 1]  # remove trailing comma
 
     # Count open brackets to figure out what to close
-    open_brackets = truncated.count('[') - truncated.count(']')
-    open_braces = truncated.count('{') - truncated.count('}')
+    open_brackets = truncated.count("[") - truncated.count("]")
+    open_braces = truncated.count("{") - truncated.count("}")
 
-    truncated += ']' * open_brackets + '}' * open_braces
+    truncated += "]" * open_brackets + "}" * open_braces
 
     try:
         return json.loads(truncated)
@@ -93,9 +93,13 @@ class LLMEntityExtractor:
                     f"Previous response was not valid JSON: {e}. "
                     "Return ONLY valid JSON with 'entities' and 'relations' arrays."
                 )
-                logger.warning(f"Entity extraction JSON error for chunk {chunk.id} (attempt {rw_attempt}): {e}")
+                logger.warning(
+                    f"Entity extraction JSON error for chunk {chunk.id} (attempt {rw_attempt}): {e}"
+                )
             except Exception as e:
-                logger.error("Entity extraction attempt %d failed for chunk %s: %s", rw_attempt, chunk.id, e)
+                logger.error(
+                    "Entity extraction attempt %d failed for chunk %s: %s", rw_attempt, chunk.id, e
+                )
                 rw_feedback = f"Previous call failed: {e}."
         return ExtractionResult(chunk_id=chunk.id)
 
@@ -111,13 +115,17 @@ class LLMEntityExtractor:
                     component="entity_extractor",
                 )
             except Exception as e:
-                logger.warning("[ENTITY] Cheap LLM failed for %s, falling back: %s", chunk.id[:12], e)
+                logger.warning(
+                    "[ENTITY] Cheap LLM failed for %s, falling back: %s", chunk.id[:12], e
+                )
 
         if cheap_content and len(cheap_content.strip()) >= 10:
             content = cheap_content
         else:
             messages = [
-                SystemMessage(content="You are an entity extraction system. Output only valid JSON."),
+                SystemMessage(
+                    content="You are an entity extraction system. Output only valid JSON."
+                ),
                 HumanMessage(content=_EXTRACTION_PROMPT.format(text=chunk.content)),
             ]
             if feedback:
@@ -159,12 +167,14 @@ class LLMEntityExtractor:
             if data:
                 logger.info(
                     "Repaired truncated JSON for chunk %s (got %d entities)",
-                    chunk.id, len(data.get("entities", [])),
+                    chunk.id,
+                    len(data.get("entities", [])),
                 )
             else:
                 logger.warning(
                     "Failed to parse entity extraction JSON for chunk %s: %s",
-                    chunk.id, e,
+                    chunk.id,
+                    e,
                 )
                 return ExtractionResult(chunk_id=chunk.id)
 
@@ -194,8 +204,12 @@ class LLMEntityExtractor:
         relations: list[Relation] = []
         for raw_rel in data.get("relations", []):
             # Support both formats for source/target entity names
-            source_name = raw_rel.get("source") or raw_rel.get("from") or raw_rel.get("source_entity", "")
-            target_name = raw_rel.get("target") or raw_rel.get("to") or raw_rel.get("target_entity", "")
+            source_name = (
+                raw_rel.get("source") or raw_rel.get("from") or raw_rel.get("source_entity", "")
+            )
+            target_name = (
+                raw_rel.get("target") or raw_rel.get("to") or raw_rel.get("target_entity", "")
+            )
             source_id = entity_name_to_id.get(source_name)
             target_id = entity_name_to_id.get(target_name)
             if source_id and target_id:
@@ -213,7 +227,9 @@ class LLMEntityExtractor:
 
         logger.debug(
             "Chunk %s: extracted %d entities, %d relations",
-            chunk.id, len(entities), len(relations),
+            chunk.id,
+            len(entities),
+            len(relations),
         )
         return ExtractionResult(
             chunk_id=chunk.id,

@@ -191,6 +191,15 @@ class VisualSearchSettings(BaseSettings):
     # Auto-detect visual queries
     auto_detect_enabled: bool = True
     visual_keywords: list[str] = [
-        "table", "chart", "graph", "diagram", "figure", "chart",
-        "таблица", "график", "диаграмма", "рисунок", "схема",
+        "table",
+        "chart",
+        "graph",
+        "diagram",
+        "figure",
+        "chart",
+        "таблица",
+        "график",
+        "диаграмма",
+        "рисунок",
+        "схема",
     ]

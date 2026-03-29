@@ -55,8 +55,11 @@ class BM25SearchStrategy:
             if not raw_hits:
                 elapsed = (time.perf_counter() - start) * 1000
                 return SearchResponse(
-                    query=query, results=[], total_found=0,
-                    search_type="bm25", elapsed_ms=elapsed,
+                    query=query,
+                    results=[],
+                    total_found=0,
+                    search_type="bm25",
+                    elapsed_ms=elapsed,
                 )
 
             normalized = {cid: score for cid, score in raw_hits}
@@ -68,8 +71,11 @@ class BM25SearchStrategy:
             if not raw_hits:
                 elapsed = (time.perf_counter() - start) * 1000
                 return SearchResponse(
-                    query=query, results=[], total_found=0,
-                    search_type="bm25", elapsed_ms=elapsed,
+                    query=query,
+                    results=[],
+                    total_found=0,
+                    search_type="bm25",
+                    elapsed_ms=elapsed,
                 )
 
             # Normalize BM25 scores to 0-1 range
@@ -149,7 +155,8 @@ class BM25SearchStrategy:
 
         logger.info(
             "[BM25] Fetched %d/%d chunks (bm25_meta=%d, vector_store=%d)",
-            len(chunks), len(chunk_ids),
+            len(chunks),
+            len(chunk_ids),
             len(chunks) - len([c for c in missing_ids if c in chunks]),
             len([c for c in missing_ids if c in chunks]),
         )

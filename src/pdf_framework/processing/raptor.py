@@ -73,13 +73,13 @@ class RAPTORTree(BaseModel):
 
     def get_leaves_for_summary(self, summary_id: str) -> list[TreeNode]:
         """
-        Get all leaf nodes that belong to a summary (recursive).
+            Get all leaf nodes that belong to a summary (recursive).
 
-    Args:
-            summary_id: TreeNode ID of summary
+        Args:
+                summary_id: TreeNode ID of summary
 
-        Returns:
-            List of leaf nodes under this summary
+            Returns:
+                List of leaf nodes under this summary
         """
         summary_node = self.get_node(summary_id)
         if not summary_node:
@@ -168,7 +168,7 @@ class RAPTORTreeBuilder:
             node_embeddings = [node.embedding for node in current_nodes if node.embedding]
 
             if not node_embeddings:
-                logger.warning(f"[RAPTOR] No embeddings at level {level-1}, stopping")
+                logger.warning(f"[RAPTOR] No embeddings at level {level - 1}, stopping")
                 break
 
             # Determine number of clusters (sqrt(n))
@@ -181,7 +181,9 @@ class RAPTORTreeBuilder:
             # Group nodes by cluster
             clusters = self._group_by_cluster(current_nodes, cluster_labels)
 
-            logger.info(f"[RAPTOR] Clustering level {level-1}: k={n_clusters}, {len(clusters)} clusters")
+            logger.info(
+                f"[RAPTOR] Clustering level {level - 1}: k={n_clusters}, {len(clusters)} clusters"
+            )
 
             # Summarize each cluster
             new_nodes = []
@@ -211,8 +213,7 @@ class RAPTORTreeBuilder:
             tree.root_summaries = [node.content for node in tree.levels[-1]]
 
         logger.info(
-            f"[RAPTOR] Tree complete: {len(tree.levels)} levels, "
-            f"{tree.total_nodes} total nodes"
+            f"[RAPTOR] Tree complete: {len(tree.levels)} levels, {tree.total_nodes} total nodes"
         )
 
         return tree
@@ -333,9 +334,7 @@ Summary:"""
             response = await llm.ainvoke([HumanMessage(content=prompt)])
             content = response.content
             if isinstance(content, list):
-                summary = " ".join(
-                    getattr(block, "text", str(block)) for block in content
-                ).strip()
+                summary = " ".join(getattr(block, "text", str(block)) for block in content).strip()
             else:
                 summary = content.strip()
 

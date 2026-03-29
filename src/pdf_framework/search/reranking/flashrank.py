@@ -86,9 +86,7 @@ class FlashRankReranker:
 
                 # Marginal utility = relevance - max_similarity_to_selected
                 if selected_indices:
-                    max_sim = max(
-                        similarity_matrix[idx][s] for s in selected_indices
-                    )
+                    max_sim = max(similarity_matrix[idx][s] for s in selected_indices)
                     utility = float(relevance_scores[idx]) - max_sim
                 else:
                     utility = float(relevance_scores[idx])
@@ -106,7 +104,10 @@ class FlashRankReranker:
 
         logger.debug(
             "FlashRank: selected %d/%d results, %d/%d tokens used",
-            len(selected_indices), n, used_tokens, budget,
+            len(selected_indices),
+            n,
+            used_tokens,
+            budget,
         )
 
         # Build results preserving relevance score
@@ -151,5 +152,8 @@ class FlashRankReranker:
         if not results:
             return []
         return await asyncio.to_thread(
-            self._select_sync, query, results, token_budget,
+            self._select_sync,
+            query,
+            results,
+            token_budget,
         )

@@ -10,17 +10,18 @@ BSL Search Service - Единый интерфейс поиска
 Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
-import logging
 import asyncio
-from typing import List, Dict, Any, Optional
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class SearchMode(Enum):
     """Режимы поиска"""
+
     SEMANTIC_ONLY = "semantic"  # Только векторный поиск
     GRAPH_ONLY = "graph"  # Только поиск по графу
     HYBRID = "hybrid"  # Гибридный подход
@@ -31,6 +32,7 @@ class SearchMode(Enum):
 @dataclass
 class SearchResult:
     """Результат поиска"""
+
     file_path: str
     module_type: str
     score: float
@@ -41,19 +43,20 @@ class SearchResult:
     source: str = "unknown"  # Источник результата (semantic, graph, hybrid)
     reranked: bool = False  # Был ли применен LLM re-ranking
     reasoning: str = ""  # Объяснение от LLM (если reranked=True)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class SearchRequest:
     """Запрос на поиск"""
+
     query: str
     mode: SearchMode = SearchMode.INTELLIGENT
     limit: int = 10
 
     # Фильтры
-    module_types: Optional[List[str]] = None
-    file_path_pattern: Optional[str] = None
+    module_types: list[str] | None = None
+    file_path_pattern: str | None = None
     min_score: float = 0.0
 
     # Опции
@@ -73,9 +76,9 @@ class BSLSearchService:
     def __init__(
         self,
         qdrant_service=None,  # QdrantVectorStore
-        neo4j_service=None,   # Neo4jService или GraphAnalyzer
-        hybrid_engine=None,    # HybridSearchEngine
-        llm_service=None      # LLMService
+        neo4j_service=None,  # Neo4jService или GraphAnalyzer
+        hybrid_engine=None,  # HybridSearchEngine
+        llm_service=None,  # LLMService
     ):
         """
         Инициализация BSL Search Service
@@ -101,7 +104,7 @@ class BSLSearchService:
         logger.info(f"  Hybrid: {'✓' if hybrid_engine else '✗'}")
         logger.info(f"  LLM: {'✓' if llm_service else '✗'}")
 
-    async def search(self, request: SearchRequest) -> List[SearchResult]:
+    async def search(self, request: SearchRequest) -> list[SearchResult]:
         """
         Выполнить поиск согласно запросу
 
@@ -129,9 +132,9 @@ class BSLSearchService:
             results = await self._semantic_search(request)
 
         logger.info(f"Поиск завершен: найдено {len(results)} результатов")
-        return results[:request.limit]
+        return results[: request.limit]
 
-    async def _semantic_search(self, request: SearchRequest) -> List[SearchResult]:
+    async def _semantic_search(self, request: SearchRequest) -> list[SearchResult]:
         """Векторный поиск через Qdrant"""
         logger.debug("Выполняется semantic search")
 
@@ -139,22 +142,24 @@ class BSLSearchService:
             raw_results = await self._call_qdrant_search(
                 query=request.query,
                 limit=request.limit * 2,
-                filters=self._build_qdrant_filters(request)
+                filters=self._build_qdrant_filters(request),
             )
 
             results = []
             for r in raw_results:
-                results.append(SearchResult(
-                    file_path=r.get("file_path", ""),
-                    module_type=r.get("module_type", "Unknown"),
-                    score=r.get("score", 0.0),
-                    original_score=r.get("score", 0.0),
-                    summary=r.get("summary", ""),
-                    functions_count=r.get("functions_count", 0),
-                    variables_count=r.get("variables_count", 0),
-                    source="semantic",
-                    metadata=r
-                ))
+                results.append(
+                    SearchResult(
+                        file_path=r.get("file_path", ""),
+                        module_type=r.get("module_type", "Unknown"),
+                        score=r.get("score", 0.0),
+                        original_score=r.get("score", 0.0),
+                        summary=r.get("summary", ""),
+                        functions_count=r.get("functions_count", 0),
+                        variables_count=r.get("variables_count", 0),
+                        source="semantic",
+                        metadata=r,
+                    )
+                )
 
             return results
 
@@ -162,7 +167,7 @@ class BSLSearchService:
             logger.error(f"Ошибка semantic search: {e}")
             return []
 
-    async def _graph_search(self, request: SearchRequest) -> List[SearchResult]:
+    async def _graph_search(self, request: SearchRequest) -> list[SearchResult]:
         """Поиск по графу зависимостей через Neo4j"""
         logger.debug("Выполняется graph search")
 
@@ -172,22 +177,23 @@ class BSLSearchService:
 
         try:
             raw_results = await self._call_neo4j_search(
-                query=request.query,
-                limit=request.limit * 2
+                query=request.query, limit=request.limit * 2
             )
 
             results = []
             for r in raw_results:
-                results.append(SearchResult(
-                    file_path=r.get("file_path", ""),
-                    module_type=r.get("type", "Unknown"),
-                    score=r.get("relevance", 0.5),
-                    original_score=r.get("relevance", 0.5),
-                    summary=r.get("description", ""),
-                    functions_count=r.get("functions_count", 0),
-                    source="graph",
-                    metadata=r
-                ))
+                results.append(
+                    SearchResult(
+                        file_path=r.get("file_path", ""),
+                        module_type=r.get("type", "Unknown"),
+                        score=r.get("relevance", 0.5),
+                        original_score=r.get("relevance", 0.5),
+                        summary=r.get("description", ""),
+                        functions_count=r.get("functions_count", 0),
+                        source="graph",
+                        metadata=r,
+                    )
+                )
 
             return results
 
@@ -195,28 +201,29 @@ class BSLSearchService:
             logger.error(f"Ошибка graph search: {e}")
             return []
 
-    async def _hybrid_search(self, request: SearchRequest) -> List[SearchResult]:
+    async def _hybrid_search(self, request: SearchRequest) -> list[SearchResult]:
         """Гибридный поиск"""
         logger.debug("Выполняется hybrid search")
 
         try:
             raw_results = await self._call_hybrid_search(
-                query=request.query,
-                limit=request.limit * 2
+                query=request.query, limit=request.limit * 2
             )
 
             results = []
             for r in raw_results:
-                results.append(SearchResult(
-                    file_path=r.get("file_path", ""),
-                    module_type=r.get("module_type", "Unknown"),
-                    score=r.get("combined_score", 0.0),
-                    original_score=r.get("combined_score", 0.0),
-                    summary=r.get("summary", ""),
-                    functions_count=r.get("functions_count", 0),
-                    source="hybrid",
-                    metadata=r
-                ))
+                results.append(
+                    SearchResult(
+                        file_path=r.get("file_path", ""),
+                        module_type=r.get("module_type", "Unknown"),
+                        score=r.get("combined_score", 0.0),
+                        original_score=r.get("combined_score", 0.0),
+                        summary=r.get("summary", ""),
+                        functions_count=r.get("functions_count", 0),
+                        source="hybrid",
+                        metadata=r,
+                    )
+                )
 
             return results
 
@@ -224,7 +231,7 @@ class BSLSearchService:
             logger.error(f"Ошибка hybrid search: {e}")
             return []
 
-    async def _intelligent_search(self, request: SearchRequest) -> List[SearchResult]:
+    async def _intelligent_search(self, request: SearchRequest) -> list[SearchResult]:
         """Умный поиск с LLM re-ranking"""
         logger.debug("Выполняется intelligent search с LLM")
 
@@ -239,16 +246,13 @@ class BSLSearchService:
 
         return results
 
-    async def _multi_stage_search(self, request: SearchRequest) -> List[SearchResult]:
+    async def _multi_stage_search(self, request: SearchRequest) -> list[SearchResult]:
         """Многостадийный поиск"""
         logger.debug("Выполняется multi-stage search")
 
         # Стадия 1: Широкий semantic search
         semantic_results = await self._semantic_search(
-            SearchRequest(
-                query=request.query,
-                limit=request.limit * 5
-            )
+            SearchRequest(query=request.query, limit=request.limit * 5)
         )
 
         if not semantic_results:
@@ -256,33 +260,28 @@ class BSLSearchService:
 
         # Стадия 2-4: TODO
 
-        return semantic_results[:request.limit]
+        return semantic_results[: request.limit]
 
-    async def _call_qdrant_search(
-        self,
-        query: str,
-        limit: int,
-        filters: Any
-    ) -> List[Dict]:
+    async def _call_qdrant_search(self, query: str, limit: int, filters: Any) -> list[dict]:
         """Вызов Qdrant search с генерацией embedding"""
         try:
             from qdrant_client import QdrantClient
+
             from ..config import get_bsl_settings
 
             settings = get_bsl_settings()
 
             if self._qdrant_client is None:
                 self._qdrant_client = QdrantClient(
-                    host=settings.qdrant_host,
-                    port=settings.qdrant_port
+                    host=settings.qdrant_host, port=settings.qdrant_port
                 )
 
             # Инициализация embedding service
             if self._embedding_service is None:
                 from .embedding import EmbeddingService
+
                 self._embedding_service = EmbeddingService(
-                    ollama_host=settings.ollama_host,
-                    model=settings.embedding_model
+                    ollama_host=settings.ollama_host, model=settings.embedding_model
                 )
 
             # Генерация embedding для запроса
@@ -293,11 +292,11 @@ class BSLSearchService:
                 return []
 
             # Поиск в Qdrant
-            collection_name = getattr(self.qdrant, 'collection_name', settings.collection_name)
+            collection_name = getattr(self.qdrant, "collection_name", settings.collection_name)
             search_params = {
                 "collection_name": collection_name,
                 "query_vector": query_embedding,
-                "limit": limit
+                "limit": limit,
             }
 
             if filters:
@@ -309,18 +308,20 @@ class BSLSearchService:
             results = []
             for hit in search_results:
                 payload = hit.payload or {}
-                results.append({
-                    "file_path": payload.get("file_path", ""),
-                    "module_type": payload.get("module_type", "Unknown"),
-                    "score": hit.score,
-                    "summary": payload.get("searchable_text", "")[:500],
-                    "functions_count": payload.get("functions_count", 0),
-                    "variables_count": payload.get("variables_count", 0),
-                    "functions": payload.get("functions", []),
-                    "procedures": payload.get("procedures", []),
-                    "file_size": payload.get("file_size", 0),
-                    "indexed_at": payload.get("indexed_at", "")
-                })
+                results.append(
+                    {
+                        "file_path": payload.get("file_path", ""),
+                        "module_type": payload.get("module_type", "Unknown"),
+                        "score": hit.score,
+                        "summary": payload.get("searchable_text", "")[:500],
+                        "functions_count": payload.get("functions_count", 0),
+                        "variables_count": payload.get("variables_count", 0),
+                        "functions": payload.get("functions", []),
+                        "procedures": payload.get("procedures", []),
+                        "file_size": payload.get("file_size", 0),
+                        "indexed_at": payload.get("indexed_at", ""),
+                    }
+                )
 
             logger.info(f"Qdrant search завершен: найдено {len(results)} результатов")
             return results
@@ -332,11 +333,7 @@ class BSLSearchService:
             logger.error(f"Ошибка Qdrant search: {e}", exc_info=True)
             return []
 
-    async def _call_neo4j_search(
-        self,
-        query: str,
-        limit: int
-    ) -> List[Dict]:
+    async def _call_neo4j_search(self, query: str, limit: int) -> list[dict]:
         """Вызов Neo4j search через Cypher запрос"""
         if not self.neo4j:
             logger.warning("Neo4j service недоступен")
@@ -372,30 +369,31 @@ class BSLSearchService:
             LIMIT $limit
             """
 
-            results = self.neo4j.execute_query(
-                cypher_query,
-                {"keywords": keywords, "limit": limit}
-            )
+            results = self.neo4j.execute_query(cypher_query, {"keywords": keywords, "limit": limit})
 
             formatted_results = []
             for r in results:
                 relevance = self._calculate_relevance(
                     query=query,
                     module_name=r.get("module_name", ""),
-                    file_path=r.get("file_path", "")
+                    file_path=r.get("file_path", ""),
                 )
 
-                formatted_results.append({
-                    "file_path": r.get("file_path", ""),
-                    "type": r.get("module_type", "Unknown"),
-                    "module_type": r.get("module_type", "Unknown"),
-                    "relevance": relevance,
-                    "description": f"Модуль {r.get('module_name', 'Unknown')} с {r.get('functions_count', 0)} функциями",
-                    "functions_count": r.get("functions_count", 0),
-                    "functions": r.get("functions", []),
-                    "dependencies": r.get("dependencies", []),
-                    "summary": f"Зависимости: {', '.join(r.get('dependencies', [])[:3])}" if r.get('dependencies') else "Нет зависимостей"
-                })
+                formatted_results.append(
+                    {
+                        "file_path": r.get("file_path", ""),
+                        "type": r.get("module_type", "Unknown"),
+                        "module_type": r.get("module_type", "Unknown"),
+                        "relevance": relevance,
+                        "description": f"Модуль {r.get('module_name', 'Unknown')} с {r.get('functions_count', 0)} функциями",
+                        "functions_count": r.get("functions_count", 0),
+                        "functions": r.get("functions", []),
+                        "dependencies": r.get("dependencies", []),
+                        "summary": f"Зависимости: {', '.join(r.get('dependencies', [])[:3])}"
+                        if r.get("dependencies")
+                        else "Нет зависимостей",
+                    }
+                )
 
             logger.info(f"Neo4j search завершен: найдено {len(formatted_results)} результатов")
             return formatted_results
@@ -404,29 +402,18 @@ class BSLSearchService:
             logger.error(f"Ошибка Neo4j search: {e}", exc_info=True)
             return []
 
-    async def _call_hybrid_search(
-        self,
-        query: str,
-        limit: int
-    ) -> List[Dict]:
+    async def _call_hybrid_search(self, query: str, limit: int) -> list[dict]:
         """Гибридный поиск - объединение semantic + graph"""
         try:
             # Параллельный запуск semantic и graph search
             semantic_results_task = self._call_qdrant_search(
-                query=query,
-                limit=limit * 2,
-                filters=None
+                query=query, limit=limit * 2, filters=None
             )
 
-            graph_results_task = self._call_neo4j_search(
-                query=query,
-                limit=limit
-            )
+            graph_results_task = self._call_neo4j_search(query=query, limit=limit)
 
             semantic_results, graph_results = await asyncio.gather(
-                semantic_results_task,
-                graph_results_task,
-                return_exceptions=True
+                semantic_results_task, graph_results_task, return_exceptions=True
             )
 
             if isinstance(semantic_results, Exception):
@@ -442,7 +429,7 @@ class BSLSearchService:
                 semantic_results=semantic_results,
                 graph_results=graph_results,
                 semantic_weight=0.6,
-                graph_weight=0.4
+                graph_weight=0.4,
             )
 
             logger.info(f"Hybrid search завершен: {len(combined_results)} результатов")
@@ -455,7 +442,7 @@ class BSLSearchService:
     def _build_qdrant_filters(self, request: SearchRequest) -> Any:
         """Построение фильтров для Qdrant"""
         try:
-            from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchAny
+            from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
             conditions = []
 
@@ -463,16 +450,12 @@ class BSLSearchService:
                 if len(request.module_types) == 1:
                     conditions.append(
                         FieldCondition(
-                            key="module_type",
-                            match=MatchValue(value=request.module_types[0])
+                            key="module_type", match=MatchValue(value=request.module_types[0])
                         )
                     )
                 else:
                     conditions.append(
-                        FieldCondition(
-                            key="module_type",
-                            match=MatchAny(any=request.module_types)
-                        )
+                        FieldCondition(key="module_type", match=MatchAny(any=request.module_types))
                     )
 
             if conditions:
@@ -486,21 +469,62 @@ class BSLSearchService:
             logger.error(f"Ошибка построения фильтров: {e}")
             return None
 
-    def _extract_keywords_from_query(self, query: str) -> List[str]:
+    def _extract_keywords_from_query(self, query: str) -> list[str]:
         """Извлечение ключевых слов из поискового запроса"""
         stopwords = {
-            "как", "что", "где", "когда", "почему", "кто", "чем", "это", "все",
-            "для", "из", "при", "с", "по", "на", "в", "о", "от", "до", "к",
-            "и", "или", "не", "но", "а", "также", "еще", "уже", "только",
-            "the", "is", "at", "which", "on", "in", "a", "an", "and", "or",
-            "but", "for", "with", "from", "to", "of", "by", "as", "this"
+            "как",
+            "что",
+            "где",
+            "когда",
+            "почему",
+            "кто",
+            "чем",
+            "это",
+            "все",
+            "для",
+            "из",
+            "при",
+            "с",
+            "по",
+            "на",
+            "в",
+            "о",
+            "от",
+            "до",
+            "к",
+            "и",
+            "или",
+            "не",
+            "но",
+            "а",
+            "также",
+            "еще",
+            "уже",
+            "только",
+            "the",
+            "is",
+            "at",
+            "which",
+            "on",
+            "in",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "for",
+            "with",
+            "from",
+            "to",
+            "of",
+            "by",
+            "as",
+            "this",
         }
 
         words = query.lower().split()
         keywords = [
-            w.strip('.,!?;:()[]{}"\'-')
-            for w in words
-            if len(w) > 2 and w.lower() not in stopwords
+            w.strip(".,!?;:()[]{}\"'-") for w in words if len(w) > 2 and w.lower() not in stopwords
         ]
 
         seen = set()
@@ -512,12 +536,7 @@ class BSLSearchService:
 
         return unique_keywords[:10]
 
-    def _calculate_relevance(
-        self,
-        query: str,
-        module_name: str,
-        file_path: str
-    ) -> float:
+    def _calculate_relevance(self, query: str, module_name: str, file_path: str) -> float:
         """Расчет релевантности результата Neo4j поиска"""
         query_lower = query.lower()
         module_lower = module_name.lower()
@@ -536,11 +555,11 @@ class BSLSearchService:
 
     def _combine_search_results(
         self,
-        semantic_results: List[Dict],
-        graph_results: List[Dict],
+        semantic_results: list[dict],
+        graph_results: list[dict],
         semantic_weight: float = 0.6,
-        graph_weight: float = 0.4
-    ) -> List[Dict]:
+        graph_weight: float = 0.4,
+    ) -> list[dict]:
         """Объединение результатов semantic и graph поиска"""
         combined = {}
 
@@ -559,7 +578,7 @@ class BSLSearchService:
                 "functions_count": result.get("functions_count", 0),
                 "variables_count": result.get("variables_count", 0),
                 "functions": result.get("functions", []),
-                "source": "semantic"
+                "source": "semantic",
             }
 
         for result in graph_results:
@@ -586,27 +605,20 @@ class BSLSearchService:
                     "functions_count": result.get("functions_count", 0),
                     "functions": result.get("functions", []),
                     "dependencies": result.get("dependencies", []),
-                    "source": "graph"
+                    "source": "graph",
                 }
 
-        sorted_results = sorted(
-            combined.values(),
-            key=lambda x: x["combined_score"],
-            reverse=True
-        )
+        sorted_results = sorted(combined.values(), key=lambda x: x["combined_score"], reverse=True)
 
         return sorted_results
 
 
 # Singleton instance
-_bsl_search_service: Optional[BSLSearchService] = None
+_bsl_search_service: BSLSearchService | None = None
 
 
 def get_bsl_search_service(
-    qdrant_service=None,
-    neo4j_service=None,
-    hybrid_engine=None,
-    llm_service=None
+    qdrant_service=None, neo4j_service=None, hybrid_engine=None, llm_service=None
 ) -> BSLSearchService:
     """Получение singleton instance BSLSearchService"""
     global _bsl_search_service
@@ -616,7 +628,7 @@ def get_bsl_search_service(
             qdrant_service=qdrant_service,
             neo4j_service=neo4j_service,
             hybrid_engine=hybrid_engine,
-            llm_service=llm_service
+            llm_service=llm_service,
         )
 
     return _bsl_search_service

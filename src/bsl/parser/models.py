@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
 
 
 class SymbolType(Enum):
@@ -77,13 +76,13 @@ class ModuleType(Enum):
 class BSLParam:
     name: str
     by_val: bool = False
-    default_value: Optional[str] = None
+    default_value: str | None = None
 
 
 @dataclass
 class BSLCall:
     caller_name: str
-    callee_module: Optional[str]  # None for local calls
+    callee_module: str | None  # None for local calls
     callee_method: str
     line: int
 
@@ -96,11 +95,11 @@ class BSLSymbol:
     line_end: int
     body: str
     is_export: bool = False
-    params: List[BSLParam] = field(default_factory=list)
+    params: list[BSLParam] = field(default_factory=list)
     compilation_directive: CompilationDirective = CompilationDirective.NONE
     comment: str = ""
-    region: Optional[str] = None
-    calls: List[BSLCall] = field(default_factory=list)
+    region: str | None = None
+    calls: list[BSLCall] = field(default_factory=list)
 
     @property
     def params_str(self) -> str:
@@ -137,28 +136,29 @@ class BSLRegion:
 class BSLModule:
     file_path: str
     module_type: ModuleType
-    symbols: List[BSLSymbol] = field(default_factory=list)
-    variables: List[BSLVariable] = field(default_factory=list)
-    regions: List[BSLRegion] = field(default_factory=list)
+    symbols: list[BSLSymbol] = field(default_factory=list)
+    variables: list[BSLVariable] = field(default_factory=list)
+    regions: list[BSLRegion] = field(default_factory=list)
     raw_content: str = ""
     line_count: int = 0
 
     @property
-    def procedures(self) -> List[BSLSymbol]:
+    def procedures(self) -> list[BSLSymbol]:
         return [s for s in self.symbols if s.symbol_type == SymbolType.PROCEDURE]
 
     @property
-    def functions(self) -> List[BSLSymbol]:
+    def functions(self) -> list[BSLSymbol]:
         return [s for s in self.symbols if s.symbol_type == SymbolType.FUNCTION]
 
     @property
-    def exports(self) -> List[BSLSymbol]:
+    def exports(self) -> list[BSLSymbol]:
         return [s for s in self.symbols if s.is_export]
 
     @property
     def module_name(self) -> str:
         """Extract module name from file path."""
         import os
+
         parts = self.file_path.replace("\\", "/").split("/")
         # Try to find meaningful name from path
         for i, part in enumerate(parts):

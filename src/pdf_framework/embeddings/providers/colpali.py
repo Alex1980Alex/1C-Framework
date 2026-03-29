@@ -70,8 +70,7 @@ class ColPaliProvider:
         """
         if model_name not in COLPALI_MODELS:
             raise ValueError(
-                f"Unknown model: {model_name}. "
-                f"Supported: {list(COLPALI_MODELS.keys())}"
+                f"Unknown model: {model_name}. Supported: {list(COLPALI_MODELS.keys())}"
             )
 
         self._model_name = model_name
@@ -144,9 +143,7 @@ class ColPaliProvider:
             # Load processor
             from transformers import AutoProcessor
 
-            self._processor = AutoProcessor.from_pretrained(
-                self._model_config["model_id"]
-            )
+            self._processor = AutoProcessor.from_pretrained(self._model_config["model_id"])
 
             logger.info(f"[COLPALI] Model loaded: {self._model_config['model_id']}")
 
@@ -179,7 +176,7 @@ class ColPaliProvider:
             >>> print(vectors.shape)  # torch.Size([256, 128])
         """
         # Load image if path provided
-        if isinstance(image, (str, Path)):
+        if isinstance(image, str | Path):
             image = Image.open(image).convert("RGB")
 
         # Ensure RGB
@@ -223,7 +220,7 @@ class ColPaliProvider:
             # Load images if paths provided
             pil_images = []
             for img in batch:
-                if isinstance(img, (str, Path)):
+                if isinstance(img, str | Path):
                     pil_images.append(Image.open(img).convert("RGB"))
                 else:
                     pil_images.append(img)
@@ -295,9 +292,10 @@ class ColPaliProvider:
         """
         # Compute cosine similarity matrix
         # Shape: (q_tokens, d_tokens)
-        sim_matrix = torch.nn.functional.normalize(query_vectors, dim=-1) @ torch.nn.functional.normalize(
-            doc_vectors, dim=-1
-        ).T
+        sim_matrix = (
+            torch.nn.functional.normalize(query_vectors, dim=-1)
+            @ torch.nn.functional.normalize(doc_vectors, dim=-1).T
+        )
 
         # MaxSim: take max similarity for each query token
         max_sim = sim_matrix.max(dim=1).values

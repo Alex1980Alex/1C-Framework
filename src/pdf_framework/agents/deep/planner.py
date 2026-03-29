@@ -17,10 +17,24 @@ logger = logging.getLogger(__name__)
 
 # Heuristic keywords for deep research detection
 _COMPLEX_KEYWORDS = {
-    "сравн", "отличи", "различи", "анализ", "механизм", "цикл",
-    "взаимосвяз", "архитектур", "vs", "versus", "compare", "contrast",
-    "принцип работы", "жизненный цикл", "все типы", "обзор всех",
-    "преимущества и недостатки", "плюсы и минусы",
+    "сравн",
+    "отличи",
+    "различи",
+    "анализ",
+    "механизм",
+    "цикл",
+    "взаимосвяз",
+    "архитектур",
+    "vs",
+    "versus",
+    "compare",
+    "contrast",
+    "принцип работы",
+    "жизненный цикл",
+    "все типы",
+    "обзор всех",
+    "преимущества и недостатки",
+    "плюсы и минусы",
 }
 _MULTI_STEP_PATTERNS = [
     r"от .+ до .+",  # "от создания до записи"
@@ -100,20 +114,28 @@ class ResearchPlanner:
             # Extract entities being compared
             parts = re.split(r"\s+и\s+|\s+с\s+|\s+от\s+", question, maxsplit=1)
             for i, part in enumerate(parts):
-                sub_questions.append(SubQuestion(
-                    question=f"Что такое {part.strip('?., ')}?",
-                    strategy="hybrid",
-                    priority=i + 1,
-                ))
-            sub_questions.append(SubQuestion(
-                question=question,
-                strategy="graphrag_local",
-                priority=len(parts) + 1,
-            ))
+                sub_questions.append(
+                    SubQuestion(
+                        question=f"Что такое {part.strip('?., ')}?",
+                        strategy="hybrid",
+                        priority=i + 1,
+                    )
+                )
+            sub_questions.append(
+                SubQuestion(
+                    question=question,
+                    strategy="graphrag_local",
+                    priority=len(parts) + 1,
+                )
+            )
         elif is_lifecycle:
             sub_questions = [
                 SubQuestion(question=question, strategy="hybrid", priority=1),
-                SubQuestion(question=f"Какие этапы включает процесс в контексте: {question}?", strategy="bm25", priority=2),
+                SubQuestion(
+                    question=f"Какие этапы включает процесс в контексте: {question}?",
+                    strategy="bm25",
+                    priority=2,
+                ),
             ]
         elif is_overview:
             sub_questions = [
@@ -124,7 +146,9 @@ class ResearchPlanner:
             # Generic decomposition
             sub_questions = [
                 SubQuestion(question=question, strategy="hybrid", priority=1),
-                SubQuestion(question=f"Связанные понятия: {question}", strategy="vector", priority=2),
+                SubQuestion(
+                    question=f"Связанные понятия: {question}", strategy="vector", priority=2
+                ),
             ]
 
         # Determine complexity
@@ -137,11 +161,13 @@ class ResearchPlanner:
 
         # Ensure 2-4 sub-questions
         if len(sub_questions) < 2:
-            sub_questions.append(SubQuestion(
-                question=f"Дополнительный контекст: {question}",
-                strategy="vector",
-                priority=2,
-            ))
+            sub_questions.append(
+                SubQuestion(
+                    question=f"Дополнительный контекст: {question}",
+                    strategy="vector",
+                    priority=2,
+                )
+            )
         sub_questions = sub_questions[:4]
 
         return ResearchPlan(
@@ -158,21 +184,28 @@ class ResearchPlanner:
             from langchain_core.messages import HumanMessage, SystemMessage
 
             messages = [
-                SystemMessage(content=(
-                    "Decompose the following question into 2-4 sub-questions for research. "
-                    "For each sub-question suggest a strategy: vector, hybrid, bm25, graphrag_local, or adaptive. "
-                    "Also classify complexity as: simple, moderate, or complex. "
-                    "Reply in JSON: {\"complexity\": \"...\", \"sub_questions\": [{\"question\": \"...\", \"strategy\": \"...\"}]}"
-                )),
+                SystemMessage(
+                    content=(
+                        "Decompose the following question into 2-4 sub-questions for research. "
+                        "For each sub-question suggest a strategy: vector, hybrid, bm25, graphrag_local, or adaptive. "
+                        "Also classify complexity as: simple, moderate, or complex. "
+                        'Reply in JSON: {"complexity": "...", "sub_questions": [{"question": "...", "strategy": "..."}]}'
+                    )
+                ),
                 HumanMessage(content=question),
             ]
             response = await self._llm.ainvoke(messages)
             import json
-            text = response.content if isinstance(response.content, str) else response.content[0].text
-            data = json.loads(text[text.find("{"):text.rfind("}") + 1])
+
+            text = (
+                response.content if isinstance(response.content, str) else response.content[0].text
+            )
+            data = json.loads(text[text.find("{") : text.rfind("}") + 1])
 
             subs = [
-                SubQuestion(question=sq["question"], strategy=sq.get("strategy", "hybrid"), priority=i + 1)
+                SubQuestion(
+                    question=sq["question"], strategy=sq.get("strategy", "hybrid"), priority=i + 1
+                )
                 for i, sq in enumerate(data.get("sub_questions", []))
             ]
             return ResearchPlan(

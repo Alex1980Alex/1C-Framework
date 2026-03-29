@@ -7,15 +7,15 @@ Version: 1.2.0 - Phase 11.6: Metrics Dashboard
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-from src.pdf_framework.observability.tracer import get_metrics_collector
-from src.pdf_framework.observability.hook_metrics_db import HookMetricsDB
 from src.pdf_framework.agents.cache import get_llm_cache
 from src.pdf_framework.embeddings.cache import get_embedding_cache
+from src.pdf_framework.observability.hook_metrics_db import HookMetricsDB
+from src.pdf_framework.observability.tracer import get_metrics_collector
 from src.pdf_framework.processing.cache import get_document_cache
 
 logger = logging.getLogger(__name__)
@@ -510,7 +510,12 @@ async def get_metrics():
     doc_cache_stats = doc_cache.get_stats()
 
     # Calculate combined hit rate
-    total_requests = llm_cache_stats["hits"] + llm_cache_stats["misses"] + emb_cache_stats.hits + emb_cache_stats.misses
+    total_requests = (
+        llm_cache_stats["hits"]
+        + llm_cache_stats["misses"]
+        + emb_cache_stats.hits
+        + emb_cache_stats.misses
+    )
     total_hits = llm_cache_stats["hits"] + emb_cache_stats.hits
     combined_hit_rate = total_hits / total_requests if total_requests > 0 else 0.0
 
@@ -567,7 +572,7 @@ async def get_metrics():
         "accuracy": accuracy,
         "errors": errors,
         "enforcement": enforcement,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -583,7 +588,9 @@ async def get_metrics_html():
 
     for strategy, count in sorted(strategies.items(), key=lambda x: x[1], reverse=True):
         share = count / total_queries * 100 if total_queries > 0 else 0
-        tag_color = "blue" if strategy == "vector" else "green" if strategy == "hybrid" else "purple"
+        tag_color = (
+            "blue" if strategy == "vector" else "green" if strategy == "hybrid" else "purple"
+        )
         strategy_rows.append(f"""
             <tr>
                 <td><span class="tag tag-{tag_color}">{strategy}</span></td>
@@ -593,7 +600,9 @@ async def get_metrics_html():
         """)
 
     if not strategy_rows:
-        strategy_rows.append('<tr><td colspan="3" style="text-align:center;color:#999;">No data yet</td></tr>')
+        strategy_rows.append(
+            '<tr><td colspan="3" style="text-align:center;color:#999;">No data yet</td></tr>'
+        )
 
     # Build hook invocation rows
     hook_rows = []
@@ -606,15 +615,17 @@ async def get_metrics_html():
         hook_rows.append(f"""
             <tr>
                 <td><strong>{short_name}</strong></td>
-                <td>{h.get('count', 0)}</td>
-                <td>{h.get('avg_ms', 0):.1f}</td>
-                <td>{h.get('p95_ms', 0)}</td>
-                <td{blocks_class}>{h.get('blocks', 0)}</td>
-                <td{errors_class}>{h.get('errors', 0)}</td>
+                <td>{h.get("count", 0)}</td>
+                <td>{h.get("avg_ms", 0):.1f}</td>
+                <td>{h.get("p95_ms", 0)}</td>
+                <td{blocks_class}>{h.get("blocks", 0)}</td>
+                <td{errors_class}>{h.get("errors", 0)}</td>
             </tr>
         """)
     if not hook_rows:
-        hook_rows.append('<tr><td colspan="6" style="text-align:center;color:#999;">No hook data yet</td></tr>')
+        hook_rows.append(
+            '<tr><td colspan="6" style="text-align:center;color:#999;">No hook data yet</td></tr>'
+        )
 
     # Build skill activation rows
     skill_rows = []
@@ -633,14 +644,16 @@ async def get_metrics_html():
         skill_rows.append(f"""
             <tr>
                 <td><strong>{skill_name}</strong></td>
-                <td>{s.get('recommended', 0)}</td>
-                <td>{s.get('activated', 0)}</td>
+                <td>{s.get("recommended", 0)}</td>
+                <td>{s.get("activated", 0)}</td>
                 <td>{source_html}</td>
                 <td class="{rate_class}">{rate:.1f}%</td>
             </tr>
         """)
     if not skill_rows:
-        skill_rows.append('<tr><td colspan="5" style="text-align:center;color:#999;">No skill data yet</td></tr>')
+        skill_rows.append(
+            '<tr><td colspan="5" style="text-align:center;color:#999;">No skill data yet</td></tr>'
+        )
 
     # Build error rows
     error_rows = []
@@ -656,7 +669,9 @@ async def get_metrics_html():
             </tr>
         """)
     if not error_rows:
-        error_rows.append('<tr><td colspan="3" style="text-align:center;color:#999;">No errors</td></tr>')
+        error_rows.append(
+            '<tr><td colspan="3" style="text-align:center;color:#999;">No errors</td></tr>'
+        )
 
     # Activation rate color
     act_rate = skill_data.get("activation_rate", 0)
@@ -680,7 +695,7 @@ async def get_metrics_html():
     doc = metrics_data["document_cache"]
 
     html = Template(_DASHBOARD_HTML).safe_substitute(
-        timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        timestamp=datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC"),
         queries_total=metrics_data.get("queries_total", 0),
         queries_today=metrics_data.get("queries_today", 0),
         avg_latency_ms=f"{metrics_data.get('avg_latency_ms', 0):.1f}",
@@ -722,11 +737,11 @@ async def get_metrics_html():
 @router.post("/reset")
 async def reset_metrics():
     """Reset daily metrics counter."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     metrics_collector = get_metrics_collector()
     metrics_collector._queries_today = 0
-    metrics_collector._last_reset = datetime.now(timezone.utc)
+    metrics_collector._last_reset = datetime.now(UTC)
 
     return {"status": "ok", "message": "Daily metrics reset"}
 

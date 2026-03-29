@@ -75,7 +75,8 @@ class SemanticTextSplitter:
         # For very short documents, return as single chunk
         if len(sentences) <= 2:
             return self._make_chunks(
-                [" ".join(sentences)], document,
+                [" ".join(sentences)],
+                document,
             )
 
         # Compute sentence embeddings
@@ -96,7 +97,8 @@ class SemanticTextSplitter:
         return self._make_chunks(sized_chunks, document)
 
     def _compute_consecutive_similarities(
-        self, embeddings: np.ndarray,
+        self,
+        embeddings: np.ndarray,
     ) -> list[float]:
         """Compute cosine similarity between each pair of consecutive sentences."""
         norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
@@ -131,7 +133,9 @@ class SemanticTextSplitter:
         return breakpoints
 
     def _group_sentences(
-        self, sentences: list[str], breakpoints: list[int],
+        self,
+        sentences: list[str],
+        breakpoints: list[int],
     ) -> list[str]:
         """Group sentences into chunks split at breakpoints."""
         if not breakpoints:

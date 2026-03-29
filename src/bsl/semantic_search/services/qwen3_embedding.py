@@ -124,9 +124,7 @@ class Qwen3EmbeddingService:
                 if self._dims is None and embeddings:
                     self._dims = len(embeddings[0])
                     logger.info("Detected embedding dimensions: %d", self._dims)
-                return [
-                    emb if isinstance(emb, list) else None for emb in embeddings
-                ]
+                return [emb if isinstance(emb, list) else None for emb in embeddings]
             logger.warning(
                 "Ollama batch: expected %d, got %d embeddings",
                 len(texts),
@@ -153,9 +151,7 @@ class Qwen3EmbeddingService:
         instructed = DOCUMENT_INSTRUCTION + text
         return self._embed_ollama(instructed)
 
-    def embed_batch(
-        self, texts: list[str], is_query: bool = False
-    ) -> list[list[float] | None]:
+    def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float] | None]:
         """Batch embed texts with appropriate instruction prefix."""
         if not texts:
             return []

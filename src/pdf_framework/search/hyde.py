@@ -79,7 +79,9 @@ class HyDEGenerator:
                     component="hyde",
                 )
                 if result and len(result.strip()) >= 30:
-                    logger.info(f"[HyDE] Generated hypothetical (cheap, {len(result.strip())} chars)")
+                    logger.info(
+                        f"[HyDE] Generated hypothetical (cheap, {len(result.strip())} chars)"
+                    )
                     return result.strip()
             except Exception as e:
                 logger.warning("[HyDE] Cheap LLM failed, falling back: %s", e)
@@ -120,7 +122,9 @@ class HyDEGenerator:
 
                     if len(hypothetical) < 30:
                         rw_feedback = "Write 2-3 sentences answering the question. Do not refuse."
-                        logger.warning(f"[HyDE] Attempt {rw_attempt}: too short ({len(hypothetical)} chars)")
+                        logger.warning(
+                            f"[HyDE] Attempt {rw_attempt}: too short ({len(hypothetical)} chars)"
+                        )
                         continue
 
                     logger.info(f"[HyDE] Generated hypothetical ({len(hypothetical)} chars)")

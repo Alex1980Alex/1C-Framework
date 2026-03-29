@@ -54,11 +54,13 @@ class AutoRAGRunner:
                 results.append(result)
 
             except Exception as e:
-                results.append(GridResult(
-                    config=cfg,
-                    errors=[str(e)],
-                    latency_ms=(time.time() - t0) * 1000,
-                ))
+                results.append(
+                    GridResult(
+                        config=cfg,
+                        errors=[str(e)],
+                        latency_ms=(time.time() - t0) * 1000,
+                    )
+                )
 
         return results
 

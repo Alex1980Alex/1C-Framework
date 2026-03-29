@@ -52,10 +52,7 @@ async def check_completeness(
     feedback = ""
 
     for attempt in range(1, 3):
-        prompt = (
-            f"Вопрос пользователя: {question}\n\n"
-            f"Сгенерированный ответ:\n{answer}"
-        )
+        prompt = f"Вопрос пользователя: {question}\n\nСгенерированный ответ:\n{answer}"
         if feedback:
             prompt += f"\n\n⚠️ КОРРЕКЦИЯ: {feedback}"
 
@@ -85,7 +82,8 @@ async def check_completeness(
                 if gaps:
                     logger.info(
                         "[ENRICHMENT] Answer INCOMPLETE, %d gaps: %s",
-                        len(gaps), "; ".join(gaps),
+                        len(gaps),
+                        "; ".join(gaps),
                     )
                     return {"is_complete": False, "gaps": gaps}
 
@@ -96,10 +94,7 @@ async def check_completeness(
                 continue
 
             # Invalid format
-            feedback = (
-                "Ответь СТРОГО в формате: COMPLETE или "
-                "INCOMPLETE: пробел1; пробел2; пробел3"
-            )
+            feedback = "Ответь СТРОГО в формате: COMPLETE или INCOMPLETE: пробел1; пробел2; пробел3"
 
         except Exception:
             logger.exception("[ENRICHMENT] Completeness check failed (attempt %d)", attempt)
@@ -142,10 +137,7 @@ async def generate_sub_queries(
     feedback = ""
 
     for attempt in range(1, 3):
-        prompt = (
-            f"Исходный вопрос: {question}\n"
-            f"Пробелы в ответе: {gaps_text}"
-        )
+        prompt = f"Исходный вопрос: {question}\nПробелы в ответе: {gaps_text}"
         if feedback:
             prompt += f"\n\n⚠️ КОРРЕКЦИЯ: {feedback}"
 
@@ -171,7 +163,8 @@ async def generate_sub_queries(
                 queries = queries[:max_queries]
                 logger.info(
                     "[ENRICHMENT] Generated %d sub-queries: %s",
-                    len(queries), queries,
+                    len(queries),
+                    queries,
                 )
                 return queries
 
@@ -240,7 +233,9 @@ async def enrich_search_results(
 
     logger.info(
         "[ENRICHMENT] Merged: %d original + %d new = %d total",
-        len(original_results), new_count, len(merged),
+        len(original_results),
+        new_count,
+        len(merged),
     )
 
     return SearchResponse(

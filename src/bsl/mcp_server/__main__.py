@@ -1,7 +1,8 @@
 """Точка входа для запуска модуля как пакета."""
 
 import asyncio
+
 from .main import main
 
 if __name__ == "__main__":
-	asyncio.run(main()) 
+    asyncio.run(main())

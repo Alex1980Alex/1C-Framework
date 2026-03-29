@@ -51,14 +51,32 @@ def _get_components():
 def index(
     file_path: str = typer.Argument(..., help="Path to PDF file to index"),
     build_graph: bool = typer.Option(False, "--graph", help="Also build knowledge graph"),
-    communities: bool = typer.Option(False, "--communities", help="Detect communities after graph build (Phase 6)"),
-    parent_child: bool = typer.Option(False, "--parent-child", help="Use parent-child two-level splitting (Phase 7)"),
-    contextual: bool = typer.Option(False, "--contextual", help="Generate LLM context per chunk (Phase 3.1)"),
-    layout_aware: bool = typer.Option(False, "--layout-aware", help="Use layout-aware PDF parsing (Phase 10)"),
-    extract_images: bool = typer.Option(False, "--extract-images", help="Extract and describe images (Phase 10)"),
-    template: str = typer.Option("auto", "--template", help="Parse template: auto/generic/research_paper/user_manual (Phase 10)"),
-    raptor: bool = typer.Option(False, "--raptor", help="Build RAPTOR tree for hierarchical retrieval (Phase 13.1)"),
-    summarize: bool = typer.Option(False, "--summarize", help="Generate document summary for pre-routing (Phase 13.4)"),
+    communities: bool = typer.Option(
+        False, "--communities", help="Detect communities after graph build (Phase 6)"
+    ),
+    parent_child: bool = typer.Option(
+        False, "--parent-child", help="Use parent-child two-level splitting (Phase 7)"
+    ),
+    contextual: bool = typer.Option(
+        False, "--contextual", help="Generate LLM context per chunk (Phase 3.1)"
+    ),
+    layout_aware: bool = typer.Option(
+        False, "--layout-aware", help="Use layout-aware PDF parsing (Phase 10)"
+    ),
+    extract_images: bool = typer.Option(
+        False, "--extract-images", help="Extract and describe images (Phase 10)"
+    ),
+    template: str = typer.Option(
+        "auto",
+        "--template",
+        help="Parse template: auto/generic/research_paper/user_manual (Phase 10)",
+    ),
+    raptor: bool = typer.Option(
+        False, "--raptor", help="Build RAPTOR tree for hierarchical retrieval (Phase 13.1)"
+    ),
+    summarize: bool = typer.Option(
+        False, "--summarize", help="Generate document summary for pre-routing (Phase 13.4)"
+    ),
 ):
     """Index a PDF document into the vector store.
 
@@ -93,8 +111,10 @@ def index(
             tables = extractor.extract_all(file_path)
 
             for table in tables:
-                console.print(f"  Table p.{table.page_number}: "
-                            f"{len(table.headers)} cols × {len(table.rows)} rows")
+                console.print(
+                    f"  Table p.{table.page_number}: "
+                    f"{len(table.headers)} cols × {len(table.rows)} rows"
+                )
 
         # Phase 10: Image description
         if extract_images or components.settings.layout.extract_images:
@@ -136,12 +156,13 @@ def index(
 
             await parent_store.add_parents(parents)
             console.print(
-                f"[green]Parent-Child:[/green] {len(parents)} parents, "
-                f"{len(chunks)} children"
+                f"[green]Parent-Child:[/green] {len(parents)} parents, {len(chunks)} children"
             )
         elif layout_aware or components.settings.layout.layout_detection_enabled:
             # Phase 10: Structure-aware splitting for layout-parsed documents
-            from src.pdf_framework.processing.splitters.structure_aware import StructureAwareSplitter
+            from src.pdf_framework.processing.splitters.structure_aware import (
+                StructureAwareSplitter,
+            )
 
             splitter = StructureAwareSplitter(
                 max_chunk_size=components.settings.layout.structure_aware_chunk_size,
@@ -169,8 +190,10 @@ def index(
             document_id=document.id,
             source_path=document.source_path,
         )
-        console.print(f"[green]Indexed:[/green] {result.chunks_stored} chunks, "
-                       f"{result.embeddings_computed} embeddings")
+        console.print(
+            f"[green]Indexed:[/green] {result.chunks_stored} chunks, "
+            f"{result.embeddings_computed} embeddings"
+        )
 
         if build_graph:
             from src.pdf_framework.graph_store.construction.builder import GraphBuilder
@@ -181,12 +204,15 @@ def index(
                 api_key=components.settings.anthropic_api_key,
             )
             builder = GraphBuilder(
-                extractor, components.graph_store,
+                extractor,
+                components.graph_store,
                 concurrency=components.settings.agent.graph_concurrency,
             )
             stats = await builder.build_from_chunks(chunks)
-            console.print(f"[green]Graph:[/green] {stats['entities_added']} entities, "
-                          f"{stats['relations_added']} relations")
+            console.print(
+                f"[green]Graph:[/green] {stats['entities_added']} entities, "
+                f"{stats['relations_added']} relations"
+            )
 
             # Phase 6: Community detection and summarization
             if communities and components.settings.graph_rag.community_detection_enabled:
@@ -224,7 +250,9 @@ def index(
                     )
 
                 components.graph_store._save_to_file()
-                console.print(f"[green]Summaries:[/green] {len(summaries)} community summaries generated")
+                console.print(
+                    f"[green]Summaries:[/green] {len(summaries)} community summaries generated"
+                )
 
         # Phase 13.1: RAPTOR Tree Builder
         if raptor or components.settings.raptor.enabled:
@@ -308,15 +336,26 @@ def index(
 @app.command()
 def search(
     query: str = typer.Argument(..., help="Search query"),
-    strategy: str = typer.Option("vector", "--strategy", "-s", help="Search strategy (vector/graph/hybrid/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive/raptor)"),
+    strategy: str = typer.Option(
+        "vector",
+        "--strategy",
+        "-s",
+        help="Search strategy (vector/graph/hybrid/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive/raptor)",
+    ),
     k: int = typer.Option(5, "--top-k", "-k", help="Number of results"),
     no_rerank: bool = typer.Option(False, "--no-rerank", help="Disable reranking (Phase 1.1)"),
     doc_type: str = typer.Option(None, "--doc-type", help="Filter by document_type (Phase 1.3)"),
     language: str = typer.Option(None, "--language", help="Filter by language (Phase 1.3)"),
     version: str = typer.Option(None, "--version", help="Filter by version (Phase 1.3)"),
-    diversity: float = typer.Option(None, "--diversity", help="MMR diversity lambda 0.0-1.0 (Phase 2.1)"),
-    expand_query: bool = typer.Option(False, "--expand-query", help="Enable query expansion (Phase 2.3)"),
-    force_route: str = typer.Option(None, "--force-route", help="Force adaptive to use specific strategy (Phase 8)"),
+    diversity: float = typer.Option(
+        None, "--diversity", help="MMR diversity lambda 0.0-1.0 (Phase 2.1)"
+    ),
+    expand_query: bool = typer.Option(
+        False, "--expand-query", help="Enable query expansion (Phase 2.3)"
+    ),
+    force_route: str = typer.Option(
+        None, "--force-route", help="Force adaptive to use specific strategy (Phase 8)"
+    ),
 ):
     """Search indexed documents.
 
@@ -377,10 +416,17 @@ def search(
 @app.command()
 def ask(
     question: str = typer.Argument(..., help="Question to ask"),
-    strategy: str = typer.Option("hybrid", "--strategy", "-s", help="Search strategy (hybrid/vector/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive/raptor)"),
+    strategy: str = typer.Option(
+        "hybrid",
+        "--strategy",
+        "-s",
+        help="Search strategy (hybrid/vector/mmr/two_stage/graphrag_local/graphrag_global/auto_merge/adaptive/raptor)",
+    ),
     stream: bool = typer.Option(False, "--stream", help="Enable streaming response (Phase 9)"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show Self-RAG pipeline details"),
-    no_self_rag: bool = typer.Option(False, "--no-self-rag", help="Disable Self-RAG (use legacy chain)"),
+    no_self_rag: bool = typer.Option(
+        False, "--no-self-rag", help="Disable Self-RAG (use legacy chain)"
+    ),
 ):
     """Ask a question using RAG agent (Phase 5: Self-RAG).
 
@@ -414,12 +460,12 @@ def ask(
             runner = StreamingRAGRunner(agent, show_status=False)
 
             # Stream and print tokens in real-time
-            console.print(f"\n[bold]Answer:[/bold]\n")
+            console.print("\n[bold]Answer:[/bold]\n")
             async for event in runner.stream(question, search_strategy=strategy):
                 if event.type.value == "token":
                     console.print(event.data, end="", markup=False)
                 elif event.type.value == "source":
-                    console.print(f"\n\n[dim]Sources:[/dim]")
+                    console.print("\n\n[dim]Sources:[/dim]")
                     for src in event.data:
                         console.print(f"  - {src.get('id', 'unknown')}")
                 elif event.type.value == "error":
@@ -432,7 +478,9 @@ def ask(
             from src.pdf_framework.chains.qa.retrieval_qa import RetrievalQAChain
 
             search_response = await components.search_manager.search(
-                query=question, strategy=strategy, k=5,
+                query=question,
+                strategy=strategy,
+                k=5,
             )
             chain = RetrievalQAChain(
                 settings=components.settings.agent,
@@ -458,10 +506,12 @@ def ask(
             api_key=components.settings.anthropic_api_key,
         )
 
-        result = await agent.ainvoke({
-            "question": question,
-            "search_strategy": strategy,
-        })
+        result = await agent.ainvoke(
+            {
+                "question": question,
+                "search_strategy": strategy,
+            }
+        )
 
         answer = result.get("answer", "No answer generated.")
         console.print(f"\n[bold]Answer:[/bold]\n{answer}\n")
@@ -493,7 +543,9 @@ def ask(
 
 @app.command()
 def chat(
-    thread: str = typer.Option(None, "--thread", "-t", help="Thread ID to continue (default: new thread)"),
+    thread: str = typer.Option(
+        None, "--thread", "-t", help="Thread ID to continue (default: new thread)"
+    ),
     strategy: str = typer.Option("adaptive", "--strategy", "-s", help="Search strategy"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show pipeline details"),
 ):
@@ -522,9 +574,7 @@ def chat(
 
     # Get existing history or start new
     loop = asyncio.new_event_loop()
-    history = loop.run_until_complete(
-        memory.get_history(thread_id)
-    )
+    history = loop.run_until_complete(memory.get_history(thread_id))
 
     streaming_enabled = True
 
@@ -555,7 +605,11 @@ def chat(
             if user_input.lower() == "/history":
                 hist = loop.run_until_complete(memory.get_history(thread_id))
                 for i, msg in enumerate(hist, 1):
-                    role = "[bold cyan]You[/bold cyan]" if msg.role == "user" else "[bold green]Assistant[/bold green]"
+                    role = (
+                        "[bold cyan]You[/bold cyan]"
+                        if msg.role == "user"
+                        else "[bold green]Assistant[/bold green]"
+                    )
                     content = msg.content[:100] + "..." if len(msg.content) > 100 else msg.content
                     console.print(f"  [{i}] {role}: {content}")
                 continue
@@ -666,6 +720,7 @@ def chat(
                         console.print(f"[dim]Sources: {len(result['sources'])} documents[/dim]")
 
             from src.pdf_framework.agents.rag.streaming import collect_stream
+
             asyncio.run(_process())
 
         except KeyboardInterrupt:
@@ -683,9 +738,9 @@ def stats():
         vector_count = await components.vector_store.count()
         graph_stats = await components.graph_store.get_statistics()
 
-        console.print(f"\n[bold]Vector Store:[/bold]")
+        console.print("\n[bold]Vector Store:[/bold]")
         console.print(f"  Documents: {vector_count}")
-        console.print(f"\n[bold]Graph Store:[/bold]")
+        console.print("\n[bold]Graph Store:[/bold]")
         for key, value in graph_stats.items():
             console.print(f"  {key}: {value}")
 
@@ -740,7 +795,9 @@ def restart(
             try:
                 result = subprocess.run(
                     ["netstat", "-ano", "-p", "TCP"],
-                    capture_output=True, text=True, timeout=10,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 for line in result.stdout.splitlines():
                     parts = line.split()
@@ -752,7 +809,9 @@ def restart(
             try:
                 result = subprocess.run(
                     ["lsof", "-ti", f":{p}"],
-                    capture_output=True, text=True, timeout=10,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 if result.stdout.strip():
                     return int(result.stdout.strip().splitlines()[0])
@@ -767,7 +826,9 @@ def restart(
         if platform.system() == "Windows":
             result = subprocess.run(
                 ["tasklist", "/FI", f"PID eq {pid}"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             return str(pid) in result.stdout
         else:
@@ -787,7 +848,9 @@ def restart(
             # Windows: taskkill /F /T kills process tree reliably
             result = subprocess.run(
                 ["taskkill", "/PID", str(pid), "/F", "/T"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             return result.returncode == 0
         else:
@@ -836,8 +899,17 @@ def restart(
     # --- Step 2: Start new server ---
     console.print(f"[yellow]Starting API server on {host}:{port}...[/yellow]")
     subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "src.api.app:create_app",
-         "--factory", "--host", host, "--port", str(port)],
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "src.api.app:create_app",
+            "--factory",
+            "--host",
+            host,
+            "--port",
+            str(port),
+        ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         creationflags=_CREATE_NO_WINDOW,
@@ -848,7 +920,7 @@ def restart(
         if _is_port_open(host, port):
             console.print(f"[green]Server restarted on {host}:{port}[/green]")
             return
-    console.print(f"[red]Server failed to start within 15 seconds[/red]")
+    console.print("[red]Server failed to start within 15 seconds[/red]")
     raise typer.Exit(1)
 
 
@@ -898,9 +970,16 @@ def dashboard(
 
         # Check if Docker daemon is responsive
         try:
-            docker_ok = subprocess.run(
-                ["docker", "info"], capture_output=True, timeout=10,
-            ).returncode == 0 if docker_bin else False
+            docker_ok = (
+                subprocess.run(
+                    ["docker", "info"],
+                    capture_output=True,
+                    timeout=10,
+                ).returncode
+                == 0
+                if docker_bin
+                else False
+            )
         except subprocess.TimeoutExpired:
             docker_ok = False
 
@@ -924,7 +1003,9 @@ def dashboard(
                 time.sleep(2)
                 try:
                     result = subprocess.run(
-                        ["docker", "info"], capture_output=True, timeout=10,
+                        ["docker", "info"],
+                        capture_output=True,
+                        timeout=10,
                     )
                     if result.returncode == 0:
                         docker_ok = True
@@ -933,14 +1014,18 @@ def dashboard(
                 except subprocess.TimeoutExpired:
                     continue
             else:
-                console.print("[yellow]Docker daemon not ready after 120s. Continuing without Qdrant.[/yellow]")
+                console.print(
+                    "[yellow]Docker daemon not ready after 120s. Continuing without Qdrant.[/yellow]"
+                )
 
         # --- Step 2: Qdrant container ---
         if docker_ok and not _is_port_open("127.0.0.1", 6333):
             # Check if container exists but stopped
             result = subprocess.run(
                 ["docker", "ps", "-a", "--filter", "name=qdrant", "--format", "{{.Status}}"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             container_status = result.stdout.strip()
 
@@ -950,11 +1035,22 @@ def dashboard(
             elif not container_status:
                 console.print("[yellow]Qdrant container not found. Creating...[/yellow]")
                 subprocess.run(
-                    ["docker", "run", "-d", "--name", "qdrant",
-                     "-p", "6333:6333", "-p", "6334:6334",
-                     "-v", "qdrant_storage:/qdrant/storage",
-                     "qdrant/qdrant"],
-                    capture_output=True, timeout=120,
+                    [
+                        "docker",
+                        "run",
+                        "-d",
+                        "--name",
+                        "qdrant",
+                        "-p",
+                        "6333:6333",
+                        "-p",
+                        "6334:6334",
+                        "-v",
+                        "qdrant_storage:/qdrant/storage",
+                        "qdrant/qdrant",
+                    ],
+                    capture_output=True,
+                    timeout=120,
                 )
             else:
                 console.print(f"[dim]Qdrant container: {container_status}[/dim]")
@@ -966,7 +1062,9 @@ def dashboard(
                     console.print("[green]Qdrant ready on port 6333[/green]")
                     break
             else:
-                console.print("[yellow]Qdrant not ready after 30s. Server will start in degraded mode.[/yellow]")
+                console.print(
+                    "[yellow]Qdrant not ready after 30s. Server will start in degraded mode.[/yellow]"
+                )
     elif not no_docker and _is_port_open("127.0.0.1", 6333):
         console.print("[green]Qdrant already running on port 6333[/green]")
 
@@ -976,8 +1074,17 @@ def dashboard(
     else:
         console.print(f"[yellow]Starting API server on {host}:{port}...[/yellow]")
         subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "src.api.app:create_app",
-             "--factory", "--host", host, "--port", str(port)],
+            [
+                sys.executable,
+                "-m",
+                "uvicorn",
+                "src.api.app:create_app",
+                "--factory",
+                "--host",
+                host,
+                "--port",
+                str(port),
+            ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=_CREATE_NO_WINDOW,
@@ -985,10 +1092,10 @@ def dashboard(
         for _ in range(30):
             time.sleep(0.5)
             if _is_port_open(host, port):
-                console.print(f"[green]API server started[/green]")
+                console.print("[green]API server started[/green]")
                 break
         else:
-            console.print(f"[red]API server failed to start within 15 seconds[/red]")
+            console.print("[red]API server failed to start within 15 seconds[/red]")
             raise typer.Exit(1)
 
     # --- Step 4: Browser ---
@@ -1002,7 +1109,9 @@ def dashboard(
 @app.command()
 def cache(
     action: str = typer.Argument(..., help="Action: stats, clear"),
-    cache_type: str = typer.Option("all", "--type", "-t", help="Cache type: all/embedding/llm/document"),
+    cache_type: str = typer.Option(
+        "all", "--type", "-t", help="Cache type: all/embedding/llm/document"
+    ),
 ):
     """Manage caches (Phase 11).
 
@@ -1077,7 +1186,6 @@ def cache(
 
         elif action == "clear":
             # Clear specified cache(s)
-            import asyncio
 
             count = 0
 
@@ -1117,7 +1225,7 @@ def tenant(
         list    - List all tenants
         delete  - Delete a tenant and all data (GDPR)
     """
-    from src.pdf_framework.multitenancy import get_tenant_store_manager, get_tenant_graph_manager
+    from src.pdf_framework.multitenancy import get_tenant_graph_manager, get_tenant_store_manager
 
     async def _run():
         store_mgr = get_tenant_store_manager()
@@ -1147,8 +1255,8 @@ def tenant(
             table.add_column("Documents", width=10)
             table.add_column("Created", width=25)
 
-            for tenant_id in tenants:
-                metadata = await store_mgr.get_tenant_metadata(tenant_id)
+            for tid in tenants:
+                metadata = await store_mgr.get_tenant_metadata(tid)
                 if metadata:
                     table.add_row(
                         metadata.tenant_id,
@@ -1219,7 +1327,7 @@ def auth(
 
         token = jwt_handler.create_token(tenant, role)
 
-        console.print(f"[green]Token generated:[/green]")
+        console.print("[green]Token generated:[/green]")
         console.print(f"  Token: {token}")
         console.print(f"  Tenant: {tenant}")
         console.print(f"  Role: {role}")
@@ -1227,8 +1335,8 @@ def auth(
 
         # Show curl example
         console.print("\n[dim]Example usage:[/dim]")
-        console.print(f"  curl -H \"Authorization: Bearer {token}\" \\")
-        console.print(f"    http://localhost:8000/search/")
+        console.print(f'  curl -H "Authorization: Bearer {token}" \\')
+        console.print("    http://localhost:8000/search/")
 
     else:
         console.print(f"[red]Unknown action:[/red] {action}")
@@ -1241,7 +1349,9 @@ def evaluate(
     dataset: str = typer.Argument(..., help="Path to evaluation dataset JSON"),
     strategy: str = typer.Option("vector", "--strategy", "-s", help="Search strategy"),
     k: int = typer.Option(5, "--top-k", "-k", help="Number of results per query"),
-    with_rag_triad: bool = typer.Option(False, "--with-rag-triad", help="Enable RAG Triad evaluation (requires LLM)"),
+    with_rag_triad: bool = typer.Option(
+        False, "--with-rag-triad", help="Enable RAG Triad evaluation (requires LLM)"
+    ),
 ):
     """Run evaluation benchmark on a dataset (Phase 4)."""
     components = _get_components()
@@ -1348,7 +1458,9 @@ def ui(
 def suggest(
     query: str = typer.Option("", "--query", "-q", help="Context query for suggestions"),
     k: int = typer.Option(5, "--top-k", "-k", help="Number of suggestions"),
-    method: str = typer.Option("entity", "--method", "-m", help="Suggestion method (entity/frequency/llm/related)"),
+    method: str = typer.Option(
+        "entity", "--method", "-m", help="Suggestion method (entity/frequency/llm/related)"
+    ),
 ):
     """Get query suggestions for exploration (Phase 14.5).
 
@@ -1386,7 +1498,9 @@ def suggest(
 def research(
     question: str = typer.Argument(..., help="Research question"),
     strategy: str = typer.Option("hybrid", "--strategy", "-s", help="Search strategy"),
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show sub-questions and quality scores"),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show sub-questions and quality scores"
+    ),
 ):
     """Deep research across multiple documents (Phase 19).
 
@@ -1400,8 +1514,8 @@ def research(
 
     async def _run():
         from src.pdf_framework.agents.deep.planner import ResearchPlanner
-        from src.pdf_framework.agents.deep.synthesizer import CrossDocumentSynthesizer, SubResult
         from src.pdf_framework.agents.deep.quality import ResearchQualityChecker
+        from src.pdf_framework.agents.deep.synthesizer import CrossDocumentSynthesizer, SubResult
 
         planner = ResearchPlanner(
             api_key=components.settings.anthropic_api_key,
@@ -1422,17 +1536,19 @@ def research(
         sub_results = []
         for sq in plan.sub_questions:
             response = await components.search_manager.search(
-                query=sq.question, strategy=strategy, k=5,
+                query=sq.question,
+                strategy=strategy,
+                k=5,
             )
-            chunks_text = "\n\n".join(
-                r.chunk.content for r in response.results
+            chunks_text = "\n\n".join(r.chunk.content for r in response.results)
+            sub_results.append(
+                SubResult(
+                    question=sq.question,
+                    answer=chunks_text,
+                    sources=[r.chunk.id for r in response.results],
+                    confidence=max((r.score for r in response.results), default=0.0),
+                )
             )
-            sub_results.append(SubResult(
-                question=sq.question,
-                answer=chunks_text,
-                sources=[r.chunk.id for r in response.results],
-                confidence=max((r.score for r in response.results), default=0.0),
-            ))
 
         # Step 3: Synthesize
         console.print("[yellow]Synthesizing answer...[/yellow]")
@@ -1458,7 +1574,7 @@ def research(
                 console.print(f"  - {c}")
 
         if verbose:
-            console.print(f"\n[bold]Quality:[/bold]")
+            console.print("\n[bold]Quality:[/bold]")
             console.print(f"  Coverage:     {quality.coverage_score:.2f}")
             console.print(f"  Groundedness: {quality.groundedness_score:.2f}")
             if quality.gaps:
@@ -1471,7 +1587,9 @@ def research(
 def autorag(
     dataset: str = typer.Argument("default", help="Benchmark dataset name or path to JSON"),
     max_experiments: int = typer.Option(20, "--max", help="Maximum number of experiments"),
-    smart: bool = typer.Option(True, "--smart/--full", help="Use SmartGrid (prune redundant combos)"),
+    smart: bool = typer.Option(
+        True, "--smart/--full", help="Use SmartGrid (prune redundant combos)"
+    ),
 ):
     """Run AutoRAG grid search optimization (Phase 20).
 
@@ -1485,8 +1603,8 @@ def autorag(
 
     async def _run():
         from src.pdf_framework.evaluation.autorag import ParameterGrid, SmartGrid
-        from src.pdf_framework.evaluation.autorag_runner import AutoRAGRunner
         from src.pdf_framework.evaluation.autorag_analyzer import AutoRAGAnalyzer
+        from src.pdf_framework.evaluation.autorag_runner import AutoRAGRunner
 
         # Build grid
         grid_cls = SmartGrid if smart else ParameterGrid
@@ -1498,12 +1616,13 @@ def autorag(
 
         total = grid.configs_count()
         actual = min(total, max_experiments)
-        console.print(f"[bold]AutoRAG Optimization[/bold]")
+        console.print("[bold]AutoRAG Optimization[/bold]")
         console.print(f"  Grid: {total} configs, running {actual}")
         console.print(f"  Dataset: {dataset}")
 
         # Load benchmark
         from src.pdf_framework.evaluation.benchmark import BenchmarkLoader
+
         benchmark = BenchmarkLoader.load(dataset)
 
         # Run
@@ -1518,7 +1637,7 @@ def autorag(
         console.print(analyzer.comparison_table())
 
         if best:
-            console.print(f"\n[bold green]Best config:[/bold green]")
+            console.print("\n[bold green]Best config:[/bold green]")
             for key, value in best.items():
                 console.print(f"  {key}: {value}")
 
@@ -1606,10 +1725,9 @@ def feedback_cmd(
             console.print(f"[green]Cleared feedback older than {days} days[/green]")
 
         elif action == "export":
-            if not output:
-                output = "feedback_export.json"
-            collector.export_feedback(output)
-            console.print(f"[green]Exported feedback to {output}[/green]")
+            export_path = output if output else "feedback_export.json"
+            collector.export_feedback(export_path)
+            console.print(f"[green]Exported feedback to {export_path}[/green]")
 
         else:
             console.print(f"[red]Unknown action:[/red] {action}")

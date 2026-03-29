@@ -11,7 +11,6 @@ import os
 import shutil
 import subprocess
 import time
-from typing import List, Optional
 
 import httpx
 
@@ -22,7 +21,7 @@ _OLLAMA_KNOWN_PATHS = [
 ]
 
 
-def _find_ollama() -> Optional[str]:
+def _find_ollama() -> str | None:
     path = shutil.which("ollama")
     if path:
         return path
@@ -81,9 +80,7 @@ class EmbeddingService:
     """
 
     def __init__(
-        self,
-        ollama_host: str = "http://localhost:11434",
-        model: str = "nomic-embed-text"
+        self, ollama_host: str = "http://localhost:11434", model: str = "nomic-embed-text"
     ):
         """
         Инициализация Embedding Service
@@ -99,7 +96,7 @@ class EmbeddingService:
 
         logger.info(f"EmbeddingService инициализирован: {ollama_host}, model={model}")
 
-    def create_embedding(self, text: str) -> Optional[List[float]]:
+    def create_embedding(self, text: str) -> list[float] | None:
         """
         Создание embedding для текста
 
@@ -122,7 +119,7 @@ class EmbeddingService:
             url = f"{self.ollama_host}/api/embeddings"
             payload = {
                 "model": self.model,
-                "prompt": text[:8000]  # Ограничение длины
+                "prompt": text[:8000],  # Ограничение длины
             }
 
             response = self.client.post(url, json=payload)
@@ -146,10 +143,8 @@ class EmbeddingService:
             return None
 
     def create_embeddings_batch(
-        self,
-        texts: List[str],
-        batch_size: int = 10
-    ) -> List[Optional[List[float]]]:
+        self, texts: list[str], batch_size: int = 10
+    ) -> list[list[float] | None]:
         """
         Пакетное создание embeddings
 
@@ -163,7 +158,7 @@ class EmbeddingService:
         results = []
 
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
             batch_results = []
 
             for text in batch:
@@ -171,11 +166,11 @@ class EmbeddingService:
                 batch_results.append(embedding)
 
             results.extend(batch_results)
-            logger.debug(f"Обработан batch {i//batch_size + 1}: {len(batch_results)} embeddings")
+            logger.debug(f"Обработан batch {i // batch_size + 1}: {len(batch_results)} embeddings")
 
         return results
 
     def __del__(self):
         """Закрытие HTTP клиента"""
-        if hasattr(self, 'client'):
+        if hasattr(self, "client"):
             self.client.close()

@@ -13,7 +13,6 @@ Modules:
 """
 
 import logging
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +42,7 @@ if _DSPY_AVAILABLE:
 
         question: str = dspy.InputField(desc="The user's question")
         document: str = dspy.InputField(desc="Document chunk to evaluate")
-        relevance: str = dspy.OutputField(
-            desc="'yes' if relevant, 'no' if not relevant"
-        )
+        relevance: str = dspy.OutputField(desc="'yes' if relevant, 'no' if not relevant")
 
     class RewriterSignature(dspy.Signature):
         """Rewrite a search query to improve retrieval results.
@@ -55,12 +52,8 @@ if _DSPY_AVAILABLE:
         """
 
         question: str = dspy.InputField(desc="Original search query")
-        feedback: str = dspy.InputField(
-            desc="Why the previous search was insufficient"
-        )
-        rewritten_query: str = dspy.OutputField(
-            desc="Improved search query for better retrieval"
-        )
+        feedback: str = dspy.InputField(desc="Why the previous search was insufficient")
+        rewritten_query: str = dspy.OutputField(desc="Improved search query for better retrieval")
 
     class AnalyzerSignature(dspy.Signature):
         """Answer a question analytically using provided context.
@@ -174,9 +167,7 @@ if _DSPY_AVAILABLE:
             super().__init__()
             self.predict = dspy.ChainOfThought(EvidenceSignature)
 
-        def forward(
-            self, question: str, aspects: str, chunks: str
-        ) -> dspy.Prediction:
+        def forward(self, question: str, aspects: str, chunks: str) -> dspy.Prediction:
             return self.predict(question=question, aspects=aspects, chunks=chunks)
 
     class ComparatorModule(dspy.Module):
@@ -186,12 +177,8 @@ if _DSPY_AVAILABLE:
             super().__init__()
             self.predict = dspy.ChainOfThought(ComparatorSignature)
 
-        def forward(
-            self, entities: str, criteria: str, evidence: str
-        ) -> dspy.Prediction:
-            return self.predict(
-                entities=entities, criteria=criteria, evidence=evidence
-            )
+        def forward(self, entities: str, criteria: str, evidence: str) -> dspy.Prediction:
+            return self.predict(entities=entities, criteria=criteria, evidence=evidence)
 
     class ConclusionModule(dspy.Module):
         """DSPy module for conclusion generation."""
@@ -200,12 +187,8 @@ if _DSPY_AVAILABLE:
             super().__init__()
             self.predict = dspy.ChainOfThought(ConclusionSignature)
 
-        def forward(
-            self, question: str, evidence: str, comparison: str = ""
-        ) -> dspy.Prediction:
-            return self.predict(
-                question=question, evidence=evidence, comparison=comparison
-            )
+        def forward(self, question: str, evidence: str, comparison: str = "") -> dspy.Prediction:
+            return self.predict(question=question, evidence=evidence, comparison=comparison)
 
 else:
     # Stubs when DSPy is not installed

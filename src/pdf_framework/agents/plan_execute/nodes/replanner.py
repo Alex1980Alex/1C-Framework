@@ -6,8 +6,8 @@ Author: Claude Code
 Version: 1.0.0 - Phase 57: Agentic RAG Plan-Execute
 """
 
-import logging
 import json
+import logging
 from typing import Any
 
 from src.pdf_framework.agents.plan_execute.state import PlanExecuteState, PlanStep
@@ -48,31 +48,33 @@ def replan(llm: Any):
         logger.info(f"[REPLANNER] Evaluating plan (iteration {state.iterations})")
 
         # Build status summary
-        plan_status = "\n".join([
-            f"- {s.step_id}: {s.status} - {s.description}"
-            for s in state.plan
-        ])
+        plan_status = "\n".join(
+            [f"- {s.step_id}: {s.status} - {s.description}" for s in state.plan]
+        )
 
         # Get recent results
         recent_results = []
         for step_id, result in state.results.items():
             if isinstance(result, dict) and "results" in result:
-                recent_results.append(
-                    f"{step_id}: {len(result['results'])} results found"
-                )
+                recent_results.append(f"{step_id}: {len(result['results'])} results found")
             else:
                 recent_results.append(f"{step_id}: {str(result)[:100]}")
 
         results_str = "\n".join(recent_results) if recent_results else "No results yet"
 
         # Get replanning decision
-        response = await llm.ainvoke([
-            {"role": "user", "content": REPLANNER_PROMPT.format(
-                query=state.query,
-                plan_status=plan_status,
-                recent_results=results_str,
-            )}
-        ])
+        response = await llm.ainvoke(
+            [
+                {
+                    "role": "user",
+                    "content": REPLANNER_PROMPT.format(
+                        query=state.query,
+                        plan_status=plan_status,
+                        recent_results=results_str,
+                    ),
+                }
+            ]
+        )
 
         try:
             decision = json.loads(response.content)
@@ -86,13 +88,15 @@ def replan(llm: Any):
                 new_steps = []
 
                 for i, step_data in enumerate(new_steps_data):
-                    new_steps.append(PlanStep(
-                        step_id=f"new_{state.iterations}_{i}",
-                        description=step_data.get("description", ""),
-                        tool=step_data.get("tool", "search"),
-                        query=step_data.get("query", ""),
-                        status="pending",
-                    ))
+                    new_steps.append(
+                        PlanStep(
+                            step_id=f"new_{state.iterations}_{i}",
+                            description=step_data.get("description", ""),
+                            tool=step_data.get("tool", "search"),
+                            query=step_data.get("query", ""),
+                            status="pending",
+                        )
+                    )
 
                 logger.info(f"[REPLANNER] Added {len(new_steps)} new steps")
                 updated_plan = state.plan + new_steps

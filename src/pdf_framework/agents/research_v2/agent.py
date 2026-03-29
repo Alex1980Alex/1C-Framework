@@ -189,10 +189,14 @@ def create_research_agent_v2(
                 strategy = task.strategy
                 if strategy == "section_first":
                     return task, await search_manager.search_section_first(
-                        query=task.question, k=5,
+                        query=task.question,
+                        k=5,
                     )
                 return task, await search_manager.search(
-                    query=task.question, strategy=strategy, k=5, rerank=True,
+                    query=task.question,
+                    strategy=strategy,
+                    k=5,
+                    rerank=True,
                 )
             except Exception as e:
                 logger.warning("[EXEC] Task %s failed: %s", task.id, e)
@@ -221,16 +225,18 @@ def create_research_agent_v2(
             for sr in response.results:
                 if sr.chunk.id not in seen_ids:
                     seen_ids.add(sr.chunk.id)
-                    all_chunks.append({
-                        "id": sr.chunk.id,
-                        "content": sr.chunk.content,
-                        "score": sr.score,
-                        "source": sr.chunk.metadata.get("source", ""),
-                        "page": sr.chunk.metadata.get("page_number", ""),
-                        "section": sr.chunk.metadata.get("section_title", "")
+                    all_chunks.append(
+                        {
+                            "id": sr.chunk.id,
+                            "content": sr.chunk.content,
+                            "score": sr.score,
+                            "source": sr.chunk.metadata.get("source", ""),
+                            "page": sr.chunk.metadata.get("page_number", ""),
+                            "section": sr.chunk.metadata.get("section_title", "")
                             or sr.chunk.metadata.get("breadcrumb", ""),
-                        "task_id": task.id,
-                    })
+                            "task_id": task.id,
+                        }
+                    )
 
         logger.info(
             "[EXEC] Executed %d tasks, got %d new chunks (progress: %.0f%%)",
@@ -293,9 +299,7 @@ def create_research_agent_v2(
 
         try:
             messages = [
-                SystemMessage(
-                    content="Ты — аналитик-экстрактор фактов. Отвечай только JSON."
-                ),
+                SystemMessage(content="Ты — аналитик-экстрактор фактов. Отвечай только JSON."),
                 HumanMessage(content=prompt),
             ]
             response = await fast_llm.ainvoke(messages)
@@ -345,8 +349,7 @@ def create_research_agent_v2(
                 )
 
         logger.info(
-            "[EVIDENCE_V2] Round %d: +%d facts (total: %d), +%d relations, "
-            "%d contradictions",
+            "[EVIDENCE_V2] Round %d: +%d facts (total: %d), +%d relations, %d contradictions",
             state.get("round", 0) + 1,
             len(new_fact_ids),
             len(eg.facts),
@@ -378,16 +381,12 @@ def create_research_agent_v2(
                     if f.aspect.lower() in a.lower() or a.lower() in f.aspect.lower():
                         tasks_with_evidence.add(a)
 
-        coverage = (
-            len(tasks_with_evidence) / len(plan.tasks) if plan.tasks else 1.0
-        )
+        coverage = len(tasks_with_evidence) / len(plan.tasks) if plan.tasks else 1.0
 
         # Groundedness: facts with high confidence
         if eg.facts:
             avg_confidence = sum(f.confidence for f in eg.facts) / len(eg.facts)
-            high_confidence_ratio = (
-                sum(1 for f in eg.facts if f.confidence >= 0.7) / len(eg.facts)
-            )
+            high_confidence_ratio = sum(1 for f in eg.facts if f.confidence >= 0.7) / len(eg.facts)
             groundedness = high_confidence_ratio
         else:
             avg_confidence = 0.0
@@ -398,8 +397,7 @@ def create_research_agent_v2(
         # Determine uncovered
         covered_task_ids = {f.task_id for f in eg.facts if f.task_id}
         uncovered = [
-            t.question for t in plan.tasks
-            if t.id not in covered_task_ids and t.status == "done"
+            t.question for t in plan.tasks if t.id not in covered_task_ids and t.status == "done"
         ]
 
         # Determine recommendation
@@ -459,18 +457,15 @@ def create_research_agent_v2(
                 src = fact_map.get(c.source_id)
                 tgt = fact_map.get(c.target_id)
                 if src and tgt:
-                    contra_text += (
-                        f"- ПРОТИВОРЕЧИЕ: \"{src.fact}\" vs \"{tgt.fact}\"\n"
-                    )
+                    contra_text += f'- ПРОТИВОРЕЧИЕ: "{src.fact}" vs "{tgt.fact}"\n'
 
         # Group facts by plan task
         task_sections = ""
         for task in plan.tasks:
             task_facts = [f for f in eg.facts if f.task_id == task.id]
             if task_facts:
-                task_sections += (
-                    f"\n### Задача: {task.question}\n"
-                    + "".join(f"- {f.fact}\n" for f in task_facts[:5])
+                task_sections += f"\n### Задача: {task.question}\n" + "".join(
+                    f"- {f.fact}\n" for f in task_facts[:5]
                 )
 
         prompt = (
@@ -535,9 +530,7 @@ def create_research_agent_v2(
             else:
                 current_content += line + "\n"
         if current_title:
-            sections.append(
-                ReportSection(title=current_title, content=current_content.strip())
-            )
+            sections.append(ReportSection(title=current_title, content=current_content.strip()))
 
         # Extract summary (first section or first paragraph)
         summary = ""
@@ -561,8 +554,7 @@ def create_research_agent_v2(
         )
 
         logger.info(
-            "[REPORT_V2] Generated: %d chars, %d sections, %d sources, "
-            "%d evidence, %d rounds",
+            "[REPORT_V2] Generated: %d chars, %d sections, %d sources, %d evidence, %d rounds",
             len(report_text),
             len(sections),
             len(sources),

@@ -19,13 +19,11 @@ logger = logging.getLogger(__name__)
 # Try to import graspologic for Leiden algorithm
 try:
     from graspologic.partition import leiden
+
     GRASPOLOGIC_AVAILABLE = True
 except ImportError:
     GRASPOLOGIC_AVAILABLE = False
-    logger.warning(
-        "[COMMUNITY] graspologic not available. "
-        "Install with: pip install graspologic"
-    )
+    logger.warning("[COMMUNITY] graspologic not available. Install with: pip install graspologic")
 
 
 class CommunityDetector:
@@ -132,9 +130,11 @@ class CommunityDetector:
 
         for level in range(lvl_count):
             # Double resolution for each level (1x, 2x, 4x, ...)
-            level_resolution = base_resolution * (2 ** level)
+            level_resolution = base_resolution * (2**level)
 
-            logger.info(f"[COMMUNITY] Detecting level {level + 1}/{lvl_count} (resolution={level_resolution})")
+            logger.info(
+                f"[COMMUNITY] Detecting level {level + 1}/{lvl_count} (resolution={level_resolution})"
+            )
 
             communities = await self.detect(graph, resolution=level_resolution)
             results.append(communities)
@@ -192,10 +192,7 @@ class CommunityDetector:
         """
         entities = []
         for node_id, data in graph.nodes(data=True):
-            if (
-                data.get("community_id") == community_id
-                and data.get("community_level") == level
-            ):
+            if data.get("community_id") == community_id and data.get("community_level") == level:
                 entities.append(str(node_id))
         return entities
 

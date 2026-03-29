@@ -84,7 +84,9 @@ class LLMReranker:
         return "\n".join(parts)
 
     def _parse_scores(
-        self, text: str, n_results: int,
+        self,
+        text: str,
+        n_results: int,
     ) -> list[tuple[int, float]]:
         """Parse JSON array of {index, score} from LLM response.
 
@@ -120,7 +122,10 @@ class LLMReranker:
         return scores
 
     async def rerank(
-        self, query: str, results: list[SearchResult], top_k: int = 5,
+        self,
+        query: str,
+        results: list[SearchResult],
+        top_k: int = 5,
     ) -> list[SearchResult]:
         """Rerank results using Claude LLM relevance scoring."""
         if not results:

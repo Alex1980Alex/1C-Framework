@@ -27,9 +27,14 @@ class CircuitBreaker:
     """Per-provider circuit breaker with configurable thresholds."""
 
     __slots__ = (
-        "state", "fail_count", "success_count",
-        "fail_threshold", "success_threshold", "reset_timeout",
-        "_default_reset_timeout", "opened_at",
+        "state",
+        "fail_count",
+        "success_count",
+        "fail_threshold",
+        "success_threshold",
+        "reset_timeout",
+        "_default_reset_timeout",
+        "opened_at",
     )
 
     def __init__(
@@ -52,7 +57,10 @@ class CircuitBreaker:
         if self.state == CircuitState.CLOSED:
             return True
         if self.state == CircuitState.OPEN:
-            if self.opened_at is not None and time.monotonic() - self.opened_at >= self.reset_timeout:
+            if (
+                self.opened_at is not None
+                and time.monotonic() - self.opened_at >= self.reset_timeout
+            ):
                 self.state = CircuitState.HALF_OPEN
                 self.success_count = 0
                 return True

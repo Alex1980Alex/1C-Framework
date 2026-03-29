@@ -89,8 +89,7 @@ async def build_communities():
 
     # Step 0: Remove old COMMUNITY nodes (if re-running)
     old_community_nodes = [
-        nid for nid, data in graph.nodes(data=True)
-        if data.get("node_type") == "COMMUNITY"
+        nid for nid, data in graph.nodes(data=True) if data.get("node_type") == "COMMUNITY"
     ]
     for nid in old_community_nodes:
         graph.remove_node(nid)
@@ -113,7 +112,8 @@ async def build_communities():
 
     logger.info(
         "[COMMUNITIES] Leiden detected %d communities from %d entities",
-        stats["num_communities"], stats["num_entities"],
+        stats["num_communities"],
+        stats["num_entities"],
     )
 
     # Step 2: LLM summarization for each community
@@ -145,7 +145,8 @@ async def build_communities():
 
     logger.info(
         "[COMMUNITIES] Done: %d communities, %d summaries, graph saved",
-        stats["num_communities"], len(summaries),
+        stats["num_communities"],
+        len(summaries),
     )
 
     return {
@@ -220,8 +221,7 @@ async def get_neighbors(entity_id: str, depth: int = 1):
     subgraph = await components.graph_store.get_neighbors(entity_id, depth=depth)
     return {
         "entities": [
-            {"id": e.id, "name": e.name, "type": e.entity_type}
-            for e in subgraph.entities
+            {"id": e.id, "name": e.name, "type": e.entity_type} for e in subgraph.entities
         ],
         "relations": [
             {
@@ -236,6 +236,7 @@ async def get_neighbors(entity_id: str, depth: int = 1):
 
 # Phase 61: Incremental graph update endpoints
 
+
 @router.post("/incremental-update")
 async def incremental_graph_update(document_id: str, tenant_id: str = "default"):
     """Incrementally update graph for a document.
@@ -246,9 +247,7 @@ async def incremental_graph_update(document_id: str, tenant_id: str = "default")
     re-extracts entities for modified/new chunks, and updates
     entity embeddings.
     """
-    from src.pdf_framework.graph_store.change_detector import get_change_detector
     from src.pdf_framework.graph_store.incremental import IncrementalGraphUpdater
-    from src.pdf_framework.vector_store.base import DocumentChunk
 
     components = await get_components()
 

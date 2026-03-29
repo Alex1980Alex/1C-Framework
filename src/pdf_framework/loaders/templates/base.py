@@ -181,14 +181,8 @@ def detect_document_type(
     total = len(layout_elements)
 
     # Check for research paper indicators
-    has_abstract = any(
-        "abstract" in el.get("content", "").lower()
-        for el in layout_elements
-    )
-    has_references = any(
-        "references" in el.get("content", "").lower()
-        for el in layout_elements
-    )
+    has_abstract = any("abstract" in el.get("content", "").lower() for el in layout_elements)
+    has_references = any("references" in el.get("content", "").lower() for el in layout_elements)
     high_table_ratio = element_counts.get("table", 0) / total > 0.1
 
     if has_abstract or (has_references and high_table_ratio):

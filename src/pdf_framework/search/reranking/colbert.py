@@ -70,9 +70,7 @@ class ColBERTReranker:
                 device=self._device if self._device != "auto" else None,
             )
             self._backend = "sentence_transformers"
-            logger.info(
-                "[COLBERT] Loaded via sentence-transformers: %s", self._model_name
-            )
+            logger.info("[COLBERT] Loaded via sentence-transformers: %s", self._model_name)
             return
         except ImportError:
             logger.warning("[COLBERT] sentence-transformers not available")
@@ -84,9 +82,7 @@ class ColBERTReranker:
             "Install: pip install ragatouille OR pip install sentence-transformers"
         )
 
-    def _score_ragatouille(
-        self, query: str, documents: list[str]
-    ) -> list[float]:
+    def _score_ragatouille(self, query: str, documents: list[str]) -> list[float]:
         """Score using RAGatouille API."""
         results = self._model.rerank(query=query, documents=documents, k=len(documents))
         # RAGatouille returns sorted results with scores
@@ -97,9 +93,7 @@ class ColBERTReranker:
             score_map[idx] = score
         return [score_map.get(i, 0.0) for i in range(len(documents))]
 
-    def _score_sentence_transformers(
-        self, query: str, documents: list[str]
-    ) -> list[float]:
+    def _score_sentence_transformers(self, query: str, documents: list[str]) -> list[float]:
         """Score using sentence-transformers MaxSim."""
         # Encode query and documents
         q_emb = self._model.encode(query, convert_to_tensor=True)
@@ -111,9 +105,7 @@ class ColBERTReranker:
 
         if q_emb.dim() == 1:
             # Dense embedding fallback (not true ColBERT)
-            similarities = torch.nn.functional.cosine_similarity(
-                q_emb.unsqueeze(0), d_embs
-            )
+            similarities = torch.nn.functional.cosine_similarity(q_emb.unsqueeze(0), d_embs)
             return similarities.tolist()
 
         # True ColBERT: q_emb is (q_tokens, dim), d_embs is (n_docs, d_tokens, dim)

@@ -23,8 +23,7 @@ class TableData(BaseModel):
     caption: str | None = Field(default=None, description="Table caption if available")
     page_number: int = Field(description="Page number where table was found")
     bbox: tuple[float, float, float, float] | None = Field(
-        default=None,
-        description="Bounding box of table on page"
+        default=None, description="Bounding box of table on page"
     )
 
     def to_markdown(self) -> str:
@@ -52,7 +51,7 @@ class TableData(BaseModel):
             # Ensure row has same number of columns as headers
             while len(row) < len(self.headers):
                 row.append("")
-            row_text = "| " + " | ".join(row[:len(self.headers)]) + " |"
+            row_text = "| " + " | ".join(row[: len(self.headers)]) + " |"
             lines.append(row_text)
 
         return "\n".join(lines)
@@ -110,6 +109,7 @@ class TableExtractor:
         """Check if pdfplumber library is available."""
         try:
             import pdfplumber  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -280,16 +280,18 @@ class TableExtractor:
         for table in tables:
             markdown = table.to_markdown()
 
-            chunks.append({
-                "content": markdown,
-                "metadata": {
-                    "element_type": "table",
-                    "page_number": table.page_number,
-                    "table_data": table.to_json(),
-                    "chunk_type": "table",
-                    "document_id": document_id,
-                },
-            })
+            chunks.append(
+                {
+                    "content": markdown,
+                    "metadata": {
+                        "element_type": "table",
+                        "page_number": table.page_number,
+                        "table_data": table.to_json(),
+                        "chunk_type": "table",
+                        "document_id": document_id,
+                    },
+                }
+            )
 
         return chunks
 

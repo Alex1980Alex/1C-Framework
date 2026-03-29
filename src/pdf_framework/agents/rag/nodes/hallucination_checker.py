@@ -104,7 +104,9 @@ async def check_hallucination(
         try:
             attempt_messages = list(messages)
             if feedback:
-                attempt_messages.append(HumanMessage(content=f"\u26a0\ufe0f CORRECTION: {feedback}"))
+                attempt_messages.append(
+                    HumanMessage(content=f"\u26a0\ufe0f CORRECTION: {feedback}")
+                )
 
             response = await llm.ainvoke(attempt_messages)
             result_text = parser.invoke(response).strip().lower()
@@ -140,7 +142,9 @@ async def check_hallucination(
     is_hallucinated = _parse_hallucination_result(last_result_text) if last_result_text else False
     return {
         "is_hallucinated": is_hallucinated,
-        "hallucination_reason": last_result_text[:300] if last_result_text else "All attempts failed",
+        "hallucination_reason": last_result_text[:300]
+        if last_result_text
+        else "All attempts failed",
     }
 
 
@@ -205,7 +209,9 @@ async def regenerate_answer(
             # Validate: non-empty and Russian
             if len(new_answer) < 20:
                 rw_feedback = "\u041e\u0442\u0432\u0435\u0442 \u0441\u043b\u0438\u0448\u043a\u043e\u043c \u043a\u043e\u0440\u043e\u0442\u043a\u0438\u0439. \u0414\u0430\u0439 \u0440\u0430\u0437\u0432\u0451\u0440\u043d\u0443\u0442\u044b\u0439 \u043e\u0442\u0432\u0435\u0442 \u043d\u0430 \u0440\u0443\u0441\u0441\u043a\u043e\u043c."
-                logger.warning(f"[REGENERATE] Attempt {rw_attempt}: too short ({len(new_answer)} chars)")
+                logger.warning(
+                    f"[REGENERATE] Attempt {rw_attempt}: too short ({len(new_answer)} chars)"
+                )
                 continue
 
             # Validate: not same as hallucinated answer

@@ -11,16 +11,15 @@ Adapted: uses project-local data/skill_learning/ for storage.
 import asyncio
 import json
 import logging
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from uuid import uuid4
 
-from mcp.server import Server
 from mcp import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.server import Server
+from mcp.types import TextContent, Tool
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,12 +39,12 @@ REJECTED_FILE = STORAGE_DIR / "rejected_patterns.jsonl"
 STATS_FILE = STORAGE_DIR / "learning_stats.json"
 
 
-def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     """Read JSONL file, return list of dicts."""
     if not path.exists():
         return []
     items = []
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -56,34 +55,34 @@ def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
     return items
 
 
-def _write_jsonl(path: Path, items: List[Dict[str, Any]]):
+def _write_jsonl(path: Path, items: list[dict[str, Any]]):
     """Write list of dicts to JSONL file."""
     with open(path, "w", encoding="utf-8") as f:
         for item in items:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
-def _append_jsonl(path: Path, item: Dict[str, Any]):
+def _append_jsonl(path: Path, item: dict[str, Any]):
     """Append single dict to JSONL file."""
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
-def _load_stats() -> Dict[str, Any]:
+def _load_stats() -> dict[str, Any]:
     """Load learning statistics."""
     if STATS_FILE.exists():
-        with open(STATS_FILE, "r", encoding="utf-8") as f:
+        with open(STATS_FILE, encoding="utf-8") as f:
             return json.load(f)
     return {"total_patterns": 0, "by_type": {}, "by_confidence": {"high": 0, "medium": 0, "low": 0}}
 
 
-def _save_stats(stats: Dict[str, Any]):
+def _save_stats(stats: dict[str, Any]):
     """Save learning statistics."""
     with open(STATS_FILE, "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
 
-def _update_stats_on_save(pattern: Dict[str, Any]):
+def _update_stats_on_save(pattern: dict[str, Any]):
     """Update stats when a pattern is saved."""
     stats = _load_stats()
     stats["total_patterns"] = stats.get("total_patterns", 0) + 1
@@ -236,9 +235,20 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
         status = "saved"
 
     logger.info(f"Captured pattern {pattern_id}: {pattern['name']} (status={status})")
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "pattern_id": pattern_id, "status": status, "name": pattern["name"],
-    }, ensure_ascii=False))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "pattern_id": pattern_id,
+                    "status": status,
+                    "name": pattern["name"],
+                },
+                ensure_ascii=False,
+            ),
+        )
+    ]
 
 
 async def handle_batch_capture(args: dict) -> list[TextContent]:
@@ -250,17 +260,38 @@ async def handle_batch_capture(args: dict) -> list[TextContent]:
         result = await handle_capture_pattern(p)
         results.append(json.loads(result[0].text))
 
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "count": len(results), "results": results,
-    }, ensure_ascii=False, indent=2))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "count": len(results),
+                    "results": results,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+        )
+    ]
 
 
 async def handle_get_pending(args: dict) -> list[TextContent]:
     limit = args.get("limit", 10)
     pending = _read_jsonl(PENDING_FILE)
-    return [TextContent(type="text", text=json.dumps({
-        "count": len(pending), "patterns": pending[:limit],
-    }, ensure_ascii=False, indent=2))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "count": len(pending),
+                    "patterns": pending[:limit],
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+        )
+    ]
 
 
 async def handle_confirm(args: dict) -> list[TextContent]:
@@ -276,7 +307,12 @@ async def handle_confirm(args: dict) -> list[TextContent]:
             remaining.append(p)
 
     if not found:
-        return [TextContent(type="text", text=json.dumps({"success": False, "error": "Pattern not found in pending"}))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps({"success": False, "error": "Pattern not found in pending"}),
+            )
+        ]
 
     # Save confirmed pattern
     found["updated_at"] = datetime.now().isoformat()
@@ -287,9 +323,19 @@ async def handle_confirm(args: dict) -> list[TextContent]:
     _write_jsonl(PENDING_FILE, remaining)
 
     logger.info(f"Confirmed pattern {pattern_id}: {found.get('name', '')}")
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "pattern_id": pattern_id, "name": found.get("name", ""),
-    }, ensure_ascii=False))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "pattern_id": pattern_id,
+                    "name": found.get("name", ""),
+                },
+                ensure_ascii=False,
+            ),
+        )
+    ]
 
 
 async def handle_reject(args: dict) -> list[TextContent]:
@@ -305,7 +351,12 @@ async def handle_reject(args: dict) -> list[TextContent]:
             remaining.append(p)
 
     if not found:
-        return [TextContent(type="text", text=json.dumps({"success": False, "error": "Pattern not found in pending"}))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps({"success": False, "error": "Pattern not found in pending"}),
+            )
+        ]
 
     # Save to rejected
     found["rejected_at"] = datetime.now().isoformat()
@@ -315,9 +366,18 @@ async def handle_reject(args: dict) -> list[TextContent]:
     _write_jsonl(PENDING_FILE, remaining)
 
     logger.info(f"Rejected pattern {pattern_id}: {found.get('name', '')}")
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "pattern_id": pattern_id,
-    }, ensure_ascii=False))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "pattern_id": pattern_id,
+                },
+                ensure_ascii=False,
+            ),
+        )
+    ]
 
 
 async def handle_stats(args: dict) -> list[TextContent]:

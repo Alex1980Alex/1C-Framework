@@ -5,11 +5,11 @@ Provides:
 - SQLiteBackend: Persistent SQLite storage for production
 """
 
-import aiosqlite
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
-from typing import Literal
+from datetime import UTC, datetime, timedelta
+
+import aiosqlite
 
 from src.pdf_framework.agents.memory.conversation import Message
 
@@ -78,11 +78,13 @@ class MemoryBackend(BaseBackend):
 
         for thread_id, messages in list(self._storage.items())[:limit]:
             if messages:
-                result.append({
-                    "thread_id": thread_id,
-                    "message_count": len(messages),
-                    "last_updated": messages[-1].timestamp.isoformat(),
-                })
+                result.append(
+                    {
+                        "thread_id": thread_id,
+                        "message_count": len(messages),
+                        "last_updated": messages[-1].timestamp.isoformat(),
+                    }
+                )
 
         # Sort by last updated (newest first)
         result.sort(key=lambda x: x["last_updated"], reverse=True)
@@ -91,7 +93,7 @@ class MemoryBackend(BaseBackend):
 
     async def cleanup_old_threads(self, days: int) -> int:
         """Delete threads older than N days."""
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
         to_delete = []
 
         for thread_id, messages in self._storage.items():
@@ -174,7 +176,7 @@ class SQLiteBackend(BaseBackend):
                 WHERE thread_id = ?
                 ORDER BY id ASC
                 """,
-                (thread_id,)
+                (thread_id,),
             )
 
             rows = await cursor.fetchall()
@@ -182,13 +184,16 @@ class SQLiteBackend(BaseBackend):
             messages = []
             for row in rows:
                 import json
+
                 metadata = json.loads(row["metadata"]) if row["metadata"] else {}
-                messages.append(Message(
-                    role=row["role"],
-                    content=row["content"],
-                    timestamp=datetime.fromisoformat(row["timestamp"]),
-                    metadata=metadata,
-                ))
+                messages.append(
+                    Message(
+                        role=row["role"],
+                        content=row["content"],
+                        timestamp=datetime.fromisoformat(row["timestamp"]),
+                        metadata=metadata,
+                    )
+                )
 
             return messages
 
@@ -200,13 +205,13 @@ class SQLiteBackend(BaseBackend):
 
         async with aiosqlite.connect(self._db_path) as db:
             # Ensure thread exists
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(UTC).isoformat()
             await db.execute(
                 """
                 INSERT OR IGNORE INTO threads (thread_id, created_at, updated_at)
                 VALUES (?, ?, ?)
                 """,
-                (thread_id, now, now)
+                (thread_id, now, now),
             )
 
             # Update thread timestamp
@@ -214,7 +219,7 @@ class SQLiteBackend(BaseBackend):
                 """
                 UPDATE threads SET updated_at = ? WHERE thread_id = ?
                 """,
-                (now, thread_id)
+                (now, thread_id),
             )
 
             # Insert message
@@ -229,7 +234,7 @@ class SQLiteBackend(BaseBackend):
                     message.content,
                     message.timestamp.isoformat(),
                     json.dumps(message.metadata),
-                )
+                ),
             )
 
             await db.commit()
@@ -262,7 +267,7 @@ class SQLiteBackend(BaseBackend):
                 ORDER BY t.updated_at DESC
                 LIMIT ?
                 """,
-                (limit,)
+                (limit,),
             )
 
             rows = await cursor.fetchall()
@@ -280,7 +285,7 @@ class SQLiteBackend(BaseBackend):
         """Delete threads older than N days."""
         await self._ensure_tables()
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         async with aiosqlite.connect(self._db_path) as db:
             cursor = await db.execute(
@@ -288,7 +293,7 @@ class SQLiteBackend(BaseBackend):
                 SELECT thread_id FROM threads
                 WHERE updated_at < ?
                 """,
-                (cutoff.isoformat(),)
+                (cutoff.isoformat(),),
             )
 
             rows = await cursor.fetchall()

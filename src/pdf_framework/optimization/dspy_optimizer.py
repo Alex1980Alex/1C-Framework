@@ -87,7 +87,9 @@ class DSPyOptimizer:
         with open(self._dataset_path, "w", encoding="utf-8") as f:
             json.dump(
                 [p.model_dump() for p in self._dataset],
-                f, ensure_ascii=False, indent=2,
+                f,
+                ensure_ascii=False,
+                indent=2,
             )
         logger.info("[DSPY] Saved %d evaluation pairs", len(self._dataset))
 
@@ -144,6 +146,7 @@ class DSPyOptimizer:
             )
 
         import dspy
+
         from src.pdf_framework.optimization.dspy_metrics import CompositeMetric
         from src.pdf_framework.optimization.dspy_modules import (
             AnalyzerModule,
@@ -250,7 +253,9 @@ class DSPyOptimizer:
 
                     logger.info(
                         "[DSPY] %s: %.3f -> %.3f (%.1f%% improvement)",
-                        name, avg_before, avg_after,
+                        name,
+                        avg_before,
+                        avg_after,
                         (avg_after - avg_before) / max(avg_before, 0.001) * 100,
                     )
 
@@ -292,7 +297,6 @@ class DSPyOptimizer:
         if not save_path.exists():
             return None
 
-        import dspy
         from src.pdf_framework.optimization.dspy_modules import (
             AnalyzerModule,
             GraderModule,

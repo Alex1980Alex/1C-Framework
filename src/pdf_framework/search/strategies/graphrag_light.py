@@ -16,7 +16,6 @@ from typing import Any
 
 from src.pdf_framework.config import LightRAGSettings
 from src.pdf_framework.schemas.documents import (
-    DocumentChunk,
     SearchResponse,
     SearchResult,
 )
@@ -92,7 +91,8 @@ class LightRAGStrategy:
 
         logger.info(
             "[LIGHTRAG] Found %d entity hits + %d relation hits",
-            len(entity_hits), len(relation_hits),
+            len(entity_hits),
+            len(relation_hits),
         )
 
         # Step 4: Collect source chunk IDs with scores
@@ -135,7 +135,9 @@ class LightRAGStrategy:
 
         logger.info(
             "[LIGHTRAG] Collected %d unique chunk IDs from %d entities + %d relations",
-            len(chunk_scores), len(entity_names), len(relation_hits),
+            len(chunk_scores),
+            len(entity_names),
+            len(relation_hits),
         )
 
         # Step 6: Fetch chunks from vector store (no re-embedding needed)
@@ -144,7 +146,7 @@ class LightRAGStrategy:
         if chunk_scores:
             # Sort chunk IDs by score, take top candidates
             sorted_ids = sorted(chunk_scores.keys(), key=lambda x: chunk_scores[x], reverse=True)
-            top_ids = sorted_ids[:self._settings.max_chunks * 2]
+            top_ids = sorted_ids[: self._settings.max_chunks * 2]
 
             chunks = await self._vector_store.get_by_ids(top_ids)
 
@@ -154,11 +156,13 @@ class LightRAGStrategy:
                     score = chunk_scores.get(chunk.id, 0.0)
                     chunk.metadata["graph_context"] = "\n".join(graph_context_parts[:5])
                     chunk.metadata["lightrag_entities"] = list(entity_names)[:10]
-                    results.append(SearchResult(
-                        chunk=chunk,
-                        score=score,
-                        source="lightrag",
-                    ))
+                    results.append(
+                        SearchResult(
+                            chunk=chunk,
+                            score=score,
+                            source="lightrag",
+                        )
+                    )
 
                 # Sort by score and limit
                 results.sort(key=lambda r: r.score, reverse=True)
@@ -168,14 +172,21 @@ class LightRAGStrategy:
         if not results:
             logger.info("[LIGHTRAG] No chunks from graph refs -- falling back to vector search")
             results = await self._fallback_search(
-                query, query_embedding, entity_names, k, filter,
+                query,
+                query_embedding,
+                entity_names,
+                k,
+                filter,
             )
 
         elapsed = (time.perf_counter() - start) * 1000
 
         logger.info(
             "[LIGHTRAG] Completed in %.0fms: %d results from %d entities + %d relations",
-            elapsed, len(results), len(entity_names), len(relation_hits),
+            elapsed,
+            len(results),
+            len(entity_names),
+            len(relation_hits),
         )
 
         return SearchResponse(

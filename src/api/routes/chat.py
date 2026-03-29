@@ -8,13 +8,12 @@ Version: 1.0.0 - Phase 9.4: Chat API endpoints
 
 import logging
 import uuid
-from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from src.pdf_framework.agents.memory.conversation import ConversationMemory, Message
+from src.pdf_framework.agents.memory.conversation import ConversationMemory
 from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
 
 logger = logging.getLogger(__name__)
@@ -172,6 +171,7 @@ async def send_message(request: ChatMessageRequest):
         except Exception as e:
             logger.error(f"[CHAT API] Error processing message: {e}")
             from src.pdf_framework.agents.rag.streaming import StreamEvent, StreamEventType
+
             error_event = StreamEvent(
                 type=StreamEventType.ERROR,
                 data=str(e),

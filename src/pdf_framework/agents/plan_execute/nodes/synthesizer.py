@@ -53,25 +53,18 @@ def synthesize_answer(llm: Any):
                     content = result.get("result", result.get("results", []))
 
                     if isinstance(content, list):
-                        snippet = ", ".join([
-                            r.get("content", str(r))[:50]
-                            for r in content[:3]
-                        ])
+                        snippet = ", ".join([r.get("content", str(r))[:50] for r in content[:3]])
                     else:
                         snippet = str(content)[:200]
 
-                    results_summary.append(
-                        f"Step {step.step_id} ({step.tool}): {snippet}"
-                    )
+                    results_summary.append(f"Step {step.step_id} ({step.tool}): {snippet}")
                 else:
                     results_summary.append(
                         f"Step {step.step_id}: {str(result)[:200] if result else 'No result'}"
                     )
 
             elif step.status == "failed":
-                results_summary.append(
-                    f"Step {step.step_id}: FAILED - {step.description}"
-                )
+                results_summary.append(f"Step {step.step_id}: FAILED - {step.description}")
 
         results_text = "\n\n".join(results_summary) if results_summary else "No results"
 
@@ -89,9 +82,7 @@ def synthesize_answer(llm: Any):
             )
 
         # Generate final answer
-        response = await llm.ainvoke([
-            {"role": "user", "content": final_prompt}
-        ])
+        response = await llm.ainvoke([{"role": "user", "content": final_prompt}])
 
         final_answer = response.content
 

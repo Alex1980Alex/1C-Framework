@@ -9,10 +9,8 @@ from pathlib import Path
 from arq import create_pool
 from arq.connections import RedisSettings
 
-from src.pdf_framework.indexing import index_with_delta
-from src.pdf_framework.search.bm25_store import BM25Store
-from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
 from src.pdf_framework.config import get_settings
+from src.pdf_framework.indexing import index_with_delta
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -32,7 +30,7 @@ async def update_progress(ctx: dict, job_id: str, progress: int, status: str) ->
             mapping={
                 "progress": str(progress),
                 "status": status,
-            }
+            },
         )
         await redis.expire(key, settings.queue.job_timeout)
     except Exception as e:

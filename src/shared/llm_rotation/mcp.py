@@ -32,6 +32,7 @@ def _get_service():
     global _service
     if _service is None:
         from src.shared.llm_rotation.service import LLMRotationService
+
         _service = LLMRotationService()
     return _service
 
@@ -73,8 +74,7 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="llm_get_stats",
             description=(
-                "Get statistics for all LLM providers: "
-                "status, requests, errors, response times."
+                "Get statistics for all LLM providers: status, requests, errors, response times."
             ),
             inputSchema={"type": "object", "properties": {}},
         ),
@@ -117,10 +117,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 max_tokens=arguments.get("max_tokens", 2048),
                 timeout=arguments.get("timeout"),
             )
-            return [TextContent(
-                type="text",
-                text=json.dumps(result, ensure_ascii=False, indent=2),
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False, indent=2),
+                )
+            ]
 
         elif name == "llm_get_stats":
             stats = service.get_stats()
@@ -162,9 +164,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                         preferred_provider=state.config.name,
                         max_tokens=10,
                     )
-                    results.append(
-                        f"✅ {state.config.name}: OK ({result['response_time']}s)"
-                    )
+                    results.append(f"✅ {state.config.name}: OK ({result['response_time']}s)")
                 except Exception as e:
                     results.append(f"❌ {state.config.name}: {str(e)[:100]}")
             if not results:
@@ -173,6 +173,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
         elif name == "llm_list_providers":
             import os
+
             lines = ["# Configured Providers\n"]
             for pname, state in service._providers.items():
                 cfg = state.config

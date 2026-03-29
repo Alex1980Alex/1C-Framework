@@ -11,13 +11,11 @@ Version: 1.0.0 - Phase 22: Self-Learning Feedback Loop
 
 import json
 import logging
-from pathlib import Path
-from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.pdf_framework.config import Settings, get_settings
-from src.pdf_framework.feedback.collector import FeedbackCollector, FeedbackStats
+from src.pdf_framework.feedback.collector import FeedbackCollector
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,9 @@ class StrategyWeights(BaseModel):
 
     def normalize(self) -> "StrategyWeights":
         """Normalize weights to sum to 1.0."""
-        total = sum([self.vector, self.hybrid, self.graphrag_local, self.graphrag_global, self.two_stage])
+        total = sum(
+            [self.vector, self.hybrid, self.graphrag_local, self.graphrag_global, self.two_stage]
+        )
 
         if total == 0:
             return StrategyWeights()
@@ -138,9 +138,7 @@ class StrategyTuner:
         # Normalize scores
         max_score = max(strategy_scores.values())
         if max_score > 0:
-            strategy_scores = {
-                k: v / max_score for k, v in strategy_scores.items()
-            }
+            strategy_scores = {k: v / max_score for k, v in strategy_scores.items()}
 
         # Update weights with learning rate
         new_weights = StrategyWeights()

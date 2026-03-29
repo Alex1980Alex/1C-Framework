@@ -84,8 +84,12 @@ class DocumentIndexer:
         logger.info(
             "[INDEXER] Начало индексации: %d чанков (%d символов), %d батчей по %d, "
             "document_id=%s, source='%s'",
-            len(chunks), total_chars, total_batches, _INDEXING_BATCH_SIZE,
-            document_id, source_path,
+            len(chunks),
+            total_chars,
+            total_batches,
+            _INDEXING_BATCH_SIZE,
+            document_id,
+            source_path,
         )
 
         # Check for existing checkpoint to resume from
@@ -100,7 +104,8 @@ class DocumentIndexer:
                 start_batch = checkpoint.last_completed_batch + 1
                 logger.info(
                     "[INDEXER] Возобновление с батча %d/%d (пропуск %d уже обработанных чанков)",
-                    start_batch + 1, total_batches,
+                    start_batch + 1,
+                    total_batches,
                     start_batch * _INDEXING_BATCH_SIZE,
                 )
 
@@ -118,10 +123,7 @@ class DocumentIndexer:
 
                 # 1. Compute embeddings for this batch
                 t_embed = time.time()
-                texts = [
-                    c.metadata.get("contextual_content", c.content)
-                    for c in batch_chunks
-                ]
+                texts = [c.metadata.get("contextual_content", c.content) for c in batch_chunks]
                 embeddings = await self._embedding_engine.embed_batch(texts)
                 embed_elapsed = time.time() - t_embed
 
@@ -143,7 +145,10 @@ class DocumentIndexer:
                         ]
                         await self._bm25_store.add_chunks(
                             chunk_ids=[c.id for c in batch_chunks],
-                            contents=[c.metadata.get("contextual_content", c.content) for c in batch_chunks],
+                            contents=[
+                                c.metadata.get("contextual_content", c.content)
+                                for c in batch_chunks
+                            ],
                             document_ids=[c.document_id for c in batch_chunks],
                             sources=[c.metadata.get("source", source_path) for c in batch_chunks],
                             sections=sections,
@@ -152,7 +157,9 @@ class DocumentIndexer:
                     except Exception as e:
                         logger.warning(
                             "[INDEXER] BM25 батч %d/%d ошибка (vector OK): %s",
-                            batch_idx + 1, total_batches, e,
+                            batch_idx + 1,
+                            total_batches,
+                            e,
                         )
 
                 # 4. Save checkpoint after batch completes
@@ -169,15 +176,26 @@ class DocumentIndexer:
                 batch_elapsed = time.time() - batch_start_time
                 overall_elapsed = time.time() - indexing_start
                 remaining_batches = total_batches - batch_idx - 1
-                eta = (overall_elapsed / (batch_idx - start_batch + 1)) * remaining_batches if batch_idx > start_batch else 0
+                eta = (
+                    (overall_elapsed / (batch_idx - start_batch + 1)) * remaining_batches
+                    if batch_idx > start_batch
+                    else 0
+                )
 
                 logger.info(
                     "[INDEXER] Батч %d/%d: %d чанков (%d симв) за %.2f сек "
                     "(embed=%.2f, store=%.2f, bm25=%.2f) | "
                     "Прогресс: %d/%d чанков (%.0f%%) | ETA: %.0f сек",
-                    batch_idx + 1, total_batches, len(stored_ids), batch_chars,
-                    batch_elapsed, embed_elapsed, store_elapsed, bm25_elapsed,
-                    total_stored, len(chunks),
+                    batch_idx + 1,
+                    total_batches,
+                    len(stored_ids),
+                    batch_chars,
+                    batch_elapsed,
+                    embed_elapsed,
+                    store_elapsed,
+                    bm25_elapsed,
+                    total_stored,
+                    len(chunks),
                     total_stored / len(chunks) * 100,
                     eta,
                 )
@@ -198,7 +216,9 @@ class DocumentIndexer:
             logger.info(
                 "[INDEXER] Индексация завершена: %d чанков, %d эмбеддингов за %.2f сек "
                 "(%.0f чанков/сек) | document_id=%s",
-                total_stored, total_embedded, total_elapsed,
+                total_stored,
+                total_embedded,
+                total_elapsed,
                 total_stored / total_elapsed if total_elapsed > 0 else 0,
                 document_id,
             )
@@ -209,7 +229,11 @@ class DocumentIndexer:
             logger.error(
                 "[INDEXER] Индексация прервана на батче %d/%d после %.2f сек "
                 "(%d чанков сохранено): %s",
-                failed_batch, total_batches, total_elapsed, total_stored, e,
+                failed_batch,
+                total_batches,
+                total_elapsed,
+                total_stored,
+                e,
             )
             # Mark indexing as failed so it can be resumed later
             if version_manager and source_path:

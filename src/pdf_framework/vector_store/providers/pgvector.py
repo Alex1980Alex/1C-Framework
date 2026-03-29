@@ -85,8 +85,11 @@ class PgVectorStore(BaseVectorStore):
                         f"INSERT INTO {self._table_name} (id, content, document_id, metadata, embedding) "
                         f"VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE "
                         f"SET content=$2, document_id=$3, metadata=$4, embedding=$5",
-                        chunk.id, chunk.content, chunk.document_id,
-                        json.dumps(chunk.metadata), str(emb),
+                        chunk.id,
+                        chunk.content,
+                        chunk.document_id,
+                        json.dumps(chunk.metadata),
+                        str(emb),
                     )
                     ids.append(chunk.id)
         else:
@@ -119,19 +122,23 @@ class PgVectorStore(BaseVectorStore):
                 if conditions:
                     filter_clause = "WHERE " + " AND ".join(conditions)
 
-            rows = await conn.fetch(f"""
+            rows = await conn.fetch(
+                f"""
                 SELECT id, content, document_id, metadata,
                        1 - (embedding <=> $1::vector) as score
                 FROM {self._table_name}
                 {filter_clause}
                 ORDER BY embedding <=> $1::vector
                 LIMIT $2
-            """, *params)
+            """,
+                *params,
+            )
 
         results = []
         for row in rows:
             chunk = DocumentChunk(
-                id=row["id"], content=row["content"],
+                id=row["id"],
+                content=row["content"],
                 document_id=row["document_id"],
                 metadata=json.loads(row["metadata"]) if row["metadata"] else {},
             )
@@ -154,20 +161,21 @@ class PgVectorStore(BaseVectorStore):
     async def delete(self, ids: list[str]) -> None:
         if self._pool:
             async with self._pool.acquire() as conn:
-                await conn.execute(
-                    f"DELETE FROM {self._table_name} WHERE id = ANY($1)", ids
-                )
+                await conn.execute(f"DELETE FROM {self._table_name} WHERE id = ANY($1)", ids)
 
     async def get_by_ids(self, ids: list[str]) -> list[DocumentChunk]:
         if not self._pool:
             return []
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(
-                f"SELECT id, content, document_id, metadata FROM {self._table_name} WHERE id = ANY($1)", ids
+                f"SELECT id, content, document_id, metadata FROM {self._table_name} WHERE id = ANY($1)",
+                ids,
             )
         return [
             DocumentChunk(
-                id=r["id"], content=r["content"], document_id=r["document_id"],
+                id=r["id"],
+                content=r["content"],
+                document_id=r["document_id"],
                 metadata=json.loads(r["metadata"]) if r["metadata"] else {},
             )
             for r in rows
@@ -207,7 +215,9 @@ class PgVectorStore(BaseVectorStore):
             )
         return [
             DocumentChunk(
-                id=r["id"], content=r["content"], document_id=r["document_id"],
+                id=r["id"],
+                content=r["content"],
+                document_id=r["document_id"],
                 metadata=json.loads(r["metadata"]) if r["metadata"] else {},
             )
             for r in rows
@@ -224,9 +234,7 @@ class PgVectorStore(BaseVectorStore):
                 conditions.append(f"metadata->>'{key}' = ${i}")
                 params.append(str(value))
             where = " AND ".join(conditions)
-            result = await conn.execute(
-                f"DELETE FROM {self._table_name} WHERE {where}", *params
-            )
+            result = await conn.execute(f"DELETE FROM {self._table_name} WHERE {where}", *params)
             # asyncpg returns "DELETE N"
             count = int(result.split()[-1]) if result else 0
         return count

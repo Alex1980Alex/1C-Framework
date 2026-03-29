@@ -28,8 +28,7 @@ class ImageDescription(BaseModel):
     description: str = Field(description="Text description from Claude Vision")
     page_number: int = Field(description="Page number where image was found")
     bbox: tuple[float, float, float, float] | None = Field(
-        default=None,
-        description="Bounding box on page"
+        default=None, description="Bounding box on page"
     )
     image_format: str = Field(description="Image format (png, jpeg, etc.)")
     size: tuple[int, int] = Field(description="Image size (width, height) in pixels")
@@ -95,7 +94,8 @@ class ImageExtractor:
     @staticmethod
     def _check_pymupdf() -> bool:
         try:
-            import fitz  # PyMuPDF
+            import fitz  # noqa: F401 — PyMuPDF availability check
+
             return True
         except ImportError:
             return False
@@ -123,7 +123,9 @@ class ImageExtractor:
             total_pages = len(doc)
             logger.info(
                 "[IMAGE] Начало извлечения изображений из '%s' (%d страниц, модель=%s)",
-                Path(pdf_path).name, total_pages, self._model,
+                Path(pdf_path).name,
+                total_pages,
+                self._model,
             )
 
             for page_num, page in enumerate(doc, start=1):
@@ -138,15 +140,21 @@ class ImageExtractor:
                     logger.info(
                         "[IMAGE] Стр. %d/%d: %d изображений описано "
                         "(всего %d, пропущено мелких %d, %.1f сек)",
-                        page_num, total_pages, len(page_images),
-                        len(descriptions), skipped_small, elapsed,
+                        page_num,
+                        total_pages,
+                        len(page_images),
+                        len(descriptions),
+                        skipped_small,
+                        elapsed,
                     )
 
         elapsed = time.time() - t0
         logger.info(
             "[IMAGE] Готово: %d изображений из '%s' за %.1f сек "
             "(пропущено мелких: %d, %.1f изобр/сек)",
-            len(descriptions), Path(pdf_path).name, elapsed,
+            len(descriptions),
+            Path(pdf_path).name,
+            elapsed,
             skipped_small,
             len(descriptions) / elapsed if elapsed > 0 else 0,
         )
@@ -160,6 +168,7 @@ class ImageExtractor:
     ) -> list[ImageDescription]:
         """Extract images from a single PyMuPDF page."""
         import io
+
         from PIL import Image
 
         descriptions = []
@@ -195,23 +204,31 @@ class ImageExtractor:
                 # Generate description via Claude Vision (non-blocking)
                 logger.debug(
                     "[IMAGE] Описание изображения %d на стр. %d (%dx%d, %s, %d KB)...",
-                    img_index + 1, page_number, width, height,
-                    image_format, len(image_bytes) // 1024,
+                    img_index + 1,
+                    page_number,
+                    width,
+                    height,
+                    image_format,
+                    len(image_bytes) // 1024,
                 )
                 description = await self.describe_image(image_bytes)
 
-                descriptions.append(ImageDescription(
-                    image_bytes=image_bytes,
-                    description=description,
-                    page_number=page_number,
-                    bbox=None,
-                    image_format=image_format,
-                    size=(width, height),
-                    description_model=self._model,
-                ))
+                descriptions.append(
+                    ImageDescription(
+                        image_bytes=image_bytes,
+                        description=description,
+                        page_number=page_number,
+                        bbox=None,
+                        image_format=image_format,
+                        size=(width, height),
+                        description_model=self._model,
+                    )
+                )
 
             except Exception as e:
-                logger.warning(f"[IMAGE] Error extracting image {img_index} on page {page_number}: {e}")
+                logger.warning(
+                    f"[IMAGE] Error extracting image {img_index} on page {page_number}: {e}"
+                )
 
         return descriptions
 
@@ -238,8 +255,8 @@ class ImageExtractor:
         if exotic > 10:
             return True
         # Mostly English in a Russian-language task — suspicious
-        latin_chars = sum(1 for ch in text[:500] if 'a' <= ch.lower() <= 'z')
-        cyrillic_chars = sum(1 for ch in text[:500] if '\u0400' <= ch <= '\u04ff')
+        latin_chars = sum(1 for ch in text[:500] if "a" <= ch.lower() <= "z")
+        cyrillic_chars = sum(1 for ch in text[:500] if "\u0400" <= ch <= "\u04ff")
         if latin_chars > cyrillic_chars * 3 and len(text) > 200:
             return True
         return False
@@ -312,9 +329,7 @@ class ImageExtractor:
                 last_description = f"[Ошибка описания изображения: {e}]"
 
         # All retries exhausted — return best available or error
-        logger.warning(
-            f"[IMAGE] All {max_retries} attempts failed (Ralph Wiggum loop exhausted)"
-        )
+        logger.warning(f"[IMAGE] All {max_retries} attempts failed (Ralph Wiggum loop exhausted)")
         if self._cache_enabled and last_description:
             self._description_cache[cache_key] = last_description
         return last_description or "[Ошибка описания изображения]"
@@ -340,9 +355,7 @@ class ImageExtractor:
         "| Склад | СправочникСсылка.Склады | Не проверять |\n\n"
     )
 
-    def _call_vision_api(
-        self, image_base64: str, media_type: str, feedback: str = ""
-    ) -> str:
+    def _call_vision_api(self, image_base64: str, media_type: str, feedback: str = "") -> str:
         """Synchronous Vision API call (runs in thread).
 
         Args:
@@ -423,24 +436,26 @@ class ImageExtractor:
 
         for idx, img_desc in enumerate(descriptions):
             chunk_id = f"{document_id}_img_{img_desc.page_number}_{idx}"
-            chunks.append(DocumentChunk(
-                id=chunk_id,
-                content=img_desc.to_markdown_chunk(),
-                document_id=document_id,
-                page_number=img_desc.page_number,
-                section="",  # Phase 29: empty → will be inherited from nearest text chunk
-                chunk_index=9000 + idx,  # High index so images sort after text
-                metadata={
-                    "chunk_type": "image",
-                    "element_type": "image",
-                    "source": source_path,
-                    "document_id": document_id,
-                    "image_format": img_desc.image_format,
-                    "image_size": f"{img_desc.size[0]}x{img_desc.size[1]}",
-                    "description_model": img_desc.description_model,
-                    "page_number": str(img_desc.page_number),
-                },
-            ))
+            chunks.append(
+                DocumentChunk(
+                    id=chunk_id,
+                    content=img_desc.to_markdown_chunk(),
+                    document_id=document_id,
+                    page_number=img_desc.page_number,
+                    section="",  # Phase 29: empty → will be inherited from nearest text chunk
+                    chunk_index=9000 + idx,  # High index so images sort after text
+                    metadata={
+                        "chunk_type": "image",
+                        "element_type": "image",
+                        "source": source_path,
+                        "document_id": document_id,
+                        "image_format": img_desc.image_format,
+                        "image_size": f"{img_desc.size[0]}x{img_desc.size[1]}",
+                        "description_model": img_desc.description_model,
+                        "page_number": str(img_desc.page_number),
+                    },
+                )
+            )
 
         return chunks
 

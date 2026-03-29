@@ -11,7 +11,6 @@ from typing import Any, TypedDict
 
 from pydantic import BaseModel, Field
 
-
 # ---- Research Plan Tree ----
 
 
@@ -37,9 +36,9 @@ class ResearchPlanTree(BaseModel):
         """Return tasks whose dependencies are satisfied."""
         done_ids = {t.id for t in self.tasks if t.status == "done"}
         return [
-            t for t in self.tasks
-            if t.status == "pending"
-            and (t.parent_id is None or t.parent_id in done_ids)
+            t
+            for t in self.tasks
+            if t.status == "pending" and (t.parent_id is None or t.parent_id in done_ids)
         ]
 
     def mark_done(self, task_id: str) -> None:
@@ -98,7 +97,8 @@ class EvidenceGraph(BaseModel):
     def get_facts_for_aspect(self, aspect: str) -> list[EvidenceFact]:
         aspect_lower = aspect.lower()
         return [
-            f for f in self.facts
+            f
+            for f in self.facts
             if aspect_lower in f.aspect.lower() or f.aspect.lower() in aspect_lower
         ]
 

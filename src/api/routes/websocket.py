@@ -50,9 +50,7 @@ async def websocket_search(websocket: WebSocket):
             try:
                 request = json.loads(raw)
             except json.JSONDecodeError:
-                await websocket.send_text(
-                    _ws_message("error", "Invalid JSON")
-                )
+                await websocket.send_text(_ws_message("error", "Invalid JSON"))
                 continue
 
             # Handle cancel-only messages
@@ -61,9 +59,7 @@ async def websocket_search(websocket: WebSocket):
 
             question = request.get("question", "").strip()
             if not question:
-                await websocket.send_text(
-                    _ws_message("error", "Missing 'question' field")
-                )
+                await websocket.send_text(_ws_message("error", "Missing 'question' field"))
                 continue
 
             strategy = request.get("strategy", "hybrid")
@@ -75,9 +71,7 @@ async def websocket_search(websocket: WebSocket):
                 t0 = time.perf_counter()
 
                 # Step 1: Search
-                await websocket.send_text(
-                    _ws_message("status", "searching")
-                )
+                await websocket.send_text(_ws_message("status", "searching"))
 
                 search_response = await components.search_manager.search(
                     query=question,
@@ -99,16 +93,18 @@ async def websocket_search(websocket: WebSocket):
                         sources.append(src)
 
                 await websocket.send_text(
-                    _ws_message("sources", sources, {
-                        "total_found": search_response.total_found,
-                        "search_type": search_response.search_type,
-                    })
+                    _ws_message(
+                        "sources",
+                        sources,
+                        {
+                            "total_found": search_response.total_found,
+                            "search_type": search_response.search_type,
+                        },
+                    )
                 )
 
                 # Step 3: Stream answer tokens
-                await websocket.send_text(
-                    _ws_message("status", "generating")
-                )
+                await websocket.send_text(_ws_message("status", "generating"))
 
                 chain = RetrievalQAChain(
                     settings=components.settings.agent,
@@ -127,30 +123,31 @@ async def websocket_search(websocket: WebSocket):
                             _ws_message("ttft", "", {"ttft_ms": round(ttft_ms)})
                         )
                         ttft_sent = True
-                    await websocket.send_text(
-                        _ws_message("token", token)
-                    )
+                    await websocket.send_text(_ws_message("token", token))
 
                 # Step 4: Post-processing (section refs)
                 full_answer = "".join(collected)
                 from src.pdf_framework.utils.section_refs import append_section_refs
+
                 final_answer = append_section_refs(full_answer, search_response.results)
-                extra = final_answer[len(full_answer):]
+                extra = final_answer[len(full_answer) :]
                 if extra:
-                    await websocket.send_text(
-                        _ws_message("token", extra)
-                    )
+                    await websocket.send_text(_ws_message("token", extra))
 
                 # Step 5: Done
                 elapsed = (time.perf_counter() - t0) * 1000
                 await websocket.send_text(
-                    _ws_message("done", "", {
-                        "elapsed_ms": round(elapsed),
-                        "ttft_ms": round(ttft_ms) if ttft_sent else None,
-                        "search_ms": round(search_ms),
-                        "search_type": search_response.search_type,
-                        "total_found": search_response.total_found,
-                    })
+                    _ws_message(
+                        "done",
+                        "",
+                        {
+                            "elapsed_ms": round(elapsed),
+                            "ttft_ms": round(ttft_ms) if ttft_sent else None,
+                            "search_ms": round(search_ms),
+                            "search_type": search_response.search_type,
+                            "total_found": search_response.total_found,
+                        },
+                    )
                 )
 
             search_task: asyncio.Task = asyncio.create_task(_run_search())
@@ -159,20 +156,16 @@ async def websocket_search(websocket: WebSocket):
             async def _listen_for_cancel():
                 try:
                     while not search_task.done():
-                        raw_msg = await asyncio.wait_for(
-                            websocket.receive_text(), timeout=0.5
-                        )
+                        raw_msg = await asyncio.wait_for(websocket.receive_text(), timeout=0.5)
                         try:
                             msg = json.loads(raw_msg)
                             if msg.get("action") == "cancel":
                                 search_task.cancel()
-                                await websocket.send_text(
-                                    _ws_message("status", "cancelled")
-                                )
+                                await websocket.send_text(_ws_message("status", "cancelled"))
                                 return
                         except json.JSONDecodeError:
                             pass
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass
 
             cancel_listener = asyncio.create_task(_listen_for_cancel())
@@ -183,9 +176,7 @@ async def websocket_search(websocket: WebSocket):
                 logger.info("[WS] Search cancelled by client")
             except Exception as e:
                 logger.error("[WS] Search error: %s", e)
-                await websocket.send_text(
-                    _ws_message("error", str(e))
-                )
+                await websocket.send_text(_ws_message("error", str(e)))
             finally:
                 cancel_listener.cancel()
                 try:

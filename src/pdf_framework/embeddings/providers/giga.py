@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Instruction prefix for GigaEmbeddings retrieval tasks
 _GIGA_QUERY_PREFIX = (
-    "Instruct: Given a search query, retrieve relevant passages "
-    "that answer the query\nQuery: "
+    "Instruct: Given a search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
 # BGE-M3 does not need any prefix
@@ -74,7 +73,9 @@ class GigaEmbeddingEngine(BaseEmbeddingEngine):
             t0 = time.time()
             logger.info(
                 "[GIGA_EMBED] Loading model '%s' (%d dims) on %s...",
-                self._settings.model, self._settings.dimensions, device,
+                self._settings.model,
+                self._settings.dimensions,
+                device,
             )
             self._model = SentenceTransformer(
                 self._settings.model,
@@ -83,7 +84,9 @@ class GigaEmbeddingEngine(BaseEmbeddingEngine):
             )
             logger.info(
                 "[GIGA_EMBED] Model loaded in %.2fs (device=%s, CUDA=%s)",
-                time.time() - t0, device, torch.cuda.is_available(),
+                time.time() - t0,
+                device,
+                torch.cuda.is_available(),
             )
         return self._model
 
@@ -106,7 +109,9 @@ class GigaEmbeddingEngine(BaseEmbeddingEngine):
     async def embed_text(self, text: str) -> list[float]:
         """Embed single text with query instruction prefix."""
         results = await asyncio.to_thread(
-            self._embed_sync, [text], self._query_prefix,
+            self._embed_sync,
+            [text],
+            self._query_prefix,
         )
         return results[0]
 
@@ -116,12 +121,16 @@ class GigaEmbeddingEngine(BaseEmbeddingEngine):
             return []
         t0 = time.time()
         result = await asyncio.to_thread(
-            self._embed_sync, texts, self._passage_prefix,
+            self._embed_sync,
+            texts,
+            self._passage_prefix,
         )
         elapsed = time.time() - t0
         logger.info(
             "[GIGA_EMBED] %d texts -> %d embeddings in %.2fs (%.0f texts/sec)",
-            len(texts), len(result), elapsed,
+            len(texts),
+            len(result),
+            elapsed,
             len(texts) / elapsed if elapsed > 0 else 0,
         )
         return result

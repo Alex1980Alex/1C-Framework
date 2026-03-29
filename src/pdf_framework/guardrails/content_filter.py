@@ -20,15 +20,18 @@ class FilterResult:
 
 # Known safe URL domains (documentation, official sources)
 _SAFE_DOMAINS = {
-    "its.1c.ru", "v8.1c.ru", "1c.ru",
-    "docs.python.org", "github.com",
-    "arxiv.org", "wikipedia.org",
-    "qdrant.tech", "neo4j.com",
+    "its.1c.ru",
+    "v8.1c.ru",
+    "1c.ru",
+    "docs.python.org",
+    "github.com",
+    "arxiv.org",
+    "wikipedia.org",
+    "qdrant.tech",
+    "neo4j.com",
 }
 
-_URL_PATTERN = re.compile(
-    r'https?://[A-Za-z0-9\-._~:/?#\[\]@!$&\'()*+,;=%]+'
-)
+_URL_PATTERN = re.compile(r"https?://[A-Za-z0-9\-._~:/?#\[\]@!$&\'()*+,;=%]+")
 
 
 class ContentFilter:
@@ -75,7 +78,7 @@ class ContentFilter:
         """Validate and sanitize output text."""
         # Truncate if too long
         if len(text) > self.max_response_length:
-            text = text[:self.max_response_length] + "\n\n[Ответ усечён из-за ограничения длины]"
+            text = text[: self.max_response_length] + "\n\n[Ответ усечён из-за ограничения длины]"
 
         return FilterResult(allowed=True, filtered_text=text)
 
@@ -88,7 +91,7 @@ class ContentFilter:
         for match in _URL_PATTERN.finditer(text):
             url = match.group()
             # Extract domain
-            domain_match = re.search(r'https?://([^/:]+)', url)
+            domain_match = re.search(r"https?://([^/:]+)", url)
             if domain_match:
                 domain = domain_match.group(1).lower()
                 # Check against safe domains

@@ -16,9 +16,9 @@ import time
 from typing import Any
 
 from src.pdf_framework.config import AdaptiveRAGSettings
-from src.pdf_framework.schemas.documents import SearchResponse, SearchResult, DocumentChunk
+from src.pdf_framework.schemas.documents import DocumentChunk, SearchResponse, SearchResult
 from src.pdf_framework.search.manager import SearchManager
-from src.pdf_framework.search.routing.classifier import QueryClassifier, QueryClassification
+from src.pdf_framework.search.routing.classifier import QueryClassification, QueryClassifier
 from src.pdf_framework.search.routing.decomposer import SubQuestionDecomposer
 from src.pdf_framework.search.routing.router import StrategyRouter
 
@@ -57,11 +57,10 @@ class AdaptiveSearchStrategy:
 
         # Initialize components with API credentials
         self._classifier = QueryClassifier(
-            api_key=api_key, base_url=base_url,
+            api_key=api_key,
+            base_url=base_url,
         )
-        self._router = StrategyRouter(
-            available_strategies=search_manager.available_strategies
-        )
+        self._router = StrategyRouter(available_strategies=search_manager.available_strategies)
 
         # Initialize decomposer if enabled
         self._decomposer = None
@@ -110,9 +109,11 @@ class AdaptiveSearchStrategy:
         final_k = decision.k or k
 
         # Step 2.5: BM25 early termination for simple queries (Phase 26)
-        if (classification.complexity == "simple"
-                and self._settings.bm25_early_termination
-                and "bm25" in self._search_manager.available_strategies):
+        if (
+            classification.complexity == "simple"
+            and self._settings.bm25_early_termination
+            and "bm25" in self._search_manager.available_strategies
+        ):
             early = await self._try_bm25_early(query, final_k, filter, classification, start)
             if early is not None:
                 return early
@@ -141,7 +142,10 @@ class AdaptiveSearchStrategy:
         threshold = self._settings.bm25_early_threshold
 
         bm25_response = await self._search_manager.search(
-            query=query, strategy="bm25", k=k, filter=filter,
+            query=query,
+            strategy="bm25",
+            k=k,
+            filter=filter,
             rerank=False,
         )
 
@@ -152,7 +156,8 @@ class AdaptiveSearchStrategy:
         if top_score < threshold:
             logger.info(
                 "[ADAPTIVE] BM25 early: score=%.2f < threshold=%.2f, falling through",
-                top_score, threshold,
+                top_score,
+                threshold,
             )
             return None
 
@@ -172,7 +177,9 @@ class AdaptiveSearchStrategy:
         bm25_response.elapsed_ms = elapsed
         logger.info(
             "[ADAPTIVE] BM25 early termination: score=%.2f >= %.2f, time=%.0fms",
-            top_score, threshold, elapsed,
+            top_score,
+            threshold,
+            elapsed,
         )
         return bm25_response
 
@@ -239,9 +246,12 @@ class AdaptiveSearchStrategy:
             # Decomposition failed, fall back to standard search
             logger.warning("[ADAPTIVE] Decomposition failed, using standard search")
             return await self._execute_standard_search(
-                query, k, filter, decision, QueryClassification(
-                    complexity="moderate", query_type="unknown", confidence=0.0
-                ), start_time
+                query,
+                k,
+                filter,
+                decision,
+                QueryClassification(complexity="moderate", query_type="unknown", confidence=0.0),
+                start_time,
             )
 
         logger.info(f"[ADAPTIVE] Decomposed into {len(sub_queries)} sub-queries")
@@ -252,8 +262,11 @@ class AdaptiveSearchStrategy:
 
         tasks = [
             self._search_manager.search(
-                query=sq, strategy=decision.strategy, k=k,
-                filter=filter, rerank=decision.use_reranking,
+                query=sq,
+                strategy=decision.strategy,
+                k=k,
+                filter=filter,
+                rerank=decision.use_reranking,
             )
             for sq in sub_queries
         ]
@@ -283,10 +296,7 @@ class AdaptiveSearchStrategy:
         # Score = average of best scores from each sub-query
         avg_score = 0.0
         if sub_responses:
-            scores = [
-                r.results[0].score if r.results else 0.5
-                for r in sub_responses
-            ]
+            scores = [r.results[0].score if r.results else 0.5 for r in sub_responses]
             avg_score = sum(scores) / len(scores)
 
         final_result = SearchResult(

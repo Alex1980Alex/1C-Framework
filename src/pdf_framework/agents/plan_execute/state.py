@@ -24,6 +24,7 @@ class PlanStep:
         status: Step status (pending/in_progress/completed/failed)
         result: Result from executing this step
     """
+
     step_id: str
     description: str
     tool: str
@@ -47,6 +48,7 @@ class PlanExecuteState:
         max_iterations: Maximum allowed iterations
         error: Error message if failed
     """
+
     query: str
     plan: list[PlanStep] = field(default_factory=list)
     current_step: int = 0

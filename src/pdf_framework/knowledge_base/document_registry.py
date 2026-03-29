@@ -132,16 +132,27 @@ class DocumentRegistry:
                 " chunk_count, page_count, file_size_bytes, indexed_at, updated_at, status) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    document_id, source_path, filename, title, description,
-                    str(tags_list), chunk_count, page_count, file_size,
-                    now, now, status,
+                    document_id,
+                    source_path,
+                    filename,
+                    title,
+                    description,
+                    str(tags_list),
+                    chunk_count,
+                    page_count,
+                    file_size,
+                    now,
+                    now,
+                    status,
                 ),
             )
             await db.commit()
 
         logger.info(
             "[REGISTRY] Registered '%s' (%d chunks, %d pages)",
-            filename, chunk_count, page_count,
+            filename,
+            chunk_count,
+            page_count,
         )
         return DocumentRecord(
             document_id=document_id,
@@ -202,9 +213,7 @@ class DocumentRegistry:
                     (status,),
                 )
             else:
-                cursor = await db.execute(
-                    "SELECT * FROM documents ORDER BY updated_at DESC"
-                )
+                cursor = await db.execute("SELECT * FROM documents ORDER BY updated_at DESC")
             rows = await cursor.fetchall()
 
         return [_row_to_record(row) for row in rows]
@@ -265,9 +274,7 @@ class DocumentRegistry:
         await self.initialize()
 
         async with aiosqlite.connect(self._db_path) as db:
-            cursor = await db.execute(
-                "DELETE FROM documents WHERE document_id = ?", (document_id,)
-            )
+            cursor = await db.execute("DELETE FROM documents WHERE document_id = ?", (document_id,))
             await db.commit()
             return cursor.rowcount > 0
 
@@ -293,6 +300,7 @@ def _parse_tags(raw: str | None) -> list[str]:
         return []
     try:
         import ast
+
         result = ast.literal_eval(raw)
         return result if isinstance(result, list) else []
     except (ValueError, SyntaxError):
@@ -305,6 +313,7 @@ def _parse_extra(raw: str | None) -> dict[str, Any]:
         return {}
     try:
         import json
+
         return json.loads(raw)
     except (ValueError, TypeError):
         return {}

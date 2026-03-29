@@ -10,7 +10,6 @@ Version: 1.0.0 - Phase 19: Deep Research Agent
 """
 
 import logging
-from typing import Any
 
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
@@ -213,12 +212,14 @@ Query: "How does 1C:Enterprise handle multi-user concurrency and what are the be
             # Parse sub-questions
             sub_questions = []
             for sq in data.get("sub_questions", []):
-                sub_questions.append(SubQuestion(
-                    question=sq["question"],
-                    dependencies=sq.get("dependencies", []),
-                    rationale=sq.get("rationale", ""),
-                    search_terms=sq.get("search_terms", []),
-                ))
+                sub_questions.append(
+                    SubQuestion(
+                        question=sq["question"],
+                        dependencies=sq.get("dependencies", []),
+                        rationale=sq.get("rationale", ""),
+                        search_terms=sq.get("search_terms", []),
+                    )
+                )
 
             return QueryDecomposition(
                 sub_questions=sub_questions,

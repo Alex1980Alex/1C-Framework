@@ -39,7 +39,8 @@ class ErrorAnalyzer:
         self._threshold = threshold
 
     async def analyze(
-        self, report: Any = None,
+        self,
+        report: Any = None,
     ) -> ErrorReport:
         """Analyze evaluation report and classify errors.
 

@@ -47,14 +47,18 @@ def openai_to_anthropic(openai_request: dict[str, Any]) -> dict[str, Any]:
         if role == "system":
             system_text = content
         elif role == "tool":
-            converted_messages.append({
-                "role": "user",
-                "content": [{
-                    "type": "tool_result",
-                    "tool_use_id": msg.get("tool_call_id", ""),
-                    "content": content,
-                }],
-            })
+            converted_messages.append(
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": msg.get("tool_call_id", ""),
+                            "content": content,
+                        }
+                    ],
+                }
+            )
         else:
             mapped_role = "assistant" if role == "assistant" else "user"
             converted_messages.append({"role": mapped_role, "content": content})
@@ -87,11 +91,13 @@ def openai_to_anthropic(openai_request: dict[str, Any]) -> dict[str, Any]:
         anthropic_tools = []
         for tool in tools:
             fn = tool.get("function", {})
-            anthropic_tools.append({
-                "name": fn.get("name", ""),
-                "description": fn.get("description", ""),
-                "input_schema": fn.get("parameters", {"type": "object"}),
-            })
+            anthropic_tools.append(
+                {
+                    "name": fn.get("name", ""),
+                    "description": fn.get("description", ""),
+                    "input_schema": fn.get("parameters", {"type": "object"}),
+                }
+            )
         anthropic_req["tools"] = anthropic_tools
 
     return anthropic_req
@@ -111,14 +117,16 @@ def anthropic_to_openai(anthropic_response: dict[str, Any]) -> dict[str, Any]:
         elif block_type == "thinking":
             reasoning_content = block.get("thinking", "")
         elif block_type == "tool_use":
-            tool_calls.append({
-                "id": block.get("id", ""),
-                "type": "function",
-                "function": {
-                    "name": block.get("name", ""),
-                    "arguments": json.dumps(block.get("input", {})),
-                },
-            })
+            tool_calls.append(
+                {
+                    "id": block.get("id", ""),
+                    "type": "function",
+                    "function": {
+                        "name": block.get("name", ""),
+                        "arguments": json.dumps(block.get("input", {})),
+                    },
+                }
+            )
 
     stop_reason = anthropic_response.get("stop_reason", "end_turn")
     finish_reason = _map_stop_reason(stop_reason)
@@ -141,11 +149,13 @@ def anthropic_to_openai(anthropic_response: dict[str, Any]) -> dict[str, Any]:
         "object": "chat.completion",
         "created": int(datetime.now().timestamp()),
         "model": anthropic_response.get("model", ZAI_DEFAULT_MODEL),
-        "choices": [{
-            "index": 0,
-            "message": message,
-            "finish_reason": finish_reason,
-        }],
+        "choices": [
+            {
+                "index": 0,
+                "message": message,
+                "finish_reason": finish_reason,
+            }
+        ],
         "usage": {
             "prompt_tokens": usage.get("input_tokens", 0),
             "completion_tokens": usage.get("output_tokens", 0),
@@ -180,9 +190,7 @@ class ZAIProxy:
 
     async def _get_session(self) -> ClientSession:
         if self._session is None or self._session.closed:
-            self._session = ClientSession(
-                timeout=ClientTimeout(total=300)
-            )
+            self._session = ClientSession(timeout=ClientTimeout(total=300))
         return self._session
 
     async def handle_chat(self, request: web.Request) -> web.StreamResponse:
@@ -262,9 +270,7 @@ class ZAIProxy:
                     event = json.loads(data_str)
                     chunk = self._convert_stream_chunk(event)
                     if chunk:
-                        await response.write(
-                            f"data: {json.dumps(chunk)}\n\n".encode()
-                        )
+                        await response.write(f"data: {json.dumps(chunk)}\n\n".encode())
                 except json.JSONDecodeError:
                     continue
 
@@ -281,55 +287,65 @@ class ZAIProxy:
             if delta_type == "text_delta":
                 return {
                     "object": "chat.completion.chunk",
-                    "choices": [{
-                        "index": 0,
-                        "delta": {"content": delta.get("text", "")},
-                        "finish_reason": None,
-                    }],
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"content": delta.get("text", "")},
+                            "finish_reason": None,
+                        }
+                    ],
                 }
             elif delta_type == "thinking_delta":
                 return {
                     "object": "chat.completion.chunk",
-                    "choices": [{
-                        "index": 0,
-                        "delta": {"reasoning_content": delta.get("thinking", "")},
-                        "finish_reason": None,
-                    }],
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"reasoning_content": delta.get("thinking", "")},
+                            "finish_reason": None,
+                        }
+                    ],
                 }
 
         elif event_type == "message_delta":
             stop_reason = event.get("delta", {}).get("stop_reason", "end_turn")
             return {
                 "object": "chat.completion.chunk",
-                "choices": [{
-                    "index": 0,
-                    "delta": {},
-                    "finish_reason": _map_stop_reason(stop_reason),
-                }],
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {},
+                        "finish_reason": _map_stop_reason(stop_reason),
+                    }
+                ],
             }
 
         return None
 
     async def handle_models(self, _request: web.Request) -> web.Response:
         """GET /v1/models"""
-        return web.json_response({
-            "object": "list",
-            "data": [
-                {"id": "glm-5.1", "object": "model", "owned_by": "zhipu"},
-                {"id": "glm-5", "object": "model", "owned_by": "zhipu"},
-                {"id": "glm-4.6", "object": "model", "owned_by": "zhipu"},
-                {"id": "glm-4.5-air", "object": "model", "owned_by": "zhipu"},
-            ],
-        })
+        return web.json_response(
+            {
+                "object": "list",
+                "data": [
+                    {"id": "glm-5.1", "object": "model", "owned_by": "zhipu"},
+                    {"id": "glm-5", "object": "model", "owned_by": "zhipu"},
+                    {"id": "glm-4.6", "object": "model", "owned_by": "zhipu"},
+                    {"id": "glm-4.5-air", "object": "model", "owned_by": "zhipu"},
+                ],
+            }
+        )
 
     async def handle_health(self, _request: web.Request) -> web.Response:
         """GET /health"""
-        return web.json_response({
-            "status": "ok",
-            "provider": "z.ai_direct",
-            "model": ZAI_DEFAULT_MODEL,
-            "version": "2.0",
-        })
+        return web.json_response(
+            {
+                "status": "ok",
+                "provider": "z.ai_direct",
+                "model": ZAI_DEFAULT_MODEL,
+                "version": "2.0",
+            }
+        )
 
     async def handle_stats(self, _request: web.Request) -> web.Response:
         """GET /stats"""

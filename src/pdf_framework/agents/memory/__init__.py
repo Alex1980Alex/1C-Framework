@@ -8,10 +8,9 @@ Provides:
 """
 
 # Import conversation first (it has no dependency on backends at module level)
-from src.pdf_framework.agents.memory.conversation import ConversationMemory, Message
-
 # Then import backends (which depend on Message from conversation)
 from src.pdf_framework.agents.memory.backends import MemoryBackend, SQLiteBackend
+from src.pdf_framework.agents.memory.conversation import ConversationMemory, Message
 
 __all__ = [
     "Message",

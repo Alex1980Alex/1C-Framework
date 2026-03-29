@@ -40,9 +40,11 @@ class SmartLoaderRouter(BaseLoader):
                 from src.pdf_framework.loaders.providers.pymupdf4llm_loader import (
                     PyMuPDF4LLMLoader,
                 )
+
                 self._fast_loader = PyMuPDF4LLMLoader()
             else:
                 from src.pdf_framework.loaders.pdf.pymupdf_loader import PyMuPDFLoader
+
                 self._fast_loader = PyMuPDFLoader()
         return self._fast_loader
 
@@ -59,6 +61,7 @@ class SmartLoaderRouter(BaseLoader):
                 from src.pdf_framework.loaders.providers.docling_loader import (
                     DoclingLoader,
                 )
+
                 ds = self._docling_settings or DoclingSettings()
                 if force_ocr is not None:
                     ds = ds.model_copy(update={"ocr_enabled": force_ocr})
@@ -67,6 +70,7 @@ class SmartLoaderRouter(BaseLoader):
                 from src.pdf_framework.loaders.providers.layout_parser import (
                     LayoutAwareLoader,
                 )
+
                 self._full_loader = LayoutAwareLoader()
         return self._full_loader
 
@@ -163,9 +167,7 @@ class SmartLoaderRouter(BaseLoader):
         need_ocr = pdf_type == "scanned"
         loader = self._get_full_loader(force_ocr=need_ocr)
         ocr_label = "OCR=on" if need_ocr else "OCR=off"
-        logger.info(
-            f"[ROUTER] → Full path ({self._settings.full_loader}, {ocr_label})"
-        )
+        logger.info(f"[ROUTER] → Full path ({self._settings.full_loader}, {ocr_label})")
         try:
             return await loader.load(source)
         except Exception as e:
@@ -178,6 +180,7 @@ class SmartLoaderRouter(BaseLoader):
     async def load_batch(self, sources: list[str | Path]) -> list[ProcessedDocument]:
         """Load multiple documents (each routed individually)."""
         import asyncio
+
         tasks = [self.load(s) for s in sources]
         return await asyncio.gather(*tasks)
 

@@ -9,9 +9,9 @@ Modules:
 # Phase 15: Multimodal image schemas
 from src.pdf_framework.schemas.images import (
     ImageChunk,
-    ImageMetadata,
     ImageDescriptionRequest,
     ImageDescriptionResponse,
+    ImageMetadata,
     ProcessedImage,
 )
 

@@ -93,54 +93,92 @@ class QueryClassifier:
 
         # Thematic patterns — broad overview queries
         _THEMATIC = (
-            "обзор", "основные темы", "общая картина", "резюме", "итог",
-            "о чём", "о чем", "ключевые", "главные мысли", "краткое содержание",
+            "обзор",
+            "основные темы",
+            "общая картина",
+            "резюме",
+            "итог",
+            "о чём",
+            "о чем",
+            "ключевые",
+            "главные мысли",
+            "краткое содержание",
         )
         if any(p in q for p in _THEMATIC):
             return QueryClassification(
-                complexity="thematic", query_type="thematic",
-                confidence=0.85, reasoning="rule:thematic_keywords",
+                complexity="thematic",
+                query_type="thematic",
+                confidence=0.85,
+                reasoning="rule:thematic_keywords",
             )
 
         # Complex patterns — comparison, enumeration, multi-step
         _COMPLEX = (
-            "сравни", "сравнение", "отличия", "различия", "плюсы и минусы",
-            "перечисли все", "перечисли основные", "пошаговый", "пошагово",
-            "compare", "difference", "list all",
+            "сравни",
+            "сравнение",
+            "отличия",
+            "различия",
+            "плюсы и минусы",
+            "перечисли все",
+            "перечисли основные",
+            "пошаговый",
+            "пошагово",
+            "compare",
+            "difference",
+            "list all",
         )
         if any(p in q for p in _COMPLEX):
             return QueryClassification(
-                complexity="complex", query_type="comparative",
-                confidence=0.85, reasoning="rule:complex_keywords",
+                complexity="complex",
+                query_type="comparative",
+                confidence=0.85,
+                reasoning="rule:complex_keywords",
             )
 
         # Simple patterns — short factual queries
         _SIMPLE_START = (
-            "что такое", "кто такой", "где находится", "какой тип",
-            "what is", "who is", "where is", "define",
+            "что такое",
+            "кто такой",
+            "где находится",
+            "какой тип",
+            "what is",
+            "who is",
+            "where is",
+            "define",
         )
         if any(q.startswith(p) for p in _SIMPLE_START) and word_count <= 8:
             return QueryClassification(
-                complexity="simple", query_type="factual",
-                confidence=0.80, reasoning="rule:simple_start",
+                complexity="simple",
+                query_type="factual",
+                confidence=0.80,
+                reasoning="rule:simple_start",
             )
 
         # Very short queries → simple
         if word_count <= 3:
             return QueryClassification(
-                complexity="simple", query_type="factual",
-                confidence=0.75, reasoning="rule:short_query",
+                complexity="simple",
+                query_type="factual",
+                confidence=0.75,
+                reasoning="rule:short_query",
             )
 
         # Moderate patterns — how/why questions
         _MODERATE_START = (
-            "как ", "почему ", "зачем ", "каким образом ",
-            "how ", "why ", "explain ",
+            "как ",
+            "почему ",
+            "зачем ",
+            "каким образом ",
+            "how ",
+            "why ",
+            "explain ",
         )
         if any(q.startswith(p) for p in _MODERATE_START):
             return QueryClassification(
-                complexity="moderate", query_type="analytical",
-                confidence=0.80, reasoning="rule:moderate_start",
+                complexity="moderate",
+                query_type="analytical",
+                confidence=0.80,
+                reasoning="rule:moderate_start",
             )
 
         return None  # Uncertain → fall through to LLM
@@ -170,8 +208,10 @@ class QueryClassifier:
                 self._cache[query] = fast_result
             logger.info(
                 "[CLASSIFIER] Fast: '%s' -> %s (%s, confidence=%.2f)",
-                query[:40], fast_result.complexity,
-                fast_result.query_type, fast_result.confidence,
+                query[:40],
+                fast_result.complexity,
+                fast_result.query_type,
+                fast_result.confidence,
             )
             return fast_result
 
@@ -194,8 +234,10 @@ class QueryClassifier:
 
             logger.info(
                 "[CLASSIFIER] LLM: '%s' -> %s (%s, confidence=%.2f)",
-                query[:40], classification.complexity,
-                classification.query_type, classification.confidence,
+                query[:40],
+                classification.complexity,
+                classification.query_type,
+                classification.confidence,
             )
 
             return classification

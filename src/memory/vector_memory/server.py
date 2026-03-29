@@ -18,17 +18,17 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from mcp.server import Server
 from mcp import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.server import Server
+from mcp.types import TextContent, Tool
 
 from .models import (
-    LearnedPattern,
-    PatternType,
     EvidenceSource,
+    LearnedPattern,
     PatternSearchResult,
+    PatternType,
 )
 
 logging.basicConfig(
@@ -55,6 +55,7 @@ def _get_qdrant():
     global _qdrant_client
     if _qdrant_client is None:
         from qdrant_client import QdrantClient
+
         _qdrant_client = QdrantClient(url=QDRANT_URL)
         _ensure_collection()
     return _qdrant_client
@@ -63,6 +64,7 @@ def _get_qdrant():
 def _ensure_collection():
     """Ensure learned_patterns collection exists with cosine 1024d vectors."""
     from qdrant_client.http import models as qmodels
+
     client = _qdrant_client
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
@@ -86,7 +88,7 @@ def _ensure_collection():
         logger.info(f"Created collection {COLLECTION_NAME} ({VECTOR_SIZE}d cosine)")
 
 
-async def _get_embedding(text: str) -> List[float]:
+async def _get_embedding(text: str) -> list[float]:
     """Get embedding using project's embedding provider or hash fallback."""
     global _embedding_fn
     if _embedding_fn is None:
@@ -95,13 +97,14 @@ async def _get_embedding(text: str) -> List[float]:
             if str(project_root / "src") not in sys.path:
                 sys.path.insert(0, str(project_root / "src"))
             from pdf_framework.embeddings import get_embedding_provider
+
             provider = get_embedding_provider()
             _embedding_fn = provider.embed_texts
             logger.info("Using project embedding provider (E5 1024d)")
         except Exception:
             import hashlib
 
-            def _hash_embed(texts: List[str]) -> List[List[float]]:
+            def _hash_embed(texts: list[str]) -> list[list[float]]:
                 results = []
                 for t in texts:
                     h = hashlib.sha512(t.encode()).digest()
@@ -119,7 +122,7 @@ async def _get_embedding(text: str) -> List[float]:
     return result[0]
 
 
-def _pattern_from_payload(point_id: str, payload: Dict[str, Any]) -> LearnedPattern:
+def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPattern:
     """Convert Qdrant point payload to LearnedPattern."""
     evidence = [EvidenceSource.from_dict(e) for e in payload.get("evidence_sources", [])]
     return LearnedPattern(
@@ -130,18 +133,24 @@ def _pattern_from_payload(point_id: str, payload: Dict[str, Any]) -> LearnedPatt
         content=payload.get("content", ""),
         confidence=payload.get("confidence", 0.5),
         evidence_sources=evidence,
-        created_at=datetime.fromisoformat(payload["created_at"]) if payload.get("created_at") else datetime.now(),
-        updated_at=datetime.fromisoformat(payload["updated_at"]) if payload.get("updated_at") else datetime.now(),
+        created_at=datetime.fromisoformat(payload["created_at"])
+        if payload.get("created_at")
+        else datetime.now(),
+        updated_at=datetime.fromisoformat(payload["updated_at"])
+        if payload.get("updated_at")
+        else datetime.now(),
         decay_rate=payload.get("decay_rate", DECAY_RATE),
         application_count=payload.get("application_count", 0),
-        last_applied=datetime.fromisoformat(payload["last_applied"]) if payload.get("last_applied") else None,
+        last_applied=datetime.fromisoformat(payload["last_applied"])
+        if payload.get("last_applied")
+        else None,
         version=payload.get("version", 1),
         tags=payload.get("tags", []),
         metadata=payload.get("metadata", {}),
     )
 
 
-def _pattern_to_payload(pattern: LearnedPattern) -> Dict[str, Any]:
+def _pattern_to_payload(pattern: LearnedPattern) -> dict[str, Any]:
     """Convert LearnedPattern to Qdrant payload dict."""
     return {
         "pattern_id": pattern.pattern_id,
@@ -295,13 +304,26 @@ async def handle_save_pattern(args: dict) -> list[TextContent]:
 
     client.upsert(
         collection_name=COLLECTION_NAME,
-        points=[qmodels.PointStruct(id=pattern_id, vector=vector, payload=_pattern_to_payload(pattern))],
+        points=[
+            qmodels.PointStruct(id=pattern_id, vector=vector, payload=_pattern_to_payload(pattern))
+        ],
     )
 
     logger.info(f"Saved pattern {pattern_id}: {pattern.name} (confidence={pattern.confidence})")
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "pattern_id": pattern_id, "name": pattern.name, "confidence": pattern.confidence,
-    }, ensure_ascii=False))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "pattern_id": pattern_id,
+                    "name": pattern.name,
+                    "confidence": pattern.confidence,
+                },
+                ensure_ascii=False,
+            ),
+        )
+    ]
 
 
 async def handle_search_patterns(args: dict) -> list[TextContent]:
@@ -317,7 +339,9 @@ async def handle_search_patterns(args: dict) -> list[TextContent]:
     conditions = [qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))]
     pattern_types = args.get("pattern_types")
     if pattern_types:
-        conditions.append(qmodels.FieldCondition(key="pattern_type", match=qmodels.MatchAny(any=pattern_types)))
+        conditions.append(
+            qmodels.FieldCondition(key="pattern_type", match=qmodels.MatchAny(any=pattern_types))
+        )
 
     results = client.query_points(
         collection_name=COLLECTION_NAME,
@@ -331,16 +355,30 @@ async def handle_search_patterns(args: dict) -> list[TextContent]:
     for point in results.points:
         pattern = _pattern_from_payload(str(point.id), point.payload)
         similarity = point.score if point.score else 0.0
-        search_results.append(PatternSearchResult(
-            pattern=pattern, similarity_score=similarity,
-            adjusted_confidence=pattern.confidence, combined_score=similarity * pattern.confidence,
-        ))
+        search_results.append(
+            PatternSearchResult(
+                pattern=pattern,
+                similarity_score=similarity,
+                adjusted_confidence=pattern.confidence,
+                combined_score=similarity * pattern.confidence,
+            )
+        )
 
     search_results.sort(key=lambda r: r.combined_score, reverse=True)
-    return [TextContent(type="text", text=json.dumps({
-        "query": query, "count": len(search_results),
-        "results": [r.to_dict() for r in search_results],
-    }, ensure_ascii=False, indent=2))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "query": query,
+                    "count": len(search_results),
+                    "results": [r.to_dict() for r in search_results],
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+        )
+    ]
 
 
 async def handle_apply_pattern(args: dict) -> list[TextContent]:
@@ -350,7 +388,11 @@ async def handle_apply_pattern(args: dict) -> list[TextContent]:
 
     points = client.retrieve(collection_name=COLLECTION_NAME, ids=[pattern_id], with_payload=True)
     if not points:
-        return [TextContent(type="text", text=json.dumps({"success": False, "error": "Pattern not found"}))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"success": False, "error": "Pattern not found"})
+            )
+        ]
 
     payload = points[0].payload
     delta = 0.02 if success else -0.01
@@ -368,12 +410,23 @@ async def handle_apply_pattern(args: dict) -> list[TextContent]:
         points=[pattern_id],
     )
 
-    logger.info(f"Applied pattern {pattern_id}: {payload.get('confidence', 0.5):.2f} -> {new_confidence:.2f}")
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "pattern_id": pattern_id,
-        "old_confidence": payload.get("confidence", 0.5),
-        "new_confidence": new_confidence, "application_count": new_count,
-    }))]
+    logger.info(
+        f"Applied pattern {pattern_id}: {payload.get('confidence', 0.5):.2f} -> {new_confidence:.2f}"
+    )
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "pattern_id": pattern_id,
+                    "old_confidence": payload.get("confidence", 0.5),
+                    "new_confidence": new_confidence,
+                    "application_count": new_count,
+                }
+            ),
+        )
+    ]
 
 
 async def handle_get_pattern(args: dict) -> list[TextContent]:
@@ -381,9 +434,20 @@ async def handle_get_pattern(args: dict) -> list[TextContent]:
     pattern_id = args["pattern_id"]
     points = client.retrieve(collection_name=COLLECTION_NAME, ids=[pattern_id], with_payload=True)
     if not points:
-        return [TextContent(type="text", text=json.dumps({"success": False, "error": "Pattern not found"}))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"success": False, "error": "Pattern not found"})
+            )
+        ]
     pattern = _pattern_from_payload(str(points[0].id), points[0].payload)
-    return [TextContent(type="text", text=json.dumps({"success": True, "pattern": pattern.to_dict()}, ensure_ascii=False, indent=2))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {"success": True, "pattern": pattern.to_dict()}, ensure_ascii=False, indent=2
+            ),
+        )
+    ]
 
 
 async def handle_delete_pattern(args: dict) -> list[TextContent]:
@@ -405,7 +469,10 @@ async def handle_decay_confidence(args: dict) -> list[TextContent]:
     offset = None
     while True:
         result = client.scroll(
-            collection_name=COLLECTION_NAME, limit=100, offset=offset, with_payload=True,
+            collection_name=COLLECTION_NAME,
+            limit=100,
+            offset=offset,
+            with_payload=True,
         )
         points, next_offset = result
 
@@ -415,7 +482,9 @@ async def handle_decay_confidence(args: dict) -> list[TextContent]:
             if not updated_at:
                 continue
 
-            days_since = (datetime.now() - datetime.fromisoformat(updated_at)).total_seconds() / 86400
+            days_since = (
+                datetime.now() - datetime.fromisoformat(updated_at)
+            ).total_seconds() / 86400
             if days_since < 1:
                 continue
 
@@ -439,9 +508,19 @@ async def handle_decay_confidence(args: dict) -> list[TextContent]:
         offset = next_offset
 
     logger.info(f"Decay complete: {decayed} decayed, {deleted} deleted")
-    return [TextContent(type="text", text=json.dumps({
-        "success": True, "decayed": decayed, "deleted": deleted, "timestamp": datetime.now().isoformat(),
-    }))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "success": True,
+                    "decayed": decayed,
+                    "deleted": deleted,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
+        )
+    ]
 
 
 async def handle_health_check(args: dict) -> list[TextContent]:

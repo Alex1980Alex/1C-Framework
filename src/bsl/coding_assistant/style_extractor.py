@@ -18,7 +18,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.bsl.parser.models import BSLModule, BSLSymbol, SymbolType
+from src.bsl.parser.models import BSLModule, BSLSymbol
 
 
 @dataclass
@@ -151,8 +151,7 @@ class BSLStyleExtractor:
 
         # Metrics
         lengths = [
-            (s.line_end - s.line_start + 1) for s in all_symbols
-            if s.line_start and s.line_end
+            (s.line_end - s.line_start + 1) for s in all_symbols if s.line_start and s.line_end
         ]
         profile.avg_proc_length = sum(lengths) / len(lengths) if lengths else 0
         profile.export_ratio = total_exports / n_symbols

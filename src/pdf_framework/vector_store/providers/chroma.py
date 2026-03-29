@@ -202,10 +202,7 @@ class ChromaVectorStore(BaseVectorStore):
                 chunk_index = 0
 
             # Extract metadata (Phase 1.3: all non-standard fields)
-            chunk_metadata = {
-                k: v for k, v in meta.items()
-                if k not in standard_fields
-            }
+            chunk_metadata = {k: v for k, v in meta.items() if k not in standard_fields}
 
             chunk = DocumentChunk(
                 id=doc_id,
@@ -241,15 +238,17 @@ class ChromaVectorStore(BaseVectorStore):
             standard_fields = {"document_id", "page_number", "section", "chunk_index"}
             chunk_metadata = {k: v for k, v in meta.items() if k not in standard_fields}
 
-            chunks.append(DocumentChunk(
-                id=doc_id,
-                content=content,
-                document_id=meta.get("document_id", ""),
-                page_number=self._safe_int(meta.get("page_number")),
-                section=meta.get("section", ""),
-                chunk_index=self._safe_int(meta.get("chunk_index")) or 0,
-                metadata=chunk_metadata,
-            ))
+            chunks.append(
+                DocumentChunk(
+                    id=doc_id,
+                    content=content,
+                    document_id=meta.get("document_id", ""),
+                    page_number=self._safe_int(meta.get("page_number")),
+                    section=meta.get("section", ""),
+                    chunk_index=self._safe_int(meta.get("chunk_index")) or 0,
+                    metadata=chunk_metadata,
+                )
+            )
         return chunks
 
     async def delete_by_filter(self, filter: dict[str, Any]) -> int:

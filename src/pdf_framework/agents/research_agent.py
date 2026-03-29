@@ -19,8 +19,8 @@ from src.pdf_framework.agents.cross_document_synthesizer import (
     SynthesizedAnswer,
 )
 from src.pdf_framework.agents.multi_step_retriever import (
-    MultiStepRetriever,
     MultiStepResult,
+    MultiStepRetriever,
 )
 from src.pdf_framework.agents.query_decomposer import (
     QueryDecomposer,
@@ -137,41 +137,37 @@ class DeepResearchAgent:
         if enable_decomposition:
             step_t0 = time.time()
             decomposition = self._decomposer.decompose(query, context)
-            steps.append(ResearchStep(
-                step_type="decompose",
-                description=f"Decomposed into {len(decomposition.sub_questions)} sub-questions",
-                duration_ms=(time.time() - step_t0) * 1000,
-                details={
-                    "sub_questions": [sq.question for sq in decomposition.sub_questions],
-                    "execution_order": decomposition.execution_order,
-                },
-            ))
+            steps.append(
+                ResearchStep(
+                    step_type="decompose",
+                    description=f"Decomposed into {len(decomposition.sub_questions)} sub-questions",
+                    duration_ms=(time.time() - step_t0) * 1000,
+                    details={
+                        "sub_questions": [sq.question for sq in decomposition.sub_questions],
+                        "execution_order": decomposition.execution_order,
+                    },
+                )
+            )
             report.decomposition = decomposition
 
         # Step 2: Multi-step retrieval
-        queries = (
-            [sq.question for sq in decomposition.sub_questions]
-            if decomposition
-            else [query]
-        )
-        execution_order = (
-            decomposition.execution_order
-            if decomposition
-            else None
-        )
+        queries = [sq.question for sq in decomposition.sub_questions] if decomposition else [query]
+        execution_order = decomposition.execution_order if decomposition else None
 
         step_t0 = time.time()
         retrieval_result = await self._retriever.retrieve(queries, execution_order)
-        steps.append(ResearchStep(
-            step_type="retrieve",
-            description=f"Retrieved {retrieval_result.total_sources} sources in {len(retrieval_result.steps)} steps",
-            duration_ms=(time.time() - step_t0) * 1000,
-            details={
-                "steps_count": len(retrieval_result.steps),
-                "sources_count": retrieval_result.total_sources,
-                "context_length": len(retrieval_result.accumulated_context),
-            },
-        ))
+        steps.append(
+            ResearchStep(
+                step_type="retrieve",
+                description=f"Retrieved {retrieval_result.total_sources} sources in {len(retrieval_result.steps)} steps",
+                duration_ms=(time.time() - step_t0) * 1000,
+                details={
+                    "steps_count": len(retrieval_result.steps),
+                    "sources_count": retrieval_result.total_sources,
+                    "context_length": len(retrieval_result.accumulated_context),
+                },
+            )
+        )
         report.retrieval_result = retrieval_result
 
         # Step 3: Cross-document synthesis (if enabled)
@@ -182,16 +178,18 @@ class DeepResearchAgent:
                 results=retrieval_result.all_results,
                 context=retrieval_result.accumulated_context,
             )
-            steps.append(ResearchStep(
-                step_type="synthesize",
-                description=f"Synthesized answer with {len(synthesis.citations)} citations",
-                duration_ms=(time.time() - step_t0) * 1000,
-                details={
-                    "citations_count": len(synthesis.citations),
-                    "confidence": synthesis.confidence,
-                    "conflicts": synthesis.conflicting_info,
-                },
-            ))
+            steps.append(
+                ResearchStep(
+                    step_type="synthesize",
+                    description=f"Synthesized answer with {len(synthesis.citations)} citations",
+                    duration_ms=(time.time() - step_t0) * 1000,
+                    details={
+                        "citations_count": len(synthesis.citations),
+                        "confidence": synthesis.confidence,
+                        "conflicts": synthesis.conflicting_info,
+                    },
+                )
+            )
             report.synthesis = synthesis
             report.final_answer = synthesis.answer
 

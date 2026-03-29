@@ -71,14 +71,10 @@ class ImageExtractor:
                 if max_images and len(images) >= max_images:
                     break
 
-                page_images = self._extract_from_page(
-                    page, page_num, document_id, str(pdf_path)
-                )
+                page_images = self._extract_from_page(page, page_num, document_id, str(pdf_path))
                 images.extend(page_images)
 
-            logger.info(
-                f"[IMAGE_EXTRACTOR] Extracted {len(images)} images from {pdf_path.name}"
-            )
+            logger.info(f"[IMAGE_EXTRACTOR] Extracted {len(images)} images from {pdf_path.name}")
             return images
 
         finally:
@@ -104,16 +100,21 @@ class ImageExtractor:
                 base_image = page.parent.extract_image(xref)
 
                 # Skip small images
-                if base_image["width"] < self._min_image_size or base_image["height"] < self._min_image_size:
+                if (
+                    base_image["width"] < self._min_image_size
+                    or base_image["height"] < self._min_image_size
+                ):
                     continue
 
                 # Get image bbox on page
                 img_bbox = self._get_image_bbox(page, xref)
 
                 # Extract context around image
-                context = self._extract_context_around_image(
-                    page_text, img_bbox
-                ) if self._extract_context else ""
+                context = (
+                    self._extract_context_around_image(page_text, img_bbox)
+                    if self._extract_context
+                    else ""
+                )
 
                 # Save image file
                 image_filename = f"{document_id}_{page_num}_{img_index}.{base_image['ext']}"
@@ -152,8 +153,7 @@ class ImageExtractor:
 
             except Exception as e:
                 logger.warning(
-                    f"[IMAGE_EXTRACTOR] Failed to extract image {img_index} "
-                    f"on page {page_num}: {e}"
+                    f"[IMAGE_EXTRACTOR] Failed to extract image {img_index} on page {page_num}: {e}"
                 )
                 continue
 
@@ -223,9 +223,9 @@ class ImageExtractor:
 
         parts = []
         if before:
-            parts.append(before[:self._context_chars])
+            parts.append(before[: self._context_chars])
         if after and after != before:
-            parts.append(after[:self._context_chars])
+            parts.append(after[: self._context_chars])
 
         return " ... ".join(parts)
 
@@ -249,7 +249,6 @@ class ImageExtractor:
         Returns:
             ImageChunk object
         """
-        from PIL import Image
 
         # Get image dimensions
         img = Image.open(io.BytesIO(image_bytes))

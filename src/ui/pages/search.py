@@ -32,9 +32,9 @@ def _render_results_html(results: list[dict], query: str) -> str:
         return (
             '<div class="empty-state">'
             '<div class="icon">&#128269;</div>'
-            '<p><strong>Ничего не найдено</strong></p>'
-            '<p>Попробуйте изменить запрос, выбрать другую стратегию или расширить фильтры</p>'
-            '</div>'
+            "<p><strong>Ничего не найдено</strong></p>"
+            "<p>Попробуйте изменить запрос, выбрать другую стратегию или расширить фильтры</p>"
+            "</div>"
         )
 
     cards = []
@@ -54,7 +54,7 @@ def _render_results_html(results: list[dict], query: str) -> str:
             display_content = display_content[:400] + "..."
 
         # Score bar
-        score_val = float(score) if isinstance(score, (int, float)) else 0
+        score_val = float(score) if isinstance(score, int | float) else 0
         score_width = max(5, min(100, int(score_val * 100)))
         score_str = f"{score_val:.3f}"
 
@@ -75,7 +75,7 @@ def _render_results_html(results: list[dict], query: str) -> str:
                 <div style="flex:1;margin:0 12px;background:#e2e8f0;border-radius:3px;height:6px;">
                     <div class="score-bar" style="width:{score_width}%;"></div>
                 </div>
-                <span style="font-size:0.8em;color:#64748b;">#{i+1}</span>
+                <span style="font-size:0.8em;color:#64748b;">#{i + 1}</span>
             </div>"""
 
         if breadcrumb:
@@ -118,7 +118,10 @@ def create_search_page(api_url: str):
                 info="hybrid — оптимальный баланс скорости и качества",
             )
             top_k = gr.Slider(
-                1, 20, value=5, step=1,
+                1,
+                20,
+                value=5,
+                step=1,
                 label="Количество результатов",
                 info="Сколько фрагментов показать (Top-K)",
             )
@@ -156,9 +159,9 @@ def create_search_page(api_url: str):
             value=(
                 '<div class="empty-state">'
                 '<div class="icon">&#128269;</div>'
-                '<p><strong>Введите запрос</strong></p>'
-                '<p>Результаты поиска появятся здесь</p>'
-                '</div>'
+                "<p><strong>Введите запрос</strong></p>"
+                "<p>Результаты поиска появятся здесь</p>"
+                "</div>"
             )
         )
 
@@ -170,9 +173,9 @@ def create_search_page(api_url: str):
                     "*Введите поисковый запрос.*",
                     '<div class="empty-state">'
                     '<div class="icon">&#128269;</div>'
-                    '<p><strong>Введите запрос</strong></p>'
-                    '<p>Результаты поиска появятся здесь</p>'
-                    '</div>',
+                    "<p><strong>Введите запрос</strong></p>"
+                    "<p>Результаты поиска появятся здесь</p>"
+                    "</div>",
                 )
 
             try:
@@ -208,7 +211,7 @@ def create_search_page(api_url: str):
                 if isinstance(meta, dict) and meta.get("section_first"):
                     section_info = f", раздел: {meta['section_first']}"
 
-                elapsed_str = f"{elapsed:.0f}" if isinstance(elapsed, (int, float)) else str(elapsed)
+                elapsed_str = f"{elapsed:.0f}" if isinstance(elapsed, int | float) else str(elapsed)
                 info = f"**Найдено {total} результатов** за {elapsed_str} мс, стратегия: {stype}{section_info}"
 
                 html = _render_results_html(results, q)

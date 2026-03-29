@@ -6,7 +6,7 @@ Migrated from D:\\1C-Enterprise_Framework\\vector-memory-mcp\\src\\models\\patte
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class PatternType(Enum):
@@ -47,10 +47,10 @@ class EvidenceSource:
     source_type: str  # "file", "commit", "conversation", "tool-use"
     reference: str
     weight: float = 1.0
-    timestamp: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "source_type": self.source_type,
             "reference": self.reference,
@@ -60,7 +60,7 @@ class EvidenceSource:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EvidenceSource":
+    def from_dict(cls, data: dict[str, Any]) -> "EvidenceSource":
         return cls(
             source_type=data["source_type"],
             reference=data["reference"],
@@ -80,15 +80,15 @@ class LearnedPattern:
     description: str
     content: str
     confidence: float
-    evidence_sources: List[EvidenceSource] = field(default_factory=list)
+    evidence_sources: list[EvidenceSource] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     decay_rate: float = 0.05
     application_count: int = 0
-    last_applied: Optional[datetime] = None
+    last_applied: datetime | None = None
     version: int = 1
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def confidence_level(self) -> ConfidenceLevel:
@@ -98,7 +98,7 @@ class LearnedPattern:
     def evidence_count(self) -> int:
         return len(self.evidence_sources)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pattern_id": self.pattern_id,
             "pattern_type": self.pattern_type.value,
@@ -120,7 +120,7 @@ class LearnedPattern:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LearnedPattern":
+    def from_dict(cls, data: dict[str, Any]) -> "LearnedPattern":
         return cls(
             pattern_id=data["pattern_id"],
             pattern_type=PatternType(data["pattern_type"]),
@@ -128,12 +128,20 @@ class LearnedPattern:
             description=data.get("description", ""),
             content=data["content"],
             confidence=data["confidence"],
-            evidence_sources=[EvidenceSource.from_dict(e) for e in data.get("evidence_sources", [])],
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else datetime.now(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else datetime.now(),
+            evidence_sources=[
+                EvidenceSource.from_dict(e) for e in data.get("evidence_sources", [])
+            ],
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else datetime.now(),
+            updated_at=datetime.fromisoformat(data["updated_at"])
+            if data.get("updated_at")
+            else datetime.now(),
             decay_rate=data.get("decay_rate", 0.05),
             application_count=data.get("application_count", 0),
-            last_applied=datetime.fromisoformat(data["last_applied"]) if data.get("last_applied") else None,
+            last_applied=datetime.fromisoformat(data["last_applied"])
+            if data.get("last_applied")
+            else None,
             version=data.get("version", 1),
             tags=data.get("tags", []),
             metadata=data.get("metadata", {}),
@@ -149,7 +157,7 @@ class PatternSearchResult:
     adjusted_confidence: float
     combined_score: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pattern": self.pattern.to_dict(),
             "similarity_score": self.similarity_score,
@@ -163,12 +171,12 @@ class LearningStats:
     """Statistics about the learning system."""
 
     total_patterns: int
-    patterns_by_type: Dict[str, int]
-    patterns_by_confidence: Dict[str, int]
+    patterns_by_type: dict[str, int]
+    patterns_by_confidence: dict[str, int]
     recently_active: int = 0
-    last_decay_run: Optional[datetime] = None
+    last_decay_run: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "total_patterns": self.total_patterns,
             "patterns_by_type": self.patterns_by_type,

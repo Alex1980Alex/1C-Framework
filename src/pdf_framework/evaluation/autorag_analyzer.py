@@ -34,7 +34,9 @@ class AutoRAGAnalyzer:
         lines = ["| Config | MRR | Recall | Precision | Latency |", "|---|---|---|---|---|"]
         for r in sorted(self._results, key=lambda x: x.mrr, reverse=True):
             name = str(r.config)[:40]
-            lines.append(f"| {name} | {r.mrr:.3f} | {r.recall:.3f} | {r.precision:.3f} | {r.latency_ms:.0f}ms |")
+            lines.append(
+                f"| {name} | {r.mrr:.3f} | {r.recall:.3f} | {r.precision:.3f} | {r.latency_ms:.0f}ms |"
+            )
         return "\n".join(lines)
 
     def export_env(self, config: dict[str, Any] | None, path: str | Path | None = None) -> None:

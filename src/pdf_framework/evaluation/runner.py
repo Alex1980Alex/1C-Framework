@@ -122,13 +122,16 @@ class EvalRunner:
                 answer = await self._qa_chain.answer(case.query, response)
 
                 ctx_rel = await self._rag_evaluator.evaluate_context_relevance(
-                    case.query, contexts,
+                    case.query,
+                    contexts,
                 )
                 grounded = await self._rag_evaluator.evaluate_groundedness(
-                    answer, contexts,
+                    answer,
+                    contexts,
                 )
                 ans_rel = await self._rag_evaluator.evaluate_answer_relevance(
-                    case.query, answer,
+                    case.query,
+                    answer,
                 )
 
                 ctx_relevances.append(ctx_rel)

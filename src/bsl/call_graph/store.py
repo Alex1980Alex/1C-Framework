@@ -93,8 +93,10 @@ class CallGraphStore:
         parts = file_path.replace("\\", "/").split("/")
         # Pattern: .../Catalogs/ObjectName/Ext/Module.bsl
         type_folders = {
-            "catalogs": "Catalog", "справочники": "Catalog",
-            "documents": "Document", "документы": "Document",
+            "catalogs": "Catalog",
+            "справочники": "Catalog",
+            "documents": "Document",
+            "документы": "Document",
             "informationregisters": "InformationRegister",
             "регистрысведений": "InformationRegister",
             "accumulationregisters": "AccumulationRegister",
@@ -103,7 +105,8 @@ class CallGraphStore:
             "обработки": "DataProcessor",
             "commonmodules": "CommonModule",
             "общиемодули": "CommonModule",
-            "reports": "Report", "отчёты": "Report",
+            "reports": "Report",
+            "отчёты": "Report",
         }
         for i, part in enumerate(parts):
             key = part.lower()
@@ -131,36 +134,46 @@ class CallGraphStore:
             call_rows = []
             for sym in module.symbols:
                 sid = self._symbol_id(fp, sym.name)
-                params_json = json.dumps(
-                    [{"name": p.name, "by_val": p.by_val, "default": p.default_value}
-                     for p in sym.params],
-                    ensure_ascii=False,
-                ) if sym.params else None
+                params_json = (
+                    json.dumps(
+                        [
+                            {"name": p.name, "by_val": p.by_val, "default": p.default_value}
+                            for p in sym.params
+                        ],
+                        ensure_ascii=False,
+                    )
+                    if sym.params
+                    else None
+                )
 
-                symbol_rows.append((
-                    sid,
-                    sym.name,
-                    sym.symbol_type.value,
-                    fp,
-                    sym.line_start,
-                    sym.line_end,
-                    1 if sym.is_export else 0,
-                    params_json,
-                    sym.comment or None,
-                ))
+                symbol_rows.append(
+                    (
+                        sid,
+                        sym.name,
+                        sym.symbol_type.value,
+                        fp,
+                        sym.line_start,
+                        sym.line_end,
+                        1 if sym.is_export else 0,
+                        params_json,
+                        sym.comment or None,
+                    )
+                )
 
                 # Calls from this symbol
                 for call in sym.calls:
                     call_type = "direct"
                     if call.callee_module:
                         call_type = "cross-module"
-                    call_rows.append((
-                        sid,
-                        call.callee_method,
-                        call.callee_module,
-                        call.line,
-                        call_type,
-                    ))
+                    call_rows.append(
+                        (
+                            sid,
+                            call.callee_method,
+                            call.callee_module,
+                            call.line,
+                            call_type,
+                        )
+                    )
 
             c.executemany(
                 "INSERT OR REPLACE INTO symbols "
@@ -222,9 +235,7 @@ class CallGraphStore:
         )
         return [dict(row) for row in c.fetchall()]
 
-    def impact_analysis(
-        self, name: str, module: str | None = None, depth: int = 3
-    ) -> list[dict]:
+    def impact_analysis(self, name: str, module: str | None = None, depth: int = 3) -> list[dict]:
         """Transitive callers via BFS up to given depth."""
         visited: set[str] = set()
         result: list[dict] = []

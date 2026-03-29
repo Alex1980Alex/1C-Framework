@@ -7,11 +7,11 @@ Author: Claude Code
 Version: 1.0.0 - Phase 23: Production Hardening
 """
 
-import time
 import logging
-from typing import Callable, Optional
+import time
+from collections.abc import Callable
 
-from fastapi import HTTPException, Request, Response
+from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         app,
         rate: int = 100,
         window: int = 60,
-        key_func: Optional[Callable[[Request], str]] = None,
+        key_func: Callable[[Request], str] | None = None,
     ):
         """Initialize middleware.
 
@@ -211,6 +211,7 @@ class RedisRateLimiter:
         """
         try:
             import redis
+
             self._redis = redis.from_url(redis_url, decode_responses=True)
         except ImportError:
             logger.warning("[RATE_LIMIT] Redis not available, using in-memory")
@@ -275,7 +276,7 @@ class RedisRateLimiter:
 
 
 def get_rate_limiter(
-    redis_url: Optional[str] = None,
+    redis_url: str | None = None,
     rate: int = 100,
     window: int = 60,
 ):
