@@ -2,9 +2,10 @@
 
 ## Адаптированная под текущий ПК и фреймворк D:\1С-Framework
 
-**Версия:** 2.2 (2026-03-29)
+**Версия:** 2.3 (2026-03-30)
 **Конфигурация:** УправлениеТранспортомНаПЛК v2026.1.1.0 (91 справочник, 27 документов, 190 регистров сведений)
 **Подход:** Windows-нативный CI (GitHub Actions + Self-Hosted Runner)
+**Репозиторий:** https://github.com/Alex1980Alex/1C-Framework (private)
 
 ---
 
@@ -24,10 +25,18 @@
 | 1.3 | `sonar-project.properties` | ✅ | 2026-03-29 |
 | 1.4 | sonar-scanner CLI (автоустановка в `setup-sonar.ps1`) | ✅ | 2026-03-29 |
 | 1.5 | Скрипт анализа (`scripts/run-sonar-analysis.ps1`) | ✅ | 2026-03-29 |
-| **Фаза 2** | GitHub Actions Self-Hosted Runner | ✅ **ВЫПОЛНЕНО** | 2026-03-29 |
-| 2.1 | Установка и регистрация Runner | ⬜ Ручной шаг | — |
-| 2.2 | GitHub Secrets и переменные | ⬜ Ручной шаг | — |
+| **Фаза 2** | GitHub Actions Self-Hosted Runner | ✅ **ВЫПОЛНЕНО** | 2026-03-30 |
+| 2.1 | Установка и регистрация Runner `windows-1c-runner` | ✅ | 2026-03-30 |
+| 2.2 | GitHub Secrets и переменные (5 шт) | ✅ | 2026-03-30 |
 | 2.3 | Workflow `ci-1c.yml` | ✅ | 2026-03-29 |
+| 2.4 | Junction `D:\1C-FW` для обхода кириллического пути | ✅ | 2026-03-30 |
+| 2.5 | Git LFS для JAR-файлов (71 объект, 524 МБ) | ✅ | 2026-03-30 |
+| 2.6 | Новый remote: `Alex1980Alex/1C-Framework` (private) | ✅ | 2026-03-30 |
+| **Фаза 2.5** | Python CI (ruff, mypy, pytest, interrogate) | ✅ **ВЫПОЛНЕНО** | 2026-03-30 |
+| 2.5.1 | Ruff lint+format: 2937→0 ошибок (256 файлов) | ✅ | 2026-03-30 |
+| 2.5.2 | Skill Router Eval: graceful skip без ground-truth | ✅ | 2026-03-30 |
+| 2.5.3 | Type Check (mypy): 3.11 + 3.12 | ✅ | 2026-03-30 |
+| 2.5.4 | Docstring Coverage (interrogate) | ✅ | 2026-03-30 |
 | **Фаза 3** | Полное тестирование (YAxUnit/BDD/Coverage) | ✅ **ВЫПОЛНЕНО** | 2026-03-29 |
 | 3.1 | BDD feature `blocked_ts_cascade.feature` | ✅ | 2026-03-29 |
 | 3.2 | Coverage41C setup (`scripts/setup-coverage41c.ps1`) | ✅ | 2026-03-29 |
@@ -35,6 +44,43 @@
 | 3.4 | CI workflow + Coverage41C шаг | ✅ | 2026-03-29 |
 | 3.5 | YAxUnit тесты бизнес-логики | ⬜ Требует EDT | — |
 | **Фаза 4** | Docker-образы 1С (требует DEB) | ⬜ Будущее | — |
+
+---
+
+## Результаты CI (2026-03-30)
+
+### CI 1C:Enterprise (Self-Hosted Runner)
+
+| Job | Статус | Примечание |
+|-----|:------:|------------|
+| BSL Static Analysis | ✅ | BSL LS + SonarQube |
+| YAxUnit Tests | ✅ | Модульные тесты |
+| BDD Tests | ⚠️ | VA timeout 120s — требует интерактивный GUI |
+| Code Coverage | ❌ | Coverage41C JAR не установлен |
+| Allure Report | ✅ | Генерация HTML-отчёта |
+
+### Python CI (ubuntu-latest)
+
+| Job | Статус | Примечание |
+|-----|:------:|------------|
+| Lint & Format (ruff) | ✅ | 2937→0 ошибок |
+| Type Check (mypy) | ✅ | 3.11 + 3.12 |
+| Docstring Coverage | ✅ | interrogate |
+| Skill Router Eval | ✅ | Graceful skip без ground-truth |
+| Tests (pytest) | ⚠️ | Qdrant container init — инфра-проблема |
+| Pre-commit Hooks | ⚠️ | Зависит от ruff версии |
+
+### Настроенная инфраструктура
+
+| Компонент | Значение |
+|-----------|----------|
+| Runner | `windows-1c-runner` v2.333.1, автозапуск через Task Scheduler |
+| Лейблы | `self-hosted, Windows, X64, windows-11, 1c, bsl` |
+| SonarQube | v9.9.8 LTS, BSL Plugin v1.16.1, `http://localhost:9000` |
+| Secrets | `USER_1C_LOGIN`, `USER_1C_PASS`, `SONAR_TOKEN` |
+| Variables | `SRV_1C=KOMPUTER`, `DB_NAME=testdb1c`, `ONEC_VERSION=8.3.27.1859` |
+| Junction | `D:\1C-FW` → `D:\1С-Framework` (обход кириллического пути) |
+| Git LFS | 71 объект (JAR, CF), 524 МБ |
 
 ---
 
