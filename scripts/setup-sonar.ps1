@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 
 $ProjectRoot = "D:\1С-Framework"
 $SonarScannerVersion = "6.2.1.4610"
-$BslPluginVersion = "0.15.2"
+$BslPluginVersion = "1.16.1"  # Last version compatible with SonarQube LTS (Java 17)
 
 function Wait-SonarQubeReady {
     param (
@@ -83,7 +83,7 @@ else {
 # Step 4: Download and install BSL plugin
 Write-Host "`n=== Step 4: Installing BSL plugin ===" -ForegroundColor Cyan
 
-$BslPluginUrl = "https://github.com/1c-syntax/sonar-bsl-plugin-community/releases/download/v$BslPluginVersion/sonar-bsl-plugin-community-$BslPluginVersion.jar"
+$BslPluginUrl = "https://github.com/1c-syntax/sonar-bsl-plugin-community/releases/download/v$BslPluginVersion/sonar-communitybsl-plugin-$BslPluginVersion.jar"
 $BslPluginPath = "$ToolsDir\sonar-bsl-plugin-community-$BslPluginVersion.jar"
 
 Write-Host "Downloading BSL plugin v$BslPluginVersion..."
