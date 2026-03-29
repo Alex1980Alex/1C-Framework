@@ -423,7 +423,10 @@
       "Bash(\"D:/1С-Framework/tools/coverage41c/Coverage41C-2.7.3/bin/Coverage41C.bat\" --help)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" -c \"import sys; print\\('encoding:', sys.stdout.encoding\\); print\\('version:', sys.version\\)\" 2>&1)",
       "Bash(gh auth:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(GITHUB_TOKEN=\"\" gh auth status)",
+      "Bash(GITHUB_TOKEN=\"\" gh repo list Alex1980Alex --limit 10 2>&1)",
+      "Bash(GITHUB_TOKEN=\"\" gh api repos/Alex1980Alex/1C-Enterprise_Framework/actions/runners/registration-token -X POST -q .token 2>&1)"
     ]
   },
   "enableAllProjectMcpServers": true,
