@@ -72,15 +72,32 @@ def _quality_heuristic(text: str, response_time: float) -> dict:
 
 
 def _log_outcome(entry: dict) -> None:
-    """Append delegation outcome to JSONL."""
+    """Log delegation outcome to SQLite (fallback: JSONL)."""
     try:
-        project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
-        log_path = os.path.join(project_dir, "data", "delegation-outcomes.jsonl")
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        from shared.db_writer import log_delegation
+        log_delegation(
+            provider=entry.get("provider", "unknown"),
+            model=entry.get("model", "unknown"),
+            content_type=entry.get("content_type", ""),
+            response_time=entry.get("response_time", 0),
+            text_length=entry.get("text_length", 0),
+            quality_score=entry.get("quality_score", 0),
+            attempt=entry.get("attempt", 1),
+            prompt_tokens=entry.get("prompt_tokens", 0),
+            completion_tokens=entry.get("completion_tokens", 0),
+            session_id=entry.get("session_id", ""),
+            quality_details=entry.get("quality_details"),
+        )
     except Exception:
-        pass
+        # Fallback to JSONL
+        try:
+            project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+            log_path = os.path.join(project_dir, "data", "delegation-outcomes.jsonl")
+            os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
 
 class PostToolUseDelegationTracker(BaseHook):
