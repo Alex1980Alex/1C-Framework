@@ -431,7 +431,9 @@
       "Bash(GITHUB_TOKEN=\"\" gh secret set USER_1C_PASS --repo Alex1980Alex/1C-Enterprise_Framework --body \"Alex80Alex\" 2>&1)",
       "Bash(GITHUB_TOKEN=\"\" gh secret list --repo Alex1980Alex/1C-Enterprise_Framework 2>&1)",
       "Bash(GITHUB_TOKEN=\"\" gh secret set SONAR_TOKEN --repo Alex1980Alex/1C-Enterprise_Framework --body \"squ_7e49682aa8e170f0eb8ea35546c9914b008ece91\")",
-      "Bash(GITHUB_TOKEN=\"\" gh secret list --repo Alex1980Alex/1C-Enterprise_Framework)"
+      "Bash(GITHUB_TOKEN=\"\" gh secret list --repo Alex1980Alex/1C-Enterprise_Framework)",
+      "Bash(GITHUB_TOKEN=\"\" git push --force origin master)",
+      "WebSearch"
     ]
   },
   "enableAllProjectMcpServers": true,
