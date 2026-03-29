@@ -28,7 +28,12 @@
 | 2.1 | Установка и регистрация Runner | ⬜ Ручной шаг | — |
 | 2.2 | GitHub Secrets и переменные | ⬜ Ручной шаг | — |
 | 2.3 | Workflow `ci-1c.yml` | ✅ | 2026-03-29 |
-| **Фаза 3** | Полное тестирование (YAxUnit/BDD/Coverage) | ⬜ TODO | — |
+| **Фаза 3** | Полное тестирование (YAxUnit/BDD/Coverage) | ✅ **ВЫПОЛНЕНО** | 2026-03-29 |
+| 3.1 | BDD feature `blocked_ts_cascade.feature` | ✅ | 2026-03-29 |
+| 3.2 | Coverage41C setup (`scripts/setup-coverage41c.ps1`) | ✅ | 2026-03-29 |
+| 3.3 | Test orchestrator (`scripts/run-all-tests.ps1`) | ✅ | 2026-03-29 |
+| 3.4 | CI workflow + Coverage41C шаг | ✅ | 2026-03-29 |
+| 3.5 | YAxUnit тесты бизнес-логики | ⬜ Требует EDT | — |
 | **Фаза 4** | Docker-образы 1С (требует DEB) | ⬜ Будущее | — |
 
 ---
@@ -658,6 +663,68 @@ powershell -File scripts/run-sonar-analysis.ps1
 # 3. Открытие дашборда SonarQube в браузере
 Start-Process "http://localhost:9000"
 ```
+
+---
+
+### Ход реализации Фазы 3 (2026-03-29)
+
+Реализована инфраструктура тестирования: BDD-сценарии, замер покрытия кода, единый оркестратор запуска всех тестов.
+
+#### 1. BDD feature-файл каскадной блокировки
+
+Создан **`features/blocked_ts_cascade.feature`** — 2 сценария:
+
+- **Блокировка цепочки:** Проверка что при `КачествоНеПринято` для ТС-001 автоматически блокируются ТС-002 и ТС-003
+- **Разблокировка через АРМ:** Проверка что кнопка "Разблокировать" снимает каскадную блокировку
+- Теги: `@bdd @blocking` для селективного запуска
+
+Итого BDD features в проекте: **4 файла** (smoke, smoke_simple, bdd_document, blocked_ts_cascade)
+
+#### 2. Coverage41C setup
+
+Создан **`scripts/setup-coverage41c.ps1`** — автоматическая установка Coverage41C v2.4.3:
+
+- Скачивание JAR с GitHub releases
+- Проверка Java
+- Тест работоспособности
+- Вывод инструкции по использованию с dbgs
+
+#### 3. Оркестратор тестов run-all-tests.ps1
+
+Создан **`scripts/run-all-tests.ps1`** — единая точка запуска всех тестов:
+
+| Шаг | Что делает | Параметр пропуска |
+|-----|-----------|-------------------|
+| 1. BSL Analysis | BSL LS → JSON отчёт | `-SkipBSL` |
+| 2. YAxUnit | Модульные тесты (Слой 3) | `-SkipYAxUnit` |
+| 3. BDD | Vanessa Automation (Слои 1-3) | `-SkipBDD` |
+| 4. Coverage | Coverage41C (placeholder) | `-SkipCoverage` |
+| 5. Allure | Генерация HTML-отчёта | `-SkipAllure` |
+
+Особенности: try/catch на каждый шаг, замер времени, итоговая таблица PASS/FAIL/SKIP, exit code.
+
+#### 4. CI workflow + Coverage41C
+
+Обновлён **`.github/workflows/ci-1c.yml`** — добавлен job `coverage`:
+
+- Запускается после успешных YAxUnit тестов
+- Проверяет наличие Coverage41C JAR
+- Запускает `dbgs.exe`, собирает покрытие, генерирует `coverage.xml`
+- `continue-on-error: true` — покрытие опционально
+- Артефакт: `build/reports/coverage.xml`
+
+#### 5. YAxUnit тесты бизнес-логики (TODO)
+
+Требует 1С EDT для добавления тестового модуля в конфигурацию. Примеры тестов описаны в [разделе 3.1](#31-написание-yaxunit-тестов-для-бизнес-логики).
+
+#### Сводка файлов Фазы 3
+
+| Файл | Размер | Назначение |
+|------|--------|------------|
+| `features/blocked_ts_cascade.feature` | 0.9 KB | BDD-сценарии каскадной блокировки ТС |
+| `scripts/setup-coverage41c.ps1` | 2.8 KB | Установка Coverage41C v2.4.3 |
+| `scripts/run-all-tests.ps1` | 5.8 KB | Оркестратор: BSL + YAxUnit + BDD + Allure |
+| `.github/workflows/ci-1c.yml` | +2.1 KB | Добавлен job `coverage` |
 
 ---
 

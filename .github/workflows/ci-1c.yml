@@ -132,12 +132,81 @@ jobs:
             build/reports/screenshots/
 
   # ═══════════════════════════════════════════════
+  # Coverage41C (code coverage, after tests)
+  # ═══════════════════════════════════════════════
+  coverage:
+    name: Code Coverage
+    runs-on: [self-hosted, windows-11, 1c]
+    needs: [yaxunit-tests]
+    if: always() && needs.yaxunit-tests.result == 'success'
+    continue-on-error: true  # Coverage is optional until dbgs is stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Coverage41C
+        id: check-coverage
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          $jar = "${{ env.PROJECT_PATH }}\tools\coverage41c\coverage41c.jar"
+          if (Test-Path $jar) {
+            Write-Host "Coverage41C found: $jar"
+            echo "available=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "Coverage41C not installed, skipping"
+            echo "available=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Run Coverage
+        if: steps.check-coverage.outputs.available == 'true'
+        shell: pwsh
+        env:
+          USER_1C: ${{ secrets.USER_1C_LOGIN }}
+          PASS_1C: ${{ secrets.USER_1C_PASS }}
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          $jar = "${{ env.PROJECT_PATH }}\tools\coverage41c\coverage41c.jar"
+          $dbgs = "${{ env.ONEC_PATH }}\dbgs.exe"
+
+          # Start debug server
+          $dbgsProc = Start-Process -FilePath $dbgs -ArgumentList "--addr=localhost","--port=1550" -PassThru
+          Start-Sleep -Seconds 5
+
+          # Start coverage
+          java -jar $jar start --debugger "localhost:1550" --output "${{ env.PROJECT_PATH }}\build\reports\coverage.xml" --format "genericCoverage" --projectDir "${{ env.BSL_SRC }}"
+
+          # Run YAxUnit with coverage
+          & "${{ env.OSCRIPT_PATH }}" `
+            "C:\Tools\OneScript\lib\vanessa-runner\vanessa-runner.os" `
+            run `
+            --ibconnection "${{ env.IB_CONNECTION }}" `
+            --db-user "$env:USER_1C" `
+            --db-pwd "$env:PASS_1C" `
+            --command "RunUnitTests" `
+            --execute "${{ env.PROJECT_PATH }}\tools\vanessa\YAxUnit-25.12.cfe" `
+            --settings "${{ env.PROJECT_PATH }}\tools\yaxunit.json"
+
+          # Stop coverage and generate report
+          java -jar $jar stop
+
+          # Cleanup
+          Stop-Process -Id $dbgsProc.Id -Force -ErrorAction SilentlyContinue
+
+      - name: Upload Coverage Report
+        if: always() && steps.check-coverage.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/coverage.xml
+
+  # ═══════════════════════════════════════════════
   # Allure Report (aggregates all test results)
   # ═══════════════════════════════════════════════
   allure-report:
     name: Allure Report
     runs-on: [self-hosted, windows-11, 1c]
-    needs: [bsl-analysis, yaxunit-tests, bdd-tests]
+    needs: [bsl-analysis, yaxunit-tests, bdd-tests, coverage]
     if: always()
     steps:
       - name: Checkout
