@@ -159,6 +159,9 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   posttooluse-skill-metrics.py # PostToolUse:Skill: confirmed activation logging + hookSpecificOutput feedback
   posttooluse-web-cache.py  # PostToolUse:WebSearch|WebFetch: cache results 24h TTL
   posttooluse-docs-tracker.py # PostToolUse:Write|Edit: instant docs update reminder via hookSpecificOutput
+  posttooluse-quality-feedback.py # PostToolUse:Write|Edit: ruff check on *.py, errors via hookSpecificOutput
+  posttooluse-delegation-tracker.py # PostToolUse:mcp__llm-rotation__llm_complete: delegation outcome tracking
+  knowledge-cache-reminder.py # PostToolUse:WebSearch|WebFetch: research cache reminder (migrated from Stop)
   auto-git-save.py          # Stop: auto-commit on threshold
   auto-git-save-prompt.py   # UserPromptSubmit: commit reminders
   git-commit-enforcer.py    # Stop: uncommitted changes check
