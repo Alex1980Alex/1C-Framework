@@ -442,7 +442,9 @@
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-web-cache.py)",
       "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\" .claude/hooks/posttooluse-docs-tracker.py)",
       "Bash(D:/1С-Framework/.venv/Scripts/ruff.exe check:*)",
-      "Bash(D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-quality-feedback.py)"
+      "Bash(D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-quality-feedback.py)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); langs=[l[''''key''''] for l in d.get\\(''''languages'''',[]\\)]; print\\(''''BSL plugin: INSTALLED'''' if ''''bsl'''' in langs else f''''BSL plugin: NOT FOUND \\(langs: {langs}\\)''''\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); cs=d.get\\(''''components'''',[]\\); print\\(f''''Project: {cs[0][name]} \\(key: {cs[0][key]}\\)'''' if cs else ''''Project: NOT CREATED yet''''\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,
