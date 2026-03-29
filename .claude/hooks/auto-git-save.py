@@ -58,6 +58,7 @@ logging.basicConfig(
 log = logging.getLogger("auto-git-save")
 
 from base import BaseHook, HookInput, HookOutput
+from shared.circuit_breaker import with_circuit_breaker
 from shared.task_master import (
     add_task,
     complete_task_by_hook,
