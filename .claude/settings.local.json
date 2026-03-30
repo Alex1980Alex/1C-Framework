@@ -458,7 +458,8 @@
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list localhost:1545 2>&1)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list localhost:1540 2>&1)",
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase user --help)",
-      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase user create --help)"
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase user create --help)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" help infobase)"
     ]
   },
   "enableAllProjectMcpServers": true,
