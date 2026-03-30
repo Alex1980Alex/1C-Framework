@@ -449,7 +449,8 @@
       "Bash(gh variable:*)",
       "Bash(xxd \"D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2335 Устранить ошибки выявленные в ходе тестирования 2603-1/GKSTCPLK-2335 Устранить ошибки выявле.md\")",
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase --cluster=KOMPUTER:1541 summary list)",
-      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list 2>&1)"
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list 2>&1)",
+      "Bash(start:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
