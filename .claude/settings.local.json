@@ -446,7 +446,8 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); langs=[l[''''key''''] for l in d.get\\(''''languages'''',[]\\)]; print\\(''''BSL plugin: INSTALLED'''' if ''''bsl'''' in langs else f''''BSL plugin: NOT FOUND \\(langs: {langs}\\)''''\\)\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); cs=d.get\\(''''components'''',[]\\); print\\(f''''Project: {cs[0][name]} \\(key: {cs[0][key]}\\)'''' if cs else ''''Project: NOT CREATED yet''''\\)\")",
       "Bash(unset GITHUB_TOKEN)",
-      "Bash(gh variable:*)"
+      "Bash(gh variable:*)",
+      "Bash(xxd \"D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/GKSTCPLK-2335 Устранить ошибки выявленные в ходе тестирования 2603-1/GKSTCPLK-2335 Устранить ошибки выявле.md\")"
     ]
   },
   "enableAllProjectMcpServers": true,
