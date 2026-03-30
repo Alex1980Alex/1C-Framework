@@ -1,5 +1,12 @@
 {
   "doc_version": "8.3.27",
   "last_reindex": null,
-  "topics": {}
+  "topics": {
+    "pdf-preview-form": {
+      "title": "Предпросмотр PDF на форме 1С",
+      "keywords": ["pdf", "предпросмотр", "ДокументPDF", "Показать", "присоединённые файлы", "WebKit", "PDF.js"],
+      "last_verified": "2026-03-30",
+      "sources": ["infostart.ru"]
+    }
+  }
 }
