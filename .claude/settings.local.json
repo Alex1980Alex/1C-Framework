@@ -452,7 +452,11 @@
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list 2>&1)",
       "Bash(start:*)",
       "Bash(/dev/null -exec cat {})",
-      "Bash(2)"
+      "Bash(2)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list --server=KOMPUTER:1545 2>&1)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list KOMPUTER:1545 2>&1)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list localhost:1545 2>&1)",
+      "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list localhost:1540 2>&1)"
     ]
   },
   "enableAllProjectMcpServers": true,
