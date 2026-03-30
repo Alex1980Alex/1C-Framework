@@ -4,9 +4,15 @@
   "topics": {
     "pdf-preview-form": {
       "title": "Предпросмотр PDF на форме 1С",
-      "keywords": ["pdf", "предпросмотр", "ДокументPDF", "Показать", "присоединённые файлы", "WebKit", "PDF.js"],
+      "keywords": ["pdf", "предпросмотр", "ДокументPDF", "ПолеPDFДокумента", "присоединённые файлы", "WebKit", "PDF.js", "Ghostscript"],
       "last_verified": "2026-03-30",
-      "sources": ["infostart.ru"]
+      "sources": ["infostart.ru", "koderline.ru", "wonderland.v8.1c.ru", "bsl-platform-context"]
+    },
+    "integration-1c-do": {
+      "title": "Интеграция с 1С:Документооборот — настройка подключения",
+      "keywords": ["документооборот", "интеграция ДО", "АдресВебСервиса", "бесшовная интеграция", "DMService", "присоединённые файлы ДО"],
+      "last_verified": "2026-03-30",
+      "sources": ["b-rs.ru", "efsol.ru", "its.1c.ru"]
     }
   }
 }
