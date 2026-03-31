@@ -13,6 +13,12 @@
       "keywords": ["документооборот", "интеграция ДО", "АдресВебСервиса", "бесшовная интеграция", "DMService", "присоединённые файлы ДО"],
       "last_verified": "2026-03-30",
       "sources": ["b-rs.ru", "efsol.ru", "its.1c.ru"]
+    },
+    "mcp-servers-1c-ecosystem": {
+      "title": "MCP-серверы для 1С:Предприятие — обзор экосистемы",
+      "keywords": ["MCP", "MCP сервер 1С", "1c_mcp", "mcp-bsl-platform-context", "mcp-onec-test-runner", "1c-mcp-toolkit", "mcp-1c-v1", "mini-ai-1c", "AI ассистент 1С", "RAG 1С", "Model Context Protocol"],
+      "last_verified": "2026-03-31",
+      "sources": ["github.com/vladimir-kharin/1c_mcp", "github.com/alkoleft/mcp-bsl-platform-context", "github.com/alkoleft/mcp-onec-test-runner", "github.com/ROCTUP/1c-mcp-toolkit", "github.com/FSerg/mcp-1c-v1", "github.com/hawkxtreme/mini-ai-1c"]
     }
   }
 }
