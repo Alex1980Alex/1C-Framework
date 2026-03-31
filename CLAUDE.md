@@ -99,9 +99,10 @@ Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotat
 - **Hard** (Opus thorough review mandatory): code writing, refactoring, analysis
 - **Never delegate**: architecture decisions, security, debugging, tasks < 30 lines output
 
-### Orchestrator Mode (MUST use for 3+ output files)
+### Orchestrator Mode (MUST use for 3+ output files OR single file >100 lines)
 1. **DECOMPOSE** — Opus разбивает задачу на подзадачи, классифицирует каждую (Soft/Medium/Hard/Never)
-2. **PREPARE** — Opus строит промпт для каждой делегируемой подзадачи (задача+контекст+формат+ограничения)
+2. **PREPARE** — Opus строит промпт для каждой делегируемой подзадачи (задача+контекст+формат+ограничения). Each llm_complete call: max_tokens=2048, narrow context per section.
+**ANTI-PATTERN: One llm_complete for entire document → bad quality → Opus rewrites 80% → no savings.**
 3. **DELEGATE** — `mcp__llm-rotation__llm_complete()` для каждой подзадачи (параллельно если независимы)
 4. **REVIEW** — Opus ревьюит каждый результат (Medium: accuracy; Hard: +logic+security)
 5. **ASSEMBLE** — Opus собирает финальный результат, Write() файлы
