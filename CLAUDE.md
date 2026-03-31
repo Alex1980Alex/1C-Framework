@@ -77,6 +77,22 @@ Full algorithm: `Skill('task-protocol')`.
 
 Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotation.
 
+### Agent() Model Selection (MANDATORY — NEVER USE OPUS FOR AGENTS)
+
+**RULE: NEVER launch Agent() without explicit `model` parameter. Default inherits Opus = waste.**
+
+| Agent task type | Model | Alternative (preferred) |
+|---|---|---|
+| Web research (GitHub, docs) | **DO NOT USE Agent** | Direct `WebSearch` + `WebFetch` in parallel |
+| File search / code lookup | **DO NOT USE Agent** | Direct `Glob` + `Grep` + `Read` |
+| Deep code analysis (10+ files) | `model: "sonnet"` | — |
+| Code generation in worktree | `model: "sonnet"` | `llm_complete()` + Opus review |
+| Simple lookup | `model: "haiku"` | Direct tools |
+| Architecture / security | **DO NOT USE Agent** | Opus in main conversation |
+
+**Decision flow:** Task → Can solve with direct tools? → YES → use them. NO → Agent with `model: "sonnet"` (never opus).
+**Violation: Agent() without model parameter = Opus tokens wasted on delegatable work.**
+
 ### Delegation Levels
 - **Soft** (no review): bulk ops (10+ items), translations, formatting
 - **Medium** (Opus review mandatory): docs, decomposition, tests, boilerplate, checklists, templates
