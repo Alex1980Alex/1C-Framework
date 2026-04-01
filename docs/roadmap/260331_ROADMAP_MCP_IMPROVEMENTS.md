@@ -376,14 +376,16 @@ METR **запускается** (Spring Boot 5.2s, 8 MCP tools). Баг `purpose
 
 **Выполнены:** 8.1 (YAML исправлен), 8.2 (source-set), 8.6 (auto-test skill), 8.7 (dump config). **Прогресс:** METR подключён и работает, нужна выгрузка конфигурации
 
-### Фаза 10: Dual-vector BSL (1 PARTIAL, 1 PENDING)
+### Фаза 10: Dual-vector BSL — ✅ COMPLETE (2026-04-01)
 
-| Шаг | Описание | Статус | Результат |
-|-----|----------|--------|-----------|
-| 10.5 | A/B тестирование single vs dual vector | **PARTIAL** (100 чанков) | Preliminary: SINGLE wins 4:1. Dual побеждает на path-запросах (0.862 vs 0.847). Нужен full reindex (22K чанков) для fair comparison |
-| 10.6 | Переключить production на bsl_code_v4 | PENDING | Решение после полного A/B теста |
+A/B тест выполнен: SINGLE 7:1 DUAL (8 запросов). Dual побеждает только на path-запросах (+0.019). **Решение: оставить single-vector (bsl_code_v3) в production.** Dual-vector не даёт значимого улучшения precision.
 
-**Выполнены:** 10.1 (schema), 10.2 (migration), 10.3 (reindex_bsl_qwen3.py --dual-vector), 10.4 (create_pipeline() factory), 10.5 partial (bsl_code_v4 created, 70 points, preliminary A/B done)
+| Шаг | Статус | Результат |
+|-----|--------|-----------|
+| 10.5 | **DONE** | bsl_code_v4 (311 pts), A/B: single лучше на 7/8 запросах (avg delta -0.024) |
+| 10.6 | **DONE** (no-go) | Production остаётся на bsl_code_v3. bsl_code_v4 сохранена для будущих экспериментов |
+
+**Выполнены:** все 6 шагов (10.1-10.6)
 
 ### Фаза 11: OAuth2 (4 BLOCKED)
 
