@@ -166,6 +166,12 @@
         "PYTHONIOENCODING": "utf-8"
       },
       "timeout": 60000
+    },
+    "openspec-mcp": {
+      "command": "npx",
+      "args": ["-y", "openspec-mcp@0.4.2", "--project-dir", "D:/1С-Framework"],
+      "cwd": "D:\\1С-Framework",
+      "timeout": 60000
     }
   }
 }
