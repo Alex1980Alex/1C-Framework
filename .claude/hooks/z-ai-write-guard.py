@@ -2,18 +2,18 @@
 """
 Hook: z-ai-write-guard
 Event: PreToolUse
-Matcher: Write
-Purpose: Block Write of >15 lines of code if Z.AI (llm_complete) was not
+Matcher: Write|Edit
+Purpose: Block Write/Edit of >15 lines of code if Z.AI (llm_complete) was not
          used in this session. Enforces Token Economy protocol (strict mode).
 Timeout: 3s
 
 Pattern: Enforcer (blocks until condition met).
 
 Flow:
-  1. Write fires → extract file_path and content from tool_input
+  1. Write/Edit fires → extract file_path and content/new_string from tool_input
   2. Skip non-code files (.md, .json, .yml, .env, .toml, .txt, .csv, .html)
   3. Skip exempt paths (.claude/, docs/, data/, tests/)
-  4. Count lines in content
+  4. Count lines in content (Write) or new_string (Edit)
   5. If lines > 15 AND no llm_delegation in session → block with Z.AI instructions
   6. Otherwise → allow
 """
