@@ -378,14 +378,14 @@
 
 **Выполнены:** 8.1 (YAML с реальным connection), 8.2 (source-set), 8.6 (auto-test skill), 8.7 (dump config)
 
-### Фаза 10: Dual-vector BSL (2 BLOCKED)
+### Фаза 10: Dual-vector BSL (1 PARTIAL, 1 PENDING)
 
-| Шаг | Описание | Блокер | Как разблокировать |
-|-----|----------|--------|-------------------|
-| 10.5 | A/B тестирование single vs dual vector | Требует Qdrant с проиндексированными данными | `python scripts/reindex_bsl_qwen3.py --project <path> --collection bsl_code_v4 --dual-vector --recreate` |
-| 10.6 | Переключить production на bsl_code_v4 | Зависит от 10.5 | При улучшении precision — обновить `qdrant_collection` в конфиге bsl-semantic-search |
+| Шаг | Описание | Статус | Результат |
+|-----|----------|--------|-----------|
+| 10.5 | A/B тестирование single vs dual vector | **PARTIAL** (100 чанков) | Preliminary: SINGLE wins 4:1. Dual побеждает на path-запросах (0.862 vs 0.847). Нужен full reindex (22K чанков) для fair comparison |
+| 10.6 | Переключить production на bsl_code_v4 | PENDING | Решение после полного A/B теста |
 
-**Выполнены:** 10.1 (schema), 10.2 (migration), 10.3 (reindex_bsl_qwen3.py --dual-vector), 10.4 (create_pipeline() factory)
+**Выполнены:** 10.1 (schema), 10.2 (migration), 10.3 (reindex_bsl_qwen3.py --dual-vector), 10.4 (create_pipeline() factory), 10.5 partial (bsl_code_v4 created, 70 points, preliminary A/B done)
 
 ### Фаза 11: OAuth2 (4 BLOCKED)
 
