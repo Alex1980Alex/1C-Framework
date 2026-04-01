@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="c905a568-6837-43d7-9c2e-32f9b70cb174">
+		<Name>ВыгрузкаНачата</Name>
+		<Code>000000001</Code>
+		<Description>Выгрузка начата</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="03626d82-e08a-4026-b02f-c7f09ae10195">
+		<Name>ВыгрузкаОкончена</Name>
+		<Code>000000002</Code>
+		<Description>Выгрузка окончена</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="24d31cb2-9cf4-496c-b552-c93b21d072bf">
+		<Name>ДогрузкаНачата</Name>
+		<Code>000000005</Code>
+		<Description>Догрузка начата</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="558ec97b-2358-4bcc-94b6-1f0ae29e881a">
+		<Name>ДогрузкаОкончена</Name>
+		<Code>000000006</Code>
+		<Description>Догрузка окончена</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="05fba7bb-0c8c-4afd-a41f-82a910fe622f">
+		<Name>ПогрузкаНачата</Name>
+		<Code>000000003</Code>
+		<Description>Погрузка начата</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="c4e52ab5-326e-4eff-ae43-54dc40e9d4e4">
+		<Name>ПогрузкаОкончена</Name>
+		<Code>000000004</Code>
+		<Description>Погрузка окончена</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

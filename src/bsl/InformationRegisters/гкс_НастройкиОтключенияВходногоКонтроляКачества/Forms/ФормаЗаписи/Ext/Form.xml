@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+		<Event name="BeforeWriteAtServer">ПередЗаписьюНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаОсновные" id="31">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Основные</v8:content>
+				</v8:item>
+			</Title>
+			<Group>Vertical</Group>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ThroughAlign>Use</ThroughAlign>
+			<ExtendedTooltip name="ГруппаОсновныеРасширеннаяПодсказка" id="32"/>
+			<ChildItems>
+				<CheckBoxField name="Активен" id="28">
+					<DataPath>Запись.Активен</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="АктивенКонтекстноеМеню" id="29"/>
+					<ExtendedTooltip name="АктивенРасширеннаяПодсказка" id="30"/>
+				</CheckBoxField>
+				<InputField name="ВидПеревозки" id="1">
+					<DataPath>Запись.ВидПеревозки</DataPath>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Вид перевозки для отключения контроля (обязательно)</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ContextMenu name="ВидПеревозкиКонтекстноеМеню" id="2"/>
+					<ExtendedTooltip name="ВидПеревозкиРасширеннаяПодсказка" id="3"/>
+					<Events>
+						<Event name="OnChange">ВидПеревозкиПриИзменении</Event>
+					</Events>
+				</InputField>
+				<InputField name="ТочкаМаршрута" id="4">
+					<DataPath>Запись.ТочкаМаршрута</DataPath>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Точка маршрута для отключения контроля (обязательно)</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="5"/>
+					<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="6"/>
+				</InputField>
+				<InputField name="Номенклатура" id="7">
+					<DataPath>Запись.Номенклатура</DataPath>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Номенклатура для отключения контроля (обязательно)</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ContextMenu name="НоменклатураКонтекстноеМеню" id="8"/>
+					<ExtendedTooltip name="НоменклатураРасширеннаяПодсказка" id="9"/>
+				</InputField>
+				<UsualGroup name="ГруппаПериод" id="33">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Период</v8:content>
+						</v8:item>
+					</Title>
+					<Group>AlwaysHorizontal</Group>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ThroughAlign>Use</ThroughAlign>
+					<ExtendedTooltip name="ГруппаПериодРасширеннаяПодсказка" id="34"/>
+					<ChildItems>
+						<InputField name="ДатаНачала" id="22">
+							<DataPath>Запись.ДатаНачала</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Период действия с</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Период действия для отключения контроля (обязательно)</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ContextMenu name="ДатаНачалаКонтекстноеМеню" id="23"/>
+							<ExtendedTooltip name="ДатаНачалаРасширеннаяПодсказка" id="24"/>
+						</InputField>
+						<InputField name="ДатаОкончания" id="25">
+							<DataPath>Запись.ДатаОкончания</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>по</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ДатаОкончанияКонтекстноеМеню" id="26"/>
+							<ExtendedTooltip name="ДатаОкончанияРасширеннаяПодсказка" id="27"/>
+						</InputField>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаОтборы" id="35">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отборы</v8:content>
+				</v8:item>
+			</Title>
+			<Group>Vertical</Group>
+			<Representation>None</Representation>
+			<ThroughAlign>Use</ThroughAlign>
+			<ExtendedTooltip name="ГруппаОтборыРасширеннаяПодсказка" id="36"/>
+			<ChildItems>
+				<InputField name="Поставщик" id="16">
+					<DataPath>Запись.Поставщик</DataPath>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Оставьте пустым для применения ко всем поставщикам</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ContextMenu name="ПоставщикКонтекстноеМеню" id="17"/>
+					<ExtendedTooltip name="ПоставщикРасширеннаяПодсказка" id="18"/>
+				</InputField>
+				<InputField name="ПунктПогрузки" id="13">
+					<DataPath>Запись.ПунктПогрузки</DataPath>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Оставьте пустым для применения ко всем пунктам погрузки</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ContextMenu name="ПунктПогрузкиКонтекстноеМеню" id="14"/>
+					<ExtendedTooltip name="ПунктПогрузкиРасширеннаяПодсказка" id="15"/>
+				</InputField>
+				<UsualGroup name="ГруппаЖДСтанция" id="37">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>ЖДСтанция</v8:content>
+						</v8:item>
+					</Title>
+					<Group>AlwaysHorizontal</Group>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ThroughAlign>Use</ThroughAlign>
+					<ExtendedTooltip name="ГруппаЖДСтанцияРасширеннаяПодсказка" id="38"/>
+					<ChildItems>
+						<InputField name="ЖДСтанция" id="19">
+							<DataPath>Запись.ЖДСтанция</DataPath>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Оставьте пустым для применения ко всем жд станциям</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ContextMenu name="ЖДСтанцияКонтекстноеМеню" id="20"/>
+							<ExtendedTooltip name="ЖДСтанцияРасширеннаяПодсказка" id="21"/>
+						</InputField>
+						<InputField name="ЖДСтанцияНаименованиеПолное" id="42">
+							<DataPath>Запись.ЖДСтанция.НаименованиеПолное</DataPath>
+							<ReadOnly>true</ReadOnly>
+							<TitleLocation>None</TitleLocation>
+							<ContextMenu name="ЖДСтанцияНаименованиеПолноеКонтекстноеМеню" id="43"/>
+							<ExtendedTooltip name="ЖДСтанцияНаименованиеПолноеРасширеннаяПодсказка" id="44"/>
+						</InputField>
+					</ChildItems>
+				</UsualGroup>
+				<InputField name="ТранспортноеСредство" id="10">
+					<DataPath>Запись.ТранспортноеСредство</DataPath>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Оставьте пустым для применения ко всем транспортным средствам</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ContextMenu name="ТранспортноеСредствоКонтекстноеМеню" id="11"/>
+					<ExtendedTooltip name="ТранспортноеСредствоРасширеннаяПодсказка" id="12"/>
+				</InputField>
+				<InputField name="Комментарий" id="45">
+					<DataPath>Запись.Комментарий</DataPath>
+					<ContextMenu name="КомментарийКонтекстноеМеню" id="46"/>
+					<ExtendedTooltip name="КомментарийРасширеннаяПодсказка" id="47"/>
+				</InputField>
+				<InputField name="Пользователь" id="48">
+					<DataPath>Запись.Пользователь</DataPath>
+					<ContextMenu name="ПользовательКонтекстноеМеню" id="49"/>
+					<ExtendedTooltip name="ПользовательРасширеннаяПодсказка" id="50"/>
+				</InputField>
+				<InputField name="ДатаВремяИзменения" id="51">
+					<DataPath>Запись.ДатаВремяИзменения</DataPath>
+					<ContextMenu name="ДатаВремяИзмененияКонтекстноеМеню" id="52"/>
+					<ExtendedTooltip name="ДатаВремяИзмененияРасширеннаяПодсказка" id="53"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_НастройкиОтключенияВходногоКонтроляКачества</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

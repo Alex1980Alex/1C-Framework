@@ -1,0 +1,443 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<CommandBarLocation>None</CommandBarLocation>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<ChildItems>
+		<LabelField name="СерверыОчередейRMQКод" id="14">
+			<ContextMenu name="СерверыОчередейRMQКодКонтекстноеМеню" id="15"/>
+			<ExtendedTooltip name="СерверыОчередейRMQКодРасширеннаяПодсказка" id="16"/>
+		</LabelField>
+		<LabelField name="СерверыОчередейRMQЛогин" id="26">
+			<ContextMenu name="СерверыОчередейRMQЛогинКонтекстноеМеню" id="27"/>
+			<ExtendedTooltip name="СерверыОчередейRMQЛогинРасширеннаяПодсказка" id="28"/>
+		</LabelField>
+		<LabelField name="СерверыОчередейRMQПорт" id="23">
+			<ContextMenu name="СерверыОчередейRMQПортКонтекстноеМеню" id="24"/>
+			<ExtendedTooltip name="СерверыОчередейRMQПортРасширеннаяПодсказка" id="25"/>
+		</LabelField>
+		<LabelField name="СерверыОчередейRMQВиртуальныйХост" id="20">
+			<ContextMenu name="СерверыОчередейRMQВиртуальныйХостКонтекстноеМеню" id="21"/>
+			<ExtendedTooltip name="СерверыОчередейRMQВиртуальныйХостРасширеннаяПодсказка" id="22"/>
+		</LabelField>
+		<UsualGroup name="ОбщиеНастройки" id="50">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Общие настройки</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Общие настройки</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>Vertical</Group>
+			<Behavior>Collapsible</Behavior>
+			<ControlRepresentation>Picture</ControlRepresentation>
+			<Representation>NormalSeparation</Representation>
+			<ExtendedTooltip name="ОбщиеНастройкиРасширеннаяПодсказка" id="51"/>
+			<ChildItems>
+				<Button name="СерверыОчередейRMQ" id="52">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.СерверыОчередейRMQ</CommandName>
+					<ExtendedTooltip name="СерверыОчередейRMQРасширеннаяПодсказка" id="53"/>
+				</Button>
+				<Button name="гкс_МоделиДанныхXDTO" id="54">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_МоделиДанныхXDTO</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Модели данных XDTO</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="гкс_МоделиДанныхXDTOРасширеннаяПодсказка" id="55"/>
+				</Button>
+				<Button name="гкс_ТочкиОбмена" id="56">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ТочкиОбмена</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Точки обмена</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="гкс_ТочкиОбменаРасширеннаяПодсказка" id="57"/>
+				</Button>
+				<Button name="гкс_ФорматыОбмена" id="64">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ФорматыОбмена</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Форматы обмена</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="гкс_ФорматыОбменаРасширеннаяПодсказка" id="65"/>
+				</Button>
+				<Button name="гкс_ТаблицаСвязей" id="68">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ТаблицаСвязей</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Таблица связей</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="гкс_ТаблицаСвязейРасширеннаяПодсказка" id="69"/>
+				</Button>
+				<Button name="гкс_ПроизвольныеНастройкиИнтеграции" id="70">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ПроизвольныеНастройкиИнтеграции</CommandName>
+					<ExtendedTooltip name="гкс_ПроизвольныеНастройкиИнтеграцииРасширеннаяПодсказка" id="71"/>
+				</Button>
+				<Button name="гкс_НастройкиХраненияСлужебныхДанных" id="66">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_НастройкиХраненияСлужебныхДанных</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Прочее</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="гкс_НастройкиХраненияСлужебныхДанныхРасширеннаяПодсказка" id="67"/>
+				</Button>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ВходящиеСообщения" id="40">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Входящие сообщения</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Входящие сообщения</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>Vertical</Group>
+			<Behavior>Collapsible</Behavior>
+			<ControlRepresentation>Picture</ControlRepresentation>
+			<Representation>NormalSeparation</Representation>
+			<ExtendedTooltip name="ВходящиеСообщенияРасширеннаяПодсказка" id="41"/>
+			<ChildItems>
+				<Button name="гкс_ВходящиеСообщения" id="72">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ВходящиеСообщения</CommandName>
+					<ExtendedTooltip name="гкс_ВходящиеСообщенияРасширеннаяПодсказка" id="73"/>
+				</Button>
+				<Button name="гкс_ЗаданияОбработкиОчередиВходящихСообщенийRMQ" id="76">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ЗаданияОбработкиОчередиВходящихСообщенийRMQ</CommandName>
+					<ExtendedTooltip name="гкс_ЗаданияОбработкиОчередиВходящихСообщенийRMQРасширеннаяПодсказка" id="77"/>
+				</Button>
+				<Button name="ПодпискиНаСобытия" id="33">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.ПодпискиНаСобытия</CommandName>
+					<ExtendedTooltip name="ПодпискиНаСобытияРасширеннаяПодсказка" id="34"/>
+				</Button>
+				<Button name="ОбработчикиСобытий" id="31">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.ОбработчикиСобытий</CommandName>
+					<ExtendedTooltip name="ОбработчикиСобытийРасширеннаяПодсказка" id="32"/>
+				</Button>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ИсходящиеСообщенияГруппа" id="29">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Исходящие сообщения</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Исходящие сообщения группа</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>Vertical</Group>
+			<Behavior>Collapsible</Behavior>
+			<ControlRepresentation>Picture</ControlRepresentation>
+			<Representation>NormalSeparation</Representation>
+			<ExtendedTooltip name="ИсходящиеСообщенияГруппаРасширеннаяПодсказка" id="30"/>
+			<ChildItems>
+				<Button name="ИсходящиеСообщения" id="35">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.ИсходящиеСообщения</CommandName>
+					<ExtendedTooltip name="ИсходящиеСообщенияРасширеннаяПодсказка" id="36"/>
+				</Button>
+				<Button name="ЗаданияНаОтправку" id="42">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.ЗаданияНаОтправку</CommandName>
+					<ExtendedTooltip name="ЗаданияНаОтправкуРасширеннаяПодсказка" id="43"/>
+				</Button>
+				<Button name="гкс_ПолучателиДанных" id="60">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.гкс_ПолучателиДанных</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Получатели данных</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="гкс_ПолучателиДанныхРасширеннаяПодсказка" id="61"/>
+				</Button>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DataProcessorObject.НастройкаИнтеграционногоАдаптера</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+		<Attribute name="СерверыОчередейRMQ" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Серверы очередей RMQ</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>false</ManualQuery>
+				<DynamicDataRead>true</DynamicDataRead>
+				<MainTable>Catalog.СерверыОчередейRMQ</MainTable>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>dfcece9d-5077-440b-b6b3-45a5cb4538eb</dcsset:userSettingID>
+					</dcsset:filter>
+					<dcsset:order>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>88619765-ccb3-46c6-ac52-38e9c992ebd4</dcsset:userSettingID>
+					</dcsset:order>
+					<dcsset:conditionalAppearance>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>b75fecce-942b-4aed-abc9-e6a02e460fb3</dcsset:userSettingID>
+					</dcsset:conditionalAppearance>
+					<dcsset:itemsViewMode>Normal</dcsset:itemsViewMode>
+					<dcsset:itemsUserSettingID>911b6018-f537-43e8-a417-da56b22f9aec</dcsset:itemsUserSettingID>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ОбработчикиСобытий" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обработчики событий</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обработчики событий</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ОбработчикиСобытий</Action>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="ПодпискиНаСобытия" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подписки на события</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подписки на события</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПодпискиНаСобытия</Action>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="ИсходящиеСообщения" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Исходящие сообщения</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Исходящие сообщения</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ИсходящиеСообщения</Action>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="ЗаданияНаОтправку" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Задания на отправку</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Задания на отправку</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ЗаданияНаОтправку</Action>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="СерверыОчередейRMQ" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Серверы очередей RMQ</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Серверы очередей RMQ</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>СерверыОчередейRMQ</Action>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="гкс_МоделиДанныхXDTO" id="6">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Модели данных XDTO</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Схемы данных формата</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_МоделиДанныхXDTO</Action>
+		</Command>
+		<Command name="гкс_ТочкиОбмена" id="7">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Точки обмена</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Точки обмена</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_ТочкиОбмена</Action>
+		</Command>
+		<Command name="гкс_ФорматыОбмена" id="8">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Форматы обмена</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Форматы обмена</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_ФорматыОбмена</Action>
+		</Command>
+		<Command name="гкс_ПолучателиДанных" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Получатели данных</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Получатели данных</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_ПолучателиДанных</Action>
+		</Command>
+		<Command name="гкс_НастройкиХраненияСлужебныхДанных" id="11">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки хранения служебных данных</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки хранения служебных данных</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_НастройкиХраненияСлужебныхДанных</Action>
+		</Command>
+		<Command name="гкс_ТаблицаСвязей" id="10">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Гкс таблица связей</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Гкс таблица связей</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_ТаблицаСвязей</Action>
+		</Command>
+		<Command name="гкс_ПроизвольныеНастройкиИнтеграции" id="12">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Произвольные настройки интеграции</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Гкс произвольные настройки интеграции</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_ПроизвольныеНастройкиИнтеграции</Action>
+		</Command>
+		<Command name="гкс_ВходящиеСообщения" id="13">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Входящие сообщения</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Гкс входящие сообщения</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>гкс_ВходящиеСообщения</Action>
+		</Command>
+		<Command name="гкс_ЗаданияОбработкиОчередиВходящихСообщенийRMQ" id="14">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Задания обработки очереди входящих сообщений</v8:content>
+				</v8:item>
+			</Title>
+			<Action>гкс_ЗаданияОбработкиОчередиВходящихСообщенийRMQ</Action>
+		</Command>
+	</Commands>
+</Form>

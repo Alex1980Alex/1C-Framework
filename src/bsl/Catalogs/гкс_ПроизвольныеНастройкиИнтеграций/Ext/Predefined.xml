@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="1943d2b5-6939-4628-96aa-3aafb65dc696">
+		<Name>НеПереноситьДляТестирования</Name>
+		<Code/>
+		<Description>Не переносить (Элемент для тестирования)</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

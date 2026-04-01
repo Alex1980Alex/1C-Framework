@@ -1,0 +1,295 @@
+﻿<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="http://sodru.com/AsynxExchangeServices">
+	<valueType name="Amount" base="xs:decimal" variety="Atomic" totalDigits="15" fractionDigits="2"/>
+	<objectType name="ASObject">
+		<property name="name" type="xs:string" nillable="true"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="objectID" type="d3p1:ASObjectID"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="externalObject" type="d3p1:ASExternalObject" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="externalObjects" type="d3p1:ASExternalObject" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType name="ASObjectID">
+		<property name="id" type="xs:string"/>
+		<property name="presentation" type="xs:string" lowerBound="0"/>
+		<property name="type" type="xs:string"/>
+		<property name="navigationRef" type="xs:string" lowerBound="0"/>
+		<property name="AdditionalInfo" type="xs:anyType" lowerBound="0"/>
+	</objectType>
+	<objectType name="ASExternalObject">
+		<property name="name" type="xs:string" nillable="true"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="id" type="d3p1:ASExternalObjectID"/>
+	</objectType>
+	<objectType name="ASExternalObjectID">
+		<property name="id" type="xs:string"/>
+		<property name="type" type="xs:string"/>
+	</objectType>
+	<objectType name="ASMessage" abstract="true"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASRequest" base="d2p1:ASMessage" abstract="true"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASResponse" base="d2p1:ASMessage" abstract="true"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASError" base="d2p1:ASResponse">
+		<property name="Subject" type="xs:string"/>
+		<property name="Description" type="xs:string"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASBudget" base="d2p1:ASCatalog"/>
+	<objectType name="ASBudgetBalance">
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Budget" type="d3p1:ASBudget"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="ResponsibilityCenter" type="d3p1:ASDepartment"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="BudgetLine" type="d3p1:ASBudgetItem"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Project" type="d3p1:ASProject" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Item" type="d3p1:ASItem" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="ItemsGroup" type="d3p1:ASItemsGroup" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Balance" type="d3p1:Amount" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="ProcurementCenter" type="d3p1:ASDepartment" lowerBound="0" nillable="true"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASBudgetBalanceRequest" base="d2p1:ASRequest">
+		<property name="Balance" type="d2p1:ASBudgetBalance" lowerBound="0" upperBound="-1"/>
+		<property name="Scenario" type="d2p1:ASBudgetScenario"/>
+		<property name="Currency" type="d2p1:ASCurrency"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASBudgetBalanceResponse" base="d2p1:ASResponse">
+		<property name="Balance" type="d2p1:ASBudgetBalance" lowerBound="0" upperBound="-1"/>
+		<property name="Scenario" type="d2p1:ASBudgetScenario"/>
+		<property name="Currency" type="d2p1:ASCurrency"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASBudgetItem" base="d2p1:ASCatalog">
+		<property name="Parent" type="d2p1:ASBudgetItem" lowerBound="0"/>
+		<property name="IsFolder" type="xs:boolean" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASBudgetScenario" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCatalog" base="d2p1:ASObject" abstract="true">
+		<property name="Code" type="xs:string" lowerBound="0"/>
+		<property name="Description" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCurrency" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASDepartmentType" base="d2p1:ASCatalog">
+		<property name="IsFolder" type="xs:boolean" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASDepartment" base="d2p1:ASCatalog">
+		<property name="Parent" type="d2p1:ASDepartment" lowerBound="0"/>
+		<property name="DepartmentType" type="d2p1:ASDepartmentType" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASItem" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASItemsGroup" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASProject" base="d2p1:ASCatalog"/>
+	<objectType name="ASAddress">
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Type" type="d3p1:ASContactInformationType"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Kind" type="d3p1:ASContactInformationKind"/>
+		<property name="ContactTitle" type="xs:string" lowerBound="0"/>
+		<property name="Country" type="xs:string" lowerBound="0"/>
+		<property name="PostIndex" type="xs:string" lowerBound="0"/>
+		<property name="Region" type="xs:string" lowerBound="0"/>
+		<property name="City" type="xs:string" lowerBound="0"/>
+		<property name="Location" type="xs:string" lowerBound="0"/>
+		<property name="PrintAddress" type="xs:string" lowerBound="0"/>
+		<property name="Phone" type="xs:string" lowerBound="0"/>
+		<property name="Fax" type="xs:string" lowerBound="0"/>
+		<property name="Email" type="xs:string" lowerBound="0"/>
+		<property name="ContactWith" type="xs:string" lowerBound="0"/>
+		<property name="RailCode" type="xs:string" lowerBound="0"/>
+		<property name="CountryID" type="xs:string" lowerBound="0"/>
+		<property name="EtranAddrId" type="xs:string" lowerBound="0"/>
+		<property name="IRSAdressID" type="xs:int" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASBankAccount" base="d2p1:ASCatalog">
+		<property name="Currency" type="d2p1:ASCurrency" lowerBound="0"/>
+		<property name="ShortNameRecvisit" type="xs:string" lowerBound="0"/>
+		<property name="CalculationAccount" type="xs:string" lowerBound="0"/>
+		<property name="BankName" type="xs:string" lowerBound="0"/>
+		<property name="BankPlace" type="xs:string" lowerBound="0"/>
+		<property name="BankCorrAccount" type="xs:string" lowerBound="0"/>
+		<property name="BankBIK_SWIFT" type="xs:string" lowerBound="0"/>
+		<property name="BankSwift" type="xs:string" lowerBound="0"/>
+		<property name="CorrBankName" type="xs:string" lowerBound="0"/>
+		<property name="CorrBankCalculationAccount" type="xs:string" lowerBound="0"/>
+		<property name="CorrBankSwift" type="xs:string" lowerBound="0"/>
+		<property name="Owner" type="d2p1:ASObject" lowerBound="0"/>
+		<property name="TypeAccount" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType name="ASBaseDocumentListItem">
+		<property name="Item" type="xs:string" lowerBound="0"/>
+		<property name="Count" type="xs:float" lowerBound="0"/>
+		<property name="Sum" type="xs:float" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCompany" base="d2p1:ASCatalog">
+		<property name="CodeKPP" type="xs:string" lowerBound="0"/>
+		<property name="CodeInn" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKPO" type="xs:string" lowerBound="0"/>
+		<property name="LegalName" type="xs:string" lowerBound="0" nillable="true" form="Element"/>
+		<property name="MailingAdress" type="xs:string" lowerBound="0" nillable="true" form="Element"/>
+		<property name="LegalAdress" type="xs:string" lowerBound="0" nillable="true" form="Element"/>
+		<property name="CorporateCode" type="xs:string" lowerBound="0" nillable="true" form="Element"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContract" base="d2p1:ASCatalog">
+		<property name="Counterparty" type="d2p1:ASCounterparty" lowerBound="0"/>
+		<property name="Company" type="d2p1:ASCompany" lowerBound="0"/>
+		<property name="Currency" type="d2p1:ASCurrency" lowerBound="0"/>
+		<property name="regNumber" type="xs:string" lowerBound="0"/>
+		<property name="regDate" type="xs:dateTime" lowerBound="0"/>
+		<property name="termDate" type="xs:dateTime" lowerBound="0"/>
+		<property name="sum" type="xs:decimal" lowerBound="0"/>
+		<property name="responsible" type="d2p1:ASPerson" lowerBound="0"/>
+		<property name="summary" type="xs:string" lowerBound="0"/>
+		<property name="aggBuggetItemCode" type="xs:string" lowerBound="0"/>
+		<property name="aggBudgetItemDescription" type="xs:string" lowerBound="0"/>
+		<property name="ExternalCode" type="xs:string" lowerBound="0"/>
+		<property name="PaymentsList" type="d2p1:ASContractListIte" lowerBound="0" upperBound="-1"/>
+		<property name="LiabilitiesList" type="d2p1:ASContractListIte" lowerBound="0" upperBound="-1"/>
+		<property name="GeneralPlanObjectsList" type="d2p1:ASContractGeneralObjectsListItem" lowerBound="0" upperBound="-1"/>
+		<property name="IsFrame" type="xs:boolean" lowerBound="0"/>
+		<property name="ParentContract" type="d2p1:ASContract" lowerBound="0"/>
+		<property name="CargoContract" type="xs:int" lowerBound="0"/>
+		<property name="Rent" type="xs:int" lowerBound="0"/>
+		<property name="WagonBuy" type="xs:int" lowerBound="0"/>
+		<property name="CompBuy" type="xs:int" lowerBound="0"/>
+		<property name="Maintain" type="xs:int" lowerBound="0"/>
+		<property name="Common" type="xs:int" lowerBound="0"/>
+		<property name="ProvidingService" type="xs:int" lowerBound="0"/>
+		<property name="StopNotificationDays" type="xs:int" lowerBound="0"/>
+		<property name="StopInitiatorERPId" type="xs:int" lowerBound="0"/>
+		<property name="ContractKind" type="d2p1:ASContractKinds" lowerBound="0"/>
+		<property name="ExternalName" type="xs:string" lowerBound="0"/>
+		<property name="IsConventionalPayments" type="xs:boolean" lowerBound="0"/>
+		<property name="ResponsibilityCenter" type="d2p1:ASDepartment" lowerBound="0"/>
+		<property name="Agreed" type="xs:boolean" lowerBound="0"/>
+		<property name="Archive" type="xs:boolean" lowerBound="0"/>
+		<property name="PerformanceDate" type="xs:dateTime" lowerBound="0" nillable="true"/>
+		<property name="Termless" type="xs:boolean" lowerBound="0"/>
+		<property name="IsFolder" type="xs:boolean" lowerBound="0"/>
+		<property name="Parent" type="d2p1:ASContract" lowerBound="0"/>
+		<property name="ChangeStatusDate" type="xs:date" lowerBound="0"/>
+		<property name="CodeDirectum" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContractKinds" base="d2p1:ASEnumeration"/>
+	<objectType name="ASContractListIte">
+		<property name="LineNumber" type="xs:integer"/>
+		<property name="Line" type="xs:string" lowerBound="0" nillable="true"/>
+		<property name="Date" type="xs:dateTime" lowerBound="0" nillable="true"/>
+		<property name="Sum" type="xs:float" lowerBound="0" nillable="true"/>
+	</objectType>
+	<objectType name="ASContractGeneralObjectsListItem">
+		<property name="LineNumber" type="xs:integer"/>
+		<property name="GeneralObjectCode" type="xs:string" nillable="true"/>
+		<property name="GeneralObjectDescription" type="xs:string" nillable="true"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContactInformationKind" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContactInformationType" base="d2p1:ASEnumeration"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCounterparty" base="d2p1:ASCatalog">
+		<property name="Supplier" type="xs:boolean" lowerBound="0"/>
+		<property name="FullName" type="xs:string" lowerBound="0"/>
+		<property name="CodeInn" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKPO" type="xs:string" lowerBound="0"/>
+		<property name="ChiefFirm" type="d2p1:ASCounterparty" lowerBound="0"/>
+		<property name="RegisterCountry" type="d2p1:ASCountry" lowerBound="0"/>
+		<property name="CodeKPP" type="xs:string" lowerBound="0"/>
+		<property name="CodeOGRN" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKVED" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKATO" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKOGU" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKFS" type="xs:string" lowerBound="0"/>
+		<property name="CodeOKOPF" type="xs:string" lowerBound="0"/>
+		<property name="Addresses" type="d2p1:ASAddress" lowerBound="0" upperBound="-1"/>
+		<property name="BankAccounts" type="d2p1:ASBankAccount" lowerBound="0" upperBound="-1"/>
+		<property name="NonResident" type="xs:boolean" lowerBound="0"/>
+		<property name="RailCodes" type="d2p1:ASCounterpartyRailCodes" lowerBound="0" upperBound="-1"/>
+		<property name="TypeCounterparty" type="d2p1:ASTypeCounterpartyKinds" lowerBound="0"/>
+		<property name="IsFolder" type="xs:boolean" lowerBound="0"/>
+		<property name="Parent" type="d2p1:ASCounterparty" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCountry" base="d2p1:ASCatalog">
+		<property name="CountryCode" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCreateRequest" base="d2p1:ASRequest">
+		<property name="object" type="d2p1:ASObject"/>
+	</objectType>
+	<objectType name="ASCounterpartyRailCodes">
+		<property name="RailCode" type="xs:string" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Station" type="d3p1:ASStation" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASDocument" base="d2p1:ASObject">
+		<property name="Author" type="d2p1:ASUser" lowerBound="0"/>
+		<property name="Comment" type="xs:string" lowerBound="0"/>
+		<property name="Date" type="xs:dateTime" lowerBound="0"/>
+		<property name="Number" type="xs:string" lowerBound="0"/>
+		<property name="Posted" type="xs:boolean" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASEnumeration" base="d2p1:ASObject" abstract="true"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASPaymentInvoice" base="d2p1:ASDocument">
+		<property name="Company" type="d2p1:ASCompany" lowerBound="0"/>
+		<property name="Counterparty" type="d2p1:ASCounterparty" lowerBound="0"/>
+		<property name="Contract" type="d2p1:ASContract" lowerBound="0"/>
+		<property name="Currency" type="d2p1:ASCurrency" lowerBound="0"/>
+		<property name="IncomingDocumentNumber" type="xs:string" lowerBound="0"/>
+		<property name="IncomingDocumentDate" type="xs:dateTime" lowerBound="0"/>
+		<property name="DocumentSum" type="xs:float" lowerBound="0"/>
+		<property name="VATRate" type="d2p1:ASVATRates" lowerBound="0"/>
+		<property name="VATSum" type="xs:float" lowerBound="0"/>
+		<property name="BaseDocumentType" type="xs:int" lowerBound="0"/>
+		<property name="BaseDocumentNumber" type="xs:string" lowerBound="0"/>
+		<property name="BaseDocumentDeliveryDate" type="xs:dateTime" lowerBound="0"/>
+		<property name="BaseDocumentList" type="d2p1:ASBaseDocumentListItem" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASPerson" base="d2p1:ASObject">
+		<property name="Code" type="xs:string" lowerBound="0"/>
+		<property name="IsFolder" type="xs:boolean" lowerBound="0"/>
+		<property name="Parent" type="d2p1:ASPerson" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASStation" base="d2p1:ASCatalog">
+		<property name="RailCode" type="xs:string" lowerBound="0"/>
+		<property name="Country" type="d2p1:ASCountry" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASTypeCounterpartyKinds" base="d2p1:ASEnumeration"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASVATRates" base="d2p1:ASEnumeration"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASUser" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCreateResponse" base="d2p1:ASResponse">
+		<property name="object" type="d2p1:ASObject"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContractRegistration" base="d2p1:ASDocument">
+		<property name="OperationType" type="xs:int" lowerBound="0"/>
+		<property name="Counterparty" type="d2p1:ASCounterparty" lowerBound="0"/>
+		<property name="Company" type="d2p1:ASCompany" lowerBound="0"/>
+		<property name="Contract" type="d2p1:ASContract" lowerBound="0"/>
+		<property name="LeadContract" type="d2p1:ASContract" lowerBound="0"/>
+		<property name="Currency" type="d2p1:ASCurrency" lowerBound="0"/>
+		<property name="ContractSum" type="xs:float" lowerBound="0"/>
+		<property name="VATRate" type="d2p1:ASVATRates" lowerBound="0"/>
+		<property name="VATSum" type="xs:float" lowerBound="0"/>
+		<property name="BudgetScenario" type="d2p1:ASBudgetScenario" lowerBound="0"/>
+		<property name="BudgetList" type="d2p1:ASContractRegistrationBudgetListItem" lowerBound="0" upperBound="-1"/>
+		<property name="OrderNumber" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContractRegistrationRequest" base="d2p1:ASRequest">
+		<property name="ContractRegistration" type="d2p1:ASContractRegistration"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASContractRegistrationResponse" base="d2p1:ASResponse">
+		<property name="Result" type="xs:boolean"/>
+	</objectType>
+	<objectType name="ASContractRegistrationBudgetListItem">
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Budget" type="d3p1:ASBudget"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="ResponsibilityCenter" type="d3p1:ASDepartment"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="BudgetLine" type="d3p1:ASBudgetItem"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Project" type="d3p1:ASProject" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Item" type="d3p1:ASItem" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="ItemsGroup" type="d3p1:ASItemsGroup" lowerBound="0"/>
+		<property name="ContractSum" type="xs:float"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="ProcurementCenter" type="d3p1:ASDepartment" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="VATRate" type="d3p1:ASVATRates" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASCostCenter" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASJobTitle" base="d2p1:ASCatalog"/>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASWorkForceAvailabilityRequest" base="d2p1:ASRequest">
+		<property name="Company" type="d2p1:ASCompany" lowerBound="0"/>
+		<property name="CostCenter" type="d2p1:ASCostCenter" lowerBound="0"/>
+		<property name="JobTitle" type="d2p1:ASJobTitle" lowerBound="0"/>
+		<property name="DateFrom" type="xs:date"/>
+		<property name="DateTo" type="xs:date"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodru.com/AsynxExchangeServices" name="ASWorkForceAvailabilityResponse" base="d2p1:ASResponse">
+		<property name="Row" type="d2p1:ASWorkForceAvailabilityResponseRow" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType name="ASWorkForceAvailabilityResponseRow">
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="Company" type="d3p1:ASCompany"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="CostCenter" type="d3p1:ASCostCenter" nillable="true"/>
+		<property xmlns:d3p1="http://sodru.com/AsynxExchangeServices" name="JobTitle" type="d3p1:ASJobTitle"/>
+		<property name="Date" type="xs:date"/>
+		<property name="WorkersCount" type="xs:int"/>
+		<property name="WorkingHours" type="xs:decimal"/>
+	</objectType>
+</package>

@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<DataCompositionSchema xmlns="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcscom="http://v8.1c.ru/8.1/data-composition-system/common" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<dataSource>
+		<name>ИсточникДанных1</name>
+		<dataSourceType>Local</dataSourceType>
+	</dataSource>
+	<dataSet xsi:type="DataSetQuery">
+		<name>Данные</name>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>НомерДокументаПоставщика</dataPath>
+			<field>НомерДокументаПоставщика</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>НомерТранспортногоСредства</dataPath>
+			<field>НомерТранспортногоСредства</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Номер транспортного средства</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Водитель</dataPath>
+			<field>Водитель</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаДокументаПоставщика</dataPath>
+			<field>ДатаДокументаПоставщика</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>БруттоДок</dataPath>
+			<field>БруттоДок</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Брутто док</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ТараДок</dataPath>
+			<field>ТараДок</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тара док</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>НеттоДок</dataPath>
+			<field>НеттоДок</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Нетто док</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>БруттоФакт</dataPath>
+			<field>БруттоФакт</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Брутто факт</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Поставщик</dataPath>
+			<field>Поставщик</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Поставщик</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Грузоотправитель</dataPath>
+			<field>Грузоотправитель</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Грузоотправитель</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Номенклатура</dataPath>
+			<field>Номенклатура</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>КоличествоОсей</dataPath>
+			<field>КоличествоОсей</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДопустимаяМасса</dataPath>
+			<field>ДопустимаяМасса</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ТранспортноеСредство</dataPath>
+			<field>ТранспортноеСредство</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Транспортное средство</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Превышение</dataPath>
+			<field>Превышение</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Превышение</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<dataSource>ИсточникДанных1</dataSource>
+		<query>ВЫБРАТЬ
+	Контрагенты.НаименованиеПолное КАК Поставщик,
+	Грузоотправители.НаименованиеПолное КАК Грузоотправитель,
+	РегистрацияНаПЛК.НомерДокументаПоставщика КАК НомерДокументаПоставщика,
+	РегистрацияНаПЛК.ДатаДокументаПоставщика КАК ДатаДокументаПоставщика,
+	РегистрацияНаПЛК.ВесБрутто КАК БруттоДок,
+	РегистрацияНаПЛК.ВесНетто КАК НеттоДок,
+	РегистрацияНаПЛК.ВесТары КАК ТараДок,
+	РегистрацияНаПЛК.Водитель КАК Водитель,
+	ВзвешиваниеНаВъезде.Вес КАК БруттоФакт,
+	РегистрацияНаПЛК.Номенклатура.НаименованиеПолное КАК Номенклатура,
+	ТранспортныеСредства.Ссылка КАК ТранспортноеСредство,
+	ТранспортныеСредства.НомерТранспортногоСредства КАК НомерТранспортногоСредства,
+	ТранспортныеСредства.КоличествоОсей КАК КоличествоОсей
+ПОМЕСТИТЬ ВТ_ОбщиеДанные
+ИЗ
+	Документ.гкс_Взвешивание КАК ВзвешиваниеНаВъезде
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ Документ.гкс_РегистрацияНаПЛК КАК РегистрацияНаПЛК
+			ВНУТРЕННЕЕ СОЕДИНЕНИЕ Справочник.Контрагенты КАК Контрагенты
+			ПО РегистрацияНаПЛК.Контрагент = Контрагенты.Ссылка
+			ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Контрагенты КАК Грузоотправители
+			ПО РегистрацияНаПЛК.ОтправительПолучатель = Грузоотправители.Ссылка
+			ВНУТРЕННЕЕ СОЕДИНЕНИЕ Справочник.ТранспортныеСредства КАК ТранспортныеСредства
+			ПО РегистрацияНаПЛК.ТранспортноеСредство = ТранспортныеСредства.Ссылка
+		ПО ВзвешиваниеНаВъезде.ДокументРегистрации = РегистрацияНаПЛК.Ссылка
+			И (РегистрацияНаПЛК.ТипРегистрации = ЗНАЧЕНИЕ(Перечисление.гкс_ТипРегистрации.Приемка))
+			И (РегистрацияНаПЛК.ВидПеревозки = ЗНАЧЕНИЕ(Перечисление.гкс_ТипыТранспортныхСредствДоставки.Автомобиль))
+			И (РегистрацияНаПЛК.Проведен = ИСТИНА)
+ГДЕ
+	ВзвешиваниеНаВъезде.Ссылка = &amp;гкс_Взвешивание
+	И ВзвешиваниеНаВъезде.ТипВзвешивания = ЗНАЧЕНИЕ(Перечисление.гкс_ТипыВзвешивания.Въезд)
+	И ВзвешиваниеНаВъезде.Проведен = ИСТИНА
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ
+	ВТ_ОбщиеДанные.Поставщик КАК Поставщик,
+	ВТ_ОбщиеДанные.Грузоотправитель КАК Грузоотправитель,
+	ВТ_ОбщиеДанные.НомерДокументаПоставщика КАК НомерДокументаПоставщика,
+	ВТ_ОбщиеДанные.ДатаДокументаПоставщика КАК ДатаДокументаПоставщика,
+	ВТ_ОбщиеДанные.БруттоДок КАК БруттоДок,
+	ВТ_ОбщиеДанные.НеттоДок КАК НеттоДок,
+	ВТ_ОбщиеДанные.ТараДок КАК ТараДок,
+	ВТ_ОбщиеДанные.Водитель КАК Водитель,
+	ВТ_ОбщиеДанные.БруттоФакт КАК БруттоФакт,
+	ВТ_ОбщиеДанные.Номенклатура КАК Номенклатура,
+	ВТ_ОбщиеДанные.ТранспортноеСредство КАК ТранспортноеСредство,
+	ВТ_ОбщиеДанные.НомерТранспортногоСредства КАК НомерТранспортногоСредства,
+	ВТ_ОбщиеДанные.КоличествоОсей КАК КоличествоОсей,
+	ДопустимыеМассыТранспортныхСредств.ДопустимаяМасса КАК ДопустимаяМасса,
+	ВТ_ОбщиеДанные.БруттоФакт - ДопустимыеМассыТранспортныхСредств.ДопустимаяМасса КАК Превышение
+ИЗ
+	ВТ_ОбщиеДанные КАК ВТ_ОбщиеДанные
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ РегистрСведений.гкс_ДопустимыеМассыТранспортныхСредств КАК ДопустимыеМассыТранспортныхСредств
+		ПО ВТ_ОбщиеДанные.КоличествоОсей = ДопустимыеМассыТранспортныхСредств.КоличествоОсей
+			И (ДопустимыеМассыТранспортныхСредств.ВидПеревозки = ЗНАЧЕНИЕ(Перечисление.гкс_ТипыТранспортныхСредствДоставки.Автомобиль))
+			И ДопустимыеМассыТранспортныхСредств.ДопустимаяМасса &lt; ВТ_ОбщиеДанные.БруттоФакт</query>
+	</dataSet>
+	<parameter>
+		<name>гкс_Взвешивание</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Гкс взвешивание</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:DocumentRef.гкс_Взвешивание</v8:Type>
+		</valueType>
+		<value xsi:nil="true"/>
+		<useRestriction>true</useRestriction>
+	</parameter>
+	<settingsVariant>
+		<dcsset:name>Основной</dcsset:name>
+		<dcsset:presentation xsi:type="xs:string">Основной</dcsset:presentation>
+		<dcsset:settings xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows">
+			<dcsset:item xsi:type="dcsset:StructureItemGroup">
+				<dcsset:order>
+					<dcsset:item xsi:type="dcsset:OrderItemAuto"/>
+				</dcsset:order>
+				<dcsset:selection>
+					<dcsset:item xsi:type="dcsset:SelectedItemAuto"/>
+				</dcsset:selection>
+			</dcsset:item>
+		</dcsset:settings>
+	</settingsVariant>
+</DataCompositionSchema>

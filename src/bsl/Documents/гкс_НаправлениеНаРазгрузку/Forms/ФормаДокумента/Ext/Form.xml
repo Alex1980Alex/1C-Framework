@@ -1,0 +1,547 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoTitle>false</AutoTitle>
+	<AutoTime>CurrentOrLast</AutoTime>
+	<UsePostingMode>Auto</UsePostingMode>
+	<RepostOnWrite>true</RepostOnWrite>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<ChildItems>
+			<Popup name="ПодменюОтчеты" id="18">
+				<Title>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Отчеты</v8:content>
+					</v8:item>
+					<v8:item>
+						<v8:lang>en</v8:lang>
+						<v8:content>Reports</v8:content>
+					</v8:item>
+				</Title>
+				<Representation>PictureAndText</Representation>
+				<ExtendedTooltip name="ПодменюОтчетыРасширеннаяПодсказка" id="19"/>
+				<ChildItems>
+					<ButtonGroup name="ПодменюОтчетыВажное" id="20">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты важное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Important reports submenu</v8:content>
+							</v8:item>
+						</Title>
+						<ExtendedTooltip name="ПодменюОтчетыВажноеРасширеннаяПодсказка" id="21"/>
+					</ButtonGroup>
+					<ButtonGroup name="ПодменюОтчетыОбычное" id="22">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты обычное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Submenu reports standard</v8:content>
+							</v8:item>
+						</Title>
+						<ToolTip>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты важное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Important reports submenu</v8:content>
+							</v8:item>
+						</ToolTip>
+						<ExtendedTooltip name="ПодменюОтчетыОбычноеРасширеннаяПодсказка" id="23"/>
+					</ButtonGroup>
+					<ButtonGroup name="ПодменюОтчетыСмТакже" id="24">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты см также</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Submenu reports see also</v8:content>
+							</v8:item>
+						</Title>
+						<ToolTip>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты важное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Important reports submenu</v8:content>
+							</v8:item>
+						</ToolTip>
+						<ExtendedTooltip name="ПодменюОтчетыСмТакжеРасширеннаяПодсказка" id="25"/>
+					</ButtonGroup>
+				</ChildItems>
+			</Popup>
+			<Button name="ФормаПоказатьСкрытьДоступныеМестаРазгрузки" id="98">
+				<Type>CommandBarButton</Type>
+				<CommandName>Form.Command.ПоказатьСкрытьДоступныеМестаРазгрузки</CommandName>
+				<LocationInCommandBar>InAdditionalSubmenu</LocationInCommandBar>
+				<ExtendedTooltip name="ФормаПоказатьСкрытьДоступныеМестаРазгрузкиРасширеннаяПодсказка" id="99"/>
+			</Button>
+		</ChildItems>
+	</AutoCommandBar>
+	<Events>
+		<Event name="AfterWrite">ПослеЗаписи</Event>
+		<Event name="AfterWriteAtServer">ПослеЗаписиНаСервере</Event>
+		<Event name="OnReadAtServer">ПриЧтенииНаСервере</Event>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="BeforeWrite">ПередЗаписью</Event>
+		<Event name="BeforeWriteAtServer">ПередЗаписьюНаСервере</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+		<Event name="FillCheckProcessingAtServer">ОбработкаПроверкиЗаполненияНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="Шапка" id="64">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Шапка</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Шапка</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>AlwaysHorizontal</Group>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ШапкаРасширеннаяПодсказка" id="65"/>
+			<ChildItems>
+				<UsualGroup name="ШапкаЛево" id="66">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Шапка лево</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Шапка лево</v8:content>
+						</v8:item>
+					</ToolTip>
+					<Group>Vertical</Group>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ШапкаЛевоРасширеннаяПодсказка" id="67"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаШапкаНомер" id="16">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа шапка номер</v8:content>
+								</v8:item>
+							</Title>
+							<Behavior>Usual</Behavior>
+							<ShowTitle>false</ShowTitle>
+							<ThroughAlign>Use</ThroughAlign>
+							<ExtendedTooltip name="ГруппаШапкаНомерРасширеннаяПодсказка" id="17"/>
+							<ChildItems>
+								<InputField name="Номер" id="1">
+									<DataPath>Объект.Number</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<HorizontalStretch>false</HorizontalStretch>
+									<ContextMenu name="НомерКонтекстноеМеню" id="2"/>
+									<ExtendedTooltip name="НомерРасширеннаяПодсказка" id="3"/>
+								</InputField>
+								<InputField name="Дата" id="4">
+									<DataPath>Объект.Date</DataPath>
+									<Visible>false</Visible>
+									<ReadOnly>true</ReadOnly>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>от</v8:content>
+										</v8:item>
+									</Title>
+									<EditMode>EnterOnInput</EditMode>
+									<AutoMaxWidth>false</AutoMaxWidth>
+									<MaxWidth>13</MaxWidth>
+									<ContextMenu name="ДатаКонтекстноеМеню" id="5"/>
+									<ExtendedTooltip name="ДатаРасширеннаяПодсказка" id="6"/>
+								</InputField>
+								<InputField name="МестнаяДата" id="32">
+									<DataPath>Объект.МестнаяДата</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>от</v8:content>
+										</v8:item>
+									</Title>
+									<AutoMaxWidth>false</AutoMaxWidth>
+									<MaxWidth>13</MaxWidth>
+									<ContextMenu name="МестнаяДатаКонтекстноеМеню" id="33"/>
+									<ExtendedTooltip name="МестнаяДатаРасширеннаяПодсказка" id="34"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<InputField name="ТочкаМаршрута" id="7">
+							<DataPath>Объект.ТочкаМаршрута</DataPath>
+							<ReadOnly>true</ReadOnly>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Пункт приема</v8:content>
+								</v8:item>
+							</Title>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="8"/>
+							<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="9"/>
+						</InputField>
+						<LabelField name="Номенклатура" id="55">
+							<DataPath>Номенклатура</DataPath>
+							<Font ref="style:NormalTextFont" bold="true" italic="false" underline="false" strikeout="false" kind="StyleItem" scale="100"/>
+							<ContextMenu name="НоменклатураКонтекстноеМеню" id="56"/>
+							<ExtendedTooltip name="НоменклатураРасширеннаяПодсказка" id="57"/>
+						</LabelField>
+						<InputField name="ДокументРегистрации" id="10">
+							<DataPath>Объект.ДокументРегистрации</DataPath>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="ДокументРегистрацииКонтекстноеМеню" id="11"/>
+							<ExtendedTooltip name="ДокументРегистрацииРасширеннаяПодсказка" id="12"/>
+							<Events>
+								<Event name="OnChange">ДокументРегистрацииПриИзменении</Event>
+							</Events>
+						</InputField>
+						<UsualGroup name="ГруппаТранспорт" id="41">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Транспорт</v8:content>
+								</v8:item>
+							</Title>
+							<ExtendedTooltip name="ГруппаТранспортРасширеннаяПодсказка" id="42"/>
+							<ChildItems>
+								<LabelField name="ДокументРегистрацииТранспортноеСредство" id="43">
+									<DataPath>Объект.ДокументРегистрации.ТранспортноеСредство</DataPath>
+									<TitleLocation>None</TitleLocation>
+									<ContextMenu name="ДокументРегистрацииТранспортноеСредствоКонтекстноеМеню" id="44"/>
+									<ExtendedTooltip name="ДокументРегистрацииТранспортноеСредствоРасширеннаяПодсказка" id="45"/>
+								</LabelField>
+								<CheckBoxField name="ДокументРегистрацииВыгрузкаСОдногоБорта" id="52">
+									<DataPath>Объект.ДокументРегистрации.ВыгрузкаСОдногоБорта</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="ДокументРегистрацииВыгрузкаСОдногоБортаКонтекстноеМеню" id="53"/>
+									<ExtendedTooltip name="ДокументРегистрацииВыгрузкаСОдногоБортаРасширеннаяПодсказка" id="54"/>
+								</CheckBoxField>
+							</ChildItems>
+						</UsualGroup>
+						<LabelField name="ПричинаКачествоНеПринято" id="100">
+							<DataPath>ПричинаКачествоНеПринято</DataPath>
+							<TitleLocation>None</TitleLocation>
+							<AutoMaxWidth>false</AutoMaxWidth>
+							<TextColor>style:ПросроченныеДанныеЦвет</TextColor>
+							<ContextMenu name="ПричинаКачествоНеПринятоКонтекстноеМеню" id="101"/>
+							<ExtendedTooltip name="ПричинаКачествоНеПринятоРасширеннаяПодсказка" id="102"/>
+						</LabelField>
+						<CheckBoxField name="ПринятьКачество" id="26">
+							<DataPath>Объект.ПринятьКачество</DataPath>
+							<CheckBoxType>Auto</CheckBoxType>
+							<ContextMenu name="ПринятьКачествоКонтекстноеМеню" id="27"/>
+							<ExtendedTooltip name="ПринятьКачествоРасширеннаяПодсказка" id="28"/>
+							<Events>
+								<Event name="OnChange">ПринятьКачествоПриИзменении</Event>
+							</Events>
+						</CheckBoxField>
+						<InputField name="Комментарий" id="29">
+							<DataPath>Объект.Комментарий</DataPath>
+							<Height>2</Height>
+							<MultiLine>true</MultiLine>
+							<ContextMenu name="КомментарийКонтекстноеМеню" id="30"/>
+							<ExtendedTooltip name="КомментарийРасширеннаяПодсказка" id="31"/>
+						</InputField>
+						<InputField name="Склад" id="13">
+							<DataPath>Объект.Склад</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Силос</v8:content>
+								</v8:item>
+							</Title>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="СкладКонтекстноеМеню" id="14"/>
+							<ExtendedTooltip name="СкладРасширеннаяПодсказка" id="15"/>
+							<Events>
+								<Event name="OnChange">СкладПриИзменении</Event>
+							</Events>
+						</InputField>
+						<InputField name="ЯмаРазгрузки" id="35">
+							<DataPath>Объект.ЯмаРазгрузки</DataPath>
+							<ContextMenu name="ЯмаРазгрузкиКонтекстноеМеню" id="36"/>
+							<ExtendedTooltip name="ЯмаРазгрузкиРасширеннаяПодсказка" id="37"/>
+						</InputField>
+						<InputField name="СлужебнаяНоменклатура" id="38">
+							<DataPath>Объект.СлужебнаяНоменклатура</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Служебная номенклатура</v8:content>
+								</v8:item>
+							</Title>
+							<DropListButton>false</DropListButton>
+							<ChoiceButton>true</ChoiceButton>
+							<ChoiceButtonRepresentation>ShowInInputField</ChoiceButtonRepresentation>
+							<ClearButton>false</ClearButton>
+							<CreateButton>false</CreateButton>
+							<AutoChoiceIncomplete>false</AutoChoiceIncomplete>
+							<QuickChoice>false</QuickChoice>
+							<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+							<TextEdit>false</TextEdit>
+							<SpellCheckingOnTextInput>DontUse</SpellCheckingOnTextInput>
+							<ChoiceHistoryOnInput>DontUse</ChoiceHistoryOnInput>
+							<ContextMenu name="СлужебнаяНоменклатураКонтекстноеМеню" id="39"/>
+							<ExtendedTooltip name="СлужебнаяНоменклатураРасширеннаяПодсказка" id="40"/>
+							<Events>
+								<Event name="AutoComplete">СлужебнаяНоменклатураАвтоПодбор</Event>
+								<Event name="StartChoice">СлужебнаяНоменклатураНачалоВыбора</Event>
+								<Event name="ChoiceProcessing">СлужебнаяНоменклатураОбработкаВыбора</Event>
+							</Events>
+						</InputField>
+					</ChildItems>
+				</UsualGroup>
+				<UsualGroup name="ШапкаПраво" id="68">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Шапка право</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Шапка право</v8:content>
+						</v8:item>
+					</ToolTip>
+					<Group>Vertical</Group>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ШапкаПравоРасширеннаяПодсказка" id="69"/>
+					<ChildItems>
+						<Table name="ДоступныеМестаРазгрузки" id="70">
+							<Visible>false</Visible>
+							<ChangeRowSet>false</ChangeRowSet>
+							<ChangeRowOrder>false</ChangeRowOrder>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Объект.ДоступныеМестаРазгрузки</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="ДоступныеМестаРазгрузкиКонтекстноеМеню" id="71"/>
+							<AutoCommandBar name="ДоступныеМестаРазгрузкиКоманднаяПанель" id="72">
+								<Autofill>false</Autofill>
+							</AutoCommandBar>
+							<ExtendedTooltip name="ДоступныеМестаРазгрузкиРасширеннаяПодсказка" id="73"/>
+							<SearchStringAddition name="ДоступныеМестаРазгрузкиСтрокаПоиска" id="74">
+								<AdditionSource>
+									<Item>ДоступныеМестаРазгрузки</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ДоступныеМестаРазгрузкиСтрокаПоискаКонтекстноеМеню" id="75"/>
+								<ExtendedTooltip name="ДоступныеМестаРазгрузкиСтрокаПоискаРасширеннаяПодсказка" id="76"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="ДоступныеМестаРазгрузкиСостояниеПросмотра" id="77">
+								<AdditionSource>
+									<Item>ДоступныеМестаРазгрузки</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ДоступныеМестаРазгрузкиСостояниеПросмотраКонтекстноеМеню" id="78"/>
+								<ExtendedTooltip name="ДоступныеМестаРазгрузкиСостояниеПросмотраРасширеннаяПодсказка" id="79"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="ДоступныеМестаРазгрузкиУправлениеПоиском" id="80">
+								<AdditionSource>
+									<Item>ДоступныеМестаРазгрузки</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="ДоступныеМестаРазгрузкиУправлениеПоискомКонтекстноеМеню" id="81"/>
+								<ExtendedTooltip name="ДоступныеМестаРазгрузкиУправлениеПоискомРасширеннаяПодсказка" id="82"/>
+							</SearchControlAddition>
+							<Events>
+								<Event name="Selection">ДоступныеМестаРазгрузкиВыбор</Event>
+							</Events>
+							<ChildItems>
+								<LabelField name="ДоступныеМестаРазгрузкиНомерСтроки" id="83">
+									<DataPath>Объект.ДоступныеМестаРазгрузки.LineNumber</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ДоступныеМестаРазгрузкиНомерСтрокиКонтекстноеМеню" id="84"/>
+									<ExtendedTooltip name="ДоступныеМестаРазгрузкиНомерСтрокиРасширеннаяПодсказка" id="85"/>
+								</LabelField>
+								<InputField name="ДоступныеМестаРазгрузкиСилос" id="86">
+									<DataPath>Объект.ДоступныеМестаРазгрузки.Силос</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="ДоступныеМестаРазгрузкиСилосКонтекстноеМеню" id="87"/>
+									<ExtendedTooltip name="ДоступныеМестаРазгрузкиСилосРасширеннаяПодсказка" id="88"/>
+								</InputField>
+								<InputField name="ДоступныеМестаРазгрузкиЯмаРазгрузки" id="95">
+									<DataPath>Объект.ДоступныеМестаРазгрузки.ЯмаРазгрузки</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="ДоступныеМестаРазгрузкиЯмаРазгрузкиКонтекстноеМеню" id="96"/>
+									<ExtendedTooltip name="ДоступныеМестаРазгрузкиЯмаРазгрузкиРасширеннаяПодсказка" id="97"/>
+								</InputField>
+								<InputField name="ДоступныеМестаРазгрузкиСлужебнаяНоменклатура" id="89">
+									<DataPath>Объект.ДоступныеМестаРазгрузки.СлужебнаяНоменклатура</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="ДоступныеМестаРазгрузкиСлужебнаяНоменклатураКонтекстноеМеню" id="90"/>
+									<ExtendedTooltip name="ДоступныеМестаРазгрузкиСлужебнаяНоменклатураРасширеннаяПодсказка" id="91"/>
+								</InputField>
+								<CheckBoxField name="ДоступныеМестаРазгрузкиФактическаяРазгрузка" id="92">
+									<DataPath>Объект.ДоступныеМестаРазгрузки.ФактическаяРазгрузка</DataPath>
+									<Visible>false</Visible>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="ДоступныеМестаРазгрузкиФактическаяРазгрузкаКонтекстноеМеню" id="93"/>
+									<ExtendedTooltip name="ДоступныеМестаРазгрузкиФактическаяРазгрузкаРасширеннаяПодсказка" id="94"/>
+								</CheckBoxField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DocumentObject.гкс_НаправлениеНаРазгрузку</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+			<UseAlways>
+				<Field>Объект.RegisterRecords</Field>
+			</UseAlways>
+		</Attribute>
+		<Attribute name="КачествоНеПринято" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Качество не принято</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ЧасовойПоясПЛК" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Часовой пояс ПЛК</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ТипРегистрации" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тип регистрации</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:EnumRef.гкс_ТипРегистрации</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ВидНоменклатурыЭталонКачества" id="7">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Вид номенклатуры эталон качества</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.ВидыНоменклатуры</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="МассивСообщений" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Массив сообщений</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueListType</v8:Type>
+			</Type>
+			<Settings xsi:type="v8:TypeDescription"/>
+		</Attribute>
+		<Attribute name="Номенклатура" id="6">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Номенклатура</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.Номенклатура</v8:Type>
+			</Type>
+			<FillCheck>ShowError</FillCheck>
+		</Attribute>
+		<Attribute name="ВидПеревозки" id="8">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Вид перевозки</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ПричинаКачествоНеПринято" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Причина качество не принято</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>150</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ПоказатьСкрытьДоступныеМестаРазгрузки" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать доступные места разгрузки</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать скрыть доступные места разгрузки</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПоказатьСкрытьДоступныеМестаРазгрузки</Action>
+			<FunctionalOptions>
+				<Item>FunctionalOption.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</Item>
+			</FunctionalOptions>
+		</Command>
+	</Commands>
+</Form>

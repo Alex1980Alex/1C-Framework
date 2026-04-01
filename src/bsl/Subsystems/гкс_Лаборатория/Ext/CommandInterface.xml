@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CommandInterface xmlns="http://v8.1c.ru/8.3/xcf/extrnprops" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<CommandsVisibility>
+		<Command name="InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС.StandardCommand.OpenList">
+			<Visibility>
+				<xr:Common>false</xr:Common>
+			</Visibility>
+		</Command>
+		<Command name="InformationRegister.гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ.StandardCommand.OpenList">
+			<Visibility>
+				<xr:Common>false</xr:Common>
+			</Visibility>
+		</Command>
+		<Command name="InformationRegister.гкс_НастройкиПечатиФормированияПроб.StandardCommand.OpenList">
+			<Visibility>
+				<xr:Common>false</xr:Common>
+			</Visibility>
+		</Command>
+	</CommandsVisibility>
+	<CommandsOrder>
+		<Command name="InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС.StandardCommand.OpenList">
+			<CommandGroup>NavigationPanelOrdinary</CommandGroup>
+		</Command>
+		<Command name="InformationRegister.гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ.StandardCommand.OpenList">
+			<CommandGroup>NavigationPanelOrdinary</CommandGroup>
+		</Command>
+		<Command name="InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС.Command.ОткрытьРегистрКонтрагентыНоменклатурыЛИМС">
+			<CommandGroup>ActionsPanelTools</CommandGroup>
+		</Command>
+		<Command name="InformationRegister.гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ.Command.гкс_ОткрытьРегистрНастройкаПечатиОсобыхОтметокЗПП47АЛЦ">
+			<CommandGroup>ActionsPanelTools</CommandGroup>
+		</Command>
+		<Command name="InformationRegister.гкс_НастройкиПечатиФормированияПроб.Command.гкс_ОткрытьРегистрНастройкаПечатиФормированияПроб">
+			<CommandGroup>ActionsPanelTools</CommandGroup>
+		</Command>
+		<Command name="InformationRegister.гкс_НастройкаПорядкаПоказателейВходнойКонтрольСырья.Command.гкс_ОткрытьРегистрНастроекОтчетаВходнойКонтрольСырья">
+			<CommandGroup>ActionsPanelTools</CommandGroup>
+		</Command>
+	</CommandsOrder>
+	<SubsystemsOrder>
+		<Subsystem>Subsystem.гкс_Лаборатория.Subsystem.ВнутренниеПробы</Subsystem>
+		<Subsystem>Subsystem.гкс_Лаборатория.Subsystem.ВнешниеПробы</Subsystem>
+		<Subsystem>Subsystem.гкс_Лаборатория.Subsystem.Аналитика</Subsystem>
+	</SubsystemsOrder>
+	<GroupsOrder>
+		<Group>NavigationPanelOrdinary</Group>
+		<Group>ActionsPanelTools</Group>
+	</GroupsOrder>
+</CommandInterface>

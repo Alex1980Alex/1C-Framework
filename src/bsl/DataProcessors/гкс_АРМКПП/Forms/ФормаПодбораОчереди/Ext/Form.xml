@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<CommandBarLocation>None</CommandBarLocation>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаПользовательскихНастроек" id="288">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа1</v8:content>
+				</v8:item>
+			</Title>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаПользовательскихНастроекРасширеннаяПодсказка" id="289"/>
+		</UsualGroup>
+		<Table name="ТаблицаДокументовОчереди" id="254">
+			<SelectionMode>SingleRow</SelectionMode>
+			<DataPath>ТаблицаДокументовОчереди</DataPath>
+			<AutoRefresh>false</AutoRefresh>
+			<AutoRefreshPeriod>60</AutoRefreshPeriod>
+			<Period>
+				<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+				<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+				<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+			</Period>
+			<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+			<RestoreCurrentRow>false</RestoreCurrentRow>
+			<TopLevelParent xsi:nil="true"/>
+			<ShowRoot>true</ShowRoot>
+			<AllowRootChoice>false</AllowRootChoice>
+			<UpdateOnDataChange>Auto</UpdateOnDataChange>
+			<UserSettingsGroup>ГруппаПользовательскихНастроек</UserSettingsGroup>
+			<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
+			<ContextMenu name="ТаблицаДокументовОчередиКонтекстноеМеню" id="256"/>
+			<AutoCommandBar name="ТаблицаДокументовОчередиКоманднаяПанель" id="255"/>
+			<ExtendedTooltip name="ТаблицаДокументовОчередиРасширеннаяПодсказка" id="257"/>
+			<SearchStringAddition name="ТаблицаДокументовОчередиСтрокаПоиска" id="258">
+				<AdditionSource>
+					<Item>ТаблицаДокументовОчереди</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ТаблицаДокументовОчередиСтрокаПоискаКонтекстноеМеню" id="259"/>
+				<ExtendedTooltip name="ТаблицаДокументовОчередиСтрокаПоискаРасширеннаяПодсказка" id="260"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="ТаблицаДокументовОчередиСостояниеПросмотра" id="264">
+				<AdditionSource>
+					<Item>ТаблицаДокументовОчереди</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ТаблицаДокументовОчередиСостояниеПросмотраКонтекстноеМеню" id="265"/>
+				<ExtendedTooltip name="ТаблицаДокументовОчередиСостояниеПросмотраРасширеннаяПодсказка" id="266"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="ТаблицаДокументовОчередиУправлениеПоиском" id="261">
+				<AdditionSource>
+					<Item>ТаблицаДокументовОчереди</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="ТаблицаДокументовОчередиУправлениеПоискомКонтекстноеМеню" id="262"/>
+				<ExtendedTooltip name="ТаблицаДокументовОчередиУправлениеПоискомРасширеннаяПодсказка" id="263"/>
+			</SearchControlAddition>
+			<ChildItems>
+				<InputField name="ТаблицаДокументовОчередиСсылка" id="267">
+					<DataPath>ТаблицаДокументовОчереди.Ссылка</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиСсылкаКонтекстноеМеню" id="268"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиСсылкаРасширеннаяПодсказка" id="269"/>
+				</InputField>
+				<InputField name="ТаблицаДокументовОчередиДата" id="270">
+					<DataPath>ТаблицаДокументовОчереди.Дата</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиДатаКонтекстноеМеню" id="271"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиДатаРасширеннаяПодсказка" id="272"/>
+				</InputField>
+				<InputField name="ТаблицаДокументовОчередиНомер" id="273">
+					<DataPath>ТаблицаДокументовОчереди.Номер</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиНомерКонтекстноеМеню" id="274"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиНомерРасширеннаяПодсказка" id="275"/>
+				</InputField>
+				<LabelField name="ТаблицаДокументовОчередиНачалоПериода" id="294">
+					<DataPath>ТаблицаДокументовОчереди.НачалоПериода</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиНачалоПериодаКонтекстноеМеню" id="295"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиНачалоПериодаРасширеннаяПодсказка" id="296"/>
+				</LabelField>
+				<LabelField name="ТаблицаДокументовОчередиОкончаниеПериода" id="297">
+					<DataPath>ТаблицаДокументовОчереди.ОкончаниеПериода</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиОкончаниеПериодаКонтекстноеМеню" id="298"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиОкончаниеПериодаРасширеннаяПодсказка" id="299"/>
+				</LabelField>
+				<InputField name="ТаблицаДокументовОчередиКонтрагент" id="276">
+					<DataPath>ТаблицаДокументовОчереди.Контрагент</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиКонтрагентКонтекстноеМеню" id="277"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиКонтрагентРасширеннаяПодсказка" id="278"/>
+				</InputField>
+				<InputField name="ТаблицаДокументовОчередиНоменклатура" id="279">
+					<DataPath>ТаблицаДокументовОчереди.Номенклатура</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиНоменклатураКонтекстноеМеню" id="280"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиНоменклатураРасширеннаяПодсказка" id="281"/>
+				</InputField>
+				<InputField name="ТаблицаДокументовОчередиНомерТранспортногоСредства" id="282">
+					<DataPath>ТаблицаДокументовОчереди.НомерТранспортногоСредства</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиНомерТранспортногоСредстваКонтекстноеМеню" id="283"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиНомерТранспортногоСредстваРасширеннаяПодсказка" id="284"/>
+				</InputField>
+				<InputField name="ТаблицаДокументовОчередиУсловиеПроезда" id="285">
+					<DataPath>ТаблицаДокументовОчереди.УсловиеПроезда</DataPath>
+					<ContextMenu name="ТаблицаДокументовОчередиУсловиеПроездаКонтекстноеМеню" id="286"/>
+					<ExtendedTooltip name="ТаблицаДокументовОчередиУсловиеПроездаРасширеннаяПодсказка" id="287"/>
+				</InputField>
+			</ChildItems>
+		</Table>
+		<UsualGroup name="Группа1" id="290">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа1</v8:content>
+				</v8:item>
+			</Title>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="Группа1РасширеннаяПодсказка" id="291"/>
+			<ChildItems>
+				<Button name="СоздатьДокумент" id="17">
+					<Type>UsualButton</Type>
+					<Height>2</Height>
+					<GroupHorizontalAlign>Left</GroupHorizontalAlign>
+					<CommandName>Form.Command.СоздатьДокумент</CommandName>
+					<BackColor>style:ImportantColor</BackColor>
+					<Font faceName="" height="20" bold="true" italic="false" underline="false" strikeout="false" kind="Absolute" scale="100"/>
+					<ExtendedTooltip name="СоздатьДокументРасширеннаяПодсказка" id="18"/>
+				</Button>
+				<Button name="ЗакрытьФорму" id="292">
+					<Type>UsualButton</Type>
+					<Height>2</Height>
+					<GroupHorizontalAlign>Right</GroupHorizontalAlign>
+					<CommandName>Form.Command.Закрыть</CommandName>
+					<BackColor>style:SpecialTextColor</BackColor>
+					<Font faceName="" height="20" bold="true" italic="false" underline="false" strikeout="false" kind="Absolute" scale="100"/>
+					<ExtendedTooltip name="ЗакрытьФормуРасширеннаяПодсказка" id="293"/>
+				</Button>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="ТаблицаДокументовОчереди" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Таблица документов очереди</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>true</ManualQuery>
+				<DynamicDataRead>false</DynamicDataRead>
+				<QueryText>ВЫБРАТЬ
+	ЗаписьВОчередьПриемкиПЛК.Ссылка КАК Ссылка,
+	ЗаписьВОчередьПриемкиПЛК.Дата КАК Дата,
+	ЗаписьВОчередьПриемкиПЛК.Номер КАК Номер,
+	ЗаписьВОчередьПриемкиПЛК.Контрагент КАК Контрагент,
+	ЗаписьВОчередьПриемкиПЛК.Номенклатура КАК Номенклатура,
+	ЗаписьВОчередьПриемкиПЛК.НомерТранспортногоСредства КАК НомерТранспортногоСредства,
+	ЗаписьВОчередьПриемкиПЛК.УсловиеПроезда КАК УсловиеПроезда,
+	ЗаписьВОчередьПриемкиПЛК.НачалоПериода КАК НачалоПериода,
+	ЗаписьВОчередьПриемкиПЛК.ОкончаниеПериода КАК ОкончаниеПериода
+ИЗ
+	Документ.гкс_ЗаписьВОчередьПриемкиПЛК КАК ЗаписьВОчередьПриемкиПЛК
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_ВъездНаКПП КАК ВъездНаКПП
+		ПО ЗаписьВОчередьПриемкиПЛК.Ссылка = ВъездНаКПП.ДокументОснование
+ГДЕ
+	ЗаписьВОчередьПриемкиПЛК.НачалоПериода &gt; ДОБАВИТЬКДАТЕ(&amp;ТекущаяДата, МИНУТА, &amp;ВременнойРазбросДляКПП)
+	И ВъездНаКПП.Ссылка ЕСТЬ NULL</QueryText>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Ссылка</dcssch:dataPath>
+					<dcssch:field>Ссылка</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Дата</dcssch:dataPath>
+					<dcssch:field>Дата</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номер</dcssch:dataPath>
+					<dcssch:field>Номер</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Контрагент</dcssch:dataPath>
+					<dcssch:field>Контрагент</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номенклатура</dcssch:dataPath>
+					<dcssch:field>Номенклатура</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>НомерТранспортногоСредства</dcssch:dataPath>
+					<dcssch:field>НомерТранспортногоСредства</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>УсловиеПроезда</dcssch:dataPath>
+					<dcssch:field>УсловиеПроезда</dcssch:field>
+					<dcssch:attributeUseRestriction>
+						<dcssch:field>true</dcssch:field>
+						<dcssch:condition>true</dcssch:condition>
+						<dcssch:group>true</dcssch:group>
+						<dcssch:order>true</dcssch:order>
+					</dcssch:attributeUseRestriction>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ОкончаниеПериода</dcssch:dataPath>
+					<dcssch:field>ОкончаниеПериода</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>НачалоПериода</dcssch:dataPath>
+					<dcssch:field>НачалоПериода</dcssch:field>
+				</Field>
+				<Parameter>
+					<dcssch:name>ВременнойРазбросДляКПП</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Временной разброс для КПП</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>0</v8:Digits>
+							<v8:FractionDigits>0</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ТекущаяДата</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Текущая дата</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>DateTime</v8:DateFractions>
+						</v8:DateQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:item xsi:type="dcsset:FilterItemComparison">
+							<dcsset:use>false</dcsset:use>
+							<dcsset:left xsi:type="dcscor:Field">Контрагент</dcsset:left>
+							<dcsset:comparisonType>Equal</dcsset:comparisonType>
+							<dcsset:userSettingID>b32e551f-dc92-48c9-bece-2d01cd3e981d</dcsset:userSettingID>
+						</dcsset:item>
+						<dcsset:item xsi:type="dcsset:FilterItemComparison">
+							<dcsset:left xsi:type="dcscor:Field">Ссылка.ПометкаУдаления</dcsset:left>
+							<dcsset:comparisonType>Equal</dcsset:comparisonType>
+							<dcsset:right xsi:type="xs:boolean">false</dcsset:right>
+						</dcsset:item>
+					</dcsset:filter>
+					<dcsset:dataParameters>
+						<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+							<dcscor:use>false</dcscor:use>
+							<dcscor:parameter>ТекущаяДата</dcscor:parameter>
+							<dcscor:value xsi:nil="true"/>
+						</dcscor:item>
+					</dcsset:dataParameters>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="СоздатьДокумент" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать документ</v8:content>
+				</v8:item>
+			</Title>
+			<Action>СоздатьДокумент</Action>
+		</Command>
+		<Command name="Закрыть" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Закрыть</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ЗакрытьФорму</Action>
+		</Command>
+	</Commands>
+</Form>

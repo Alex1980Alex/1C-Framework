@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<UseForFoldersAndItems>Items</UseForFoldersAndItems>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<ChildItems>
+		<InputField name="Код" id="1">
+			<DataPath>Объект.Code</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="КодКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="КодРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<UsualGroup name="ГруппаШапка" id="47">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Шапка</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа шапка</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаШапкаРасширеннаяПодсказка" id="48"/>
+			<ChildItems>
+				<InputField name="Родитель" id="7">
+					<DataPath>Объект.Parent</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="РодительКонтекстноеМеню" id="8"/>
+					<ExtendedTooltip name="РодительРасширеннаяПодсказка" id="9"/>
+				</InputField>
+				<InputField name="ТипОборудования" id="13">
+					<DataPath>Объект.ТипОборудования</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="ТипОборудованияКонтекстноеМеню" id="14"/>
+					<ExtendedTooltip name="ТипОборудованияРасширеннаяПодсказка" id="15"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<InputField name="ТипВзвешивания" id="31">
+			<DataPath>Объект.ТипВзвешивания</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ТипВзвешиванияКонтекстноеМеню" id="32"/>
+			<ExtendedTooltip name="ТипВзвешиванияРасширеннаяПодсказка" id="33"/>
+		</InputField>
+		<UsualGroup name="ГруппаНаименование" id="49">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа наименование</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа наименование</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаНаименованиеРасширеннаяПодсказка" id="50"/>
+			<ChildItems>
+				<InputField name="Наименование" id="4">
+					<DataPath>Объект.Description</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="НаименованиеКонтекстноеМеню" id="5"/>
+					<ExtendedTooltip name="НаименованиеРасширеннаяПодсказка" id="6"/>
+				</InputField>
+				<InputField name="КраткоеНазвание" id="16">
+					<DataPath>Объект.КраткоеНазвание</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="КраткоеНазваниеКонтекстноеМеню" id="17"/>
+					<ExtendedTooltip name="КраткоеНазваниеРасширеннаяПодсказка" id="18"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<InputField name="Номер" id="10">
+			<DataPath>Объект.Номер</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НомерКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="НомерРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<UsualGroup name="ГруппаНастройкиСервисаВесов" id="43">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки сервиса весов</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа настройки сервиса весов</v8:content>
+				</v8:item>
+			</ToolTip>
+			<ExtendedTooltip name="ГруппаНастройкиСервисаВесовРасширеннаяПодсказка" id="44"/>
+			<ChildItems>
+				<InputField name="гкс_НомерПроезда" id="19">
+					<DataPath>Объект.гкс_НомерПроезда</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="гкс_НомерПроездаКонтекстноеМеню" id="20"/>
+					<ExtendedTooltip name="гкс_НомерПроездаРасширеннаяПодсказка" id="21"/>
+				</InputField>
+				<InputField name="МаксимальноеКоличествоОпросов" id="28">
+					<DataPath>Объект.МаксимальноеКоличествоОпросов</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="МаксимальноеКоличествоОпросовКонтекстноеМеню" id="29"/>
+					<ExtendedTooltip name="МаксимальноеКоличествоОпросовРасширеннаяПодсказка" id="30"/>
+				</InputField>
+				<CheckBoxField name="ИспользоватьАвтоматическоеВзвешивание" id="34">
+					<DataPath>Объект.ИспользоватьАвтоматическоеВзвешивание</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="ИспользоватьАвтоматическоеВзвешиваниеКонтекстноеМеню" id="35"/>
+					<ExtendedTooltip name="ИспользоватьАвтоматическоеВзвешиваниеРасширеннаяПодсказка" id="36"/>
+				</CheckBoxField>
+				<InputField name="ВремяОжиданияОтвета" id="37">
+					<DataPath>Объект.ВремяОжиданияОтвета</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="ВремяОжиданияОтветаКонтекстноеМеню" id="38"/>
+					<ExtendedTooltip name="ВремяОжиданияОтветаРасширеннаяПодсказка" id="39"/>
+				</InputField>
+				<UsualGroup name="ГруппаRMQ" id="45">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>RMQ</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа RMQ</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаRMQРасширеннаяПодсказка" id="46"/>
+					<ChildItems>
+						<InputField name="ТочкаОбмена" id="22">
+							<DataPath>Объект.ТочкаОбмена</DataPath>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="ТочкаОбменаКонтекстноеМеню" id="23"/>
+							<ExtendedTooltip name="ТочкаОбменаРасширеннаяПодсказка" id="24"/>
+						</InputField>
+						<InputField name="КлючМаршрутизации" id="25">
+							<DataPath>Объект.КлючМаршрутизации</DataPath>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="КлючМаршрутизацииКонтекстноеМеню" id="26"/>
+							<ExtendedTooltip name="КлючМаршрутизацииРасширеннаяПодсказка" id="27"/>
+						</InputField>
+						<CheckBoxField name="АвтоудалениеОчередиОтвета" id="40">
+							<DataPath>Объект.АвтоудалениеОчередиОтвета</DataPath>
+							<EditMode>EnterOnInput</EditMode>
+							<CheckBoxType>Auto</CheckBoxType>
+							<ContextMenu name="АвтоудалениеОчередиОтветаКонтекстноеМеню" id="41"/>
+							<ExtendedTooltip name="АвтоудалениеОчередиОтветаРасширеннаяПодсказка" id="42"/>
+						</CheckBoxField>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:CatalogObject.гкс_ОборудованиеПЛК</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

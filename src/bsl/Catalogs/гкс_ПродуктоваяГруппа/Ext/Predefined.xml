@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="c335c1b0-e36e-479b-adff-e790e2b5c001">
+		<Name>Рапс</Name>
+		<Code>00000000001</Code>
+		<Description>Рапс</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="c5bac025-95ff-4b40-aa0c-14662cff0206">
+		<Name>Соя</Name>
+		<Code>00000000002</Code>
+		<Description>Соя</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="093bb94e-ccc4-45a1-ae40-87ec6e1ddea8">
+		<Name>Рыжик</Name>
+		<Code>00000000003</Code>
+		<Description>Рыжик</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="ec6bb45a-3d1a-4f68-a889-2e6e08134a49">
+		<Name>Лен</Name>
+		<Code>00000000004</Code>
+		<Description>Лен</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

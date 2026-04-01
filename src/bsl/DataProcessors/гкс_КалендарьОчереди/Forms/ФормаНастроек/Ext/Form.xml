@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="НастройкиФона" id="1">
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки фона</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="НастройкиФонаРасширеннаяПодсказка" id="2"/>
+			<ChildItems>
+				<Button name="НастройкиЦветаВидовНоменклатурыСохранитьИЗакрыть" id="25">
+					<Type>UsualButton</Type>
+					<Representation>PictureAndText</Representation>
+					<CommandName>Form.Command.СохранитьИЗакрыть</CommandName>
+					<BackColor>style:ImportantColor</BackColor>
+					<Font ref="style:NormalTextFont" bold="true" italic="false" underline="false" strikeout="false" kind="StyleItem"/>
+					<Picture>
+						<xr:Ref>StdPicture.Write</xr:Ref>
+						<xr:LoadTransparent>true</xr:LoadTransparent>
+					</Picture>
+					<ExtendedTooltip name="НастройкиЦветаВидовНоменклатурыСохранитьИЗакрытьРасширеннаяПодсказка" id="26"/>
+				</Button>
+			</ChildItems>
+		</UsualGroup>
+		<Table name="НастройкиЦветаСегментовНоменклатуры" id="3">
+			<Representation>List</Representation>
+			<AutoInsertNewRow>true</AutoInsertNewRow>
+			<EnableStartDrag>true</EnableStartDrag>
+			<EnableDrag>true</EnableDrag>
+			<DataPath>НастройкиЦветаЭлементовПланировщика</DataPath>
+			<RowFilter xsi:nil="true"/>
+			<ContextMenu name="НастройкиЦветаСегментовНоменклатурыКонтекстноеМеню" id="4"/>
+			<AutoCommandBar name="НастройкиЦветаСегментовНоменклатурыКоманднаяПанель" id="5"/>
+			<ExtendedTooltip name="НастройкиЦветаСегментовНоменклатурыРасширеннаяПодсказка" id="6"/>
+			<SearchStringAddition name="НастройкиЦветаСегментовНоменклатурыСтрокаПоиска" id="7">
+				<AdditionSource>
+					<Item>НастройкиЦветаСегментовНоменклатуры</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="НастройкиЦветаСегментовНоменклатурыСтрокаПоискаКонтекстноеМеню" id="8"/>
+				<ExtendedTooltip name="НастройкиЦветаСегментовНоменклатурыСтрокаПоискаРасширеннаяПодсказка" id="9"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="НастройкиЦветаСегментовНоменклатурыСостояниеПросмотра" id="10">
+				<AdditionSource>
+					<Item>НастройкиЦветаСегментовНоменклатуры</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="НастройкиЦветаСегментовНоменклатурыСостояниеПросмотраКонтекстноеМеню" id="11"/>
+				<ExtendedTooltip name="НастройкиЦветаСегментовНоменклатурыСостояниеПросмотраРасширеннаяПодсказка" id="12"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="НастройкиЦветаСегментовНоменклатурыУправлениеПоиском" id="13">
+				<AdditionSource>
+					<Item>НастройкиЦветаСегментовНоменклатуры</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="НастройкиЦветаСегментовНоменклатурыУправлениеПоискомКонтекстноеМеню" id="14"/>
+				<ExtendedTooltip name="НастройкиЦветаСегментовНоменклатурыУправлениеПоискомРасширеннаяПодсказка" id="15"/>
+			</SearchControlAddition>
+			<ChildItems>
+				<InputField name="НастройкиЦветаСегментовНоменклатурыНоменклатура" id="27">
+					<DataPath>НастройкиЦветаЭлементовПланировщика.Номенклатура</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="НастройкиЦветаСегментовНоменклатурыНоменклатураКонтекстноеМеню" id="28"/>
+					<ExtendedTooltip name="НастройкиЦветаСегментовНоменклатурыНоменклатураРасширеннаяПодсказка" id="29"/>
+				</InputField>
+				<InputField name="НастройкиЦветаВидовНоменклатурыЦвет" id="19">
+					<DataPath>НастройкиЦветаЭлементовПланировщика.Цвет</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="НастройкиЦветаВидовНоменклатурыЦветКонтекстноеМеню" id="20"/>
+					<ExtendedTooltip name="НастройкиЦветаВидовНоменклатурыЦветРасширеннаяПодсказка" id="21"/>
+				</InputField>
+			</ChildItems>
+		</Table>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="НастройкиЦветаЭлементовПланировщика" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки цвета элементов планировщика</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Цвет" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Цвет</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>v8ui:Color</v8:Type>
+					</Type>
+				</Column>
+				<Column name="Номенклатура" id="3">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Номенклатура</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>cfg:CatalogRef.Номенклатура</v8:Type>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="Объект" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Объект</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DataProcessorObject.гкс_КалендарьОчереди</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="СохранитьИЗакрыть" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Сохранить и закрыть</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Сохранить и закрыть</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>СохранитьИЗакрыть</Action>
+		</Command>
+	</Commands>
+</Form>

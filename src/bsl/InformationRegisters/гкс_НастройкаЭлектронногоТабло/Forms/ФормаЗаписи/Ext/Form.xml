@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+		<Event name="BeforeWriteAtServer">ПередЗаписьюНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="ТочкаМаршрута" id="1">
+			<DataPath>Запись.ТочкаМаршрута</DataPath>
+			<ReadOnly>true</ReadOnly>
+			<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="Табло" id="10">
+			<DataPath>Запись.Табло</DataPath>
+			<ReadOnly>true</ReadOnly>
+			<ContextMenu name="ТаблоКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="ТаблоРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="ВидПеревозки" id="4">
+			<DataPath>Запись.ВидПеревозки</DataPath>
+			<ContextMenu name="ВидПеревозкиКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="ВидПеревозкиРасширеннаяПодсказка" id="6"/>
+		</InputField>
+		<InputField name="ВидТабло" id="7">
+			<DataPath>Запись.ВидТабло</DataPath>
+			<ContextMenu name="ВидТаблоКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="ВидТаблоРасширеннаяПодсказка" id="9"/>
+			<Events>
+				<Event name="OnChange">ВидТаблоПриИзменении</Event>
+			</Events>
+		</InputField>
+		<InputField name="Номенклатура" id="13">
+			<DataPath>Запись.Номенклатура</DataPath>
+			<Visible>false</Visible>
+			<ContextMenu name="НоменклатураКонтекстноеМеню" id="14"/>
+			<ExtendedTooltip name="НоменклатураРасширеннаяПодсказка" id="15"/>
+		</InputField>
+		<InputField name="Весы" id="16">
+			<DataPath>Запись.Весы</DataPath>
+			<Visible>false</Visible>
+			<ContextMenu name="ВесыКонтекстноеМеню" id="17"/>
+			<ExtendedTooltip name="ВесыРасширеннаяПодсказка" id="18"/>
+		</InputField>
+		<InputField name="ЯмаРазгрузки" id="19">
+			<DataPath>Запись.ЯмаРазгрузки</DataPath>
+			<Visible>false</Visible>
+			<ContextMenu name="ЯмаРазгрузкиКонтекстноеМеню" id="20"/>
+			<ExtendedTooltip name="ЯмаРазгрузкиРасширеннаяПодсказка" id="21"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_НастройкаЭлектронногоТабло</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

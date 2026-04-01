@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="fac6f3ee-547f-4265-99d2-55563efa34a4">
+		<Name>НезаполненныеРеквизиты</Name>
+		<Code/>
+		<Description>Незаполненные реквизиты</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="1baab930-1cbd-44a0-8e29-c6a4a448a82a">
+		<Name>Неструктурированная</Name>
+		<Code/>
+		<Description>Неструктурированная</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="41e0d7f7-203b-439c-be53-5bf59a1ba1e1">
+		<Name>ОтложеннаяЗаписьОбъекта</Name>
+		<Code/>
+		<Description>Отложенная запись объекта</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="b4d170fc-4cd8-4a90-ac1e-e0e56dd0ca1d">
+		<Name>ОтложенноеПроведениеДокумента</Name>
+		<Code/>
+		<Description>Отложенное проведение документа</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="b4b6b530-b89c-4532-aab7-9e1b907b8c3b">
+		<Name>ОшибкаВыполненияКодаОбработчиковПриОтправкеДанных</Name>
+		<Code/>
+		<Description>Ошибка выполнения кода обработчиков при отправке данных</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="bb649725-1209-4590-b052-100d4afbf359">
+		<Name>ОшибкаВыполненияКодаОбработчиковПриПолученииДанных</Name>
+		<Code/>
+		<Description>Ошибка выполнения кода обработчиков при получении данных</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="86e3f4c6-c49e-41c8-9925-f12f4de39043">
+		<Name>ОшибкаОтложенногоФормирования</Name>
+		<Code/>
+		<Description>Ошибка отложенного формирования исходящих сообщений</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="b3a95170-0cf0-47e2-9501-55233718d530">
+		<Name>ОшибкаПроверкиСконвертированногоОбъекта</Name>
+		<Code/>
+		<Description>Ошибка проверки сконвертированного объекта</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="e67a31e0-d77b-4287-ae24-2aebf2a7f6e3">
+		<Name>ПроведениеДокумента</Name>
+		<Code/>
+		<Description>Проведение документа</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

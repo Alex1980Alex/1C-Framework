@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<VerticalScroll>useIfNecessary</VerticalScroll>
+	<UseForFoldersAndItems>Items</UseForFoldersAndItems>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<Pages name="Страницы" id="28">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Страницы</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Страницы</v8:content>
+				</v8:item>
+			</ToolTip>
+			<PagesRepresentation>TabsOnTop</PagesRepresentation>
+			<ExtendedTooltip name="СтраницыРасширеннаяПодсказка" id="29"/>
+			<ChildItems>
+				<Page name="СтраницаОсновное" id="40">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Основное</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Страница основное</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="СтраницаОсновноеРасширеннаяПодсказка" id="41"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаДаты" id="65">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа даты</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа даты</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Vertical</Group>
+							<Behavior>Usual</Behavior>
+							<Representation>StrongSeparation</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="ГруппаДатыРасширеннаяПодсказка" id="66"/>
+							<ChildItems>
+								<InputField name="ДатаВремяСобытия" id="3">
+									<DataPath>Объект.ДатаВремяСобытия</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ДатаВремяСобытияКонтекстноеМеню" id="4"/>
+									<ExtendedTooltip name="ДатаВремяСобытияРасширеннаяПодсказка" id="14"/>
+								</InputField>
+								<InputField name="ДатаВремяОтправки" id="9">
+									<DataPath>Объект.ДатаВремяОтправки</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ДатаВремяОтправкиКонтекстноеМеню" id="10"/>
+									<ExtendedTooltip name="ДатаВремяОтправкиРасширеннаяПодсказка" id="17"/>
+								</InputField>
+								<InputField name="УниверсальнаяДатаСобытияВМиллисекундах" id="25">
+									<DataPath>Объект.УниверсальнаяДатаСобытияВМиллисекундах</DataPath>
+									<ContextMenu name="УниверсальнаяДатаСобытияВМиллисекундахКонтекстноеМеню" id="26"/>
+									<ExtendedTooltip name="УниверсальнаяДатаСобытияВМиллисекундахРасширеннаяПодсказка" id="27"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаИдентификаторы" id="63">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа идентификаторы</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа идентификаторы</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Behavior>Usual</Behavior>
+							<Representation>StrongSeparation</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="ГруппаИдентификаторыРасширеннаяПодсказка" id="64"/>
+							<ChildItems>
+								<InputField name="ИдентификаторСообщения" id="42">
+									<DataPath>Объект.ИдентификаторСообщения</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<ContextMenu name="ИдентификаторСообщенияКонтекстноеМеню" id="43"/>
+									<ExtendedTooltip name="ИдентификаторСообщенияРасширеннаяПодсказка" id="44"/>
+								</InputField>
+								<InputField name="КорневойИдентификаторСообщения" id="51">
+									<DataPath>Объект.КорневойИдентификаторСообщения</DataPath>
+									<ContextMenu name="КорневойИдентификаторСообщенияКонтекстноеМеню" id="52"/>
+									<ExtendedTooltip name="КорневойИдентификаторСообщенияРасширеннаяПодсказка" id="53"/>
+								</InputField>
+								<InputField name="ТипКонтракта" id="54">
+									<DataPath>Объект.ТипКонтракта</DataPath>
+									<ContextMenu name="ТипКонтрактаКонтекстноеМеню" id="55"/>
+									<ExtendedTooltip name="ТипКонтрактаРасширеннаяПодсказка" id="56"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаХарактеристики" id="69">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа характеристики</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа характеристики</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Behavior>Usual</Behavior>
+							<Representation>StrongSeparation</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="ГруппаХарактеристикиРасширеннаяПодсказка" id="70"/>
+							<ChildItems>
+								<InputField name="Хоп" id="48">
+									<DataPath>Объект.Хоп</DataPath>
+									<ContextMenu name="ХопКонтекстноеМеню" id="49"/>
+									<ExtendedTooltip name="ХопРасширеннаяПодсказка" id="50"/>
+								</InputField>
+								<InputField name="ТочкаПубликации" id="5">
+									<DataPath>Объект.ТочкаПубликации</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ТочкаПубликацииКонтекстноеМеню" id="6"/>
+									<ExtendedTooltip name="ТочкаПубликацииРасширеннаяПодсказка" id="15"/>
+								</InputField>
+								<InputField name="КлючМаршрутизации" id="22">
+									<DataPath>Объект.КлючМаршрутизации</DataPath>
+									<ContextMenu name="КлючМаршрутизацииКонтекстноеМеню" id="23"/>
+									<ExtendedTooltip name="КлючМаршрутизацииРасширеннаяПодсказка" id="24"/>
+								</InputField>
+								<InputField name="СерверОчередей" id="19">
+									<DataPath>Объект.СерверОчередей</DataPath>
+									<ContextMenu name="СерверОчередейКонтекстноеМеню" id="20"/>
+									<ExtendedTooltip name="СерверОчередейРасширеннаяПодсказка" id="21"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаПрочее" id="67">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа прочее</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа прочее</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Vertical</Group>
+							<Behavior>Usual</Behavior>
+							<Representation>StrongSeparation</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="ГруппаПрочееРасширеннаяПодсказка" id="68"/>
+							<ChildItems>
+								<InputField name="гкс_ОбъектСобытия" id="37">
+									<DataPath>Объект.гкс_ОбъектСобытия</DataPath>
+									<ContextMenu name="гкс_ОбъектСобытияКонтекстноеМеню" id="38"/>
+									<ExtendedTooltip name="гкс_ОбъектСобытияРасширеннаяПодсказка" id="39"/>
+								</InputField>
+								<InputField name="гкс_Получатель" id="45">
+									<DataPath>Объект.гкс_НастройкаПолучателя</DataPath>
+									<ContextMenu name="гкс_ПолучательКонтекстноеМеню" id="46"/>
+									<ExtendedTooltip name="гкс_ПолучательРасширеннаяПодсказка" id="47"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</Page>
+				<Page name="СтраницаСообщение" id="30">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Сообщение</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Сообщение</v8:content>
+						</v8:item>
+					</ToolTip>
+					<TitleDataPath>ВыгруженоОбъектов</TitleDataPath>
+					<ExtendedTooltip name="СтраницаСообщениеРасширеннаяПодсказка" id="31"/>
+					<ChildItems>
+						<InputField name="Сообщение" id="11">
+							<DataPath>Объект.Сообщение</DataPath>
+							<TitleLocation>None</TitleLocation>
+							<EditMode>EnterOnInput</EditMode>
+							<AutoMaxWidth>false</AutoMaxWidth>
+							<HorizontalStretch>true</HorizontalStretch>
+							<ContextMenu name="СообщениеКонтекстноеМеню" id="12"/>
+							<ExtendedTooltip name="СообщениеРасширеннаяПодсказка" id="18"/>
+						</InputField>
+					</ChildItems>
+				</Page>
+				<Page name="СтраницаСвойстваСообщения" id="32">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Свойства сообщения</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Страница свойства сообщения</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="СтраницаСвойстваСообщенияРасширеннаяПодсказка" id="33"/>
+					<ChildItems>
+						<InputField name="СвойстваСообщения" id="34">
+							<DataPath>Объект.СвойстваСообщения</DataPath>
+							<TitleLocation>None</TitleLocation>
+							<AutoMaxWidth>false</AutoMaxWidth>
+							<HorizontalStretch>true</HorizontalStretch>
+							<ContextMenu name="СвойстваСообщенияКонтекстноеМеню" id="35"/>
+							<ExtendedTooltip name="СвойстваСообщенияРасширеннаяПодсказка" id="36"/>
+						</InputField>
+					</ChildItems>
+				</Page>
+				<Page name="СтраницаВыгруженныеОбъекты" id="93">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Выгруженные объекты</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Страница выгруженные объекты</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="СтраницаВыгруженныеОбъектыРасширеннаяПодсказка" id="94"/>
+					<ChildItems>
+						<Table name="ВыгруженныеОбъекты" id="71">
+							<CommandBarLocation>None</CommandBarLocation>
+							<ReadOnly>true</ReadOnly>
+							<ChangeRowSet>false</ChangeRowSet>
+							<ChangeRowOrder>false</ChangeRowOrder>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Объект.ВыгруженныеОбъекты</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="ВыгруженныеОбъектыКонтекстноеМеню" id="72"/>
+							<AutoCommandBar name="ВыгруженныеОбъектыКоманднаяПанель" id="73"/>
+							<ExtendedTooltip name="ВыгруженныеОбъектыРасширеннаяПодсказка" id="74"/>
+							<SearchStringAddition name="ВыгруженныеОбъектыСтрокаПоиска" id="75">
+								<AdditionSource>
+									<Item>ВыгруженныеОбъекты</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ВыгруженныеОбъектыСтрокаПоискаКонтекстноеМеню" id="76"/>
+								<ExtendedTooltip name="ВыгруженныеОбъектыСтрокаПоискаРасширеннаяПодсказка" id="77"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="ВыгруженныеОбъектыСостояниеПросмотра" id="78">
+								<AdditionSource>
+									<Item>ВыгруженныеОбъекты</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ВыгруженныеОбъектыСостояниеПросмотраКонтекстноеМеню" id="79"/>
+								<ExtendedTooltip name="ВыгруженныеОбъектыСостояниеПросмотраРасширеннаяПодсказка" id="80"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="ВыгруженныеОбъектыУправлениеПоиском" id="81">
+								<AdditionSource>
+									<Item>ВыгруженныеОбъекты</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="ВыгруженныеОбъектыУправлениеПоискомКонтекстноеМеню" id="82"/>
+								<ExtendedTooltip name="ВыгруженныеОбъектыУправлениеПоискомРасширеннаяПодсказка" id="83"/>
+							</SearchControlAddition>
+							<Events>
+								<Event name="Selection">ВыгруженныеОбъектыВыбор</Event>
+							</Events>
+							<ChildItems>
+								<InputField name="ВыгруженныеОбъектыОбъект" id="87">
+									<DataPath>Объект.ВыгруженныеОбъекты.Объект</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ВыгруженныеОбъектыОбъектКонтекстноеМеню" id="88"/>
+									<ExtendedTooltip name="ВыгруженныеОбъектыОбъектРасширеннаяПодсказка" id="89"/>
+								</InputField>
+								<InputField name="ВыгруженныеОбъектыДата" id="90">
+									<DataPath>Объект.ВыгруженныеОбъекты.Дата</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ВыгруженныеОбъектыДатаКонтекстноеМеню" id="91"/>
+									<ExtendedTooltip name="ВыгруженныеОбъектыДатаРасширеннаяПодсказка" id="92"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+			</ChildItems>
+		</Pages>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:CatalogObject.ИсходящиеСообщения</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+		<Attribute name="ВыгруженоОбъектов" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выгружено объектов</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:decimal</v8:Type>
+				<v8:NumberQualifiers>
+					<v8:Digits>3</v8:Digits>
+					<v8:FractionDigits>0</v8:FractionDigits>
+					<v8:AllowedSign>Any</v8:AllowedSign>
+				</v8:NumberQualifiers>
+			</Type>
+		</Attribute>
+		<ConditionalAppearance>
+			<dcsset:item>
+				<dcsset:selection>
+					<dcsset:item>
+						<dcsset:field>ВыгруженныеОбъектыОбъект</dcsset:field>
+					</dcsset:item>
+				</dcsset:selection>
+				<dcsset:filter>
+					<dcsset:item xsi:type="dcsset:FilterItemComparison">
+						<dcsset:left xsi:type="dcscor:Field">Объект.гкс_ОбъектСобытия</dcsset:left>
+						<dcsset:comparisonType>Equal</dcsset:comparisonType>
+						<dcsset:right xsi:type="dcscor:Field">Объект.ВыгруженныеОбъекты.Объект</dcsset:right>
+					</dcsset:item>
+				</dcsset:filter>
+				<dcsset:appearance>
+					<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+						<dcscor:parameter>Шрифт</dcscor:parameter>
+						<dcscor:value xsi:type="v8ui:Font" ref="sys:DefaultGUIFont" bold="true" italic="false" underline="false" strikeout="false" kind="WindowsFont"/>
+					</dcscor:item>
+				</dcsset:appearance>
+			</dcsset:item>
+		</ConditionalAppearance>
+	</Attributes>
+	<CommandInterface>
+		<CommandBar>
+			<Item>
+				<Command>CommonCommand.гкс_ОбработатьБезОчереди</Command>
+				<Type>Auto</Type>
+				<DefaultVisible>false</DefaultVisible>
+				<Visible>
+					<xr:Common>false</xr:Common>
+				</Visible>
+			</Item>
+			<Item>
+				<Command>CommonCommand.гкс_ПовторноеПроигрываниеСообщений</Command>
+				<Type>Auto</Type>
+				<DefaultVisible>false</DefaultVisible>
+				<Visible>
+					<xr:Common>false</xr:Common>
+				</Visible>
+			</Item>
+			<Item>
+				<Command>CommonCommand.гкс_ВернутьВОчередь</Command>
+				<Type>Auto</Type>
+				<DefaultVisible>false</DefaultVisible>
+				<Visible>
+					<xr:Common>false</xr:Common>
+				</Visible>
+			</Item>
+			<Item>
+				<Command>CommonCommand.гкс_ПакетнаяВыгрузкаОбъектов</Command>
+				<Type>Auto</Type>
+				<DefaultVisible>false</DefaultVisible>
+				<Visible>
+					<xr:Common>false</xr:Common>
+				</Visible>
+			</Item>
+		</CommandBar>
+	</CommandInterface>
+</Form>

@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<ChildItems>
+		<InputField name="ГруппаТСКод" id="13">
+			<DataPath>Запись.ГруппаТС.Code</DataPath>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Код группы</v8:content>
+				</v8:item>
+			</Title>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ГруппаТСКодКонтекстноеМеню" id="14"/>
+			<ExtendedTooltip name="ГруппаТСКодРасширеннаяПодсказка" id="15"/>
+		</InputField>
+		<InputField name="ГруппаТС" id="1">
+			<DataPath>Запись.ГруппаТС</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ГруппаТСКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="ГруппаТСРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="РегистрацияТранспорта" id="4">
+			<DataPath>Запись.РегистрацияТранспорта</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="РегистрацияТранспортаКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="РегистрацияТранспортаРасширеннаяПодсказка" id="6"/>
+			<Events>
+				<Event name="OnChange">РегистрацияТранспортаПриИзменении</Event>
+			</Events>
+		</InputField>
+		<LabelField name="ТранспортноеСредство" id="7">
+			<DataPath>Запись.ТранспортноеСредство</DataPath>
+			<ContextMenu name="ТранспортноеСредствоКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="ТранспортноеСредствоРасширеннаяПодсказка" id="9"/>
+		</LabelField>
+		<InputField name="МестнаяДата" id="10">
+			<DataPath>Запись.МестнаяДата</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="МестнаяДатаКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="МестнаяДатаРасширеннаяПодсказка" id="12"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_СоставГруппТранспорта</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

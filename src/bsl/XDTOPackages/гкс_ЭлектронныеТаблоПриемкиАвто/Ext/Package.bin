@@ -1,0 +1,26 @@
+﻿<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="http://sodrugestvo.com/onec-adapter/online-car-queue-acceptance">
+	<objectType name="Scoreboards.DataTable.Line" open="true" ordered="false" sequenced="true">
+		<property name="StringValue" type="xs:string" lowerBound="1" localName="string"/>
+		<property name="Font" type="xs:string" lowerBound="0" localName="font"/>
+		<property name="Color" type="xs:string" lowerBound="0" localName="color"/>
+		<property name="CoordX" type="xs:int" lowerBound="0" localName="coord_x"/>
+		<property name="CoordY" type="xs:int" lowerBound="0" localName="coord_y"/>
+		<property name="Height" type="xs:int" lowerBound="0" localName="height"/>
+		<property name="Size" type="xs:int" lowerBound="0" localName="size"/>
+		<property name="Alignment" type="xs:string" lowerBound="0" localName="alignment"/>
+		<property name="Width" type="xs:int" lowerBound="0" localName="width"/>
+	</objectType>
+	<objectType name="Scoreboards.DataTable" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodrugestvo.com/onec-adapter/online-car-queue-acceptance" name="Line" type="d3p1:Scoreboards.DataTable.Line" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType name="Scoreboards" sequenced="true">
+		<property name="Ip" type="xs:string" lowerBound="1" localName="ip"/>
+		<property name="Count" type="xs:int" lowerBound="0" localName="count"/>
+		<property name="AutoLine" type="xs:boolean" lowerBound="0" localName="auto_line"/>
+		<property name="Model" type="xs:string" lowerBound="0" localName="model"/>
+		<property xmlns:d3p1="http://sodrugestvo.com/onec-adapter/online-car-queue-acceptance" name="DataTable" type="d3p1:Scoreboards.DataTable" lowerBound="0"/>
+	</objectType>
+	<objectType name="Message">
+		<property xmlns:d3p1="http://sodrugestvo.com/onec-adapter/online-car-queue-acceptance" name="Scoreboards" type="d3p1:Scoreboards"/>
+	</objectType>
+</package>

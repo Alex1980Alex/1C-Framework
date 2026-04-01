@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="PlanOfCharacteristicKindPredefinedItems" version="2.20">
+	<Item id="52445416-958f-4e92-b881-c66ffd6cb8e5">
+		<Name>ВидНоменклатурыПродукция</Name>
+		<Code>000000001</Code>
+		<Description>Продукция (вид номенклатуры)</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.ВидыНоменклатуры</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="4d494cf9-3667-4d1f-8ed6-f1d9b082c8e8">
+		<Name>ВидНоменклатурыСырье</Name>
+		<Code>000000002</Code>
+		<Description>Сырье (вид номенклатуры)</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.ВидыНоменклатуры</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="232f7c8b-9ec2-4be6-afab-02b0f0985cf6">
+		<Name>ВидНоменклатурыТорговыеГрузы</Name>
+		<Code>000000003</Code>
+		<Description>ТорговыеГрузы (Вид нмоенклатуры)</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.ВидыНоменклатуры</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="143e9f6b-1f65-4ec8-ac26-057530b04c40">
+		<Name>ЕдиницаИзмеренияТранспортногоДокумента</Name>
+		<Code>000000004</Code>
+		<Description>Единица измерения Транспортного документа</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.УпаковкиЕдиницыИзмерения</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="fd5466b1-8fd1-4f71-abdd-55821a323f5b">
+		<Name>ВидНоменклатурыТовар</Name>
+		<Code>000000005</Code>
+		<Description>Вид номенклатуры товар</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.ВидыНоменклатуры</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="78a9898c-79de-4e03-8e76-5f7136c00492">
+		<Name>РуководительЛаборатории</Name>
+		<Code>000000006</Code>
+		<Description>Руководитель лаборатории</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.гкс_ОтветственныеЛица</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="715e8804-a55a-4689-bbac-1deaa9f01b3f">
+		<Name>ВидыНоменклатурыЭталоныКачества</Name>
+		<Code>000000007</Code>
+		<Description>Эталоны качества</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.ВидыНоменклатуры</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="9c16b4d2-8604-4267-b3c0-ef8c69860bc4">
+		<Name>ПолучательДанныхУправлениеДвором</Name>
+		<Code>000000008</Code>
+		<Description>Получатель данных управление двором</Description>
+		<Type>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.гкс_ПолучателиДанныхRMQ</v8:Type>
+		</Type>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

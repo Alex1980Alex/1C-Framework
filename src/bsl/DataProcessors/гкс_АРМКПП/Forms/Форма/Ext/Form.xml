@@ -1,0 +1,370 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>false</Autofill>
+	</AutoCommandBar>
+	<Events>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаКоманд" id="59">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа команд</v8:content>
+				</v8:item>
+			</Title>
+			<Group>AlwaysHorizontal</Group>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаКомандРасширеннаяПодсказка" id="60"/>
+			<ChildItems>
+				<Button name="СоздатьЗаписьКППНаОснованииОчереди" id="3">
+					<Type>UsualButton</Type>
+					<Height>2</Height>
+					<CommandName>Form.Command.СоздатьЗаписьКППНаОснованииОчереди</CommandName>
+					<BackColor>style:ImportantColor</BackColor>
+					<Font faceName="" height="20" bold="true" italic="false" underline="false" strikeout="false" kind="Absolute" scale="100"/>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Въезд на основании очереди</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="СоздатьЗаписьКППНаОснованииОчередиРасширеннаяПодсказка" id="4"/>
+				</Button>
+				<Button name="СоздатьЗаписьКПП" id="1">
+					<Type>UsualButton</Type>
+					<Height>2</Height>
+					<CommandName>Form.Command.СоздатьЗаписьКПП</CommandName>
+					<BackColor>style:ImportantColor</BackColor>
+					<Font faceName="" height="20" bold="true" italic="false" underline="false" strikeout="false" kind="Absolute" scale="100"/>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Въезд</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="СоздатьЗаписьКППРасширеннаяПодсказка" id="2"/>
+				</Button>
+				<Button name="ОтменитьДокумент" id="5">
+					<Type>UsualButton</Type>
+					<Height>2</Height>
+					<CommandName>Form.Command.ОтменитьДокумент</CommandName>
+					<BackColor>style:SpecialTextColor</BackColor>
+					<Font faceName="" height="20" bold="true" italic="false" underline="false" strikeout="false" kind="Absolute" scale="100"/>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Отменить въезд</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="ОтменитьДокументРасширеннаяПодсказка" id="6"/>
+				</Button>
+				<CheckBoxField name="ПоказыватьОтмененные" id="1539">
+					<DataPath>ПоказыватьОтмененные</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="ПоказыватьОтмененныеКонтекстноеМеню" id="1540"/>
+					<ExtendedTooltip name="ПоказыватьОтмененныеРасширеннаяПодсказка" id="1541"/>
+					<Events>
+						<Event name="OnChange">ПоказыватьОтмененныеПриИзменении</Event>
+					</Events>
+				</CheckBoxField>
+			</ChildItems>
+		</UsualGroup>
+		<Table name="ТаблицаРегистрацииТранспорта" id="2088">
+			<DataPath>ТаблицаРегистрацииТранспорта</DataPath>
+			<AutoRefresh>false</AutoRefresh>
+			<AutoRefreshPeriod>60</AutoRefreshPeriod>
+			<Period>
+				<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+				<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+				<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+			</Period>
+			<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+			<RestoreCurrentRow>false</RestoreCurrentRow>
+			<TopLevelParent xsi:nil="true"/>
+			<ShowRoot>true</ShowRoot>
+			<AllowRootChoice>false</AllowRootChoice>
+			<UpdateOnDataChange>Auto</UpdateOnDataChange>
+			<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
+			<ContextMenu name="ТаблицаРегистрацииТранспортаКонтекстноеМеню" id="2090"/>
+			<AutoCommandBar name="ТаблицаРегистрацииТранспортаКоманднаяПанель" id="2089"/>
+			<ExtendedTooltip name="ТаблицаРегистрацииТранспортаРасширеннаяПодсказка" id="2091"/>
+			<SearchStringAddition name="ТаблицаРегистрацииТранспортаСтрокаПоиска" id="2092">
+				<AdditionSource>
+					<Item>ТаблицаРегистрацииТранспорта</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ТаблицаРегистрацииТранспортаСтрокаПоискаКонтекстноеМеню" id="2093"/>
+				<ExtendedTooltip name="ТаблицаРегистрацииТранспортаСтрокаПоискаРасширеннаяПодсказка" id="2094"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="ТаблицаРегистрацииТранспортаСостояниеПросмотра" id="2098">
+				<AdditionSource>
+					<Item>ТаблицаРегистрацииТранспорта</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ТаблицаРегистрацииТранспортаСостояниеПросмотраКонтекстноеМеню" id="2099"/>
+				<ExtendedTooltip name="ТаблицаРегистрацииТранспортаСостояниеПросмотраРасширеннаяПодсказка" id="2100"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="ТаблицаРегистрацииТранспортаУправлениеПоиском" id="2095">
+				<AdditionSource>
+					<Item>ТаблицаРегистрацииТранспорта</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="ТаблицаРегистрацииТранспортаУправлениеПоискомКонтекстноеМеню" id="2096"/>
+				<ExtendedTooltip name="ТаблицаРегистрацииТранспортаУправлениеПоискомРасширеннаяПодсказка" id="2097"/>
+			</SearchControlAddition>
+			<ChildItems>
+				<InputField name="ТаблицаРегистрацииТранспортаВремяВъезда" id="2101">
+					<DataPath>ТаблицаРегистрацииТранспорта.НачалоПериода</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаВремяВъездаКонтекстноеМеню" id="2102"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаВремяВъездаРасширеннаяПодсказка" id="2103"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаНомер" id="2104">
+					<DataPath>ТаблицаРегистрацииТранспорта.Номер</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаНомерКонтекстноеМеню" id="2105"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаНомерРасширеннаяПодсказка" id="2106"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаКонтрагент" id="2107">
+					<DataPath>ТаблицаРегистрацииТранспорта.Контрагент</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаКонтрагентКонтекстноеМеню" id="2108"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаКонтрагентРасширеннаяПодсказка" id="2109"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаНоменклатура" id="2110">
+					<DataPath>ТаблицаРегистрацииТранспорта.Номенклатура</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаНоменклатураКонтекстноеМеню" id="2111"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаНоменклатураРасширеннаяПодсказка" id="2112"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаНомерТранспортногоСредства" id="2113">
+					<DataPath>ТаблицаРегистрацииТранспорта.НомерТранспортногоСредства</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаНомерТранспортногоСредстваКонтекстноеМеню" id="2114"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаНомерТранспортногоСредстваРасширеннаяПодсказка" id="2115"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаУсловиеПроезда" id="2116">
+					<DataPath>ТаблицаРегистрацииТранспорта.УсловиеПроезда</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаУсловиеПроездаКонтекстноеМеню" id="2117"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаУсловиеПроездаРасширеннаяПодсказка" id="2118"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаВремяНахожденияНаПЛК" id="2119">
+					<DataPath>ТаблицаРегистрацииТранспорта.ВремяНахожденияНаПЛК</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаВремяНахожденияНаПЛККонтекстноеМеню" id="2120"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаВремяНахожденияНаПЛКРасширеннаяПодсказка" id="2121"/>
+				</InputField>
+				<InputField name="ТаблицаРегистрацииТранспортаСсылка" id="2122">
+					<DataPath>ТаблицаРегистрацииТранспорта.Ссылка</DataPath>
+					<ContextMenu name="ТаблицаРегистрацииТранспортаСсылкаКонтекстноеМеню" id="2123"/>
+					<ExtendedTooltip name="ТаблицаРегистрацииТранспортаСсылкаРасширеннаяПодсказка" id="2124"/>
+				</InputField>
+			</ChildItems>
+		</Table>
+		<Button name="Выезд" id="7">
+			<Type>UsualButton</Type>
+			<Width>30</Width>
+			<Height>3</Height>
+			<CommandName>Form.Command.Выезд</CommandName>
+			<BackColor>style:ImportantColor</BackColor>
+			<Font faceName="" height="20" bold="true" italic="false" underline="false" strikeout="false" kind="Absolute" scale="100"/>
+			<ExtendedTooltip name="ВыездРасширеннаяПодсказка" id="8"/>
+		</Button>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DataProcessorObject.гкс_АРМКПП</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+		<Attribute name="ТаблицаРегистрацииТранспорта" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Таблица регистрации транспорта</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>true</ManualQuery>
+				<DynamicDataRead>false</DynamicDataRead>
+				<QueryText>ВЫБРАТЬ
+	ВъездНаКПП.НачалоПериода КАК НачалоПериода,
+	ВъездНаКПП.Номер КАК Номер,
+	ВъездНаКПП.Контрагент КАК Контрагент,
+	ВъездНаКПП.Номенклатура КАК Номенклатура,
+	ВъездНаКПП.НомерТранспортногоСредства КАК НомерТранспортногоСредства,
+	ВъездНаКПП.УсловиеПроезда КАК УсловиеПроезда,
+	ВЫБОР
+		КОГДА НЕ ВъездНаКПП.НачалоПериода = ДАТАВРЕМЯ(1, 1, 1)
+				И НЕ ВъездНаКПП.ПометкаУдаления
+			ТОГДА СТРОКА(ЦЕЛ(РАЗНОСТЬДАТ(ВъездНаКПП.НачалоПериода, &amp;ТекущаяДата, МИНУТА) / 60)) + " ч " + СТРОКА(РАЗНОСТЬДАТ(ВъездНаКПП.НачалоПериода, &amp;ТекущаяДата, МИНУТА) - ЦЕЛ(РАЗНОСТЬДАТ(ВъездНаКПП.НачалоПериода, &amp;ТекущаяДата, МИНУТА) / 60) * 60) + " мин"
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1)
+	КОНЕЦ КАК ВремяНахожденияНаПЛК,
+	ВъездНаКПП.Ссылка КАК Ссылка
+ИЗ
+	Документ.гкс_ВъездНаКПП КАК ВъездНаКПП
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_ВыездНаКПП КАК ВыездНаКПП
+		ПО (ВыездНаКПП.ДокументОснование = ВъездНаКПП.Ссылка)
+			И (НЕ ВыездНаКПП.ПометкаУдаления)
+ГДЕ
+	ВыездНаКПП.Ссылка ЕСТЬ NULL
+	И НЕ ВъездНаКПП.ПометкаУдаления
+
+ОБЪЕДИНИТЬ ВСЕ
+
+ВЫБРАТЬ
+	ВъездНаКПППометка.НачалоПериода,
+	ВъездНаКПППометка.Номер,
+	ВъездНаКПППометка.Контрагент,
+	ВъездНаКПППометка.Номенклатура,
+	ВъездНаКПППометка.НомерТранспортногоСредства,
+	ВъездНаКПППометка.УсловиеПроезда,
+	ДАТАВРЕМЯ(1, 1, 1),
+	ВъездНаКПППометка.Ссылка
+ИЗ
+	Документ.гкс_ВъездНаКПП КАК ВъездНаКПППометка
+ГДЕ
+	ВЫБОР
+			КОГДА НЕ &amp;ПоказыватьОтмененные
+				ТОГДА НЕ ВъездНаКПППометка.ПометкаУдаления
+			ИНАЧЕ ИСТИНА
+		КОНЕЦ
+	И ВъездНаКПППометка.Дата МЕЖДУ НАЧАЛОПЕРИОДА(&amp;ТекущаяДата, ДЕНЬ) И КОНЕЦПЕРИОДА(&amp;ТекущаяДата, ДЕНЬ)
+	И ВъездНаКПППометка.ПометкаУдаления</QueryText>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номер</dcssch:dataPath>
+					<dcssch:field>Номер</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Контрагент</dcssch:dataPath>
+					<dcssch:field>Контрагент</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номенклатура</dcssch:dataPath>
+					<dcssch:field>Номенклатура</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>НомерТранспортногоСредства</dcssch:dataPath>
+					<dcssch:field>НомерТранспортногоСредства</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>УсловиеПроезда</dcssch:dataPath>
+					<dcssch:field>УсловиеПроезда</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ВремяНахожденияНаПЛК</dcssch:dataPath>
+					<dcssch:field>ВремяНахожденияНаПЛК</dcssch:field>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Время нахождения на ПЛК</v8:content>
+						</v8:item>
+					</dcssch:title>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Ссылка</dcssch:dataPath>
+					<dcssch:field>Ссылка</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>НачалоПериода</dcssch:dataPath>
+					<dcssch:field>НачалоПериода</dcssch:field>
+				</Field>
+				<Parameter>
+					<dcssch:name>ТекущаяДата</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Текущая дата</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>DateTime</v8:DateFractions>
+						</v8:DateQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ПоказыватьОтмененные</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Показывать отмененные</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<ListSettings>
+					<dcsset:order>
+						<dcsset:userSettingID>5c47ee86-e636-40f9-848f-5d360a7252a8</dcsset:userSettingID>
+					</dcsset:order>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+		<Attribute name="ПоказыватьОтмененные" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показывать отмененные</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="СоздатьЗаписьКПП" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать документ</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать запись КПП</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>СоздатьЗаписьКПП</Action>
+		</Command>
+		<Command name="СоздатьЗаписьКППНаОснованииОчереди" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать документ на основании очереди</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать запись КППНа основании очереди</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>СоздатьЗаписьКППНаОснованииОчереди</Action>
+		</Command>
+		<Command name="ОтменитьДокумент" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отменить документ</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ОтменитьДокумент</Action>
+		</Command>
+		<Command name="Выезд" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выезд</v8:content>
+				</v8:item>
+			</Title>
+			<Action>Выезд</Action>
+		</Command>
+	</Commands>
+</Form>

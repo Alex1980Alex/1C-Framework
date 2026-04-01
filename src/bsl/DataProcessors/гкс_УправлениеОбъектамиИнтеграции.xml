@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<DataProcessor uuid="5a5e6ad7-9b32-4cc8-a4fd-d59216580bdb">
+		<InternalInfo>
+			<xr:GeneratedType name="DataProcessorObject.гкс_УправлениеОбъектамиИнтеграции" category="Object">
+				<xr:TypeId>2a351f5e-0bf3-4d9d-80ca-d58641a25abb</xr:TypeId>
+				<xr:ValueId>1dd32745-3e82-48cb-9333-4bdc010ae037</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="DataProcessorManager.гкс_УправлениеОбъектамиИнтеграции" category="Manager">
+				<xr:TypeId>2d2e1b55-60f4-47c4-a8fb-f7ef16c6956e</xr:TypeId>
+				<xr:ValueId>137e249e-4a79-4ce7-8f4b-33b8658410b3</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>гкс_УправлениеОбъектамиИнтеграции</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Управление объектами интеграции (ИАС)</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<UseStandardCommands>false</UseStandardCommands>
+			<DefaultForm>DataProcessor.гкс_УправлениеОбъектамиИнтеграции.Form.ПовторноеПроигрываниеСообшений</DefaultForm>
+			<AuxiliaryForm/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+			<ExtendedPresentation>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Управление объектами интеграции</v8:content>
+				</v8:item>
+			</ExtendedPresentation>
+			<Explanation/>
+		</Properties>
+		<ChildObjects>
+			<Form>ПовторноеПроигрываниеСообшений</Form>
+			<Form>ПакетнаяВыгрузка</Form>
+			<Form>РаспространениеФормата</Form>
+			<Form>ПовторноеФормированиеСообщенийОбъектов</Form>
+		</ChildObjects>
+	</DataProcessor>
+</MetaDataObject>

@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Subsystem uuid="361e8947-b55c-4015-a8e2-334aae142b13">
+		<Properties>
+			<Name>ОчередиСообщенийRMQ</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Интеграционный адаптер "Содружество"</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<IncludeHelpInContents>true</IncludeHelpInContents>
+			<IncludeInCommandInterface>true</IncludeInCommandInterface>
+			<UseOneCommand>false</UseOneCommand>
+			<Explanation/>
+			<Picture>
+				<xr:Ref>CommonPicture.гкс_RabbitMQ</xr:Ref>
+				<xr:LoadTransparent>false</xr:LoadTransparent>
+			</Picture>
+			<Content>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.ОчередьСообщений</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.ИздательСобытий</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.ПолучательСобытий</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.АсинхронныйСервис</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.КлиентАсинхронногоСервиса</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.КлиентОчередиСообщений</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.ИспользованиеОчередейСообщений</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonTemplate.V8RMQClient</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.ОбновлениеИнформационнойБазыИАС</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.УправлениеСобытийнымОбменом</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.УдалитьСервераОчередей</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.ОбработчикиСобытийRMQ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.СерверыОчередейRMQ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.ОчередьСообщенийВызовСервера</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.ОчередьСообщенийПовтИсп</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.НастройкаИнтеграционногоАдаптера</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_НастройкиФорматовОбменаОбщие</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Enum.гкс_ТипыТочекОбменаRMQ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Enum.гкс_ТипыФорматовОбменаRMQ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.гкс_МоделиДанныхXDTO</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.гкс_ТочкиОбменаRMQ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.гкс_ФорматыОбменаИАС</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.гкс_ИсследовательGUID</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.ИсходящиеСообщения</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.гкс_ВходящиеСообщенияRMQ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonCommand.гкс_НастройкаИнтеграционногоАдаптера</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_ОтложеннаяОбработкаОбъектов</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonCommand.гкс_ПакетнаяВыгрузкаОбъектов</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_НастройкаТаблицыКлючей</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_НастройкиФорматовОбменаED</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonCommand.гкс_РаспространениеФорматаИАС</xr:Item>
+			</Content>
+		</Properties>
+		<ChildObjects>
+			<Subsystem>РегламентноеПолучениеСообщений</Subsystem>
+			<Subsystem>АсинхронныеСервисы</Subsystem>
+			<Subsystem>РегламентнаяОтправкаСообщений</Subsystem>
+		</ChildObjects>
+	</Subsystem>
+</MetaDataObject>

@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="FormCommandBar" id="-1"/>
+	<Events>
+		<Event name="AfterWrite">ПослеЗаписи</Event>
+		<Event name="OnOpen">ПриОткрытии</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Период" id="1">
+			<DataPath>Запись.Period</DataPath>
+			<ContextMenu name="ПериодКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="ПериодРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="Формат" id="4">
+			<DataPath>Запись.Формат</DataPath>
+			<ContextMenu name="ФорматКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="ФорматРасширеннаяПодсказка" id="6"/>
+		</InputField>
+		<InputField name="МенеджерЗагрузки" id="7">
+			<DataPath>Запись.МенеджерЗагрузки</DataPath>
+			<ContextMenu name="МенеджерЗагрузкиКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="МенеджерЗагрузкиРасширеннаяПодсказка" id="9"/>
+		</InputField>
+		<InputField name="МенеджерВыгрузки" id="10">
+			<DataPath>Запись.МенеджерВыгрузки</DataPath>
+			<ContextMenu name="МенеджерВыгрузкиКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="МенеджерВыгрузкиРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<UsualGroup name="ГруппаМодель" id="18">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа модель</v8:content>
+				</v8:item>
+			</Title>
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаМодельРасширеннаяПодсказка" id="19"/>
+			<ChildItems>
+				<Button name="СформироватьМодель" id="16">
+					<Type>Hyperlink</Type>
+					<CommandName>Form.Command.СформироватьМодель</CommandName>
+					<ExtendedTooltip name="СформироватьМодельРасширеннаяПодсказка" id="17"/>
+				</Button>
+				<InputField name="МодельДанных" id="13">
+					<DataPath>Запись.МодельДанных</DataPath>
+					<ContextMenu name="МодельДанныхКонтекстноеМеню" id="14"/>
+					<ExtendedTooltip name="МодельДанныхРасширеннаяПодсказка" id="15"/>
+					<Events>
+						<Event name="OnChange">МодельДанныхПриИзменении</Event>
+					</Events>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_НастройкиФорматовОбменаED</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="СформироватьМодель" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Сформировать модель</v8:content>
+				</v8:item>
+			</Title>
+			<Action>СформироватьМодель</Action>
+		</Command>
+	</Commands>
+</Form>

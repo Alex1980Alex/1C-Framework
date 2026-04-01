@@ -1,0 +1,39 @@
+﻿<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" elementFormQualified="true" attributeFormQualified="false">
+	<valueType name="TypeQuantity" base="xs:decimal" variety="Atomic" totalDigits="15" fractionDigits="3"/>
+	<objectType name="BasicMessage" abstract="true">
+		<property name="ID" type="xs:string"/>
+		<property name="Entry" type="xs:decimal" lowerBound="0"/>
+		<property name="RFID" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType name="CargoProperties">
+		<property name="CargoName" type="xs:string"/>
+		<property name="Brutto" type="xs:float" lowerBound="0"/>
+		<property name="Netto" type="xs:float" lowerBound="0"/>
+		<property name="TareWeight" type="xs:float" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" name="DepartureTransportMessage" base="d2p1:BasicMessage">
+		<property name="DateOut" type="xs:dateTime"/>
+		<property name="Result" type="xs:boolean"/>
+	</objectType>
+	<objectType xmlns:d2p1="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" name="LaboratorySamplingMessage" base="d2p1:BasicMessage"/>
+	<objectType xmlns:d2p1="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" name="TransportEntryRequestMessage" base="d2p1:BasicMessage">
+		<property name="Cargo" type="d2p1:CargoProperties"/>
+		<property name="CarNum" type="xs:string" lowerBound="0"/>
+		<property name="Driver" type="xs:string" lowerBound="0"/>
+		<property name="Cancel" type="xs:boolean"/>
+		<property name="AllowedDate" type="xs:decimal" lowerBound="0" nillable="true"/>
+	</objectType>
+	<objectType xmlns:d2p1="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" name="TransportEntryResponseMessage" base="d2p1:BasicMessage">
+		<property name="Source" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" name="TransportRegistrationMessage" base="d2p1:BasicMessage">
+		<property name="Manual" type="xs:boolean"/>
+	</objectType>
+	<objectType xmlns:d2p1="https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13" name="WeighResultsMessage" base="d2p1:BasicMessage">
+		<property name="WeighResults" type="d2p1:WeighResultsProperties"/>
+	</objectType>
+	<objectType name="WeighResultsProperties">
+		<property name="DateEnd" type="xs:dateTime"/>
+		<property name="Weight" type="xs:float"/>
+	</objectType>
+</package>

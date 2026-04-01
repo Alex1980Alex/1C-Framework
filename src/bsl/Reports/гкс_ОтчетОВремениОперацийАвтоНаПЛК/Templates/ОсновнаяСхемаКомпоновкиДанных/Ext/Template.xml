@@ -1,0 +1,520 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<DataCompositionSchema xmlns="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcscom="http://v8.1c.ru/8.1/data-composition-system/common" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<dataSource>
+		<name>ИсточникДанных1</name>
+		<dataSourceType>Local</dataSourceType>
+	</dataSource>
+	<dataSet xsi:type="DataSetQuery">
+		<name>НаборДанных1</name>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Авто</dataPath>
+			<field>Авто</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Номенклатура</dataPath>
+			<field>Номенклатура</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ПЛК</dataPath>
+			<field>ПЛК</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Контрагент</dataPath>
+			<field>Контрагент</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Регистрация</dataPath>
+			<field>Регистрация</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаПрибытия</dataPath>
+			<field>ДатаПрибытия</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаПеревескаБрутто</dataPath>
+			<field>ДатаПеревескаБрутто</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаНачалаОтбораПроб</dataPath>
+			<field>ДатаНачалаОтбораПроб</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаЗавершенияОтбораПроб</dataPath>
+			<field>ДатаЗавершенияОтбораПроб</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаНачалаАнализа</dataPath>
+			<field>ДатаНачалаАнализа</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаОкончанияАнализа</dataPath>
+			<field>ДатаОкончанияАнализа</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаПолученияРезультатаАнализа</dataPath>
+			<field>ДатаПолученияРезультатаАнализа</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Дата получения результата анализа</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаНазначениеСклада</dataPath>
+			<field>ДатаНазначениеСклада</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаЗавершенияВыгрузки</dataPath>
+			<field>ДатаЗавершенияВыгрузки</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаПеревескаТара</dataPath>
+			<field>ДатаПеревескаТара</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаУбытияАвто</dataPath>
+			<field>ДатаУбытияАвто</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ОбщееВремяНахожденияАвто</dataPath>
+			<field>ОбщееВремяНахожденияАвто</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Общее время нахождения авто</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Въезд</dataPath>
+			<field>Въезд</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Выезд</dataPath>
+			<field>Выезд</field>
+		</field>
+		<dataSource>ИсточникДанных1</dataSource>
+		<query>ВЫБРАТЬ
+	СостоянияРегистрации.ДокументРегистрации КАК ДокументРегистрации
+ПОМЕСТИТЬ ВТ_Регистрации
+ИЗ
+	РегистрСведений.гкс_СостоянияРегистрации КАК СостоянияРегистрации
+ГДЕ
+	СостоянияРегистрации.Период МЕЖДУ &amp;ДатаНачала И &amp;ДатаОкончания
+	И СостоянияРегистрации.ТочкаМаршрута = &amp;ТочкаМаршрута
+	И СостоянияРегистрации.ТипРегистрации = &amp;ТипРегистрации
+	И СостоянияРегистрации.ВидПеревозки = &amp;ВидПеревозки
+	И СостоянияРегистрации.Состояние = &amp;Состояние
+СГРУППИРОВАТЬ ПО
+	СостоянияРегистрации.ДокументРегистрации
+
+ИНДЕКСИРОВАТЬ ПО
+	ДокументРегистрации
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ ВЫБРАТЬ
+	СостоянияРегистрации.ДокументРегистрации КАК ДокументРегистрации,
+	СостоянияРегистрации.Состояние КАК Состояние,
+	МАКСИМУМ(СостоянияРегистрации.Период) КАК Период
+ПОМЕСТИТЬ ВТ_Состояния
+ИЗ
+	ВТ_Регистрации КАК ВТ_Регистрации
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ РегистрСведений.гкс_СостоянияРегистрации КАК СостоянияРегистрации
+		ПО ВТ_Регистрации.ДокументРегистрации = СостоянияРегистрации.ДокументРегистрации
+ГДЕ
+	СостоянияРегистрации.Период МЕЖДУ &amp;ДатаНачала И &amp;ДатаОкончания
+	И СостоянияРегистрации.ТочкаМаршрута = &amp;ТочкаМаршрута
+	И СостоянияРегистрации.ТипРегистрации = &amp;ТипРегистрации
+	И СостоянияРегистрации.ВидПеревозки = &amp;ВидПеревозки
+СГРУППИРОВАТЬ ПО
+	СостоянияРегистрации.ДокументРегистрации,
+	СостоянияРегистрации.Состояние
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ ВЫБРАТЬ
+	ВТ_Состояния.ДокументРегистрации КАК ДокументРегистрации,
+	ВТ_Состояния.Состояние КАК Состояние,
+	МАКСИМУМ(ВТ_Состояния.Период) КАК Период
+ПОМЕСТИТЬ ВТ_СостоянияБезКачества
+ИЗ
+	ВТ_Состояния КАК ВТ_Состояния
+ГДЕ
+	НЕ ВТ_Состояния.Состояние В (ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.КачествоПринято),
+		ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.КачествоНеПринято))
+СГРУППИРОВАТЬ ПО
+	ВТ_Состояния.ДокументРегистрации,
+	ВТ_Состояния.Состояние
+
+ИНДЕКСИРОВАТЬ ПО
+	ДокументРегистрации
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ ВЫБРАТЬ
+	ВТ_Состояния.ДокументРегистрации КАК ДокументРегистрации,
+	МАКСИМУМ(ВТ_Состояния.Период) КАК Период
+ПОМЕСТИТЬ ВТ_СостоянияКачество
+ИЗ
+	ВТ_Состояния КАК ВТ_Состояния
+ГДЕ
+	ВТ_Состояния.Состояние В (ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.КачествоПринято),
+		ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.КачествоНеПринято))
+СГРУППИРОВАТЬ ПО
+	ВТ_Состояния.ДокументРегистрации
+
+ИНДЕКСИРОВАТЬ ПО
+	ДокументРегистрации
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ ВЫБРАТЬ
+	ВъездНаКПП.Ссылка КАК Ссылка,
+	ВъездНаКПП.НачалоПериода КАК Въезд,
+	ЕСТЬNULL(ВыездНаКПП.ВремяВыезда, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)) КАК Выезд
+ПОМЕСТИТЬ ВТ_ДокументыКПП
+ИЗ
+	Документ.гкс_ВъездНаКПП КАК ВъездНаКПП
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_ВыездНаКПП КАК ВыездНаКПП
+		ПО ВыездНаКПП.ДокументОснование = ВъездНаКПП.Ссылка
+ГДЕ
+	НЕ ВъездНаКПП.ПометкаУдаления
+	И НЕ ВыездНаКПП.ПометкаУдаления
+СГРУППИРОВАТЬ ПО
+	ВъездНаКПП.Ссылка,
+	ВъездНаКПП.НачалоПериода,
+	ЕСТЬNULL(ВыездНаКПП.ВремяВыезда, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+
+ИНДЕКСИРОВАТЬ ПО
+	Ссылка
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ ВЫБРАТЬ
+	Регистрация.ТранспортноеСредство КАК Авто,
+	Регистрация.Номенклатура КАК Номенклатура,
+	Регистрация.ТочкаМаршрута КАК ПЛК,
+	Регистрация.Контрагент КАК Контрагент,
+	Регистрация.Ссылка КАК Регистрация,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Прибыл)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаПрибытия,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ВзвешенБрутто)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ВЫБОР
+			КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ГотовКОтборуПроб)
+				ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+			ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+		КОНЕЦ
+	КОНЕЦ) КАК ДатаПеревескаБрутто,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ГотовКОтборуПроб)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаГотовКОтборуПроб,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ВзятыПробы)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаНачалаОтбораПроб,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ПринятыПробы)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаЗавершенияОтбораПроб,
+	МАКСИМУМ(ЕСТЬNULL(ЛабораторныйАнализ.гкс_ДатаНачалаАнализа, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))) КАК ДатаНачалаАнализа,
+	МАКСИМУМ(ЕСТЬNULL(ЛабораторныйАнализ.гкс_ДатаОкончанияАнализа, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))) КАК
+		ДатаОкончанияАнализа,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.РезультатыПробПолучены)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаПолученияРезультатаАнализа,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ВыгрузкаРазрешена)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаНазначениеСклада,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Выгружен)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаЗавершенияВыгрузки,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.ВзвешенТара)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаПеревескаТара,
+	МАКСИМУМ(ВЫБОР
+		КОГДА ВТ_СостоянияБезКачества.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Убыл)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияБезКачества.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+	КОНЕЦ) КАК ДатаУбытияАвто,
+	ЕСТЬNULL(ВТ_ДокументыКПП.Въезд, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)) КАК Въезд,
+	ЕСТЬNULL(ВТ_ДокументыКПП.Выезд, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)) КАК Выезд
+ПОМЕСТИТЬ ВТ_Итоги
+ИЗ
+	ВТ_Регистрации КАК ВТ_Регистрации
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ Документ.гкс_РегистрацияНаПЛК КАК Регистрация
+		ПО ВТ_Регистрации.ДокументРегистрации = Регистрация.Ссылка
+		ЛЕВОЕ СОЕДИНЕНИЕ ВТ_СостоянияБезКачества КАК ВТ_СостоянияБезКачества
+		ПО ВТ_Регистрации.ДокументРегистрации = ВТ_СостоянияБезКачества.ДокументРегистрации
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_ЛабораторныйАнализ КАК ЛабораторныйАнализ
+		ПО ВТ_Регистрации.ДокументРегистрации = ЛабораторныйАнализ.гкс_ДокументРегистрации
+		ЛЕВОЕ СОЕДИНЕНИЕ ВТ_ДокументыКПП КАК ВТ_ДокументыКПП
+		ПО ВТ_Регистрации.ДокументРегистрации.ДокументОснование = ВТ_ДокументыКПП.Ссылка
+СГРУППИРОВАТЬ ПО
+	Регистрация.ТранспортноеСредство,
+	Регистрация.Номенклатура,
+	Регистрация.ТочкаМаршрута,
+	Регистрация.Контрагент,
+	Регистрация.Ссылка,
+	ВТ_ДокументыКПП.Въезд,
+	ВТ_ДокументыКПП.Выезд
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ ВЫБРАТЬ
+	ВТ_Итоги.Авто КАК Авто,
+	ВТ_Итоги.Номенклатура КАК Номенклатура,
+	ВТ_Итоги.ПЛК КАК ПЛК,
+	ВТ_Итоги.Контрагент КАК Контрагент,
+	ВТ_Итоги.Регистрация КАК Регистрация,
+	ВТ_Итоги.Въезд,
+	ВТ_Итоги.ДатаПрибытия КАК ДатаПрибытия,
+	ВТ_Итоги.ДатаПеревескаБрутто КАК ДатаПеревескаБрутто,
+	ВТ_Итоги.ДатаНачалаОтбораПроб КАК ДатаНачалаОтбораПроб,
+	ВТ_Итоги.ДатаЗавершенияОтбораПроб КАК ДатаЗавершенияОтбораПроб,
+	ВТ_Итоги.ДатаНачалаАнализа КАК ДатаНачалаАнализа,
+	ВТ_Итоги.ДатаОкончанияАнализа КАК ДатаОкончанияАнализа,
+	ВЫБОР
+		КОГДА ВТ_Итоги.ДатаПолученияРезультатаАнализа = ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+			ТОГДА ЕСТЬNULL(ВТ_СостоянияКачество.Период, ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0))
+		ИНАЧЕ ВТ_Итоги.ДатаПолученияРезультатаАнализа
+	КОНЕЦ КАК ДатаПолученияРезультатаАнализа,
+	ВТ_Итоги.ДатаНазначениеСклада КАК ДатаНазначениеСклада,
+	ВТ_Итоги.ДатаЗавершенияВыгрузки КАК ДатаЗавершенияВыгрузки,
+	ВТ_Итоги.ДатаПеревескаТара КАК ДатаПеревескаТара,
+	ВТ_Итоги.ДатаУбытияАвто КАК ДатаУбытияАвто,
+	ВТ_Итоги.Выезд,
+	ВЫБОР
+		КОГДА ВТ_Итоги.Выезд = ДАТАВРЕМЯ(1, 1, 1, 0, 0, 0)
+			ТОГДА 0
+		ИНАЧЕ РАЗНОСТЬДАТ(ВТ_Итоги.Въезд, ВТ_Итоги.Выезд, МИНУТА)
+	КОНЕЦ КАК ОбщееВремяНахожденияАвто
+ИЗ
+	ВТ_Итоги КАК ВТ_Итоги
+		ЛЕВОЕ СОЕДИНЕНИЕ ВТ_СостоянияКачество КАК ВТ_СостоянияКачество
+		ПО ВТ_Итоги.Регистрация = ВТ_СостоянияКачество.ДокументРегистрации</query>
+	</dataSet>
+	<parameter>
+		<name>СтандартныйПериод</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Период </v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type>v8:StandardPeriod</v8:Type>
+		</valueType>
+		<value xsi:type="v8:StandardPeriod">
+			<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+			<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+			<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+		</value>
+		<useRestriction>false</useRestriction>
+	</parameter>
+	<parameter>
+		<name>Состояние</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Состояние</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:EnumRef.гкс_СостоянияРегистрации</v8:Type>
+		</valueType>
+		<value xsi:type="dcscor:DesignTimeValue">Перечисление.гкс_СостоянияРегистрации.Прибыл</value>
+		<useRestriction>true</useRestriction>
+	</parameter>
+	<parameter>
+		<name>ДатаОкончания</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Дата окончания</v8:content>
+			</v8:item>
+		</title>
+		<value xsi:type="xs:string">01.01.0001</value>
+		<useRestriction>true</useRestriction>
+		<expression>&amp;СтандартныйПериод.ДатаОкончания</expression>
+	</parameter>
+	<parameter>
+		<name>ДатаНачала</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Дата начала</v8:content>
+			</v8:item>
+		</title>
+		<value xsi:type="xs:string">01.01.0001</value>
+		<useRestriction>true</useRestriction>
+		<expression>&amp;СтандартныйПериод.ДатаНачала</expression>
+	</parameter>
+	<parameter>
+		<name>ТочкаМаршрута</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Точка маршрута</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:CatalogRef.гкс_ТочкиМаршрута</v8:Type>
+		</valueType>
+		<value xsi:nil="true"/>
+		<useRestriction>false</useRestriction>
+	</parameter>
+	<parameter>
+		<name>ВидПеревозки</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Вид перевозки</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+		</valueType>
+		<value xsi:nil="true"/>
+		<useRestriction>false</useRestriction>
+	</parameter>
+	<parameter>
+		<name>ТипРегистрации</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Тип регистрации</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type xmlns:d4p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d4p1:EnumRef.гкс_ТипРегистрации</v8:Type>
+		</valueType>
+		<value xsi:type="dcscor:DesignTimeValue">Перечисление.гкс_ТипРегистрации.Приемка</value>
+		<useRestriction>true</useRestriction>
+	</parameter>
+	<settingsVariant>
+		<dcsset:name>ВремяОперацийНаПЛК</dcsset:name>
+		<dcsset:presentation xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Отчет о времени операций транспорта на ПЛК (основной)</v8:content>
+			</v8:item>
+		</dcsset:presentation>
+		<dcsset:settings xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows">
+			<dcsset:selection>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Авто</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Номенклатура</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ПЛК</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Контрагент</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Регистрация</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Въезд</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаПрибытия</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаПеревескаБрутто</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаНачалаОтбораПроб</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаЗавершенияОтбораПроб</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаНачалаАнализа</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаОкончанияАнализа</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаПолученияРезультатаАнализа</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаНазначениеСклада</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаЗавершенияВыгрузки</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаПеревескаТара</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаУбытияАвто</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Выезд</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ОбщееВремяНахожденияАвто</dcsset:field>
+				</dcsset:item>
+			</dcsset:selection>
+			<dcsset:dataParameters>
+				<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+					<dcscor:parameter>СтандартныйПериод</dcscor:parameter>
+					<dcscor:value xsi:type="v8:StandardPeriod">
+						<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+						<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+						<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+					</dcscor:value>
+					<dcsset:userSettingID>6a0a6f10-c591-4d25-9bb2-4feea225dd3e</dcsset:userSettingID>
+				</dcscor:item>
+				<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+					<dcscor:use>false</dcscor:use>
+					<dcscor:parameter>ТочкаМаршрута</dcscor:parameter>
+					<dcscor:value xsi:nil="true"/>
+					<dcsset:userSettingID>3bbca83d-10ed-4ea8-9224-4782f2dd2952</dcsset:userSettingID>
+				</dcscor:item>
+				<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+					<dcscor:use>false</dcscor:use>
+					<dcscor:parameter>ВидПеревозки</dcscor:parameter>
+					<dcscor:value xsi:nil="true"/>
+					<dcsset:userSettingID>49cb753c-e0bc-40ff-8a8d-0e0f0b25f704</dcsset:userSettingID>
+				</dcscor:item>
+			</dcsset:dataParameters>
+			<dcsset:order>
+				<dcsset:item xsi:type="dcsset:OrderItemField">
+					<dcsset:field>ДатаПрибытия</dcsset:field>
+					<dcsset:orderType>Asc</dcsset:orderType>
+				</dcsset:item>
+			</dcsset:order>
+			<dcsset:item xsi:type="dcsset:StructureItemGroup">
+				<dcsset:order>
+					<dcsset:item xsi:type="dcsset:OrderItemAuto"/>
+				</dcsset:order>
+				<dcsset:selection>
+					<dcsset:item xsi:type="dcsset:SelectedItemAuto"/>
+				</dcsset:selection>
+			</dcsset:item>
+		</dcsset:settings>
+	</settingsVariant>
+</DataCompositionSchema>

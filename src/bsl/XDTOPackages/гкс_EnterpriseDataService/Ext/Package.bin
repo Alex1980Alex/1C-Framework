@@ -1,0 +1,162 @@
+﻿<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1">
+	<import namespace="http://www.1c.ru/SSL/Exchange/Message"/>
+	<valueType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="СправочникСсылка.ДополнительныеРеквизиты" base="d2p1:Ref"/>
+	<valueType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="СправочникСсылка.гкс_ВходящиеСообщенияRMQ" base="d2p1:Ref"/>
+	<valueType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="СправочникСсылка.гкс_УчастникиОбменаRMQ" base="d2p1:Ref"/>
+	<valueType name="гкс_СостоянияОбработкиСообщенийRMQ" base="xs:string" variety="Atomic">
+		<enumeration>ВОбработке</enumeration>
+		<enumeration>Зарегистрировано</enumeration>
+		<enumeration>Обработано</enumeration>
+		<enumeration>ОшибкаОбработки</enumeration>
+		<enumeration>Пропущено</enumeration>
+	</valueType>
+	<valueType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="СправочникСсылка.гкс_МоделиДанныхXDTO" base="d2p1:Ref"/>
+	<valueType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="СправочникСсылка.гкс_ФорматыОбменаИАС" base="d2p1:Ref"/>
+	<valueType name="гкс_ТипыФорматовОбменаRMQ" base="xs:string" variety="Atomic">
+		<enumeration xsi:type="xs:string">ED</enumeration>
+	</valueType>
+	<objectType name="ЛюбаяСсылка">
+		<property name="СсылкаНаОбъект">
+			<typeDef xsi:type="ObjectType">
+				<property xmlns:d5p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="УчастникиОбменаСсылка" type="d5p1:СправочникСсылка.гкс_УчастникиОбменаRMQ" lowerBound="0"/>
+				<property xmlns:d5p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="МоделиДанныхXDTOСсылка" type="d5p1:СправочникСсылка.гкс_МоделиДанныхXDTO" lowerBound="0"/>
+				<property xmlns:d5p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ФорматыОбменаИАССсылка" type="d5p1:СправочникСсылка.гкс_ФорматыОбменаИАС" lowerBound="0"/>
+				<property xmlns:d5p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ВходящиеСообщенияRMQСсылка" type="d5p1:СправочникСсылка.гкс_ВходящиеСообщенияRMQ" lowerBound="0"/>
+			</typeDef>
+		</property>
+	</objectType>
+	<objectType name="УдалениеОбъекта">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="СсылкаНаОбъект" type="d3p1:ЛюбаяСсылка"/>
+	</objectType>
+	<objectType name="КлючевыеСвойстваВходящиеСообщенияRMQ" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.гкс_ВходящиеСообщенияRMQ" lowerBound="0"/>
+		<property name="КлючОбъекта" type="xs:string" lowerBound="0"/>
+		<property name="ИдентификаторСообщения" type="xs:string" lowerBound="0"/>
+		<property name="КорневойИдентификаторСообщения" type="xs:string" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="УчастникОбмена" type="d3p1:КлючевыеСвойстваУчастникиОбмена" lowerBound="0"/>
+	</objectType>
+	<objectType name="КлючевыеСвойстваДополнительныеРеквизиты" open="true" sequenced="true">
+		<property name="Наименование" type="xs:string"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.ДополнительныеРеквизиты" lowerBound="0"/>
+		<property name="ЭтоДополнительноеСведение" type="xs:boolean" lowerBound="0"/>
+	</objectType>
+	<objectType name="КлючевыеСвойстваУчастникиОбмена" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.гкс_УчастникиОбменаRMQ" lowerBound="0"/>
+		<property name="Наименование" type="xs:string" lowerBound="0"/>
+		<property name="Код" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType name="КлючевыеСвойстваМоделиДанныхXDTO" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.гкс_МоделиДанныхXDTO" lowerBound="0"/>
+		<property name="ПространствоИмен" type="xs:string"/>
+		<property name="Наименование" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType name="КлючевыеСвойстваФорматыОбменаИАС">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.гкс_ФорматыОбменаИАС" lowerBound="0"/>
+		<property name="Наименование" type="xs:string"/>
+	</objectType>
+	<objectType name="ДополнительныеРеквизиты">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Строка" type="d3p1:ДополнительныеРеквизиты.Строка" upperBound="-1"/>
+	</objectType>
+	<objectType name="ДополнительныеРеквизиты.Строка" open="true" sequenced="true">
+		<property name="ЗначениеСвойства" lowerBound="0">
+			<typeDef xsi:type="ObjectType" ordered="false" sequenced="true">
+				<property xmlns:d5p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ВходящиеСообщенияRMQСсылка" type="d5p1:КлючевыеСвойстваВходящиеСообщенияRMQ" lowerBound="0"/>
+				<property xmlns:d5p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="УчастникиОбменаСсылка" type="d5p1:КлючевыеСвойстваУчастникиОбмена" lowerBound="0"/>
+				<property name="Число" type="xs:decimal" lowerBound="0"/>
+				<property name="Строка" type="xs:string" lowerBound="0"/>
+				<property name="Дата" type="xs:date" lowerBound="0"/>
+				<property name="Булево" type="xs:boolean" lowerBound="0"/>
+			</typeDef>
+		</property>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Свойство" type="d3p1:КлючевыеСвойстваДополнительныеРеквизиты"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="Справочник.ВходящиеСообщенияRMQ" base="d2p1:Object" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="КлючевыеСвойства" type="d3p1:КлючевыеСвойстваВходящиеСообщенияRMQ"/>
+		<property name="ДатаПолучения" type="xs:dateTime" lowerBound="0"/>
+		<property name="ДатаПринятияВОбработку" type="xs:dateTime" lowerBound="0"/>
+		<property name="ДатаОбработки" type="xs:dateTime" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="СостояниеОбработки" type="d3p1:гкс_СостоянияОбработкиСообщенийRMQ" lowerBound="0"/>
+		<property name="ТекстОшибкиОбработки" type="xs:string" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ЗагруженныеОбъекты" type="d3p1:Справочник.ВходящиеСообщенияRMQ.ЗагруженныеОбъекты" lowerBound="0"/>
+		<property name="УниверсальнаяДатаИзмененияСобытияВМиллисекундах" type="xs:integer" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ДополнительныеРеквизиты" type="d3p1:ДополнительныеРеквизиты" lowerBound="0"/>
+	</objectType>
+	<objectType name="Справочник.ВходящиеСообщенияRMQ.ЗагруженныеОбъекты">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Строка" type="d3p1:Справочник.ВходящиеСообщенияRMQ.ЗагруженныеОбъекты.Строка" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType name="Справочник.ВходящиеСообщенияRMQ.ЗагруженныеОбъекты.Строка" open="true" sequenced="true">
+		<property name="ТипОбъекта" type="xs:string" lowerBound="0"/>
+		<property name="ИдентификаторОбъекта" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="Справочник.УчастникиОбмена" base="d2p1:Object" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="КлючевыеСвойства" type="d3p1:КлючевыеСвойстваУчастникиОбмена"/>
+		<property name="ЭтаБаза" type="xs:boolean" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="Справочник.МоделиДанныхXDTO" base="d2p1:Object" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="КлючевыеСвойства" type="d3p1:КлючевыеСвойстваМоделиДанныхXDTO"/>
+		<property name="Содержимое" type="xs:base64Binary" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="Справочник.ФорматыОбменаИАС" base="d2p1:Object" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="КлючевыеСвойства" type="d3p1:КлючевыеСвойстваФорматыОбменаИАС"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Тип" type="d3p1:гкс_ТипыФорматовОбменаRMQ" lowerBound="1"/>
+		<property name="Версия" type="xs:string" lowerBound="0"/>
+		<property name="Порядок" type="xs:int" lowerBound="0"/>
+		<property name="ПространствоИмен">
+			<typeDef xsi:type="ValueType" base="xs:string" maxLength="150"/>
+		</property>
+		<property name="Активен" type="xs:boolean" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="НастройкиФорматовОбменаОбщие" type="d3p1:НастройкиФорматовОбменаОбщие" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="НастройкиФорматовОбменаED" type="d3p1:НастройкиФорматовОбменаED" lowerBound="0"/>
+	</objectType>
+	<objectType name="НастройкиФорматовОбменаОбщие">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Строка" type="d3p1:НастройкиФорматовОбменаОбщие.Строка" lowerBound="1" upperBound="-1"/>
+	</objectType>
+	<objectType name="НастройкиФорматовОбменаОбщие.Строка">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Тип" type="d3p1:гкс_ТипыФорматовОбменаRMQ"/>
+		<property name="МенеджерФормирования" type="xs:string" lowerBound="0"/>
+		<property name="МенеджерОбработки" type="xs:string"/>
+	</objectType>
+	<objectType name="НастройкиФорматовОбменаED">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Строка" type="d3p1:НастройкиФорматовОбменаED.Строка" lowerBound="1" upperBound="-1"/>
+	</objectType>
+	<objectType name="НастройкиФорматовОбменаED.Строка">
+		<property name="МенеджерЗагрузки" type="xs:string" lowerBound="0"/>
+		<property name="МенеджерВыгрузки" type="xs:string" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="МодельДанных" type="d3p1:КлючевыеСвойстваМоделиДанныхXDTO" lowerBound="0"/>
+		<property name="Период" type="xs:dateTime" lowerBound="0"/>
+	</objectType>
+	<objectType name="КлючевыеСвойствагкс_УчастникиОбмена" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.гкс_УчастникиОбменаRMQ" lowerBound="0"/>
+		<property name="Наименование" type="xs:string" lowerBound="0"/>
+		<property name="Код" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="Справочник.гкс_УчастникиОбмена" base="d2p1:Object" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="КлючевыеСвойства" type="d3p1:КлючевыеСвойствагкс_УчастникиОбмена"/>
+		<property name="ЭтаБаза" type="xs:boolean" lowerBound="0"/>
+	</objectType>
+	<objectType name="КлючевыеСвойствагкс_ВходящиеСообщенияRMQ" open="true" sequenced="false">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Ссылка" type="d3p1:СправочникСсылка.гкс_ВходящиеСообщенияRMQ" lowerBound="0"/>
+		<property name="КлючОбъекта" type="xs:string" lowerBound="0"/>
+		<property name="ИдентификаторСообщения" type="xs:string" lowerBound="0"/>
+		<property name="КорневойИдентификаторСообщения" type="xs:string" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="УчастникОбмена" type="d3p1:КлючевыеСвойствагкс_УчастникиОбмена" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://www.1c.ru/SSL/Exchange/Message" name="Справочник.гкс_ВходящиеСообщенияRMQ" base="d2p1:Object" open="true" sequenced="true">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="КлючевыеСвойства" type="d3p1:КлючевыеСвойствагкс_ВходящиеСообщенияRMQ"/>
+		<property name="ДатаПолучения" type="xs:dateTime" lowerBound="0"/>
+		<property name="ДатаПринятияВОбработку" type="xs:dateTime" lowerBound="0" upperBound="1"/>
+		<property name="ДатаОбработки" type="xs:dateTime" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="СостояниеОбработки" type="d3p1:гкс_СостоянияОбработкиСообщенийRMQ" lowerBound="0"/>
+		<property name="ТекстОшибкиОбработки" type="xs:string" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ЗагруженныеОбъекты" type="d3p1:Справочник.гкс_ВходящиеСообщенияRMQ.ЗагруженныеОбъекты" lowerBound="0" upperBound="1"/>
+		<property name="УниверсальнаяДатаИзмененияСобытияВМиллисекундах" type="xs:integer" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="ДополнительныеРеквизиты" type="d3p1:ДополнительныеРеквизиты" lowerBound="0"/>
+	</objectType>
+	<objectType name="Справочник.гкс_ВходящиеСообщенияRMQ.ЗагруженныеОбъекты">
+		<property xmlns:d3p1="http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1" name="Строка" type="d3p1:Справочник.гкс_ВходящиеСообщенияRMQ.ЗагруженныеОбъекты.Строка" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType name="Справочник.гкс_ВходящиеСообщенияRMQ.ЗагруженныеОбъекты.Строка" open="true" sequenced="true">
+		<property name="ТипОбъекта" type="xs:string" lowerBound="0"/>
+		<property name="ИдентификаторОбъекта" type="xs:string" lowerBound="0"/>
+	</objectType>
+</package>
