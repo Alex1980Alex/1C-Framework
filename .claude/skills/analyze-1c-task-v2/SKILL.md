@@ -3,9 +3,9 @@ name: analyze-1c-task-v2
 description: >
   5-фазная методология анализа задачи 1С:Предприятие.
   Требования -> Объекты -> Алгоритм -> План -> Верификация.
-  v3.0: Итеративный режим с 3 агентами (Executor + Reviewer + Comparator).
-version: 3.0.0
-updated: 2026-03-21
+  v4.0: SDD-интеграция (OpenSpec delta-specs, approval gate, brownfield validation).
+version: 4.0.0
+updated: 2026-04-02
 tags: [1c, analysis, bsl, configuration, methodology, semantic-search, autoresearch, three-agent]
 ultrathink: true
 commands:
