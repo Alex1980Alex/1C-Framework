@@ -17,7 +17,7 @@
 | **7** | **MCP Resources и Prompts** | **6/6 DONE** (import verified) | **P1** | 2 дня | vladimir-kharin/1c_mcp |
 | **8** | **Глубокая интеграция METR** | **4/7 DONE** (YAML+skill+source-set+dump), 3 BLOCKED (1C) | **P1** | 2 дня | alkoleft/mcp-onec-test-runner |
 | **9** | **Конвейер экспорта конфигурации** | **5/5 DONE** (скрипт+MD/CSV+хеши+bat) | **P2** | 2 дня | FSerg/mcp-1c-v1 |
-| **10** | **Двухвекторный поиск BSL кода** | **4/6 DONE** (интегрирован в reindex+hybrid), 2 BLOCKED (Qdrant A/B) | **P2** | 3 дня | FSerg/mcp-1c-v1 |
+| **10** | **Двухвекторный поиск BSL кода** | **6/6 DONE** ✅ (A/B: single лучше, no-go на dual) | **P2** | 3 дня | FSerg/mcp-1c-v1 |
 | **11** | **Активация OAuth2** | **1/5 DONE** (guide), 4 BLOCKED (MCP server) | **P3** | 1 день | vladimir-kharin/1c_mcp |
 | **12** | **Расширение MCP Dashboard** | **4/5 DONE** (скрипт+dashboard+metrics+alerts), Streamlit deferred | **P3** | 2 дня | Внутренняя потребность |
 
