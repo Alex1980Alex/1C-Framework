@@ -40,7 +40,7 @@ def should_skip(path: Path) -> bool:
     return any(p in path_str for p in SKIP_PATTERNS)
 
 
-def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool = False) -> None:
+def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False) -> None:
     if recreate:
         try:
             client.delete_collection(collection_name=name)
@@ -52,14 +52,24 @@ def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool
         info = client.get_collection(collection_name=name)
         print(f"Collection '{name}' exists: {info.points_count} points")
     except (UnexpectedResponse, Exception):
-        client.create_collection(
-            collection_name=name,
-            vectors_config=models.VectorParams(
-                size=dims,
-                distance=models.Distance.COSINE,
-            ),
-        )
-        print(f"Created collection: {name} (dims={dims}, cosine)")
+        if dual_vector:
+            client.create_collection(
+                collection_name=name,
+                vectors_config={
+                    "content": models.VectorParams(size=dims, distance=models.Distance.COSINE),
+                    "module_path": models.VectorParams(size=dims, distance=models.Distance.COSINE),
+                },
+            )
+            print(f"Created dual-vector collection: {name} (content+module_path, {dims}d, cosine)")
+        else:
+            client.create_collection(
+                collection_name=name,
+                vectors_config=models.VectorParams(
+                    size=dims,
+                    distance=models.Distance.COSINE,
+                ),
+            )
+            print(f"Created collection: {name} (dims={dims}, cosine)")
 
 
 def point_id(chunk_id: str) -> str:
@@ -125,19 +135,34 @@ def flush_batch(
     embedder: Any,
     collection: str,
     chunks: list[BSLChunk],
+    dual_vector: bool = False,
 ) -> int:
     """Embed and upsert a batch. Returns count of successfully upserted points."""
     texts = [c.content for c in chunks]
     vectors = embedder.embed_batch(texts, is_query=False)
 
+    # Generate module_path embeddings if dual-vector mode
+    mp_vectors = None
+    if dual_vector:
+        mp_texts = [c.metadata.get("module_path", "") or "" for c in chunks]
+        mp_vectors = embedder.embed_batch(mp_texts, is_query=False)
+
     points = []
-    for chunk, vec in zip(chunks, vectors):
+    for i, (chunk, vec) in enumerate(zip(chunks, vectors)):
         if vec is None:
             continue
+        vec_list = vec if isinstance(vec, list) else vec.tolist()
+
+        if dual_vector and mp_vectors and mp_vectors[i] is not None:
+            mp_vec = mp_vectors[i] if isinstance(mp_vectors[i], list) else mp_vectors[i].tolist()
+            vector_data = {"content": vec_list, "module_path": mp_vec}
+        else:
+            vector_data = vec_list
+
         points.append(
             models.PointStruct(
                 id=point_id(chunk.chunk_id),
-                vector=vec if isinstance(vec, list) else vec.tolist(),
+                vector=vector_data,
                 payload=chunk_payload(chunk),
             )
         )
@@ -156,6 +181,7 @@ def main() -> None:
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
+    ap.add_argument("--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)")
     args = ap.parse_args()
 
     project = args.project.resolve()
@@ -189,7 +215,9 @@ def main() -> None:
             enricher = None
 
     qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
-    create_collection(qdrant, args.collection, vector_dims, args.recreate)
+    create_collection(qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector)
+    if args.dual_vector:
+        print("Dual-vector mode: content + module_path named vectors")
 
     bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
     print(f"Found {len(bsl_files)} BSL files")
@@ -210,7 +238,7 @@ def main() -> None:
             for chunk in chunks:
                 batch.append(chunk)
                 if len(batch) >= args.batch_size:
-                    n = flush_batch(qdrant, embedder, args.collection, batch)
+                    n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
                     total_chunks += n
                     batch.clear()
                     if args.limit and total_chunks >= args.limit:
@@ -230,7 +258,7 @@ def main() -> None:
 
     # Flush remaining
     if batch:
-        n = flush_batch(qdrant, embedder, args.collection, batch)
+        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
         total_chunks += n
 
     elapsed = time.time() - t0

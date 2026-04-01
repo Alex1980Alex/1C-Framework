@@ -14,7 +14,7 @@ Usage:
     python scripts/hook-dashboard.py --json              # JSON output
     python scripts/hook-dashboard.py --section accuracy  # accuracy only
 
-Sections: summary, hooks, skills, accuracy, errors, sessions (default: all)
+Sections: summary, hooks, skills, accuracy, errors, sessions, mcp (default: all)
 """
 
 import argparse
@@ -657,7 +657,51 @@ def main():
     if section in ("all", "sessions"):
         output_parts.append(format_sessions(session_metrics))
 
+    # Phase 12: MCP Server Health section
+    if section in ("all", "mcp"):
+        output_parts.append(_format_mcp_health())
+
     print("\n".join(output_parts))
+
+
+def _format_mcp_health() -> str:
+    """Phase 12: Format MCP server health status from cache/mcp-health.json."""
+    health_file = PROJECT_ROOT / "cache" / "mcp-health.json"
+    lines = ["\n=== MCP SERVER HEALTH ===\n"]
+
+    if not health_file.exists():
+        lines.append("  (No health data. Run: python scripts/mcp_health_monitor.py)\n")
+        return "\n".join(lines)
+
+    try:
+        data = json.loads(health_file.read_text("utf-8"))
+        servers = data.get("servers", [])
+        ts = data.get("timestamp", "?")
+        lines.append(f"  Last check: {ts}\n")
+
+        ok = sum(1 for s in servers if s.get("status") == "ok")
+        total = len(servers)
+        lines.append(f"  {'Server':<28} {'Status':<8} {'Latency':<10} {'Tools':<6} {'Type':<8}")
+        lines.append(f"  {'─'*28} {'─'*8} {'─'*10} {'─'*6} {'─'*8}")
+
+        for s in servers:
+            status = s.get("status", "?")
+            lat = f"{s.get('latency_ms', 0):.0f}ms" if status == "ok" else "—"
+            tools = str(s.get("tools_count", 0)) if status == "ok" else "—"
+            lines.append(f"  {s.get('name', '?'):<28} {status:<8} {lat:<10} {tools:<6} {s.get('transport', '?'):<8}")
+
+            # Alert: error/timeout servers
+            if status in ("error", "timeout"):
+                err = s.get("error", "")
+                if err:
+                    lines.append(f"    └─ {err[:80]}")
+
+        lines.append(f"\n  {ok}/{total} healthy")
+
+    except Exception as e:
+        lines.append(f"  Error reading health data: {e}")
+
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
