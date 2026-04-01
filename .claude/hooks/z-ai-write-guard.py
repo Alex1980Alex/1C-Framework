@@ -58,8 +58,14 @@ class ZAIWriteGuard(BaseHook):
 
     def execute(self, inp: HookInput) -> HookOutput | None:
         tool_input = inp.tool_input or {}
+        tool_name = inp.tool_name or ""
         file_path = tool_input.get("file_path", "")
-        content = tool_input.get("content", "")
+
+        # Write uses "content", Edit uses "new_string"
+        if tool_name == "Edit":
+            content = tool_input.get("new_string", "")
+        else:
+            content = tool_input.get("content", "")
 
         if not file_path or not content:
             return None
