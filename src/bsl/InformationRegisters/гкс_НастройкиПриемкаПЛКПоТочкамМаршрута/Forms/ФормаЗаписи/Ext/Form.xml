@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="AfterWriteAtServer">ПослеЗаписиНаСервере</Event>
+		<Event name="OnReadAtServer">ПриЧтенииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="ТочкаМаршрута" id="1">
+			<DataPath>Запись.ТочкаМаршрута</DataPath>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Точка маршрута</v8:content>
+				</v8:item>
+			</Title>
+			<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<UsualGroup name="Группа1" id="22">
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="Группа1РасширеннаяПодсказка" id="23"/>
+			<ChildItems>
+				<InputField name="СтарыйСтатус" id="7">
+					<DataPath>Запись.СтарыйСтатус</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Старый статус</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="СтарыйСтатусКонтекстноеМеню" id="8"/>
+					<ExtendedTooltip name="СтарыйСтатусРасширеннаяПодсказка" id="9"/>
+				</InputField>
+				<InputField name="НовыйСтатус" id="10">
+					<DataPath>Запись.НовыйСтатус</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Новый статус</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="НовыйСтатусКонтекстноеМеню" id="11"/>
+					<ExtendedTooltip name="НовыйСтатусРасширеннаяПодсказка" id="12"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="Группа2" id="24">
+			<Group>Vertical</Group>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="Группа2РасширеннаяПодсказка" id="25"/>
+			<ChildItems>
+				<InputField name="ВремяОжиданияТСМинута" id="4">
+					<DataPath>Запись.ВремяОжидания</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Время ожидания транспортного средства (в минутах)</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="ВремяОжиданияТСМинутаКонтекстноеМеню" id="5"/>
+					<ExtendedTooltip name="ВремяОжиданияТСМинутаРасширеннаяПодсказка" id="6"/>
+				</InputField>
+				<InputField name="НормативПогрузки" id="43">
+					<DataPath>Запись.НормативПогрузки</DataPath>
+					<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+					<ContextMenu name="НормативПогрузкиКонтекстноеМеню" id="44"/>
+					<ExtendedTooltip name="НормативПогрузкиРасширеннаяПодсказка" id="45"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<InputField name="ПутьКДокументамСАРА" id="19">
+			<DataPath>Запись.ПутьКДокументамСАРА</DataPath>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Путь к сохранению документов САРА</v8:content>
+				</v8:item>
+			</Title>
+			<ChoiceButton>true</ChoiceButton>
+			<ContextMenu name="ПутьКДокументамСАРАКонтекстноеМеню" id="20"/>
+			<ExtendedTooltip name="ПутьКДокументамСАРАРасширеннаяПодсказка" id="21"/>
+			<Events>
+				<Event name="StartChoice">ПутьКДокументамСАРАНачалоВыбора</Event>
+			</Events>
+		</InputField>
+		<InputField name="ЗначениеДопустимогоОтклоненияБрутто" id="29">
+			<DataPath>Запись.ЗначениеДопустимогоОтклоненияБрутто</DataPath>
+			<ContextMenu name="ЗначениеДопустимогоОтклоненияБруттоКонтекстноеМеню" id="30"/>
+			<ExtendedTooltip name="ЗначениеДопустимогоОтклоненияБруттоРасширеннаяПодсказка" id="31"/>
+		</InputField>
+		<UsualGroup name="Группа3" id="35">
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="Группа3РасширеннаяПодсказка" id="36"/>
+			<ChildItems>
+				<CheckBoxField name="ИспользуютсяЭлектронныеТабло" id="26">
+					<DataPath>Запись.ИспользуютсяЭлектронныеТабло</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Используются электронные табло</v8:content>
+						</v8:item>
+					</Title>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="ИспользуютсяЭлектронныеТаблоКонтекстноеМеню" id="27"/>
+					<ExtendedTooltip name="ИспользуютсяЭлектронныеТаблоРасширеннаяПодсказка" id="28"/>
+				</CheckBoxField>
+				<InputField name="ВариантИспользованияТаблоЭлектроннойОчереди" id="40">
+					<DataPath>Запись.ВариантИспользованияТаблоЭлектроннойОчереди</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Вариант использования Табло</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="ВариантИспользованияТаблоЭлектроннойОчередиКонтекстноеМеню" id="41"/>
+					<ExtendedTooltip name="ВариантИспользованияТаблоЭлектроннойОчередиРасширеннаяПодсказка" id="42"/>
+				</InputField>
+				<CheckBoxField name="АвтоматическоеФормированиеДокументов" id="32">
+					<DataPath>Запись.АвтоматическоеФормированиеДокументов</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="АвтоматическоеФормированиеДокументовКонтекстноеМеню" id="33"/>
+					<ExtendedTooltip name="АвтоматическоеФормированиеДокументовРасширеннаяПодсказка" id="34"/>
+				</CheckBoxField>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_НастройкиПриемкаПЛКПоТочкамМаршрута</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

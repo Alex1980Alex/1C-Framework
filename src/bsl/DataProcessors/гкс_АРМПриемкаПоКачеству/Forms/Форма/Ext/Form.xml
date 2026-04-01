@@ -1,0 +1,966 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>false</Autofill>
+	</AutoCommandBar>
+	<Events>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаОтбор" id="7">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа отбор</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа отбор</v8:content>
+				</v8:item>
+			</ToolTip>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаОтборРасширеннаяПодсказка" id="8"/>
+			<ChildItems>
+				<RadioButtonField name="ОтборВидПеревозки" id="4">
+					<DataPath>ОтборВидПеревозки</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>ВидПеревозки</v8:content>
+						</v8:item>
+					</Title>
+					<TitleFont ref="style:NormalTextFont" height="8" bold="true" italic="false" underline="false" strikeout="false" kind="StyleItem" scale="100"/>
+					<EditMode>EnterOnInput</EditMode>
+					<RadioButtonType>Tumbler</RadioButtonType>
+					<ChoiceList>
+						<xr:Item>
+							<xr:Presentation/>
+							<xr:CheckState>0</xr:CheckState>
+							<xr:Value xsi:type="FormChoiceListDesTimeValue">
+								<Presentation/>
+								<Value xsi:type="xr:DesignTimeRef">Enum.гкс_ТипыТранспортныхСредствДоставки.EnumValue.Автомобиль</Value>
+							</xr:Value>
+						</xr:Item>
+						<xr:Item>
+							<xr:Presentation/>
+							<xr:CheckState>0</xr:CheckState>
+							<xr:Value xsi:type="FormChoiceListDesTimeValue">
+								<Presentation/>
+								<Value xsi:type="xr:DesignTimeRef">Enum.гкс_ТипыТранспортныхСредствДоставки.EnumValue.ЖДТранспорт</Value>
+							</xr:Value>
+						</xr:Item>
+					</ChoiceList>
+					<Font ref="style:NormalTextFont" height="8" bold="true" italic="false" underline="false" strikeout="false" kind="StyleItem" scale="100"/>
+					<BackColor>#FFFF99</BackColor>
+					<ContextMenu name="ОтборВидПеревозкиКонтекстноеМеню" id="5"/>
+					<ExtendedTooltip name="ОтборВидПеревозкиРасширеннаяПодсказка" id="6"/>
+					<Events>
+						<Event name="OnChange">ВидПеревозкиПриИзменении</Event>
+					</Events>
+				</RadioButtonField>
+				<InputField name="ОтборТочкаМаршрута" id="1">
+					<DataPath>Объект.ТочкаМаршрута</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Пункт приема</v8:content>
+						</v8:item>
+					</Title>
+					<TitleFont ref="style:NormalTextFont" height="8" bold="true" italic="false" underline="false" strikeout="false" kind="StyleItem" scale="100"/>
+					<EditMode>EnterOnInput</EditMode>
+					<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+					<Font ref="style:NormalTextFont" height="8" bold="true" italic="false" underline="false" strikeout="false" kind="StyleItem" scale="100"/>
+					<ContextMenu name="ОтборТочкаМаршрутаКонтекстноеМеню" id="2"/>
+					<ExtendedTooltip name="ОтборТочкаМаршрутаРасширеннаяПодсказка" id="3"/>
+					<Events>
+						<Event name="OnChange">ПЛКПриИзменении</Event>
+					</Events>
+				</InputField>
+				<CheckBoxField name="ОтборАктивность" id="64">
+					<DataPath>ОтборАктивность</DataPath>
+					<TitleLocation>Right</TitleLocation>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="ОтборАктивностьКонтекстноеМеню" id="65"/>
+					<ExtendedTooltip name="ОтборАктивностьРасширеннаяПодсказка" id="66"/>
+					<Events>
+						<Event name="OnChange">ОтборАктивностьПриИзменении</Event>
+					</Events>
+				</CheckBoxField>
+			</ChildItems>
+		</UsualGroup>
+		<Pages name="ГруппаНастройки" id="79">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа настройки</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа настройки</v8:content>
+				</v8:item>
+			</ToolTip>
+			<PagesRepresentation>TabsOnTop</PagesRepresentation>
+			<ExtendedTooltip name="ГруппаНастройкиРасширеннаяПодсказка" id="80"/>
+			<Events>
+				<Event name="OnCurrentPageChange">ГруппаНастройкиПриСменеСтраницы</Event>
+			</Events>
+			<ChildItems>
+				<Page name="ГруппаУсиленныйКонтроль" id="81">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Усиленный контроль</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа усиленный контроль</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаУсиленныйКонтрольРасширеннаяПодсказка" id="82"/>
+					<ChildItems>
+						<Table name="НастройкиУсиленногоКонтроляКачества" id="9">
+							<UseAlternationRowColor>true</UseAlternationRowColor>
+							<EnableStartDrag>true</EnableStartDrag>
+							<DataPath>НастройкиУсиленногоКонтроляКачества</DataPath>
+							<RowPictureDataPath>НастройкиУсиленногоКонтроляКачества.DefaultPicture</RowPictureDataPath>
+							<AutoRefresh>false</AutoRefresh>
+							<AutoRefreshPeriod>60</AutoRefreshPeriod>
+							<Period>
+								<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+								<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+								<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+							</Period>
+							<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+							<RestoreCurrentRow>false</RestoreCurrentRow>
+							<TopLevelParent xsi:nil="true"/>
+							<ShowRoot>true</ShowRoot>
+							<AllowRootChoice>false</AllowRootChoice>
+							<UpdateOnDataChange>Auto</UpdateOnDataChange>
+							<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
+							<ContextMenu name="НастройкиУсиленногоКонтроляКачестваКонтекстноеМеню" id="10"/>
+							<AutoCommandBar name="НастройкиУсиленногоКонтроляКачестваКоманднаяПанель" id="11">
+								<Autofill>false</Autofill>
+								<ChildItems>
+									<Button name="СоздатьНастройкуУК" id="147">
+										<Type>CommandBarButton</Type>
+										<DefaultButton>true</DefaultButton>
+										<CommandName>Form.Command.СоздатьНастройкуУК</CommandName>
+										<ExtendedTooltip name="СоздатьНастройкуУКРасширеннаяПодсказка" id="148"/>
+									</Button>
+									<Button name="НастройкиУсиленногоКонтроляКачестваОбновитьСписок" id="70">
+										<Type>CommandBarButton</Type>
+										<Representation>Picture</Representation>
+										<CommandName>Form.Command.ОбновитьСписок</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.Refresh</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваОбновитьСписокРасширеннаяПодсказка" id="71"/>
+									</Button>
+									<Button name="НастройкиУсиленногоКонтроляКачестваСоздать" id="72">
+										<Type>CommandBarButton</Type>
+										<Representation>PictureAndText</Representation>
+										<CommandName>Form.Command.Создать</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.CreateListItem</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<Title>
+											<v8:item>
+												<v8:lang>ru</v8:lang>
+												<v8:content>Добавить</v8:content>
+											</v8:item>
+										</Title>
+										<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваСоздатьРасширеннаяПодсказка" id="73"/>
+									</Button>
+								</ChildItems>
+							</AutoCommandBar>
+							<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваРасширеннаяПодсказка" id="12"/>
+							<SearchStringAddition name="НастройкиУсиленногоКонтроляКачестваСтрокаПоиска" id="13">
+								<AdditionSource>
+									<Item>НастройкиУсиленногоКонтроляКачества</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="НастройкиУсиленногоКонтроляКачестваСтрокаПоискаКонтекстноеМеню" id="14"/>
+								<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваСтрокаПоискаРасширеннаяПодсказка" id="15"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="НастройкиУсиленногоКонтроляКачестваСостояниеПросмотра" id="16">
+								<AdditionSource>
+									<Item>НастройкиУсиленногоКонтроляКачества</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="НастройкиУсиленногоКонтроляКачестваСостояниеПросмотраКонтекстноеМеню" id="17"/>
+								<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваСостояниеПросмотраРасширеннаяПодсказка" id="18"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="НастройкиУсиленногоКонтроляКачестваУправлениеПоиском" id="19">
+								<AdditionSource>
+									<Item>НастройкиУсиленногоКонтроляКачества</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="НастройкиУсиленногоКонтроляКачестваУправлениеПоискомКонтекстноеМеню" id="20"/>
+								<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваУправлениеПоискомРасширеннаяПодсказка" id="21"/>
+							</SearchControlAddition>
+							<Events>
+								<Event name="BeforeDeleteRow">НастройкиУсиленногоКонтроляКачестваПередУдалением</Event>
+							</Events>
+							<ChildItems>
+								<CheckBoxField name="НастройкиУсиленногоКонтроляКачестваАктивен" id="22">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.Активен</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваАктивенКонтекстноеМеню" id="23"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваАктивенРасширеннаяПодсказка" id="24"/>
+								</CheckBoxField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваНоменклатура" id="43">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.Номенклатура</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваНоменклатураКонтекстноеМеню" id="44"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваНоменклатураРасширеннаяПодсказка" id="45"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваТипВходногоКонтроля" id="67">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ТипВходногоКонтроля</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Тип контроля</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваТипВходногоКонтроляКонтекстноеМеню" id="68"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваТипВходногоКонтроляРасширеннаяПодсказка" id="69"/>
+								</LabelField>
+								<InputField name="НастройкиУсиленногоКонтроляКачестваКоличествоТС" id="141">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.КоличествоТС</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Кол-во ТС</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваКоличествоТСКонтекстноеМеню" id="142"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваКоличествоТСРасширеннаяПодсказка" id="143"/>
+								</InputField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваДатаНачала" id="28">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ДатаНачала</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваДатаНачалаКонтекстноеМеню" id="29"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваДатаНачалаРасширеннаяПодсказка" id="30"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваДатаОкончания" id="31">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ДатаОкончания</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваДатаОкончанияКонтекстноеМеню" id="32"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваДатаОкончанияРасширеннаяПодсказка" id="33"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваПоставщик" id="52">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.Поставщик</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваПоставщикКонтекстноеМеню" id="53"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваПоставщикРасширеннаяПодсказка" id="54"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваЖДСтанция" id="34">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ЖДСтанция</DataPath>
+									<Visible>false</Visible>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваЖДСтанцияКонтекстноеМеню" id="35"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваЖДСтанцияРасширеннаяПодсказка" id="36"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваЖДСтанцияНаименование" id="76">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ЖДСтанцияНаименование</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>ЖД станция</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваЖДСтанцияНаименованиеКонтекстноеМеню" id="77"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваЖДСтанцияНаименованиеРасширеннаяПодсказка" id="78"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваПунктПогрузки" id="58">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ПунктПогрузки</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваПунктПогрузкиКонтекстноеМеню" id="59"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваПунктПогрузкиРасширеннаяПодсказка" id="60"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваТранспортноеСредство" id="61">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ТранспортноеСредство</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>ТС</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваТранспортноеСредствоКонтекстноеМеню" id="62"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваТранспортноеСредствоРасширеннаяПодсказка" id="63"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваПоказатель" id="49">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.Показатель</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваПоказательКонтекстноеМеню" id="50"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваПоказательРасширеннаяПодсказка" id="51"/>
+								</LabelField>
+								<CheckBoxField name="НастройкиУсиленногоКонтроляКачестваОтклонятьКачество" id="149">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ОтклонятьКачество</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваОтклонятьКачествоКонтекстноеМеню" id="150"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваОтклонятьКачествоРасширеннаяПодсказка" id="151"/>
+								</CheckBoxField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваБазис" id="83">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.Базис</DataPath>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваБазисКонтекстноеМеню" id="84"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваБазисРасширеннаяПодсказка" id="85"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваЗначениеПоказателяМин" id="40">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ЗначениеПоказателяМин</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Значение (Мин.)</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваЗначениеПоказателяМинКонтекстноеМеню" id="41"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваЗначениеПоказателяМинРасширеннаяПодсказка" id="42"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваЗначениеПоказателяМакс" id="37">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ЗначениеПоказателяМакс</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Значение (Макс.)</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваЗначениеПоказателяМаксКонтекстноеМеню" id="38"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваЗначениеПоказателяМаксРасширеннаяПодсказка" id="39"/>
+								</LabelField>
+								<LabelField name="НастройкиУсиленногоКонтроляКачестваИдентификаторПравила" id="86">
+									<DataPath>НастройкиУсиленногоКонтроляКачества.ИдентификаторПравила</DataPath>
+									<Visible>false</Visible>
+									<ContextMenu name="НастройкиУсиленногоКонтроляКачестваИдентификаторПравилаКонтекстноеМеню" id="87"/>
+									<ExtendedTooltip name="НастройкиУсиленногоКонтроляКачестваИдентификаторПравилаРасширеннаяПодсказка" id="88"/>
+								</LabelField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+				<Page name="ГруппаОтключенияВходногоКонтроля" id="89">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Отключения входного контроля</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="ГруппаОтключенияВходногоКонтроляРасширеннаяПодсказка" id="90"/>
+					<ChildItems>
+						<Table name="НастройкиОтключенияВходногоКонтроляКачества" id="91">
+							<DataPath>НастройкиОтключенияВходногоКонтроляКачества</DataPath>
+							<AutoRefresh>false</AutoRefresh>
+							<AutoRefreshPeriod>60</AutoRefreshPeriod>
+							<Period>
+								<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+								<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+								<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+							</Period>
+							<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+							<RestoreCurrentRow>false</RestoreCurrentRow>
+							<TopLevelParent xsi:nil="true"/>
+							<ShowRoot>true</ShowRoot>
+							<AllowRootChoice>false</AllowRootChoice>
+							<UpdateOnDataChange>Auto</UpdateOnDataChange>
+							<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
+							<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваКонтекстноеМеню" id="93"/>
+							<AutoCommandBar name="НастройкиОтключенияВходногоКонтроляКачестваКоманднаяПанель" id="92">
+								<Autofill>false</Autofill>
+								<ChildItems>
+									<Button name="НастройкиОтключенияВходногоКонтроляКачестваОбновитьСписокОтключенияВходногоКонтроля" id="139">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ОбновитьСписокОтключенияВходногоКонтроля</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.Refresh</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваОбновитьСписокОтключенияВходногоКонтроляРасширеннаяПодсказка" id="140"/>
+									</Button>
+									<Button name="НастройкиОтключенияВходногоКонтроляКачестваСоздатьОтключенияВходногоКонтроля" id="137">
+										<Type>CommandBarButton</Type>
+										<Representation>PictureAndText</Representation>
+										<CommandName>Form.Command.СоздатьОтключенияВходногоКонтроля</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.CreateListItem</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваСоздатьОтключенияВходногоКонтроляРасширеннаяПодсказка" id="138"/>
+									</Button>
+								</ChildItems>
+							</AutoCommandBar>
+							<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваРасширеннаяПодсказка" id="94"/>
+							<SearchStringAddition name="НастройкиОтключенияВходногоКонтроляКачестваСтрокаПоиска" id="95">
+								<AdditionSource>
+									<Item>НастройкиОтключенияВходногоКонтроляКачества</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваСтрокаПоискаКонтекстноеМеню" id="96"/>
+								<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваСтрокаПоискаРасширеннаяПодсказка" id="97"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="НастройкиОтключенияВходногоКонтроляКачестваСостояниеПросмотра" id="101">
+								<AdditionSource>
+									<Item>НастройкиОтключенияВходногоКонтроляКачества</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваСостояниеПросмотраКонтекстноеМеню" id="102"/>
+								<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваСостояниеПросмотраРасширеннаяПодсказка" id="103"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="НастройкиОтключенияВходногоКонтроляКачестваУправлениеПоиском" id="98">
+								<AdditionSource>
+									<Item>НастройкиОтключенияВходногоКонтроляКачества</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваУправлениеПоискомКонтекстноеМеню" id="99"/>
+								<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваУправлениеПоискомРасширеннаяПодсказка" id="100"/>
+							</SearchControlAddition>
+							<ChildItems>
+								<CheckBoxField name="НастройкиОтключенияВходногоКонтроляКачестваАктивен" id="131">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.Активен</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваАктивенКонтекстноеМеню" id="132"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваАктивенРасширеннаяПодсказка" id="133"/>
+								</CheckBoxField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваНоменклатура" id="110">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.Номенклатура</DataPath>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваНоменклатураКонтекстноеМеню" id="111"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваНоменклатураРасширеннаяПодсказка" id="112"/>
+								</InputField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваДатаНачала" id="125">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.ДатаНачала</DataPath>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваДатаНачалаКонтекстноеМеню" id="126"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваДатаНачалаРасширеннаяПодсказка" id="127"/>
+								</InputField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваДатаОкончания" id="128">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.ДатаОкончания</DataPath>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваДатаОкончанияКонтекстноеМеню" id="129"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваДатаОкончанияРасширеннаяПодсказка" id="130"/>
+								</InputField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваПоставщик" id="119">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.Поставщик</DataPath>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваПоставщикКонтекстноеМеню" id="120"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваПоставщикРасширеннаяПодсказка" id="121"/>
+								</InputField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваЖДСтанция" id="122">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.ЖДСтанция</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>ЖД станция</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваЖДСтанцияКонтекстноеМеню" id="123"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваЖДСтанцияРасширеннаяПодсказка" id="124"/>
+								</InputField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваПунктПогрузки" id="116">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.ПунктПогрузки</DataPath>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваПунктПогрузкиКонтекстноеМеню" id="117"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваПунктПогрузкиРасширеннаяПодсказка" id="118"/>
+								</InputField>
+								<InputField name="НастройкиОтключенияВходногоКонтроляКачестваТранспортноеСредство" id="113">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.ТранспортноеСредство</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>ТС</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваТранспортноеСредствоКонтекстноеМеню" id="114"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваТранспортноеСредствоРасширеннаяПодсказка" id="115"/>
+								</InputField>
+								<LabelField name="НастройкиОтключенияВходногоКонтроляКачестваПользователь" id="144">
+									<DataPath>НастройкиОтключенияВходногоКонтроляКачества.Пользователь</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="НастройкиОтключенияВходногоКонтроляКачестваПользовательКонтекстноеМеню" id="145"/>
+									<ExtendedTooltip name="НастройкиОтключенияВходногоКонтроляКачестваПользовательРасширеннаяПодсказка" id="146"/>
+								</LabelField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+			</ChildItems>
+		</Pages>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DataProcessorObject.гкс_АРМПриемкаПоКачеству</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+		<Attribute name="НастройкиУсиленногоКонтроляКачества" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки усиленного контроля качества</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>true</ManualQuery>
+				<DynamicDataRead>false</DynamicDataRead>
+				<QueryText>ВЫБРАТЬ
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ВидПеревозки КАК ВидПеревозки,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ТочкаМаршрута КАК ТочкаМаршрута,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.Номенклатура КАК Номенклатура,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.Показатель КАК Показатель,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ТранспортноеСредство КАК ТранспортноеСредство,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ПунктПогрузки КАК ПунктПогрузки,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.Поставщик КАК Поставщик,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ЖДСтанция КАК ЖДСтанция,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ЖДСтанция.НаименованиеПолное КАК ЖДСтанцияНаименование,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ДатаНачала КАК ДатаНачала,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ДатаОкончания КАК ДатаОкончания,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ИдентификаторПравила КАК ИдентификаторПравила,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.Базис КАК Базис,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ЗначениеПоказателяМин КАК ЗначениеПоказателяМин,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ЗначениеПоказателяМакс КАК ЗначениеПоказателяМакс,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ТипВходногоКонтроля КАК ТипВходногоКонтроля,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.Активен КАК Активен,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.КоличествоТС КАК КоличествоТС,
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ОтклонятьКачество КАК ОтклонятьКачество
+ИЗ
+	РегистрСведений.гкс_НастройкиУсиленногоКонтроляКачества КАК РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества
+ГДЕ
+	РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ТочкаМаршрута = &amp;ТочкаМаршрута
+	И ВЫБОР
+			КОГДА &amp;Активен
+				ТОГДА РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.Активен = &amp;Активен
+			ИНАЧЕ ИСТИНА
+		КОНЕЦ
+	И РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ВидПеревозки = &amp;ВидПеревозки
+	И РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ДатаНачала &lt;= &amp;ПроизводственныеСутки
+	И ВЫБОР
+			КОГДА РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ДатаОкончания = ДАТАВРЕМЯ(1, 1, 1)
+				ТОГДА ДАТАВРЕМЯ(3999, 1, 1)
+			ИНАЧЕ РегистрСведенийгкс_НастройкиУсиленногоКонтроляКачества.ДатаОкончания
+		КОНЕЦ &gt;= &amp;ПроизводственныеСутки</QueryText>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ТранспортноеСредство</dcssch:dataPath>
+					<dcssch:field>ТранспортноеСредство</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Активен</dcssch:dataPath>
+					<dcssch:field>Активен</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДатаОкончания</dcssch:dataPath>
+					<dcssch:field>ДатаОкончания</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Показатель</dcssch:dataPath>
+					<dcssch:field>Показатель</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ВидПеревозки</dcssch:dataPath>
+					<dcssch:field>ВидПеревозки</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ТочкаМаршрута</dcssch:dataPath>
+					<dcssch:field>ТочкаМаршрута</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ПунктПогрузки</dcssch:dataPath>
+					<dcssch:field>ПунктПогрузки</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номенклатура</dcssch:dataPath>
+					<dcssch:field>Номенклатура</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Поставщик</dcssch:dataPath>
+					<dcssch:field>Поставщик</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ЖДСтанция</dcssch:dataPath>
+					<dcssch:field>ЖДСтанция</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ЖДСтанцияНаименование</dcssch:dataPath>
+					<dcssch:field>ЖДСтанцияНаименование</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДатаНачала</dcssch:dataPath>
+					<dcssch:field>ДатаНачала</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ЗначениеПоказателяМин</dcssch:dataPath>
+					<dcssch:field>ЗначениеПоказателяМин</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ЗначениеПоказателяМакс</dcssch:dataPath>
+					<dcssch:field>ЗначениеПоказателяМакс</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ТипВходногоКонтроля</dcssch:dataPath>
+					<dcssch:field>ТипВходногоКонтроля</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Базис</dcssch:dataPath>
+					<dcssch:field>Базис</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ИдентификаторПравила</dcssch:dataPath>
+					<dcssch:field>ИдентификаторПравила</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>КоличествоТС</dcssch:dataPath>
+					<dcssch:field>КоличествоТС</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ОтклонятьКачество</dcssch:dataPath>
+					<dcssch:field>ОтклонятьКачество</dcssch:field>
+				</Field>
+				<Parameter>
+					<dcssch:name>Активен</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Активен</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:boolean</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:type="xs:boolean">false</dcssch:value>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ВидПеревозки</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Вид перевозки</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ПроизводственныеСутки</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Производственные сутки</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>DateTime</v8:DateFractions>
+						</v8:DateQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:type="xs:dateTime">0001-01-01T00:00:00</dcssch:value>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ТочкаМаршрута</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Точка маршрута</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:CatalogRef.гкс_ТочкиМаршрута</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<MainTable>InformationRegister.гкс_НастройкиУсиленногоКонтроляКачества</MainTable>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>dfcece9d-5077-440b-b6b3-45a5cb4538eb</dcsset:userSettingID>
+					</dcsset:filter>
+					<dcsset:order>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>88619765-ccb3-46c6-ac52-38e9c992ebd4</dcsset:userSettingID>
+					</dcsset:order>
+					<dcsset:conditionalAppearance>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>b75fecce-942b-4aed-abc9-e6a02e460fb3</dcsset:userSettingID>
+					</dcsset:conditionalAppearance>
+					<dcsset:itemsViewMode>Normal</dcsset:itemsViewMode>
+					<dcsset:itemsUserSettingID>911b6018-f537-43e8-a417-da56b22f9aec</dcsset:itemsUserSettingID>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+		<Attribute name="ОтборАктивность" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Только активные</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОтборВидПеревозки" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отбор вид перевозки</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="НастройкиОтключенияВходногоКонтроляКачества" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки отключения входного контроля качества</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>true</ManualQuery>
+				<DynamicDataRead>false</DynamicDataRead>
+				<QueryText>ВЫБРАТЬ
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ВидПеревозки КАК ВидПеревозки,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ТочкаМаршрута КАК ТочкаМаршрута,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.Номенклатура КАК Номенклатура,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ТранспортноеСредство КАК ТранспортноеСредство,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ПунктПогрузки КАК ПунктПогрузки,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.Поставщик КАК Поставщик,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.Пользователь КАК Пользователь,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ЖДСтанция КАК ЖДСтанция,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ДатаНачала КАК ДатаНачала,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ДатаОкончания КАК ДатаОкончания,
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.Активен КАК Активен
+ИЗ
+	РегистрСведений.гкс_НастройкиОтключенияВходногоКонтроляКачества КАК гкс_НастройкиОтключенияВходногоКонтроляКачества
+ГДЕ
+	гкс_НастройкиОтключенияВходногоКонтроляКачества.ТочкаМаршрута = &amp;ТочкаМаршрута
+	И ВЫБОР
+		КОГДА &amp;Активен
+			ТОГДА гкс_НастройкиОтключенияВходногоКонтроляКачества.Активен = &amp;Активен
+		ИНАЧЕ ИСТИНА
+	КОНЕЦ
+	И гкс_НастройкиОтключенияВходногоКонтроляКачества.ВидПеревозки = &amp;ВидПеревозки
+	И гкс_НастройкиОтключенияВходногоКонтроляКачества.ДатаНачала &lt;= &amp;ПроизводственныеСутки
+	И ВЫБОР
+		КОГДА гкс_НастройкиОтключенияВходногоКонтроляКачества.ДатаОкончания = ДАТАВРЕМЯ(1, 1, 1)
+			ТОГДА ДАТАВРЕМЯ(3999, 1, 1)
+		ИНАЧЕ гкс_НастройкиОтключенияВходногоКонтроляКачества.ДатаОкончания
+	КОНЕЦ &gt;= &amp;ПроизводственныеСутки</QueryText>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ВидПеревозки</dcssch:dataPath>
+					<dcssch:field>ВидПеревозки</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ТочкаМаршрута</dcssch:dataPath>
+					<dcssch:field>ТочкаМаршрута</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номенклатура</dcssch:dataPath>
+					<dcssch:field>Номенклатура</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ТранспортноеСредство</dcssch:dataPath>
+					<dcssch:field>ТранспортноеСредство</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ПунктПогрузки</dcssch:dataPath>
+					<dcssch:field>ПунктПогрузки</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Поставщик</dcssch:dataPath>
+					<dcssch:field>Поставщик</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ЖДСтанция</dcssch:dataPath>
+					<dcssch:field>ЖДСтанция</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДатаНачала</dcssch:dataPath>
+					<dcssch:field>ДатаНачала</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДатаОкончания</dcssch:dataPath>
+					<dcssch:field>ДатаОкончания</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Активен</dcssch:dataPath>
+					<dcssch:field>Активен</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Пользователь</dcssch:dataPath>
+					<dcssch:field>Пользователь</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДатаВремяИзменения</dcssch:dataPath>
+					<dcssch:field>ДатаВремяИзменения</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Комментарий</dcssch:dataPath>
+					<dcssch:field>Комментарий</dcssch:field>
+				</Field>
+				<Parameter>
+					<dcssch:name>ТочкаМаршрута</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Точка маршрута</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:CatalogRef.гкс_ТочкиМаршрута</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>Активен</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Активен</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:boolean</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ПроизводственныеСутки</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Производственные сутки</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>Date</v8:DateFractions>
+						</v8:DateQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ВидПеревозки</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Вид перевозки</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<MainTable>InformationRegister.гкс_НастройкиОтключенияВходногоКонтроляКачества</MainTable>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>dfcece9d-5077-440b-b6b3-45a5cb4538eb</dcsset:userSettingID>
+					</dcsset:filter>
+					<dcsset:order>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>88619765-ccb3-46c6-ac52-38e9c992ebd4</dcsset:userSettingID>
+					</dcsset:order>
+					<dcsset:conditionalAppearance>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>b75fecce-942b-4aed-abc9-e6a02e460fb3</dcsset:userSettingID>
+					</dcsset:conditionalAppearance>
+					<dcsset:itemsViewMode>Normal</dcsset:itemsViewMode>
+					<dcsset:itemsUserSettingID>911b6018-f537-43e8-a417-da56b22f9aec</dcsset:itemsUserSettingID>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ОбновитьСписок" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обновить список</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обновить список</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ОбновитьСписок</Action>
+		</Command>
+		<Command name="Создать" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>Создать</Action>
+		</Command>
+		<Command name="СоздатьОтключенияВходногоКонтроля" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Добавить</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать отключения входного контроля</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>СоздатьОтключенияВходногоКонтроля</Action>
+		</Command>
+		<Command name="ОбновитьСписокОтключенияВходногоКонтроля" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обновить</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обновить список отключения входного контроля</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ОбновитьСписокОтключенияВходногоКонтроля</Action>
+		</Command>
+		<Command name="СоздатьНастройкуУК" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки УК</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Создать настройку УК</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>СоздатьНастройкуУК</Action>
+		</Command>
+	</Commands>
+</Form>

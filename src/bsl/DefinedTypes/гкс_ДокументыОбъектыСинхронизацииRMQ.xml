@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<DefinedType uuid="b1bec7d5-1c1a-4abb-8769-fe07b623cbf9">
+		<InternalInfo>
+			<xr:GeneratedType name="DefinedType.гкс_ДокументыОбъектыСинхронизацииRMQ" category="DefinedType">
+				<xr:TypeId>794fc88d-cbda-403c-931c-8be0287e4ae1</xr:TypeId>
+				<xr:ValueId>ae0b35f3-59eb-4a1d-8416-bed4e0c539b2</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>гкс_ДокументыОбъектыСинхронизацииRMQ</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Документы-объекты синхронизации RMQ (Интеграционый адаптер "Содружество")</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<Type>
+				<v8:Type>cfg:DocumentObject.гкс_ОснованиеДляДвиженияЗапасов</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ТранспортныйДокумент</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_НаправлениеНаРазгрузку</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ЗаписьВГрафикПриемкиПЛК</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_РегистрацияНаПЛК</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_СРПВПеревеска</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ЗаписьВГрафикОтгрузкиПЛК</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ЗаписьВОчередьОтгрузкиПЛК</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_РеестрНакладныхЗПП3</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ЛабораторныйАнализ</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ЗаписьВОчередьПриемкиПЛК</v8:Type>
+				<v8:Type>cfg:DocumentObject.гкс_ВъездНаКПП</v8:Type>
+			</Type>
+		</Properties>
+	</DefinedType>
+</MetaDataObject>

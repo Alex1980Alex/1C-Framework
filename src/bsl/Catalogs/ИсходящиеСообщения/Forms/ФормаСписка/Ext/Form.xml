@@ -1,0 +1,354 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<VerticalScroll>useIfNecessary</VerticalScroll>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<ChildItems>
+			<Button name="ПоказатьИдентификаторы" id="58">
+				<Type>CommandBarButton</Type>
+				<CommandName>Form.Command.ПоказатьИдентификаторы</CommandName>
+				<ExtendedTooltip name="ПоказатьИдентификаторыРасширеннаяПодсказка" id="59"/>
+			</Button>
+			<Button name="ПеренестиТекущиеСостоянияСообщений" id="70">
+				<Type>CommandBarButton</Type>
+				<CommandName>Form.Command.ПеренестиТекущиеСостоянияСообщений</CommandName>
+				<ExtendedTooltip name="ПеренестиТекущиеСостоянияСообщенийРасширеннаяПодсказка" id="71"/>
+			</Button>
+		</ChildItems>
+	</AutoCommandBar>
+	<Events>
+		<Event name="NotificationProcessing">ОбработкаОповещения</Event>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<Table name="Список" id="1">
+			<Representation>List</Representation>
+			<CommandBarLocation>None</CommandBarLocation>
+			<DefaultItem>true</DefaultItem>
+			<HorizontalScrollBar>UseAlways</HorizontalScrollBar>
+			<UseAlternationRowColor>true</UseAlternationRowColor>
+			<InitialTreeView>ExpandTopLevel</InitialTreeView>
+			<EnableStartDrag>true</EnableStartDrag>
+			<DataPath>Список</DataPath>
+			<RowPictureDataPath>Список.DefaultPicture</RowPictureDataPath>
+			<SearchStringLocation>None</SearchStringLocation>
+			<ViewStatusLocation>None</ViewStatusLocation>
+			<SearchControlLocation>None</SearchControlLocation>
+			<AutoRefresh>false</AutoRefresh>
+			<AutoRefreshPeriod>60</AutoRefreshPeriod>
+			<Period>
+				<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+				<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+				<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+			</Period>
+			<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+			<RestoreCurrentRow>false</RestoreCurrentRow>
+			<TopLevelParent xsi:nil="true"/>
+			<ShowRoot>true</ShowRoot>
+			<AllowRootChoice>false</AllowRootChoice>
+			<UpdateOnDataChange>Auto</UpdateOnDataChange>
+			<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
+			<ContextMenu name="СписокКонтекстноеМеню" id="2">
+				<ChildItems>
+					<Button name="СвязанныеСообщения" id="50">
+						<Type>CommandBarButton</Type>
+						<CommandName>Report.гкс_СвязанныеСообщения.Command.СвязанныеСообщения</CommandName>
+						<DataPath>Items.Список.CurrentData.Ссылка</DataPath>
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Связанные сообщения</v8:content>
+							</v8:item>
+						</Title>
+						<ExtendedTooltip name="СвязанныеСообщенияРасширеннаяПодсказка" id="51"/>
+					</Button>
+					<Button name="ПоказатьИдентификаторыКонтекст" id="60">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.ПоказатьИдентификаторы</CommandName>
+						<ExtendedTooltip name="ПоказатьИдентификаторыКонтекстРасширеннаяПодсказка" id="61"/>
+					</Button>
+					<Button name="ПроблемыОбменаКонтекст" id="65">
+						<Type>CommandBarButton</Type>
+						<CommandName>InformationRegister.гкс_ПроблемыОбменаДанными.Command.ПроблемыОбменаСообщениями</CommandName>
+						<DataPath>Items.Список.CurrentData.Ссылка</DataPath>
+						<ExtendedTooltip name="ПроблемыОбменаКонтекстРасширеннаяПодсказка" id="66"/>
+					</Button>
+				</ChildItems>
+			</ContextMenu>
+			<AutoCommandBar name="СписокКоманднаяПанель" id="3">
+				<Autofill>false</Autofill>
+			</AutoCommandBar>
+			<ExtendedTooltip name="СписокРасширеннаяПодсказка" id="12"/>
+			<SearchStringAddition name="СписокСтрокаПоиска" id="13">
+				<AdditionSource>
+					<Item>Список</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="СписокСтрокаПоискаКонтекстноеМеню" id="14"/>
+				<ExtendedTooltip name="СписокСтрокаПоискаРасширеннаяПодсказка" id="15"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="СписокСостояниеПросмотра" id="16">
+				<AdditionSource>
+					<Item>Список</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="СписокСостояниеПросмотраКонтекстноеМеню" id="17"/>
+				<ExtendedTooltip name="СписокСостояниеПросмотраРасширеннаяПодсказка" id="18"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="СписокУправлениеПоиском" id="19">
+				<AdditionSource>
+					<Item>Список</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="СписокУправлениеПоискомКонтекстноеМеню" id="20"/>
+				<ExtendedTooltip name="СписокУправлениеПоискомРасширеннаяПодсказка" id="21"/>
+			</SearchControlAddition>
+			<Events>
+				<Event name="Selection">СписокВыбор</Event>
+			</Events>
+			<ChildItems>
+				<LabelField name="ДатаВремяСобытия" id="8">
+					<DataPath>Список.ДатаВремяСобытия</DataPath>
+					<ContextMenu name="ДатаВремяСобытияКонтекстноеМеню" id="9"/>
+					<ExtendedTooltip name="ДатаВремяСобытияРасширеннаяПодсказка" id="23"/>
+				</LabelField>
+				<LabelField name="ДатаВремяОтправки" id="10">
+					<DataPath>Список.ДатаВремяОтправки</DataPath>
+					<ContextMenu name="ДатаВремяОтправкиКонтекстноеМеню" id="11"/>
+					<ExtendedTooltip name="ДатаВремяОтправкиРасширеннаяПодсказка" id="25"/>
+				</LabelField>
+				<LabelField name="ТипКонтракта" id="62">
+					<DataPath>Список.ТипКонтракта</DataPath>
+					<ContextMenu name="ТипКонтрактаКонтекстноеМеню" id="63"/>
+					<ExtendedTooltip name="ТипКонтрактаРасширеннаяПодсказка" id="64"/>
+				</LabelField>
+				<LabelField name="Состояние" id="52">
+					<DataPath>Список.Состояние</DataPath>
+					<CellHyperlink>true</CellHyperlink>
+					<ContextMenu name="СостояниеКонтекстноеМеню" id="53"/>
+					<ExtendedTooltip name="СостояниеРасширеннаяПодсказка" id="54"/>
+				</LabelField>
+				<LabelField name="ИдентификаторСообщения" id="47">
+					<DataPath>Список.ИдентификаторСообщения</DataPath>
+					<Visible>false</Visible>
+					<ContextMenu name="ИдентификаторСообщенияКонтекстноеМеню" id="48"/>
+					<ExtendedTooltip name="ИдентификаторСообщенияРасширеннаяПодсказка" id="49"/>
+				</LabelField>
+				<LabelField name="КорневойИдентификаторСообщения" id="55">
+					<DataPath>Список.КорневойИдентификаторСообщения</DataPath>
+					<Visible>false</Visible>
+					<ContextMenu name="КорневойИдентификаторСообщенияКонтекстноеМеню" id="56"/>
+					<ExtendedTooltip name="КорневойИдентификаторСообщенияРасширеннаяПодсказка" id="57"/>
+				</LabelField>
+				<LabelField name="гкс_ОбъектСобытия" id="44">
+					<DataPath>Список.гкс_ОбъектСобытия</DataPath>
+					<ContextMenu name="гкс_ОбъектСобытияКонтекстноеМеню" id="45"/>
+					<ExtendedTooltip name="гкс_ОбъектСобытияРасширеннаяПодсказка" id="46"/>
+				</LabelField>
+				<LabelField name="ТочкаПубликации" id="26">
+					<DataPath>Список.ТочкаПубликации</DataPath>
+					<ContextMenu name="ТочкаПубликацииКонтекстноеМеню" id="27"/>
+					<ExtendedTooltip name="ТочкаПубликацииРасширеннаяПодсказка" id="28"/>
+				</LabelField>
+				<LabelField name="КлючМаршрутизации" id="35">
+					<DataPath>Список.КлючМаршрутизации</DataPath>
+					<ContextMenu name="КлючМаршрутизацииКонтекстноеМеню" id="36"/>
+					<ExtendedTooltip name="КлючМаршрутизацииРасширеннаяПодсказка" id="37"/>
+				</LabelField>
+				<LabelField name="СерверОчередей" id="38">
+					<DataPath>Список.СерверОчередей</DataPath>
+					<Visible>false</Visible>
+					<ContextMenu name="СерверОчередейКонтекстноеМеню" id="39"/>
+					<ExtendedTooltip name="СерверОчередейРасширеннаяПодсказка" id="40"/>
+				</LabelField>
+				<LabelField name="Код" id="4">
+					<DataPath>Список.Код</DataPath>
+					<Visible>false</Visible>
+					<DefaultItem>true</DefaultItem>
+					<ContextMenu name="КодКонтекстноеМеню" id="5"/>
+					<ExtendedTooltip name="КодРасширеннаяПодсказка" id="22"/>
+				</LabelField>
+				<LabelField name="УниверсальнаяДатаСобытияВМиллисекундах" id="41">
+					<DataPath>Список.УниверсальнаяДатаСобытияВМиллисекундах</DataPath>
+					<Visible>false</Visible>
+					<UserVisible>
+						<xr:Common>false</xr:Common>
+					</UserVisible>
+					<ContextMenu name="УниверсальнаяДатаСобытияВМиллисекундахКонтекстноеМеню" id="42"/>
+					<ExtendedTooltip name="УниверсальнаяДатаСобытияВМиллисекундахРасширеннаяПодсказка" id="43"/>
+				</LabelField>
+				<LabelField name="КраткийСостав" id="67">
+					<DataPath>Список.КраткийСостав</DataPath>
+					<ContextMenu name="КраткийСоставКонтекстноеМеню" id="68"/>
+					<ExtendedTooltip name="КраткийСоставРасширеннаяПодсказка" id="69"/>
+				</LabelField>
+			</ChildItems>
+		</Table>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Список" id="1">
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>true</ManualQuery>
+				<DynamicDataRead>true</DynamicDataRead>
+				<QueryText>ВЫБРАТЬ
+	ВсеСообщения.Ссылка КАК Ссылка,
+	ВсеСообщения.ВерсияДанных КАК ВерсияДанных,
+	ВсеСообщения.ПометкаУдаления КАК ПометкаУдаления,
+	ВсеСообщения.Код КАК Код,
+	ВсеСообщения.ДатаВремяСобытия КАК ДатаВремяСобытия,
+	ВсеСообщения.УниверсальнаяДатаСобытияВМиллисекундах КАК УниверсальнаяДатаСобытияВМиллисекундах,
+	ВсеСообщения.ТочкаПубликации КАК ТочкаПубликации,
+	ВсеСообщения.КлючМаршрутизации КАК КлючМаршрутизации,
+	ВсеСообщения.ДатаВремяОтправки КАК ДатаВремяОтправки,
+	ВсеСообщения.Сообщение КАК Сообщение,
+	ВсеСообщения.СерверОчередей КАК СерверОчередей,
+	ВсеСообщения.СвойстваСообщения КАК СвойстваСообщения,
+	ВсеСообщения.УдалитьКлючСоединения КАК УдалитьКлючСоединения,
+	ВсеСообщения.ИдентификаторСообщения КАК ИдентификаторСообщения,
+	ВсеСообщения.КорневойИдентификаторСообщения КАК КорневойИдентификаторСообщения,
+	ВсеСообщения.Хоп КАК Хоп,
+	ВсеСообщения.гкс_ОбъектСобытия КАК гкс_ОбъектСобытия,
+	ВсеСообщения.гкс_НастройкаПолучателя КАК гкс_НастройкаПолучателя,
+	ВсеСообщения.Предопределенный КАК Предопределенный,
+	ВсеСообщения.ИмяПредопределенныхДанных КАК ИмяПредопределенныхДанных,
+	ВЫБОР
+		КОГДА ВсеСостояния.Состояние ЕСТЬ NULL
+			ТОГДА ВЫБОР
+					КОГДА ВсеСообщения.ДатаВремяОтправки = ДАТАВРЕМЯ(1, 1, 1)
+						ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Подготовлено)
+					ИНАЧЕ ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Отправлено)
+				КОНЕЦ
+		КОГДА ВсеСостояния.Состояние = 1
+			ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Подготовлено)
+		КОГДА ВсеСостояния.Состояние = 2
+			ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Отправлено)
+		КОГДА ВсеСостояния.Состояние = 3
+			ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Пропущено)
+		КОГДА ВсеСостояния.Состояние = 4
+			ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ОшибкаОбработкиПолучателем)
+		КОГДА ВсеСостояния.Состояние = 5
+			ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Доставлено)
+		КОГДА ВсеСостояния.Состояние = 6
+			ТОГДА ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ДоставленоИОбработано)
+		ИНАЧЕ ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ОшибкаФормированияСостояния)
+	КОНЕЦ КАК Состояние,
+	ВсеСообщения.ТипКонтракта КАК ТипКонтракта,
+	ВсеСообщения.КраткийСостав КАК КраткийСостав
+ИЗ
+	Справочник.ИсходящиеСообщения КАК ВсеСообщения
+		ЛЕВОЕ СОЕДИНЕНИЕ (ВЫБРАТЬ
+			гкс_СостоянияИсходящихСообщений.Сообщение КАК Сообщение,
+			МИНИМУМ(ВЫБОР
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Подготовлено)
+						ТОГДА 1
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Отправлено)
+						ТОГДА 2
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Пропущено)
+						ТОГДА 3
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Пропущено)
+						ТОГДА 3
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ОшибкаОбработкиПолучателем)
+						ТОГДА 4
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Доставлено)
+						ТОГДА 5
+					КОГДА гкс_СостоянияИсходящихСообщений.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ДоставленоИОбработано)
+						ТОГДА 6
+					ИНАЧЕ -1
+				КОНЕЦ) КАК Состояние
+		ИЗ
+			РегистрСведений.гкс_СостоянияИсходящихСообщений КАК гкс_СостоянияИсходящихСообщений
+				ВНУТРЕННЕЕ СОЕДИНЕНИЕ (ВЫБРАТЬ
+					гкс_СостоянияИсходящихСообщений.Сообщение КАК Сообщение,
+					гкс_СостоянияИсходящихСообщений.УчастникОбмена КАК УчастникОбмена,
+					МАКСИМУМ(гкс_СостоянияИсходящихСообщений.УниверсальнаяДатаСобытияВМиллисекундах) КАК МаксимальнаяДатаСобытия
+				ИЗ
+					РегистрСведений.гкс_СостоянияИсходящихСообщений КАК гкс_СостоянияИсходящихСообщений
+				
+				СГРУППИРОВАТЬ ПО
+					гкс_СостоянияИсходящихСообщений.Сообщение,
+					гкс_СостоянияИсходящихСообщений.УчастникОбмена) КАК СрезМаксимальныхДат
+				ПО гкс_СостоянияИсходящихСообщений.Сообщение = СрезМаксимальныхДат.Сообщение
+					И гкс_СостоянияИсходящихСообщений.УчастникОбмена = СрезМаксимальныхДат.УчастникОбмена
+					И гкс_СостоянияИсходящихСообщений.УниверсальнаяДатаСобытияВМиллисекундах = СрезМаксимальныхДат.МаксимальнаяДатаСобытия
+				ВНУТРЕННЕЕ СОЕДИНЕНИЕ (ВЫБРАТЬ
+					гкс_СостоянияИсходящихСообщений.Сообщение КАК Сообщение,
+					гкс_УчастникиОбменаRMQ.ЭтаБаза КАК ЭтоСтатусТекущейБазы
+				ИЗ
+					(ВЫБРАТЬ
+						гкс_СостоянияИсходящихСообщений.Сообщение КАК Сообщение,
+						МАКСИМУМ(гкс_СостоянияИсходящихСообщений.УниверсальнаяДатаСобытияВМиллисекундах) КАК МаксимальнаяДатаСобытия
+					ИЗ
+						РегистрСведений.гкс_СостоянияИсходящихСообщений КАК гкс_СостоянияИсходящихСообщений
+					
+					СГРУППИРОВАТЬ ПО
+						гкс_СостоянияИсходящихСообщений.Сообщение) КАК МаксимальныеДатыСообщений
+						ВНУТРЕННЕЕ СОЕДИНЕНИЕ РегистрСведений.гкс_СостоянияИсходящихСообщений КАК гкс_СостоянияИсходящихСообщений
+							ВНУТРЕННЕЕ СОЕДИНЕНИЕ Справочник.гкс_УчастникиОбменаRMQ КАК гкс_УчастникиОбменаRMQ
+							ПО гкс_СостоянияИсходящихСообщений.УчастникОбмена = гкс_УчастникиОбменаRMQ.Ссылка
+						ПО МаксимальныеДатыСообщений.Сообщение = гкс_СостоянияИсходящихСообщений.Сообщение
+							И МаксимальныеДатыСообщений.МаксимальнаяДатаСобытия = гкс_СостоянияИсходящихСообщений.УниверсальнаяДатаСобытияВМиллисекундах) КАК НаправленияПросмотраСостояний
+				ПО гкс_СостоянияИсходящихСообщений.Сообщение = НаправленияПросмотраСостояний.Сообщение
+		ГДЕ
+			ВЫБОР
+					КОГДА НаправленияПросмотраСостояний.ЭтоСтатусТекущейБазы
+						ТОГДА гкс_СостоянияИсходящихСообщений.Состояние В (ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Подготовлено), ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Отправлено), ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Пропущено))
+					ИНАЧЕ гкс_СостоянияИсходящихСообщений.Состояние В (ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ОшибкаОбработкиПолучателем), ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.Доставлено), ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияИсходящихСообщенийRMQ.ДоставленоИОбработано))
+				КОНЕЦ
+		
+		СГРУППИРОВАТЬ ПО
+			гкс_СостоянияИсходящихСообщений.Сообщение) КАК ВсеСостояния
+		ПО (ВсеСостояния.Сообщение = ВсеСообщения.Ссылка)</QueryText>
+				<MainTable>Catalog.ИсходящиеСообщения</MainTable>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>dfcece9d-5077-440b-b6b3-45a5cb4538eb</dcsset:userSettingID>
+					</dcsset:filter>
+					<dcsset:order>
+						<dcsset:item xsi:type="dcsset:OrderItemField">
+							<dcsset:field>ДатаВремяСобытия</dcsset:field>
+							<dcsset:orderType>Asc</dcsset:orderType>
+						</dcsset:item>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+					</dcsset:order>
+					<dcsset:conditionalAppearance>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>b75fecce-942b-4aed-abc9-e6a02e460fb3</dcsset:userSettingID>
+					</dcsset:conditionalAppearance>
+					<dcsset:itemsViewMode>Normal</dcsset:itemsViewMode>
+					<dcsset:itemsUserSettingID>911b6018-f537-43e8-a417-da56b22f9aec</dcsset:itemsUserSettingID>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ПоказатьИдентификаторы" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать идентификаторы</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать идентификаторы</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПоказатьИдентификаторы</Action>
+		</Command>
+		<Command name="ПеренестиТекущиеСостоянияСообщений" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Перенести текущие состояния сообщений</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ПеренестиТекущиеСостоянияСообщений</Action>
+		</Command>
+	</Commands>
+</Form>

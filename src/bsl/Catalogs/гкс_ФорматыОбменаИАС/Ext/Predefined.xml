@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="b1248617-7593-4387-b907-331080fcc0d8">
+		<Name>EnterpriseDataService</Name>
+		<Code/>
+		<Description>Enterprise data (Служебный)</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="5b0c708c-503e-47ce-beb8-29d2c97ab71e">
+		<Name>СтандартнаяСериализацияXML</Name>
+		<Code/>
+		<Description>Стандартная сериализация XML</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="bd29d680-a8c5-443c-b791-d6af7fd5f903">
+		<Name>СтандартнаяСериализацияXDTOXML</Name>
+		<Code/>
+		<Description>Стандартная сериализация XDTO XML</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="d1c94f75-7a57-4c18-80be-5970275255e4">
+		<Name>СтандартнаяСериализацияXDTOJSON</Name>
+		<Code/>
+		<Description>Стандартная сериализация XDTO JSON</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="097bdf17-9f3b-4b20-a393-47ecb5ccf65b">
+		<Name>ПроизвольныйФормат</Name>
+		<Code/>
+		<Description>Произвольный формат</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

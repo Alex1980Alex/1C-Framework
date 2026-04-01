@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoTime>CurrentOrLast</AutoTime>
+	<UsePostingMode>Auto</UsePostingMode>
+	<RepostOnWrite>true</RepostOnWrite>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="AfterWrite">ПослеЗаписи</Event>
+		<Event name="AfterWriteAtServer">ПослеЗаписиНаСервере</Event>
+		<Event name="OnReadAtServer">ПриЧтенииНаСервере</Event>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Номер" id="1">
+			<DataPath>Объект.Number</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НомерКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="НомерРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="Дата" id="4">
+			<DataPath>Объект.Date</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ДатаКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="ДатаРасширеннаяПодсказка" id="6"/>
+		</InputField>
+		<InputField name="ТочкаМаршрута" id="25">
+			<DataPath>Объект.ТочкаМаршрута</DataPath>
+			<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="26"/>
+			<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="27"/>
+		</InputField>
+		<InputField name="Путь" id="28">
+			<DataPath>Объект.Путь</DataPath>
+			<ContextMenu name="ПутьКонтекстноеМеню" id="29"/>
+			<ExtendedTooltip name="ПутьРасширеннаяПодсказка" id="30"/>
+		</InputField>
+		<InputField name="НомерВагона" id="10">
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НомерВагонаКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="НомерВагонаРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="ИдентификаторОтправки" id="13">
+			<DataPath>Объект.ИдентификаторОтправки</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ИдентификаторОтправкиКонтекстноеМеню" id="14"/>
+			<ExtendedTooltip name="ИдентификаторОтправкиРасширеннаяПодсказка" id="15"/>
+		</InputField>
+		<InputField name="ТипОперации" id="16">
+			<DataPath>Объект.ТипОперации</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ListChoiceMode>true</ListChoiceMode>
+			<ChoiceList>
+				<xr:Item>
+					<xr:Presentation/>
+					<xr:CheckState>0</xr:CheckState>
+					<xr:Value xsi:type="FormChoiceListDesTimeValue">
+						<Presentation/>
+						<Value xsi:type="xr:DesignTimeRef">Enum.гкс_СРПВТипыОперацийСВагоном.EnumValue.Погрузка</Value>
+					</xr:Value>
+				</xr:Item>
+				<xr:Item>
+					<xr:Presentation/>
+					<xr:CheckState>0</xr:CheckState>
+					<xr:Value xsi:type="FormChoiceListDesTimeValue">
+						<Presentation/>
+						<Value xsi:type="xr:DesignTimeRef">Enum.гкс_СРПВТипыОперацийСВагоном.EnumValue.Разгрузка</Value>
+					</xr:Value>
+				</xr:Item>
+			</ChoiceList>
+			<ContextMenu name="ТипОперацииКонтекстноеМеню" id="17"/>
+			<ExtendedTooltip name="ТипОперацииРасширеннаяПодсказка" id="18"/>
+		</InputField>
+		<InputField name="ДатаНачала" id="19">
+			<DataPath>Объект.ДатаНачала</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ДатаНачалаКонтекстноеМеню" id="20"/>
+			<ExtendedTooltip name="ДатаНачалаРасширеннаяПодсказка" id="21"/>
+		</InputField>
+		<InputField name="ДатаОкончания" id="22">
+			<DataPath>Объект.ДатаОкончания</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ДатаОкончанияКонтекстноеМеню" id="23"/>
+			<ExtendedTooltip name="ДатаОкончанияРасширеннаяПодсказка" id="24"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DocumentObject.гкс_СРПВРегистрацияОперацииСВагоном</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+			<UseAlways>
+				<Field>Объект.RegisterRecords</Field>
+			</UseAlways>
+		</Attribute>
+	</Attributes>
+</Form>

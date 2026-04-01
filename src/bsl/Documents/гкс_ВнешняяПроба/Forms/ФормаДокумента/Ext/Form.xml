@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoTime>CurrentOrLast</AutoTime>
+	<UsePostingMode>Auto</UsePostingMode>
+	<RepostOnWrite>true</RepostOnWrite>
+	<AutoCommandBar name="FormCommandBar" id="-1"/>
+	<ChildItems>
+		<InputField name="Номер" id="1">
+			<DataPath>Объект.Number</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="НомерКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="НомерРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="Дата" id="4">
+			<DataPath>Объект.Date</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ДатаКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="ДатаРасширеннаяПодсказка" id="6"/>
+		</InputField>
+		<InputField name="ВидПробы" id="7">
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ВидПробыКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="ВидПробыРасширеннаяПодсказка" id="9"/>
+		</InputField>
+		<InputField name="ДатаПогрузки" id="10">
+			<DataPath>Объект.ДатаПогрузки</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ДатаПогрузкиКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="ДатаПогрузкиРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="ДатаИзменения" id="13">
+			<DataPath>Объект.ДатаИзменения</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ДатаИзмененияКонтекстноеМеню" id="14"/>
+			<ExtendedTooltip name="ДатаИзмененияРасширеннаяПодсказка" id="15"/>
+		</InputField>
+		<InputField name="Организация" id="16">
+			<DataPath>Объект.Организация</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ОрганизацияКонтекстноеМеню" id="17"/>
+			<ExtendedTooltip name="ОрганизацияРасширеннаяПодсказка" id="18"/>
+		</InputField>
+		<InputField name="Номенклатура" id="19">
+			<DataPath>Объект.Номенклатура</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="НоменклатураКонтекстноеМеню" id="20"/>
+			<ExtendedTooltip name="НоменклатураРасширеннаяПодсказка" id="21"/>
+		</InputField>
+		<InputField name="НоменклатураWarehouse" id="22">
+			<DataPath>Объект.НоменклатураWarehouse</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="НоменклатураWarehouseКонтекстноеМеню" id="23"/>
+			<ExtendedTooltip name="НоменклатураWarehouseРасширеннаяПодсказка" id="24"/>
+		</InputField>
+		<InputField name="ТранспортноеСредство" id="25">
+			<DataPath>Объект.ТранспортноеСредство</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ТранспортноеСредствоКонтекстноеМеню" id="26"/>
+			<ExtendedTooltip name="ТранспортноеСредствоРасширеннаяПодсказка" id="27"/>
+		</InputField>
+		<InputField name="НомерТС" id="28">
+			<DataPath>Объект.НомерТС</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="НомерТСКонтекстноеМеню" id="29"/>
+			<ExtendedTooltip name="НомерТСРасширеннаяПодсказка" id="30"/>
+		</InputField>
+		<InputField name="ИДКомпозитнойПробы" id="31">
+			<DataPath>Объект.ИДКомпозитнойПробы</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ИДКомпозитнойПробыКонтекстноеМеню" id="32"/>
+			<ExtendedTooltip name="ИДКомпозитнойПробыРасширеннаяПодсказка" id="33"/>
+		</InputField>
+		<InputField name="ИДПробы" id="34">
+			<DataPath>Объект.ИДПробы</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="ИДПробыКонтекстноеМеню" id="35"/>
+			<ExtendedTooltip name="ИДПробыРасширеннаяПодсказка" id="36"/>
+		</InputField>
+		<InputField name="СтанцияОтправления" id="37">
+			<DataPath>Объект.СтанцияОтправления</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="СтанцияОтправленияКонтекстноеМеню" id="38"/>
+			<ExtendedTooltip name="СтанцияОтправленияРасширеннаяПодсказка" id="39"/>
+		</InputField>
+		<InputField name="СтанцияНазначения" id="80">
+			<DataPath>Объект.СтанцияНазначения</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="СтанцияНазначенияКонтекстноеМеню" id="81"/>
+			<ExtendedTooltip name="СтанцияНазначенияРасширеннаяПодсказка" id="82"/>
+		</InputField>
+		<InputField name="Сюрвейер" id="74">
+			<DataPath>Объект.Сюрвейер</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="СюрвейерКонтекстноеМеню" id="75"/>
+			<ExtendedTooltip name="СюрвейерРасширеннаяПодсказка" id="76"/>
+		</InputField>
+		<InputField name="НомерДокумента" id="68">
+			<DataPath>Объект.НомерДокумента</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="НомерДокументаКонтекстноеМеню" id="69"/>
+			<ExtendedTooltip name="НомерДокументаРасширеннаяПодсказка" id="70"/>
+		</InputField>
+		<InputField name="НомерЗаявки" id="40">
+			<DataPath>Объект.НомерЗаявки</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="НомерЗаявкиКонтекстноеМеню" id="41"/>
+			<ExtendedTooltip name="НомерЗаявкиРасширеннаяПодсказка" id="42"/>
+		</InputField>
+		<InputField name="Комментарий" id="71">
+			<DataPath>Объект.Комментарий</DataPath>
+			<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+			<ContextMenu name="КомментарийКонтекстноеМеню" id="72"/>
+			<ExtendedTooltip name="КомментарийРасширеннаяПодсказка" id="73"/>
+		</InputField>
+		<Table name="КачественныеПоказатели" id="43">
+			<Representation>List</Representation>
+			<AutoInsertNewRow>true</AutoInsertNewRow>
+			<EnableStartDrag>true</EnableStartDrag>
+			<EnableDrag>true</EnableDrag>
+			<DataPath>Объект.КачественныеПоказатели</DataPath>
+			<RowFilter xsi:nil="true"/>
+			<ContextMenu name="КачественныеПоказателиКонтекстноеМеню" id="44"/>
+			<AutoCommandBar name="КачественныеПоказателиКоманднаяПанель" id="45"/>
+			<ExtendedTooltip name="КачественныеПоказателиРасширеннаяПодсказка" id="46"/>
+			<SearchStringAddition name="КачественныеПоказателиСтрокаПоиска" id="47">
+				<AdditionSource>
+					<Item>КачественныеПоказатели</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="КачественныеПоказателиСтрокаПоискаКонтекстноеМеню" id="48"/>
+				<ExtendedTooltip name="КачественныеПоказателиСтрокаПоискаРасширеннаяПодсказка" id="49"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="КачественныеПоказателиСостояниеПросмотра" id="50">
+				<AdditionSource>
+					<Item>КачественныеПоказатели</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="КачественныеПоказателиСостояниеПросмотраКонтекстноеМеню" id="51"/>
+				<ExtendedTooltip name="КачественныеПоказателиСостояниеПросмотраРасширеннаяПодсказка" id="52"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="КачественныеПоказателиУправлениеПоиском" id="53">
+				<AdditionSource>
+					<Item>КачественныеПоказатели</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="КачественныеПоказателиУправлениеПоискомКонтекстноеМеню" id="54"/>
+				<ExtendedTooltip name="КачественныеПоказателиУправлениеПоискомРасширеннаяПодсказка" id="55"/>
+			</SearchControlAddition>
+			<ChildItems>
+				<LabelField name="КачественныеПоказателиНомерСтроки" id="56">
+					<DataPath>Объект.КачественныеПоказатели.LineNumber</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="КачественныеПоказателиНомерСтрокиКонтекстноеМеню" id="57"/>
+					<ExtendedTooltip name="КачественныеПоказателиНомерСтрокиРасширеннаяПодсказка" id="58"/>
+				</LabelField>
+				<InputField name="КачественныеПоказателиВидПробы" id="77">
+					<DataPath>Объект.КачественныеПоказатели.ВидПробы</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+					<ContextMenu name="КачественныеПоказателиВидПробыКонтекстноеМеню" id="78"/>
+					<ExtendedTooltip name="КачественныеПоказателиВидПробыРасширеннаяПодсказка" id="79"/>
+				</InputField>
+				<InputField name="КачественныеПоказателиПоказательВнешний" id="59">
+					<DataPath>Объект.КачественныеПоказатели.ПоказательВнешний</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+					<ContextMenu name="КачественныеПоказателиПоказательВнешнийКонтекстноеМеню" id="60"/>
+					<ExtendedTooltip name="КачественныеПоказателиПоказательВнешнийРасширеннаяПодсказка" id="61"/>
+				</InputField>
+				<InputField name="КачественныеПоказателиПоказатель" id="62">
+					<DataPath>Объект.КачественныеПоказатели.Показатель</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+					<ContextMenu name="КачественныеПоказателиПоказательКонтекстноеМеню" id="63"/>
+					<ExtendedTooltip name="КачественныеПоказателиПоказательРасширеннаяПодсказка" id="64"/>
+				</InputField>
+				<InputField name="КачественныеПоказателиЗначение" id="65">
+					<DataPath>Объект.КачественныеПоказатели.Значение</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+					<ContextMenu name="КачественныеПоказателиЗначениеКонтекстноеМеню" id="66"/>
+					<ExtendedTooltip name="КачественныеПоказателиЗначениеРасширеннаяПодсказка" id="67"/>
+				</InputField>
+			</ChildItems>
+		</Table>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DocumentObject.гкс_ВнешняяПроба</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+			<UseAlways>
+				<Field>Объект.RegisterRecords</Field>
+			</UseAlways>
+		</Attribute>
+	</Attributes>
+</Form>

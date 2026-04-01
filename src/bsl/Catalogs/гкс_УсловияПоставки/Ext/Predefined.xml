@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="596407ad-c0b4-41cf-87dd-8ea5cf80102f">
+		<Name>DAPПоступлениеПЛК</Name>
+		<Code xsi:type="xs:decimal">1</Code>
+		<Description>DAP ПЛК Поступление</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="5046533c-ae37-4409-8b2a-3b7e10cda1fd">
+		<Name>DAPПоступление</Name>
+		<Code xsi:type="xs:decimal">2</Code>
+		<Description>DAP Поступление</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="07945cc9-2726-4d28-abcb-d8f8faada1fc">
+		<Name>EXWПоступление</Name>
+		<Code xsi:type="xs:decimal">3</Code>
+		<Description>EXW Поступление</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="3c3b082c-a601-4d35-8068-dcac387bdf74">
+		<Name>FCAПоступлениеАвто</Name>
+		<Code xsi:type="xs:decimal">4</Code>
+		<Description>FCA Авто Поступление</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="6e344430-b2b7-4858-8889-3b388eac8abc">
+		<Name>FCAПоступлениеЖД</Name>
+		<Code xsi:type="xs:decimal">5</Code>
+		<Description>FCA ЖД Поступление</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="b29f3918-3fe5-422d-b2e0-17ceb47f935e">
+		<Name>Приемка</Name>
+		<Code xsi:type="xs:decimal">6</Code>
+		<Description>Приемка</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="1d6933ee-388b-4fca-b113-44159cee9bf2">
+		<Name>ПриемНаХранение</Name>
+		<Code xsi:type="xs:decimal">7</Code>
+		<Description>Прием на хранение</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="8a3ae6ab-4c38-43f4-a282-e6a6fbaa4c0c">
+		<Name>Отгрузка</Name>
+		<Code xsi:type="xs:decimal">8</Code>
+		<Description>Отгрузка</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

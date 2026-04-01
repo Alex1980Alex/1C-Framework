@@ -1,0 +1,544 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<UseForFoldersAndItems>Items</UseForFoldersAndItems>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnOpen">ПриОткрытии</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Наименование" id="1">
+			<DataPath>Объект.Description</DataPath>
+			<ReadOnly>true</ReadOnly>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройка</v8:content>
+				</v8:item>
+			</Title>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НаименованиеКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="НаименованиеРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<Pages name="ГруппаСтраницы" id="45">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа страницы</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа страницы</v8:content>
+				</v8:item>
+			</ToolTip>
+			<PagesRepresentation>TabsOnTop</PagesRepresentation>
+			<ExtendedTooltip name="ГруппаСтраницыРасширеннаяПодсказка" id="46"/>
+			<ChildItems>
+				<Page name="ГруппаОсновные" id="47">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Основные</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа основные</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаОсновныеРасширеннаяПодсказка" id="48"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаНастройкаОбработки" id="36">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Настройка обработки</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа настройка обработки</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="ГруппаНастройкаОбработкиРасширеннаяПодсказка" id="37"/>
+							<ChildItems>
+								<InputField name="КоличествоНеудачныхОбработок" id="4">
+									<DataPath>Объект.КоличествоНеудачныхОбработок</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="КоличествоНеудачныхОбработокКонтекстноеМеню" id="5"/>
+									<ExtendedTooltip name="КоличествоНеудачныхОбработокРасширеннаяПодсказка" id="6"/>
+								</InputField>
+								<InputField name="РазмерПорцииОбработки" id="7">
+									<DataPath>Объект.РазмерПорцииОбработки</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="РазмерПорцииОбработкиКонтекстноеМеню" id="8"/>
+									<ExtendedTooltip name="РазмерПорцииОбработкиРасширеннаяПодсказка" id="9"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаОтборПоСтанцииНазначения" id="34">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Отбор по станции назначения</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа отбор по станции назначения</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Vertical</Group>
+							<ExtendedTooltip name="ГруппаОтборПоСтанцииНазначенияРасширеннаяПодсказка" id="35"/>
+							<ChildItems>
+								<LabelDecoration name="ДекорацияВРазработке" id="38">
+									<Enabled>false</Enabled>
+									<Title formatted="false">
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Настройка в разработке</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="ДекорацияВРазработкеКонтекстноеМеню" id="39"/>
+									<ExtendedTooltip name="ДекорацияВРазработкеРасширеннаяПодсказка" id="40"/>
+								</LabelDecoration>
+								<InputField name="СтанцияНазначения" id="10">
+									<DataPath>Объект.СтанцияНазначения</DataPath>
+									<Enabled>false</Enabled>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="СтанцияНазначенияКонтекстноеМеню" id="11"/>
+									<ExtendedTooltip name="СтанцияНазначенияРасширеннаяПодсказка" id="12"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаОтборПоОрганизации" id="32">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Отбор по организации</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа отбор по организации</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="ГруппаОтборПоОрганизацииРасширеннаяПодсказка" id="33"/>
+							<ChildItems>
+								<Table name="ОтборПоОрганизации" id="13">
+									<Representation>List</Representation>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>Объект.ОтборПоОрганизации</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Отбор по организации</v8:content>
+										</v8:item>
+									</Title>
+									<RowFilter xsi:nil="true"/>
+									<ContextMenu name="ОтборПоОрганизацииКонтекстноеМеню" id="14"/>
+									<AutoCommandBar name="ОтборПоОрганизацииКоманднаяПанель" id="15"/>
+									<ExtendedTooltip name="ОтборПоОрганизацииРасширеннаяПодсказка" id="16"/>
+									<SearchStringAddition name="ОтборПоОрганизацииСтрокаПоиска" id="17">
+										<AdditionSource>
+											<Item>ОтборПоОрганизации</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ОтборПоОрганизацииСтрокаПоискаКонтекстноеМеню" id="18"/>
+										<ExtendedTooltip name="ОтборПоОрганизацииСтрокаПоискаРасширеннаяПодсказка" id="19"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="ОтборПоОрганизацииСостояниеПросмотра" id="20">
+										<AdditionSource>
+											<Item>ОтборПоОрганизации</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ОтборПоОрганизацииСостояниеПросмотраКонтекстноеМеню" id="21"/>
+										<ExtendedTooltip name="ОтборПоОрганизацииСостояниеПросмотраРасширеннаяПодсказка" id="22"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="ОтборПоОрганизацииУправлениеПоиском" id="23">
+										<AdditionSource>
+											<Item>ОтборПоОрганизации</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="ОтборПоОрганизацииУправлениеПоискомКонтекстноеМеню" id="24"/>
+										<ExtendedTooltip name="ОтборПоОрганизацииУправлениеПоискомРасширеннаяПодсказка" id="25"/>
+									</SearchControlAddition>
+									<ChildItems>
+										<LabelField name="ОтборПоОрганизацииНомерСтроки" id="26">
+											<DataPath>Объект.ОтборПоОрганизации.LineNumber</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ОтборПоОрганизацииНомерСтрокиКонтекстноеМеню" id="27"/>
+											<ExtendedTooltip name="ОтборПоОрганизацииНомерСтрокиРасширеннаяПодсказка" id="28"/>
+										</LabelField>
+										<InputField name="ОтборПоОрганизацииОрганизация" id="29">
+											<DataPath>Объект.ОтборПоОрганизации.Организация</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ОтборПоОрганизацииОрганизацияКонтекстноеМеню" id="30"/>
+											<ExtendedTooltip name="ОтборПоОрганизацииОрганизацияРасширеннаяПодсказка" id="31"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</Page>
+				<Page name="ГруппаУправлениеДанными" id="49">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Управление данными</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа управление данными</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаУправлениеДаннымиРасширеннаяПодсказка" id="50"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаПолучение" id="58">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Получение</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа получение</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Vertical</Group>
+							<ExtendedTooltip name="ГруппаПолучениеРасширеннаяПодсказка" id="59"/>
+							<ChildItems>
+								<UsualGroup name="ГруппаИспользоватьПериод" id="62">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Группа использовать период</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Группа использовать период</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>AlwaysHorizontal</Group>
+									<Representation>None</Representation>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="ГруппаИспользоватьПериодРасширеннаяПодсказка" id="63"/>
+									<ChildItems>
+										<CheckBoxField name="ИспользоватьПериод" id="55">
+											<DataPath>ИспользоватьПериод</DataPath>
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Получить данные за период</v8:content>
+												</v8:item>
+											</Title>
+											<CheckBoxType>Auto</CheckBoxType>
+											<ContextMenu name="ИспользоватьПериодКонтекстноеМеню" id="56"/>
+											<ExtendedTooltip name="ИспользоватьПериодРасширеннаяПодсказка" id="57"/>
+											<Events>
+												<Event name="OnChange">ИспользоватьПериодПриИзменении</Event>
+											</Events>
+										</CheckBoxField>
+										<InputField name="Периоды" id="64">
+											<DataPath>Периоды</DataPath>
+											<TitleLocation>None</TitleLocation>
+											<ContextMenu name="ПериодыКонтекстноеМеню" id="65"/>
+											<ExtendedTooltip name="ПериодыРасширеннаяПодсказка" id="66"/>
+										</InputField>
+									</ChildItems>
+								</UsualGroup>
+								<Button name="ПолучитьВходящиеДанные" id="51">
+									<Type>UsualButton</Type>
+									<CommandName>Form.Command.ПолучитьВходящиеДанные</CommandName>
+									<ExtendedTooltip name="ПолучитьВходящиеДанныеРасширеннаяПодсказка" id="52"/>
+								</Button>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаОбработка" id="60">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Обработка</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа обработка</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="ГруппаОбработкаРасширеннаяПодсказка" id="61"/>
+							<ChildItems>
+								<Button name="ОбработатьВходящиеДанные" id="53">
+									<Type>UsualButton</Type>
+									<CommandName>Form.Command.ОбработатьВходящиеДанные</CommandName>
+									<ExtendedTooltip name="ОбработатьВходящиеДанныеРасширеннаяПодсказка" id="54"/>
+								</Button>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</Page>
+				<Page name="ГруппаОчисткаДанных" id="75">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Очистка данных</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Очистка устаревщих данных интеграции</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаОчисткаДанныхРасширеннаяПодсказка" id="76"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаСрокиХранения" id="77">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Сроки хранения</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа сроки хранения</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Vertical</Group>
+							<ExtendedTooltip name="ГруппаСрокиХраненияРасширеннаяПодсказка" id="78"/>
+							<ChildItems>
+								<LabelDecoration name="ДекорацияСрокХранения" id="79">
+									<TextColor>style:ТекстИнформационнойНадписи</TextColor>
+									<Font ref="style:NormalTextFont" bold="false" italic="true" underline="false" strikeout="false" kind="StyleItem" scale="100"/>
+									<Title formatted="false">
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Устанавливается в месяцах</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="ДекорацияСрокХраненияКонтекстноеМеню" id="80"/>
+									<ExtendedTooltip name="ДекорацияСрокХраненияРасширеннаяПодсказка" id="81"/>
+								</LabelDecoration>
+								<InputField name="СрокХранениеВходящихДанныхWarehouse" id="82">
+									<DataPath>Объект.СрокХранениеВходящихДанныхWarehouse</DataPath>
+									<ContextMenu name="СрокХранениеВходящихДанныхWarehouseКонтекстноеМеню" id="83"/>
+									<ExtendedTooltip name="СрокХранениеВходящихДанныхWarehouseРасширеннаяПодсказка" id="84"/>
+								</InputField>
+								<InputField name="СрокХранениеВнешнихПроб" id="85">
+									<DataPath>Объект.СрокХранениеВнешнихПроб</DataPath>
+									<ContextMenu name="СрокХранениеВнешнихПробКонтекстноеМеню" id="86"/>
+									<ExtendedTooltip name="СрокХранениеВнешнихПробРасширеннаяПодсказка" id="87"/>
+								</InputField>
+								<InputField name="СрокХранениеИсторииИзмененияВнешнихПроб" id="88">
+									<DataPath>Объект.СрокХранениеИсторииИзмененияВнешнихПроб</DataPath>
+									<ContextMenu name="СрокХранениеИсторииИзмененияВнешнихПробКонтекстноеМеню" id="89"/>
+									<ExtendedTooltip name="СрокХранениеИсторииИзмененияВнешнихПробРасширеннаяПодсказка" id="90"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаОбработкаДанных" id="91">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Обработка</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа обработка</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Vertical</Group>
+							<ExtendedTooltip name="ГруппаОбработкаДанныхРасширеннаяПодсказка" id="92"/>
+							<ChildItems>
+								<InputField name="РазмерПорцииОбработкиДанныхОчистки" id="93">
+									<DataPath>Объект.РазмерПорцииОбработкиОчистки</DataPath>
+									<ContextMenu name="РазмерПорцииОбработкиДанныхОчисткиКонтекстноеМеню" id="94"/>
+									<ExtendedTooltip name="РазмерПорцииОбработкиДанныхОчисткиРасширеннаяПодсказка" id="95"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<Button name="ВыполнитьОчисткуУстаревшихДанных" id="96">
+							<Type>UsualButton</Type>
+							<CommandName>Form.Command.ВыполнитьОчисткуУстаревшихДанных</CommandName>
+							<ExtendedTooltip name="ВыполнитьОчисткуУстаревшихДанныхРасширеннаяПодсказка" id="97"/>
+						</Button>
+					</ChildItems>
+				</Page>
+				<Page name="ГруппаОбъектыВебСервиса" id="67">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Объекты веб-сервиса</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа объекты веб сервиса</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаОбъектыВебСервисаРасширеннаяПодсказка" id="68"/>
+					<ChildItems>
+						<Button name="КомандаЛогСобытийВебСервисов" id="73">
+							<Type>Hyperlink</Type>
+							<CommandName>Form.Command.КомандаЛогСобытийВебСервисов</CommandName>
+							<ExtendedTooltip name="КомандаЛогСобытийВебСервисовРасширеннаяПодсказка" id="74"/>
+						</Button>
+						<Button name="КомандаРесурсыВебСервисов" id="69">
+							<Type>Hyperlink</Type>
+							<CommandName>Form.Command.КомандаРесурсыВебСервисов</CommandName>
+							<ExtendedTooltip name="КомандаРесурсыВебСервисовРасширеннаяПодсказка" id="70"/>
+						</Button>
+						<Button name="КомандаПодключениеКВебСервисам" id="71">
+							<Type>Hyperlink</Type>
+							<CommandName>Form.Command.КомандаПодключениеКВебСервисам</CommandName>
+							<ExtendedTooltip name="КомандаПодключениеКВебСервисамРасширеннаяПодсказка" id="72"/>
+						</Button>
+					</ChildItems>
+				</Page>
+			</ChildItems>
+		</Pages>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:CatalogObject.гкс_НастройкиИнтеграцииWarehouse</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+		<Attribute name="ИспользоватьПериод" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Использовать период</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="Периоды" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Периоды</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:StandardPeriod</v8:Type>
+			</Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ПолучитьВходящиеДанные" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Получить входящие данные</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Получить входящие данные</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПолучитьВходящиеДанные</Action>
+		</Command>
+		<Command name="ОбработатьВходящиеДанные" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обработать входящие данные</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обработать входящие данные</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ОбработатьВходящиеДанные</Action>
+		</Command>
+		<Command name="КомандаЛогСобытийВебСервисов" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Лог событий веб-сервисов</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда лог событий веб сервисов</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаЛогСобытийВебСервисов</Action>
+		</Command>
+		<Command name="КомандаПодключениеКВебСервисам" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подключения к веб-сервисам</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда подключение к веб сервисам</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаПодключениеКВебСервисам</Action>
+		</Command>
+		<Command name="КомандаРесурсыВебСервисов" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание ресурсы веб-сервисов</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда ресурсы веб сервисов</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаРесурсыВебСервисов</Action>
+		</Command>
+		<Command name="ВыполнитьОчисткуУстаревшихДанных" id="6">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выполнить очистку устаревших данных</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выполнить очистку устаревших данных</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ВыполнитьОчисткуУстаревшихДанных</Action>
+		</Command>
+	</Commands>
+</Form>

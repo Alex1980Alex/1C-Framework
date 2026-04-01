@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="f67bf5b2-9ab8-405f-90fa-8dee28cab8c8">
+		<Name>ПодключениеWarehouse</Name>
+		<Code/>
+		<Description>Подключение Warehouse</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="3cde0278-2dc1-409f-8858-dfba0e078252">
+		<Name>ПодключениеСРПВ</Name>
+		<Code/>
+		<Description>Подключение СРПВ</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

@@ -1,0 +1,448 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Title>
+		<v8:item>
+			<v8:lang>ru</v8:lang>
+			<v8:content>Распространение формата</v8:content>
+		</v8:item>
+	</Title>
+	<AutoTitle>false</AutoTitle>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>false</Autofill>
+	</AutoCommandBar>
+	<Events>
+		<Event name="NotificationProcessing">ОбработкаОповещения</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+		<Event name="FillCheckProcessingAtServer">ОбработкаПроверкиЗаполненияНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаОписаниеФормата" id="34">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа описание формата</v8:content>
+				</v8:item>
+			</Title>
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<Representation>StrongSeparation</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаОписаниеФорматаРасширеннаяПодсказка" id="35"/>
+			<ChildItems>
+				<InputField name="Формат" id="17">
+					<DataPath>Формат</DataPath>
+					<AutoMaxWidth>false</AutoMaxWidth>
+					<HorizontalStretch>false</HorizontalStretch>
+					<ContextMenu name="ФорматКонтекстноеМеню" id="18"/>
+					<ExtendedTooltip name="ФорматРасширеннаяПодсказка" id="19"/>
+					<Events>
+						<Event name="OnChange">ФорматПриИзменении</Event>
+					</Events>
+				</InputField>
+				<CheckBoxField name="АктивностьФормата" id="36">
+					<DataPath>АктивностьФормата</DataPath>
+					<TitleLocation>Right</TitleLocation>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="АктивностьФорматаКонтекстноеМеню" id="37"/>
+					<ExtendedTooltip name="АктивностьФорматаРасширеннаяПодсказка" id="38"/>
+				</CheckBoxField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаВыгрузкаНастроек" id="23">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Дополнительно распространить </v8:content>
+				</v8:item>
+			</Title>
+			<Group>Vertical</Group>
+			<Behavior>Usual</Behavior>
+			<Representation>StrongSeparation</Representation>
+			<ExtendedTooltip name="ГруппаВыгрузкаНастроекРасширеннаяПодсказка" id="24"/>
+			<ChildItems>
+				<UsualGroup name="ГруппаОбщиеНастройки" id="43">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа общие настройки</v8:content>
+						</v8:item>
+					</Title>
+					<Group>Vertical</Group>
+					<Behavior>Usual</Behavior>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ГруппаОбщиеНастройкиРасширеннаяПодсказка" id="44"/>
+					<ChildItems>
+						<CheckBoxField name="ВыгружатьОбщиеНастройки" id="31">
+							<DataPath>ВыгружатьОбщиеНастройки</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>общие настройки типа формата (записи РС "Настройки форматов обмена общие ")</v8:content>
+								</v8:item>
+							</Title>
+							<TitleLocation>Right</TitleLocation>
+							<CheckBoxType>Auto</CheckBoxType>
+							<ContextMenu name="ВыгружатьОбщиеНастройкиКонтекстноеМеню" id="32"/>
+							<ExtendedTooltip name="ВыгружатьОбщиеНастройкиРасширеннаяПодсказка" id="33"/>
+						</CheckBoxField>
+						<LabelField name="ОписаниеВыгружатьОбщиеНастройки" id="64">
+							<DataPath>ОписаниеВыгружатьОбщиеНастройки</DataPath>
+							<TitleLocation>None</TitleLocation>
+							<ContextMenu name="ОписаниеВыгружатьОбщиеНастройкиКонтекстноеМеню" id="65"/>
+							<ExtendedTooltip name="ОписаниеВыгружатьОбщиеНастройкиРасширеннаяПодсказка" id="66"/>
+						</LabelField>
+					</ChildItems>
+				</UsualGroup>
+				<UsualGroup name="ГруппаВыгружатьНастройкиФормата" id="48">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа выгружать настройки формата</v8:content>
+						</v8:item>
+					</Title>
+					<Group>Vertical</Group>
+					<Behavior>Usual</Behavior>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ГруппаВыгружатьНастройкиФорматаРасширеннаяПодсказка" id="49"/>
+					<ChildItems>
+						<CheckBoxField name="ВыгружатьНастройкиФормата" id="28">
+							<DataPath>ВыгружатьНастройкиФормата</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>настройки формата на текущую дату (записи РС "Настройки форматов обмена Enterprise Data")</v8:content>
+								</v8:item>
+							</Title>
+							<TitleLocation>Right</TitleLocation>
+							<CheckBoxType>Auto</CheckBoxType>
+							<ContextMenu name="ВыгружатьНастройкиФорматаКонтекстноеМеню" id="29"/>
+							<ExtendedTooltip name="ВыгружатьНастройкиФорматаРасширеннаяПодсказка" id="30"/>
+						</CheckBoxField>
+						<LabelField name="ОписаниеВыгружатьНастройкиФормата" id="61">
+							<DataPath>ОписаниеВыгружатьНастройкиФормата</DataPath>
+							<TitleLocation>None</TitleLocation>
+							<ContextMenu name="ОписаниеВыгружатьНастройкиФорматаКонтекстноеМеню" id="62"/>
+							<ExtendedTooltip name="ОписаниеВыгружатьНастройкиФорматаРасширеннаяПодсказка" id="63"/>
+						</LabelField>
+					</ChildItems>
+				</UsualGroup>
+				<UsualGroup name="ГруппаНастройкиМодели" id="39">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа настройки модели</v8:content>
+						</v8:item>
+					</Title>
+					<Group>Vertical</Group>
+					<Behavior>Usual</Behavior>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ГруппаНастройкиМоделиРасширеннаяПодсказка" id="40"/>
+					<ChildItems>
+						<CheckBoxField name="ВыгружатьМодель" id="25">
+							<DataPath>ВыгружатьМодель</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>модель (связанный с форматом элемент справочника "Модели данных XDTO"). Должна быть установлен связь в РС "Настройки форматов обмена ED"</v8:content>
+								</v8:item>
+							</Title>
+							<TitleLocation>Right</TitleLocation>
+							<CheckBoxType>Auto</CheckBoxType>
+							<ContextMenu name="ВыгружатьМодельКонтекстноеМеню" id="26"/>
+							<ExtendedTooltip name="ВыгружатьМодельРасширеннаяПодсказка" id="27"/>
+						</CheckBoxField>
+						<LabelField name="ОписаниеВыгружатьМодель" id="58">
+							<DataPath>ОписаниеВыгружатьМодель</DataPath>
+							<TitleLocation>None</TitleLocation>
+							<ContextMenu name="ОписаниеВыгружатьМодельКонтекстноеМеню" id="59"/>
+							<ExtendedTooltip name="ОписаниеВыгружатьМодельРасширеннаяПодсказка" id="60"/>
+						</LabelField>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаМаршрутизация" id="56">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Маршрутизация</v8:content>
+				</v8:item>
+			</Title>
+			<Behavior>Usual</Behavior>
+			<Representation>StrongSeparation</Representation>
+			<ExtendedTooltip name="ГруппаМаршрутизацияРасширеннаяПодсказка" id="57"/>
+			<ChildItems>
+				<InputField name="КлючМаршрутизации" id="20">
+					<DataPath>КлючМаршрутизации</DataPath>
+					<Width>30</Width>
+					<AutoMaxWidth>false</AutoMaxWidth>
+					<HorizontalStretch>false</HorizontalStretch>
+					<ContextMenu name="КлючМаршрутизацииКонтекстноеМеню" id="21"/>
+					<ExtendedTooltip name="КлючМаршрутизацииРасширеннаяПодсказка" id="22"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаСоединение" id="15">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Параметры соединения RMQ</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа соединение</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>Vertical</Group>
+			<Behavior>Usual</Behavior>
+			<Representation>StrongSeparation</Representation>
+			<ExtendedTooltip name="ГруппаСоединениеРасширеннаяПодсказка" id="16"/>
+			<ChildItems>
+				<InputField name="ТочкаОбмена" id="1">
+					<DataPath>ТочкаОбмена</DataPath>
+					<AutoMaxWidth>false</AutoMaxWidth>
+					<HorizontalStretch>false</HorizontalStretch>
+					<ContextMenu name="ТочкаОбменаКонтекстноеМеню" id="2"/>
+					<ExtendedTooltip name="ТочкаОбменаРасширеннаяПодсказка" id="3"/>
+					<Events>
+						<Event name="OnChange">ТочкаОбменаПриИзменении</Event>
+					</Events>
+				</InputField>
+				<UsualGroup name="ГруппаНастройкиСоединения" id="76">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа настройки соединения</v8:content>
+						</v8:item>
+					</Title>
+					<Group>Vertical</Group>
+					<Behavior>Usual</Behavior>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ГруппаНастройкиСоединенияРасширеннаяПодсказка" id="77"/>
+					<ChildItems>
+						<LabelField name="ОписаниеСервер" id="67">
+							<DataPath>ОписаниеСервер</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Сервер</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ОписаниеСерверКонтекстноеМеню" id="68"/>
+							<ExtendedTooltip name="ОписаниеСерверРасширеннаяПодсказка" id="69"/>
+						</LabelField>
+						<LabelField name="ОписаниеВиртуальныйХост" id="70">
+							<DataPath>ОписаниеВиртуальныйХост</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Виртуальнаый хост</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ОписаниеВиртуальныйХостКонтекстноеМеню" id="71"/>
+							<ExtendedTooltip name="ОписаниеВиртуальныйХостРасширеннаяПодсказка" id="72"/>
+						</LabelField>
+						<LabelField name="ОписаниеПорт" id="73">
+							<DataPath>ОписаниеПорт</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Порт</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ОписаниеПортКонтекстноеМеню" id="74"/>
+							<ExtendedTooltip name="ОписаниеПортРасширеннаяПодсказка" id="75"/>
+						</LabelField>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+		<Button name="Распространить" id="10">
+			<Type>UsualButton</Type>
+			<DefaultButton>true</DefaultButton>
+			<CommandName>Form.Command.Распространить</CommandName>
+			<ExtendedTooltip name="РаспространитьРасширеннаяПодсказка" id="11"/>
+		</Button>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DataProcessorObject.гкс_УправлениеОбъектамиИнтеграции</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+		<Attribute name="ТочкаОбмена" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Точка обмена</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.гкс_ТочкиОбменаRMQ</v8:Type>
+			</Type>
+			<FillCheck>ShowError</FillCheck>
+		</Attribute>
+		<Attribute name="Формат" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Формат</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.гкс_ФорматыОбменаИАС</v8:Type>
+			</Type>
+			<FillCheck>ShowError</FillCheck>
+		</Attribute>
+		<Attribute name="КлючМаршрутизации" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Ключ маршрутизации</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>100</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+			<FillCheck>ShowError</FillCheck>
+		</Attribute>
+		<Attribute name="ВыгружатьМодель" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выгружать модель</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ВыгружатьНастройкиФормата" id="6">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выгружать настройки формата</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ВыгружатьОбщиеНастройки" id="7">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выгружать общие настройки</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="АктивностьФормата" id="8">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Установить формат активным</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОписаниеВыгружатьОбщиеНастройки" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание выгружать общие настройки</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОписаниеВыгружатьНастройкиФормата" id="10">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание выгружать настройки формата</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОписаниеВыгружатьМодель" id="11">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание выгружать модель</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОписаниеСервер" id="12">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание сервер</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОписаниеВиртуальныйХост" id="13">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание виртуальный хост</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОписаниеПорт" id="14">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Описание порт</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="Распространить" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Распространить</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Распространить</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>Распространить</Action>
+		</Command>
+	</Commands>
+</Form>

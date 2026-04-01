@@ -1,0 +1,444 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="AfterWrite">ПослеЗаписи</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаОсновная" id="200">
+			<Group>Horizontal</Group>
+			<HorizontalSpacing>Double</HorizontalSpacing>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаОсновнаяExtendedTooltip" id="201"/>
+			<ChildItems>
+				<UsualGroup name="ГруппаЛеваяПанель" id="210">
+					<Group>Vertical</Group>
+					<VerticalSpacing>OneAndHalf</VerticalSpacing>
+					<Behavior>Usual</Behavior>
+					<ExtendedTooltip name="ГруппаЛеваяПанельExtendedTooltip" id="211"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаИнтеграция" id="140">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Интеграция</v8:content>
+								</v8:item>
+							</Title>
+							<Group>Vertical</Group>
+							<Behavior>Collapsible</Behavior>
+							<ExtendedTooltip name="ГруппаИнтеграцияExtendedTooltip" id="141"/>
+							<ChildItems>
+								<CheckBoxField name="гкс_ИспользоватьИнтеграциюСWarehouse" id="16">
+									<DataPath>НаборКонстант.гкс_ИспользоватьИнтеграциюСWarehouse</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьИнтеграциюСWarehouseКонтекстноеМеню" id="17"/>
+									<ExtendedTooltip name="гкс_ИспользоватьИнтеграциюСWarehouseРасширеннаяПодсказка" id="18"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьИнтеграциюСКверион" id="19">
+									<DataPath>НаборКонстант.гкс_ИспользоватьИнтеграциюСКверион</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьИнтеграциюСКверионКонтекстноеМеню" id="20"/>
+									<ExtendedTooltip name="гкс_ИспользоватьИнтеграциюСКверионРасширеннаяПодсказка" id="21"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьИнтеграциюСРПВ" id="22">
+									<DataPath>НаборКонстант.гкс_ИспользоватьИнтеграциюСРПВ</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьИнтеграциюСРПВКонтекстноеМеню" id="23"/>
+									<ExtendedTooltip name="гкс_ИспользоватьИнтеграциюСРПВРасширеннаяПодсказка" id="24"/>
+									<Events>
+										<Event name="OnChange">гкс_ИспользоватьИнтеграциюСРПВПриИзменении</Event>
+									</Events>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ" id="264">
+									<DataPath>НаборКонстант.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВКонтекстноеМеню" id="265"/>
+									<ExtendedTooltip name="гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВРасширеннаяПодсказка" id="266"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьИнтеграциюССАРА" id="25">
+									<DataPath>НаборКонстант.гкс_ИспользоватьИнтеграциюССАРА</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьИнтеграциюССАРАКонтекстноеМеню" id="26"/>
+									<ExtendedTooltip name="гкс_ИспользоватьИнтеграциюССАРАРасширеннаяПодсказка" id="27"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьФГИСЗерно" id="52">
+									<DataPath>НаборКонстант.гкс_ИспользоватьФГИСЗерно</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьФГИСЗерноКонтекстноеМеню" id="53"/>
+									<ExtendedTooltip name="гкс_ИспользоватьФГИСЗерноРасширеннаяПодсказка" id="54"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьСервисАутентификации1СДокументооборот" id="46">
+									<DataPath>НаборКонстант.гкс_ИспользоватьСервисАутентификации1СДокументооборот</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьСервисАутентификации1СДокументооборотКонтекстноеМеню" id="47"/>
+									<ExtendedTooltip name="гкс_ИспользоватьСервисАутентификации1СДокументооборотРасширеннаяПодсказка" id="48"/>
+								</CheckBoxField>
+								<InputField name="гкс_ПутьКДокументамСАРА" id="70">
+									<DataPath>НаборКонстант.гкс_ПутьКДокументамСАРА</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ПутьКДокументамСАРАКонтекстноеМеню" id="71"/>
+									<ExtendedTooltip name="гкс_ПутьКДокументамСАРАРасширеннаяПодсказка" id="72"/>
+								</InputField>
+								<InputField name="гкс_СрокХраненияЛогаВебСервисов" id="79">
+									<DataPath>НаборКонстант.гкс_СрокХраненияЛогаВебСервисов</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_СрокХраненияЛогаВебСервисовКонтекстноеМеню" id="80"/>
+									<ExtendedTooltip name="гкс_СрокХраненияЛогаВебСервисовРасширеннаяПодсказка" id="81"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаЛаборатория" id="150">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Лабораторный анализ</v8:content>
+								</v8:item>
+							</Title>
+							<Group>Vertical</Group>
+							<Behavior>Collapsible</Behavior>
+							<ExtendedTooltip name="ГруппаЛабораторияExtendedTooltip" id="151"/>
+							<ChildItems>
+								<CheckBoxField name="гкс_ИспользоватьНесколькоАЛЦ" id="40">
+									<DataPath>НаборКонстант.гкс_ИспользоватьНесколькоАЛЦ</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьНесколькоАЛЦКонтекстноеМеню" id="41"/>
+									<ExtendedTooltip name="гкс_ИспользоватьНесколькоАЛЦРасширеннаяПодсказка" id="42"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ПередаватьКачествоВходногоКонтроля" id="64">
+									<DataPath>НаборКонстант.гкс_ПередаватьКачествоВходногоКонтроля</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ПередаватьКачествоВходногоКонтроляКонтекстноеМеню" id="65"/>
+									<ExtendedTooltip name="гкс_ПередаватьКачествоВходногоКонтроляРасширеннаяПодсказка" id="66"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьСредневзвешенныеПоказатели" id="49">
+									<DataPath>НаборКонстант.гкс_ИспользоватьСредневзвешенныеПоказатели</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьСредневзвешенныеПоказателиКонтекстноеМеню" id="50"/>
+									<ExtendedTooltip name="гкс_ИспользоватьСредневзвешенныеПоказателиРасширеннаяПодсказка" id="51"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ФормироватьКомпозитныйЛабораторныйАнализАвто" id="88">
+									<DataPath>НаборКонстант.гкс_ФормироватьКомпозитныйЛабораторныйАнализАвто</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ФормироватьКомпозитныйЛабораторныйАнализАвтоКонтекстноеМеню" id="89"/>
+									<ExtendedTooltip name="гкс_ФормироватьКомпозитныйЛабораторныйАнализАвтоРасширеннаяПодсказка" id="90"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_НеОжидатьОкончанияАнализаДляВыполнения" id="258">
+									<DataPath>НаборКонстант.гкс_НеОжидатьОкончанияАнализаДляВыполнения</DataPath>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Если установлено, то Лабораторный анализ после обработки будет переведен в статус "Выполнен" не взирая на дату окончания анализа.</v8:content>
+										</v8:item>
+									</ToolTip>
+									<ToolTipRepresentation>Button</ToolTipRepresentation>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_НеОжидатьОкончанияАнализаДляВыполненияКонтекстноеМеню" id="259"/>
+									<ExtendedTooltip name="гкс_НеОжидатьОкончанияАнализаДляВыполненияРасширеннаяПодсказка" id="260"/>
+								</CheckBoxField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаОбщиеНастройки" id="160">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Общие настройки</v8:content>
+								</v8:item>
+							</Title>
+							<Group>Vertical</Group>
+							<Behavior>Collapsible</Behavior>
+							<ExtendedTooltip name="ГруппаОбщиеНастройкиExtendedTooltip" id="161"/>
+							<ChildItems>
+								<CheckBoxField name="гкс_РазрешитьВходнойКонтрольДоВзвешиванияЖД" id="222">
+									<DataPath>НаборКонстант.гкс_РазрешитьВходнойКонтрольДоВзвешиванияЖД</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_РазрешитьВходнойКонтрольДоВзвешиванияЖДКонтекстноеМеню" id="223"/>
+									<ExtendedTooltip name="гкс_РазрешитьВходнойКонтрольДоВзвешиванияЖДРасширеннаяПодсказка" id="224"/>
+								</CheckBoxField>
+								<InputField name="гкс_ДатаОкончанияПериодаСертификацииПоУмолчанию" id="4">
+									<DataPath>НаборКонстант.гкс_ДатаОкончанияПериодаСертификацииПоУмолчанию</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ДатаОкончанияПериодаСертификацииПоУмолчаниюКонтекстноеМеню" id="5"/>
+									<ExtendedTooltip name="гкс_ДатаОкончанияПериодаСертификацииПоУмолчаниюРасширеннаяПодсказка" id="6"/>
+								</InputField>
+								<InputField name="гкс_СтранаЛокализации" id="82">
+									<DataPath>НаборКонстант.гкс_СтранаЛокализации</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_СтранаЛокализацииКонтекстноеМеню" id="83"/>
+									<ExtendedTooltip name="гкс_СтранаЛокализацииРасширеннаяПодсказка" id="84"/>
+								</InputField>
+								<InputField name="гкс_СрокХраненияВерсийОбъектов" id="76">
+									<DataPath>НаборКонстант.гкс_СрокХраненияВерсийОбъектов</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_СрокХраненияВерсийОбъектовКонтекстноеМеню" id="77"/>
+									<ExtendedTooltip name="гкс_СрокХраненияВерсийОбъектовРасширеннаяПодсказка" id="78"/>
+								</InputField>
+								<InputField name="гкс_СмещениеПроизводственныхСуток" id="73">
+									<DataPath>НаборКонстант.гкс_СмещениеПроизводственныхСуток</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_СмещениеПроизводственныхСутокКонтекстноеМеню" id="74"/>
+									<ExtendedTooltip name="гкс_СмещениеПроизводственныхСутокРасширеннаяПодсказка" id="75"/>
+								</InputField>
+								<CheckBoxField name="гкс_ИспользоватьДоговорыКонтрагентов" id="13">
+									<DataPath>НаборКонстант.гкс_ИспользоватьДоговорыКонтрагентов</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьДоговорыКонтрагентовКонтекстноеМеню" id="14"/>
+									<ExtendedTooltip name="гкс_ИспользоватьДоговорыКонтрагентовРасширеннаяПодсказка" id="15"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_АвтоматическаяПечатьЭтикеток" id="228">
+									<DataPath>НаборКонстант.гкс_АвтоматическаяПечатьЭтикеток</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_АвтоматическаяПечатьЭтикетокКонтекстноеМеню" id="229"/>
+									<ExtendedTooltip name="гкс_АвтоматическаяПечатьЭтикетокРасширеннаяПодсказка" id="230"/>
+								</CheckBoxField>
+								<LabelDecoration name="НастройкиПриемкиПЛКПоТочкамМаршрута" id="231">
+									<Title formatted="false">
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Настройки приемки ПЛК по точкам маршрута</v8:content>
+										</v8:item>
+									</Title>
+									<Hyperlink>true</Hyperlink>
+									<ContextMenu name="НастройкиПриемкиПЛКПоТочкамМаршрутаКонтекстноеМеню" id="232"/>
+									<ExtendedTooltip name="НастройкиПриемкиПЛКПоТочкамМаршрутаРасширеннаяПодсказка" id="233"/>
+									<Events>
+										<Event name="Click">НастройкиПриемкиПЛКПоТочкамМаршрутаНажатие</Event>
+									</Events>
+								</LabelDecoration>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</UsualGroup>
+				<UsualGroup name="ГруппаПраваяПанель" id="220">
+					<GroupHorizontalAlign>Right</GroupHorizontalAlign>
+					<Group>Vertical</Group>
+					<VerticalSpacing>OneAndHalf</VerticalSpacing>
+					<Behavior>Usual</Behavior>
+					<ExtendedTooltip name="ГруппаПраваяПанельExtendedTooltip" id="221"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаЕдиницыИзмерения" id="110">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Единицы измерения</v8:content>
+								</v8:item>
+							</Title>
+							<Group>Vertical</Group>
+							<Behavior>Collapsible</Behavior>
+							<ExtendedTooltip name="ГруппаЕдиницыИзмеренияExtendedTooltip" id="111"/>
+							<ChildItems>
+								<InputField name="гкс_ЕдиницаИзмеренияВеса" id="7">
+									<DataPath>НаборКонстант.гкс_ЕдиницаИзмеренияВеса</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ЕдиницаИзмеренияВесаКонтекстноеМеню" id="8"/>
+									<ExtendedTooltip name="гкс_ЕдиницаИзмеренияВесаРасширеннаяПодсказка" id="9"/>
+								</InputField>
+								<InputField name="гкс_ПредельноеОтклонениеВесаГруза" id="67">
+									<DataPath>НаборКонстант.гкс_ПредельноеОтклонениеВесаГруза</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ПредельноеОтклонениеВесаГрузаКонтекстноеМеню" id="68"/>
+									<ExtendedTooltip name="гкс_ПредельноеОтклонениеВесаГрузаРасширеннаяПодсказка" id="69"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаТранспортиКПП" id="120">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Транспорт и КПП</v8:content>
+								</v8:item>
+							</Title>
+							<Group>Vertical</Group>
+							<Behavior>Collapsible</Behavior>
+							<ExtendedTooltip name="ГруппаТранспортиКППExtendedTooltip" id="121"/>
+							<ChildItems>
+								<InputField name="гкс_ВременнойРазбросДляКПП" id="1">
+									<DataPath>НаборКонстант.гкс_ВременнойРазбросДляКПП</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ВременнойРазбросДляКППКонтекстноеМеню" id="2"/>
+									<ExtendedTooltip name="гкс_ВременнойРазбросДляКППРасширеннаяПодсказка" id="3"/>
+								</InputField>
+								<InputField name="гкс_ИнтервалПодбораТранспортныхДокументов" id="10">
+									<DataPath>НаборКонстант.гкс_ИнтервалПодбораТранспортныхДокументов</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ИнтервалПодбораТранспортныхДокументовКонтекстноеМеню" id="11"/>
+									<ExtendedTooltip name="гкс_ИнтервалПодбораТранспортныхДокументовРасширеннаяПодсказка" id="12"/>
+								</InputField>
+								<CheckBoxField name="гкс_ИспользоватьПредварительнуюРегистрациюНаКПП" id="43">
+									<DataPath>НаборКонстант.гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьПредварительнуюРегистрациюНаКППКонтекстноеМеню" id="44"/>
+									<ExtendedTooltip name="гкс_ИспользоватьПредварительнуюРегистрациюНаКППРасширеннаяПодсказка" id="45"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьЭлектронноеТабло" id="55">
+									<DataPath>НаборКонстант.гкс_ИспользоватьЭлектронноеТабло</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьЭлектронноеТаблоКонтекстноеМеню" id="56"/>
+									<ExtendedTooltip name="гкс_ИспользоватьЭлектронноеТаблоРасширеннаяПодсказка" id="57"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьЭлектроннуюОчередь" id="58">
+									<DataPath>НаборКонстант.гкс_ИспользоватьЭлектроннуюОчередь</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьЭлектроннуюОчередьКонтекстноеМеню" id="59"/>
+									<ExtendedTooltip name="гкс_ИспользоватьЭлектроннуюОчередьРасширеннаяПодсказка" id="60"/>
+								</CheckBoxField>
+								<InputField name="гкс_КоличествоДнейВидимостиПрибывшихВагонов" id="61">
+									<DataPath>НаборКонстант.гкс_КоличествоДнейВидимостиПрибывшихВагонов</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_КоличествоДнейВидимостиПрибывшихВагоновКонтекстноеМеню" id="62"/>
+									<ExtendedTooltip name="гкс_КоличествоДнейВидимостиПрибывшихВагоновРасширеннаяПодсказка" id="63"/>
+								</InputField>
+								<InputField name="гкс_ПериодОжиданияОтветаОтСРПВ" id="261">
+									<DataPath>НаборКонстант.гкс_ПериодОжиданияОтветаОтСРПВ</DataPath>
+									<ContextMenu name="гкс_ПериодОжиданияОтветаОтСРПВКонтекстноеМеню" id="262"/>
+									<ExtendedTooltip name="гкс_ПериодОжиданияОтветаОтСРПВРасширеннаяПодсказка" id="263"/>
+								</InputField>
+								<InputField name="гкс_ТочкаМаршрутаБазы" id="85">
+									<DataPath>НаборКонстант.гкс_ТочкаМаршрутаБазы</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="гкс_ТочкаМаршрутаБазыКонтекстноеМеню" id="86"/>
+									<ExtendedTooltip name="гкс_ТочкаМаршрутаБазыРасширеннаяПодсказка" id="87"/>
+								</InputField>
+								<CheckBoxField name="гкс_ОпределятьГрузополучателяПоМестуХранения" id="240">
+									<DataPath>НаборКонстант.гкс_ОпределятьГрузополучателяПоМестуХранения</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ОпределятьГрузополучателяПоМестуХраненияКонтекстноеМеню" id="241"/>
+									<ExtendedTooltip name="гкс_ОпределятьГрузополучателяПоМестуХраненияРасширеннаяПодсказка" id="242"/>
+								</CheckBoxField>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаКонтроль" id="130">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Контроль</v8:content>
+								</v8:item>
+							</Title>
+							<Group>Vertical</Group>
+							<Behavior>Collapsible</Behavior>
+							<ExtendedTooltip name="ГруппаКонтрольExtendedTooltip" id="131"/>
+							<ChildItems>
+								<CheckBoxField name="гкс_ИспользоватьКонтрольВесаОтгрузки" id="28">
+									<DataPath>НаборКонстант.гкс_ИспользоватьКонтрольВесаОтгрузки</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьКонтрольВесаОтгрузкиКонтекстноеМеню" id="29"/>
+									<ExtendedTooltip name="гкс_ИспользоватьКонтрольВесаОтгрузкиРасширеннаяПодсказка" id="30"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьКонтрольВместимостиСкладов" id="31">
+									<DataPath>НаборКонстант.гкс_ИспользоватьКонтрольВместимостиСкладов</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьКонтрольВместимостиСкладовКонтекстноеМеню" id="32"/>
+									<ExtendedTooltip name="гкс_ИспользоватьКонтрольВместимостиСкладовРасширеннаяПодсказка" id="33"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков" id="34">
+									<DataPath>НаборКонстант.гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиковКонтекстноеМеню" id="35"/>
+									<ExtendedTooltip name="гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиковРасширеннаяПодсказка" id="36"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиля" id="37">
+									<DataPath>НаборКонстант.гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиля</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиляКонтекстноеМеню" id="38"/>
+									<ExtendedTooltip name="гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиляРасширеннаяПодсказка" id="39"/>
+								</CheckBoxField>
+								<CheckBoxField name="гкс_ИспользоватьОтключениеВходногоКонтроляКачества" id="243">
+									<DataPath>НаборКонстант.гкс_ИспользоватьОтключениеВходногоКонтроляКачества</DataPath>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="гкс_ИспользоватьОтключениеВходногоКонтроляКачестваКонтекстноеМеню" id="244"/>
+									<ExtendedTooltip name="гкс_ИспользоватьОтключениеВходногоКонтроляКачестваРасширеннаяПодсказка" id="245"/>
+								</CheckBoxField>
+								<UsualGroup name="ГруппаУсиленныйКонтроль" id="267">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Усиленный контроль</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Группа усиленный контроль</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>Vertical</Group>
+									<Representation>None</Representation>
+									<ExtendedTooltip name="ГруппаУсиленныйКонтрольРасширеннаяПодсказка" id="268"/>
+									<ChildItems>
+										<CheckBoxField name="гкс_ИспользоватьУсиленныйКонтрольКачества" id="234">
+											<DataPath>НаборКонстант.гкс_ИспользоватьУсиленныйКонтрольКачества</DataPath>
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Использовать усиленный контроль качества</v8:content>
+												</v8:item>
+											</Title>
+											<CheckBoxType>Auto</CheckBoxType>
+											<ContextMenu name="гкс_ИспользоватьУсиленныйКонтрольКачестваКонтекстноеМеню" id="235"/>
+											<ExtendedTooltip name="гкс_ИспользоватьУсиленныйКонтрольКачестваРасширеннаяПодсказка" id="236"/>
+											<Events>
+												<Event name="OnChange">гкс_ИспользоватьУсиленныйКонтрольКачестваПриИзменении</Event>
+											</Events>
+										</CheckBoxField>
+										<CheckBoxField name="гкс_ИспользоватьЗаблокированныеТС" id="255">
+											<DataPath>НаборКонстант.гкс_ИспользоватьЗаблокированныеТС</DataPath>
+											<CheckBoxType>Auto</CheckBoxType>
+											<ContextMenu name="гкс_ИспользоватьЗаблокированныеТСКонтекстноеМеню" id="256"/>
+											<ExtendedTooltip name="гкс_ИспользоватьЗаблокированныеТСРасширеннаяПодсказка" id="257"/>
+										</CheckBoxField>
+										<InputField name="гкс_СрокУстановкиПравилКаждоеТС" id="269">
+											<DataPath>НаборКонстант.гкс_СрокУстановкиПравилКаждоеТС</DataPath>
+											<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+											<ContextMenu name="гкс_СрокУстановкиПравилКаждоеТСКонтекстноеМеню" id="270"/>
+											<ExtendedTooltip name="гкс_СрокУстановкиПравилКаждоеТСРасширеннаяПодсказка" id="271"/>
+										</InputField>
+									</ChildItems>
+								</UsualGroup>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="НаборКонстант" id="1">
+			<Type>
+				<v8:Type>cfg:ConstantsSet</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

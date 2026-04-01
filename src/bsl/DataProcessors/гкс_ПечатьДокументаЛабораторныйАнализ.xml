@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<DataProcessor uuid="01b684a0-f938-46f0-856b-3578d8af21f9">
+		<InternalInfo>
+			<xr:GeneratedType name="DataProcessorObject.гкс_ПечатьДокументаЛабораторныйАнализ" category="Object">
+				<xr:TypeId>805a4d28-bb2d-42ae-b111-4a68e493d55d</xr:TypeId>
+				<xr:ValueId>84d6e476-041e-49e7-a292-73448a568523</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="DataProcessorManager.гкс_ПечатьДокументаЛабораторныйАнализ" category="Manager">
+				<xr:TypeId>cb21053f-1964-45ce-8d44-c0911d00c484</xr:TypeId>
+				<xr:ValueId>d3be5248-91b5-4a5e-8f4c-04979a2aac33</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>гкс_ПечатьДокументаЛабораторныйАнализ</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Процедуры печати документа Лабораторный анализ</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<UseStandardCommands>true</UseStandardCommands>
+			<DefaultForm>DataProcessor.гкс_ПечатьДокументаЛабораторныйАнализ.Form.НастройкиПечатиАктОтбораПроб</DefaultForm>
+			<AuxiliaryForm/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+			<ExtendedPresentation/>
+			<Explanation/>
+		</Properties>
+		<ChildObjects>
+			<Form>НастройкиПечатиЗПП47</Form>
+			<Form>НастройкиПечатиАктОтбораПроб</Form>
+			<Form>НастройкиПечатиАктОтбораПроб_ru</Form>
+			<Template>ПФ_MXL_АктЗабраковкиПартии_ru</Template>
+			<Template>ПФ_MXL_АктОтбораПроб_ru</Template>
+			<Template>ПФ_MXL_ЗПП47_ru</Template>
+			<Template>ПФ_MXL_ЗПП42_ru</Template>
+			<Template>ПФ_MXL_АктОтбораПроб</Template>
+			<Template>ПФ_MXL_ЗПП47_АЛЦ_ru</Template>
+		</ChildObjects>
+	</DataProcessor>
+</MetaDataObject>

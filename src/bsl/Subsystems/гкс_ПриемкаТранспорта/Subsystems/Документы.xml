@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Subsystem uuid="fbb36bbf-419b-4e27-99c5-de299e567abf">
+		<Properties>
+			<Name>Документы</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Документы</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<IncludeHelpInContents>true</IncludeHelpInContents>
+			<IncludeInCommandInterface>true</IncludeInCommandInterface>
+			<UseOneCommand>false</UseOneCommand>
+			<Explanation/>
+			<Picture/>
+			<Content>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_Взвешивание</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_НаправлениеНаРазгрузку</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_РегистрацияНаПЛК</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_РеестрНакладныхЗПП3</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_ЗаданияНаПроверкуКачества</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_ЗаявкаНаОтгрузкуПродукции</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_ОформленныеПартии</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.гкс_ПечатьТТН_Беларусь</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ЗаявкаНаОтгрузкуПродукции_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ЗаявкаНаОтгрузкуПродукции_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_НаправлениеНаРазгрузку_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_НаправлениеНаРазгрузку_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_НормативнаяСертификацияНоменклатуры_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_НормативнаяСертификацияНоменклатуры_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ОснованиеДляДвиженияЗапасов_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ПриказНаОтпускПродукцииЭлеватораЗПП16_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ПриказНаОтпускПродукцииЭлеватораЗПП16_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_РегистрацияНаПЛК_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_РегистрацияНаПЛК_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_РеестрНакладныхЗПП3_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_РеестрНакладныхЗПП3_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ТранспортныйДокумент_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ТранспортныйДокумент_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ФормированиеНомераПробы_ДобавлениеИзменение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Документ_ФормированиеНомераПробы_Просмотр</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_Обработка_ГрупповоеИзменениеДатыВРегистрацииСвязанныхОбъектов_Использование</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_ЗаявкаНаПеревозку</xr:Item>
+			</Content>
+		</Properties>
+		<ChildObjects/>
+	</Subsystem>
+</MetaDataObject>

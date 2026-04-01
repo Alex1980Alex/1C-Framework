@@ -1,0 +1,946 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Title>
+		<v8:item>
+			<v8:lang>en</v8:lang>
+			<v8:content>Reception &amp; shipping trucks</v8:content>
+		</v8:item>
+		<v8:item>
+			<v8:lang>ru</v8:lang>
+			<v8:content>Принятые ТС</v8:content>
+		</v8:item>
+		<v8:item>
+			<v8:lang>es</v8:lang>
+			<v8:content>Recepción &amp; embarque en camiones</v8:content>
+		</v8:item>
+	</Title>
+	<SaveDataInSettings>UseList</SaveDataInSettings>
+	<AutoTitle>false</AutoTitle>
+	<ScalingMode>Compact</ScalingMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>false</Autofill>
+	</AutoCommandBar>
+	<Events>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+		<Event name="OnClose">ПриЗакрытии</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаОтборВерхний" id="659">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа верхний</v8:content>
+				</v8:item>
+			</Title>
+			<Group>AlwaysHorizontal</Group>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаОтборВерхнийРасширеннаяПодсказка" id="660"/>
+			<ChildItems>
+				<RadioButtonField name="ВидПеревозки" id="656">
+					<DataPath>ВидПеревозки</DataPath>
+					<RadioButtonType>Tumbler</RadioButtonType>
+					<ChoiceList>
+						<xr:Item>
+							<xr:Presentation/>
+							<xr:CheckState>0</xr:CheckState>
+							<xr:Value xsi:type="FormChoiceListDesTimeValue">
+								<Presentation>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Автоперевозка</v8:content>
+									</v8:item>
+								</Presentation>
+								<Value xsi:type="xr:DesignTimeRef">Enum.гкс_ТипыТранспортныхСредствДоставки.EnumValue.Автомобиль</Value>
+							</xr:Value>
+						</xr:Item>
+						<xr:Item>
+							<xr:Presentation/>
+							<xr:CheckState>0</xr:CheckState>
+							<xr:Value xsi:type="FormChoiceListDesTimeValue">
+								<Presentation>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>ЖД перевозка</v8:content>
+									</v8:item>
+								</Presentation>
+								<Value xsi:type="xr:DesignTimeRef">Enum.гкс_ТипыТранспортныхСредствДоставки.EnumValue.ЖДТранспорт</Value>
+							</xr:Value>
+						</xr:Item>
+					</ChoiceList>
+					<ContextMenu name="ВидПеревозкиКонтекстноеМеню" id="657"/>
+					<ExtendedTooltip name="ВидПеревозкиРасширеннаяПодсказка" id="658"/>
+					<Events>
+						<Event name="OnChange">ВидПеревозкиПриИзменении</Event>
+					</Events>
+				</RadioButtonField>
+				<RadioButtonField name="ТипРегистрации" id="663">
+					<DataPath>ТипРегистрации</DataPath>
+					<RadioButtonType>Tumbler</RadioButtonType>
+					<ChoiceList>
+						<xr:Item>
+							<xr:Presentation/>
+							<xr:CheckState>0</xr:CheckState>
+							<xr:Value xsi:type="FormChoiceListDesTimeValue">
+								<Presentation>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Приемка</v8:content>
+									</v8:item>
+								</Presentation>
+								<Value xsi:type="xr:DesignTimeRef">Enum.гкс_ТипРегистрации.EnumValue.Приемка</Value>
+							</xr:Value>
+						</xr:Item>
+						<xr:Item>
+							<xr:Presentation/>
+							<xr:CheckState>0</xr:CheckState>
+							<xr:Value xsi:type="FormChoiceListDesTimeValue">
+								<Presentation>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Отгрузка</v8:content>
+									</v8:item>
+								</Presentation>
+								<Value xsi:type="xr:DesignTimeRef">Enum.гкс_ТипРегистрации.EnumValue.Отгрузка</Value>
+							</xr:Value>
+						</xr:Item>
+					</ChoiceList>
+					<ContextMenu name="ТипРегистрацииКонтекстноеМеню" id="664"/>
+					<ExtendedTooltip name="ТипРегистрацииРасширеннаяПодсказка" id="665"/>
+					<Events>
+						<Event name="OnChange">ТипРегистрацииПриИзменении</Event>
+					</Events>
+				</RadioButtonField>
+				<InputField name="ОтборТочкаМаршрута" id="666">
+					<DataPath>ОтборТочкаМаршрута</DataPath>
+					<ContextMenu name="ОтборТочкаМаршрутаКонтекстноеМеню" id="667"/>
+					<ExtendedTooltip name="ОтборТочкаМаршрутаРасширеннаяПодсказка" id="668"/>
+					<Events>
+						<Event name="OnChange">ОтборТочкаМаршрутаПриИзменении</Event>
+					</Events>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаВыборПериода" id="528">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Выбор периода</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа выбор периода</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ExtendedTooltip name="ГруппаВыборПериодаРасширеннаяПодсказка" id="529"/>
+			<ChildItems>
+				<InputField name="ОтборНачалоПериода" id="530">
+					<DataPath>ОтборНачалоПериода</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Начало периода</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="ОтборНачалоПериодаКонтекстноеМеню" id="531"/>
+					<ExtendedTooltip name="ОтборНачалоПериодаРасширеннаяПодсказка" id="532"/>
+					<Events>
+						<Event name="OnChange">ОтборНачалоПериодаПриИзменении</Event>
+					</Events>
+				</InputField>
+				<InputField name="ОтборКонецПериода" id="533">
+					<DataPath>ОтборКонецПериода</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Конец периода</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="ОтборКонецПериодаКонтекстноеМеню" id="534"/>
+					<ExtendedTooltip name="ОтборКонецПериодаРасширеннаяПодсказка" id="535"/>
+					<Events>
+						<Event name="OnChange">ОтборКонецПериодаПриИзменении</Event>
+					</Events>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаОтборыДополнительная" id="517">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отборы</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа отборы дополнительная</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ExtendedTooltip name="ГруппаОтборыДополнительнаяРасширеннаяПодсказка" id="518"/>
+			<ChildItems>
+				<InputField name="ОтборНоменклатура" id="519">
+					<DataPath>ОтборНоменклатура</DataPath>
+					<ContextMenu name="ОтборНоменклатураКонтекстноеМеню" id="520"/>
+					<ExtendedTooltip name="ОтборНоменклатураРасширеннаяПодсказка" id="521"/>
+					<Events>
+						<Event name="OnChange">ОтборНоменклатураПриИзменении</Event>
+					</Events>
+				</InputField>
+				<InputField name="ОтборКонтрагент" id="522">
+					<DataPath>ОтборКонтрагент</DataPath>
+					<ContextMenu name="ОтборКонтрагентКонтекстноеМеню" id="523"/>
+					<ExtendedTooltip name="ОтборКонтрагентРасширеннаяПодсказка" id="524"/>
+					<Events>
+						<Event name="OnChange">ОтборКонтрагентПриИзменении</Event>
+					</Events>
+				</InputField>
+				<InputField name="ОтборСобственник" id="669">
+					<DataPath>ОтборСобственник</DataPath>
+					<ContextMenu name="ОтборСобственникКонтекстноеМеню" id="670"/>
+					<ExtendedTooltip name="ОтборСобственникРасширеннаяПодсказка" id="671"/>
+					<Events>
+						<Event name="OnChange">ОтборСобственникПриИзменении</Event>
+					</Events>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаДополнительная" id="484">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа дополнительная</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа дополнительная</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаДополнительнаяРасширеннаяПодсказка" id="485"/>
+			<ChildItems>
+				<Table name="ДополнительныйСписок" id="486">
+					<MultipleChoice>true</MultipleChoice>
+					<RowSelectionMode>Row</RowSelectionMode>
+					<UseAlternationRowColor>true</UseAlternationRowColor>
+					<EnableStartDrag>true</EnableStartDrag>
+					<DataPath>ДополнительныйСписок</DataPath>
+					<RowPictureDataPath>~ДополнительныйСписок.DefaultPicture</RowPictureDataPath>
+					<AutoRefresh>false</AutoRefresh>
+					<AutoRefreshPeriod>60</AutoRefreshPeriod>
+					<Period>
+						<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+						<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+						<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+					</Period>
+					<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+					<RestoreCurrentRow>false</RestoreCurrentRow>
+					<TopLevelParent xsi:nil="true"/>
+					<ShowRoot>true</ShowRoot>
+					<AllowRootChoice>false</AllowRootChoice>
+					<UpdateOnDataChange>Auto</UpdateOnDataChange>
+					<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
+					<ContextMenu name="ДополнительныйСписокКонтекстноеМеню" id="487"/>
+					<AutoCommandBar name="ДополнительныйСписокКоманднаяПанель" id="488">
+						<ChildItems>
+							<Button name="ДополнительныйСписокКомандаСформироватьЗПП3" id="621">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.Command.КомандаСформироватьЗПП3</CommandName>
+								<Title>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Сформировать ЗПП-3</v8:content>
+									</v8:item>
+								</Title>
+								<ExtendedTooltip name="ДополнительныйСписокКомандаСформироватьЗПП3РасширеннаяПодсказка" id="622"/>
+							</Button>
+							<Button name="ФормаИзменитьФорму" id="651">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.StandardCommand.CustomizeForm</CommandName>
+								<ExtendedTooltip name="ФормаИзменитьФормуРасширеннаяПодсказка" id="652"/>
+							</Button>
+						</ChildItems>
+					</AutoCommandBar>
+					<ExtendedTooltip name="ДополнительныйСписокРасширеннаяПодсказка" id="489"/>
+					<SearchStringAddition name="ДополнительныйСписокСтрокаПоиска" id="490">
+						<AdditionSource>
+							<Item>ДополнительныйСписок</Item>
+							<Type>SearchStringRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ДополнительныйСписокСтрокаПоискаКонтекстноеМеню" id="491"/>
+						<ExtendedTooltip name="ДополнительныйСписокСтрокаПоискаРасширеннаяПодсказка" id="492"/>
+					</SearchStringAddition>
+					<ViewStatusAddition name="ДополнительныйСписокСостояниеПросмотра" id="493">
+						<AdditionSource>
+							<Item>ДополнительныйСписок</Item>
+							<Type>ViewStatusRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ДополнительныйСписокСостояниеПросмотраКонтекстноеМеню" id="494"/>
+						<ExtendedTooltip name="ДополнительныйСписокСостояниеПросмотраРасширеннаяПодсказка" id="495"/>
+					</ViewStatusAddition>
+					<SearchControlAddition name="ДополнительныйСписокУправлениеПоиском" id="496">
+						<AdditionSource>
+							<Item>ДополнительныйСписок</Item>
+							<Type>SearchControl</Type>
+						</AdditionSource>
+						<ContextMenu name="ДополнительныйСписокУправлениеПоискомКонтекстноеМеню" id="497"/>
+						<ExtendedTooltip name="ДополнительныйСписокУправлениеПоискомРасширеннаяПодсказка" id="498"/>
+					</SearchControlAddition>
+					<Events>
+						<Event name="Selection">ДополнительныйСписокВыбор</Event>
+					</Events>
+					<ChildItems>
+						<LabelField name="ДополнительныйСписокДокументРегистрацииНомер" id="505">
+							<DataPath>ДополнительныйСписок.НомерДокументРегистрации</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Номер регистрации</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ДополнительныйСписокДокументРегистрацииНомерКонтекстноеМеню" id="506"/>
+							<ExtendedTooltip name="ДополнительныйСписокДокументРегистрацииНомерРасширеннаяПодсказка" id="507"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокНоменклатура" id="511">
+							<DataPath>ДополнительныйСписок.Номенклатура</DataPath>
+							<ContextMenu name="ДополнительныйСписокНоменклатураКонтекстноеМеню" id="512"/>
+							<ExtendedTooltip name="ДополнительныйСписокНоменклатураРасширеннаяПодсказка" id="513"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокКонтрагент" id="508">
+							<DataPath>ДополнительныйСписок.Контрагент</DataPath>
+							<ContextMenu name="ДополнительныйСписокКонтрагентКонтекстноеМеню" id="509"/>
+							<ExtendedTooltip name="ДополнительныйСписокКонтрагентРасширеннаяПодсказка" id="510"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокВесНетто" id="499">
+							<DataPath>ДополнительныйСписок.ВесНетто</DataPath>
+							<ContextMenu name="ДополнительныйСписокВесНеттоКонтекстноеМеню" id="500"/>
+							<ExtendedTooltip name="ДополнительныйСписокВесНеттоРасширеннаяПодсказка" id="501"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокВесБрутто" id="543">
+							<DataPath>ДополнительныйСписок.ВесБрутто</DataPath>
+							<ContextMenu name="ДополнительныйСписокВесБруттоКонтекстноеМеню" id="544"/>
+							<ExtendedTooltip name="ДополнительныйСписокВесБруттоРасширеннаяПодсказка" id="545"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокВесТара" id="546">
+							<DataPath>ДополнительныйСписок.ВесТара</DataPath>
+							<ContextMenu name="ДополнительныйСписокВесТараКонтекстноеМеню" id="547"/>
+							<ExtendedTooltip name="ДополнительныйСписокВесТараРасширеннаяПодсказка" id="548"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокНомерПробы" id="623">
+							<DataPath>ДополнительныйСписок.НомерПробы</DataPath>
+							<ContextMenu name="ДополнительныйСписокНомерПробыКонтекстноеМеню" id="624"/>
+							<ExtendedTooltip name="ДополнительныйСписокНомерПробыРасширеннаяПодсказка" id="625"/>
+						</LabelField>
+						<LabelField name="ДополнительныйСписокРеестрНакладныхНомер" id="636">
+							<DataPath>ДополнительныйСписок.РеестрНакладных.Number</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>ЗПП-3</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ДополнительныйСписокРеестрНакладныхНомерКонтекстноеМеню" id="637"/>
+							<ExtendedTooltip name="ДополнительныйСписокРеестрНакладныхНомерРасширеннаяПодсказка" id="638"/>
+						</LabelField>
+						<InputField name="ДополнительныйСписокДокументРегистрации" id="653">
+							<DataPath>ДополнительныйСписок.ДокументРегистрации</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Документ регистрации</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ДополнительныйСписокДокументРегистрацииКонтекстноеМеню" id="654"/>
+							<ExtendedTooltip name="ДополнительныйСписокДокументРегистрацииРасширеннаяПодсказка" id="655"/>
+						</InputField>
+						<LabelField name="ДополнительныйСписокРеестрНакладных" id="633">
+							<DataPath>ДополнительныйСписок.РеестрНакладных</DataPath>
+							<ContextMenu name="ДополнительныйСписокРеестрНакладныхКонтекстноеМеню" id="634"/>
+							<ExtendedTooltip name="ДополнительныйСписокРеестрНакладныхРасширеннаяПодсказка" id="635"/>
+						</LabelField>
+					</ChildItems>
+				</Table>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DataProcessorObject.гкс_ПриемкаТранспорта</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+		<Attribute name="ЕстьПравоНаРедактированиеРеестр" id="30">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Есть право на редактирование реестр накладных ЗПП</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ДополнительныйСписок" id="58">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>ПринятыеТС</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:DynamicList</v8:Type>
+			</Type>
+			<UseAlways>
+				<Field>ДополнительныйСписок.ВесБрутто</Field>
+				<Field>ДополнительныйСписок.ВесНетто</Field>
+				<Field>ДополнительныйСписок.ВесТара</Field>
+				<Field>ДополнительныйСписок.ДокументРегистрации</Field>
+				<Field>ДополнительныйСписок.ДокументФНП</Field>
+				<Field>ДополнительныйСписок.ЛабораторныйАнализ</Field>
+			</UseAlways>
+			<Settings xsi:type="DynamicList">
+				<ManualQuery>true</ManualQuery>
+				<DynamicDataRead>false</DynamicDataRead>
+				<QueryText>ВЫБРАТЬ РАЗРЕШЕННЫЕ
+	СостоянияРегистрации.ДокументРегистрации КАК ДокументРегистрации
+ПОМЕСТИТЬ ВТ_Выгружены
+ИЗ
+	РегистрСведений.гкс_СостоянияРегистрации КАК СостоянияРегистрации
+ГДЕ
+	СостоянияРегистрации.Период МЕЖДУ &amp;НачалоПериода И &amp;КонецПериода
+	И СостоянияРегистрации.ВидПеревозки = &amp;ВидПеревозки
+	И СостоянияРегистрации.ТипРегистрации = &amp;ТипРегистрации
+	И СостоянияРегистрации.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Выгружен)
+	И (НЕ &amp;ТочкаМаршрутаИспользование
+			ИЛИ СостоянияРегистрации.ТочкаМаршрута = &amp;ТочкаМаршрута)
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ РАЗРЕШЕННЫЕ
+	КомпозитныеПробы.ДокументРегистрации КАК ДокументРегистрации,
+	МАКСИМУМ(СопоставлениеФНП.ФормированиеНомераПробы) КАК ДокументФНП,
+	МАКСИМУМ(СопоставлениеФНП.ЛабораторныйАнализ) КАК ЛабораторныйАнализ
+ПОМЕСТИТЬ ВТ_КомпозитныеПробы
+ИЗ
+	РегистрСведений.гкс_КомпозитныеПробы КАК КомпозитныеПробы
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ РегистрСведений.гкс_СопоставлениеФНПЛабАнализа КАК СопоставлениеФНП
+		ПО КомпозитныеПробы.КомпозитнаяПроба = СопоставлениеФНП.ФормированиеНомераПробы
+			И (СопоставлениеФНП.НазначениеИспользования = ЗНАЧЕНИЕ(Перечисление.гкс_НазначенияИспользованияКачества.ПриемкаКомпозит))
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ ВТ_Выгружены КАК ВТ_Выгружены
+		ПО (ВТ_Выгружены.ДокументРегистрации = КомпозитныеПробы.ДокументРегистрации)
+ГДЕ
+	КомпозитныеПробы.ВидПеревозки = &amp;ВидПеревозки
+	И КомпозитныеПробы.ПроизводственныеСуткиРегистрации МЕЖДУ НАЧАЛОПЕРИОДА(ДОБАВИТЬКДАТЕ(&amp;НачалоПериода, ДЕНЬ, -1), ДЕНЬ) И ДОБАВИТЬКДАТЕ(&amp;КонецПериода, ДЕНЬ, 1)
+
+СГРУППИРОВАТЬ ПО
+	КомпозитныеПробы.ДокументРегистрации
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ
+	СостоянияРегистрации.ДокументРегистрации КАК ДокументРегистрации
+ПОМЕСТИТЬ ВТ_Убыли
+ИЗ
+	РегистрСведений.гкс_СостоянияРегистрации КАК СостоянияРегистрации
+ГДЕ
+	СостоянияРегистрации.Период МЕЖДУ &amp;НачалоПериода И &amp;КонецПериода
+	И СостоянияРегистрации.ВидПеревозки = &amp;ВидПеревозки
+	И СостоянияРегистрации.ТипРегистрации = &amp;ТипРегистрации
+	И СостоянияРегистрации.Состояние = ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Убыл)
+	И (НЕ &amp;ТочкаМаршрутаИспользование
+			ИЛИ СостоянияРегистрации.ТочкаМаршрута = &amp;ТочкаМаршрута)
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ
+	ВТ_Убыли.ДокументРегистрации КАК ДокументРегистрации
+ПОМЕСТИТЬ ВТ_Регистрации
+ИЗ
+	ВТ_Выгружены КАК ВТ_Выгружены
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ ВТ_Убыли КАК ВТ_Убыли
+		ПО ВТ_Выгружены.ДокументРегистрации = ВТ_Убыли.ДокументРегистрации
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ
+	ВТ_Регистрации.ДокументРегистрации КАК ДокументРегистрации,
+	МИНИМУМ(ЕСТЬNULL(ВзвешиваниеБрутто.Ссылка, ЗНАЧЕНИЕ(Документ.гкс_Взвешивание.ПустаяСсылка))) КАК ВзвешиваниеБрутто,
+	МАКСИМУМ(ЕСТЬNULL(ВзвешиваниеТара.Ссылка, ЗНАЧЕНИЕ(Документ.гкс_Взвешивание.ПустаяСсылка))) КАК ВзвешиваниеТара
+ПОМЕСТИТЬ ВТ_ДокументыПриемки
+ИЗ
+	ВТ_Регистрации КАК ВТ_Регистрации
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_Взвешивание КАК ВзвешиваниеБрутто
+		ПО ВТ_Регистрации.ДокументРегистрации = ВзвешиваниеБрутто.ДокументРегистрации
+			И (ВзвешиваниеБрутто.Проведен)
+			И (ВзвешиваниеБрутто.ТипВзвешивания = ЗНАЧЕНИЕ(Перечисление.гкс_ТипыВзвешивания.Въезд))
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_Взвешивание КАК ВзвешиваниеТара
+		ПО ВТ_Регистрации.ДокументРегистрации = ВзвешиваниеТара.ДокументРегистрации
+			И (ВзвешиваниеТара.Проведен)
+			И (ВзвешиваниеТара.ТипВзвешивания = ЗНАЧЕНИЕ(Перечисление.гкс_ТипыВзвешивания.Выезд))
+
+СГРУППИРОВАТЬ ПО
+	ВТ_Регистрации.ДокументРегистрации
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ
+	ВТ_ДокументыПриемки.ДокументРегистрации КАК ДокументРегистрации,
+	ЕСТЬNULL(РегистрацияНаПЛК.Номер, "") КАК НомерДокументРегистрации,
+	ЕСТЬNULL(ДокументВзвешиваниеБрутто.Вес, 0) - ЕСТЬNULL(ДокументВзвешиваниеТара.Вес, 0) КАК ВесНетто,
+	РегистрацияНаПЛК.Номенклатура КАК Номенклатура,
+	РегистрацияНаПЛК.Контрагент КАК Контрагент,
+	ВЫБОР
+		КОГДА РегистрацияНаПЛК.Собственник ССЫЛКА Справочник.Контрагенты
+			ТОГДА ВЫРАЗИТЬ(РегистрацияНаПЛК.Собственник КАК Справочник.Контрагенты)
+		ИНАЧЕ ВЫРАЗИТЬ(РегистрацияНаПЛК.Собственник КАК Справочник.Организации).КонтрагентОрганизации
+	КОНЕЦ КАК Собственник,
+	ЕСТЬNULL(ДокументВзвешиваниеБрутто.Вес, 0) КАК ВесБрутто,
+	ЕСТЬNULL(ДокументВзвешиваниеТара.Вес, 0) КАК ВесТара
+ПОМЕСТИТЬ ВТ_Итог
+ИЗ
+	ВТ_ДокументыПриемки КАК ВТ_ДокументыПриемки
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ Документ.гкс_РегистрацияНаПЛК КАК РегистрацияНаПЛК
+		ПО ВТ_ДокументыПриемки.ДокументРегистрации = РегистрацияНаПЛК.Ссылка
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_Взвешивание КАК ДокументВзвешиваниеБрутто
+		ПО ВТ_ДокументыПриемки.ВзвешиваниеБрутто = ДокументВзвешиваниеБрутто.Ссылка
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_Взвешивание КАК ДокументВзвешиваниеТара
+		ПО ВТ_ДокументыПриемки.ВзвешиваниеТара = ДокументВзвешиваниеТара.Ссылка
+;
+
+////////////////////////////////////////////////////////////////////////////////
+ВЫБРАТЬ
+	ВТ_Итог.ДокументРегистрации КАК ДокументРегистрации,
+	ВТ_Итог.НомерДокументРегистрации КАК НомерДокументРегистрации,
+	ВТ_Итог.ВесНетто КАК ВесНетто,
+	ВТ_Итог.Номенклатура КАК Номенклатура,
+	ВТ_Итог.Контрагент КАК Контрагент,
+	ВТ_Итог.ВесБрутто КАК ВесБрутто,
+	ВТ_Итог.ВесТара КАК ВесТара,
+	ВТ_КомпозитныеПробы.ДокументФНП КАК ДокументФНП,
+	ВТ_КомпозитныеПробы.ЛабораторныйАнализ КАК ЛабораторныйАнализ,
+	гкс_ФормированиеНомераПробы.НомерПробы КАК НомерПробы,
+	гкс_РеестрНакладныхЗПП3Накладные.Ссылка КАК РеестрНакладных,
+	ВТ_Итог.Собственник КАК Собственник
+ИЗ
+	ВТ_Итог КАК ВТ_Итог
+		ЛЕВОЕ СОЕДИНЕНИЕ ВТ_КомпозитныеПробы КАК ВТ_КомпозитныеПробы
+			ВНУТРЕННЕЕ СОЕДИНЕНИЕ Документ.гкс_ФормированиеНомераПробы КАК гкс_ФормированиеНомераПробы
+			ПО ВТ_КомпозитныеПробы.ДокументФНП = гкс_ФормированиеНомераПробы.Ссылка
+		ПО ВТ_Итог.ДокументРегистрации = ВТ_КомпозитныеПробы.ДокументРегистрации
+		ЛЕВОЕ СОЕДИНЕНИЕ Документ.гкс_РеестрНакладныхЗПП3.Накладные КАК гкс_РеестрНакладныхЗПП3Накладные
+		ПО ВТ_Итог.ДокументРегистрации = гкс_РеестрНакладныхЗПП3Накладные.ДокументРегистрации
+			И (НЕ гкс_РеестрНакладныхЗПП3Накладные.Ссылка.ПометкаУдаления)</QueryText>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДокументРегистрации</dcssch:dataPath>
+					<dcssch:field>ДокументРегистрации</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>НомерДокументРегистрации</dcssch:dataPath>
+					<dcssch:field>НомерДокументРегистрации</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ВесНетто</dcssch:dataPath>
+					<dcssch:field>ВесНетто</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Номенклатура</dcssch:dataPath>
+					<dcssch:field>Номенклатура</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Контрагент</dcssch:dataPath>
+					<dcssch:field>Контрагент</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ВесБрутто</dcssch:dataPath>
+					<dcssch:field>ВесБрутто</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ВесТара</dcssch:dataPath>
+					<dcssch:field>ВесТара</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ДокументФНП</dcssch:dataPath>
+					<dcssch:field>ДокументФНП</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>ЛабораторныйАнализ</dcssch:dataPath>
+					<dcssch:field>ЛабораторныйАнализ</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>НомерПробы</dcssch:dataPath>
+					<dcssch:field>НомерПробы</dcssch:field>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>РеестрНакладных</dcssch:dataPath>
+					<dcssch:field>РеестрНакладных</dcssch:field>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Реестр накладных</v8:content>
+						</v8:item>
+					</dcssch:title>
+				</Field>
+				<Field xsi:type="dcssch:DataSetFieldField">
+					<dcssch:dataPath>Собственник</dcssch:dataPath>
+					<dcssch:field>Собственник</dcssch:field>
+				</Field>
+				<Parameter>
+					<dcssch:name>НачалоПериода</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Начало периода</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>DateTime</v8:DateFractions>
+						</v8:DateQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ТочкаМаршрута</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Точка маршрута</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:CatalogRef.гкс_ТочкиМаршрута</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ТочкаМаршрутаИспользование</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Точка маршрута использование</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:boolean</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ВидПеревозки</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Вид перевозки</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>ТипРегистрации</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Тип регистрации</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>cfg:EnumRef.гкс_ТипРегистрации</v8:Type>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<Parameter>
+					<dcssch:name>КонецПериода</dcssch:name>
+					<dcssch:title xsi:type="v8:LocalStringType">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Конец периода</v8:content>
+						</v8:item>
+					</dcssch:title>
+					<dcssch:valueType>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>DateTime</v8:DateFractions>
+						</v8:DateQualifiers>
+					</dcssch:valueType>
+					<dcssch:value xsi:nil="true"/>
+					<dcssch:useRestriction>true</dcssch:useRestriction>
+				</Parameter>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>dfcece9d-5077-440b-b6b3-45a5cb4538eb</dcsset:userSettingID>
+					</dcsset:filter>
+					<dcsset:order>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>88619765-ccb3-46c6-ac52-38e9c992ebd4</dcsset:userSettingID>
+					</dcsset:order>
+					<dcsset:conditionalAppearance>
+						<dcsset:item>
+							<dcsset:selection>
+								<dcsset:item>
+									<dcsset:field>ВесБрутто</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>ВесНетто</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>ВесТара</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>ДвижениеЗапасов</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>ДокументРегистрации</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>КоличествоДЗ</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>Контрагент</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>Номенклатура</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>НомерРасписки</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>РасхождениеНетто</dcsset:field>
+								</dcsset:item>
+								<dcsset:item>
+									<dcsset:field>Склад</dcsset:field>
+								</dcsset:item>
+							</dcsset:selection>
+							<dcsset:filter>
+								<dcsset:item xsi:type="dcsset:FilterItemComparison">
+									<dcsset:left xsi:type="dcscor:Field">РасхождениеНетто</dcsset:left>
+									<dcsset:comparisonType>Equal</dcsset:comparisonType>
+									<dcsset:right xsi:type="xs:boolean">false</dcsset:right>
+								</dcsset:item>
+							</dcsset:filter>
+							<dcsset:appearance>
+								<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+									<dcscor:parameter>ЦветФона</dcscor:parameter>
+									<dcscor:value xsi:type="v8ui:Color">web:Pink</dcscor:value>
+								</dcscor:item>
+							</dcsset:appearance>
+						</dcsset:item>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>b75fecce-942b-4aed-abc9-e6a02e460fb3</dcsset:userSettingID>
+					</dcsset:conditionalAppearance>
+					<dcsset:itemsViewMode>Normal</dcsset:itemsViewMode>
+					<dcsset:itemsUserSettingID>911b6018-f537-43e8-a417-da56b22f9aec</dcsset:itemsUserSettingID>
+				</ListSettings>
+			</Settings>
+		</Attribute>
+		<Attribute name="ОтборКонтрагент" id="59">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Контрагент</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.Контрагенты</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОтборНоменклатура" id="60">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Номенклатура</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.Номенклатура</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОтборНачалоПериода" id="62">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отбор начало периода</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:dateTime</v8:Type>
+				<v8:DateQualifiers>
+					<v8:DateFractions>Date</v8:DateFractions>
+				</v8:DateQualifiers>
+			</Type>
+			<Save>
+				<Field>ОтборНачалоПериода</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ОтборКонецПериода" id="63">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отбор конец периода</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:dateTime</v8:Type>
+				<v8:DateQualifiers>
+					<v8:DateFractions>Date</v8:DateFractions>
+				</v8:DateQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="Пользователь" id="64">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Пользователь</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.Пользователи</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ЭтоПолноправныйПользователь" id="65">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Это полноправный пользователь</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ТипРегистрации" id="66">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тип регистрации</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:EnumRef.гкс_ТипРегистрации</v8:Type>
+			</Type>
+			<Save>
+				<Field>ТипРегистрации</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ТочкаМаршрута" id="67">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Точка маршрута</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.гкс_ТочкиМаршрута</v8:Type>
+			</Type>
+			<Save>
+				<Field>ТочкаМаршрута</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ВидПеревозки" id="68">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Вид перевозки</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:EnumRef.гкс_ТипыТранспортныхСредствДоставки</v8:Type>
+			</Type>
+			<Save>
+				<Field>ВидПеревозки</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ОтборТочкаМаршрута" id="69">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отбор точка маршрута</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.гкс_ТочкиМаршрута</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ЕстьПравоНаПросмотрРеестр" id="70">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Есть право на просмотр реестр накладных ЗПП</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ОтборСобственник" id="71">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Собственник</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.Контрагенты</v8:Type>
+			</Type>
+		</Attribute>
+		<ConditionalAppearance>
+			<dcsset:item>
+				<dcsset:selection>
+					<dcsset:item>
+						<dcsset:field>КачественныеПоказателиОтклонениеОтБазиса</dcsset:field>
+					</dcsset:item>
+				</dcsset:selection>
+				<dcsset:filter>
+					<dcsset:item xsi:type="dcsset:FilterItemComparison">
+						<dcsset:left xsi:type="dcscor:Field">КачественныеПоказатели.СоответствуетНормативу</dcsset:left>
+						<dcsset:comparisonType>Equal</dcsset:comparisonType>
+						<dcsset:right xsi:type="xs:boolean">false</dcsset:right>
+					</dcsset:item>
+				</dcsset:filter>
+				<dcsset:appearance>
+					<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+						<dcscor:parameter>ЦветТекста</dcscor:parameter>
+						<dcscor:value xsi:type="v8ui:Color">web:Red</dcscor:value>
+					</dcscor:item>
+				</dcsset:appearance>
+			</dcsset:item>
+		</ConditionalAppearance>
+	</Attributes>
+	<Commands>
+		<Command name="КомандаСформироватьЗПП3" id="32">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>ЗПП-3</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда сформировать ЗПП3</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаСформироватьЗПП3</Action>
+		</Command>
+	</Commands>
+</Form>

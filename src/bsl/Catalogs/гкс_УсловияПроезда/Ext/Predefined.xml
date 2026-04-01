@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.20">
+	<Item id="094c70a4-7f37-4284-be66-0441cbbcac7c">
+		<Name>FCA</Name>
+		<Code>000000001</Code>
+		<Description>FCA</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+	<Item id="d8b61ee2-468d-4e88-b83a-4e98646db922">
+		<Name>DAP</Name>
+		<Code>000000002</Code>
+		<Description>DAP</Description>
+		<IsFolder>false</IsFolder>
+	</Item>
+</PredefinedData>

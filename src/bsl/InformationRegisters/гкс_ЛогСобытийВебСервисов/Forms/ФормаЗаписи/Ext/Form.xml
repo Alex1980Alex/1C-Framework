@@ -1,0 +1,489 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<ChildItems>
+			<Button name="ФормаПоказатьЗапрос" id="22">
+				<Type>CommandBarButton</Type>
+				<CommandName>Form.Command.ПоказатьЗапрос</CommandName>
+				<ExtendedTooltip name="ФормаПоказатьЗапросРасширеннаяПодсказка" id="23"/>
+			</Button>
+			<Button name="ФормаПоказатьОтвет" id="24">
+				<Type>CommandBarButton</Type>
+				<CommandName>Form.Command.ПоказатьОтвет</CommandName>
+				<ExtendedTooltip name="ФормаПоказатьОтветРасширеннаяПодсказка" id="25"/>
+			</Button>
+		</ChildItems>
+	</AutoCommandBar>
+	<ChildItems>
+		<Pages name="ГруппаСтраницы" id="26">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа страницы</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа страницы</v8:content>
+				</v8:item>
+			</ToolTip>
+			<PagesRepresentation>TabsOnTop</PagesRepresentation>
+			<ExtendedTooltip name="ГруппаСтраницыРасширеннаяПодсказка" id="27"/>
+			<ChildItems>
+				<Page name="ГруппаОсновная" id="28">
+					<ReadOnly>true</ReadOnly>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Основная</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа основная</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаОсновнаяРасширеннаяПодсказка" id="29"/>
+					<ChildItems>
+						<InputField name="ИмяСервиса" id="4">
+							<DataPath>Запись.Ресурс</DataPath>
+							<ContextMenu name="ИмяСервисаКонтекстноеМеню" id="5"/>
+							<ExtendedTooltip name="ИмяСервисаРасширеннаяПодсказка" id="6"/>
+						</InputField>
+						<InputField name="ИмяМетода" id="7">
+							<DataPath>Запись.ИмяМетода</DataPath>
+							<ContextMenu name="ИмяМетодаКонтекстноеМеню" id="8"/>
+							<ExtendedTooltip name="ИмяМетодаРасширеннаяПодсказка" id="9"/>
+						</InputField>
+						<InputField name="Идентификатор" id="10">
+							<DataPath>Запись.Идентификатор</DataPath>
+							<ContextMenu name="ИдентификаторКонтекстноеМеню" id="11"/>
+							<ExtendedTooltip name="ИдентификаторРасширеннаяПодсказка" id="12"/>
+						</InputField>
+						<InputField name="КодСостояния" id="13">
+							<DataPath>Запись.КодСостояния</DataPath>
+							<ContextMenu name="КодСостоянияКонтекстноеМеню" id="14"/>
+							<ExtendedTooltip name="КодСостоянияРасширеннаяПодсказка" id="15"/>
+						</InputField>
+						<InputField name="Длительность" id="16">
+							<DataPath>Запись.Длительность</DataPath>
+							<ContextMenu name="ДлительностьКонтекстноеМеню" id="17"/>
+							<ExtendedTooltip name="ДлительностьРасширеннаяПодсказка" id="18"/>
+						</InputField>
+						<InputField name="Дата" id="19">
+							<DataPath>Запись.Дата</DataPath>
+							<ContextMenu name="ДатаКонтекстноеМеню" id="20"/>
+							<ExtendedTooltip name="ДатаРасширеннаяПодсказка" id="21"/>
+						</InputField>
+						<InputField name="УниверсальнаяДата" id="1">
+							<DataPath>Запись.УниверсальнаяДата</DataPath>
+							<ContextMenu name="УниверсальнаяДатаКонтекстноеМеню" id="2"/>
+							<ExtendedTooltip name="УниверсальнаяДатаРасширеннаяПодсказка" id="3"/>
+						</InputField>
+					</ChildItems>
+				</Page>
+				<Page name="ГруппаЗапрос" id="30">
+					<Visible>false</Visible>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Запрос</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа запрос</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаЗапросРасширеннаяПодсказка" id="31"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаЗапросЗаголовки" id="59">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Заголовки</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа запрос заголовки</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Behavior>Collapsible</Behavior>
+							<ControlRepresentation>Picture</ControlRepresentation>
+							<ExtendedTooltip name="ГруппаЗапросЗаголовкиРасширеннаяПодсказка" id="60"/>
+							<ChildItems>
+								<Table name="ЗаголовкиЗапроса" id="40">
+									<Representation>List</Representation>
+									<Height>7</Height>
+									<AutoMaxHeight>false</AutoMaxHeight>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<VerticalStretch>false</VerticalStretch>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>ЗаголовкиЗапроса</DataPath>
+									<RowFilter xsi:nil="true"/>
+									<ContextMenu name="ЗаголовкиЗапросаКонтекстноеМеню" id="41"/>
+									<AutoCommandBar name="ЗаголовкиЗапросаКоманднаяПанель" id="42">
+										<Autofill>false</Autofill>
+									</AutoCommandBar>
+									<ExtendedTooltip name="ЗаголовкиЗапросаРасширеннаяПодсказка" id="43"/>
+									<SearchStringAddition name="ЗаголовкиЗапросаСтрокаПоиска" id="44">
+										<AdditionSource>
+											<Item>ЗаголовкиЗапроса</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ЗаголовкиЗапросаСтрокаПоискаКонтекстноеМеню" id="45"/>
+										<ExtendedTooltip name="ЗаголовкиЗапросаСтрокаПоискаРасширеннаяПодсказка" id="46"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="ЗаголовкиЗапросаСостояниеПросмотра" id="47">
+										<AdditionSource>
+											<Item>ЗаголовкиЗапроса</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ЗаголовкиЗапросаСостояниеПросмотраКонтекстноеМеню" id="48"/>
+										<ExtendedTooltip name="ЗаголовкиЗапросаСостояниеПросмотраРасширеннаяПодсказка" id="49"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="ЗаголовкиЗапросаУправлениеПоиском" id="50">
+										<AdditionSource>
+											<Item>ЗаголовкиЗапроса</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="ЗаголовкиЗапросаУправлениеПоискомКонтекстноеМеню" id="51"/>
+										<ExtendedTooltip name="ЗаголовкиЗапросаУправлениеПоискомРасширеннаяПодсказка" id="52"/>
+									</SearchControlAddition>
+									<ChildItems>
+										<InputField name="ЗаголовкиЗапросаЗаголовок" id="53">
+											<DataPath>ЗаголовкиЗапроса.Заголовок</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ЗаголовкиЗапросаЗаголовокКонтекстноеМеню" id="54"/>
+											<ExtendedTooltip name="ЗаголовкиЗапросаЗаголовокРасширеннаяПодсказка" id="55"/>
+										</InputField>
+										<InputField name="ЗаголовкиЗапросаЗначение" id="56">
+											<DataPath>ЗаголовкиЗапроса.Значение</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ЗаголовкиЗапросаЗначениеКонтекстноеМеню" id="57"/>
+											<ExtendedTooltip name="ЗаголовкиЗапросаЗначениеРасширеннаяПодсказка" id="58"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаЗапросТекстЗапроса" id="61">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Текст запроса</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа запрос текст запроса</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Behavior>Collapsible</Behavior>
+							<ControlRepresentation>Picture</ControlRepresentation>
+							<ExtendedTooltip name="ГруппаЗапросТекстЗапросаРасширеннаяПодсказка" id="62"/>
+							<ChildItems>
+								<InputField name="ТекстЗапроса" id="34">
+									<DataPath>ТекстЗапроса</DataPath>
+									<TitleLocation>None</TitleLocation>
+									<Width>50</Width>
+									<AutoMaxWidth>false</AutoMaxWidth>
+									<AutoMaxHeight>false</AutoMaxHeight>
+									<MultiLine>true</MultiLine>
+									<ExtendedEdit>true</ExtendedEdit>
+									<ContextMenu name="ТекстЗапросаКонтекстноеМеню" id="35"/>
+									<ExtendedTooltip name="ТекстЗапросаРасширеннаяПодсказка" id="36"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</Page>
+				<Page name="ГруппаОтвет" id="32">
+					<Visible>false</Visible>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Ответ</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа ответ</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="ГруппаОтветРасширеннаяПодсказка" id="33"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаОтветЗаголовки" id="63">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Заголовки</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа запрос заголовки</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Behavior>Collapsible</Behavior>
+							<ControlRepresentation>Picture</ControlRepresentation>
+							<ExtendedTooltip name="ГруппаОтветЗаголовкиРасширеннаяПодсказка" id="64"/>
+							<ChildItems>
+								<Table name="ЗаголовкиОтвета" id="86">
+									<Representation>List</Representation>
+									<Height>7</Height>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<VerticalStretch>false</VerticalStretch>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>ЗаголовкиОтвета</DataPath>
+									<RowFilter xsi:nil="true"/>
+									<ContextMenu name="ЗаголовкиОтветаКонтекстноеМеню" id="87"/>
+									<AutoCommandBar name="ЗаголовкиОтветаКоманднаяПанель" id="88">
+										<Autofill>false</Autofill>
+									</AutoCommandBar>
+									<ExtendedTooltip name="ЗаголовкиОтветаРасширеннаяПодсказка" id="89"/>
+									<SearchStringAddition name="ЗаголовкиОтветаСтрокаПоиска" id="90">
+										<AdditionSource>
+											<Item>ЗаголовкиОтвета</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ЗаголовкиОтветаСтрокаПоискаКонтекстноеМеню" id="91"/>
+										<ExtendedTooltip name="ЗаголовкиОтветаСтрокаПоискаРасширеннаяПодсказка" id="92"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="ЗаголовкиОтветаСостояниеПросмотра" id="93">
+										<AdditionSource>
+											<Item>ЗаголовкиОтвета</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ЗаголовкиОтветаСостояниеПросмотраКонтекстноеМеню" id="94"/>
+										<ExtendedTooltip name="ЗаголовкиОтветаСостояниеПросмотраРасширеннаяПодсказка" id="95"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="ЗаголовкиОтветаУправлениеПоиском" id="96">
+										<AdditionSource>
+											<Item>ЗаголовкиОтвета</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="ЗаголовкиОтветаУправлениеПоискомКонтекстноеМеню" id="97"/>
+										<ExtendedTooltip name="ЗаголовкиОтветаУправлениеПоискомРасширеннаяПодсказка" id="98"/>
+									</SearchControlAddition>
+									<ChildItems>
+										<InputField name="ЗаголовкиОтветаЗаголовок" id="99">
+											<DataPath>ЗаголовкиОтвета.Заголовок</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ЗаголовкиОтветаЗаголовокКонтекстноеМеню" id="100"/>
+											<ExtendedTooltip name="ЗаголовкиОтветаЗаголовокРасширеннаяПодсказка" id="101"/>
+										</InputField>
+										<InputField name="ЗаголовкиОтветаЗначение" id="102">
+											<DataPath>ЗаголовкиОтвета.Значение</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ЗаголовкиОтветаЗначениеКонтекстноеМеню" id="103"/>
+											<ExtendedTooltip name="ЗаголовкиОтветаЗначениеРасширеннаяПодсказка" id="104"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="ГруппаОтветТекстЗапроса" id="84">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Текст ответа</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа запрос текст запроса</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Behavior>Collapsible</Behavior>
+							<ControlRepresentation>Picture</ControlRepresentation>
+							<ExtendedTooltip name="ГруппаОтветТекстЗапросаРасширеннаяПодсказка" id="85"/>
+							<ChildItems>
+								<InputField name="ТекстОтвета" id="37">
+									<DataPath>ТекстОтвета</DataPath>
+									<TitleLocation>None</TitleLocation>
+									<Width>50</Width>
+									<AutoMaxWidth>false</AutoMaxWidth>
+									<AutoMaxHeight>false</AutoMaxHeight>
+									<MultiLine>true</MultiLine>
+									<ExtendedEdit>true</ExtendedEdit>
+									<ContextMenu name="ТекстОтветаКонтекстноеМеню" id="38"/>
+									<ExtendedTooltip name="ТекстОтветаРасширеннаяПодсказка" id="39"/>
+								</InputField>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</Page>
+			</ChildItems>
+		</Pages>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_ЛогСобытийВебСервисов</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+		<Attribute name="ТекстЗапроса" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Текст запроса</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ТекстОтвета" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Текст ответа</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ЗаголовкиЗапроса" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Заголовки запроса</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Заголовок" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Заголовок</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Значение" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Значение</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="ЗаголовкиОтвета" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Заголовки запроса</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Заголовок" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Заголовок</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Значение" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Значение</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ПоказатьЗапрос" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать запрос</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать запрос</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПоказатьЗапрос</Action>
+		</Command>
+		<Command name="ПоказатьОтвет" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать ответ</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать ответ</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПоказатьОтвет</Action>
+		</Command>
+	</Commands>
+</Form>

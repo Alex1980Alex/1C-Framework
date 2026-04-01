@@ -1,0 +1,321 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<UseForFoldersAndItems>Items</UseForFoldersAndItems>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">гкс_ПриСозданииНаСервереПосле</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Родитель" id="7">
+			<DataPath>Объект.Parent</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="РодительКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="РодительРасширеннаяПодсказка" id="9"/>
+		</InputField>
+		<UsualGroup name="ГруппаНаименованиеКод" id="44">
+			<Title>
+				<v8:item>
+					<v8:lang>en</v8:lang>
+					<v8:content>Group name code</v8:content>
+				</v8:item>
+				<v8:item>
+					<v8:lang>uk</v8:lang>
+					<v8:content>Група найменування код</v8:content>
+				</v8:item>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа наименование код</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>en</v8:lang>
+					<v8:content>Group name code</v8:content>
+				</v8:item>
+				<v8:item>
+					<v8:lang>uk</v8:lang>
+					<v8:content>Група найменування код</v8:content>
+				</v8:item>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа наименование код</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>Horizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаНаименованиеКодРасширеннаяПодсказка" id="45"/>
+			<ChildItems>
+				<InputField name="Наименование" id="4">
+					<DataPath>Объект.Description</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="НаименованиеКонтекстноеМеню" id="5"/>
+					<ExtendedTooltip name="НаименованиеРасширеннаяПодсказка" id="6"/>
+				</InputField>
+				<InputField name="Код" id="1">
+					<DataPath>Объект.Code</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="КодКонтекстноеМеню" id="2"/>
+					<ExtendedTooltip name="КодРасширеннаяПодсказка" id="3"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<InputField name="ВидРезультатаАнализа" id="10">
+			<DataPath>Объект.ВидРезультатаАнализа</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ВидРезультатаАнализаКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="ВидРезультатаАнализаРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="ТипПоказателя" id="67">
+			<DataPath>Объект.ТипПоказателя</DataPath>
+			<ContextMenu name="ТипПоказателяКонтекстноеМеню" id="68"/>
+			<ExtendedTooltip name="ТипПоказателяРасширеннаяПодсказка" id="69"/>
+		</InputField>
+		<UsualGroup name="ГруппаНастройки" id="55">
+			<Title>
+				<v8:item>
+					<v8:lang>en</v8:lang>
+					<v8:content>Properties</v8:content>
+				</v8:item>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Настройки</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>en</v8:lang>
+					<v8:content>Группа настройки</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Behavior>Usual</Behavior>
+			<ExtendedTooltip name="ГруппаНастройкиExtendedTooltip" id="56"/>
+			<ChildItems>
+				<Pages name="ПанельДопустимыеЗначениеПоказателей" id="49">
+					<Title>
+						<v8:item>
+							<v8:lang>en</v8:lang>
+							<v8:content>Panel a valid value indicators</v8:content>
+						</v8:item>
+						<v8:item>
+							<v8:lang>uk</v8:lang>
+							<v8:content>Панель допустимі значення показників</v8:content>
+						</v8:item>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Панель допустимые значение показателей</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>en</v8:lang>
+							<v8:content>Panel a valid value indicators</v8:content>
+						</v8:item>
+						<v8:item>
+							<v8:lang>uk</v8:lang>
+							<v8:content>Панель допустимі значення показників</v8:content>
+						</v8:item>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Панель допустимые значение показателей</v8:content>
+						</v8:item>
+					</ToolTip>
+					<PagesRepresentation>None</PagesRepresentation>
+					<ExtendedTooltip name="ПанельДопустимыеЗначениеПоказателейРасширеннаяПодсказка" id="50"/>
+					<ChildItems>
+						<Page name="ЧисловойДиапазон" id="53">
+							<Title>
+								<v8:item>
+									<v8:lang>en</v8:lang>
+									<v8:content>Numeric range</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>uk</v8:lang>
+									<v8:content>Числовий діапазон</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Числовой диапазон</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>en</v8:lang>
+									<v8:content>Numeric range</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>uk</v8:lang>
+									<v8:content>Числовий діапазон</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Числовой диапазон</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="ЧисловойДиапазонРасширеннаяПодсказка" id="54"/>
+							<ChildItems>
+								<InputField name="ЕдиницаИзмерения" id="19">
+									<DataPath>Объект.ЕдиницаИзмерения</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<HorizontalStretch>false</HorizontalStretch>
+									<ContextMenu name="ЕдиницаИзмеренияКонтекстноеМеню" id="20"/>
+									<ExtendedTooltip name="ЕдиницаИзмеренияРасширеннаяПодсказка" id="21"/>
+								</InputField>
+								<UsualGroup name="GroupValue" id="57">
+									<Title>
+										<v8:item>
+											<v8:lang>en</v8:lang>
+											<v8:content>Group value</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>en</v8:lang>
+											<v8:content>Group value</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>AlwaysHorizontal</Group>
+									<Behavior>Usual</Behavior>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="GroupValueExtendedTooltip" id="58"/>
+									<ChildItems>
+										<InputField name="МинЗначение" id="13">
+											<DataPath>Объект.МинЗначение</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="МинЗначениеКонтекстноеМеню" id="14"/>
+											<ExtendedTooltip name="МинЗначениеРасширеннаяПодсказка" id="15"/>
+										</InputField>
+										<InputField name="МаксЗначение" id="16">
+											<DataPath>Объект.МаксЗначение</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="МаксЗначениеКонтекстноеМеню" id="17"/>
+											<ExtendedTooltip name="МаксЗначениеРасширеннаяПодсказка" id="18"/>
+										</InputField>
+									</ChildItems>
+								</UsualGroup>
+							</ChildItems>
+						</Page>
+						<Page name="ВхождениеВСписок" id="51">
+							<Title>
+								<v8:item>
+									<v8:lang>en</v8:lang>
+									<v8:content>Entry to list</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>uk</v8:lang>
+									<v8:content>Входження в список</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Вхождение в список</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>en</v8:lang>
+									<v8:content>Joining the list</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>uk</v8:lang>
+									<v8:content>Входження в список</v8:content>
+								</v8:item>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Вхождение в список</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="ВхождениеВСписокРасширеннаяПодсказка" id="52"/>
+							<ChildItems>
+								<Table name="ДопустимыеЗначенияПоказателей" id="25">
+									<Representation>List</Representation>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<FileDragMode>AsFile</FileDragMode>
+									<DataPath>Объект.ДопустимыеЗначенияПоказателей</DataPath>
+									<RowFilter xsi:nil="true"/>
+									<ContextMenu name="ДопустимыеЗначенияПоказателейКонтекстноеМеню" id="26"/>
+									<AutoCommandBar name="ДопустимыеЗначенияПоказателейКоманднаяПанель" id="27"/>
+									<ExtendedTooltip name="ДопустимыеЗначенияПоказателейРасширеннаяПодсказка" id="28"/>
+									<SearchStringAddition name="ДопустимыеЗначенияПоказателейСтрокаПоиска" id="29">
+										<AdditionSource>
+											<Item>ДопустимыеЗначенияПоказателей</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ДопустимыеЗначенияПоказателейСтрокаПоискаКонтекстноеМеню" id="30"/>
+										<ExtendedTooltip name="ДопустимыеЗначенияПоказателейСтрокаПоискаРасширеннаяПодсказка" id="31"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="ДопустимыеЗначенияПоказателейСостояниеПросмотра" id="32">
+										<AdditionSource>
+											<Item>ДопустимыеЗначенияПоказателей</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ДопустимыеЗначенияПоказателейСостояниеПросмотраКонтекстноеМеню" id="33"/>
+										<ExtendedTooltip name="ДопустимыеЗначенияПоказателейСостояниеПросмотраРасширеннаяПодсказка" id="34"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="ДопустимыеЗначенияПоказателейУправлениеПоиском" id="35">
+										<AdditionSource>
+											<Item>ДопустимыеЗначенияПоказателей</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="ДопустимыеЗначенияПоказателейУправлениеПоискомКонтекстноеМеню" id="36"/>
+										<ExtendedTooltip name="ДопустимыеЗначенияПоказателейУправлениеПоискомРасширеннаяПодсказка" id="37"/>
+									</SearchControlAddition>
+									<ChildItems>
+										<LabelField name="ДопустимыеЗначенияПоказателейНомерСтроки" id="38">
+											<DataPath>Объект.ДопустимыеЗначенияПоказателей.LineNumber</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ДопустимыеЗначенияПоказателейНомерСтрокиКонтекстноеМеню" id="39"/>
+											<ExtendedTooltip name="ДопустимыеЗначенияПоказателейНомерСтрокиРасширеннаяПодсказка" id="40"/>
+										</LabelField>
+										<InputField name="ДопустимыеЗначенияПоказателейЗначениеПоказателя" id="41">
+											<DataPath>Объект.ДопустимыеЗначенияПоказателей.ЗначениеПоказателя</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ДопустимыеЗначенияПоказателейЗначениеПоказателяКонтекстноеМеню" id="42"/>
+											<ExtendedTooltip name="ДопустимыеЗначенияПоказателейЗначениеПоказателяРасширеннаяПодсказка" id="43"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</Page>
+					</ChildItems>
+				</Pages>
+			</ChildItems>
+		</UsualGroup>
+		<LabelDecoration name="НадписьТекстПояснение" id="59">
+			<Title formatted="false">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Надпись текст пояснение</v8:content>
+				</v8:item>
+			</Title>
+			<ContextMenu name="НадписьТекстПояснениеКонтекстноеМеню" id="60"/>
+			<ExtendedTooltip name="НадписьТекстПояснениеРасширеннаяПодсказка" id="61"/>
+		</LabelDecoration>
+		<UsualGroup name="Группа1" id="65">
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="Группа1РасширеннаяПодсказка" id="66"/>
+			<ChildItems>
+				<InputField name="НаименованиеПолное" id="22">
+					<DataPath>Объект.НаименованиеПолное</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<AutoMaxWidth>false</AutoMaxWidth>
+					<ContextMenu name="НаименованиеПолноеКонтекстноеМеню" id="23"/>
+					<ExtendedTooltip name="НаименованиеПолноеРасширеннаяПодсказка" id="24"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:CatalogObject.гкс_ПоказателиАнализовНоменклатуры</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

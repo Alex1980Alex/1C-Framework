@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Subsystem uuid="380fa18f-a2c8-4428-a05b-1410714dbb7f">
+		<Properties>
+			<Name>СРПВ</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>СРПВ</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<IncludeHelpInContents>true</IncludeHelpInContents>
+			<IncludeInCommandInterface>true</IncludeInCommandInterface>
+			<UseOneCommand>false</UseOneCommand>
+			<Explanation/>
+			<Picture/>
+			<Content>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.гкс_ОбменДаннымиСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">FunctionalOption.гкс_ИспользоватьИнтеграциюСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.гкс_ИнтеграцияСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">XDTOPackage.гкс_SRPV</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_СРПВПрибытиеНаПуть</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Enum.гкс_СРПВТипыОперацийСВагоном</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_СРПВРегистрацияОперацииСВагоном</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.гкс_СРПВПеревеска</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_СоответствияОбъектовСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Enum.гкс_ТипыОбъектовСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DefinedType.гкс_WagonDispatchID</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DefinedType.гкс_НомерВагона</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.гкс_КлючиАналитикиСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Enum.гкс_СРПВСтатусыВагонов</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">DefinedType.гкс_ДокументыСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_СРПВСтатусыОформленияВагонов</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Constant.гкс_КоличествоДнейВидимостиПрибывшихВагонов</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_СРПВАдминистрирование</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Role.гкс_СРПВЧтение</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.гкс_СРПВТранспортныеДокументыЖДПолученные</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">CommonModule.гкс_ИнтеграцияСРПВПовтИсп</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">ScheduledJob.гкс_ОбновлениеИнформацииОВагонахСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Constant.гкс_ПериодОжиданияОтветаОтСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">ScheduledJob.гкс_ОповещениеОПроблемахДоставкиСообщенийСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">FunctionalOption.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Constant.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</xr:Item>
+			</Content>
+		</Properties>
+		<ChildObjects/>
+	</Subsystem>
+</MetaDataObject>

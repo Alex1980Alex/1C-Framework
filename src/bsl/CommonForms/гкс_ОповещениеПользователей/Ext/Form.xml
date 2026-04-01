@@ -1,0 +1,549 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Title>
+		<v8:item>
+			<v8:lang>ru</v8:lang>
+			<v8:content>Оповещение пользователей</v8:content>
+		</v8:item>
+	</Title>
+	<AutoTitle>false</AutoTitle>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>false</Autofill>
+		<ChildItems>
+			<Button name="ФормаОтправитьПисьмо" id="62">
+				<Type>CommandBarButton</Type>
+				<DefaultButton>true</DefaultButton>
+				<CommandName>Form.Command.ОтправитьПисьмо</CommandName>
+				<ExtendedTooltip name="ФормаОтправитьПисьмоРасширеннаяПодсказка" id="63"/>
+			</Button>
+		</ChildItems>
+	</AutoCommandBar>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<UsualGroup name="ГруппаШапка" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа шапка</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа шапка</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>AlwaysHorizontal</Group>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаШапкаРасширеннаяПодсказка" id="2"/>
+			<ChildItems>
+				<InputField name="ПодпискаНаСобытие" id="3">
+					<DataPath>ПодпискаНаСобытие</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Рассылка</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="ПодпискаНаСобытиеКонтекстноеМеню" id="4"/>
+					<ExtendedTooltip name="ПодпискаНаСобытиеРасширеннаяПодсказка" id="5"/>
+					<Events>
+						<Event name="OnChange">ПодпискаНаСобытиеПриИзменении</Event>
+					</Events>
+				</InputField>
+				<InputField name="ШаблонЭлектронногоПисьма" id="6">
+					<DataPath>ШаблонПисьма</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Шаблон</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="ШаблонЭлектронногоПисьмаКонтекстноеМеню" id="7"/>
+					<ExtendedTooltip name="ШаблонЭлектронногоПисьмаРасширеннаяПодсказка" id="8"/>
+					<Events>
+						<Event name="OnChange">ШаблонЭлектронногоПисьмаПриИзменении</Event>
+					</Events>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ГруппаГлавная" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа главная</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа главная</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>AlwaysHorizontal</Group>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаГлавнаяРасширеннаяПодсказка" id="10"/>
+			<ChildItems>
+				<UsualGroup name="ГруппаЛевая" id="14">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа левая</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа левая</v8:content>
+						</v8:item>
+					</ToolTip>
+					<Width>70</Width>
+					<HorizontalStretch>false</HorizontalStretch>
+					<Group>Vertical</Group>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ГруппаЛеваяРасширеннаяПодсказка" id="15"/>
+					<ChildItems>
+						<UsualGroup name="ГруппаТемаФормат" id="38">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа тема формат</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа тема формат</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>AlwaysHorizontal</Group>
+							<Representation>None</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="ГруппаТемаФорматРасширеннаяПодсказка" id="39"/>
+							<ChildItems>
+								<InputField name="ТемаПисьма" id="11">
+									<DataPath>ТемаПисьма</DataPath>
+									<ContextMenu name="ТемаПисьмаКонтекстноеМеню" id="12"/>
+									<ExtendedTooltip name="ТемаПисьмаРасширеннаяПодсказка" id="13"/>
+								</InputField>
+								<CommandBar name="ФормаВидТекстаЭлектронногоПисьма" id="32">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>HTML</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Вид текста электронного письма</v8:content>
+										</v8:item>
+									</ToolTip>
+									<HorizontalStretch>false</HorizontalStretch>
+									<ExtendedTooltip name="ФормаВидТекстаЭлектронногоПисьмаРасширеннаяПодсказка" id="33"/>
+									<ChildItems>
+										<Button name="ФормаЭлектронноеПисьмоОбычныйТекст" id="34">
+											<Type>CommandBarButton</Type>
+											<CommandName>Form.Command.ЭлектронноеПисьмоОбычныйТекст</CommandName>
+											<ExtendedTooltip name="ФормаЭлектронноеПисьмоОбычныйТекстРасширеннаяПодсказка" id="35"/>
+										</Button>
+										<Button name="ФормаЭлектронноеПисьмоHTML" id="36">
+											<Type>CommandBarButton</Type>
+											<Check>true</Check>
+											<CommandName>Form.Command.ЭлектронноеПисьмоHTML</CommandName>
+											<ExtendedTooltip name="ФормаЭлектронноеПисьмоHTMLРасширеннаяПодсказка" id="37"/>
+										</Button>
+									</ChildItems>
+								</CommandBar>
+							</ChildItems>
+						</UsualGroup>
+						<Pages name="Страницы" id="18">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Страницы</v8:content>
+								</v8:item>
+							</Title>
+							<PagesRepresentation>None</PagesRepresentation>
+							<ExtendedTooltip name="СтраницыРасширеннаяПодсказка" id="19"/>
+							<ChildItems>
+								<Page name="СообщениеЭлектронноеПисьмоHTML" id="20">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Сообщение электронное письмо HTML</v8:content>
+										</v8:item>
+									</Title>
+									<ExtendedTooltip name="СообщениеЭлектронноеПисьмоHTMLРасширеннаяПодсказка" id="21"/>
+									<ChildItems>
+										<CommandBar name="ГруппаКоманднаяПанельПисьмаВHTML" id="22">
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Командная панель письма ВHTML</v8:content>
+												</v8:item>
+											</Title>
+											<CommandSource>Item.ТелоПисьмаВHTML</CommandSource>
+											<ExtendedTooltip name="ГруппаКоманднаяПанельПисьмаВHTMLРасширеннаяПодсказка" id="23"/>
+										</CommandBar>
+										<FormattedDocumentField name="ТелоПисьмаВHTML" id="24">
+											<DataPath>ТелоПисьмаВHTML</DataPath>
+											<TitleLocation>None</TitleLocation>
+											<ContextMenu name="ТелоПисьмаВHTMLКонтекстноеМеню" id="25"/>
+											<ExtendedTooltip name="ТелоПисьмаВHTMLРасширеннаяПодсказка" id="26"/>
+											<Events>
+												<Event name="OnChange">ТелоПисьмаВHTMLПриИзменении</Event>
+											</Events>
+										</FormattedDocumentField>
+									</ChildItems>
+								</Page>
+								<Page name="СообщениеЭлектронноеПисьмо" id="27">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Сообщение электронное письмо</v8:content>
+										</v8:item>
+									</Title>
+									<ExtendedTooltip name="СообщениеЭлектронноеПисьмоРасширеннаяПодсказка" id="28"/>
+									<ChildItems>
+										<TextDocumentField name="ТелоСообщенияОбычныйТекст" id="29">
+											<DataPath>ТелоСообщенияОбычныйТекст</DataPath>
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Текст письма</v8:content>
+												</v8:item>
+											</Title>
+											<TitleLocation>None</TitleLocation>
+											<ContextMenu name="ТелоСообщенияОбычныйТекстКонтекстноеМеню" id="30"/>
+											<ExtendedTooltip name="ТелоСообщенияОбычныйТекстРасширеннаяПодсказка" id="31"/>
+											<Events>
+												<Event name="OnChange">ТелоСообщенияОбычныйТекстПриИзменении</Event>
+											</Events>
+										</TextDocumentField>
+									</ChildItems>
+								</Page>
+							</ChildItems>
+						</Pages>
+					</ChildItems>
+				</UsualGroup>
+				<UsualGroup name="ГруппаПравая" id="16">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа правая</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Группа правая</v8:content>
+						</v8:item>
+					</ToolTip>
+					<Representation>None</Representation>
+					<ShowTitle>false</ShowTitle>
+					<ExtendedTooltip name="ГруппаПраваяРасширеннаяПодсказка" id="17"/>
+					<ChildItems>
+						<Table name="Получатели" id="40">
+							<Representation>List</Representation>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Получатели</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="ПолучателиКонтекстноеМеню" id="41"/>
+							<AutoCommandBar name="ПолучателиКоманднаяПанель" id="42">
+								<Autofill>false</Autofill>
+								<ChildItems>
+									<Button name="ПолучателиДобавить" id="60">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Получатели.StandardCommand.Add</CommandName>
+										<ExtendedTooltip name="ПолучателиДобавитьРасширеннаяПодсказка" id="61"/>
+									</Button>
+									<Button name="ПолучателиПодборПользователей" id="56">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ПодборПользователей</CommandName>
+										<Title>
+											<v8:item>
+												<v8:lang>ru</v8:lang>
+												<v8:content>Подборать</v8:content>
+											</v8:item>
+										</Title>
+										<ExtendedTooltip name="ПолучателиПодборПользователейРасширеннаяПодсказка" id="57"/>
+									</Button>
+									<Button name="ПолучателиПодборАктивныхПользователей" id="58">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ПодборАктивныхПользователей</CommandName>
+										<ExtendedTooltip name="ПолучателиПодборАктивныхПользователейРасширеннаяПодсказка" id="59"/>
+									</Button>
+								</ChildItems>
+							</AutoCommandBar>
+							<ExtendedTooltip name="ПолучателиРасширеннаяПодсказка" id="43"/>
+							<SearchStringAddition name="ПолучателиСтрокаПоиска" id="44">
+								<AdditionSource>
+									<Item>Получатели</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ПолучателиСтрокаПоискаКонтекстноеМеню" id="45"/>
+								<ExtendedTooltip name="ПолучателиСтрокаПоискаРасширеннаяПодсказка" id="46"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="ПолучателиСостояниеПросмотра" id="47">
+								<AdditionSource>
+									<Item>Получатели</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ПолучателиСостояниеПросмотраКонтекстноеМеню" id="48"/>
+								<ExtendedTooltip name="ПолучателиСостояниеПросмотраРасширеннаяПодсказка" id="49"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="ПолучателиУправлениеПоиском" id="50">
+								<AdditionSource>
+									<Item>Получатели</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="ПолучателиУправлениеПоискомКонтекстноеМеню" id="51"/>
+								<ExtendedTooltip name="ПолучателиУправлениеПоискомРасширеннаяПодсказка" id="52"/>
+							</SearchControlAddition>
+							<Events>
+								<Event name="ChoiceProcessing">ПолучателиОбработкаВыбора</Event>
+							</Events>
+							<ChildItems>
+								<InputField name="ПолучателиПолучатель" id="53">
+									<DataPath>Получатели.Получатель</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ПолучателиПолучательКонтекстноеМеню" id="54"/>
+									<ExtendedTooltip name="ПолучателиПолучательРасширеннаяПодсказка" id="55"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="ПодпискаНаСобытие" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подписка на событие</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.гкс_ПодпискиНаРассылкиИОповещения</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ТемаПисьма" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тема письма</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ТелоПисьмаВHTML" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тело письма ВHTML</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type xmlns:fd="http://v8.1c.ru/8.2/data/formatted-document">fd:FormattedDocument</v8:Type>
+			</Type>
+			<SavedData>true</SavedData>
+		</Attribute>
+		<Attribute name="ТелоСообщенияОбычныйТекст" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тело сообщения обычный текст</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type xmlns:d5p1="http://v8.1c.ru/8.1/data/txtedt">d5p1:TextDocument</v8:Type>
+			</Type>
+			<SavedData>true</SavedData>
+		</Attribute>
+		<Attribute name="ТипТекстаПисьма" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тип текста письма</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:EnumRef.СпособыРедактированияЭлектронныхПисем</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ТекстШаблонаПисьма" id="6">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Текст шаблона письма</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ТекстШаблонаПисьмаHTML" id="7">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Текст шаблона письма HTML</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ШаблонПисьма" id="8">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Шаблон письма</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.ШаблоныСообщений</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="Получатели" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Получатели</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Получатель" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Получатель</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:TypeSet>cfg:DefinedType.гкс_ПодписчикиНаРассылкиИОповещения</v8:TypeSet>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="УчетнаяЗапись" id="10">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>От</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.УчетныеЗаписиЭлектроннойПочты</v8:Type>
+			</Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ЭлектронноеПисьмоHTML" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>HTML</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Электронное письмо HTML</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ЭлектронноеПисьмоHTML</Action>
+			<ModifiesSavedData>true</ModifiesSavedData>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="ЭлектронноеПисьмоОбычныйТекст" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Обычный текст</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Электронное письмо обычный текст</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ЭлектронноеПисьмоОбычныйТекст</Action>
+			<ModifiesSavedData>true</ModifiesSavedData>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+		<Command name="ПодборПользователей" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подбор пользователей</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подбор пользователей</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПодборПользователей</Action>
+		</Command>
+		<Command name="ПодборАктивныхПользователей" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Добавить активных</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подбор активных пользователей</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПодборАктивныхПользователей</Action>
+		</Command>
+		<Command name="ОтправитьПисьмо" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отправить</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отправить письмо</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ОтправитьПисьмо</Action>
+			<CurrentRowUse>DontUse</CurrentRowUse>
+		</Command>
+	</Commands>
+</Form>

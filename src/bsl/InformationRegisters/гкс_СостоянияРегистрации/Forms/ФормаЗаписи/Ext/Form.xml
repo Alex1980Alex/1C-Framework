@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<WindowOpeningMode>LockOwnerWindow</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="AfterWriteAtServer">ПослеЗаписиНаСервере</Event>
+		<Event name="OnReadAtServer">ПриЧтенииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Период" id="1">
+			<DataPath>Запись.Period</DataPath>
+			<ContextMenu name="ПериодКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="ПериодРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="ТочкаМаршрута" id="4">
+			<DataPath>Запись.ТочкаМаршрута</DataPath>
+			<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="6"/>
+		</InputField>
+		<InputField name="ТипРегистрации" id="7">
+			<DataPath>Запись.ТипРегистрации</DataPath>
+			<ContextMenu name="ТипРегистрацииКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="ТипРегистрацииРасширеннаяПодсказка" id="9"/>
+		</InputField>
+		<InputField name="ДокументРегистрации" id="10">
+			<DataPath>Запись.ДокументРегистрации</DataPath>
+			<ContextMenu name="ДокументРегистрацииКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="ДокументРегистрацииРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="ТранспортноеСредство" id="13">
+			<DataPath>Запись.ТранспортноеСредство</DataPath>
+			<ContextMenu name="ТранспортноеСредствоКонтекстноеМеню" id="14"/>
+			<ExtendedTooltip name="ТранспортноеСредствоРасширеннаяПодсказка" id="15"/>
+		</InputField>
+		<InputField name="ВидПеревозки" id="16">
+			<DataPath>Запись.ВидПеревозки</DataPath>
+			<ContextMenu name="ВидПеревозкиКонтекстноеМеню" id="17"/>
+			<ExtendedTooltip name="ВидПеревозкиРасширеннаяПодсказка" id="18"/>
+		</InputField>
+		<InputField name="Состояние" id="19">
+			<DataPath>Запись.Состояние</DataPath>
+			<ContextMenu name="СостояниеКонтекстноеМеню" id="20"/>
+			<ExtendedTooltip name="СостояниеРасширеннаяПодсказка" id="21"/>
+		</InputField>
+		<InputField name="Пользователь" id="22">
+			<DataPath>Запись.Пользователь</DataPath>
+			<ContextMenu name="ПользовательКонтекстноеМеню" id="23"/>
+			<ExtendedTooltip name="ПользовательРасширеннаяПодсказка" id="24"/>
+		</InputField>
+		<InputField name="Комментарий" id="25">
+			<DataPath>Запись.Комментарий</DataPath>
+			<ContextMenu name="КомментарийКонтекстноеМеню" id="26"/>
+			<ExtendedTooltip name="КомментарийРасширеннаяПодсказка" id="27"/>
+		</InputField>
+		<InputField name="МестнаяДата" id="28">
+			<DataPath>Запись.МестнаяДата</DataPath>
+			<ContextMenu name="МестнаяДатаКонтекстноеМеню" id="29"/>
+			<ExtendedTooltip name="МестнаяДатаРасширеннаяПодсказка" id="30"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Запись" id="1">
+			<Type>
+				<v8:Type>cfg:InformationRegisterRecordManager.гкс_СостоянияРегистрации</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

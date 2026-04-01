@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoSaveDataInSettings>Use</AutoSaveDataInSettings>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<Button name="Печать" id="1">
+			<Type>UsualButton</Type>
+			<DefaultButton>true</DefaultButton>
+			<CommandName>Form.Command.Печать</CommandName>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Печать</v8:content>
+				</v8:item>
+			</Title>
+			<ExtendedTooltip name="ПечатьРасширеннаяПодсказка" id="2"/>
+		</Button>
+		<InputField name="Подписант" id="6">
+			<DataPath>Подписант</DataPath>
+			<ContextMenu name="ПодписантКонтекстноеМеню" id="7"/>
+			<ExtendedTooltip name="ПодписантРасширеннаяПодсказка" id="8"/>
+		</InputField>
+		<UsualGroup name="ГруппаНомераПломб" id="78">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Номера пломб</v8:content>
+				</v8:item>
+			</Title>
+			<Group>AlwaysHorizontal</Group>
+			<ExtendedTooltip name="ГруппаНомераПломбРасширеннаяПодсказка" id="79"/>
+			<ChildItems>
+				<Table name="ПломбыПереданныеОтправителю" id="80">
+					<Representation>List</Representation>
+					<CommandBarLocation>Top</CommandBarLocation>
+					<DataPath>ПломбыПереданныеОтправителю</DataPath>
+					<CommandSet>
+						<ExcludedCommand>Pickup</ExcludedCommand>
+					</CommandSet>
+					<SearchStringLocation>None</SearchStringLocation>
+					<ViewStatusLocation>None</ViewStatusLocation>
+					<SearchControlLocation>None</SearchControlLocation>
+					<ContextMenu name="ПломбыПереданныеОтправителюКонтекстноеМеню" id="82"/>
+					<AutoCommandBar name="ПломбыПереданныеОтправителюКоманднаяПанель" id="81"/>
+					<ExtendedTooltip name="ПломбыПереданныеОтправителюРасширеннаяПодсказка" id="83"/>
+					<SearchStringAddition name="ПломбыПереданныеОтправителюСтрокаПоиска" id="84">
+						<AdditionSource>
+							<Item>ПломбыПереданныеОтправителю</Item>
+							<Type>SearchStringRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ПломбыПереданныеОтправителюСтрокаПоискаКонтекстноеМеню" id="85"/>
+						<ExtendedTooltip name="ПломбыПереданныеОтправителюСтрокаПоискаРасширеннаяПодсказка" id="86"/>
+					</SearchStringAddition>
+					<ViewStatusAddition name="ПломбыПереданныеОтправителюСостояниеПросмотра" id="90">
+						<AdditionSource>
+							<Item>ПломбыПереданныеОтправителю</Item>
+							<Type>ViewStatusRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ПломбыПереданныеОтправителюСостояниеПросмотраКонтекстноеМеню" id="91"/>
+						<ExtendedTooltip name="ПломбыПереданныеОтправителюСостояниеПросмотраРасширеннаяПодсказка" id="92"/>
+					</ViewStatusAddition>
+					<SearchControlAddition name="ПломбыПереданныеОтправителюУправлениеПоиском" id="87">
+						<AdditionSource>
+							<Item>ПломбыПереданныеОтправителю</Item>
+							<Type>SearchControl</Type>
+						</AdditionSource>
+						<ContextMenu name="ПломбыПереданныеОтправителюУправлениеПоискомКонтекстноеМеню" id="88"/>
+						<ExtendedTooltip name="ПломбыПереданныеОтправителюУправлениеПоискомРасширеннаяПодсказка" id="89"/>
+					</SearchControlAddition>
+					<ChildItems>
+						<InputField name="ПломбыПереданныеОтправителюЗначение" id="93">
+							<DataPath>ПломбыПереданныеОтправителю.Value</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Переданы грузоотправителю</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ПломбыПереданныеОтправителюЗначениеКонтекстноеМеню" id="94"/>
+							<ExtendedTooltip name="ПломбыПереданныеОтправителюЗначениеРасширеннаяПодсказка" id="95"/>
+						</InputField>
+					</ChildItems>
+				</Table>
+				<Table name="ПломбыОставшиесяУПолучателя" id="96">
+					<Representation>List</Representation>
+					<CommandBarLocation>Top</CommandBarLocation>
+					<DataPath>ПломбыОставшиесяУПолучателя</DataPath>
+					<CommandSet>
+						<ExcludedCommand>Pickup</ExcludedCommand>
+					</CommandSet>
+					<SearchStringLocation>None</SearchStringLocation>
+					<ViewStatusLocation>None</ViewStatusLocation>
+					<SearchControlLocation>None</SearchControlLocation>
+					<ContextMenu name="ПломбыОставшиесяУПолучателяКонтекстноеМеню" id="98"/>
+					<AutoCommandBar name="ПломбыОставшиесяУПолучателяКоманднаяПанель" id="97"/>
+					<ExtendedTooltip name="ПломбыОставшиесяУПолучателяРасширеннаяПодсказка" id="99"/>
+					<SearchStringAddition name="ПломбыОставшиесяУПолучателяСтрокаПоиска" id="100">
+						<AdditionSource>
+							<Item>ПломбыОставшиесяУПолучателя</Item>
+							<Type>SearchStringRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ПломбыОставшиесяУПолучателяСтрокаПоискаКонтекстноеМеню" id="101"/>
+						<ExtendedTooltip name="ПломбыОставшиесяУПолучателяСтрокаПоискаРасширеннаяПодсказка" id="102"/>
+					</SearchStringAddition>
+					<ViewStatusAddition name="ПломбыОставшиесяУПолучателяСостояниеПросмотра" id="106">
+						<AdditionSource>
+							<Item>ПломбыОставшиесяУПолучателя</Item>
+							<Type>ViewStatusRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ПломбыОставшиесяУПолучателяСостояниеПросмотраКонтекстноеМеню" id="107"/>
+						<ExtendedTooltip name="ПломбыОставшиесяУПолучателяСостояниеПросмотраРасширеннаяПодсказка" id="108"/>
+					</ViewStatusAddition>
+					<SearchControlAddition name="ПломбыОставшиесяУПолучателяУправлениеПоиском" id="103">
+						<AdditionSource>
+							<Item>ПломбыОставшиесяУПолучателя</Item>
+							<Type>SearchControl</Type>
+						</AdditionSource>
+						<ContextMenu name="ПломбыОставшиесяУПолучателяУправлениеПоискомКонтекстноеМеню" id="104"/>
+						<ExtendedTooltip name="ПломбыОставшиесяУПолучателяУправлениеПоискомРасширеннаяПодсказка" id="105"/>
+					</SearchControlAddition>
+					<ChildItems>
+						<InputField name="ПломбыОставшиесяУПолучателяЗначение" id="109">
+							<DataPath>ПломбыОставшиесяУПолучателя.Value</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Оставшиеся у получателя</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="ПломбыОставшиесяУПолучателяЗначениеКонтекстноеМеню" id="110"/>
+							<ExtendedTooltip name="ПломбыОставшиесяУПолучателяЗначениеРасширеннаяПодсказка" id="111"/>
+						</InputField>
+					</ChildItems>
+				</Table>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Подписант" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Подписант</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:CatalogRef.гкс_ОтветственныеЛица</v8:Type>
+			</Type>
+			<Save>
+				<Field>Подписант</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ПломбыПереданныеОтправителю" id="8">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Пломбы переданные отправителю</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueListType</v8:Type>
+			</Type>
+			<Settings xsi:type="v8:TypeDescription">
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>10</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Settings>
+		</Attribute>
+		<Attribute name="ПломбыОставшиесяУПолучателя" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Пломбы оставшиеся у получателя</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueListType</v8:Type>
+			</Type>
+			<Settings xsi:type="v8:TypeDescription">
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>10</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Settings>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="Печать" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Печать</v8:content>
+				</v8:item>
+			</Title>
+			<Action>КомандаПечать</Action>
+		</Command>
+	</Commands>
+</Form>

@@ -1,0 +1,487 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoTime>CurrentOrLast</AutoTime>
+	<UsePostingMode>Auto</UsePostingMode>
+	<RepostOnWrite>true</RepostOnWrite>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<ChildItems>
+			<Popup name="ПодменюПечать" id="86">
+				<UserVisible>
+					<xr:Common>false</xr:Common>
+				</UserVisible>
+				<Title>
+					<v8:item>
+						<v8:lang>en</v8:lang>
+						<v8:content>Print</v8:content>
+					</v8:item>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Печать</v8:content>
+					</v8:item>
+					<v8:item>
+						<v8:lang>es</v8:lang>
+						<v8:content>Impresión</v8:content>
+					</v8:item>
+				</Title>
+				<ToolTip>
+					<v8:item>
+						<v8:lang>en</v8:lang>
+						<v8:content>printing submenu</v8:content>
+					</v8:item>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Подменю печать</v8:content>
+					</v8:item>
+					<v8:item>
+						<v8:lang>es</v8:lang>
+						<v8:content>submenú de impresión</v8:content>
+					</v8:item>
+				</ToolTip>
+				<Picture>
+					<xr:Ref>StdPicture.Print</xr:Ref>
+					<xr:LoadTransparent>true</xr:LoadTransparent>
+				</Picture>
+				<ExtendedTooltip name="ПодменюПечатьРасширеннаяПодсказка" id="87"/>
+			</Popup>
+			<Popup name="ПодменюОтчеты" id="88">
+				<Title>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Отчеты</v8:content>
+					</v8:item>
+					<v8:item>
+						<v8:lang>en</v8:lang>
+						<v8:content>Reports</v8:content>
+					</v8:item>
+				</Title>
+				<Representation>PictureAndText</Representation>
+				<ExtendedTooltip name="ПодменюОтчетыРасширеннаяПодсказка" id="89"/>
+				<ChildItems>
+					<ButtonGroup name="ПодменюОтчетыВажное" id="90">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты важное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Important reports submenu</v8:content>
+							</v8:item>
+						</Title>
+						<ExtendedTooltip name="ПодменюОтчетыВажноеРасширеннаяПодсказка" id="91"/>
+					</ButtonGroup>
+					<ButtonGroup name="ПодменюОтчетыОбычное" id="92">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты обычное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Submenu reports standard</v8:content>
+							</v8:item>
+						</Title>
+						<ToolTip>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты важное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Important reports submenu</v8:content>
+							</v8:item>
+						</ToolTip>
+						<ExtendedTooltip name="ПодменюОтчетыОбычноеРасширеннаяПодсказка" id="93"/>
+					</ButtonGroup>
+					<ButtonGroup name="ПодменюОтчетыСмТакже" id="94">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты см также</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Submenu reports see also</v8:content>
+							</v8:item>
+						</Title>
+						<ToolTip>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Подменю отчеты важное</v8:content>
+							</v8:item>
+							<v8:item>
+								<v8:lang>en</v8:lang>
+								<v8:content>Important reports submenu</v8:content>
+							</v8:item>
+						</ToolTip>
+						<ExtendedTooltip name="ПодменюОтчетыСмТакжеРасширеннаяПодсказка" id="95"/>
+					</ButtonGroup>
+				</ChildItems>
+			</Popup>
+		</ChildItems>
+	</AutoCommandBar>
+	<Events>
+		<Event name="AfterWriteAtServer">ПослеЗаписиНаСервере</Event>
+		<Event name="OnReadAtServer">ПриЧтенииНаСервере</Event>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnCreateAtServer">ПриСозданииНаСервере</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Номер" id="1">
+			<DataPath>Объект.Number</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НомерКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="НомерРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="Дата" id="4">
+			<DataPath>Объект.Date</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ДатаКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="ДатаРасширеннаяПодсказка" id="6"/>
+		</InputField>
+		<InputField name="ТочкаМаршрута" id="7">
+			<DataPath>Объект.ТочкаМаршрута</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ТочкаМаршрутаКонтекстноеМеню" id="8"/>
+			<ExtendedTooltip name="ТочкаМаршрутаРасширеннаяПодсказка" id="9"/>
+		</InputField>
+		<InputField name="Номенклатура" id="10">
+			<DataPath>Объект.Номенклатура</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НоменклатураКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="НоменклатураРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="ТранспортныйДокумент" id="19">
+			<DataPath>Объект.ТранспортныйДокумент</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ТранспортныйДокументКонтекстноеМеню" id="20"/>
+			<ExtendedTooltip name="ТранспортныйДокументРасширеннаяПодсказка" id="21"/>
+			<Events>
+				<Event name="OnChange">ТранспортныйДокументПриИзменении</Event>
+				<Event name="StartChoice">ТранспортныйДокументНачалоВыбора</Event>
+			</Events>
+		</InputField>
+		<UsualGroup name="ГруппаОсновная" id="72">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа основная</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа основная</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Group>AlwaysHorizontal</Group>
+			<Behavior>Usual</Behavior>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаОсновнаяРасширеннаяПодсказка" id="73"/>
+			<ChildItems>
+				<UsualGroup name="ГруппаТранспортныеСредства" id="48">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Транспортные средства</v8:content>
+						</v8:item>
+					</Title>
+					<Group>Vertical</Group>
+					<Behavior>Usual</Behavior>
+					<ExtendedTooltip name="ГруппаТранспортныеСредстваРасширеннаяПодсказка" id="49"/>
+					<ChildItems>
+						<Table name="ТранспортныеСредства" id="50">
+							<Representation>List</Representation>
+							<ChangeRowSet>false</ChangeRowSet>
+							<ChangeRowOrder>false</ChangeRowOrder>
+							<AutoAddIncomplete>false</AutoAddIncomplete>
+							<AutoMarkIncomplete>false</AutoMarkIncomplete>
+							<DataPath>Объект.ТранспортныеСредства</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="ТранспортныеСредстваКонтекстноеМеню" id="51"/>
+							<AutoCommandBar name="ТранспортныеСредстваКоманднаяПанель" id="52">
+								<Autofill>false</Autofill>
+								<ChildItems>
+									<Button name="ТранспортныеСредстваКомандаТранспортВыбратьВсе" id="78">
+										<Type>CommandBarButton</Type>
+										<Representation>Picture</Representation>
+										<CommandName>Form.Command.КомандаТранспортВыбратьВсе</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.CheckAll</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="ТранспортныеСредстваКомандаТранспортВыбратьВсеРасширеннаяПодсказка" id="79"/>
+									</Button>
+									<Button name="ТранспортныеСредстваКомандаТранспортСнятьВсе" id="80">
+										<Type>CommandBarButton</Type>
+										<Representation>Picture</Representation>
+										<CommandName>Form.Command.КомандаТранспортСнятьВсе</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.UncheckAll</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="ТранспортныеСредстваКомандаТранспортСнятьВсеРасширеннаяПодсказка" id="81"/>
+									</Button>
+								</ChildItems>
+							</AutoCommandBar>
+							<ExtendedTooltip name="ТранспортныеСредстваРасширеннаяПодсказка" id="53"/>
+							<SearchStringAddition name="ТранспортныеСредстваСтрокаПоиска" id="54">
+								<AdditionSource>
+									<Item>ТранспортныеСредства</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ТранспортныеСредстваСтрокаПоискаКонтекстноеМеню" id="55"/>
+								<ExtendedTooltip name="ТранспортныеСредстваСтрокаПоискаРасширеннаяПодсказка" id="56"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="ТранспортныеСредстваСостояниеПросмотра" id="57">
+								<AdditionSource>
+									<Item>ТранспортныеСредства</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="ТранспортныеСредстваСостояниеПросмотраКонтекстноеМеню" id="58"/>
+								<ExtendedTooltip name="ТранспортныеСредстваСостояниеПросмотраРасширеннаяПодсказка" id="59"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="ТранспортныеСредстваУправлениеПоиском" id="60">
+								<AdditionSource>
+									<Item>ТранспортныеСредства</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="ТранспортныеСредстваУправлениеПоискомКонтекстноеМеню" id="61"/>
+								<ExtendedTooltip name="ТранспортныеСредстваУправлениеПоискомРасширеннаяПодсказка" id="62"/>
+							</SearchControlAddition>
+							<ChildItems>
+								<CheckBoxField name="ТранспортныеСредстваУчитывать" id="69">
+									<DataPath>Объект.ТранспортныеСредства.Учитывать</DataPath>
+									<TitleLocation>None</TitleLocation>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="ТранспортныеСредстваУчитыватьКонтекстноеМеню" id="70"/>
+									<ExtendedTooltip name="ТранспортныеСредстваУчитыватьРасширеннаяПодсказка" id="71"/>
+								</CheckBoxField>
+								<LabelField name="ТранспортныеСредстваНомерСтроки" id="63">
+									<DataPath>Объект.ТранспортныеСредства.LineNumber</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ТранспортныеСредстваНомерСтрокиКонтекстноеМеню" id="64"/>
+									<ExtendedTooltip name="ТранспортныеСредстваНомерСтрокиРасширеннаяПодсказка" id="65"/>
+								</LabelField>
+								<InputField name="ТранспортныеСредстваТранспортноеСредство" id="66">
+									<DataPath>Объект.ТранспортныеСредства.ТранспортноеСредство</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="ТранспортныеСредстваТранспортноеСредствоКонтекстноеМеню" id="67"/>
+									<ExtendedTooltip name="ТранспортныеСредстваТранспортноеСредствоРасширеннаяПодсказка" id="68"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</UsualGroup>
+				<UsualGroup name="ГруппаАнализы" id="24">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Анализы</v8:content>
+						</v8:item>
+					</Title>
+					<Group>Vertical</Group>
+					<Behavior>Usual</Behavior>
+					<ExtendedTooltip name="ГруппаАнализыРасширеннаяПодсказка" id="25"/>
+					<ChildItems>
+						<Table name="Анализы" id="26">
+							<Representation>List</Representation>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Объект.Анализы</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="АнализыКонтекстноеМеню" id="27"/>
+							<AutoCommandBar name="АнализыКоманднаяПанель" id="28">
+								<Autofill>false</Autofill>
+								<ChildItems>
+									<Button name="АнализыЗаполнитьКачественныеПоказатели" id="74">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ЗаполнитьКачественныеПоказатели</CommandName>
+										<ExtendedTooltip name="АнализыЗаполнитьКачественныеПоказателиРасширеннаяПодсказка" id="75"/>
+									</Button>
+									<Button name="АнализыДобавить" id="76">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Анализы.StandardCommand.Add</CommandName>
+										<ExtendedTooltip name="АнализыДобавитьРасширеннаяПодсказка" id="77"/>
+									</Button>
+									<Button name="АнализыКомандаАнализыВыбратьВсе" id="82">
+										<Type>CommandBarButton</Type>
+										<Representation>Picture</Representation>
+										<CommandName>Form.Command.КомандаАнализыВыбратьВсе</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.CheckAll</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="АнализыКомандаАнализыВыбратьВсеРасширеннаяПодсказка" id="83"/>
+									</Button>
+									<Button name="АнализыКомандаАнализыСнятьВсе" id="84">
+										<Type>CommandBarButton</Type>
+										<Representation>Picture</Representation>
+										<CommandName>Form.Command.КомандаАнализыСнятьВсе</CommandName>
+										<Picture>
+											<xr:Ref>StdPicture.UncheckAll</xr:Ref>
+											<xr:LoadTransparent>true</xr:LoadTransparent>
+										</Picture>
+										<ExtendedTooltip name="АнализыКомандаАнализыСнятьВсеРасширеннаяПодсказка" id="85"/>
+									</Button>
+								</ChildItems>
+							</AutoCommandBar>
+							<ExtendedTooltip name="АнализыРасширеннаяПодсказка" id="29"/>
+							<SearchStringAddition name="АнализыСтрокаПоиска" id="30">
+								<AdditionSource>
+									<Item>Анализы</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="АнализыСтрокаПоискаКонтекстноеМеню" id="31"/>
+								<ExtendedTooltip name="АнализыСтрокаПоискаРасширеннаяПодсказка" id="32"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="АнализыСостояниеПросмотра" id="33">
+								<AdditionSource>
+									<Item>Анализы</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="АнализыСостояниеПросмотраКонтекстноеМеню" id="34"/>
+								<ExtendedTooltip name="АнализыСостояниеПросмотраРасширеннаяПодсказка" id="35"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="АнализыУправлениеПоиском" id="36">
+								<AdditionSource>
+									<Item>Анализы</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="АнализыУправлениеПоискомКонтекстноеМеню" id="37"/>
+								<ExtendedTooltip name="АнализыУправлениеПоискомРасширеннаяПодсказка" id="38"/>
+							</SearchControlAddition>
+							<ChildItems>
+								<LabelField name="АнализыНомерСтроки" id="39">
+									<DataPath>Объект.Анализы.LineNumber</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="АнализыНомерСтрокиКонтекстноеМеню" id="40"/>
+									<ExtendedTooltip name="АнализыНомерСтрокиРасширеннаяПодсказка" id="41"/>
+								</LabelField>
+								<CheckBoxField name="АнализыВыполнитьАнализ" id="45">
+									<DataPath>Объект.Анализы.ВыполнитьАнализ</DataPath>
+									<TitleLocation>None</TitleLocation>
+									<EditMode>EnterOnInput</EditMode>
+									<CheckBoxType>Auto</CheckBoxType>
+									<ContextMenu name="АнализыВыполнитьАнализКонтекстноеМеню" id="46"/>
+									<ExtendedTooltip name="АнализыВыполнитьАнализРасширеннаяПодсказка" id="47"/>
+								</CheckBoxField>
+								<InputField name="АнализыПоказательАнализа" id="42">
+									<DataPath>Объект.Анализы.ПоказательАнализа</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="АнализыПоказательАнализаКонтекстноеМеню" id="43"/>
+									<ExtendedTooltip name="АнализыПоказательАнализаРасширеннаяПодсказка" id="44"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</UsualGroup>
+			</ChildItems>
+		</UsualGroup>
+		<InputField name="Комментарий" id="16">
+			<DataPath>Объект.Комментарий</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="КомментарийКонтекстноеМеню" id="17"/>
+			<ExtendedTooltip name="КомментарийРасширеннаяПодсказка" id="18"/>
+		</InputField>
+		<InputField name="Ответственный" id="13">
+			<DataPath>Объект.Ответственный</DataPath>
+			<ReadOnly>true</ReadOnly>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="ОтветственныйКонтекстноеМеню" id="14"/>
+			<ExtendedTooltip name="ОтветственныйРасширеннаяПодсказка" id="15"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type>
+				<v8:Type>cfg:DocumentObject.гкс_ЗаданияНаПроверкуКачества</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+			<UseAlways>
+				<Field>Объект.RegisterRecords</Field>
+			</UseAlways>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="ЗаполнитьКачественныеПоказатели" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Заполнить</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Заполнить качественные показатели</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ЗаполнитьКачественныеПоказатели</Action>
+		</Command>
+		<Command name="КомандаТранспортВыбратьВсе" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда транспорт выбрать все</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда транспорт выбрать все</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаТранспортВыбратьВсе</Action>
+		</Command>
+		<Command name="КомандаТранспортСнятьВсе" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда транспорт снять все</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда транспорт снять все</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаТранспортСнятьВсе</Action>
+		</Command>
+		<Command name="КомандаАнализыВыбратьВсе" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда анализы выбрать все</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда анализы выбрать все</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаАнализыВыбратьВсе</Action>
+		</Command>
+		<Command name="КомандаАнализыСнятьВсе" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда анализы снять все</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда анализы снять все</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаАнализыСнятьВсе</Action>
+		</Command>
+	</Commands>
+</Form>
