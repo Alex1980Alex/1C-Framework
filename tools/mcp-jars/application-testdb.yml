@@ -11,11 +11,11 @@ app:
     - path: "exts/YAXUNIT"
       name: YAXUNIT
       type: "EXTENSION"
-      purpose: [ "TESTING" ]
+      purpose: [ "YAXUNIT" ]
     - path: "exts/Smoke"
       name: Smoke
       type: "EXTENSION"
-      purpose: [ "TESTING" ]
+      purpose: [ "TESTS" ]
 
   connection:
     connection-string: 'Srvr="KOMPUTER";Ref="TestDB";'
