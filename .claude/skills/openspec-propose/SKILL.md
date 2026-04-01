@@ -33,13 +33,43 @@ When ready to implement, run /opsx:apply
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-2. **Create the change directory**
+2. **Gather existing context via MCP (Delta-spec preparation)**
+
+   Before creating artifacts, understand what already exists in the 1C configuration:
+
+   a. **Check existing objects** — for each metadata object mentioned in the user's request:
+      ```
+      mcp__1c-mcp-toolkit__get_metadata(object_type="<type>", object_name="<name>")
+      ```
+      This determines whether the object is ADDED (new) or MODIFIED (existing).
+
+   b. **Search related code** — find similar implementations:
+      ```
+      mcp__bsl-semantic-search__bsl_search(query="<relevant keywords>", limit=5)
+      ```
+      or
+      ```
+      mcp__bsl-semantic-search__bsl_hybrid_search(query="<keywords>", limit=5)
+      ```
+
+   c. **Check platform API** if needed:
+      ```
+      mcp__bsl-platform-context__search(query="<platform type or method>")
+      ```
+
+   d. **Record findings** — for each object determine:
+      - `[ADDED]` — does NOT exist in configuration → new object
+      - `[MODIFIED]` — EXISTS in configuration → delta change only
+
+   Skip this step if MCP servers are unavailable (graceful degradation).
+
+3. **Create the change directory**
    ```bash
    openspec new change "<name>"
    ```
    This creates a scaffolded change at `openspec/changes/<name>/` with `.openspec.yaml`.
 
-3. **Get the artifact build order**
+4. **Get the artifact build order**
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -47,7 +77,7 @@ When ready to implement, run /opsx:apply
    - `applyRequires`: array of artifact IDs needed before implementation (e.g., `["tasks"]`)
    - `artifacts`: list of all artifacts with their status and dependencies
 
-4. **Create artifacts in sequence until apply-ready**
+5. **Create artifacts in sequence until apply-ready**
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 
@@ -79,7 +109,7 @@ When ready to implement, run /opsx:apply
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
-5. **Show final status**
+6. **Show final status**
    ```bash
    openspec status --change "<name>"
    ```
@@ -101,6 +131,16 @@ After completing all artifacts, summarize:
 - **IMPORTANT**: `context` and `rules` are constraints for YOU, not content for the file
   - Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into the artifact
   - These guide what you write, but should never appear in the output
+
+**Delta-Spec Rules (1C brownfield)**
+- Every requirement in specs MUST start with `## ADDED` or `## MODIFIED`
+- Use MCP context from step 2 to determine the correct marker
+- `ADDED` = object/attribute does NOT exist in configuration
+- `MODIFIED` = object EXISTS, only describe the delta (what changes, was/becomes)
+- For `MODIFIED`: specify exact module, procedure, and line/block being changed
+- NEVER rewrite entire modules — only the delta
+- NEVER create new objects if an equivalent already exists in the configuration
+- Reference existing BSP/ERP procedures, don't duplicate their logic
 
 **Guardrails**
 - Create ALL artifacts needed for implementation (as defined by schema's `apply.requires`)
