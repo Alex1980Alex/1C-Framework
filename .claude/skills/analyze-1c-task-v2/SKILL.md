@@ -33,6 +33,12 @@ Skill для комплексного анализа задачи по конф�
 - Верификация имён полей через get_metadata
 - Подготовка комментариев с номером задачи в плане
 
+**Улучшения v4.0 (SDD-интеграция):**
+- Delta-spec маркеры `[ADDED]`/`[MODIFIED]` для каждого объекта (проверка через get_metadata)
+- Маршрутизация на OpenSpec после анализа: ANALYSIS-REPORT → `/opsx:propose` → approval → apply
+- Brownfield validation: после реализации → `brownfield-validate` (Gap+Design+Impl)
+- Approval gate: `approval-gate.py` блокирует реализацию без одобрения спецификации
+
 ## ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА АНАЛИЗА
 
 ### Правило 1: Ориентироваться на существующий код конфигурации
