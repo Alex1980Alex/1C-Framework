@@ -373,11 +373,19 @@ MCP-серверы — необходимое дополнение. Без ко�
 
 ---
 
-### 9.4. Фаза 2: Адаптация конвейера артефактов OpenSpec
+### 9.4. Фаза 2: Адаптация конвейера артефактов OpenSpec — DONE (2026-04-01)
 
 **Цель:** Внедрение 4-этапного процесса (proposal -> specs -> design -> tasks) с адаптацией под 1С.
 
-**Приоритет:** Высокий | **Оценка:** 5-7 дней
+**Приоритет:** Высокий | **Статус:** COMPLETE
+
+**Результаты:**
+- `openspec/config.yaml`: tech stack 1С, rules для proposal/specs/design/tasks, conventions (CamelCase, гкс_ prefix)
+- Первый полный change: `gkstcplk-2256-exclude-registered-vehicles` — все 4 артефакта DONE
+  - proposal.md: бизнес-описание задачи
+  - specs/: метаданные с типами, 4 сценария Given/When/Then
+  - design.md: SQL LEFT JOIN, аналогичные реализации, риски
+  - tasks.md: атомарные шаги с точными строками вставки + верификация METR
 
 | Шаг | Действие | Результат |
 | :--- | :--- | :--- |
