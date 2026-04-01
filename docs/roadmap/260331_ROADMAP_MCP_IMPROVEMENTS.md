@@ -364,15 +364,17 @@
 
 Все 8 шагов выполнены. tree-sitter-bsl@0.1.6 установлен (+ tree-sitter@0.25.0). AST парсинг BSL работает (procedure_definition, function_definition). Сервер: `tools/bsl-code-search/`. Индексация: 11/2027 файлов (остальные — пустые/без процедур).
 
-### Фаза 8: METR интеграция (3 BLOCKED)
+### Фаза 8: METR интеграция (2 PARTIAL, 1 BLOCKED)
 
-| Шаг | Описание | Блокер | Как разблокировать |
-|-----|----------|--------|-------------------|
-| 8.3 | Тест `build_project` через IBCMD | Требует запущенный 1С сервер | Запустить 1С, вызвать `mcp__metr__build_project` |
-| 8.4 | Тест `check_syntax` | Требует подключение к ИБ | Проверить connection string в YAML, вызвать `mcp__metr__check_syntax_designer_config` |
-| 8.5 | Тест `run_all_tests` | Требует YaXUnit расширение | Загрузить YaXUnit в ИБ, вызвать `mcp__metr__run_all_tests` |
+METR **запускается** (Spring Boot 5.2s, 8 MCP tools). Баг `purpose: TESTING` → исправлен на `TESTS`/`YAXUNIT`.
 
-**Выполнены:** 8.1 (YAML с реальным connection), 8.2 (source-set), 8.6 (auto-test skill), 8.7 (dump config)
+| Шаг | Описание | Статус | Результат |
+|-----|----------|--------|-----------|
+| 8.3 | Тест `build_project` | **PARTIAL** | Запустился, но нет `Configuration.xml` в `base-path`. Нужна полная выгрузка конфигурации через конфигуратор |
+| 8.4 | Тест `check_syntax` | **PARTIAL** | Запускается, но требует >2 мин (конфигуратор в пакетном режиме). Нужен больший таймаут |
+| 8.5 | Тест `run_all_tests` | BLOCKED | Зависит от 8.3 (нужна сборка перед тестами) |
+
+**Выполнены:** 8.1 (YAML исправлен), 8.2 (source-set), 8.6 (auto-test skill), 8.7 (dump config). **Прогресс:** METR подключён и работает, нужна выгрузка конфигурации
 
 ### Фаза 10: Dual-vector BSL (1 PARTIAL, 1 PENDING)
 
