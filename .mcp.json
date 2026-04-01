@@ -1,5 +1,14 @@
 {
   "mcpServers": {
+    "bsl-code-search": {
+      "command": "node",
+      "args": ["D:\\1С-Framework\\tools\\bsl-code-search\\index.js"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "BSL_SOURCE_DIR": "src/projects"
+      },
+      "timeout": 30000
+    },
     "pdf-vector-graph": {
       "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.mcp_server.server"],
@@ -112,8 +121,7 @@
       "timeout": 180000
     },
     "1c-mcp-toolkit": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "http://localhost:6003/mcp"],
+      "url": "http://localhost:6003/mcp",
       "timeout": 180000
     },
     "edt-mcp": {

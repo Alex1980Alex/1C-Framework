@@ -29,3 +29,9 @@ app:
     enterprise:
       additional-launch-keys:
         - "/TESTMANAGER"
+
+  # Phase 8.7: Incremental dump configuration
+  dump:
+    type: INCREMENTAL
+    path: "D:\\1С-Framework\\build\\dumps"
+    checksum-algorithm: SHA-256

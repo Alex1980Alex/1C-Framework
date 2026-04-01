@@ -12,16 +12,16 @@
 |---|---|---|---|---|---|
 | 1-3.5 | Базовая интеграция (ROCTUP + EDT-MCP + 1c_mcp + RRF метаданные) | Завершено | - | - | - |
 | 4 | Vanessa Automation + YaXUnit | Частично | - | - | - |
-| **5** | **Обновление 1c-mcp-toolkit до v1.5.0** | Планируется | **P0** | 1 день | ROCTUP/1c-mcp-toolkit |
-| **6** | **tree-sitter-bsl: структурный поиск BSL** | Планируется | **P1** | 3 дня | hawkxtreme/mini-ai-1c |
-| **7** | **MCP Resources и Prompts** | Планируется | **P1** | 2 дня | vladimir-kharin/1c_mcp |
-| **8** | **Глубокая интеграция METR** | Планируется | **P1** | 2 дня | alkoleft/mcp-onec-test-runner |
-| **9** | **Конвейер экспорта конфигурации** | Планируется | **P2** | 2 дня | FSerg/mcp-1c-v1 |
-| **10** | **Двухвекторный поиск BSL кода** | Планируется | **P2** | 3 дня | FSerg/mcp-1c-v1 |
-| **11** | **Активация OAuth2** | Планируется | **P3** | 1 день | vladimir-kharin/1c_mcp |
-| **12** | **Расширение MCP Dashboard** | Планируется | **P3** | 2 дня | Внутренняя потребность |
+| **5** | **Обновление 1c-mcp-toolkit до v1.5.0** | **3/8 DONE** (5.3+5.4+5.6), 4 BLOCKED (.epf) | **P0** | 1 день | ROCTUP/1c-mcp-toolkit |
+| **6** | **tree-sitter-bsl: структурный поиск BSL** | **7/8 DONE** (npm installed, сервер протестирован на реальных BSL) | **P1** | 3 дня | hawkxtreme/mini-ai-1c |
+| **7** | **MCP Resources и Prompts** | **6/6 DONE** (import verified) | **P1** | 2 дня | vladimir-kharin/1c_mcp |
+| **8** | **Глубокая интеграция METR** | **4/7 DONE** (YAML+skill+source-set+dump), 3 BLOCKED (1C) | **P1** | 2 дня | alkoleft/mcp-onec-test-runner |
+| **9** | **Конвейер экспорта конфигурации** | **5/5 DONE** (скрипт+MD/CSV+хеши+bat) | **P2** | 2 дня | FSerg/mcp-1c-v1 |
+| **10** | **Двухвекторный поиск BSL кода** | **4/6 DONE** (интегрирован в reindex+hybrid), 2 BLOCKED (Qdrant A/B) | **P2** | 3 дня | FSerg/mcp-1c-v1 |
+| **11** | **Активация OAuth2** | **1/5 DONE** (guide), 4 BLOCKED (MCP server) | **P3** | 1 день | vladimir-kharin/1c_mcp |
+| **12** | **Расширение MCP Dashboard** | **4/5 DONE** (скрипт+dashboard+metrics+alerts), Streamlit deferred | **P3** | 2 дня | Внутренняя потребность |
 
-**Итого новых фаз:** 8 | **Общие трудозатраты:** ~16 дней | **Критический путь:** Фаза 5 -> 6 -> 8
+**Итого:** 8 фаз | **DONE:** 34/50 шагов (68%) | **BLOCKED:** 13 (инфраструктура) | **DEFERRED:** 3 | **Дата:** 2026-04-01
 
 ---
 
@@ -348,3 +348,83 @@
 | Безопасность данных | Без анонимизации | Анонимизация ПДн |
 | Автоматизация тестов | Ручной запуск | Авто после write_module |
 | Актуальность индекса метаданных | Ручная переиндексация | Автоматическая |
+
+---
+
+## Нереализованные шаги (требуют инфраструктуру)
+
+> **Дата аудита:** 2026-04-01
+> **Всего шагов:** 50 | **Выполнено:** 34 (68%) | **Заблокировано:** 13 (26%) | **Отложено:** 3 (6%)
+
+### Фаза 5: Обновление 1c-mcp-toolkit (4 BLOCKED)
+
+| Шаг | Описание | Блокер | Как разблокировать |
+|-----|----------|--------|-------------------|
+| 5.1 | Скачать `MCP_Toolkit.epf` v1.5.0 | Нет .epf файла | Скачать из `build/` ветки v1.5.0 на [GitHub](https://github.com/ROCTUP/1c-mcp-toolkit) |
+| 5.2 | Переключить на NativeAPI HTTP сервер | Зависит от 5.1 | Загрузить .epf в 1С, включить NativeAPI MCPHttpTransport |
+| 5.5 | Настроить анонимизацию ПДн | Требует конфигурации в .epf | В обработке настроить дерево полей для анонимизации |
+| 5.7 | Тест `submit_for_deanonymization` | Зависит от 5.5 | После настройки анонимизации — вызвать 9-й инструмент |
+
+**Выполнены:** 5.3 (прямой HTTP вместо mcp-remote), 5.4 (TOON верифицирован), 5.6 (execute_code 79KB)
+
+### Фаза 6: bsl-code-search (1 PARTIAL)
+
+| Шаг | Описание | Текущее состояние | Как завершить |
+|-----|----------|-------------------|---------------|
+| 6.1 | Подключить tree-sitter-bsl вместо regex | Regex fallback работает, tree-sitter — optional dep | `npm install tree-sitter-bsl` (может потребоваться C++ компилятор на Windows) |
+
+**Выполнены:** 6.2-6.8 (сервер создан, npm installed, протестирован на реальных BSL, зарегистрирован в .mcp.json)
+
+### Фаза 8: METR интеграция (3 BLOCKED)
+
+| Шаг | Описание | Блокер | Как разблокировать |
+|-----|----------|--------|-------------------|
+| 8.3 | Тест `build_project` через IBCMD | Требует запущенный 1С сервер | Запустить 1С, вызвать `mcp__metr__build_project` |
+| 8.4 | Тест `check_syntax` | Требует подключение к ИБ | Проверить connection string в YAML, вызвать `mcp__metr__check_syntax_designer_config` |
+| 8.5 | Тест `run_all_tests` | Требует YaXUnit расширение | Загрузить YaXUnit в ИБ, вызвать `mcp__metr__run_all_tests` |
+
+**Выполнены:** 8.1 (YAML с реальным connection), 8.2 (source-set), 8.6 (auto-test skill), 8.7 (dump config)
+
+### Фаза 10: Dual-vector BSL (2 BLOCKED)
+
+| Шаг | Описание | Блокер | Как разблокировать |
+|-----|----------|--------|-------------------|
+| 10.5 | A/B тестирование single vs dual vector | Требует Qdrant с проиндексированными данными | `python scripts/reindex_bsl_qwen3.py --project <path> --collection bsl_code_v4 --dual-vector --recreate` |
+| 10.6 | Переключить production на bsl_code_v4 | Зависит от 10.5 | При улучшении precision — обновить `qdrant_collection` в конфиге bsl-semantic-search |
+
+**Выполнены:** 10.1 (schema), 10.2 (migration), 10.3 (reindex_bsl_qwen3.py --dual-vector), 10.4 (create_pipeline() factory)
+
+### Фаза 11: OAuth2 (4 BLOCKED)
+
+| Шаг | Описание | Блокер | Как разблокировать |
+|-----|----------|--------|-------------------|
+| 11.1 | Установить `MCP_AUTH_MODE=oauth2` | Требует тестирование на staging | Установить в `.env`, перезапустить MCP сервер |
+| 11.2 | Настроить TTL токенов | Зависит от 11.1 | Добавить TTL переменные в `.env` |
+| 11.3 | Тест Authorization Code + PKCE | Зависит от 11.1 | `curl -X POST localhost:8889/oauth/authorize ...` |
+| 11.4 | Per-session credentials для 1С | Зависит от 11.3 | Настроить проброс credentials в connection string |
+
+**Выполнены:** 11.5 (guide: `docs/guides/OAUTH2_ACTIVATION.md`)
+
+### Фаза 12: MCP Dashboard (1 DEFERRED)
+
+| Шаг | Описание | Статус | Причина |
+|-----|----------|--------|---------|
+| 12.3 | Streamlit UI страница | DEFERRED | Низкий приоритет (P3). CLI dashboard достаточен. Реализовать при наличии спроса |
+
+**Выполнены:** 12.1 (mcp_health_monitor.py), 12.2 (hook-dashboard.py --section mcp), 12.4 (latency+timestamp), 12.5 (error/timeout alerts)
+
+---
+
+## Порядок разблокировки
+
+Рекомендуемая последовательность для закрытия оставшихся шагов:
+
+```
+1. Скачать MCP_Toolkit.epf v1.5.0 с GitHub     → разблокирует Phase 5 (4 шага)
+2. Запустить reindex с --dual-vector             → разблокирует Phase 10 (2 шага)
+3. Запустить 1С + METR                           → разблокирует Phase 8 (3 шага)
+4. Активировать OAuth2 на staging                → разблокирует Phase 11 (4 шага)
+```
+
+**Критический путь:** 5.1 → 5.2 → 5.5 → 5.7 (последовательные, ~2 часа при наличии .epf)
+**Параллельные:** 8.3-8.5 и 10.5-10.6 можно делать одновременно

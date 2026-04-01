@@ -39,6 +39,11 @@ from .services.search import BSLSearchService, SearchMode, SearchRequest
 # Создаем FastMCP server
 mcp = FastMCP("BSL Semantic Search")
 
+# Phase 7: Register MCP Resources and Prompts
+from .mcp_resources import register_resources_and_prompts
+
+register_resources_and_prompts(mcp)
+
 # Глобальные сервисы (ленивая инициализация)
 _services_initialized = False
 search_service = None

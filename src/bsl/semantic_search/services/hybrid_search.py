@@ -244,3 +244,30 @@ class BSLHybridPipeline:
             r.score *= boost
 
         return results
+
+
+def create_pipeline(
+    sqlite_db=None,
+    qdrant_client=None,
+    embedder=None,
+    call_graph=None,
+    collection: str = "bsl_code_v3",
+    dual_vector: bool = False,
+):
+    """Factory: create BSLHybridPipeline or DualVectorPipeline based on collection type."""
+    if dual_vector or collection.endswith("v4"):
+        from .dual_vector_search import DualVectorPipeline
+        return DualVectorPipeline(
+            sqlite_db=sqlite_db,
+            qdrant_client=qdrant_client,
+            embedder=embedder,
+            call_graph=call_graph,
+            qdrant_collection=collection,
+        )
+    return BSLHybridPipeline(
+        sqlite_db=sqlite_db,
+        qdrant_client=qdrant_client,
+        embedder=embedder,
+        call_graph=call_graph,
+        qdrant_collection=collection,
+    )
