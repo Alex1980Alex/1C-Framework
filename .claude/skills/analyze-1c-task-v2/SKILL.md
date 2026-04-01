@@ -224,3 +224,50 @@ scripts\ralph.bat --template 1c-analysis --task docs/tasks/GKSTCPLK-1234.md
 - Iterations: 4
 - Session: data/analyze-1c-research/GKSTCPLK-1234/
 ```
+
+## Интеграция с SDD (Spec Driven Development)
+
+После завершения анализа ANALYSIS-REPORT используется как входные данные для OpenSpec workflow.
+
+### Маршрутизация: анализ → OpenSpec
+
+```
+/analyze-1c-task-v2 (этот скилл)
+  │ Генерирует ANALYSIS-REPORT.md с [ADDED]/[MODIFIED] маркерами
+  ▼
+/opsx:propose <task-id>
+  │ Создаёт OpenSpec change из ANALYSIS-REPORT:
+  │   proposal.md  ← из секций 1, 9
+  │   specs/*.md   ← из секций 2, 7 (delta-specs с ADDED/MODIFIED)
+  │   design.md    ← из секций 3, 4
+  │   tasks.md     ← из секции 4 (точки модификации)
+  ▼
+/opsx:approve <change>
+  │ Ревью + одобрение спецификации
+  ▼
+/opsx:apply <change>
+  │ Реализация по tasks.md
+  ▼
+brownfield-validate <change>
+  │ Gap + Design + Impl валидация
+  ▼
+/opsx:archive <change>
+```
+
+### Правило: когда использовать SDD, а когда прямой implement
+
+| Сложность задачи | Маршрут | Критерий |
+|-------------------|---------|----------|
+| Тривиальная (1 файл, 1 условие) | analyze → implement-1c-task | Нет новых объектов метаданных |
+| Средняя/Сложная (2+ файла, бизнес-логика) | analyze → /opsx:propose → approve → apply | Есть ADDED объекты или 3+ MODIFIED |
+
+### Секция 11 в ANALYSIS-REPORT
+
+В конце отчёта ОБЯЗАТЕЛЬНО указать рекомендуемый маршрут:
+
+```markdown
+## 11. Следующие шаги (SDD)
+- **Сложность:** средняя (2 модуля, 1 MODIFIED объект)
+- **Маршрут:** /opsx:propose gkstcplk-XXXX-<краткое-описание>
+- **Или:** implement-1c-task (если задача тривиальная)
+```
