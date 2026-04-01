@@ -8,11 +8,11 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "tree-sitter": "^0.22.0",
-    "glob": "^11.0.0"
+    "glob": "^11.0.0",
+    "tree-sitter": "^0.25.0"
   },
   "optionalDependencies": {
-    "tree-sitter-bsl": "^1.0.0"
+    "tree-sitter-bsl": "^0.1.6"
   },
   "engines": {
     "node": ">=18.0.0"
