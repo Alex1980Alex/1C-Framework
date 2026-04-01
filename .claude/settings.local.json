@@ -462,7 +462,8 @@
       "Bash(\"C:/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" help infobase)",
       "mcp__1c-mcp-toolkit__get_access_rights",
       "Bash(mkdir -p archive)",
-      "Bash(mv \"GKSTCPLK-2256-ANALYSIS-REPORT.md\" \"GKSTCPLK-2256-BASELINE-PROD.md\" \"GKSTCPLK-2256-BASELINE-REPORT.md\" \"GKSTCPLK-2256-INTERIM-REPORT.md\" \"GKSTCPLK-2256-SUMMARY.md\" \"analysis-report.md\" \"IMPLEMENTATION-PROGRESS.md\" archive/)"
+      "Bash(mv \"GKSTCPLK-2256-ANALYSIS-REPORT.md\" \"GKSTCPLK-2256-BASELINE-PROD.md\" \"GKSTCPLK-2256-BASELINE-REPORT.md\" \"GKSTCPLK-2256-INTERIM-REPORT.md\" \"GKSTCPLK-2256-SUMMARY.md\" \"analysis-report.md\" \"IMPLEMENTATION-PROGRESS.md\" archive/)",
+      "mcp__1c-mcp-toolkit__submit_for_deanonymization"
     ]
   },
   "enableAllProjectMcpServers": true,
