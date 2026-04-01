@@ -21,7 +21,7 @@
 | **11** | **Активация OAuth2** | **1/5 DONE** (guide), 4 BLOCKED (MCP server) | **P3** | 1 день | vladimir-kharin/1c_mcp |
 | **12** | **Расширение MCP Dashboard** | **4/5 DONE** (скрипт+dashboard+metrics+alerts), Streamlit deferred | **P3** | 2 дня | Внутренняя потребность |
 
-**Итого:** 8 фаз | **DONE:** 42/50 шагов (84%) | **BLOCKED:** 5 (инфраструктура) | **DEFERRED:** 3 | **Дата:** 2026-04-01
+**Итого:** 8 фаз | **DONE:** 44/50 шагов (88%) | **BLOCKED:** 3 (инфраструктура) | **PARTIAL:** 1 | **DEFERRED:** 2 | **Дата:** 2026-04-01
 
 ---
 
