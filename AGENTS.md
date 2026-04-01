@@ -115,6 +115,7 @@ Full protocol: `Skill('z-ai-delegation')`. Hooks: `z-ai-delegation-enforcer.py` 
   docs-change-tracker.py    # PreToolUse:Write|Edit: maps code changes to docs (migrated from PostToolUse)
   factory-enforcer.py       # PreToolUse:Write: factory steps enforcement for .claude/ files (migrated from PostToolUse)
   bulk-action-guard.py      # PreToolUse:Bash: detects destructive commands BEFORE execution (migrated from PostToolUse, now proactive)
+  approval-gate.py          # PreToolUse:Skill: blocks implement-1c-task/opsx:apply without approved design (SDD Phase 3)
   skill-usage-metrics.py    # PreToolUse:Skill: logs skill invocations (migrated from PostToolUse)
   posttooluse-skill-metrics.py # PostToolUse:Skill: confirmed activation logging + hookSpecificOutput feedback
   posttooluse-web-cache.py  # PostToolUse:WebSearch|WebFetch: cache results 24h TTL
@@ -161,7 +162,11 @@ Migration: `scripts/skill-migration-advisor.py` (pattern coverage analysis).
 
 - Спецификации: `openspec/specs/`
 - Активные изменения: `openspec/changes/`
-- Команды: `/opsx:explore`, `/opsx:propose`, `/opsx:apply`, `/opsx:archive`
-- Workflow: Explore → Propose → [Approve] → Apply → Archive
+- Команды: `/opsx:explore`, `/opsx:propose`, `/opsx:approve`, `/opsx:apply`, `/opsx:archive`
+- Workflow: Explore → Propose → **Approve** → Apply → Archive
+- **Approval Gate**: hook `approval-gate.py` блокирует `implement-1c-task` и `opsx:apply` без `approved` в `.openspec.yaml`
+- Одобрение: `/opsx:approve <change>` (ревью + approve) или `--reject --comment "причина"`
+- Статус в `openspec/changes/<name>/.openspec.yaml` → `approval.status: pending|approved|rejected`
+- MCP: `openspec-mcp` v0.4.2 (дашборд, approval workflow, WebSocket)
 - Спецификация — единственный источник правды. Правь спеку, а не код.
 - Не создавать новых объектов метаданных без явного указания в specs.
