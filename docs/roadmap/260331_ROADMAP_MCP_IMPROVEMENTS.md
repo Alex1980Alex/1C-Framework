@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|
 | 1-3.5 | Базовая интеграция (ROCTUP + EDT-MCP + 1c_mcp + RRF метаданные) | Завершено | - | - | - |
 | 4 | Vanessa Automation + YaXUnit | Частично | - | - | - |
-| **5** | **Обновление 1c-mcp-toolkit до v1.5.0** | **3/8 DONE** (5.3+5.4+5.6), 4 BLOCKED (.epf) | **P0** | 1 день | ROCTUP/1c-mcp-toolkit |
+| **5** | **Обновление 1c-mcp-toolkit до v1.5.0** | **8/8 DONE** ✅ | **P0** | 1 день | ROCTUP/1c-mcp-toolkit |
 | **6** | **tree-sitter-bsl: структурный поиск BSL** | **7/8 DONE** (npm installed, сервер протестирован на реальных BSL) | **P1** | 3 дня | hawkxtreme/mini-ai-1c |
 | **7** | **MCP Resources и Prompts** | **6/6 DONE** (import verified) | **P1** | 2 дня | vladimir-kharin/1c_mcp |
 | **8** | **Глубокая интеграция METR** | **4/7 DONE** (YAML+skill+source-set+dump), 3 BLOCKED (1C) | **P1** | 2 дня | alkoleft/mcp-onec-test-runner |
