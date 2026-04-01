@@ -360,13 +360,9 @@
 
 Все 8 шагов выполнены. Встроенный NativeAPI HTTP-сервер (без Docker). TOON-формат. Анонимизация (779 правил). 9 инструментов. `.epf`: `tools/1c-mcp-toolkit/MCP_Toolkit_v1.5.0.epf`.
 
-### Фаза 6: bsl-code-search (1 PARTIAL)
+### Фаза 6: bsl-code-search — ✅ COMPLETE (2026-04-01)
 
-| Шаг | Описание | Текущее состояние | Как завершить |
-|-----|----------|-------------------|---------------|
-| 6.1 | Подключить tree-sitter-bsl вместо regex | Regex fallback работает, tree-sitter — optional dep | `npm install tree-sitter-bsl` (может потребоваться C++ компилятор на Windows) |
-
-**Выполнены:** 6.2-6.8 (сервер создан, npm installed, протестирован на реальных BSL, зарегистрирован в .mcp.json)
+Все 8 шагов выполнены. tree-sitter-bsl@0.1.6 установлен (+ tree-sitter@0.25.0). AST парсинг BSL работает (procedure_definition, function_definition). Сервер: `tools/bsl-code-search/`. Индексация: 11/2027 файлов (остальные — пустые/без процедур).
 
 ### Фаза 8: METR интеграция (3 BLOCKED)
 
