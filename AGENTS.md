@@ -170,6 +170,7 @@ Migration: `scripts/skill-migration-advisor.py` (pattern coverage analysis).
 - MCP: `openspec-mcp` v0.4.2 (дашборд, approval workflow, WebSocket)
 - Спецификация — единственный источник правды. Правь спеку, а не код.
 - Не создавать новых объектов метаданных без явного указания в specs.
+- **Валидация**: после `/opsx:apply` запустить `brownfield-validate` (Gap + Design + Impl validators)
 - **Delta-specs (brownfield)**: каждый requirement ОБЯЗАН начинаться с `## ADDED` или `## MODIFIED`
   - `ADDED` — объект НЕ существует в конфигурации (проверить через `get_metadata`)
   - `MODIFIED` — объект существует, описывать только дельту (что/было/стало)
