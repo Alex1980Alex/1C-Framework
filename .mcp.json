@@ -175,7 +175,7 @@
     },
     "lazy-mcp": {
       "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["infra/lazy-mcp/src/server.py"],
+      "args": ["src/server.py"],
       "cwd": "D:\\1С-Framework\\infra\\lazy-mcp",
       "env": {
         "PYTHONIOENCODING": "utf-8",
