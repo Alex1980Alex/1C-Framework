@@ -181,7 +181,7 @@
         "PYTHONIOENCODING": "utf-8",
         "LAZY_MCP_CONFIG": "D:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
       },
-      "timeout": 30000
+      "timeout": 60000
     }
   }
 }
