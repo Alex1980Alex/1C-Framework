@@ -1,10 +1,11 @@
 ---
 name: learning-loop
 description: >
-  Self-learning pipeline: SEARCH existing skills, FETCH knowledge from trusted sources,
-  EXECUTE task with attribution, VERIFY against knowledge, CREATE new skill.
-  Use when code-skill-enforcer blocks with "no dedicated skill exists" or when
-  Claude needs to learn a new technology/library before implementing.
+  Use proactively when Claude encounters any unfamiliar library, technology, or API
+  not covered by existing skills. Self-learning pipeline: SEARCH existing skills,
+  FETCH knowledge from trusted sources, EXECUTE task with attribution, VERIFY against
+  knowledge, CREATE new skill. Triggers: code-skill-enforcer block, unknown import,
+  new library, unfamiliar API, no dedicated skill exists.
 tools:
   - Read
   - Write
