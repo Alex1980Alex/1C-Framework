@@ -79,6 +79,18 @@
       "last_verified": "2026-02-25",
       "sources_count": 0,
       "github_repos_count": 0
+    },
+    {
+      "file": "subagent-nesting-constraints.md",
+      "title": "Subagent Nesting Constraints — Claude Code Platform Limits",
+      "keywords": [
+        "subagent", "nesting", "sub-subagent", "Task-tool", "Agent-tool",
+        "hub-and-spoke", "depth-limit", "agent-teams", "teammates",
+        "spawn", "inline-verify", "learning-loop", "orchestration"
+      ],
+      "last_verified": "2026-04-02",
+      "sources_count": 6,
+      "github_repos_count": 0
     }
   ]
 }
