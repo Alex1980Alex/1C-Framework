@@ -243,7 +243,9 @@
       "skills": [
         "architecture-research"
       ],
-      "optional": [],
+      "optional": [
+        "framework-patterns"
+      ],
       "weighted_keywords": {
         "архитектура": 2,
         "best practice": 2,
