@@ -69,6 +69,8 @@ src/
 - **MCP серверы**: bsl-semantic-search, bsl-platform-context, auto-documenter, bsl-debugger, ast-grep-mcp, bsl-semantic-diff
 - **Memory**: `src/memory/` (ai_memory, vector_memory, skill_learning, orchestrator)
 - **LLM Rotation**: `src/shared/llm_rotation/` (5 провайдеров, fallback)
+- **Субагенты**: `.claude/agents/` (learning-loop — 5-phase self-learning pipeline, monitor)
+- **Паттерны**: `docs/architecture/PATTERNS.md` (15 arch + 13 automation), skill `framework-patterns`
 - **Профили**: `.mcp/pdf.json`, `.mcp/bsl.json`, `.mcp/full.json`, `.mcp/lazy-mcp.json`
 - **Lazy MCP**: `infra/lazy-mcp/` (proxy, 11 категорий, 27 on-demand серверов)
 - **Qdrant коллекции**: `bsl_code_v2` (768d nomic), `ai_memory` (768d), `learned_patterns` (768d)
