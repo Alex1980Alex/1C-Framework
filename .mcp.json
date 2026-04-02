@@ -172,6 +172,16 @@
       "args": ["-y", "openspec-mcp@0.4.2", "--project-dir", "D:/1С-Framework"],
       "cwd": "D:\\1С-Framework",
       "timeout": 60000
+    },
+    "lazy-mcp": {
+      "command": "D:\\1С-Framework\\infra\\lazy-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["src/server.py"],
+      "cwd": "D:\\1С-Framework\\infra\\lazy-mcp",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "LAZY_MCP_CONFIG": "D:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
+      },
+      "timeout": 30000
     }
   }
 }
