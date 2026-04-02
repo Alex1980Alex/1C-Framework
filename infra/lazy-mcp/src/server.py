@@ -2,9 +2,10 @@
 Lazy-MCP Server - Main Entry Point
 
 MCP сервер с динамической загрузкой инструментов.
-Экспонирует только 2 meta-инструмента для Claude:
-1. get_tools_in_category - навигация по категориям
-2. execute_tool - выполнение инструментов
+Экспонирует 3 meta-инструмента для Claude:
+1. recommend_tools - умная рекомендация инструментов
+2. get_tools_in_category - навигация по категориям
+3. execute_tool - выполнение инструментов
 """
 
 import asyncio
@@ -15,20 +16,22 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
+# Windows: force SelectorEventLoop (ProactorEventLoop can cause issues with anyio stdio)
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent))
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.server.fastmcp import FastMCP
 
 from registry import Registry
 from loader import ServerLoader
 from tool_interceptor import get_interceptor, intercept_tool_call, ToolCategory
 
-# Настройка логирования
+# Настройка логирования — ТОЛЬКО stderr, никогда stdout (MCP protocol)
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler(sys.stderr)]
 )
@@ -37,12 +40,39 @@ logger = logging.getLogger("lazy-mcp")
 # Глобальные объекты
 registry: Registry = None
 loader: ServerLoader = None
-server = Server("lazy-mcp")
+
+# FastMCP сервер
+mcp_app = FastMCP("lazy-mcp")
 
 
 def log_stderr(message: str) -> None:
     """Логирование в stderr для отладки"""
     print(message, file=sys.stderr)
+
+
+def safe_serialize(obj: Any) -> Any:
+    """Рекурсивно конвертирует объекты в JSON-сериализуемые типы."""
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", errors="replace")
+    if isinstance(obj, dict):
+        return {str(k): safe_serialize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [safe_serialize(i) for i in obj]
+    # dataclass-like objects (ZaiResponse, InterceptResult, etc.)
+    if hasattr(obj, '__dataclass_fields__'):
+        return safe_serialize({k: getattr(obj, k) for k in obj.__dataclass_fields__})
+    if hasattr(obj, '__dict__'):
+        return safe_serialize(vars(obj))
+    return str(obj)
+
+
+def safe_json_dumps(obj: Any, **kwargs) -> str:
+    """json.dumps с безопасной сериализацией произвольных объектов."""
+    return json.dumps(safe_serialize(obj), **kwargs)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -121,151 +151,50 @@ def recommend_categories(task_description: str) -> list[dict]:
     return recommendations
 
 
-@server.list_tools()
-async def list_tools() -> list[Tool]:
+@mcp_app.tool()
+async def recommend_tools(task_description: str) -> str:
+    """Smart tool recommendation. Analyzes task and recommends category/server/tool.
+
+    Categories: 1c-development (BSL), documentation, memory, code-analysis,
+    file-operations, reasoning, web, utils.
+
+    Example: recommend_tools("найди процедуры в BSL") -> /1c-development/ast-grep-mcp
     """
-    Возвращает 3 meta-инструмента.
-    Это ключ к экономии токенов + автоматический выбор!
-    """
-    return [
-        Tool(
-            name="recommend_tools",
-            description="""🎯 SMART TOOL RECOMMENDATION - Use this FIRST to automatically find the right tools!
-
-Analyzes your task description and recommends the best category/server/tool path.
-
-WHEN TO USE:
-- You have a task but don't know which tool to use
-- You want automatic routing to the right MCP server
-- Before manually navigating with get_tools_in_category
-
-TASK ROUTING MAP:
-┌─────────────────┬──────────────────────────────────────────────────────────┐
-│ CATEGORY        │ USE FOR TASKS                                            │
-├─────────────────┼──────────────────────────────────────────────────────────┤
-│ 1c-development  │ BSL код, процедуры, функции, API платформы 1С           │
-│ documentation   │ Поиск документации, генерация docs, правила              │
-│ memory          │ Сохранить/вспомнить контекст, история сессий             │
-│ code-analysis   │ Python/JS/TS символы, LSP, рефакторинг                   │
-│ file-operations │ Поиск файлов, grep, чтение/запись                        │
-│ reasoning       │ Сложные задачи, пошаговый анализ, think step-by-step    │
-│ web             │ Веб-поиск, HTTP, браузерная автоматизация                │
-│ utils           │ ZIP архивы, конвертация документов                       │
-└─────────────────┴──────────────────────────────────────────────────────────┘
-
-Example:
-- recommend_tools("найди все процедуры в BSL файле")
-  → {"recommended": "/1c-development/ast-grep-mcp", "tool": "ast_grep"}""",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "task_description": {
-                        "type": "string",
-                        "description": "Describe what you want to do (in any language)"
-                    }
-                },
-                "required": ["task_description"]
-            }
-        ),
-        Tool(
-            name="get_tools_in_category",
-            description="""📂 Navigate tool categories - use after recommend_tools or when you know the category.
-
-Path structure:
-- "/" → All categories with descriptions
-- "/category" → Servers in category
-- "/category/server" → Tool list with inputSchema
-
-QUICK REFERENCE:
-/1c-development     → ast-grep-mcp, bsl-platform-context, bsl-semantic-search
-/documentation      → 1c-docs-rag, auto-documenter
-/memory             → unified-memory, memory-ai, conversation-memory
-/code-analysis      → serena (LSP)
-/file-operations    → ripgrep, filesystem
-/reasoning          → sequential-thinking, code-reasoning
-/web                → brave, fetch, puppeteer (docker-mcp)
-/utils              → zip, markitdown, docling""",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "path": {
-                        "type": "string",
-                        "description": "Category path: '/', '/category', or '/category/server'",
-                        "default": "/"
-                    }
-                },
-                "required": []
-            }
-        ),
-        Tool(
-            name="execute_tool",
-            description="""⚡ Execute any tool dynamically - servers load on-demand.
-
-Path format: /category/server/tool_name
-
-COMMON PATTERNS:
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ BSL Analysis:                                                               │
-│   /1c-development/ast-grep-mcp/ast_grep                                    │
-│   {"pattern": "Процедура $NAME($$$PARAMS)", "language": "bsl"}             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Documentation Search:                                                       │
-│   /documentation/1c-docs-rag/search_docs                                   │
-│   {"query": "правила документирования BSL"}                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Memory Operations:                                                          │
-│   /memory/unified-memory/search_memory                                     │
-│   {"query": "последняя задача"}                                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ File Search:                                                                │
-│   /file-operations/ripgrep/search                                          │
-│   {"pattern": "TODO", "path": "."}                                          │
-└─────────────────────────────────────────────────────────────────────────────┘""",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "tool_path": {
-                        "type": "string",
-                        "description": "Full path: /category/server/tool_name"
-                    },
-                    "arguments": {
-                        "type": "object",
-                        "description": "Tool arguments (check get_tools_in_category for schema)",
-                        "default": {}
-                    }
-                },
-                "required": ["tool_path"]
-            }
-        )
-    ]
-
-
-@server.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Обработчик вызовов инструментов"""
-    log_stderr(f"[lazy-mcp] Tool call: {name} with args: {arguments}")
-
     try:
-        if name == "recommend_tools":
-            result = await handle_recommend_tools(arguments)
-        elif name == "get_tools_in_category":
-            result = await handle_get_tools(arguments)
-        elif name == "execute_tool":
-            result = await handle_execute_tool(arguments)
-        else:
-            result = {"error": f"Unknown tool: {name}"}
-
-        return [TextContent(
-            type="text",
-            text=json.dumps(result, ensure_ascii=False, indent=2)
-        )]
-
+        result = await handle_recommend_tools({"task_description": task_description})
+        return json.dumps(result, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"Error in {name}: {e}", exc_info=True)
-        return [TextContent(
-            type="text",
-            text=json.dumps({"error": str(e)}, ensure_ascii=False)
-        )]
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp_app.tool()
+async def get_tools_in_category(path: str = "/") -> str:
+    """Navigate tool categories. Path: "/" -> categories, "/cat" -> servers, "/cat/srv" -> tools.
+
+    /1c-development, /documentation, /memory, /code-analysis,
+    /file-operations, /reasoning, /web, /utils
+    """
+    try:
+        result = await handle_get_tools({"path": path})
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp_app.tool()
+async def execute_tool(tool_path: str, arguments: dict | None = None) -> str:
+    """Execute any tool dynamically. Path: /category/server/tool_name.
+
+    Example: execute_tool("/1c-development/ast-grep-mcp/ast_grep", {"pattern": "...", "language": "bsl"})
+    """
+    try:
+        result = await handle_execute_tool({
+            "tool_path": tool_path,
+            "arguments": arguments or {}
+        })
+        return safe_json_dumps(result, ensure_ascii=False, indent=2) if isinstance(result, dict) else str(result)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
 async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
@@ -616,8 +545,8 @@ async def handle_execute_tool(arguments: dict) -> Any:
     return result
 
 
-async def main():
-    """Точка входа"""
+def setup():
+    """Синхронная инициализация перед запуском MCP"""
     global registry, loader
 
     log_stderr("[lazy-mcp] Starting Lazy-MCP Server...")
@@ -644,14 +573,6 @@ async def main():
 
     log_stderr(f"[lazy-mcp] Loaded {len(registry.servers)} servers in {len(registry.categories)} categories")
     log_stderr("[lazy-mcp] Ready. Exposing 3 meta-tools: recommend_tools, get_tools_in_category, execute_tool")
-
-    # Запуск сервера
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            server.create_initialization_options()
-        )
 
 
 def create_default_config(path: Path) -> None:
@@ -730,4 +651,5 @@ categories:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    setup()
+    mcp_app.run(transport="stdio")
