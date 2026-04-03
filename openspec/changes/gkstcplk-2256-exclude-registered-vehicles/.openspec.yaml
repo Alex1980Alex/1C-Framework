@@ -1,7 +1,7 @@
 schema: spec-driven
 created: 2026-04-01
 approval:
-  status: pending
-  reviewed_by: null
-  reviewed_at: null
+  status: approved
+  reviewed_by: human
+  reviewed_at: 2026-04-03T20:15:00
   comment: null
