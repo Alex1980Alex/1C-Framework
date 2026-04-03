@@ -91,6 +91,24 @@
       "last_verified": "2026-04-02",
       "sources_count": 6,
       "github_repos_count": 0
+    },
+    {
+      "file": "ai-agent-memory-systems-2026.md",
+      "title": "AI Agent Memory Systems — Open-Source Landscape (April 2026)",
+      "keywords": [
+        "memory", "agent-memory", "mem0", "letta", "memgpt", "cognee",
+        "graphiti", "zep", "memos", "memori", "memobase", "langmem",
+        "hermes-agent", "engram", "openmemory", "opencrabs", "clawmem",
+        "knowledge-graph", "temporal-graph", "vector-memory", "episodic",
+        "semantic-memory", "procedural-memory", "confidence-decay",
+        "self-improving", "MCP-memory", "memory-server", "MemCube",
+        "ECL-pipeline", "RFI-scoring", "activation-decay", "hybrid-search",
+        "RRF", "long-term-memory", "session-memory", "agent-persistence",
+        "locomo-benchmark", "memory-architecture", "memory-layer"
+      ],
+      "last_verified": "2026-04-03",
+      "sources_count": 30,
+      "github_repos_count": 17
     }
   ]
 }
