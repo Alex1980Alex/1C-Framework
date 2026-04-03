@@ -440,29 +440,44 @@ P0 (Orchestrator Core)
 
 ### По завершении P0-P2 (Core):
 
-| Метрика | Текущее | Целевое |
-|---------|---------|---------|
-| MCP Tools | 18 | 28-32 |
-| Тесты | 26 | 60+ |
-| Federated search | Stub | Рабочая реализация |
-| Маршрутизация контента | Нет | route_and_save по типу |
-| Confidence propagation | Нет | BFS с time/distance decay |
-| Audit trail | Нет | Полный лог действий |
-| Circuit breaker | Нет | Защита от cascading failures |
-| Hybrid search | Нет | Semantic + FTS5 fusion |
-| Pattern merge | Нет | Слияние дубликатов |
-| Versioning + rollback | Нет | Undo/redo для записей |
+| Метрика | Текущее | Целевое | Benchmark (GitHub) |
+|---------|---------|---------|-------------------|
+| MCP Tools | 18 | 28-32 | — |
+| Тесты | 26 | 60+ | — |
+| Federated search | Stub | Hybrid RRF (reuse pdf_framework) | OpenCrabs: FTS5+vector RRF |
+| Scoring | Linear decay | RFI (Recency x Frequency x Importance) | OpenMemory: RFI composite |
+| Маршрутизация | Нет | Auto-classify + route_and_save | Memori: middleware interceptor |
+| Confidence propagation | Нет | BFS + temporal invalidation | Graphiti: valid_from/valid_to |
+| Audit trail | Нет | Полный лог действий | — |
+| Circuit breaker | Нет | Reuse из llm_rotation | — |
+| Hybrid search | Нет | 4-signal (BM25+vector+graph+rerank) | ClawMem: multi-signal |
+| Pattern merge | Нет | Слияние дубликатов | — |
+| Versioning + rollback | Нет | Undo/redo для записей | — |
+| Memory abstraction | 3 раздельных store | MemoryCube unified dataclass | MemOS: MemCube |
+| Self-improving graph | Нет | memify (prune stale + strengthen) | Cognee: ECL+memify |
+| Structured save | Нет | what/why/where/learned формат | Engram: observations |
 
 ### По завершении P3-P4 (Full):
 
-| Метрика | Целевое |
-|---------|---------|
-| MCP Tools | 35-40 |
-| Тесты | 80+ |
-| Event Bus | Внутрипроцессный pub/sub |
-| Surprise detection | Anomaly scoring |
-| Cache warmup | Предзагрузка из SQLite |
-| Docs RAG adapter | SQLite + Qdrant integration |
+| Метрика | Целевое | Benchmark (GitHub) |
+|---------|---------|-------------------|
+| MCP Tools | 35-40 | — |
+| Тесты | 80+ | — |
+| Event Bus | Внутрипроцессный pub/sub | — |
+| Surprise detection | Anomaly scoring | — |
+| Cache warmup | Предзагрузка из SQLite | — |
+| Docs RAG adapter | SQLite + Qdrant integration | — |
+| Prompt optimization | Memory improves agent prompts | LangMem: prompt optimizers |
+| Two-tier memory | Core (hot) + Archival (cold) | Letta: core+archival |
+
+### Целевые бенчмарки (LoCoMo dataset):
+
+| System | Accuracy | Tokens/Query | Наш ориентир |
+|--------|----------|-------------|-------------|
+| Memori | 81.95% | 1,294 | Минимум 75% accuracy |
+| Mem0 | Top tier | N/A | Референс по архитектуре |
+| MemOS | +43.7% vs OpenAI | N/A | Паттерн MemCube |
+| Наша цель (P2) | >75% | <2,000 | RFI + Hybrid RRF + Reranking |
 
 ---
 
