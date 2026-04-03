@@ -2213,3 +2213,8 @@ Args: ['D:\\1C-Enterprise_Framework\\ast-grep-mcp\\main.py']
 Python: 3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]
 CWD: D:\1C-Enterprise_Framework
 Args: ['D:\\1C-Enterprise_Framework\\ast-grep-mcp\\main.py']
+
+=== MCP Server Started: 2026-04-03 00:29:24.819163 ===
+Python: 3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]
+CWD: D:\1С-Framework
+Args: ['D:/1С-Framework/tools/ast-grep-mcp/main.py']
