@@ -484,7 +484,8 @@
       "Bash(PYTHONIOENCODING=utf-8 PYTHONUNBUFFERED=1 LAZY_MCP_CONFIG=\"D:/1С-Framework/infra/lazy-mcp/config/registry.yaml\" timeout 10 \"D:/1С-Framework/.venv/Scripts/python.exe\" -u src/server.py)",
       "Bash(D:/1С-Framework/.venv/Scripts/pip.exe show:*)",
       "mcp__lazy-mcp__get_tools_in_category",
-      "mcp__lazy-mcp__execute_tool"
+      "mcp__lazy-mcp__execute_tool",
+      "mcp__edt-mcp__add_metadata_attribute"
     ]
   },
   "enableAllProjectMcpServers": true,
