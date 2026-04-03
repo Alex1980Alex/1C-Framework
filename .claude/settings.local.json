@@ -485,7 +485,8 @@
       "Bash(D:/1С-Framework/.venv/Scripts/pip.exe show:*)",
       "mcp__lazy-mcp__get_tools_in_category",
       "mcp__lazy-mcp__execute_tool",
-      "mcp__edt-mcp__add_metadata_attribute"
+      "mcp__edt-mcp__add_metadata_attribute",
+      "mcp__edt-mcp__get_metadata_objects"
     ]
   },
   "enableAllProjectMcpServers": true,
