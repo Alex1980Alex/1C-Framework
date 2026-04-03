@@ -111,6 +111,13 @@ D:\1С-Framework\src\memory\
 **Оценка:** 40-50 часов
 **Цель:** Восстановить ядро оркестрации — маршрутизацию и координацию между тремя MCP-серверами.
 
+**GitHub-паттерны для P0:**
+- **MemCube abstraction** (MemOS) — единый dataclass-контейнер для всех подсистем
+- **Auto-classify memory type** (Memori) — middleware interceptor в memory_router
+- **Hybrid RRF search** (OpenCrabs) — переиспользовать `HybridSearchStrategy` из pdf_framework
+
+**Переиспользование:** HybridSearchStrategy (-8ч), QdrantVectorStore (-3ч), Pydantic Settings (-2ч)
+
 #### Таблица миграции P0
 
 | Файл источника | Файл цели | Изменения | Оценка (ч) |
