@@ -226,6 +226,13 @@ D:\1С-Framework\src\memory\
 **Оценка:** 40-50 часов
 **Цель:** Восстановить гибридный поиск, versioning, TTL, forgetgate, metrics.
 
+**GitHub-паттерны для P2:**
+- **ECL+memify** (Cognee) — self-improving graph: prune stale links, strengthen frequent edges
+- **Two-tier memory** (Letta/MemGPT) — core (hot) + archival (cold) separation
+- **Multi-signal retrieval** (ClawMem) — BM25+vector+graph+rerank через RRF
+
+**Переиспользование:** BM25Store (-3ч), SemanticSearchCache (-4ч), Rerankers (-5ч), EvalMetrics (-3ч), FrameworkLogger (-1ч)
+
 #### Таблица миграции P2
 
 | Файл источника | Файл цели | Изменения | Оценка (ч) |
