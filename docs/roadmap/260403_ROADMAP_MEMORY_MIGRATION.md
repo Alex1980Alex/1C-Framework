@@ -171,6 +171,13 @@ D:\1С-Framework\src\memory\
 **Оценка:** 35-45 часов
 **Цель:** Восстановить граф-пропагацию confidence и базовые сервисы (circuit breaker, audit).
 
+**GitHub-паттерны для P1:**
+- **RFI scoring** (OpenMemory) — заменить linear decay на Recency x Frequency x Importance
+- **Temporal fact invalidation** (Graphiti) — valid_from/valid_to в LearnedPattern
+- **Structured observations** (Engram) — what/why/where/learned формат для save
+
+**Переиспользование:** CircuitBreaker (-4ч), BackoffStrategy (-2ч), NetworkXStore (-6ч)
+
 #### Таблица миграции P1
 
 | Файл источника | Файл цели | Изменения | Оценка (ч) |
