@@ -1,0 +1,4 @@
+[lazy-mcp] Starting Lazy-MCP Server...
+[lazy-mcp] Using default config: D:\1Ñ-Framework\infra\lazy-mcp\config\registry.yaml
+[lazy-mcp] Loaded 24 servers in 9 categories
+[lazy-mcp] Ready. Exposing 3 meta-tools: recommend_tools, get_tools_in_category, execute_tool
