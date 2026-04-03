@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03
+**Дата:** 2026-04-03 (обновлено 2026-04-04 — GitHub research + infrastructure reuse)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** ПЛАНИРОВАНИЕ
+**Статус:** ПЛАНИРОВАНИЕ (v2 — с учётом best practices и переиспользования)
 
 ---
 
