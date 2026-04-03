@@ -445,7 +445,90 @@ P0 (Orchestrator Core)
 
 ---
 
-## 8. Связанные документы
+## 8. GitHub Best Practices: ТОП-17 проектов (референсы)
+
+| # | Проект (owner/repo) | Stars | Категория | Ключевые паттерны для нас |
+|---|---|---|---|---|
+| 1 | mem0ai/mem0 | ~51,500 | Universal Memory | hybrid triple-store (vector+KV+graph), auto fact extraction, 26% выше accuracy vs OpenAI Memory |
+| 2 | MemoriLabs/Memori | ~12,400 | SQL-native Memory | middleware interceptor, auto-classify turns (facts/preferences/rules), confidence decay, 82% accuracy LoCoMo |
+| 3 | memodb-io/memobase | active | Profile Memory | profile-centric (не conversation), event timelines, batch buffer, <100ms |
+| 4 | letta-ai/letta (MemGPT) | very high | Stateful Agent | two-tier memory (core+archival), self-editing memory, agent serialization |
+| 5 | NousResearch/hermes-agent | ~8,700 | Learning Agent | auto skill creation, MEMORY.md+USER.md, FTS SQLite |
+| 6 | topoteretes/cognee | ~12,000 | Knowledge Graph | ECL pipeline, memify (prune stale, strengthen frequent), 14 retrieval modes |
+| 7 | getzep/graphiti | notable | Temporal KG | valid_from/valid_to, hybrid retrieval, incremental graph updates |
+| 8 | getzep/zep | notable | Context Engine | relationship-aware retrieval, sub-200ms latency |
+| 9 | MemTensor/MemOS | ~7,300 | Memory OS | MemCube abstraction, 3 memory types, +43.7% vs OpenAI Memory |
+| 10 | modelcontextprotocol/servers/memory | MCP official | MCP Memory | knowledge graph via MCP, JSONL persistence |
+| 11 | Gentleman-Programming/engram | active | MCP Memory | SQLite+FTS5, Go binary, deferred tools, git sync |
+| 12 | edg-l/engram-mcp | active | MCP Memory | confidence decay, dedup, relationship graphs, ONNX embeddings |
+| 13 | adolfousier/opencrabs | active | Self-improving | daily log compaction, FTS5+vector RRF, curated MEMORY.md |
+| 14 | CaviraOSS/OpenMemory | ~3,100 | Multi-sector | 5 секторов памяти, RFI scoring (Recency x Frequency x Importance), sparse graph |
+| 15 | langchain-ai/langmem | active | LangChain Memory | memory managers, prompt optimization from memory |
+| 16 | coolmanns/openclaw-memory-architecture | active | Reference Arch | 12 memory layers, activation/decay с 30d half-life |
+| 17 | yoloshii/ClawMem | active | Multi-signal | BM25+vector+RRF+cross-encoder, composite scoring, self-evolving notes |
+
+---
+
+## 9. ТОП-10 архитектурных паттернов для адаптации
+
+| # | Паттерн | Источник (проект) | Текущий GAP | Рекомендация для нашей системы | Фаза |
+|---|---|---|---|---|---|
+| 1 | RFI scoring (Recency x Frequency x Importance) | OpenMemory | Наш linear decay примитивен | Заменить exponential decay на RFI composite score в vector-memory | P1 |
+| 2 | Temporal fact invalidation (valid_from/valid_to) | Graphiti | Нет validity windows | Добавить `valid_from`/`valid_to` в LearnedPattern model + auto-invalidation | P1 |
+| 3 | MemCube abstraction (content+metadata, composable) | MemOS | 3 раздельных store без единого объекта | Создать `MemoryCube` dataclass — единый контейнер для всех подсистем | P0 |
+| 4 | ECL+memify (self-improving graph) | Cognee | Граф статичен — связи не усиливаются | Добавить prune stale links + strengthen frequently-traversed edges | P2 |
+| 5 | Hybrid RRF search (reuse) | OpenCrabs, ClawMem | Есть в pdf_framework, **отсутствует** в memory | Переиспользовать `HybridSearchStrategy` из `search/` | P0 |
+| 6 | Structured observations (what/why/learned) | Engram | Save неструктурирован | title/type/content + what/why/where/learned формат в skill-learning | P1 |
+| 7 | Prompt optimization from memory | LangMem | Уникальная фича, нет аналога | Experimental: память улучшает промпты агента | P4 |
+| 8 | Auto-classify memory type | Memori | Нет автоклассификации | Middleware interceptor в memory_router: auto-detect fact/preference/rule/skill | P0 |
+| 9 | Two-tier memory (core+archival) | Letta/MemGPT | Flat memory без приоритизации | Core (hot, in-memory) + Archival (cold, Qdrant) tier separation | P2 |
+| 10 | Multi-signal retrieval (BM25+vector+graph+rerank) | ClawMem | Компоненты есть, нет объединения | Объединить 4 сигнала в federated search через RRF | P2 |
+
+---
+
+## 10. Переиспользование из текущей инфраструктуры
+
+Вместо написания с нуля, следующие компоненты переиспользуются напрямую:
+
+| # | Компонент | Путь в проекте | Что даёт | Заменяет (не нужно писать) | Экономия (ч) |
+|---|---|---|---|---|---|
+| 1 | HybridSearchStrategy | `src/pdf_framework/search/hybrid_search.py` | RRF fusion (vector+graph+BM25) | hybrid_search для memory | 8-10 |
+| 2 | QdrantVectorStore | `src/pdf_framework/vector_store/providers/qdrant.py` | Async client, batch upsert, UUID IDs | Новый Qdrant adapter | 5-8 |
+| 3 | SemanticSearchCache | `src/pdf_framework/search/semantic_cache.py` | SQLite+numpy cache, TTL, hit stats | cache.py для memory | 4-5 |
+| 4 | CircuitBreaker | `src/shared/llm_rotation/circuit_breaker.py` | 3-state CB (Closed/Open/HalfOpen) | circuit_breaker для memory | 4-5 |
+| 5 | BackoffStrategy | `src/shared/llm_rotation/backoff.py` | Exponential+jitter+cap | retry для memory | 2-3 |
+| 6 | NetworkXStore | `src/pdf_framework/graph_store/providers/networkx_store.py` | In-memory graph | Graph algorithms для memory | 6-8 |
+| 7 | BM25Store (FTS5) | `src/pdf_framework/search/bm25_store.py` | SQLite FTS5 full-text search | Полнотекстовый поиск по памяти | 3-4 |
+| 8 | EvalMetrics | `src/pdf_framework/evaluation/metrics.py` | NDCG, MRR, precision@k, recall@k | Метрики качества retrieval | 3-4 |
+| 9 | BaseVectorStore | `src/pdf_framework/vector_store/base.py` | Abstract interface | Абстракция для memory backends | 2-3 |
+| 10 | Rerankers | `src/pdf_framework/search/reranking/` | CrossEncoder, LLM, ColBERT | Ранжирование memory результатов | 5-6 |
+| 11 | Pydantic Settings | `src/pdf_framework/config/_base.py` | Nested .env config | Конфигурация memory module | 1-2 |
+| 12 | FrameworkLogger | `src/pdf_framework/callbacks/logging/` | Structured JSON logging | Observability для memory | 1-2 |
+
+**Общая экономия: 45-60 часов** (из 190-245ч raw = ~25% экономии)
+
+### Стратегия переиспользования
+
+Вместо copy-paste — **импорт и адаптация**:
+
+```python
+# P0: Federated search с RRF из pdf_framework
+from src.pdf_framework.search.strategies.hybrid_search import HybridSearchStrategy
+from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+from src.pdf_framework.search.semantic_cache import SemanticSearchCache
+
+# P1: Resilience из llm_rotation
+from src.shared.llm_rotation.circuit_breaker import CircuitBreaker
+from src.shared.llm_rotation.backoff import BackoffStrategy
+
+# P2: Graph + evaluation
+from src.pdf_framework.graph_store.providers.networkx_store import NetworkXStore
+from src.pdf_framework.evaluation.metrics import ndcg_at_k, mrr
+```
+
+---
+
+## 11. Связанные документы
 
 - [PHASE_49_UNIFIED_MEMORY.md](MIGRATION_1C_ENTERPRISE_FRAMEWORK/PHASE_49_UNIFIED_MEMORY.md) — исходный план миграции (Phase 49, DONE)
 - [TECHNOLOGY_COMPARISON.md](MIGRATION_1C_ENTERPRISE_FRAMEWORK/TECHNOLOGY_COMPARISON.md) — сравнение технологий
