@@ -497,10 +497,8 @@ class MemoryOrchestrator:
         if not self._link_registry:
             raise SubsystemUnavailableError("Link registry not initialized")
 
-        # Get entity from subsystems
+        # Get entity from subsystems (may be None for link-only entities)
         entity = await self._get_entity(entity_id)
-        if not entity:
-            raise EntityNotFoundError(f"Entity not found: {entity_id}")
 
         result: dict[str, Any] = {
             "entity": entity,
@@ -521,6 +519,9 @@ class MemoryOrchestrator:
                 }
                 for r in related[:max_entities]
             ]
+
+        if not entity and not result["links"]:
+            raise EntityNotFoundError(f"Entity not found: {entity_id}")
 
         return result
 
