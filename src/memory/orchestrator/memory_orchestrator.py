@@ -315,6 +315,12 @@ class MemoryOrchestrator:
         if self._propagation_engine:
             await self._propagation_engine.stop()
             self._propagation_engine = None
+        if self._event_store:
+            await self._event_store.stop()
+            self._event_store = None
+        if self._event_bus:
+            await self._event_bus.stop()
+            self._event_bus = None
         self._link_registry = None
         self._router = None
         self._search_engine = None
