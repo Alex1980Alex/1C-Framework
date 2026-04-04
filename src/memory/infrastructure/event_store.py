@@ -12,10 +12,10 @@ import asyncio
 import json
 import logging
 import sqlite3
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from collections.abc import Callable
 from typing import Any
 
 from .event_bus import Event
