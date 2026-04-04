@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03 (обновлено 2026-04-04 — P2 завершена)
+**Дата:** 2026-04-03 (обновлено 2026-04-04 — P3 realtime core завершена)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** В РАБОТЕ — P0 DONE, P0.5 DONE, P1 DONE, P2 DONE
+**Статус:** В РАБОТЕ — P0 DONE, P0.5 DONE, P1 DONE, P2 DONE, P3 PARTIAL (realtime core)
 
 ---
 
