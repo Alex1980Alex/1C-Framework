@@ -1,6 +1,6 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-03-06 22:17
+**Generated:** 2026-04-04 19:27
 
 ## Summary
 
@@ -8,11 +8,11 @@
 |----------|---------|----------|------------|-------------|----------------|
 | Agent Types | 5 | **0** | **0** | 100.0% | 100.0% |
 | CLI Commands | 17 | **0** | **0** | 100.0% | 100.0% |
-| Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
+| Config Variables (.env) | 296 | **0** | **0** | 100.0% | 100.0% |
 | REST API Endpoints | 92 | **0** | **0** | 100.0% | 100.0% |
 | MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
 | Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
-| **TOTAL** | **441** | **0** | **0** | | |
+| **TOTAL** | **439** | **0** | **0** | | |
 
 ## Action Items
 
@@ -50,7 +50,7 @@
 - `autorag` — `src/cli/main.py`
 - `feedback` — `src/cli/main.py`
 
-### Config Variables (.env) (298)
+### Config Variables (.env) (296)
 
 - `AGENT__MODEL` — `src\pdf_framework\config\agent.py`
 - `AGENT__TEMPERATURE` — `src\pdf_framework\config\agent.py`
@@ -268,10 +268,8 @@
 - `AUTORAG__ENABLED` — `src\pdf_framework\config\observability.py`
 - `AUTORAG__MAX_EXPERIMENTS` — `src\pdf_framework\config\observability.py`
 - `AUTORAG__OUTPUT_DIR` — `src\pdf_framework\config\observability.py`
-- `PDF__LOADER` — `src\pdf_framework\config\pdf.py`
 - `PDF__CHUNK_SIZE` — `src\pdf_framework\config\pdf.py`
 - `PDF__CHUNK_OVERLAP` — `src\pdf_framework\config\pdf.py`
-- `PDF__SPLITTER` — `src\pdf_framework\config\pdf.py`
 - `PDF__EXTRACT_TABLES` — `src\pdf_framework\config\pdf.py`
 - `PDF__EXTRACT_IMAGES` — `src\pdf_framework\config\pdf.py`
 - `PDF__SEMANTIC_THRESHOLD` — `src\pdf_framework\config\pdf.py`
