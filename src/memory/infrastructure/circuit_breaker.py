@@ -148,13 +148,16 @@ class CircuitBreaker:
             current = self.state
             if current == CircuitState.OPEN:
                 self._stats.total_rejected += 1
+                # Close unawaited coroutine to prevent ResourceWarning
+                if asyncio.iscoroutine(coro):
+                    coro.close()
                 raise CircuitBreakerError(
                     f"Circuit '{self.name}' is OPEN — rejected after "
                     f"{self._stats.failure_count} failures"
                 )
 
-            self._stats.total_calls += 1
-
+        # total_calls is tracked in record_success/record_failure only
+        # to avoid double-counting
         try:
             result = await coro
             self.record_success()
