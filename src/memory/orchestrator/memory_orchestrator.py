@@ -1319,7 +1319,8 @@ class MemoryOrchestrator:
         try:
             uid = UnifiedID.parse(unified_id)
         except ValueError:
-            return None
+            # Plain UUID — try all subsystems
+            return await self._get_entity_by_raw_id(unified_id)
 
         try:
             if uid.source == SourceServer.MEMORY_AI:
