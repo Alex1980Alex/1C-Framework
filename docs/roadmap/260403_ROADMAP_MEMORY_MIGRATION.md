@@ -12,7 +12,7 @@
 
 | Метрика | Источник | Цель (текущая) | Цель (план) |
 |---------|----------|----------------|-------------|
-| Файлов | 198 | 28 | ~45-55 |
+| Файлов | 198 | 31 | ~45-55 |
 | MCP Tools | 72+ | 18 | 35-40 |
 | Подсистемы | 5 (orchestrator, unified-mcp, vector, skill, ai) | 4 (orchestrator, vector, skill, ai) | 4 (расширенные) |
 | Бэкенды | TimescaleDB + Neo4j + Qdrant + Redis + SQLite | SQLite + Qdrant + JSONL | SQLite + Qdrant + JSONL (без изменений) |
