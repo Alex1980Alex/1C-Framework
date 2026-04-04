@@ -89,6 +89,16 @@
       },
       "timeout": 60000
     },
+    "memory-orchestrator": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.orchestrator.memory_orchestrator"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "QDRANT_URL": "http://localhost:6333"
+      },
+      "timeout": 120000
+    },
     "llm-rotation": {
       "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.shared.llm_rotation.mcp"],

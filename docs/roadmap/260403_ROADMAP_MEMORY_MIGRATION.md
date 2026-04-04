@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03 (обновлено 2026-04-04 — P3 realtime core завершена)
+**Дата:** 2026-04-03 (обновлено 2026-04-04 — P4 DONE)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** В РАБОТЕ — P0 DONE, P0.5 DONE, P1 DONE, P2 DONE, P3 PARTIAL (realtime core)
+**Статус:** ЗАВЕРШЕНО — P0 DONE, P0.5 DONE, P1 DONE, P2 DONE, P3 DONE, P4 DONE
 
 ---
 
@@ -519,10 +519,27 @@ EventBus (singleton)
   - [x] Events published on route_and_save, create_link
 - [x] infrastructure/__init__.py updated with all P3 exports
 - [x] Тесты: **28/28 PASS** (P3), **96/96 PASS** (P0-P2, no regression)
-- [ ] SubscriptionManager (in-memory dict, heartbeat) — deferred
-- [ ] 8 MCP endpoints для realtime (subscribe, publish, replay, history...) — deferred to P4
-- [ ] docs_rag адаптер (SQLite chunks + Qdrant embeddings) — deferred
-- [ ] research, id_management, surprise, warmup tools — deferred
+- [x] SubscriptionManager (in-memory dict, heartbeat)
+  - [x] ManagedSubscription dataclass (client_id, pattern, heartbeat tracking)
+  - [x] Create/remove/heartbeat/get_events/list_subscriptions API
+  - [x] Per-client subscription limits, stale auto-cleanup
+  - [x] 8 tests PASS
+- [x] 8 MCP endpoints для realtime
+  - [x] memory_subscribe, memory_unsubscribe
+  - [x] memory_publish, memory_get_events
+  - [x] memory_replay, memory_event_history
+  - [x] memory_event_stats, memory_subscription_health
+- [x] docs_rag адаптер (SQLite chunks + Qdrant embeddings)
+  - [x] DocsRagSearchAdapter: SQLite FTS5 + optional Qdrant vector search
+  - [x] Ingest with auto-chunking (configurable size/overlap)
+  - [x] Weighted merge (FTS × 0.6 + vector × 0.4)
+  - [x] 6 tests PASS
+- [x] research, id_management, surprise, warmup tools
+  - [x] ResearchTool: relationships, anomalies, clusters, timeline, summary (4 tests)
+  - [x] IDManagementTool: UUIDv7 generate, resolve, conflict, batch (6 tests)
+  - [x] SurpriseTool: novelty scoring, token overlap, batch (5 tests)
+  - [x] WarmupTool: frequent, recent, important, pattern strategies (4 tests)
+- [x] Тесты: **33/33 PASS** (P3 deferred), **203/203 PASS** (P0-P3, no regression)
 
 ---
 
@@ -559,19 +576,19 @@ EventBus (singleton)
 
 #### Чеклист P4
 
-- [ ] Зарегистрировать MCP endpoints для сервисов из P1-P2:
-  - [ ] `memory_audit_log` — обертка над audit_service
-  - [ ] `memory_circuit_status` — статус circuit breaker
-  - [ ] `memory_metrics` — агрегированные метрики
-  - [ ] `memory_ttl_set` / `memory_ttl_check` — управление TTL
-  - [ ] `memory_version_history` / `memory_rollback` — версионирование
-  - [ ] `memory_forget` — селективное удаление через forgetgate
-  - [ ] `memory_graph_analyze` — граф-аналитика
-- [ ] Расширить `learning_stats` для всех подсистем
-- [ ] Расширить `health_check` для всех подсистем
-- [ ] Обновить `.mcp.json` с новыми серверами
-- [ ] Обновить skill `memory-unified/SKILL.md`
-- [ ] Документация: описание каждого нового tool
+- [x] Зарегистрировать MCP endpoints для сервисов из P1-P2:
+  - [x] `memory_audit_log` — обертка над audit_service
+  - [x] `memory_circuit_status` — статус circuit breaker
+  - [x] `memory_metrics` — агрегированные метрики
+  - [x] `memory_ttl_set` / `memory_ttl_check` — управление TTL
+  - [x] `memory_version_history` / `memory_rollback` — версионирование
+  - [x] `memory_forget` — селективное удаление через forgetgate
+  - [x] `memory_graph_analyze` — граф-аналитика
+- [x] Расширить `learning_stats` для всех подсистем
+- [x] Расширить `health_check` для всех подсистем
+- [x] Обновить `.mcp.json` с новыми серверами
+- [x] Обновить skill `memory-unified/SKILL.md`
+- [x] Документация: описание каждого нового tool
 
 ---
 
@@ -582,10 +599,11 @@ P0 (Orchestrator Core)          ✅ DONE
  ├── P0.5 (Memory-First Hook)   ✅ DONE (local .md + Russian stemming)
  ├── P1 (Infrastructure + Propagation)  ✅ DONE
  │    └── P2 (Search + Services)  ✅ DONE (70 tests, 138 total)
- │         ├── P3 (Realtime + Adapters)  ✅ PARTIAL (core: 28 tests, 166 total)
+ │         ├── P3 (Realtime + Adapters)  ✅ DONE (61 tests, 199 total)
  │         │    └── EventBus, EventStore, ConflictResolver — DONE
- │         │    └── Adapters, MCP endpoints, tools — deferred
- │         └── P4 (MCP Tools)            [optional]
+ │         │    └── SubscriptionManager, 8 MCP endpoints — DONE
+ │         │    └── DocsRag adapter, research/id/surprise/warmup — DONE
+ │         └── P4 (MCP Tools)            ✅ DONE (13 service endpoints)
  └── P4 может начаться параллельно с P3 для оберток P0-P2 инструментов
 ```
 
