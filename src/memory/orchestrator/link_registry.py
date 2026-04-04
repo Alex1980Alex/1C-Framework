@@ -29,6 +29,19 @@ class LinkType(str, Enum):
     DERIVES_FROM = "derives_from"
     SESSION_CONTEXT = "session_context"
 
+    @property
+    def description(self) -> str:
+        """Human-readable description of the link type."""
+        descriptions = {
+            LinkType.BASED_ON: "Source entity is based on or derived from target",
+            LinkType.SUPPORTS: "Source entity supports or reinforces target",
+            LinkType.CONTRADICTS: "Source entity contradicts or conflicts with target",
+            LinkType.EXTENDS: "Source entity extends or augments target",
+            LinkType.DERIVES_FROM: "Source entity derives its content from target",
+            LinkType.SESSION_CONTEXT: "Entities are linked through a shared session context",
+        }
+        return descriptions.get(self, "")
+
     @classmethod
     def from_string(cls, value: str) -> "LinkType":
         value_lower = value.lower()
@@ -235,6 +248,8 @@ class LinkRegistry:
                 )
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_link ON link_history(link_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_action ON link_history(action)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_created ON entity_links(created_at)")
 
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS link_stats (
@@ -566,7 +581,12 @@ class LinkRegistry:
             for link in self.get_links_from(current_id):
                 if link.target_id == target_id:
                     full_path = path + [link.link_id]
-                    return [self.get_link(lid) for lid in full_path if self.get_link(lid)]
+                    result: list[EntityLink] = []
+                    for lid in full_path:
+                        found = self.get_link(lid)
+                        if found is not None:
+                            result.append(found)
+                    return result if result else None
                 if link.target_id not in visited:
                     visited.add(link.target_id)
                     queue.append((link.target_id, path + [link.link_id]))
@@ -671,9 +691,15 @@ class LinkRegistry:
                 )
             """)
             unique_entities = cursor.fetchone()["count"]
+            avg_links = total / unique_entities if unique_entities > 0 else 0.0
+            cursor.execute("SELECT AVG(strength) as avg FROM entity_links")
+            row = cursor.fetchone()
+            avg_strength = row["avg"] if row and row["avg"] is not None else 0.0
             return {
                 "total_links": total,
                 "unique_entities": unique_entities,
+                "avg_links_per_entity": round(avg_links, 2),
+                "avg_strength": round(avg_strength, 3),
                 "by_type": by_type,
                 "schema_version": self.SCHEMA_VERSION,
             }

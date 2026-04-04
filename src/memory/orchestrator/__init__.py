@@ -1,10 +1,12 @@
 """
 Memory Orchestrator — Unified Memory System.
 
-Provides UnifiedID namespace, Link Registry, and Federated Search
+Provides UnifiedID namespace, Link Registry, MemoryCube abstraction,
+Auto-classify middleware, and Federated Search with Hybrid RRF fusion
 across all memory subsystems (AI Memory, Vector Memory, Skill Learning).
 
 Phase 49: Unified Memory System migration from 1C-Enterprise_Framework.
+P0 completion: MemCube, Auto-classify, Hybrid RRF.
 """
 
 from .link_registry import (
@@ -14,6 +16,28 @@ from .link_registry import (
     RelatedEntity,
     get_link_registry,
     set_link_registry,
+)
+from .memcube import (
+    ContentType,
+    MemoryCube,
+)
+from .memory_orchestrator import (
+    OrchestratorConfig,
+    OrchestratorError,
+    EntityNotFoundError,
+    InvalidLinkError,
+    SubsystemUnavailableError,
+    MemoryOrchestrator,
+)
+from .memory_router import (
+    ClassificationResult,
+    ContentClassifier,
+    CONTENT_TYPE_TARGETS,
+    MemoryRouter,
+    RouterConfig,
+    RoutingDecision,
+    RoutingStats,
+    route_memory,
 )
 from .unified_id import (
     IDRegistry,
@@ -32,6 +56,7 @@ from .unified_search import (
     LinkedEntity,
     LinkEnricher,
     Reranker,
+    RRFMerger,
     ScoreNormalizer,
     SearchOptions,
     SearchResultItem,
@@ -41,9 +66,12 @@ from .unified_search import (
     federated_search,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 
 __all__ = [
+    # MemoryCube
+    "ContentType",
+    "MemoryCube",
     # UnifiedID
     "MemoryType",
     "SourceServer",
@@ -61,7 +89,23 @@ __all__ = [
     "LinkRegistry",
     "get_link_registry",
     "set_link_registry",
-    # UnifiedSearch
+    # MemoryRouter + Auto-classify
+    "MemoryRouter",
+    "RouterConfig",
+    "RoutingDecision",
+    "RoutingStats",
+    "ClassificationResult",
+    "ContentClassifier",
+    "CONTENT_TYPE_TARGETS",
+    "route_memory",
+    # MemoryOrchestrator
+    "MemoryOrchestrator",
+    "OrchestratorConfig",
+    "OrchestratorError",
+    "EntityNotFoundError",
+    "InvalidLinkError",
+    "SubsystemUnavailableError",
+    # UnifiedSearch + RRF
     "SearchOptions",
     "SearchResultItem",
     "LinkedEntity",
@@ -69,6 +113,7 @@ __all__ = [
     "UnifiedSearchResult",
     "BaseSearchAdapter",
     "ScoreNormalizer",
+    "RRFMerger",
     "Deduplicator",
     "Reranker",
     "LinkEnricher",
