@@ -849,6 +849,11 @@ UserPromptSubmit hook (memory-first-hook.py):
 ```
 P0 (Orchestrator Core)          ✅ DONE
  ├── P0.5 (Memory-First Hook)   ✅ DONE (local .md + Russian stemming)
+ │    └── P5 (Session Memory Bridge)  ⬜ TODO (auto-save + federated recall)
+ │         ├── P5.1 Session Context Extractor (Stop hook → SQLite/JSONL)
+ │         ├── P5.2 Federated Recall (SQLite + Qdrant + .md → RRF merge)
+ │         ├── P5.3 Deferred Qdrant Indexing (background embed + upsert)
+ │         └── P5.4 Migration .md → DB (one-time script)
  ├── P1 (Infrastructure + Propagation)  ✅ DONE
  │    └── P2 (Search + Services)  ✅ DONE (70 tests, 138 total)
  │         ├── P3 (Realtime + Adapters)  ✅ DONE (61 tests, 199 total)
@@ -859,10 +864,10 @@ P0 (Orchestrator Core)          ✅ DONE
  └── P4 может начаться параллельно с P3 для оберток P0-P2 инструментов
 ```
 
-> **P0.5 — ключевая фаза для UX:** именно она превращает memory из "инструмента по запросу" в "автоматический контекст каждой сессии". Без неё Claude может не обращаться к памяти. С ней — каждый ответ опирается на накопленные знания.
->
-> **Промежуточный итог P0.5:** Реализация использует прямое чтение локальных `.md` файлов
-> вместо HTTP-вызова unified_search. Это оказалось быстрее и надёжнее (нет зависимости от MCP-сервера).
+> **P5 — ключевая фаза для замыкания цикла:** P0.5 реализовала recall (автовспоминание),
+> P5 добавляет auto-save (автозапоминание) + federated recall (поиск в БД, не только .md).
+> Это превращает память из "Claude сам решает записать в .md" в "каждая сессия автоматически
+> сохраняется в БД, а recall ищет во всех источниках с RRF fusion."
 > Russian stemming решает проблему словоформ (агенты/агентов/агентам → агент).
 > 41 тест покрывает все компоненты. Upgrade до federated MCP search — опционален для P2+.
 
