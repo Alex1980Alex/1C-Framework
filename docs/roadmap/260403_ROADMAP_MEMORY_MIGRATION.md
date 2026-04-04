@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03 (обновлено 2026-04-04 — P0.5 завершена с Russian stemming)
+**Дата:** 2026-04-03 (обновлено 2026-04-04 — P2 завершена)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** В РАБОТЕ — P0 DONE, P0.5 DONE, P1 DONE
+**Статус:** В РАБОТЕ — P0 DONE, P0.5 DONE, P1 DONE, P2 DONE
 
 ---
 
@@ -12,11 +12,11 @@
 
 | Метрика | Источник | Цель (текущая) | Цель (план) |
 |---------|----------|----------------|-------------|
-| Файлов | 198 | 12 | ~45-55 |
+| Файлов | 198 | 28 | ~45-55 |
 | MCP Tools | 72+ | 18 | 35-40 |
 | Подсистемы | 5 (orchestrator, unified-mcp, vector, skill, ai) | 4 (orchestrator, vector, skill, ai) | 4 (расширенные) |
 | Бэкенды | TimescaleDB + Neo4j + Qdrant + Redis + SQLite | SQLite + Qdrant + JSONL | SQLite + Qdrant + JSONL (без изменений) |
-| Тесты | 20+ файлов | 1 файл (26 тестов) | 4+ файла (~80 тестов) |
+| Тесты | 20+ файлов | 4 файла (138 тестов) | 4+ файла (~80 тестов) |
 
 ### 1.2 Оценка трудозатрат
 
@@ -25,7 +25,7 @@
 | **P0** | Критический оркестратор | 40-50 | -13ч (Hybrid RRF, Qdrant, Config) | **27-37** | ✅ DONE |
 | **P0.5** | Memory-First Hook + Stemming | 4-6 | 0 | **~5** | ✅ DONE |
 | **P1** | Инфраструктура и пропагация | 35-45 | -12ч (CircuitBreaker, Backoff, NetworkX) | **23-33** | ОБЯЗАТЕЛЬНО |
-| **P2** | Продвинутый поиск и сервисы | 40-50 | -16ч (BM25, Cache, Rerankers, Metrics) | **24-34** | ОБЯЗАТЕЛЬНО |
+| **P2** | Продвинутый поиск и сервисы | 40-50 | -16ч (BM25, Cache, Rerankers, Metrics) | **24-34** | ✅ DONE |
 | **P3** | Realtime и адаптеры | 50-65 | -4ч (Logger) | **46-61** | Опционально |
 | **P4** | MCP Tools расширение | 25-35 | 0 | **25-35** | Опционально |
 | | **ИТОГО (raw)** | **194-251** | **-45ч** | **149-206** | |
@@ -388,27 +388,50 @@ Use this context to inform your response. If memory conflicts with current code,
 
 #### Чеклист P2
 
-- [ ] Создать директории `orchestrator/search/`, `vector_memory/graph/`
-- [ ] Перенести `hybrid_search.py`
-  - [ ] SQLite FTS5 вместо TimescaleDB полнотекстового поиска
-  - [ ] Гибридная формула скоринга (semantic + keyword)
-- [ ] Перенести `bsl_scorer.py` + `result_merger.py`
-- [ ] Перенести `versioning_service.py`
-  - [ ] Таблица `versions(id, entity_id, version, data_json, created_at)`
-  - [ ] Diff + rollback функциональность
-- [ ] Перенести `ttl_service.py`
-  - [ ] Таблица `ttl_registry(id, entity_id, expires_at)`
-  - [ ] Background cleanup через asyncio
-- [ ] Перенести `forgetgate_service.py`
-  - [ ] Алгоритм "забывания" адаптирован под Qdrant payload
-  - [ ] Surprise detection (отклонение от паттернов)
-- [ ] Перенести `graph/algorithms.py`
-  - [ ] SQLite + networkx (или чистый Python)
-  - [ ] Shortest path, centrality metrics
-- [ ] Перенести `cache.py` (LRU на OrderedDict, TTL, max size)
-- [ ] Перенести `metrics.py` (in-memory counters, JSON export)
-- [ ] Обновить `unified_search.py` для использования hybrid_search
-- [ ] Интеграционные тесты: hybrid search, versioning+rollback, TTL expiry, forgetgate
+- [x] Создать директории `orchestrator/search/`, `vector_memory/graph/`, `vector_memory/services/`
+- [x] Перенести `hybrid_search.py`
+  - [x] BM25Index (in-memory, BSL-aware tokenization, stopwords)
+  - [x] HybridSearchService (sparse + injectable dense, RRF + weighted fusion)
+  - [x] SearchConfig, SparseConfig, HybridSearchConfig
+- [x] Перенести `bsl_scorer.py`
+  - [x] BSLScorer (object type detection, symbol extraction, BSL-specific scoring)
+  - [x] BSLObjectType, BSLSymbolType, BSLAnalysisResult, BSLScoreResult
+  - [x] Reranking API для search results
+- [x] Перенести `versioning_service.py`
+  - [x] JSONL persistence, in-memory cache with asyncio.Lock
+  - [x] Diff + rollback, version history, cleanup
+- [x] Перенести `ttl_service.py`
+  - [x] JSONL persistence, TTLPolicy presets, background cleanup
+  - [x] Register, extend, record_access, cleanup_expired
+- [x] Перенести `forgetgate_service.py`
+  - [x] 4 стратегии: confidence_decay, access_based, surprise_based, composite
+  - [x] SurpriseCalculator (tag IDF), ForgetAction (keep/decay/archive/delete)
+  - [x] dry_run mode, apply callbacks
+- [x] Перенести `graph/algorithms.py`
+  - [x] Pure Python (no networkx dependency)
+  - [x] Dijkstra shortest path, PageRank, degree centrality
+  - [x] Connected components, community detection (label propagation)
+- [x] Перенести `graph/relation_types.py`
+  - [x] 30 relation types (structural + semantic + temporal + BSL-specific)
+  - [x] RelationRegistry with source/target/type indexes
+  - [x] Auto-inverse relations
+- [x] Перенести `cache.py` (LRU на OrderedDict, TTL, max size, stats)
+- [x] Перенести `metrics.py` (counters, gauges, timers, JSON export, global singleton)
+- [x] `unified_search.py` already uses RRF fusion (done in P0)
+- [x] Обновить `__init__.py` для всех P2 модулей
+- [x] Исправлены баги: pagerank indentation, undefined enum members, list.discard()
+- [x] Интеграционные тесты: **70/70 pass** (P2), **68/68 pass** (P0/P1, no regression)
+  - [x] TestBM25Index (6 тестов)
+  - [x] TestHybridSearchService (4 теста)
+  - [x] TestBSLScorer (8 тестов)
+  - [x] TestVersioningService (6 тестов)
+  - [x] TestTTLService (8 тестов)
+  - [x] TestForgetGateService (8 тестов)
+  - [x] TestSurpriseCalculator (2 теста)
+  - [x] TestGraphAlgorithms (9 тестов)
+  - [x] TestRelationRegistry (4 теста)
+  - [x] TestLRUCache (9 тестов)
+  - [x] TestMetricsCollector (6 тестов)
 
 ---
 
@@ -538,10 +561,10 @@ EventBus (singleton)
 P0 (Orchestrator Core)          ✅ DONE
  ├── P0.5 (Memory-First Hook)   ✅ DONE (local .md + Russian stemming)
  ├── P1 (Infrastructure + Propagation)  ✅ DONE
- │    └── P2 (Search + Services)  ← NEXT
- │         ├── P3 (Realtime + Adapters)  [optional]
+ │    └── P2 (Search + Services)  ✅ DONE (70 tests, 138 total)
+ │         ├── P3 (Realtime + Adapters)  ← NEXT [optional]
  │         └── P4 (MCP Tools)            [optional]
- └── P4 может начаться параллельно с P2 для оберток P0-инструментов
+ └── P4 может начаться параллельно с P3 для оберток P0-P2 инструментов
 ```
 
 > **P0.5 — ключевая фаза для UX:** именно она превращает memory из "инструмента по запросу" в "автоматический контекст каждой сессии". Без неё Claude может не обращаться к памяти. С ней — каждый ответ опирается на накопленные знания.

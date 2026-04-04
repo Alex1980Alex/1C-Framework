@@ -21,6 +21,8 @@ from .retry import (
     classify_exception,
 )
 from .timeout import TimeoutConfig, get_timeout_config
+from .cache import LRUCache
+from .metrics import MetricsCollector, MetricsTimer, get_metrics_collector, reset_metrics
 
 __all__ = [
     # Circuit Breaker
@@ -39,4 +41,11 @@ __all__ = [
     # Timeout
     "TimeoutConfig",
     "get_timeout_config",
+    # Cache (P2)
+    "LRUCache",
+    # Metrics (P2)
+    "MetricsCollector",
+    "MetricsTimer",
+    "get_metrics_collector",
+    "reset_metrics",
 ]

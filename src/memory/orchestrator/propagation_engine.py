@@ -312,11 +312,11 @@ class PropagationEngine:
 
         # Process with circuit breaker protection
         if self._circuit_breaker is not None:
+            coro = self._process_propagation(event)
             try:
-                result = await self._circuit_breaker.call_async(
-                    self._process_propagation(event)
-                )
+                result = await self._circuit_breaker.call_async(coro)
             except CircuitBreakerError as e:
+                # coro already closed by call_async when circuit is OPEN
                 logger.warning("Circuit OPEN — propagation blocked for %s: %s", entity_id, e)
                 return self._skip_result(event, "circuit_breaker_open")
         else:
