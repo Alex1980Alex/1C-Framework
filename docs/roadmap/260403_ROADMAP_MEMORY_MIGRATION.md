@@ -592,6 +592,258 @@ EventBus (singleton)
 
 ---
 
+### Фаза P5: Session Memory Bridge — Auto-Save + Federated Recall
+
+**Приоритет:** Высокий
+**Зависимости:** P0.5 (memory-first-hook), P0 (route_and_save, unified_search)
+**Оценка:** 30-40 часов
+**Статус:** TODO
+**Цель:** Замкнуть цикл памяти — автоматическое СОХРАНЕНИЕ контекста сессии в БД + ВСПОМИНАНИЕ через federated search (SQLite + Qdrant + .md fallback).
+
+**Проблема:** Сейчас память работает в одну сторону:
+- **Recall (P0.5):** memory-first-hook читает `.md` файлы → token overlap → systemMessage ✅
+- **Save:** Claude сам решает когда записать в `.md` файл через Write tool ❌ (ненадёжно, забывает)
+
+В результате: ценный контекст сессий (решения, ошибки, паттерны) **теряется** между сессиями.
+
+**Решение:** Двухсторонний мост — Stop-хук автоматически сохраняет контекст в БД, UserPromptSubmit-хук ищет в БД + .md.
+
+**Архитектура:**
+
+```
+                    SAVE (Stop hook)                         RECALL (UserPromptSubmit hook)
+                    ================                         =============================
+
+Session ends                                                 User prompt arrives
+     ↓                                                            ↓
+SessionState + git diff                                     memory-first-hook.py (upgraded)
+     ↓                                                            ↓
+Extract: decisions, errors,                                 ┌─ SQLite FTS (memory-ai) ←── fast, structured
+skills, files changed                                       ├─ Qdrant semantic (vector-memory) ←── deep
+     ↓                                                      └─ .md files (fallback) ←── always works
+ContentClassifier (P0)                                           ↓
+     ↓                                                      RRF merge (weighted)
+┌─ fact/decision → SQLite (memory-ai)                            ↓
+├─ pattern/skill → JSONL (skill-learning)                   systemMessage: top-5 results
+└─ semantic → Qdrant (vector-memory)                        with source attribution
+```
+
+**Прямой доступ к бэкендам (без MCP):**
+
+| Бэкенд | Путь | Способ записи из хука |
+|--------|------|----------------------|
+| SQLite (memory-ai) | `data/memory_ai.db` | `sqlite3.connect()` → INSERT INTO `important_messages` |
+| JSONL (skill-learning) | `data/skill_learning/patterns.jsonl` | `json.dumps() + "\n"` → append |
+| Qdrant (vector-memory) | `http://localhost:6333` | `qdrant_client.upsert()` (если доступен) |
+| .md (auto-memory) | `~/.claude/projects/.../memory/` | Остаётся как human-readable fallback |
+
+#### P5.1: Session Context Extractor (Stop hook) — 10-14ч
+
+Новый Stop-хук `session-memory-save.py`:
+
+| Источник данных | Что извлекает | Куда сохраняет |
+|----------------|---------------|----------------|
+| `git diff --stat` | Файлы изменённые в сессии | SQLite (category: `session_summary`) |
+| `SessionState` (`.claude/data/session-skills.json`) | Активированные скиллы, фазы | SQLite (category: `session_skills`) |
+| `hook-todos.json` | Завершённые задачи | SQLite (category: `completed_tasks`) |
+| git commit messages | Что было закоммичено | SQLite (category: `session_commits`) |
+| Ошибки/решения (из stderr хуков) | Паттерны "проблема→решение" | JSONL (skill-learning) |
+
+**Формат записи в SQLite:**
+
+```python
+{
+    "id": uuid4(),
+    "content": "Session 2026-04-04: реализована миграция P0-P4 Unified Memory. "
+               "Файлы: src/memory/ (28 files). Скиллы: memory-unified. "
+               "Решения: SQLite вместо TimescaleDB, .md fallback для надёжности.",
+    "importance": 0.7,  # auto-calculated: 0.5 base + 0.1/каждое решение + 0.1 если >5 файлов
+    "category": "session_summary",
+    "tags": '["memory", "migration", "P0-P4"]',
+    "metadata": '{"session_date": "2026-04-04", "files_changed": 28, "commits": 3}'
+}
+```
+
+**Ограничения дизайна:**
+- Timeout: max 5 секунд (Stop hook)
+- Без LLM-вызовов (слишком медленно для Stop hook)
+- Без Qdrant-записи (нужен embedding, а это LLM) — только SQLite + JSONL
+- Qdrant-запись делегируется на следующий запуск (P5.3)
+
+**Чеклист P5.1:**
+
+- [ ] Создать `.claude/hooks/session-memory-save.py`
+  - [ ] Чтение SessionState (skills, phases)
+  - [ ] Чтение git diff --stat (файлы сессии)
+  - [ ] Чтение git log с момента начала сессии (коммиты)
+  - [ ] Чтение hook-todos.json (завершённые задачи)
+  - [ ] Форматирование session_summary
+  - [ ] Auto-importance scoring (файлы × 0.1 + решения × 0.1 + base 0.5, cap 0.9)
+  - [ ] Auto-tagging (из имён файлов и скиллов)
+  - [ ] Direct SQLite write в `data/memory_ai.db`
+  - [ ] Direct JSONL append для skill patterns
+  - [ ] Deduplication: проверка по session_date чтобы не дублировать
+  - [ ] Graceful degradation: при ошибке → `{"continue": true}`
+- [ ] Зарегистрировать в `settings.json` (Stop hook, timeout 5s)
+- [ ] Тесты (10+):
+  - [ ] Extraction: git diff parsing, SessionState reading
+  - [ ] SQLite write + dedup
+  - [ ] JSONL append
+  - [ ] Timeout handling
+  - [ ] Graceful degradation
+
+#### P5.2: Federated Recall (UserPromptSubmit upgrade) — 12-16ч
+
+Обновление `memory-first-hook.py` — добавить SQLite и Qdrant поиск:
+
+**Текущий recall:**
+```
+.md файлы → tokenize → weighted overlap → top-3
+```
+
+**Целевой recall (3-layer):**
+```
+Layer 1: SQLite FTS (memory-ai)     — structured, fast (<50ms)
+Layer 2: Qdrant semantic (vector)    — deep similarity (если доступен, <200ms)
+Layer 3: .md files (current)         — always-available fallback
+
+→ RRF merge (k=60) → top-5 → systemMessage
+```
+
+**Веса источников в RRF:**
+
+| Источник | Вес | Обоснование |
+|----------|-----|-------------|
+| SQLite FTS | 0.4 | Структурированные факты, высокая точность |
+| Qdrant semantic | 0.35 | Глубокое семантическое сходство |
+| .md files | 0.25 | Человекоредактируемые, проверенные |
+
+**SQLite FTS поиск (без MCP):**
+
+```python
+import sqlite3
+db = sqlite3.connect("data/memory_ai.db")
+# FTS5 если есть, иначе LIKE
+results = db.execute(
+    "SELECT id, content, importance, category, tags "
+    "FROM important_messages "
+    "WHERE content LIKE ? ORDER BY importance DESC LIMIT 10",
+    (f"%{query}%",)
+).fetchall()
+```
+
+**Qdrant поиск (без MCP, опциональный):**
+
+```python
+from qdrant_client import QdrantClient
+client = QdrantClient("http://localhost:6333", timeout=1.0)
+# Embedding через E5 (если модель загружена) или skip
+results = client.query_points(
+    collection_name="learned_patterns",
+    query=embedding_vector,  # 1024d E5
+    limit=10,
+    using="dense"
+)
+```
+
+**Timeout budget (2 секунды total):**
+
+| Layer | Budget | Fallback |
+|-------|--------|----------|
+| SQLite FTS | 200ms | Skip layer |
+| Qdrant | 800ms | Skip layer |
+| .md files | 500ms | Skip layer |
+| RRF merge | 100ms | Return best single-source |
+| Formatting | 100ms | Truncate |
+| Reserve | 300ms | — |
+
+**Чеклист P5.2:**
+
+- [ ] Обновить `memory-first-hook.py`
+  - [ ] Layer 1: SQLite FTS query (direct connect, no MCP)
+  - [ ] Layer 2: Qdrant query (HTTP, optional — skip если timeout/unavailable)
+  - [ ] Layer 3: .md files (current implementation, as fallback)
+  - [ ] RRF merge с source weights (0.4/0.35/0.25)
+  - [ ] Source attribution в systemMessage: `[SQLite]`, `[Qdrant]`, `[.md]`
+  - [ ] Per-layer timeout (200/800/500ms)
+  - [ ] Graceful degradation: каждый layer независим
+- [ ] Embedding для Qdrant query:
+  - [ ] Вариант A: pre-computed embedding cache (SQLite таблица query→vector)
+  - [ ] Вариант B: lightweight local model (sentence-transformers, ~100ms)
+  - [ ] Вариант C: skip Qdrant если нет embedding — только SQLite + .md
+- [ ] Обновить формат systemMessage:
+  - [ ] Source attribution: откуда каждый результат
+  - [ ] Confidence: нормализованный score
+  - [ ] Recency: когда записано
+- [ ] Тесты (12+):
+  - [ ] SQLite FTS query (с данными, пустая БД, corrupted)
+  - [ ] Qdrant query (доступен, timeout, unavailable)
+  - [ ] .md fallback (как сейчас)
+  - [ ] RRF merge (все 3 источника, 2 из 3, 1 из 3)
+  - [ ] Timeout enforcement
+  - [ ] End-to-end integration
+
+#### P5.3: Deferred Qdrant Indexing (Background) — 4-6ч
+
+Session summaries из P5.1 сохраняются в SQLite (быстро), но **не** в Qdrant (нужен embedding).
+Этот компонент индексирует новые записи в Qdrant при следующем запуске.
+
+**Механизм:**
+
+```
+UserPromptSubmit hook (memory-first-hook.py):
+  1. Recall (P5.2)
+  2. Check: есть ли неиндексированные записи в SQLite? (flag: indexed_in_qdrant=0)
+  3. Если да → background task: embed + upsert в Qdrant
+  4. Обновить flag: indexed_in_qdrant=1
+```
+
+**Чеклист P5.3:**
+
+- [ ] Добавить колонку `indexed_in_qdrant INTEGER DEFAULT 0` в SQLite
+- [ ] Background indexer в memory-first-hook (threading, non-blocking)
+  - [ ] Batch: до 10 записей за раз
+  - [ ] Embedding через E5 local model или Qdrant FastEmbed
+  - [ ] Upsert в `learned_patterns` коллекцию
+  - [ ] Update flag после успешного upsert
+- [ ] Тесты (4+)
+
+#### P5.4: Migration Script (.md → DB) — 4-6ч
+
+Одноразовый скрипт: импорт существующих `memory/*.md` файлов в SQLite + Qdrant.
+
+**Чеклист P5.4:**
+
+- [ ] Скрипт `scripts/migrate_memory_md_to_db.py`
+  - [ ] Парсинг frontmatter (name, description, type)
+  - [ ] Import в SQLite (category=type, importance по type: feedback→0.8, user→0.7, project→0.6)
+  - [ ] Embedding + Qdrant upsert
+  - [ ] Dry-run mode
+  - [ ] Idempotent (skip already imported, by content hash)
+- [ ] Тесты (4+)
+
+#### Суммарная оценка P5
+
+| Подфаза | Часы | Тесты | Обязательность |
+|---------|------|-------|----------------|
+| P5.1 Session Context Extractor | 10-14 | 10+ | **Обязательно** |
+| P5.2 Federated Recall | 12-16 | 12+ | **Обязательно** |
+| P5.3 Deferred Qdrant Indexing | 4-6 | 4+ | Рекомендуемо |
+| P5.4 Migration .md → DB | 4-6 | 4+ | Опционально |
+| **Итого P5** | **30-42** | **30+** | — |
+
+#### Риски P5
+
+| Риск | Вероятность | Митигация |
+|------|-------------|-----------|
+| Stop hook timeout (5s) для SQLite write | Низкая | SQLite WAL mode, pre-opened connection |
+| Qdrant недоступен при recall | Средняя | Layer skip, .md fallback |
+| Embedding latency в recall hook (2s budget) | Средняя | Pre-computed cache или skip Qdrant layer |
+| Дубликаты session summaries | Средняя | Dedup по session_date + content hash |
+| SQLite lock contention (hook + MCP server) | Низкая | WAL mode + timeout 1s + retry |
+
+---
+
 ## 4. Граф зависимостей фаз
 
 ```
