@@ -471,12 +471,15 @@ EventBus (singleton)
 
 ```
 P0 (Orchestrator Core)
+ ├── P0.5 (Memory-First Hook) ← AUTO-CONTEXT для каждого запроса
  ├── P1 (Infrastructure + Propagation)
  │    └── P2 (Search + Services)
  │         ├── P3 (Realtime + Adapters)  [optional]
  │         └── P4 (MCP Tools)            [optional]
  └── P4 может начаться параллельно с P2 для оберток P0-инструментов
 ```
+
+> **P0.5 — ключевая фаза для UX:** именно она превращает memory из "инструмента по запросу" в "автоматический контекст каждой сессии". Без неё Claude может не обращаться к памяти. С ней — каждый ответ опирается на накопленные знания.
 
 ---
 
