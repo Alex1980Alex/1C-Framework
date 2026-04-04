@@ -581,7 +581,9 @@ P0 (Orchestrator Core)          ✅ DONE
  ├── P0.5 (Memory-First Hook)   ✅ DONE (local .md + Russian stemming)
  ├── P1 (Infrastructure + Propagation)  ✅ DONE
  │    └── P2 (Search + Services)  ✅ DONE (70 tests, 138 total)
- │         ├── P3 (Realtime + Adapters)  ← NEXT [optional]
+ │         ├── P3 (Realtime + Adapters)  ✅ PARTIAL (core: 28 tests, 166 total)
+ │         │    └── EventBus, EventStore, ConflictResolver — DONE
+ │         │    └── Adapters, MCP endpoints, tools — deferred
  │         └── P4 (MCP Tools)            [optional]
  └── P4 может начаться параллельно с P3 для оберток P0-P2 инструментов
 ```
