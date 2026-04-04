@@ -172,7 +172,7 @@ class EventStore:
     # -- SQLite helpers (run in thread) --------------------------------------
 
     def _open_db(self) -> sqlite3.Connection:
-        db = sqlite3.connect(self._config.cold_db_path)
+        db = sqlite3.connect(self._config.cold_db_path, check_same_thread=False)
         db.execute("PRAGMA journal_mode=WAL")
         db.execute(
             """
