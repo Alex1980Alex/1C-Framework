@@ -165,6 +165,78 @@ D:\1С-Framework\src\memory\
 
 ---
 
+### Фаза P0.5: Memory-First Hook (Auto-Context)
+
+**Приоритет:** Критический
+**Зависимости:** P0 (unified_search должен работать)
+**Оценка:** 4-6 часов
+**Цель:** Обеспечить автоматический поиск в памяти **перед** каждым ответом Claude — любой вопрос/просьба опирается на сохранённый контекст из предыдущих сессий.
+
+**Проблема:** MCP-серверы памяти — это инструменты, которые Claude вызывает **по своему решению**. Без этой фазы Claude может "забыть" проверить память и ответить с нуля.
+
+**Решение:** UserPromptSubmit hook, который:
+1. Получает текст запроса пользователя
+2. Вызывает `unified_search` (federated RRF по 3 бэкендам из P0)
+3. Возвращает топ-3 релевантных записей как `systemMessage`
+4. Claude получает контекст памяти **до** начала обработки запроса
+
+**Архитектура:**
+
+```
+User prompt
+  ↓
+UserPromptSubmit hook (memory-first-hook.py)
+  ↓
+unified_search(query=user_prompt, limit=3)
+  ├── ai_memory (факты, предпочтения)
+  ├── vector_memory (паттерны, решения)
+  └── skill_learning (навыки, подтверждённые практики)
+  ↓
+systemMessage: "Memory context: ..."
+  ↓
+Claude отвечает С УЧЁТОМ памяти
+```
+
+**Формат systemMessage:**
+
+```
+[MEMORY CONTEXT] Found {n} relevant memories for your query:
+1. [{type}] {title} — {snippet} (confidence: {score})
+2. [{type}] {title} — {snippet} (confidence: {score})
+3. [{type}] {title} — {snippet} (confidence: {score})
+Use this context to inform your response. If memory conflicts with current code, trust current code.
+```
+
+**Оптимизации:**
+- **Минимальная длина запроса:** skip для prompt < 20 chars (приветствия, /commands)
+- **Cooldown:** не чаще 1 раза в 30 секунд (если пользователь быстро шлёт сообщения)
+- **Threshold:** score < 0.3 → не включать (низкорелевантный шум)
+- **Timeout:** max 2 секунды на поиск, fallback — пустой контекст (не блокировать Claude)
+- **Skip patterns:** `/commit`, `/help`, однословные команды
+
+#### Чеклист P0.5
+
+- [ ] Создать `.claude/hooks/memory-first-hook.py`
+  - [ ] Парсинг stdin (userPromptSubmit формат)
+  - [ ] Вызов unified_search через HTTP/subprocess
+  - [ ] Форматирование systemMessage
+  - [ ] Timeout 2s + graceful fallback
+  - [ ] Skip для коротких/служебных запросов
+- [ ] Зарегистрировать hook в `settings.json`
+  - [ ] `event: UserPromptSubmit`
+  - [ ] `command: python .claude/hooks/memory-first-hook.py`
+- [ ] Добавить инструкцию в CLAUDE.md:
+  - [ ] "If memory context is provided, compare with current state before acting"
+  - [ ] "For deep memory search, call unified_search MCP tool explicitly"
+- [ ] Тесты:
+  - [ ] Hook возвращает релевантный контекст для known query
+  - [ ] Hook не блокирует при timeout
+  - [ ] Hook пропускает короткие запросы
+  - [ ] Hook корректно работает когда unified_search пуст
+- [ ] Интеграционный тест: полный цикл (prompt → hook → memory → systemMessage → Claude)
+
+---
+
 ### Фаза P1: Инфраструктура и пропагация (Core)
 
 **Приоритет:** Высокий
