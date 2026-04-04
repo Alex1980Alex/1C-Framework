@@ -494,15 +494,34 @@ EventBus (singleton)
 
 #### Чеклист P3
 
-- [ ] EventBus на asyncio.Queue (wildcard подписки, backpressure)
-- [ ] EventStore на SQLite (JSONL hot buffer, SQLite cold)
-- [ ] SubscriptionManager (in-memory dict, heartbeat)
-- [ ] ConflictResolver (last-write-wins, source-priority, merge-fields)
-- [ ] 8 MCP endpoints для realtime (subscribe, publish, replay, history...)
-- [ ] docs_rag адаптер (SQLite chunks + Qdrant embeddings)
-- [ ] research, id_management, surprise, warmup tools
-- [ ] Интеграция EventBus в MemoryOrchestrator
-- [ ] Тесты (unit + integration + нагрузочный)
+- [x] EventBus на asyncio.Queue (wildcard подписки, backpressure)
+  - [x] Event, Subscription, EventBusConfig, EventBusStats dataclasses
+  - [x] Wildcard matching: `*` (single level), `**` (multi-level)
+  - [x] Backpressure: drop oldest on queue full, stats.dropped_count
+  - [x] Singleton: get_event_bus() / reset_event_bus()
+  - [x] Background dispatch via asyncio.Task
+  - [x] 10 tests PASS
+- [x] EventStore на SQLite (JSONL hot buffer, SQLite cold)
+  - [x] JSONL hot buffer (fast append) + SQLite WAL cold storage
+  - [x] Auto-flush on threshold, periodic flush background task
+  - [x] Query by event_type, time range (start/end)
+  - [x] Replay with callback (sync + async)
+  - [x] 8 tests PASS
+- [x] ConflictResolver (last-write-wins, source-priority, merge-fields, manual)
+  - [x] 4 strategies: LWW, SOURCE_PRIORITY, MERGE_FIELDS, MANUAL
+  - [x] Field-level resolve + dict merge with conflict detection
+  - [x] Source priority with ranked ordering
+  - [x] 10 tests PASS
+- [x] Интеграция EventBus в MemoryOrchestrator
+  - [x] EventBus + EventStore init in start(), cleanup in stop()
+  - [x] _emit_event() helper (fire-and-forget to bus + store)
+  - [x] Events published on route_and_save, create_link
+- [x] infrastructure/__init__.py updated with all P3 exports
+- [x] Тесты: **28/28 PASS** (P3), **96/96 PASS** (P0-P2, no regression)
+- [ ] SubscriptionManager (in-memory dict, heartbeat) — deferred
+- [ ] 8 MCP endpoints для realtime (subscribe, publish, replay, history...) — deferred to P4
+- [ ] docs_rag адаптер (SQLite chunks + Qdrant embeddings) — deferred
+- [ ] research, id_management, surprise, warmup tools — deferred
 
 ---
 
