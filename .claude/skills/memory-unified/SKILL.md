@@ -137,3 +137,10 @@ Examples:
 - `memory_version_compare` — diff between two versions
 - `memory_forget` — ForgetGate evaluation (dry-run by default)
 - `memory_graph_analyze` — PageRank, centrality, communities, shortest path
+
+### Hooks (P5)
+
+- `session-memory-save.py` (Stop) — auto-saves session context to SQLite on session end
+  - Extracts: git diff, activated skills, commits, completed tasks
+  - Writes to `data/memory_ai.db` (category: `session_summary`)
+  - Dedup by session_id or date, auto-importance (0.5-0.95), auto-tags
