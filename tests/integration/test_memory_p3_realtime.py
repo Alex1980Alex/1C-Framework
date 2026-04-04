@@ -11,6 +11,7 @@ Total: 28 tests.
 
 import asyncio
 from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
 import pytest
 
@@ -66,7 +67,7 @@ def resolver():
 def _make_event(event_type: str = "test.event", **data) -> Event:
     """Helper to create Event instances for tests."""
     return Event(
-        event_id=f"test-{id(data)}",
+        event_id=f"test-{uuid4().hex[:12]}",
         event_type=event_type,
         data=data,
         timestamp=datetime.now(tz=UTC),

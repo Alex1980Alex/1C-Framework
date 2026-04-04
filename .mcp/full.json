@@ -110,6 +110,15 @@
         "NODE_OPTIONS": "--max-old-space-size=4096"
       },
       "timeout": 180000
+    },
+    "memory-orchestrator": {
+      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.memory.orchestrator.memory_orchestrator"],
+      "cwd": "D:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
     }
   }
 }

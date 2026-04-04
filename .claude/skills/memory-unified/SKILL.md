@@ -70,7 +70,7 @@ Examples:
 - Vector Memory: `src/memory/vector_memory/server.py` (7 MCP tools)
 - Skill Learning: `src/memory/skill_learning/server.py` (7 MCP tools)
 - Tests: `tests/integration/test_memory_unified.py` (26 tests)
-- MCP config: `.mcp.json` (3 servers registered)
+- MCP config: `.mcp.json` (4 servers registered)
 
 ## MCP Tools
 
@@ -96,3 +96,44 @@ Examples:
 - `confirm_pattern` / `reject_pattern` — review
 - `get_learning_stats` — statistics
 - `health_check` — storage status
+
+### memory-orchestrator (33 tools)
+
+**Core (8, P0):**
+- `unified_search` — federated search across all subsystems
+- `route_and_save` — auto-classify and route to targets
+- `get_full_context` — entity + BFS graph traversal
+- `create_link` — cross-reference between entities
+- `get_related` — find related via BFS
+- `propagate_update` — confidence propagation through graph
+- `get_system_stats` — aggregate statistics (includes P4 services)
+- `health_check` — subsystem health (includes P4 services)
+
+**Realtime (8, P3):**
+- `memory_subscribe` / `memory_unsubscribe` — event subscriptions
+- `memory_publish` — publish custom event
+- `memory_get_events` — poll pending events
+- `memory_replay` / `memory_event_history` — event replay/history
+- `memory_event_stats` — bus/store/subscription stats
+- `memory_subscription_health` — heartbeat/list
+
+**Extended (4, P3):**
+- `memory_research` — deep analysis (relationships, anomalies, clusters)
+- `memory_id_management` — UUIDv7, resolution, conflicts
+- `memory_surprise` — novelty scoring
+- `memory_warmup` — cache preloading
+
+**Services (13, P4):**
+- `memory_audit_log` — query audit log with filters
+- `memory_audit_stats` — audit statistics
+- `memory_circuit_status` — circuit breaker status
+- `memory_circuit_reset` — reset circuit breaker
+- `memory_metrics` — aggregated metrics (counters, gauges, durations)
+- `memory_ttl_set` — register/update TTL for entity
+- `memory_ttl_check` — check TTL status / get expired
+- `memory_ttl_cleanup` — remove expired entries
+- `memory_version_history` — entity version history
+- `memory_version_rollback` — rollback to specific version
+- `memory_version_compare` — diff between two versions
+- `memory_forget` — ForgetGate evaluation (dry-run by default)
+- `memory_graph_analyze` — PageRank, centrality, communities, shortest path

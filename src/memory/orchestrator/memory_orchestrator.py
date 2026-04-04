@@ -6,15 +6,18 @@ Full MCP server (stdio) that ties together 3 memory subsystems:
 - vector-memory (patterns, code conventions, semantic knowledge)
 - skill-learning (captured skills, workflow patterns)
 
-Provides 8 MCP tools:
-- unified_search: Federated search across all subsystems
-- route_and_save: Auto-classify and route content to targets
-- get_full_context: Entity + BFS graph traversal
-- create_link: Cross-reference between entities
-- get_related: Find related entities via BFS
-- propagate_update: Trigger confidence propagation (stub for P1)
-- get_system_stats: Aggregate statistics from all subsystems
-- health_check: Check subsystem availability
+Provides 33 MCP tools across 4 phases:
+  P0 (Core, 8): unified_search, route_and_save, get_full_context, create_link,
+                 get_related, propagate_update, get_system_stats, health_check
+  P3 (Realtime, 8): memory_subscribe, memory_unsubscribe, memory_publish,
+                     memory_get_events, memory_replay, memory_event_history,
+                     memory_event_stats, memory_subscription_health
+  P3 (Extended, 4): memory_research, memory_id_management, memory_surprise, memory_warmup
+  P4 (Services, 13): memory_audit_log, memory_audit_stats, memory_circuit_status,
+                      memory_circuit_reset, memory_metrics, memory_ttl_set,
+                      memory_ttl_check, memory_ttl_cleanup, memory_version_history,
+                      memory_version_rollback, memory_version_compare,
+                      memory_forget, memory_graph_analyze
 
 Migrated from D:\\1C-Enterprise_Framework\\memory-orchestrator\\src\\memory_orchestrator.py
 Adapted: Direct function calls instead of HTTP, 3 target servers, MCP server.
@@ -34,8 +37,23 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from ..ai_memory.services.audit_service import AuditAction, AuditQuery, AuditService
+from ..ai_memory.services.ttl_service import TTLPolicy, TTLService
+from ..ai_memory.services.versioning_service import ChangeType, VersioningService
+from ..infrastructure.cache import LRUCache
+from ..infrastructure.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerRegistry
 from ..infrastructure.event_bus import EventBus
 from ..infrastructure.event_store import EventStore, EventStoreConfig
+from ..infrastructure.metrics import MetricsCollector, get_metrics_collector
+from ..infrastructure.subscription_manager import SubscriptionManager, SubscriptionManagerConfig
+from ..vector_memory.graph.algorithms import GraphAlgorithms
+from ..vector_memory.graph.relation_types import RelationRegistry
+from ..vector_memory.services.forgetgate_service import (
+    ForgetCandidate,
+    ForgetGateConfig,
+    ForgetGateService,
+    ForgetStrategy,
+)
 from .link_registry import LinkRegistry, LinkType
 from .memory_router import (
     MemoryRouter,
@@ -43,6 +61,10 @@ from .memory_router import (
     RoutingDecision,
 )
 from .propagation_engine import PropagationEngine, PropagationResult
+from .tools.id_management import IDManagementTool
+from .tools.research import ResearchTool
+from .tools.surprise import SurpriseTool
+from .tools.warmup import WarmupTool
 from .unified_id import MemoryType, SourceServer, UnifiedID
 from .unified_search import (
     BaseSearchAdapter,
@@ -273,7 +295,21 @@ class MemoryOrchestrator:
         self._propagation_engine: PropagationEngine | None = None
         self._event_bus: EventBus | None = None
         self._event_store: EventStore | None = None
+        self._subscription_manager: SubscriptionManager | None = None
+        self._cache: LRUCache = LRUCache(max_size=256, default_ttl=3600.0)
+        self._research_tool: ResearchTool | None = None
+        self._id_tool: IDManagementTool | None = None
+        self._surprise_tool: SurpriseTool | None = None
+        self._warmup_tool: WarmupTool | None = None
         self._request_counts: dict[str, int] = {}
+        # P4 services
+        self._audit_service: AuditService | None = None
+        self._versioning_service: VersioningService | None = None
+        self._ttl_service: TTLService | None = None
+        self._forgetgate_service: ForgetGateService | None = None
+        self._circuit_registry: CircuitBreakerRegistry | None = None
+        self._metrics: MetricsCollector | None = None
+        self._graph_algorithms: GraphAlgorithms | None = None
 
     async def start(self):
         """Initialize all orchestrator components."""
@@ -308,10 +344,41 @@ class MemoryOrchestrator:
         ))
         await self._event_store.start()
 
+        # Subscription Manager (P3)
+        self._subscription_manager = SubscriptionManager(self._event_bus)
+        await self._subscription_manager.start()
+
+        # Tools (P3)
+        self._research_tool = ResearchTool(self._link_registry, self._search_engine)
+        self._id_tool = IDManagementTool()
+        self._surprise_tool = SurpriseTool(self._search_engine)
+        self._warmup_tool = WarmupTool(self._cache, self._search_engine, self._event_store)
+
+        # P4 services
+        services_dir = data_dir / "services"
+        services_dir.mkdir(parents=True, exist_ok=True)
+
+        self._audit_service = AuditService(
+            storage_path=str(services_dir / "audit.jsonl"),
+        )
+        self._versioning_service = VersioningService(
+            storage_path=services_dir / "versions.jsonl",
+        )
+        self._ttl_service = TTLService(
+            storage_path=services_dir / "ttl.jsonl",
+        )
+        self._forgetgate_service = ForgetGateService()
+        self._circuit_registry = CircuitBreakerRegistry()
+        self._metrics = get_metrics_collector()
+        self._graph_algorithms = GraphAlgorithms()
+
         logger.info("MemoryOrchestrator started")
 
     async def stop(self):
         """Tear down orchestrator."""
+        if self._subscription_manager:
+            await self._subscription_manager.stop()
+            self._subscription_manager = None
         if self._propagation_engine:
             await self._propagation_engine.stop()
             self._propagation_engine = None
@@ -321,9 +388,23 @@ class MemoryOrchestrator:
         if self._event_bus:
             await self._event_bus.stop()
             self._event_bus = None
+        if self._ttl_service:
+            await self._ttl_service.stop_cleanup_task()
+            self._ttl_service = None
         self._link_registry = None
         self._router = None
         self._search_engine = None
+        self._research_tool = None
+        self._id_tool = None
+        self._surprise_tool = None
+        self._warmup_tool = None
+        # P4 services
+        self._audit_service = None
+        self._versioning_service = None
+        self._forgetgate_service = None
+        self._circuit_registry = None
+        self._metrics = None
+        self._graph_algorithms = None
         logger.info("MemoryOrchestrator stopped")
 
     # ----- Tool implementations -----
@@ -548,6 +629,22 @@ class MemoryOrchestrator:
         if self._propagation_engine:
             stats["propagation"] = self._propagation_engine.get_stats()
 
+        # P4 service stats
+        if self._audit_service:
+            stats["audit"] = await self._audit_service.get_stats()
+        if self._versioning_service:
+            stats["versioning"] = await self._versioning_service.get_stats()
+        if self._ttl_service:
+            stats["ttl"] = await self._ttl_service.get_stats()
+        if self._circuit_registry:
+            stats["circuit_breakers"] = self._circuit_registry.get_all_stats()
+        if self._metrics:
+            stats["metrics"] = self._metrics.get_all()
+        if self._graph_algorithms:
+            stats["graph"] = self._graph_algorithms.get_stats()
+        if self._forgetgate_service:
+            stats["forgetgate"] = self._forgetgate_service.get_stats()
+
         if include_subsystems:
             stats["subsystems"] = await self._get_subsystem_stats()
 
@@ -578,12 +675,540 @@ class MemoryOrchestrator:
         subsystem_health = await self._check_subsystems(subsystems)
         health["components"].update(subsystem_health)
 
+        # P4 services health
+        for name, svc in [
+            ("audit_service", self._audit_service),
+            ("versioning_service", self._versioning_service),
+            ("ttl_service", self._ttl_service),
+        ]:
+            if svc:
+                try:
+                    health["components"][name] = {"status": "healthy"}
+                except Exception as e:
+                    health["components"][name] = {"status": "unhealthy", "error": str(e)}
+
+        if self._circuit_registry:
+            all_stats = self._circuit_registry.get_all_stats()
+            open_circuits = [n for n, s in all_stats.items() if s.get("state") == "open"]
+            health["components"]["circuit_breakers"] = {
+                "status": "degraded" if open_circuits else "healthy",
+                "total": len(all_stats),
+                "open": open_circuits,
+            }
+
+        if self._metrics:
+            health["components"]["metrics"] = {"status": "healthy"}
+
+        if self._graph_algorithms:
+            try:
+                gstats = self._graph_algorithms.get_stats()
+                health["components"]["graph"] = {"status": "healthy", "nodes": gstats.get("total_nodes", 0)}
+            except Exception as e:
+                health["components"]["graph"] = {"status": "unhealthy", "error": str(e)}
+
         # Determine overall status
         unhealthy = [k for k, v in health["components"].items() if v.get("status") != "healthy"]
         if unhealthy:
             health["status"] = "degraded" if len(unhealthy) < len(health["components"]) else "unhealthy"
 
         return health
+
+    # ----- Realtime tools (P3) -----
+
+    async def memory_subscribe(
+        self,
+        client_id: str,
+        pattern: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Subscribe to realtime memory events."""
+        self._track("memory_subscribe")
+        if not self._subscription_manager:
+            raise SubsystemUnavailableError("Subscription manager not initialized")
+        sub = await self._subscription_manager.create(client_id, pattern, metadata)
+        return {"success": True, "subscription": sub.to_dict()}
+
+    async def memory_unsubscribe(self, subscription_id: str) -> dict[str, Any]:
+        """Unsubscribe from memory events."""
+        self._track("memory_unsubscribe")
+        if not self._subscription_manager:
+            raise SubsystemUnavailableError("Subscription manager not initialized")
+        removed = await self._subscription_manager.remove(subscription_id)
+        return {"success": removed, "subscription_id": subscription_id}
+
+    async def memory_publish(
+        self,
+        event_type: str,
+        data: dict[str, Any],
+        source: str | None = None,
+    ) -> dict[str, Any]:
+        """Publish a custom event to the event bus."""
+        self._track("memory_publish")
+        if not self._event_bus:
+            raise SubsystemUnavailableError("Event bus not initialized")
+        event_id = await self._event_bus.publish(event_type, data, source=source)
+        if self._event_store:
+            from ..infrastructure.event_bus import Event
+
+            event = Event(
+                event_id=event_id,
+                event_type=event_type,
+                data=data,
+                timestamp=datetime.now(),
+                source=source,
+            )
+            await self._event_store.append(event)
+        return {"success": True, "event_id": event_id}
+
+    async def memory_get_events(
+        self,
+        subscription_id: str,
+        max_events: int = 10,
+    ) -> dict[str, Any]:
+        """Poll pending events from a subscription."""
+        self._track("memory_get_events")
+        if not self._subscription_manager:
+            raise SubsystemUnavailableError("Subscription manager not initialized")
+        events = await self._subscription_manager.get_events(subscription_id, max_events)
+        return {"subscription_id": subscription_id, "events": events, "count": len(events)}
+
+    async def memory_replay(
+        self,
+        event_type: str | None = None,
+        start: str | None = None,
+        limit: int = 100,
+    ) -> dict[str, Any]:
+        """Replay events from persistent storage."""
+        self._track("memory_replay")
+        if not self._event_store:
+            raise SubsystemUnavailableError("Event store not initialized")
+        start_dt = datetime.fromisoformat(start) if start else None
+        events = await self._event_store.query(event_type=event_type, start=start_dt, limit=limit)
+        return {
+            "events": [
+                {
+                    "event_id": e.event_id,
+                    "event_type": e.event_type,
+                    "data": e.data,
+                    "timestamp": e.timestamp.isoformat() if isinstance(e.timestamp, datetime) else str(e.timestamp),
+                    "source": e.source,
+                }
+                for e in events
+            ],
+            "count": len(events),
+        }
+
+    async def memory_event_history(
+        self,
+        event_type: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """Query event history with filters."""
+        self._track("memory_event_history")
+        if not self._event_store:
+            raise SubsystemUnavailableError("Event store not initialized")
+        start_dt = datetime.fromisoformat(start) if start else None
+        end_dt = datetime.fromisoformat(end) if end else None
+        events = await self._event_store.query(
+            event_type=event_type, start=start_dt, end=end_dt, limit=limit
+        )
+        return {
+            "events": [
+                {
+                    "event_id": e.event_id,
+                    "event_type": e.event_type,
+                    "data": e.data,
+                    "timestamp": e.timestamp.isoformat() if isinstance(e.timestamp, datetime) else str(e.timestamp),
+                    "source": e.source,
+                }
+                for e in events
+            ],
+            "count": len(events),
+        }
+
+    async def memory_event_stats(self) -> dict[str, Any]:
+        """Get event bus and store statistics."""
+        self._track("memory_event_stats")
+        stats: dict[str, Any] = {}
+        if self._event_bus:
+            bus_stats = self._event_bus.get_stats()
+            stats["event_bus"] = {
+                "published_count": bus_stats.published_count,
+                "subscriber_count": bus_stats.subscriber_count,
+                "dropped_count": bus_stats.dropped_count,
+            }
+        if self._event_store:
+            stats["event_store"] = await self._event_store.get_stats()
+        if self._subscription_manager:
+            stats["subscriptions"] = self._subscription_manager.get_stats()
+        return stats
+
+    async def memory_subscription_health(
+        self, subscription_id: str | None = None
+    ) -> dict[str, Any]:
+        """Check subscription health or send heartbeat."""
+        self._track("memory_subscription_health")
+        if not self._subscription_manager:
+            raise SubsystemUnavailableError("Subscription manager not initialized")
+        if subscription_id:
+            ok = await self._subscription_manager.heartbeat(subscription_id)
+            return {"subscription_id": subscription_id, "heartbeat": ok}
+        subs = await self._subscription_manager.list_subscriptions()
+        return {"subscriptions": subs, "total": len(subs)}
+
+    # ----- Extended tools (P3) -----
+
+    async def memory_research(
+        self,
+        query: str | None = None,
+        entity_ids: list[str] | None = None,
+        analysis_type: str = "relationships",
+        max_depth: int = 3,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        """Deep analysis of entity relationships and anomalies."""
+        self._track("memory_research")
+        if not self._research_tool:
+            raise SubsystemUnavailableError("Research tool not initialized")
+        return await self._research_tool.analyze(
+            query=query, entity_ids=entity_ids,
+            analysis_type=analysis_type, max_depth=max_depth, limit=limit,
+        )
+
+    async def memory_id_management(
+        self,
+        operation: str,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """UUIDv7 generation, ID resolution, conflict handling."""
+        self._track("memory_id_management")
+        if not self._id_tool:
+            raise SubsystemUnavailableError("ID management tool not initialized")
+        return await self._id_tool.execute(operation=operation, **kwargs)
+
+    async def memory_surprise(
+        self,
+        content: str,
+        context: str | None = None,
+        detail: bool = False,
+    ) -> dict[str, Any]:
+        """Calculate unexpectedness score for new content."""
+        self._track("memory_surprise")
+        if not self._surprise_tool:
+            raise SubsystemUnavailableError("Surprise tool not initialized")
+        return await self._surprise_tool.score(content=content, context=context, detail=detail)
+
+    async def memory_warmup(
+        self,
+        strategy: str = "frequent",
+        limit: int = 50,
+        query: str | None = None,
+    ) -> dict[str, Any]:
+        """Preload frequently used data into LRU cache."""
+        self._track("memory_warmup")
+        if not self._warmup_tool:
+            raise SubsystemUnavailableError("Warmup tool not initialized")
+        return await self._warmup_tool.warmup(strategy=strategy, limit=limit, query=query)
+
+    # ----- P4: Service wrapper tools -----
+
+    async def memory_audit_log(
+        self,
+        action: str | None = None,
+        resource_type: str | None = None,
+        resource_id: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Query audit log entries with filters."""
+        self._track("memory_audit_log")
+        if not self._audit_service:
+            raise SubsystemUnavailableError("Audit service not initialized")
+        query = AuditQuery(
+            action=AuditAction(action) if action else None,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            limit=limit,
+            offset=offset,
+        )
+        entries = await self._audit_service.query(query)
+        return {
+            "entries": [e.to_dict() for e in entries],
+            "count": len(entries),
+            "offset": offset,
+            "limit": limit,
+        }
+
+    async def memory_audit_stats(self) -> dict[str, Any]:
+        """Get audit log statistics."""
+        self._track("memory_audit_stats")
+        if not self._audit_service:
+            raise SubsystemUnavailableError("Audit service not initialized")
+        stats = await self._audit_service.get_stats()
+        stats["buffer_size"] = len(self._audit_service._buffer)
+        return stats
+
+    async def memory_circuit_status(
+        self, name: str | None = None
+    ) -> dict[str, Any]:
+        """Get circuit breaker status for one or all named breakers."""
+        self._track("memory_circuit_status")
+        if not self._circuit_registry:
+            raise SubsystemUnavailableError("Circuit breaker registry not initialized")
+        if name:
+            cb = self._circuit_registry.get(name)
+            if not cb:
+                return {"error": f"Circuit breaker '{name}' not found", "available": list(self._circuit_registry._breakers.keys())}
+            return cb.stats
+        return {"breakers": self._circuit_registry.get_all_stats()}
+
+    async def memory_circuit_reset(self, name: str) -> dict[str, Any]:
+        """Reset a circuit breaker to CLOSED state."""
+        self._track("memory_circuit_reset")
+        if not self._circuit_registry:
+            raise SubsystemUnavailableError("Circuit breaker registry not initialized")
+        cb = self._circuit_registry.get(name)
+        if not cb:
+            return {"error": f"Circuit breaker '{name}' not found"}
+        cb.reset()
+        return {"success": True, "name": name, "state": cb.state.value}
+
+    async def memory_metrics(
+        self, reset: bool = False
+    ) -> dict[str, Any]:
+        """Get aggregated metrics from all subsystems."""
+        self._track("memory_metrics")
+        if not self._metrics:
+            raise SubsystemUnavailableError("Metrics collector not initialized")
+        if reset:
+            self._metrics.reset()
+            return {"success": True, "action": "reset"}
+        return self._metrics.get_all()
+
+    async def memory_ttl_set(
+        self,
+        entity_id: str,
+        policy: str = "long",
+        ttl_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Register or update TTL for an entity."""
+        self._track("memory_ttl_set")
+        if not self._ttl_service:
+            raise SubsystemUnavailableError("TTL service not initialized")
+        entry = await self._ttl_service.register(
+            entity_id=entity_id,
+            policy=TTLPolicy(policy),
+            ttl_seconds=ttl_seconds,
+        )
+        return {"success": True, "entry": entry.to_dict()}
+
+    async def memory_ttl_check(
+        self,
+        entity_id: str | None = None,
+        include_expired: bool = False,
+    ) -> dict[str, Any]:
+        """Check TTL status. If entity_id given, check that entity. Otherwise list stats + expiring."""
+        self._track("memory_ttl_check")
+        if not self._ttl_service:
+            raise SubsystemUnavailableError("TTL service not initialized")
+        if entity_id:
+            entry = await self._ttl_service.get_entry(entity_id)
+            if not entry:
+                return {"entity_id": entity_id, "status": "not_found"}
+            expired = entry.is_expired()
+            result: dict[str, Any] = {"entity_id": entity_id, "expired": expired, "entry": entry.to_dict()}
+            if not expired:
+                result["record_access"] = True
+                await self._ttl_service.record_access(entity_id)
+            return result
+        stats = await self._ttl_service.get_stats()
+        if include_expired:
+            expired = await self._ttl_service.get_expired()
+            stats["expired_entries"] = [e.to_dict() for e in expired[:20]]
+        return stats
+
+    async def memory_ttl_cleanup(self) -> dict[str, Any]:
+        """Remove expired TTL entries. Returns list of removed entity IDs."""
+        self._track("memory_ttl_cleanup")
+        if not self._ttl_service:
+            raise SubsystemUnavailableError("TTL service not initialized")
+        removed = await self._ttl_service.cleanup_expired()
+        return {"success": True, "removed_count": len(removed), "removed": removed}
+
+    async def memory_version_history(
+        self,
+        entity_id: str,
+        limit: int = 50,
+        include_content: bool = True,
+    ) -> dict[str, Any]:
+        """Get version history for an entity."""
+        self._track("memory_version_history")
+        if not self._versioning_service:
+            raise SubsystemUnavailableError("Versioning service not initialized")
+        versions = await self._versioning_service.get_version_history(
+            entity_id=entity_id, limit=limit, include_content=include_content,
+        )
+        return {
+            "entity_id": entity_id,
+            "versions": [v.to_dict() for v in versions],
+            "count": len(versions),
+        }
+
+    async def memory_version_rollback(
+        self,
+        entity_id: str,
+        target_version: int,
+        rollback_by: str = "",
+    ) -> dict[str, Any]:
+        """Rollback entity to a specific version."""
+        self._track("memory_version_rollback")
+        if not self._versioning_service:
+            raise SubsystemUnavailableError("Versioning service not initialized")
+        result = await self._versioning_service.rollback_to_version(
+            entity_id=entity_id,
+            target_version=target_version,
+            rollback_by=rollback_by,
+        )
+        if result is None:
+            return {"success": False, "error": f"Version {target_version} not found for entity {entity_id}"}
+        return {"success": True, "new_version": result.to_dict()}
+
+    async def memory_version_compare(
+        self,
+        entity_id: str,
+        version_a: int,
+        version_b: int,
+    ) -> dict[str, Any]:
+        """Compare two versions of an entity."""
+        self._track("memory_version_compare")
+        if not self._versioning_service:
+            raise SubsystemUnavailableError("Versioning service not initialized")
+        return await self._versioning_service.compare_versions(
+            entity_id=entity_id, version_a=version_a, version_b=version_b,
+        )
+
+    async def memory_forget(
+        self,
+        strategy: str = "composite",
+        dry_run: bool = True,
+        candidates: list[dict[str, Any]] | None = None,
+        min_confidence: float = 0.1,
+        decay_rate: float = 0.05,
+    ) -> dict[str, Any]:
+        """Run ForgetGate evaluation on candidates. Default is dry-run (no actual deletion)."""
+        self._track("memory_forget")
+        if not self._forgetgate_service:
+            raise SubsystemUnavailableError("ForgetGate service not initialized")
+        from ..vector_memory.services.forgetgate_service import (
+            ForgetGateConfig,
+            ForgetStrategy,
+            ForgetCandidate,
+        )
+        config = ForgetGateConfig(
+            strategy=ForgetStrategy(strategy),
+            dry_run=dry_run,
+            min_confidence=min_confidence,
+            decay_rate=decay_rate,
+        )
+        gate = ForgetGateService(config)
+        if candidates:
+            fc = [
+                ForgetCandidate(
+                    entity_id=c.get("entity_id", ""),
+                    current_confidence=c.get("confidence", 0.5),
+                    last_accessed=datetime.fromisoformat(c["last_accessed"]) if c.get("last_accessed") else None,
+                    access_count=c.get("access_count", 0),
+                    created_at=datetime.fromisoformat(c["created_at"]) if c.get("created_at") else datetime.now(),
+                    tags=c.get("tags", []),
+                    metadata=c.get("metadata", {}),
+                )
+                for c in candidates
+            ]
+        else:
+            fc = []
+        decisions = gate.evaluate(fc)
+        stats = gate.apply(decisions)
+        return {
+            "stats": {
+                "total_evaluated": stats.total_evaluated,
+                "kept": stats.kept,
+                "decayed": stats.decayed,
+                "archived": stats.archived,
+                "deleted": stats.deleted,
+                "duration_ms": stats.duration_ms,
+                "dry_run": dry_run,
+            },
+            "decisions": [
+                {
+                    "entity_id": d.entity_id,
+                    "action": d.action.value,
+                    "new_confidence": round(d.new_confidence, 4),
+                    "reason": d.reason,
+                }
+                for d in decisions[:50]
+            ],
+        }
+
+    async def memory_graph_analyze(
+        self,
+        algorithm: str = "stats",
+        source: str | None = None,
+        target: str | None = None,
+        damping: float = 0.85,
+        max_iterations: int = 100,
+    ) -> dict[str, Any]:
+        """Run graph algorithms: pagerank, centrality, communities, shortest_path, stats."""
+        self._track("memory_graph_analyze")
+        if not self._graph_algorithms:
+            raise SubsystemUnavailableError("Graph algorithms not initialized")
+
+        if algorithm == "stats":
+            return self._graph_algorithms.get_stats()
+        elif algorithm == "pagerank":
+            ranks = self._graph_algorithms.pagerank(damping=damping, max_iterations=max_iterations)
+            sorted_ranks = sorted(ranks.items(), key=lambda x: x[1], reverse=True)[:20]
+            return {"algorithm": "pagerank", "results": [{"node": n, "score": round(s, 6)} for n, s in sorted_ranks]}
+        elif algorithm == "centrality":
+            cent = self._graph_algorithms.degree_centrality()
+            sorted_cent = sorted(cent.items(), key=lambda x: x[1], reverse=True)[:20]
+            return {"algorithm": "centrality", "results": [{"node": n, "degree": d} for n, d in sorted_cent]}
+        elif algorithm == "communities":
+            communities = self._graph_algorithms.detect_communities()
+            return {
+                "algorithm": "communities",
+                "count": len(communities),
+                "communities": [
+                    {"id": c.community_id, "members": c.members, "modularity": c.modularity}
+                    for c in communities
+                ],
+            }
+        elif algorithm == "shortest_path":
+            if not source or not target:
+                return {"error": "source and target required for shortest_path"}
+            result = self._graph_algorithms.shortest_path(source, target)
+            if result is None:
+                return {"algorithm": "shortest_path", "found": False}
+            return {
+                "algorithm": "shortest_path",
+                "found": True,
+                "path": result.path,
+                "total_weight": result.total_weight,
+                "hop_count": result.hop_count,
+            }
+        elif algorithm == "connected_components":
+            components = self._graph_algorithms.connected_components()
+            return {
+                "algorithm": "connected_components",
+                "count": len(components),
+                "components": [
+                    {"size": len(c), "nodes": sorted(c)[:20]}
+                    for c in sorted(components, key=len, reverse=True)
+                ],
+            }
+        else:
+            return {"error": f"Unknown algorithm: {algorithm}. Use: stats, pagerank, centrality, communities, shortest_path, connected_components"}
 
     # ----- Private helpers -----
 
@@ -1029,6 +1654,322 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        # --- Realtime tools (P3) ---
+        Tool(
+            name="memory_subscribe",
+            description="Subscribe to realtime memory events. Returns subscription ID for polling.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "client_id": {"type": "string", "description": "Client identifier"},
+                    "pattern": {"type": "string", "description": "Event pattern with wildcards (e.g. 'memory.*', 'memory.**')"},
+                    "metadata": {"type": "object", "description": "Optional subscription metadata"},
+                },
+                "required": ["client_id", "pattern"],
+            },
+        ),
+        Tool(
+            name="memory_unsubscribe",
+            description="Remove a subscription by ID.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "subscription_id": {"type": "string"},
+                },
+                "required": ["subscription_id"],
+            },
+        ),
+        Tool(
+            name="memory_publish",
+            description="Publish a custom event to the memory event bus. Persisted to event store.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "event_type": {"type": "string", "description": "Dotted event type (e.g. 'memory.custom.alert')"},
+                    "data": {"type": "object", "description": "Event payload"},
+                    "source": {"type": "string", "description": "Source identifier"},
+                },
+                "required": ["event_type", "data"],
+            },
+        ),
+        Tool(
+            name="memory_get_events",
+            description="Poll pending events from a subscription queue.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "subscription_id": {"type": "string"},
+                    "max_events": {"type": "integer", "default": 10},
+                },
+                "required": ["subscription_id"],
+            },
+        ),
+        Tool(
+            name="memory_replay",
+            description="Replay events from persistent storage. Useful for rebuilding state.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "event_type": {"type": "string", "description": "Filter by event type"},
+                    "start": {"type": "string", "description": "ISO datetime to replay from"},
+                    "limit": {"type": "integer", "default": 100},
+                },
+            },
+        ),
+        Tool(
+            name="memory_event_history",
+            description="Query event history with type and time range filters.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "event_type": {"type": "string"},
+                    "start": {"type": "string", "description": "ISO datetime range start"},
+                    "end": {"type": "string", "description": "ISO datetime range end"},
+                    "limit": {"type": "integer", "default": 50},
+                },
+            },
+        ),
+        Tool(
+            name="memory_event_stats",
+            description="Get event bus, event store, and subscription statistics.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="memory_subscription_health",
+            description="Send heartbeat for a subscription or list all subscriptions with health status.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "subscription_id": {"type": "string", "description": "Send heartbeat for this subscription (omit to list all)"},
+                },
+            },
+        ),
+        # --- Extended tools (P3) ---
+        Tool(
+            name="memory_research",
+            description="Deep analysis of entity relationships, anomalies, clusters, and timeline patterns.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query to find entities"},
+                    "entity_ids": {"type": "array", "items": {"type": "string"}, "description": "Specific entity IDs"},
+                    "analysis_type": {
+                        "type": "string",
+                        "enum": ["relationships", "anomalies", "clusters", "timeline", "summary"],
+                        "default": "relationships",
+                    },
+                    "max_depth": {"type": "integer", "default": 3},
+                    "limit": {"type": "integer", "default": 20},
+                },
+            },
+        ),
+        Tool(
+            name="memory_id_management",
+            description="Unified ID management: UUIDv7 generation, ID resolution, conflict handling, batch registration.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "enum": ["generate", "resolve", "reverse_lookup", "resolve_conflict", "batch_register", "stats"],
+                    },
+                    "source": {"type": "string", "description": "Source server name"},
+                    "memory_type": {"type": "string"},
+                    "count": {"type": "integer", "default": 1},
+                    "unified_id": {"type": "string"},
+                    "original_id": {"type": "string"},
+                    "id_a": {"type": "string"},
+                    "id_b": {"type": "string"},
+                    "strategy": {"type": "string", "default": "keep_newer"},
+                    "items": {"type": "array", "items": {"type": "object"}},
+                },
+                "required": ["operation"],
+            },
+        ),
+        Tool(
+            name="memory_surprise",
+            description="Calculate unexpectedness/novelty score for new content (0=known, 1=surprising).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "content": {"type": "string", "description": "Content to evaluate"},
+                    "context": {"type": "string", "description": "Optional domain/topic context"},
+                    "detail": {"type": "boolean", "default": False, "description": "Include detailed comparison data"},
+                },
+                "required": ["content"],
+            },
+        ),
+        Tool(
+            name="memory_warmup",
+            description="Preload frequently used data into LRU cache to reduce cold-start latency.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "strategy": {
+                        "type": "string",
+                        "enum": ["frequent", "recent", "important", "pattern"],
+                        "default": "frequent",
+                    },
+                    "limit": {"type": "integer", "default": 50},
+                    "query": {"type": "string", "description": "Query for 'pattern' strategy"},
+                },
+            },
+        ),
+        # --- P4: Service wrapper tools ---
+        Tool(
+            name="memory_audit_log",
+            description="Query audit log entries with optional filters (action, resource_type, resource_id).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "action": {"type": "string", "description": "Filter by action type (create, read, update, delete, search, link, propagate, merge, rollback, export, config_change, health_check)"},
+                    "resource_type": {"type": "string", "description": "Filter by resource type"},
+                    "resource_id": {"type": "string", "description": "Filter by resource ID"},
+                    "limit": {"type": "integer", "default": 50},
+                    "offset": {"type": "integer", "default": 0},
+                },
+            },
+        ),
+        Tool(
+            name="memory_audit_stats",
+            description="Get audit log statistics: entry counts by action, error rate, buffer size.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="memory_circuit_status",
+            description="Get circuit breaker status. Omit name to get all breakers.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Named circuit breaker (omit for all)"},
+                },
+            },
+        ),
+        Tool(
+            name="memory_circuit_reset",
+            description="Reset a circuit breaker to CLOSED state.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Circuit breaker name to reset"},
+                },
+                "required": ["name"],
+            },
+        ),
+        Tool(
+            name="memory_metrics",
+            description="Get aggregated metrics from all subsystems (counters, gauges, durations). Pass reset=true to clear.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "reset": {"type": "boolean", "default": False, "description": "Reset all metrics after reading"},
+                },
+            },
+        ),
+        Tool(
+            name="memory_ttl_set",
+            description="Register or update TTL for an entity. Policy: never, short (1h), medium (24h), long (7d), extended (30d), custom.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_id": {"type": "string"},
+                    "policy": {"type": "string", "default": "long", "description": "TTL policy preset"},
+                    "ttl_seconds": {"type": "integer", "description": "Custom TTL in seconds (for policy=custom)"},
+                },
+                "required": ["entity_id"],
+            },
+        ),
+        Tool(
+            name="memory_ttl_check",
+            description="Check TTL status for an entity, or get overall TTL stats. Set include_expired=true to list expired entries.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_id": {"type": "string", "description": "Check specific entity (omit for stats)"},
+                    "include_expired": {"type": "boolean", "default": False},
+                },
+            },
+        ),
+        Tool(
+            name="memory_ttl_cleanup",
+            description="Remove expired TTL entries. Returns list of removed entity IDs.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        Tool(
+            name="memory_version_history",
+            description="Get version history for an entity with optional content inclusion.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_id": {"type": "string"},
+                    "limit": {"type": "integer", "default": 50},
+                    "include_content": {"type": "boolean", "default": True},
+                },
+                "required": ["entity_id"],
+            },
+        ),
+        Tool(
+            name="memory_version_rollback",
+            description="Rollback entity to a specific version number.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_id": {"type": "string"},
+                    "target_version": {"type": "integer", "description": "Version number to rollback to"},
+                    "rollback_by": {"type": "string", "default": ""},
+                },
+                "required": ["entity_id", "target_version"],
+            },
+        ),
+        Tool(
+            name="memory_version_compare",
+            description="Compare two versions of an entity and return the diff.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_id": {"type": "string"},
+                    "version_a": {"type": "integer"},
+                    "version_b": {"type": "integer"},
+                },
+                "required": ["entity_id", "version_a", "version_b"],
+            },
+        ),
+        Tool(
+            name="memory_forget",
+            description="Run ForgetGate evaluation on memory candidates. Default is dry-run (no actual deletion). Strategies: confidence_decay, access_based, surprise_based, composite.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "strategy": {"type": "string", "default": "composite", "description": "Forget strategy"},
+                    "dry_run": {"type": "boolean", "default": True, "description": "If true, evaluate without applying"},
+                    "candidates": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": "Candidate entries to evaluate (omit for empty evaluation)",
+                    },
+                    "min_confidence": {"type": "number", "default": 0.1},
+                    "decay_rate": {"type": "number", "default": 0.05},
+                },
+            },
+        ),
+        Tool(
+            name="memory_graph_analyze",
+            description="Run graph algorithms on the memory knowledge graph. Algorithms: stats, pagerank, centrality, communities, shortest_path, connected_components.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "algorithm": {
+                        "type": "string",
+                        "enum": ["stats", "pagerank", "centrality", "communities", "shortest_path", "connected_components"],
+                        "default": "stats",
+                    },
+                    "source": {"type": "string", "description": "Source node (for shortest_path)"},
+                    "target": {"type": "string", "description": "Target node (for shortest_path)"},
+                    "damping": {"type": "number", "default": 0.85, "description": "Damping factor (for pagerank)"},
+                    "max_iterations": {"type": "integer", "default": 100},
+                },
+            },
+        ),
     ]
 
 
@@ -1087,6 +2028,143 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         elif name == "health_check":
             result = await orch.health_check(
                 subsystems=arguments.get("subsystems"),
+            )
+        # --- Realtime tools (P3) ---
+        elif name == "memory_subscribe":
+            result = await orch.memory_subscribe(
+                client_id=arguments["client_id"],
+                pattern=arguments["pattern"],
+                metadata=arguments.get("metadata"),
+            )
+        elif name == "memory_unsubscribe":
+            result = await orch.memory_unsubscribe(
+                subscription_id=arguments["subscription_id"],
+            )
+        elif name == "memory_publish":
+            result = await orch.memory_publish(
+                event_type=arguments["event_type"],
+                data=arguments["data"],
+                source=arguments.get("source"),
+            )
+        elif name == "memory_get_events":
+            result = await orch.memory_get_events(
+                subscription_id=arguments["subscription_id"],
+                max_events=arguments.get("max_events", 10),
+            )
+        elif name == "memory_replay":
+            result = await orch.memory_replay(
+                event_type=arguments.get("event_type"),
+                start=arguments.get("start"),
+                limit=arguments.get("limit", 100),
+            )
+        elif name == "memory_event_history":
+            result = await orch.memory_event_history(
+                event_type=arguments.get("event_type"),
+                start=arguments.get("start"),
+                end=arguments.get("end"),
+                limit=arguments.get("limit", 50),
+            )
+        elif name == "memory_event_stats":
+            result = await orch.memory_event_stats()
+        elif name == "memory_subscription_health":
+            result = await orch.memory_subscription_health(
+                subscription_id=arguments.get("subscription_id"),
+            )
+        # --- Extended tools (P3) ---
+        elif name == "memory_research":
+            result = await orch.memory_research(
+                query=arguments.get("query"),
+                entity_ids=arguments.get("entity_ids"),
+                analysis_type=arguments.get("analysis_type", "relationships"),
+                max_depth=arguments.get("max_depth", 3),
+                limit=arguments.get("limit", 20),
+            )
+        elif name == "memory_id_management":
+            result = await orch.memory_id_management(
+                operation=arguments["operation"],
+                **{k: v for k, v in arguments.items() if k != "operation"},
+            )
+        elif name == "memory_surprise":
+            result = await orch.memory_surprise(
+                content=arguments["content"],
+                context=arguments.get("context"),
+                detail=arguments.get("detail", False),
+            )
+        elif name == "memory_warmup":
+            result = await orch.memory_warmup(
+                strategy=arguments.get("strategy", "frequent"),
+                limit=arguments.get("limit", 50),
+                query=arguments.get("query"),
+            )
+        # --- P4: Service wrapper tools ---
+        elif name == "memory_audit_log":
+            result = await orch.memory_audit_log(
+                action=arguments.get("action"),
+                resource_type=arguments.get("resource_type"),
+                resource_id=arguments.get("resource_id"),
+                limit=arguments.get("limit", 50),
+                offset=arguments.get("offset", 0),
+            )
+        elif name == "memory_audit_stats":
+            result = await orch.memory_audit_stats()
+        elif name == "memory_circuit_status":
+            result = await orch.memory_circuit_status(
+                name=arguments.get("name"),
+            )
+        elif name == "memory_circuit_reset":
+            result = await orch.memory_circuit_reset(
+                name=arguments["name"],
+            )
+        elif name == "memory_metrics":
+            result = await orch.memory_metrics(
+                reset=arguments.get("reset", False),
+            )
+        elif name == "memory_ttl_set":
+            result = await orch.memory_ttl_set(
+                entity_id=arguments["entity_id"],
+                policy=arguments.get("policy", "long"),
+                ttl_seconds=arguments.get("ttl_seconds"),
+            )
+        elif name == "memory_ttl_check":
+            result = await orch.memory_ttl_check(
+                entity_id=arguments.get("entity_id"),
+                include_expired=arguments.get("include_expired", False),
+            )
+        elif name == "memory_ttl_cleanup":
+            result = await orch.memory_ttl_cleanup()
+        elif name == "memory_version_history":
+            result = await orch.memory_version_history(
+                entity_id=arguments["entity_id"],
+                limit=arguments.get("limit", 50),
+                include_content=arguments.get("include_content", True),
+            )
+        elif name == "memory_version_rollback":
+            result = await orch.memory_version_rollback(
+                entity_id=arguments["entity_id"],
+                target_version=arguments["target_version"],
+                rollback_by=arguments.get("rollback_by", ""),
+            )
+        elif name == "memory_version_compare":
+            result = await orch.memory_version_compare(
+                entity_id=arguments["entity_id"],
+                version_a=arguments["version_a"],
+                version_b=arguments["version_b"],
+            )
+        elif name == "memory_forget":
+            result = await orch.memory_forget(
+                strategy=arguments.get("strategy", "composite"),
+                dry_run=arguments.get("dry_run", True),
+                candidates=arguments.get("candidates"),
+                min_confidence=arguments.get("min_confidence", 0.1),
+                decay_rate=arguments.get("decay_rate", 0.05),
+            )
+        elif name == "memory_graph_analyze":
+            result = await orch.memory_graph_analyze(
+                algorithm=arguments.get("algorithm", "stats"),
+                source=arguments.get("source"),
+                target=arguments.get("target"),
+                damping=arguments.get("damping", 0.85),
+                max_iterations=arguments.get("max_iterations", 100),
             )
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
