@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03 (обновлено 2026-04-04 — P4 DONE)
+**Дата:** 2026-04-03 (обновлено 2026-04-04 — P4 DONE, P5 PLANNED)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** ЗАВЕРШЕНО — P0 DONE, P0.5 DONE, P1 DONE, P2 DONE, P3 DONE, P4 DONE
+**Статус:** P0-P4 ЗАВЕРШЕНО, P5 TODO — Session Memory Bridge (auto-save + federated recall)
 
 ---
 
