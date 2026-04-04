@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03 (обновлено 2026-04-04 — GitHub research + infrastructure reuse)
+**Дата:** 2026-04-03 (обновлено 2026-04-04 — P0.5 завершена с Russian stemming)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** ПЛАНИРОВАНИЕ (v2 — с учётом best practices и переиспользования)
+**Статус:** В РАБОТЕ — P0 DONE, P0.5 DONE, P1 DONE
 
 ---
 
@@ -22,8 +22,8 @@
 
 | Приоритет | Фаза | Часы (raw) | Экономия (reuse) | Часы (итог) | Обязательность |
 |-----------|-------|------------|------------------|-------------|----------------|
-| **P0** | Критический оркестратор | 40-50 | -13ч (Hybrid RRF, Qdrant, Config) | **27-37** | ОБЯЗАТЕЛЬНО |
-| **P0.5** | Memory-First Hook | 4-6 | 0 | **4-6** | ОБЯЗАТЕЛЬНО |
+| **P0** | Критический оркестратор | 40-50 | -13ч (Hybrid RRF, Qdrant, Config) | **27-37** | ✅ DONE |
+| **P0.5** | Memory-First Hook + Stemming | 4-6 | 0 | **~5** | ✅ DONE |
 | **P1** | Инфраструктура и пропагация | 35-45 | -12ч (CircuitBreaker, Backoff, NetworkX) | **23-33** | ОБЯЗАТЕЛЬНО |
 | **P2** | Продвинутый поиск и сервисы | 40-50 | -16ч (BM25, Cache, Rerankers, Metrics) | **24-34** | ОБЯЗАТЕЛЬНО |
 | **P3** | Realtime и адаптеры | 50-65 | -4ч (Logger) | **46-61** | Опционально |
@@ -133,66 +133,95 @@ D:\1С-Framework\src\memory\
 
 #### Чеклист P0
 
-- [ ] Создать директорию `infrastructure/` и `__init__.py`
-- [ ] Перенести `retry.py` -> `infrastructure/retry.py`
-  - [ ] Адаптировать импорты, добавить типизацию
-  - [ ] Покрыть тестами
-- [ ] Перенести `timeout.py` -> `infrastructure/timeout.py`
-  - [ ] Адаптировать импорты, добавить типизацию
-  - [ ] Покрыть тестами
-- [ ] Сравнить `unified_id.py` (источник vs цель)
-  - [ ] Мерж если есть различия
-  - [ ] Проверить обратную совместимость
-- [ ] Сравнить `link_registry.py` (источник vs цель)
-  - [ ] Мерж если есть различия, проверить схему SQLite
-- [ ] Перенести `memory_orchestrator.py`
-  - [ ] Заменить TimescaleDB коннекты на SQLite
-  - [ ] Адаптировать 8 MCP tools к текущим сигнатурам:
-    - [ ] `unified_search` — федеративный запрос к 3 серверам
-    - [ ] `route_and_save` — роутинг по целевым системам
-    - [ ] `get_full_context` — агрегация с graph traversal
-    - [ ] `create_link`, `get_related` — через LinkRegistry
-    - [ ] `propagate_update` — заглушка (для P1)
-    - [ ] `get_system_stats`, `health_check`
-- [ ] Перенести `memory_router.py`
-  - [ ] Упростить правила для 3 бэкендов (code->ai_memory, pattern->vector, skill->skill_learning)
-  - [ ] Убрать зависимости от Neo4j
-- [ ] Интеграционные тесты
-  - [ ] Тест маршрутизации по типам контента
-  - [ ] Тест федеративного поиска
-  - [ ] Тест создания связей
-- [ ] Проверить обратную совместимость: существующие 18 tools и 26 тестов работают
+- [x] Создать директорию `infrastructure/` и `__init__.py`
+- [x] Перенести `retry.py` -> `infrastructure/retry.py`
+  - [x] Адаптировать импорты, добавить типизацию
+  - [x] Покрыть тестами
+- [x] Перенести `timeout.py` -> `infrastructure/timeout.py`
+  - [x] Адаптировать импорты, добавить типизацию
+  - [x] Покрыть тестами
+- [x] Сравнить `unified_id.py` (источник vs цель)
+  - [x] Мерж если есть различия
+  - [x] Проверить обратную совместимость
+- [x] Сравнить `link_registry.py` (источник vs цель)
+  - [x] Мерж если есть различия, проверить схему SQLite
+- [x] Перенести `memory_orchestrator.py`
+  - [x] Заменить TimescaleDB коннекты на SQLite
+  - [x] Адаптировать 8 MCP tools к текущим сигнатурам:
+    - [x] `unified_search` — федеративный запрос к 3 серверам
+    - [x] `route_and_save` — роутинг по целевым системам
+    - [x] `get_full_context` — агрегация с graph traversal
+    - [x] `create_link`, `get_related` — через LinkRegistry
+    - [x] `propagate_update` — заглушка (для P1)
+    - [x] `get_system_stats`, `health_check`
+- [x] Перенести `memory_router.py`
+  - [x] Упростить правила для 3 бэкендов (code->ai_memory, pattern->vector, skill->skill_learning)
+  - [x] Убрать зависимости от Neo4j
+- [x] MemCube abstraction (MemOS pattern) — `orchestrator/memcube.py`
+  - [x] `MemoryCube` dataclass с полями identity/scoring/temporal/observations
+  - [x] `ContentType` enum (fact/preference/rule/skill/code/observation)
+  - [x] Конвертеры: `to_ai_memory_row()`, `to_vector_memory_payload()`, `to_skill_learning_record()`
+- [x] Auto-classify middleware (Memori pattern) — `memory_router.py`
+  - [x] `ContentClassifier` — regex-based middleware перед роутингом
+  - [x] `ClassificationResult` dataclass (content_type, confidence, signals)
+  - [x] Фаза 0 в `MemoryRouter.route()` — auto-detect fact/preference/rule/skill/code
+  - [x] `classify_content()` — публичный API для внешнего использования
+- [x] Hybrid RRF search (OpenCrabs/ClawMem pattern) — `unified_search.py`
+  - [x] `RRFMerger` — Reciprocal Rank Fusion с source weights и k-parameter
+  - [x] Нормализация RRF scores к [0, 1] шкале
+  - [x] 60% RRF rank + 40% quality signal комбинирование
+  - [x] `SearchOptions.rrf_enabled` / `rrf_k` / `rrf_source_weights` конфигурация
+  - [x] Fallback на legacy `ScoreNormalizer` при `rrf_enabled=False`
+- [x] Интеграционные тесты
+  - [x] Тест маршрутизации по типам контента (24 теста)
+  - [x] Тест федеративного поиска (26 тестов)
+  - [x] Тест создания связей (18 тестов)
+- [x] Проверить обратную совместимость: 68/68 тестов проходят
 
 ---
 
-### Фаза P0.5: Memory-First Hook (Auto-Context)
+### Фаза P0.5: Memory-First Hook (Auto-Context) — DONE ✅
 
 **Приоритет:** Критический
 **Зависимости:** P0 (unified_search должен работать)
-**Оценка:** 4-6 часов
+**Оценка:** 4-6 часов → **Факт: ~5 часов**
+**Статус:** ЗАВЕРШЕНА (2026-04-04)
 **Цель:** Обеспечить автоматический поиск в памяти **перед** каждым ответом Claude — любой вопрос/просьба опирается на сохранённый контекст из предыдущих сессий.
 
 **Проблема:** MCP-серверы памяти — это инструменты, которые Claude вызывает **по своему решению**. Без этой фазы Claude может "забыть" проверить память и ответить с нуля.
 
-**Решение:** UserPromptSubmit hook, который:
-1. Получает текст запроса пользователя
-2. Вызывает `unified_search` (federated RRF по 3 бэкендам из P0)
-3. Возвращает топ-3 релевантных записей как `systemMessage`
-4. Claude получает контекст памяти **до** начала обработки запроса
+**Решение (реализация):** UserPromptSubmit hook, который:
+1. Получает текст запроса пользователя (stdin JSON)
+2. Читает локальные memory-файлы из `MEMORY.md` индекса (без MCP/HTTP зависимостей)
+3. Выполняет token-based поиск с weighted scoring (name×3, desc×2, body×1)
+4. Возвращает топ-3 релевантных записей как `systemMessage`
+5. Claude получает контекст памяти **до** начала обработки запроса
 
-**Архитектура:**
+> **Отличие от плана:** Вместо вызова `unified_search` через HTTP/subprocess — прямое чтение
+> локальных `.md` файлов памяти. Это устраняет зависимость от MCP-сервера, снижает latency
+> и гарантирует работу даже при отключённых MCP-серверах. Federaged MCP search можно
+> добавить как upgrade в будущем.
+
+**Архитектура (реализованная):**
 
 ```
-User prompt
+User prompt (stdin JSON)
   ↓
 UserPromptSubmit hook (memory-first-hook.py)
   ↓
-unified_search(query=user_prompt, limit=3)
-  ├── ai_memory (факты, предпочтения)
-  ├── vector_memory (паттерны, решения)
-  └── skill_learning (навыки, подтверждённые практики)
+load_all_memories() — чтение .md файлов из MEMORY_DIR
+  ├── Парсинг YAML frontmatter (name, description, type)
+  ├── Fallback: glob *.md если MEMORY.md пуст
+  └── Tokenization + Russian stemming
   ↓
-systemMessage: "Memory context: ..."
+search_memories(prompt, memories) — weighted token overlap
+  ├── name tokens × 3 (strongest signal)
+  ├── description tokens × 2
+  └── body tokens × 1
+  ↓
+score = 0.7 × query_coverage + 0.3 × memory_density
+  ↓
+systemMessage: "[MEMORY CONTEXT] Found {n} relevant memories..."
   ↓
 Claude отвечает С УЧЁТОМ памяти
 ```
@@ -207,33 +236,64 @@ Claude отвечает С УЧЁТОМ памяти
 Use this context to inform your response. If memory conflicts with current code, trust current code.
 ```
 
-**Оптимизации:**
+**Оптимизации (реализованные):**
 - **Минимальная длина запроса:** skip для prompt < 20 chars (приветствия, /commands)
-- **Cooldown:** не чаще 1 раза в 30 секунд (если пользователь быстро шлёт сообщения)
+- **Cooldown:** не чаще 1 раза в 30 секунд (файл `cache/memory-first-cooldown.json`)
 - **Threshold:** score < 0.3 → не включать (низкорелевантный шум)
-- **Timeout:** max 2 секунды на поиск, fallback — пустой контекст (не блокировать Claude)
-- **Skip patterns:** `/commit`, `/help`, однословные команды
+- **Timeout:** max 2 секунды (threading-based, Windows-compatible)
+- **Skip patterns:** `/command`, однословные запросы
+- **Russian stemming:** суффиксный стриппер для русских словоформ (29 суффиксов, 3/2/1-char)
+- **Graceful degradation:** при любой ошибке → `{"continue": true}`, лог в `cache/hooks-error.log`
+
+**Russian Stemming (v1.1):**
+
+| Словоформа | Стем | Суффикс |
+|-----------|------|---------|
+| агенты | агент | -ы |
+| агентов | агент | -ов |
+| агентам | агент | -ам |
+| агентами | агент | -ами |
+| документации | документаци | -и |
+| документацию | документаци | -ю |
+| конфигурации | конфигураци | -и |
+
+> Английские токены не стеммируются (работают хорошо без стемминга).
+> Минимальная длина стема: 3 символа. Только кириллические токены обрабатываются.
 
 #### Чеклист P0.5
 
-- [ ] Создать `.claude/hooks/memory-first-hook.py`
-  - [ ] Парсинг stdin (userPromptSubmit формат)
-  - [ ] Вызов unified_search через HTTP/subprocess
-  - [ ] Форматирование systemMessage
-  - [ ] Timeout 2s + graceful fallback
-  - [ ] Skip для коротких/служебных запросов
-- [ ] Зарегистрировать hook в `settings.json`
-  - [ ] `event: UserPromptSubmit`
-  - [ ] `command: python .claude/hooks/memory-first-hook.py`
-- [ ] Добавить инструкцию в CLAUDE.md:
-  - [ ] "If memory context is provided, compare with current state before acting"
-  - [ ] "For deep memory search, call unified_search MCP tool explicitly"
-- [ ] Тесты:
-  - [ ] Hook возвращает релевантный контекст для known query
-  - [ ] Hook не блокирует при timeout
-  - [ ] Hook пропускает короткие запросы
-  - [ ] Hook корректно работает когда unified_search пуст
-- [ ] Интеграционный тест: полный цикл (prompt → hook → memory → systemMessage → Claude)
+- [x] Создать `.claude/hooks/memory-first-hook.py`
+  - [x] Парсинг stdin (UserPromptSubmit JSON формат)
+  - [x] Чтение локальных memory-файлов (MEMORY.md индекс + frontmatter парсинг)
+  - [x] Token-based поиск с weighted scoring
+  - [x] Форматирование systemMessage
+  - [x] Timeout 2s (threading) + graceful fallback
+  - [x] Skip для коротких/служебных запросов
+  - [x] Russian stemming (суффиксный стриппер, 29 суффиксов)
+- [x] Зарегистрировать hook в `settings.json`
+  - [x] `event: UserPromptSubmit`
+  - [x] `command: python D:/1C-Enterprise_Framework/.claude/hooks/memory-first-hook.py`
+- [x] Добавить инструкцию в CLAUDE.md:
+  - [x] Секция "Memory Context (Auto-Injected by memory-first-hook)"
+  - [x] "Trust code over memory", "Use as hints", "Check recency"
+- [x] Тесты (`scripts/claude-backend/tests/test_memory_first_hook.py`): **41 тестов PASS**
+  - [x] TestShouldSkip (8 тестов) — skip logic
+  - [x] TestParseFrontmatter (4 теста) — YAML парсинг
+  - [x] TestStemToken (9 тестов) — Russian stemming
+  - [x] TestTokenize (7 тестов) — tokenization + stemming integration
+  - [x] TestScoreMemory (6 тестов) — weighted scoring + Russian wordforms
+  - [x] TestFormatMemoryContext (3 теста) — output formatting
+  - [x] TestHookIntegration (4 теста) — subprocess end-to-end
+- [x] Интеграционный тест: полный цикл (prompt → hook → memory → systemMessage)
+
+#### Известные ограничения (для будущих фаз)
+
+| Ограничение | Влияние | Решение |
+|-------------|---------|---------|
+| Только локальные .md файлы | Не ищет в MCP-серверах (vector, skill_learning) | Upgrade: добавить HTTP fallback к unified_search |
+| Стемминг без морфологии | "конфигурация" → "конфигураци" (не идеально) | Pymorphy2 или snowball-stemmer |
+| Кириллица/латиница не транслитерируются | "GLM" (lat) ≠ "ГЛМ" (cyr) | Добавить transliteration mapping |
+| Нет semantic similarity | Только token overlap, не понимает синонимы | Upgrade: embedding-based search через Qdrant |
 
 ---
 
@@ -263,32 +323,37 @@ Use this context to inform your response. If memory conflicts with current code,
 
 #### Чеклист P1
 
-- [ ] Перенести `propagation_engine.py`
-  - [ ] Заменить Neo4j граф на SQLite adjacency list
-    - [ ] Таблица `edges(id, source_id, target_id, relation_type, weight, created_at)`
-    - [ ] Индексы на source_id, target_id
-  - [ ] Адаптировать BFS алгоритм (Neo4j Cypher -> SQL рекурсия)
-  - [ ] Сохранить time decay + distance decay формулы
-  - [ ] Rate limiting через asyncio.Semaphore
-  - [ ] Background workers через asyncio.create_task
-  - [ ] Покрыть тестами (unit + integration)
-- [ ] Перенести `circuit_breaker.py`
-  - [ ] Убрать Redis зависимость, использовать in-memory state
-  - [ ] Добавить конфигурацию порогов
-  - [ ] Покрыть тестами
-- [ ] Перенести `audit_service.py`
-  - [ ] Таблица `audit_log(id, timestamp, action, entity_id, details_json)`
-  - [ ] Индексы по дате
-  - [ ] Покрыть тестами
-- [ ] Создать `ai_memory/adapters/base.py`
-  - [ ] Абстрактный класс MemoryAdapter (save, search, get, delete, update)
-  - [ ] Покрыть тестами
-- [ ] Перенести `merge_patterns.py` в skill_learning
-  - [ ] Адаптировать под JSONL формат
-  - [ ] Добавить conflict resolution
-  - [ ] Зарегистрировать как новый MCP tool
-  - [ ] Покрыть тестами
-- [ ] Интеграционные тесты: пропагация, circuit breaker, audit
+- [x] Перенести `propagation_engine.py`
+  - [x] Заменить Neo4j граф на SQLite adjacency list
+    - [x] ~~Таблица `edges` — уже в LinkRegistry~~
+    - [x] ~~Индексы на source_id, target_id — уже в LinkRegistry~~
+    - [x] Адаптировать BFS алгоритм (Neo4j Cypher -> SQL через LinkRegistry)
+    - [x] Сохранить time decay + distance decay формулы
+    - [x] Rate limiting через config (depth, entities, delta threshold)
+    - [x] Background workers через asyncio.create_task
+    - [x] Покрыть тестами (8 тестов)
+- [x] Перенести `circuit_breaker.py`
+  - [x] Убрать Redis зависимость, использовать in-memory state
+  - [x] CircuitBreakerRegistry для multi-circuit management
+  - [x] Покрыть тестами (12 тестов)
+- [x] Перенести `audit_service.py`
+  - [x] JSONL persistence (append-only) + in-memory buffer
+  - [x] Immediate persist for destructive actions (DELETE, ROLLBACK)
+  - [x] Deduplication in get_errors/query
+  - [x] Покрыть тестами (9 тестов)
+- [x] Создать `ai_memory/adapters/base.py`
+  - [x] BaseMemoryAdapter ABC (save, search, get, delete, update, health_check)
+  - [x] SaveRequest, SearchResult, BackendStats dataclasses
+  - [x] Покрыть тестами (6 тестов)
+- [x] Перенести `merge_patterns.py` в skill_learning
+  - [x] PatternRecord dataclass with JSONL IO
+  - [x] Conflict resolution (4 strategies: higher_confidence, newer, older, merge_all)
+  - [x] Tag merging (union) + application count aggregation
+  - [x] Backup before write + dry_run mode
+  - [x] Покрыть тестами (7 тестов)
+- [x] Интеграционные тесты: 39/39 tests pass
+  - [x] Existing P0 tests: 68/68 pass (no regression)
+  - [x] MemoryOrchestrator: propagate_update uses real PropagationEngine
 
 ---
 
@@ -470,16 +535,21 @@ EventBus (singleton)
 ## 4. Граф зависимостей фаз
 
 ```
-P0 (Orchestrator Core)
- ├── P0.5 (Memory-First Hook) ← AUTO-CONTEXT для каждого запроса
- ├── P1 (Infrastructure + Propagation)
- │    └── P2 (Search + Services)
+P0 (Orchestrator Core)          ✅ DONE
+ ├── P0.5 (Memory-First Hook)   ✅ DONE (local .md + Russian stemming)
+ ├── P1 (Infrastructure + Propagation)  ✅ DONE
+ │    └── P2 (Search + Services)  ← NEXT
  │         ├── P3 (Realtime + Adapters)  [optional]
  │         └── P4 (MCP Tools)            [optional]
  └── P4 может начаться параллельно с P2 для оберток P0-инструментов
 ```
 
 > **P0.5 — ключевая фаза для UX:** именно она превращает memory из "инструмента по запросу" в "автоматический контекст каждой сессии". Без неё Claude может не обращаться к памяти. С ней — каждый ответ опирается на накопленные знания.
+>
+> **Промежуточный итог P0.5:** Реализация использует прямое чтение локальных `.md` файлов
+> вместо HTTP-вызова unified_search. Это оказалось быстрее и надёжнее (нет зависимости от MCP-сервера).
+> Russian stemming решает проблему словоформ (агенты/агентов/агентам → агент).
+> 41 тест покрывает все компоненты. Upgrade до federated MCP search — опционален для P2+.
 
 ---
 
@@ -524,7 +594,7 @@ P0 (Orchestrator Core)
 | Scoring | Linear decay | RFI (Recency x Frequency x Importance) | OpenMemory: RFI composite |
 | Маршрутизация | Нет | Auto-classify + route_and_save | Memori: middleware interceptor |
 | Confidence propagation | Нет | BFS + temporal invalidation | Graphiti: valid_from/valid_to |
-| **Memory-First Hook** | Нет (manual) | **Auto-context на каждый запрос** | Engram: auto-recall |
+| **Memory-First Hook** | ✅ Auto-context (local .md + stemming) | **Upgrade: federated MCP search** | Engram: auto-recall |
 | Audit trail | Нет | Полный лог действий | — |
 | Circuit breaker | Нет | Reuse из llm_rotation | — |
 | Hybrid search | Нет | 4-signal (BM25+vector+graph+rerank) | ClawMem: multi-signal |

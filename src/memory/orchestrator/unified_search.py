@@ -33,6 +33,10 @@ class SearchOptions:
     diversity_enabled: bool = True
     max_link_depth: int = 1
     min_link_strength: float = 0.5
+    # RRF configuration
+    rrf_enabled: bool = True
+    rrf_k: int = 60
+    rrf_source_weights: dict[str, float] | None = None
 
 
 @dataclass
@@ -139,12 +143,15 @@ class BaseSearchAdapter(ABC):
 
 
 class ScoreNormalizer:
-    """Normalize raw scores from different sources to 0-1 scale."""
+    """Normalize raw scores from different sources to 0-1 scale.
+
+    Used as a fallback when RRF fusion is disabled or as pre-processing
+    before RRF to ensure raw_score is in [0, 1].
+    """
 
     BOOST_RECENT_24H = 1.2
     BOOST_RECENT_WEEK = 1.1
     BOOST_HIGH_CONFIDENCE = 1.15
-    BOOST_HAS_LINKS = 1.1
 
     def normalize(self, item: SearchResultItem, options: SearchOptions) -> float:
         score = min(max(item.raw_score, 0.0), 1.0)
@@ -160,6 +167,84 @@ class ScoreNormalizer:
             score *= self.BOOST_HIGH_CONFIDENCE
 
         return min(score, 1.0)
+
+
+class RRFMerger:
+    """Reciprocal Rank Fusion across multiple source-ranked lists.
+
+    RRF formula: score(d) = SUM over sources S of: weight_S / (k + rank_S(d))
+
+    where k is a smoothing constant (default 60) and rank starts at 1.
+
+    Reference implementations:
+    - pdf_framework/search/strategies/hybrid_search.py::_rrf_merge
+    - bsl/semantic_search/services/hybrid_search.py::_rrf_fuse
+    - bsl/semantic_search/services/dual_vector_search.py::_rrf_fuse_3way
+    """
+
+    def __init__(
+        self,
+        k: int = 60,
+        source_weights: dict[str, float] | None = None,
+    ):
+        self._k = k
+        self._source_weights = source_weights or {}
+
+    def fuse(
+        self,
+        source_results: dict[str, list[SearchResultItem]],
+        options: SearchOptions,
+    ) -> list[SearchResultItem]:
+        """Fuse ranked lists from multiple sources using RRF.
+
+        Args:
+            source_results: Mapping of source_name -> ranked result list.
+            options: Search options (recency/confidence boosts applied post-RRF).
+
+        Returns:
+            Merged list sorted by RRF score (descending), normalized to [0, 1].
+        """
+        rrf_scores: dict[str, float] = {}
+        result_map: dict[str, SearchResultItem] = {}
+
+        normalizer = ScoreNormalizer()
+
+        for source_name, results in source_results.items():
+            weight = self._source_weights.get(source_name, 1.0)
+
+            # Sort each source list by raw_score descending to establish ranks
+            ranked = sorted(results, key=lambda r: r.raw_score, reverse=True)
+
+            for rank, item in enumerate(ranked):
+                rrf_score = weight / (self._k + rank + 1)
+                rrf_scores[item.unified_id] = rrf_scores.get(item.unified_id, 0.0) + rrf_score
+
+                if item.unified_id not in result_map:
+                    result_map[item.unified_id] = item
+
+        if not rrf_scores:
+            return []
+
+        # Normalize RRF scores to [0, 1] range
+        # Max possible RRF score = sum of (weight / (k + 1)) for each source at rank 0
+        max_rrf = sum(
+            self._source_weights.get(src, 1.0) / (self._k + 1)
+            for src in source_results
+        )
+        if max_rrf == 0:
+            max_rrf = 1.0
+
+        for uid, item in result_map.items():
+            base_rrf = rrf_scores[uid] / max_rrf  # normalized to [0, 1]
+            boost = normalizer.normalize(item, options)
+            # Combine: RRF position as primary, raw_score quality as secondary
+            # Weight: 60% RRF rank fusion + 40% original quality signal
+            item.normalized_score = base_rrf
+            item.final_score = 0.6 * base_rrf + 0.4 * boost
+
+        # Sort by final RRF score
+        merged = sorted(result_map.values(), key=lambda r: r.final_score, reverse=True)
+        return merged
 
 
 class Deduplicator:
@@ -261,7 +346,10 @@ class LinkEnricher:
 
 
 class UnifiedSearchEngine:
-    """Orchestrates federated search across all memory subsystems."""
+    """Orchestrates federated search across all memory subsystems.
+
+    Pipeline: Parallel dispatch -> RRF Fusion -> Filter -> Dedup -> Rerank -> Enrich
+    """
 
     def __init__(self, link_registry: LinkRegistry | None = None):
         self._adapters: dict[str, BaseSearchAdapter] = {}
@@ -305,7 +393,8 @@ class UnifiedSearchEngine:
                 )
             )
 
-        all_results: list[SearchResultItem] = []
+        # Collect results per source (needed for RRF)
+        source_results: dict[str, list[SearchResultItem]] = {}
         sources_searched = []
         sources_failed = []
 
@@ -313,7 +402,7 @@ class UnifiedSearchEngine:
             task_start = time.time()
             try:
                 results = await task
-                all_results.extend(results)
+                source_results[name] = results
                 sources_searched.append(name)
             except TimeoutError:
                 duration_ms = (time.time() - task_start) * 1000
@@ -328,15 +417,27 @@ class UnifiedSearchEngine:
                 )
                 logger.error(f"Search error for {name}: {e}")
 
-        # Filter by memory type
+        # Filter by memory type (per-source before fusion)
         if memory_types:
             type_values = {mt.value for mt in memory_types}
-            all_results = [r for r in all_results if r.memory_type.value in type_values]
+            source_results = {
+                src: [r for r in results if r.memory_type.value in type_values]
+                for src, results in source_results.items()
+            }
 
-        # Normalize scores
-        for item in all_results:
-            item.normalized_score = self._normalizer.normalize(item, options)
-            item.final_score = item.normalized_score
+        # Score fusion: RRF or legacy normalizer
+        if options.rrf_enabled and len(source_results) > 0:
+            rrf = RRFMerger(
+                k=options.rrf_k,
+                source_weights=options.rrf_source_weights,
+            )
+            all_results = rrf.fuse(source_results, options)
+        else:
+            # Fallback: flat merge + normalize
+            all_results = [item for results in source_results.values() for item in results]
+            for item in all_results:
+                item.normalized_score = self._normalizer.normalize(item, options)
+                item.final_score = item.normalized_score
 
         # Filter by min score
         all_results = [r for r in all_results if r.final_score >= min_score]
@@ -345,7 +446,7 @@ class UnifiedSearchEngine:
         if options.dedup_enabled:
             all_results = self._deduplicator.deduplicate(all_results)
 
-        # Rerank
+        # Rerank with diversity
         all_results = self._reranker.rerank(all_results, options)
 
         # Enrich with links
@@ -368,7 +469,13 @@ class UnifiedSearchEngine:
             search_time_ms=elapsed_ms,
             sources_searched=sources_searched,
             sources_failed=sources_failed,
-            metadata={"options": options.__dict__},
+            metadata={
+                "options": {
+                    k: v for k, v in options.__dict__.items()
+                    if not callable(v)
+                },
+                "fusion": "rrf" if options.rrf_enabled else "normalize",
+            },
         )
 
 
