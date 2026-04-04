@@ -488,7 +488,9 @@
       "mcp__edt-mcp__add_metadata_attribute",
       "mcp__edt-mcp__get_metadata_objects",
       "Bash(sqlite3 data/memory_ai.db \".tables\")",
-      "Bash(sqlite3 data/memory_ai.db \"PRAGMA table_info\\(important_messages\\);\")"
+      "Bash(sqlite3 data/memory_ai.db \"PRAGMA table_info\\(important_messages\\);\")",
+      "Bash(bash /tmp/verify_memory.sh)",
+      "mcp__memory-orchestrator__health_check"
     ]
   },
   "enableAllProjectMcpServers": true,
