@@ -257,13 +257,14 @@ class TestGetFullContext:
 
 class TestPropagateUpdate:
     @pytest.mark.asyncio
-    async def test_stub_propagation(self, orchestrator: MemoryOrchestrator):
+    async def test_propagation(self, orchestrator: MemoryOrchestrator):
         result = await orchestrator.propagate_update(
             entity_id="episodic:memory-ai:test",
             delta=0.1,
         )
         assert result["success"] is True
-        assert "Stub" in result["note"]
+        assert "result" in result
+        assert "event_id" in result["result"]
 
 
 # ===== Stats Tests =====
