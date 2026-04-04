@@ -102,12 +102,14 @@ class VersioningService:
         self,
         entity_id: str,
         content: dict[str, Any],
-        change_type: ChangeType,
+        change_type: ChangeType | str,
         created_by: str = "",
         change_summary: str = "",
         metadata: dict[str, Any] | None = None,
     ) -> EntityVersion:
         """Create a new version of an entity."""
+        if isinstance(change_type, str):
+            change_type = ChangeType(change_type)
         async with self._lock:
             existing = self._cache.get(entity_id, [])
             version_number = len(existing) + 1
