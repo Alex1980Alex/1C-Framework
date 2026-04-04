@@ -22,6 +22,22 @@ from .retry import (
 )
 from .timeout import TimeoutConfig, get_timeout_config
 from .cache import LRUCache
+from .conflict_resolver import (
+    ConflictRecord,
+    ConflictResolver,
+    ConflictResult,
+    ConflictStrategy,
+)
+from .event_bus import (
+    Event,
+    EventBus,
+    EventBusConfig,
+    EventBusStats,
+    Subscription,
+    get_event_bus,
+    reset_event_bus,
+)
+from .event_store import EventStore, EventStoreConfig
 from .metrics import MetricsCollector, MetricsTimer, get_metrics_collector, reset_metrics
 
 __all__ = [
