@@ -392,12 +392,17 @@ class MemoryOrchestrator:
                 except Exception as e:
                     logger.warning(f"Failed to create cross-link: {e}")
 
-        return {
+        result = {
             "success": True,
             "routing": decision.to_dict(),
             "saved_entities": saved_entities,
             "cross_links_created": max(0, len(saved_entities) - 1),
         }
+        await self._emit_event("memory.save", {
+            "targets": decision.targets,
+            "entity_count": len(saved_entities),
+        })
+        return result
 
     async def get_full_context(
         self,
