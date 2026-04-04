@@ -13,7 +13,7 @@ import asyncio
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class EventBus:
             event_id="__shutdown__",
             event_type="__shutdown__",
             data={},
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
             source=None,
         )
         await self._dispatch_queue.put(sentinel)
@@ -122,7 +122,7 @@ class EventBus:
                 await asyncio.wait_for(
                     asyncio.shield(self._dispatch_task), timeout=self._config.dispatch_timeout
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self._dispatch_task.cancel()
                 try:
                     await self._dispatch_task
@@ -150,7 +150,7 @@ class EventBus:
             event_id=str(uuid.uuid4()),
             event_type=event_type,
             data=data,
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
             source=source,
         )
         await self._dispatch_queue.put(event)
@@ -195,7 +195,7 @@ class EventBus:
                 subscription_id=sub_id,
                 pattern=pattern,
                 queue=sub_queue,
-                created_at=datetime.now(tz=timezone.utc),
+                created_at=datetime.now(tz=UTC),
             )
             self._subscribers[sub_id] = subscription
             self._stats.subscriber_count = len(self._subscribers)
@@ -230,7 +230,7 @@ class EventBus:
         while self._running:
             try:
                 event = await asyncio.wait_for(self._dispatch_queue.get(), timeout=1.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
 
             if event.event_type == "__shutdown__":
