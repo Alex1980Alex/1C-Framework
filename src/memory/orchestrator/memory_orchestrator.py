@@ -856,6 +856,25 @@ class MemoryOrchestrator:
         """Track request counts per tool."""
         self._request_counts[tool_name] = self._request_counts.get(tool_name, 0) + 1
 
+    async def _emit_event(self, event_type: str, data: dict[str, Any]) -> None:
+        """Publish event to bus and persist to store (fire-and-forget)."""
+        if self._event_bus:
+            try:
+                event_id = await self._event_bus.publish(event_type, data, source="orchestrator")
+                if self._event_store:
+                    from ..infrastructure.event_bus import Event
+
+                    event = Event(
+                        event_id=event_id,
+                        event_type=event_type,
+                        data=data,
+                        timestamp=datetime.now(),
+                        source="orchestrator",
+                    )
+                    await self._event_store.append(event)
+            except Exception as e:
+                logger.debug("Event emission failed: %s", e)
+
 
 # =============================================================================
 # MCP Server
