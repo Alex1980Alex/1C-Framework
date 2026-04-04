@@ -57,7 +57,9 @@ def _get_qdrant():
     if _qdrant_client is None:
         from qdrant_client import QdrantClient
 
-        _qdrant_client = QdrantClient(url=QDRANT_URL)
+        _qdrant_client = QdrantClient(
+            url=QDRANT_URL, grpc_port=6334, prefer_grpc=True,
+        )
         _ensure_collection()
     return _qdrant_client
 
