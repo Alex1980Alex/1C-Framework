@@ -670,27 +670,32 @@ ContentClassifier (P0)                                           ↓
 - Без Qdrant-записи (нужен embedding, а это LLM) — только SQLite + JSONL
 - Qdrant-запись делегируется на следующий запуск (P5.3)
 
-**Чеклист P5.1:**
+**Чеклист P5.1:** ✅ DONE (2026-04-04)
 
-- [ ] Создать `.claude/hooks/session-memory-save.py`
-  - [ ] Чтение SessionState (skills, phases)
-  - [ ] Чтение git diff --stat (файлы сессии)
-  - [ ] Чтение git log с момента начала сессии (коммиты)
-  - [ ] Чтение hook-todos.json (завершённые задачи)
-  - [ ] Форматирование session_summary
-  - [ ] Auto-importance scoring (файлы × 0.1 + решения × 0.1 + base 0.5, cap 0.9)
-  - [ ] Auto-tagging (из имён файлов и скиллов)
-  - [ ] Direct SQLite write в `data/memory_ai.db`
-  - [ ] Direct JSONL append для skill patterns
-  - [ ] Deduplication: проверка по session_date чтобы не дублировать
-  - [ ] Graceful degradation: при ошибке → `{"continue": true}`
-- [ ] Зарегистрировать в `settings.json` (Stop hook, timeout 5s)
-- [ ] Тесты (10+):
-  - [ ] Extraction: git diff parsing, SessionState reading
-  - [ ] SQLite write + dedup
-  - [ ] JSONL append
-  - [ ] Timeout handling
-  - [ ] Graceful degradation
+- [x] Создать `.claude/hooks/session-memory-save.py`
+  - [x] Чтение SessionState (skills, session_id)
+  - [x] Чтение git diff --name-only + staged + untracked (файлы сессии)
+  - [x] Чтение git log --since=8h (коммиты)
+  - [x] Чтение hook-todos.json (завершённые задачи)
+  - [x] Форматирование session_summary (Session DATE. Skills. Changed N files. Commits. Done.)
+  - [x] Auto-importance scoring (base 0.5 + files×0.02 + commits×0.05 + skills×0.03 + tasks×0.03, cap 0.95)
+  - [x] Auto-tagging (path→domain: src/memory/→memory, src/bsl/→bsl, .claude/hooks/→hooks, etc.)
+  - [x] Direct SQLite write в `data/memory_ai.db` (table: important_messages, category: session_summary)
+  - [x] Deduplication: по session_id (primary) или session_date (fallback при null session_id)
+  - [x] Graceful degradation: BaseHook.run() → exit(0) при любой ошибке
+- [x] Зарегистрировать в `settings.json` (Stop hook, timeout 5s, после memory-sync.py)
+- [x] Тесты: **28/28 PASS** (`tests/integration/test_memory_p5_session_save.py`)
+  - [x] TestIsMeaningful (5 тестов) — threshold logic
+  - [x] TestFormatSummary (3 теста) — full/minimal/cap
+  - [x] TestCalculateImportance (4 теста) — base/files/cap/sample
+  - [x] TestExtractTags (4 теста) — session+date/skills/paths/max10
+  - [x] TestAlreadySaved (5 тестов) — empty/saved/different/date-dedup/missing-db
+  - [x] TestSaveToSqlite (3 теста) — creates/fields/no-db
+  - [x] TestCollectContext (2 теста) — empty/session-state
+  - [x] TestGracefulDegradation (2 теста) — bad-stdin/empty-stdin
+
+> **Отличие от плана:** JSONL append для skill-learning отложен — для session summaries SQLite
+> (category=session_summary) достаточен. Skill patterns нужны при EXECUTE фазе, не при session save.
 
 #### P5.2: Federated Recall (UserPromptSubmit upgrade) — 12-16ч
 
