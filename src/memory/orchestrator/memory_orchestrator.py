@@ -271,6 +271,8 @@ class MemoryOrchestrator:
         self._router: MemoryRouter | None = None
         self._search_engine: UnifiedSearchEngine | None = None
         self._propagation_engine: PropagationEngine | None = None
+        self._event_bus: EventBus | None = None
+        self._event_store: EventStore | None = None
         self._request_counts: dict[str, int] = {}
 
     async def start(self):
