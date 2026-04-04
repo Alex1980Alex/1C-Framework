@@ -277,11 +277,12 @@ class MemoryOrchestrator:
 
     async def start(self):
         """Initialize all orchestrator components."""
+        data_dir = _PROJECT_ROOT / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+
         # Link Registry
         db_path = self.config.link_registry_path
         if db_path is None:
-            data_dir = _PROJECT_ROOT / "data"
-            data_dir.mkdir(parents=True, exist_ok=True)
             db_path = str(data_dir / "link_registry.db")
         self._link_registry = LinkRegistry(db_path=db_path)
 
@@ -297,6 +298,15 @@ class MemoryOrchestrator:
         self._search_engine.register_adapter(SkillLearningSearchAdapter(
             _PROJECT_ROOT / "data" / "skill_learning"
         ))
+
+        # Event Bus + Store (P3)
+        self._event_bus = EventBus()
+        await self._event_bus.start()
+        self._event_store = EventStore(EventStoreConfig(
+            hot_buffer_path=str(data_dir / "events.jsonl"),
+            cold_db_path=str(data_dir / "events.db"),
+        ))
+        await self._event_store.start()
 
         logger.info("MemoryOrchestrator started")
 
