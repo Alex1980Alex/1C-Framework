@@ -91,7 +91,7 @@ def _ensure_collection():
 
 async def _get_embedding(text: str) -> list[float]:
     """Get embedding using project's embedding provider or hash fallback."""
-    global _embedding_fn
+    global _embedding_fn, _embedding_provider
     if _embedding_fn is None:
         try:
             project_root = Path(__file__).parent.parent.parent.parent
