@@ -34,7 +34,7 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
-from ..infrastructure.event_bus import EventBus, EventBusConfig
+from ..infrastructure.event_bus import EventBus
 from ..infrastructure.event_store import EventStore, EventStoreConfig
 from .link_registry import LinkRegistry, LinkType
 from .memory_router import (
