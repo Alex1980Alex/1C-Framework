@@ -336,6 +336,15 @@ class MemoryOrchestrator:
             _PROJECT_ROOT / "data" / "skill_learning"
         ))
 
+        # Pre-warm vector-memory (Qdrant gRPC connect + E5 model load)
+        try:
+            from ..vector_memory.server import _get_qdrant, _get_embedding
+            await asyncio.to_thread(_get_qdrant)
+            await _get_embedding("warmup")
+            logger.info("Vector-memory pre-warmed (Qdrant + E5)")
+        except Exception as e:
+            logger.warning(f"Vector-memory pre-warm failed: {e}")
+
         # Event Bus + Store (P3)
         self._event_bus = EventBus()
         await self._event_bus.start()
