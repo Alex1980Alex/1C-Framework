@@ -78,6 +78,14 @@
         "session state"
       ],
       "summary": "PostToolUse:Skill never fires (bug #6305). Research of 25+ sources, 10+ repos. 5 established patterns: UserPromptSubmit parse (100% reliable, 1-turn delay), File-system IPC, Forced-eval (80-84%), Stop transcript verification, PreToolUse block (~95%). Current combo A+E works with 1-turn delay. Recommended A+E+D combo for ~99% coverage."
+    },
+    "qdrant-docker-wsl2-latency": {
+      "file": "qdrant-docker-wsl2-latency.md",
+      "domain": "vector-db",
+      "category": "pattern",
+      "created": "2026-04-04",
+      "keywords": ["qdrant", "docker", "wsl2", "latency", "grpc", "localhost", "windows", "performance"],
+      "summary": "WSL2 localhost NAT adds 5-15s per HTTP to Docker containers. Fix: gRPC (prefer_grpc=True, port 6334) reduces query from 10s to 7ms. Pre-warm on start() moves cold connect out of search path. Alt: WSL2 IP or native binary."
     }
   }
 }
