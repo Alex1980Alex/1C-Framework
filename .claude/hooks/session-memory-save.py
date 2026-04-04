@@ -119,16 +119,26 @@ def is_meaningful(ctx):
 
 
 def already_saved(session_id):
-    """Check if this session was already saved (dedup by session_id)."""
-    if not session_id or not SQLITE_DB.exists():
+    """Check if this session was already saved (dedup by session_id or date)."""
+    if not SQLITE_DB.exists():
         return False
     try:
         conn = sqlite3.connect(str(SQLITE_DB), timeout=1)
-        row = conn.execute(
-            "SELECT 1 FROM important_messages "
-            "WHERE category = ? AND metadata LIKE ?",
-            (CATEGORY, f'%"session_id": "{session_id}"%'),
-        ).fetchone()
+        # Primary dedup: by session_id (if available)
+        if session_id:
+            row = conn.execute(
+                "SELECT 1 FROM important_messages "
+                "WHERE category = ? AND metadata LIKE ?",
+                (CATEGORY, f'%"session_id": "{session_id}"%'),
+            ).fetchone()
+        else:
+            # Fallback dedup: by today's date (max 1 session summary per day)
+            today = date.today().isoformat()
+            row = conn.execute(
+                "SELECT 1 FROM important_messages "
+                "WHERE category = ? AND metadata LIKE ?",
+                (CATEGORY, f'%"session_date": "{today}"%'),
+            ).fetchone()
         conn.close()
         return row is not None
     except Exception:
