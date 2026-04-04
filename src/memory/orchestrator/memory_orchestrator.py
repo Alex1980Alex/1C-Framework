@@ -468,6 +468,9 @@ class MemoryOrchestrator:
             strength=strength,
             bidirectional=bidirectional,
         )
+        await self._emit_event("memory.link", {
+            "source_id": source_id, "target_id": target_id, "link_type": link_type,
+        })
         return {"success": True, "link": link.to_dict()}
 
     async def get_related(
