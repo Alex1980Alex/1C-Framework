@@ -193,7 +193,8 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
             conditions = [
                 qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))
             ]
-            qresults = client.query_points(
+            qresults = await asyncio.to_thread(
+                client.query_points,
                 collection_name="learned_patterns",
                 query=vector,
                 query_filter=qmodels.Filter(must=conditions),
