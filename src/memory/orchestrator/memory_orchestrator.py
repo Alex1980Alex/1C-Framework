@@ -42,7 +42,7 @@ from .memory_router import (
     RouterConfig,
     RoutingDecision,
 )
-from .propagation_engine import PropagationConfig, PropagationEngine, PropagationResult
+from .propagation_engine import PropagationEngine, PropagationResult
 from .unified_id import MemoryType, SourceServer, UnifiedID
 from .unified_search import (
     BaseSearchAdapter,
