@@ -16,7 +16,7 @@
 | MCP Tools | 72+ | 18 | 35-40 |
 | Подсистемы | 5 (orchestrator, unified-mcp, vector, skill, ai) | 4 (orchestrator, vector, skill, ai) | 4 (расширенные) |
 | Бэкенды | TimescaleDB + Neo4j + Qdrant + Redis + SQLite | SQLite + Qdrant + JSONL | SQLite + Qdrant + JSONL (без изменений) |
-| Тесты | 20+ файлов | 4 файла (138 тестов) | 4+ файла (~80 тестов) |
+| Тесты | 20+ файлов | 5 файлов (166 тестов) | 4+ файла (~80 тестов) |
 
 ### 1.2 Оценка трудозатрат
 
