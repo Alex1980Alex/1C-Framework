@@ -67,7 +67,7 @@ src/
 - **BSL код**: `src/bsl/` (semantic_search, mcp_server, mcp_integration, sonar, finetuning)
 - **Инструменты**: `tools/auto-documenter/` (Node.js), `tools/bsl-debugger/` (Node.js), `tools/ast-grep-mcp/`, `tools/bsl-semantic-diff/`
 - **MCP серверы**: bsl-semantic-search, bsl-platform-context, auto-documenter, bsl-debugger, ast-grep-mcp, bsl-semantic-diff
-- **Memory**: `src/memory/` (ai_memory, vector_memory, skill_learning, orchestrator)
+- **Memory**: `src/memory/` (ai_memory, vector_memory, skill_learning, orchestrator, infrastructure). P0-P4 DONE, P5 in progress. Hook: `session-memory-save.py` (Stop, auto-saves session to SQLite). Skill: `memory-unified`
 - **LLM Rotation**: `src/shared/llm_rotation/` (5 провайдеров, fallback)
 - **Субагенты**: `.claude/agents/` (learning-loop — 5-phase self-learning pipeline, monitor)
 - **Паттерны**: `docs/architecture/PATTERNS.md` (15 arch + 13 automation), skill `framework-patterns`
