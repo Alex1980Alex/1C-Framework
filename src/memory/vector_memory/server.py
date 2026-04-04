@@ -119,6 +119,9 @@ async def _get_embedding(text: str) -> list[float]:
             _embedding_fn = _hash_embed
             logger.warning("Using hash-based fallback embeddings")
 
+    if _embedding_fn == "async" and _embedding_provider is not None:
+        result = await _embedding_provider.embed_batch([text])
+        return result[0]
     result = await asyncio.to_thread(_embedding_fn, [text])
     return result[0]
 
