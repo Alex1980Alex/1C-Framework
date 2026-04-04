@@ -1394,6 +1394,28 @@ class MemoryOrchestrator:
 
         return None
 
+    async def _get_entity_by_raw_id(self, raw_id: str) -> dict[str, Any] | None:
+        import sqlite3
+        db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+        connection = None
+        try:
+            connection = sqlite3.connect(str(db_path), timeout=1)
+            cursor = connection.cursor()
+            cursor.execute(
+                "SELECT id, content, importance, category, tags, created_at "
+                "FROM important_messages WHERE id = ?", (raw_id,))
+            row = cursor.fetchone()
+            if row:
+                return {"unified_id": f"episodic:memory-ai:{row[0]}",
+                        "content": row[1], "importance": row[2],
+                        "category": row[3], "created_at": row[5]}
+            return None
+        except Exception:
+            return None
+        finally:
+            if connection:
+                connection.close()
+
     async def _get_subsystem_stats(self) -> dict[str, Any]:
         """Get stats from each subsystem."""
         stats: dict[str, Any] = {}
