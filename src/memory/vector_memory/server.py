@@ -96,10 +96,10 @@ async def _get_embedding(text: str) -> list[float]:
             project_root = Path(__file__).parent.parent.parent.parent
             if str(project_root / "src") not in sys.path:
                 sys.path.insert(0, str(project_root / "src"))
-            from pdf_framework.embeddings import get_embedding_provider
+            from pdf_framework.embeddings import get_embedding_engine
 
-            provider = get_embedding_provider()
-            _embedding_fn = provider.embed_texts
+            provider = get_embedding_engine()
+            _embedding_fn = lambda texts: asyncio.get_event_loop().run_until_complete(provider.embed_batch(texts))
             logger.info("Using project embedding provider (E5 1024d)")
         except Exception:
             import hashlib
