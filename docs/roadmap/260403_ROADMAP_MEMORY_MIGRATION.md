@@ -85,13 +85,14 @@ D:\1С-Framework\src\memory\
 |   +-- merge_patterns.py          [MIGRATE: P1]
 |
 +-- infrastructure/
-|   +-- cache.py                   [MIGRATE: P2]
-|   +-- circuit_breaker.py         [MIGRATE: P1]
-|   +-- event_bus.py               [MIGRATE: P3]
-|   +-- event_store.py             [MIGRATE: P3]
-|   +-- metrics.py                 [MIGRATE: P2]
-|   +-- retry.py                   [MIGRATE: P0]
-|   +-- timeout.py                 [MIGRATE: P0]
+|   +-- cache.py                   [DONE: P2]
+|   +-- circuit_breaker.py         [DONE: P1]
+|   +-- conflict_resolver.py       [DONE: P3]
+|   +-- event_bus.py               [DONE: P3]
+|   +-- event_store.py             [DONE: P3]
+|   +-- metrics.py                 [DONE: P2]
+|   +-- retry.py                   [DONE: P0]
+|   +-- timeout.py                 [DONE: P0]
 |
 +-- tests/
     +-- integration/
