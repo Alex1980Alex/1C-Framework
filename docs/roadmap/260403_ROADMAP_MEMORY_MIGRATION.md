@@ -524,6 +524,7 @@ P0 (Orchestrator Core)
 | Scoring | Linear decay | RFI (Recency x Frequency x Importance) | OpenMemory: RFI composite |
 | Маршрутизация | Нет | Auto-classify + route_and_save | Memori: middleware interceptor |
 | Confidence propagation | Нет | BFS + temporal invalidation | Graphiti: valid_from/valid_to |
+| **Memory-First Hook** | Нет (manual) | **Auto-context на каждый запрос** | Engram: auto-recall |
 | Audit trail | Нет | Полный лог действий | — |
 | Circuit breaker | Нет | Reuse из llm_rotation | — |
 | Hybrid search | Нет | 4-signal (BM25+vector+graph+rerank) | ClawMem: multi-signal |
