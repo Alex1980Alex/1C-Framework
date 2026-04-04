@@ -5,6 +5,7 @@ Provides retry logic, timeout configuration, circuit breaker, and shared helpers
 for the Unified Memory System.
 """
 
+from .cache import LRUCache
 from .circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
@@ -12,16 +13,6 @@ from .circuit_breaker import (
     CircuitBreakerRegistry,
     CircuitState,
 )
-from .retry import (
-    MemoryError,
-    PermanentError,
-    RetryableError,
-    RetryConfig,
-    async_retry,
-    classify_exception,
-)
-from .timeout import TimeoutConfig, get_timeout_config
-from .cache import LRUCache
 from .conflict_resolver import (
     ConflictRecord,
     ConflictResolver,
@@ -39,29 +30,54 @@ from .event_bus import (
 )
 from .event_store import EventStore, EventStoreConfig
 from .metrics import MetricsCollector, MetricsTimer, get_metrics_collector, reset_metrics
+from .retry import (
+    MemoryError,
+    PermanentError,
+    RetryableError,
+    RetryConfig,
+    async_retry,
+    classify_exception,
+)
+from .timeout import TimeoutConfig, get_timeout_config
 
 __all__ = [
-    # Circuit Breaker
+    # Cache (P2)
+    "LRUCache",
+    # Circuit Breaker (P1)
     "CircuitBreaker",
     "CircuitBreakerConfig",
     "CircuitBreakerError",
     "CircuitBreakerRegistry",
     "CircuitState",
-    # Retry
+    # Conflict Resolver (P3)
+    "ConflictRecord",
+    "ConflictResolver",
+    "ConflictResult",
+    "ConflictStrategy",
+    # Event Bus (P3)
+    "Event",
+    "EventBus",
+    "EventBusConfig",
+    "EventBusStats",
+    "Subscription",
+    "get_event_bus",
+    "reset_event_bus",
+    # Event Store (P3)
+    "EventStore",
+    "EventStoreConfig",
+    # Metrics (P2)
+    "MetricsCollector",
+    "MetricsTimer",
+    "get_metrics_collector",
+    "reset_metrics",
+    # Retry (P0)
     "MemoryError",
     "RetryableError",
     "PermanentError",
     "RetryConfig",
     "async_retry",
     "classify_exception",
-    # Timeout
+    # Timeout (P0)
     "TimeoutConfig",
     "get_timeout_config",
-    # Cache (P2)
-    "LRUCache",
-    # Metrics (P2)
-    "MetricsCollector",
-    "MetricsTimer",
-    "get_metrics_collector",
-    "reset_metrics",
 ]
