@@ -48,6 +48,7 @@ MIN_CONFIDENCE = float(os.getenv("LEARNING_MIN_CONFIDENCE", "0.3"))
 # Lazy-initialized clients
 _qdrant_client = None
 _embedding_fn = None
+_embedding_provider = None  # async E5 engine (if available)
 
 
 def _get_qdrant():
