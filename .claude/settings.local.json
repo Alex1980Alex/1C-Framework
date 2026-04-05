@@ -493,7 +493,16 @@
       "mcp__memory-orchestrator__health_check",
       "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" timeout 10 \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server)",
       "Bash(\"C:/Windows/System32/inetsrv/appcmd.exe\" list:*)",
-      "Read(//c/inetpub/wwwroot/**)"
+      "Read(//c/inetpub/wwwroot/**)",
+      "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" timeout 10 venv/Scripts/python.exe -m src.py_server)",
+      "Bash(D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe -c ':*)",
+      "Bash(venv/Scripts/python.exe -c ':*)",
+      "Bash(D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe:*)",
+      "Bash(\"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m pip list)",
+      "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" venv/Scripts/python.exe /tmp/test_mcp_stdio.py)",
+      "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server)",
+      "Bash(PYTHONSAFEPATH=1 PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server)",
+      "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/mcp_entrypoint.py\")"
     ]
   },
   "enableAllProjectMcpServers": true,
