@@ -397,16 +397,11 @@ class MemoryFirstHook(BaseHook):
         if not query_tokens:
             return None
 
-        global_start = time.monotonic()
+        deadline = time.monotonic() + TOTAL_BUDGET
 
-        sqlite_results = search_sqlite(query_tokens, limit=10)
-        qdrant_results = search_qdrant(query_tokens, limit=10)
-
-        # Skip md layer if already over budget
-        if time.monotonic() - global_start < TOTAL_BUDGET:
-            md_results = search_md(query_tokens, limit=10)
-        else:
-            md_results = []
+        sqlite_results = search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
+        qdrant_results = search_qdrant(query_tokens, limit=10) if time.monotonic() < deadline else []
+        md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
 
         merged = rrf_merge(
             {"sqlite": sqlite_results, "qdrant": qdrant_results, "md": md_results},
