@@ -508,7 +508,10 @@
       "Bash(ollama --version)",
       "Bash(/c/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe --version)",
       "Bash(/c/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe list:*)",
-      "Bash($OLLAMA serve:*)"
+      "Bash($OLLAMA serve:*)",
+      "mcp__memory-orchestrator__get_system_stats",
+      "mcp__memory-orchestrator__unified_search",
+      "mcp__memory-orchestrator__memory_event_history"
     ]
   },
   "enableAllProjectMcpServers": true,
