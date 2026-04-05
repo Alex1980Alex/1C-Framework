@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-Hook: memory-first-hook
+Hook: memory-first-hook (P5.2 Federated Recall)
 Event: UserPromptSubmit
-Purpose: Auto-inject relevant memory context into Claude's system message
-         before it starts processing the user's prompt.
-Timeout: 2s
+Purpose: Auto-inject relevant memory context from 3 layers (SQLite + Qdrant + .md)
+         into Claude's system message before processing user prompt.
+Timeout: 2s (total budget 1.5s for searches)
 
-Searches local .md memory files using weighted token overlap with Russian stemming.
-Returns top-3 relevant memories as systemMessage.
+3-layer federated search with RRF merge:
+  - Layer 1: SQLite important_messages (weight 0.40, 200ms)
+  - Layer 2: Qdrant learned_patterns (weight 0.35, 800ms, optional via QDRANT_HOOK_ENABLED=1)
+  - Layer 3: .md memory files (weight 0.25, 500ms)
 
 Exit codes:
   0 = always allow (advisory, non-blocking)
 
-Pattern: Advisory (search + inject). Part of P0.5 Memory-First Hook.
+Pattern: Advisory (search + inject). Part of P5.2 Session Memory Bridge.
 """
 
+import hashlib
 import json
 import os
 import re
+import sqlite3
 import sys
 import time
 from pathlib import Path
@@ -26,17 +30,33 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput
 
+# ---------------------------------------------------------------------------
+# Project paths
+# ---------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MEMORY_DIR = Path(os.environ.get(
     "CLAUDE_MEMORY_DIR",
     Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
 ))
 COOLDOWN_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-cooldown.json"
+SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 MIN_PROMPT_LEN = 20
 COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
-MAX_RESULTS = 3
+MAX_RESULTS = 5
+
+LAYER_WEIGHTS = {"sqlite": 0.40, "qdrant": 0.35, "md": 0.25}
+SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md"}
+
+# Timeout budgets (seconds)
+SQLITE_TIMEOUT = 0.200
+QDRANT_TIMEOUT = 0.800
+MD_TIMEOUT = 0.500
+TOTAL_BUDGET = 1.5
 
 # Russian suffix stemming (29 suffixes, ordered by length desc)
 _RU_SUFFIXES_3 = [
@@ -55,7 +75,6 @@ def stem_token(token: str) -> str:
     """Simple Russian suffix stemmer. English tokens pass through."""
     if not token or len(token) < 4:
         return token
-    # Only stem Cyrillic tokens
     if not any("\u0400" <= c <= "\u04ff" for c in token):
         return token
     for suf in _RU_SUFFIXES_3:
@@ -100,104 +119,13 @@ def parse_frontmatter(content: str) -> dict:
     return result
 
 
-def load_all_memories() -> list[dict]:
-    """Load all .md memory files from MEMORY_DIR."""
-    memories = []
-    if not MEMORY_DIR.exists():
-        return memories
-    for md_file in MEMORY_DIR.glob("*.md"):
-        if md_file.name == "MEMORY.md":
-            continue
-        try:
-            content = md_file.read_text(encoding="utf-8")
-            parsed = parse_frontmatter(content)
-            parsed["file"] = md_file.name
-            # Pre-tokenize for search
-            parsed["name_tokens"] = set(tokenize(parsed["name"]))
-            parsed["desc_tokens"] = set(tokenize(parsed["description"]))
-            parsed["body_tokens"] = set(tokenize(parsed["body"][:2000]))
-            memories.append(parsed)
-        except Exception:
-            continue
-    return memories
-
-
-def score_memory(query_tokens: set[str], memory: dict) -> float:
-    """Score memory against query using weighted token overlap.
-
-    Weights: name×3, description×2, body×1.
-    Final: 0.7 × query_coverage + 0.3 × memory_density.
-    """
-    if not query_tokens:
-        return 0.0
-
-    name_hits = query_tokens & memory["name_tokens"]
-    desc_hits = query_tokens & memory["desc_tokens"]
-    body_hits = query_tokens & memory["body_tokens"]
-    all_hits = name_hits | desc_hits | body_hits
-
-    if not all_hits:
-        return 0.0
-
-    # Weighted score
-    weighted = len(name_hits) * 3 + len(desc_hits) * 2 + len(body_hits) * 1
-    max_possible = len(query_tokens) * 3  # best case: all in name
-
-    # Query coverage: what fraction of query tokens matched somewhere
-    query_coverage = len(all_hits) / len(query_tokens)
-
-    # Memory density: weighted hits relative to max possible
-    memory_density = min(weighted / max_possible, 1.0) if max_possible > 0 else 0.0
-
-    return 0.7 * query_coverage + 0.3 * memory_density
-
-
-def search_memories(prompt: str, memories: list[dict]) -> list[tuple[dict, float]]:
-    """Search memories by prompt, return sorted (memory, score) pairs."""
-    query_tokens = set(tokenize(prompt))
-    if not query_tokens:
-        return []
-
-    scored = []
-    for mem in memories:
-        score = score_memory(query_tokens, mem)
-        if score >= SCORE_THRESHOLD:
-            scored.append((mem, score))
-
-    scored.sort(key=lambda x: -x[1])
-    return scored[:MAX_RESULTS]
-
-
-def format_memory_context(results: list[tuple[dict, float]]) -> str:
-    """Format search results into systemMessage text."""
-    if not results:
-        return ""
-    lines = [f"[MEMORY CONTEXT] Found {len(results)} relevant memories for your query:"]
-    for i, (mem, score) in enumerate(results, 1):
-        mtype = mem.get("type", "unknown")
-        title = mem.get("name", mem.get("file", "?"))
-        # Snippet: first 150 chars of body
-        body = mem.get("body", "")
-        snippet = body[:150].replace("\n", " ").strip()
-        if len(body) > 150:
-            snippet += "..."
-        lines.append(f"{i}. [{mtype}] {title} — {snippet} (confidence: {score:.2f})")
-    lines.append(
-        "Use this context to inform your response. "
-        "If memory conflicts with current code, trust current code."
-    )
-    return "\n".join(lines)
-
-
 def should_skip(prompt: str) -> bool:
     """Check if prompt should skip memory search."""
     if not prompt or len(prompt.strip()) < MIN_PROMPT_LEN:
         return True
     stripped = prompt.strip()
-    # Skip slash commands
     if stripped.startswith("/"):
         return True
-    # Skip single-word prompts
     if len(stripped.split()) <= 1:
         return True
     return False
@@ -227,28 +155,268 @@ def update_cooldown():
         pass
 
 
+# ---------------------------------------------------------------------------
+# Layer 1 — SQLite search
+# ---------------------------------------------------------------------------
+def search_sqlite(query_tokens: set, limit: int = 10) -> list:
+    """Search SQLite important_messages: top-200 by importance, rank by token overlap."""
+    if not query_tokens or not SQLITE_DB.exists():
+        return []
+    start = time.monotonic()
+    results = []
+    try:
+        conn = sqlite3.connect(str(SQLITE_DB), timeout=0.5)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            "SELECT id, content, importance, category, tags "
+            "FROM important_messages "
+            "ORDER BY importance DESC LIMIT 200"
+        )
+        rows = cursor.fetchall()
+        conn.close()
+
+        for row in rows:
+            if time.monotonic() - start > SQLITE_TIMEOUT:
+                break
+            content = row["content"] or ""
+            tags_str = (row["tags"] or "").lower()
+            importance = row["importance"] or 0.0
+            category = row["category"] or "general"
+            row_id = row["id"] or ""
+
+            content_tokens = set(tokenize(content))
+            overlap = query_tokens & content_tokens
+            if not overlap:
+                continue
+            score = len(overlap) / max(len(query_tokens), 1)
+
+            # Tag boost
+            for qt in query_tokens:
+                if qt in tags_str:
+                    score += 0.2
+                    break
+
+            if score >= SCORE_THRESHOLD:
+                results.append({
+                    "source": "sqlite",
+                    "id": row_id,
+                    "content": content[:200],
+                    "category": category,
+                    "score": round(score, 4),
+                    "importance": importance,
+                })
+
+        results.sort(key=lambda x: -x["score"])
+        return results[:limit]
+    except Exception:
+        return results[:limit]
+
+
+# ---------------------------------------------------------------------------
+# Layer 2 — Qdrant search (OPTIONAL, via QDRANT_HOOK_ENABLED=1)
+# ---------------------------------------------------------------------------
+def search_qdrant(query_tokens: set, limit: int = 10) -> list:
+    """Search Qdrant learned_patterns via scroll + token overlap (no embedding model)."""
+    if os.environ.get("QDRANT_HOOK_ENABLED") != "1":
+        return []
+    if not query_tokens:
+        return []
+    start = time.monotonic()
+    results = []
+    try:
+        from qdrant_client import QdrantClient
+
+        client = QdrantClient(host="localhost", port=6333, timeout=QDRANT_TIMEOUT)
+        scroll_result = client.scroll(
+            collection_name="learned_patterns",
+            limit=100,
+            with_payload=True,
+            with_vectors=False,
+        )
+        points, _ = scroll_result
+
+        for point in points:
+            if time.monotonic() - start > QDRANT_TIMEOUT:
+                break
+            payload = point.payload or {}
+            content = payload.get("content") or payload.get("description") or ""
+            if not content:
+                continue
+            content_tokens = set(tokenize(content))
+            overlap = query_tokens & content_tokens
+            if not overlap:
+                continue
+            score = len(overlap) / max(len(query_tokens), 1)
+            if score >= SCORE_THRESHOLD:
+                results.append({
+                    "source": "qdrant",
+                    "id": str(point.id),
+                    "content": content[:200],
+                    "category": payload.get("category", "pattern"),
+                    "score": round(score, 4),
+                })
+
+        results.sort(key=lambda x: -x["score"])
+        return results[:limit]
+    except Exception:
+        return results[:limit]
+
+
+# ---------------------------------------------------------------------------
+# Layer 3 — .md files search
+# ---------------------------------------------------------------------------
+def load_all_memories() -> list:
+    """Load all .md memory files from MEMORY_DIR."""
+    memories = []
+    if not MEMORY_DIR.exists():
+        return memories
+    for md_file in MEMORY_DIR.glob("*.md"):
+        if md_file.name == "MEMORY.md":
+            continue
+        try:
+            content = md_file.read_text(encoding="utf-8")
+            parsed = parse_frontmatter(content)
+            parsed["file"] = md_file.name
+            parsed["name_tokens"] = set(tokenize(parsed["name"]))
+            parsed["desc_tokens"] = set(tokenize(parsed["description"]))
+            parsed["body_tokens"] = set(tokenize(parsed["body"][:2000]))
+            memories.append(parsed)
+        except Exception:
+            continue
+    return memories
+
+
+def score_memory(query_tokens: set, memory: dict) -> float:
+    """Weighted token overlap: name*3, description*2, body*1."""
+    if not query_tokens:
+        return 0.0
+    name_hits = query_tokens & memory["name_tokens"]
+    desc_hits = query_tokens & memory["desc_tokens"]
+    body_hits = query_tokens & memory["body_tokens"]
+    all_hits = name_hits | desc_hits | body_hits
+    if not all_hits:
+        return 0.0
+    weighted = len(name_hits) * 3 + len(desc_hits) * 2 + len(body_hits) * 1
+    max_possible = len(query_tokens) * 3
+    query_coverage = len(all_hits) / len(query_tokens)
+    memory_density = min(weighted / max_possible, 1.0) if max_possible > 0 else 0.0
+    return 0.7 * query_coverage + 0.3 * memory_density
+
+
+def search_md(query_tokens: set, limit: int = 10) -> list:
+    """Search .md memory files with weighted overlap scoring."""
+    if not query_tokens:
+        return []
+    start = time.monotonic()
+    results = []
+    try:
+        memories = load_all_memories()
+        for mem in memories:
+            if time.monotonic() - start > MD_TIMEOUT:
+                break
+            sc = score_memory(query_tokens, mem)
+            if sc >= SCORE_THRESHOLD:
+                body = mem.get("body", "")
+                title = mem.get("name") or mem.get("file", "?")
+                snippet = (title + ": " + body[:150]) if title else body[:200]
+                results.append({
+                    "source": "md",
+                    "id": mem["file"],
+                    "content": snippet[:200],
+                    "category": mem.get("type", "note"),
+                    "score": round(sc, 4),
+                })
+        results.sort(key=lambda x: -x["score"])
+        return results[:limit]
+    except Exception:
+        return results[:limit]
+
+
+# ---------------------------------------------------------------------------
+# Reciprocal Rank Fusion merge
+# ---------------------------------------------------------------------------
+def rrf_merge(layers: dict, weights: dict, k: int = 60) -> list:
+    """Merge results via weighted RRF, dedup by content hash."""
+    scores = {}
+    for source, items in layers.items():
+        w = weights.get(source, 0.0)
+        for rank, item in enumerate(items, start=1):
+            chash = hashlib.sha1(
+                item["content"].encode("utf-8", errors="replace")
+            ).hexdigest()[:16]
+            rrf = w * (1.0 / (k + rank))
+            if chash in scores:
+                scores[chash]["fused_score"] += rrf
+            else:
+                scores[chash] = {"item": item, "fused_score": rrf}
+    merged = [{**e["item"], "fused_score": e["fused_score"]} for e in scores.values()]
+    merged.sort(key=lambda x: -x["fused_score"])
+    return merged
+
+
+# ---------------------------------------------------------------------------
+# Output formatter
+# ---------------------------------------------------------------------------
+def format_federated_context(merged: list) -> str:
+    """Format merged results into systemMessage text."""
+    sources = sorted({item.get("source", "md") for item in merged})
+    lines = [f"[MEMORY CONTEXT] Top {len(merged)} results across {len(sources)} source(s):"]
+    for i, item in enumerate(merged, start=1):
+        source = item.get("source", "md")
+        label = SOURCE_LABELS.get(source, source)
+        category = item.get("category", "general")
+        content = item.get("content", "")
+        confidence = item.get("fused_score", 0.0)
+        display = content[:100].replace("\n", " ").strip()
+        if len(content) > 100:
+            display += "..."
+        lines.append(
+            f'{i}. [{label}|{confidence:.3f}] {category}: "{display}"'
+        )
+    lines.append(
+        "Use this context to inform your response. "
+        "If memory conflicts with current code, trust current code."
+    )
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Hook class
+# ---------------------------------------------------------------------------
 class MemoryFirstHook(BaseHook):
+    """P5.2 Federated Recall hook — 3-layer memory search on UserPromptSubmit."""
 
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt
         if should_skip(prompt):
             return None
-
         if check_cooldown():
             return None
 
-        memories = load_all_memories()
-        if not memories:
+        query_tokens = set(tokenize(prompt))
+        if not query_tokens:
             return None
 
-        results = search_memories(prompt, memories)
-        if not results:
+        global_start = time.monotonic()
+
+        sqlite_results = search_sqlite(query_tokens, limit=10)
+        qdrant_results = search_qdrant(query_tokens, limit=10)
+
+        # Skip md layer if already over budget
+        if time.monotonic() - global_start < TOTAL_BUDGET:
+            md_results = search_md(query_tokens, limit=10)
+        else:
+            md_results = []
+
+        merged = rrf_merge(
+            {"sqlite": sqlite_results, "qdrant": qdrant_results, "md": md_results},
+            LAYER_WEIGHTS,
+        )[:MAX_RESULTS]
+
+        if not merged:
             return None
 
-        msg = format_memory_context(results)
-        if not msg:
-            return None
-
+        msg = format_federated_context(merged)
         update_cooldown()
         return HookOutput().system_message(msg)
 
