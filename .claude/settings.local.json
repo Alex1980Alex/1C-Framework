@@ -502,7 +502,8 @@
       "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" venv/Scripts/python.exe /tmp/test_mcp_stdio.py)",
       "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server)",
       "Bash(PYTHONSAFEPATH=1 PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server)",
-      "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/mcp_entrypoint.py\")"
+      "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=\"http://localhost/TestDB\" MCP_ONEC_USERNAME=\"a.terletskiy@sodru.com\" MCP_ONEC_PASSWORD=\"Alex80Alex\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" \"D:/1C-Enterprise_Framework/src/external/1c_mcp/mcp_entrypoint.py\")",
+      "Bash(QDRANT_HOOK_ENABLED=1 bash -c 'echo \"{\\\\\"prompt\\\\\":\\\\\"как работает unified memory system qdrant federated search\\\\\"}\" | .venv/Scripts/python.exe .claude/hooks/memory-first-hook.py')"
     ]
   },
   "enableAllProjectMcpServers": true,
