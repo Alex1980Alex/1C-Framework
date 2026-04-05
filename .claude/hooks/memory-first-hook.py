@@ -413,7 +413,12 @@ class MemoryFirstHook(BaseHook):
 
         msg = format_federated_context(merged)
         update_cooldown()
-        return HookOutput().system_message(msg)
+        # Output via stdout (100% injection rate vs 55% for systemMessage).
+        # For UserPromptSubmit hooks, stdout is added as context Claude sees,
+        # while `systemMessage` is a user-facing warning that Claude never reads.
+        # See skill-router.py:502 for the same pattern.
+        print(msg)
+        return None
 
 
 if __name__ == "__main__":
