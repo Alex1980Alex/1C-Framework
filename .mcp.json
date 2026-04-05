@@ -157,10 +157,8 @@
     },
     "1c-mcp-crud": {
       "command": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\venv\\Scripts\\python.exe",
-      "args": ["-m", "src.py_server"],
-      "cwd": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp",
+      "args": ["D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\mcp_entrypoint.py"],
       "env": {
-        "PYTHONPATH": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp",
         "PYTHONIOENCODING": "utf-8",
         "MCP_ONEC_URL": "http://localhost/TestDB",
         "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
