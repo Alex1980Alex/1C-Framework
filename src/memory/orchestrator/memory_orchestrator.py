@@ -142,31 +142,61 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
     async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]:
         import sqlite3
 
+        # Tokenize query: split on whitespace, keep tokens >= 3 chars.
+        # Fallback to full query if no tokens survive filter (short/CJK queries).
+        tokens = [t.lower() for t in query.split() if len(t) >= 3]
+        if not tokens:
+            tokens = [query.lower()]
+
         results = []
 
         def _do_search():
             conn = sqlite3.connect(str(self._db_path))
             try:
                 cursor = conn.cursor()
+                # OR-join LIKE for each token across content + tags (case-insensitive).
+                where_parts = ["(LOWER(content) LIKE ? OR LOWER(tags) LIKE ?)"] * len(tokens)
+                params: list = []
+                for t in tokens:
+                    params.extend([f"%{t}%", f"%{t}%"])
+                # Fetch more than limit for reranking by match ratio.
+                fetch_limit = max(limit * 3, 30)
+                params.append(fetch_limit)
                 cursor.execute(
                     "SELECT id, content, importance, category, tags, created_at "
                     "FROM important_messages "
-                    "WHERE content LIKE ? OR tags LIKE ? "
+                    f"WHERE {' OR '.join(where_parts)} "
                     "ORDER BY importance DESC LIMIT ?",
-                    (f"%{query}%", f"%{query}%", limit),
+                    params,
                 )
-                for row in cursor.fetchall():
-                    results.append(SearchResultItem(
-                        unified_id=f"episodic:memory-ai:{row[0]}",
-                        source=SourceServer.MEMORY_AI,
-                        memory_type=MemoryType.EPISODIC,
-                        content=row[1],
-                        raw_score=min(row[2], 1.0),
-                        created_at=datetime.fromisoformat(row[5]) if row[5] else None,
-                        tags=json.loads(row[4]) if row[4] else [],
-                    ))
+                rows = cursor.fetchall()
             finally:
                 conn.close()
+
+            # Python-side rerank: score = 0.5 * match_ratio + 0.5 * importance.
+            scored = []
+            for row in rows:
+                content_lower = (row[1] or "").lower()
+                tags_lower = (row[4] or "").lower()
+                matched = sum(1 for t in tokens if t in content_lower or t in tags_lower)
+                match_ratio = matched / len(tokens) if tokens else 0.0
+                importance = min(row[2] or 0.0, 1.0)
+                combined = min(match_ratio * 0.5 + importance * 0.5, 1.0)
+                scored.append((combined, match_ratio, row))
+
+            # Sort by combined score, keep only items with at least one token match.
+            scored = [s for s in scored if s[1] > 0.0]
+            scored.sort(key=lambda x: x[0], reverse=True)
+            for combined, _match_ratio, row in scored[:limit]:
+                results.append(SearchResultItem(
+                    unified_id=f"episodic:memory-ai:{row[0]}",
+                    source=SourceServer.MEMORY_AI,
+                    memory_type=MemoryType.EPISODIC,
+                    content=row[1],
+                    raw_score=combined,
+                    created_at=datetime.fromisoformat(row[5]) if row[5] else None,
+                    tags=json.loads(row[4]) if row[4] else [],
+                ))
 
         await asyncio.to_thread(_do_search)
         return results
