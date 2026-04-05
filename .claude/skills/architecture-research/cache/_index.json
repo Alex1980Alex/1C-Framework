@@ -3,6 +3,19 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "userpromptsubmit-hook-output-formats.md",
+      "title": "UserPromptSubmit Hook Output Formats — stdout vs systemMessage",
+      "keywords": [
+        "userpromptsubmit", "hook", "output-format", "stdout", "systemmessage",
+        "additionalcontext", "hookspecificoutput", "claude-code-hooks",
+        "injection-rate", "memory-first-hook", "skill-router", "windows",
+        "hook-debugging", "issue-10450", "issue-17424", "issue-37988"
+      ],
+      "last_verified": "2026-04-05",
+      "sources_count": 5,
+      "github_repos_count": 1
+    },
+    {
       "file": "haystack-vs-langchain-architecture.md",
       "title": "Haystack vs LangChain — глубокое архитектурное исследование",
       "keywords": [
