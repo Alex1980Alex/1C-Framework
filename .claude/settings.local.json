@@ -490,7 +490,10 @@
       "Bash(sqlite3 data/memory_ai.db \".tables\")",
       "Bash(sqlite3 data/memory_ai.db \"PRAGMA table_info\\(important_messages\\);\")",
       "Bash(bash /tmp/verify_memory.sh)",
-      "mcp__memory-orchestrator__health_check"
+      "mcp__memory-orchestrator__health_check",
+      "Bash(PYTHONPATH=\"D:/1C-Enterprise_Framework/src/external/1c_mcp\" timeout 10 \"D:/1C-Enterprise_Framework/src/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server)",
+      "Bash(\"C:/Windows/System32/inetsrv/appcmd.exe\" list:*)",
+      "Read(//c/inetpub/wwwroot/**)"
     ]
   },
   "enableAllProjectMcpServers": true,
