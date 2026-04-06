@@ -27,21 +27,26 @@ Start-Sleep -Seconds 2
 # 2. Sync features from project to va-test
 Write-Host "[SYNC] $featuresSource -> $featuresDest"
 if (Test-Path $featuresSource) {
-    Get-ChildItem "$featuresSource\*.feature" | ForEach-Object {
-        Copy-Item $_.FullName "$featuresDest\$($_.Name)" -Force
-        Write-Host "  copied: $($_.Name)"
+    Get-ChildItem "$featuresSource" -Recurse -Filter "*.feature" | ForEach-Object {
+        $relPath = $_.FullName.Substring($featuresSource.Length + 1)
+        $destDir = Split-Path "$featuresDest\$relPath" -Parent
+        if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+        Copy-Item $_.FullName "$featuresDest\$relPath" -Force
+        Write-Host "  copied: $relPath"
     }
 }
 
 # 3. If specific feature requested, disable others
 if ($Feature) {
-    Get-ChildItem "$featuresDest\*.feature" | Where-Object { $_.Name -ne $Feature } | ForEach-Object {
+    # Support subdirectory paths like "gkstcplk2256/00_smoke.feature"
+    $targetFile = Join-Path $featuresDest $Feature
+    Get-ChildItem "$featuresDest" -Recurse -Filter "*.feature" | Where-Object { $_.FullName -ne $targetFile } | ForEach-Object {
         Rename-Item $_.FullName "$($_.FullName).off"
     }
     Write-Host "[RUN] Only: $Feature"
 } else {
     # Re-enable any .off files
-    Get-ChildItem "$featuresDest\*.off" | ForEach-Object {
+    Get-ChildItem "$featuresDest" -Recurse -Filter "*.off" | ForEach-Object {
         Rename-Item $_.FullName ($_.FullName -replace '\.off$','')
     }
     Write-Host "[RUN] All features in $featuresDest"
@@ -110,7 +115,7 @@ if (Test-Path "$reportDir\*.xml") {
 }
 
 # 9. Re-enable disabled features
-Get-ChildItem "$featuresDest\*.off" | ForEach-Object {
+Get-ChildItem "$featuresDest" -Recurse -Filter "*.off" | ForEach-Object {
     Rename-Item $_.FullName ($_.FullName -replace '\.off$','')
 }
 
