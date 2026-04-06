@@ -1,2 +1,7 @@
 schema: spec-driven
 created: 2026-04-06
+approval:
+  status: approved
+  reviewed_by: human
+  reviewed_at: 2026-04-06T19:45:00
+  comment: null
