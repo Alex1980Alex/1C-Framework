@@ -8,10 +8,10 @@
 **Files**: EDT project `гкс_MCPToolkit`
 
 ### Task 2: Создать HTTP-сервис гкс_MCP
-- [ ] Добавить HTTP-сервис `гкс_MCP` с корневым URL `/mcp`
-- [ ] Создать шаблон URL `/endpoint`
-- [ ] Создать метод POST для шаблона
-- [ ] Реализовать обработчик: разбор JSON-RPC, маршрутизация, формирование ответа
+- [x] Добавить HTTP-сервис `гкс_MCP` с корневым URL `/mcp`
+- [x] Создать шаблон URL `/endpoint`
+- [x] Создать метод POST для шаблона
+- [x] Реализовать обработчик: разбор JSON-RPC, маршрутизация, формирование ответа
 **Specs**: mcp-http-service (REQ-1, REQ-2, REQ-4)
 **Files**: `HTTPServices/гкс_MCP/Module.bsl`
 
