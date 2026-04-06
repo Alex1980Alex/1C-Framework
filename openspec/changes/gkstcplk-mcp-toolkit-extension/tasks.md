@@ -1,7 +1,7 @@
 ## Tasks
 
 ### Task 1: Создать расширение конфигурации в EDT
-- [ ] Создать расширение `гкс_MCPToolkit` в EDT workspace
+- [x] Создать расширение `гкс_MCPToolkit` в EDT workspace
 - [ ] Задать назначение: `Дополнение`
 - [ ] Добавить префикс `гкс_`
 **Specs**: mcp-http-service (REQ-1)
