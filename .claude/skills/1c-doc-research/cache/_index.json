@@ -19,6 +19,12 @@
       "keywords": ["MCP", "MCP сервер 1С", "1c_mcp", "mcp-bsl-platform-context", "mcp-onec-test-runner", "1c-mcp-toolkit", "mcp-1c-v1", "mini-ai-1c", "AI ассистент 1С", "RAG 1С", "Model Context Protocol"],
       "last_verified": "2026-03-31",
       "sources": ["github.com/vladimir-kharin/1c_mcp", "github.com/alkoleft/mcp-bsl-platform-context", "github.com/alkoleft/mcp-onec-test-runner", "github.com/ROCTUP/1c-mcp-toolkit", "github.com/FSerg/mcp-1c-v1", "github.com/hawkxtreme/mini-ai-1c"]
+    },
+    "vanessa-automation-steps": {
+      "title": "Vanessa Automation — справочник шагов BDD",
+      "keywords": ["vanessa automation", "VA", "BDD", "шаги", "steps", "кнопка", "поле", "форма", "ввожу текст", "нажимаю на кнопку", "выбираю по строке", "feature", "gherkin", "ФормаСоздать"],
+      "last_verified": "2026-04-06",
+      "sources": ["github.com/Pr-Mex/vanessa-automation", "testdb1c calibration"]
     }
   }
 }
