@@ -513,7 +513,9 @@
       "mcp__memory-orchestrator__unified_search",
       "mcp__memory-orchestrator__memory_event_history",
       "mcp__edt-mcp__get_form_screenshot",
-      "Bash(uniq -f2 -D)"
+      "Bash(uniq -f2 -D)",
+      "Bash(MSYS_NO_PATHCONV=1 PYTHONIOENCODING=utf-8 python3:*)",
+      "Bash(MSYS_NO_PATHCONV=1 D:/1С-Framework/.venv/Scripts/python.exe:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
