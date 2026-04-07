@@ -178,7 +178,7 @@ print("8. get_access_rights (1 test)")
 print("=" * 60)
 
 print("  8.1: Rights for catalog")
-r = call("get_access_rights", {"object_name": "Справочник.Номенклатура"}, rid); rid += 1
+r = call("get_access_rights", {"metadata_object": "Справочник.Номенклатура"}, rid); rid += 1
 j = check("get_access_rights.1", r)
 if j and j.get('success'):
     d = j.get('data', {})
