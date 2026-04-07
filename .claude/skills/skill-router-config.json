@@ -130,6 +130,29 @@
       ],
       "optional": []
     },
+    "va-bdd": {
+      "keywords": [
+        "vanessa automation",
+        "VA BDD",
+        "feature файл",
+        "gherkin 1С",
+        "тестирование формы",
+        "заполнение полей VA",
+        "калибровка VA",
+        "probe steps",
+        "создать документ через VA",
+        "UI тест 1С",
+        "дополнение формы",
+        "SpinEdit",
+        "перехожу к строке"
+      ],
+      "skills": [
+        "va-bdd-testing"
+      ],
+      "optional": [
+        "1c-doc-research"
+      ]
+    },
     "bsl-dev": {
       "keywords": [
         "BSL",
