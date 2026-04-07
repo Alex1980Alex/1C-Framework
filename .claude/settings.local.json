@@ -519,7 +519,8 @@
       "mcp__1c-mcp-crud__get_metadata_structure",
       "mcp__1c-mcp-crud__get_form_structure",
       "mcp__1c-mcp-crud__execute_query",
-      "mcp__1c-mcp-crud__list_metadata_objects"
+      "mcp__1c-mcp-crud__list_metadata_objects",
+      "mcp__1c-mcp-crud__execute_code"
     ]
   },
   "enableAllProjectMcpServers": true,
