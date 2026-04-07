@@ -512,7 +512,8 @@
       "mcp__memory-orchestrator__get_system_stats",
       "mcp__memory-orchestrator__unified_search",
       "mcp__memory-orchestrator__memory_event_history",
-      "mcp__edt-mcp__get_form_screenshot"
+      "mcp__edt-mcp__get_form_screenshot",
+      "Bash(uniq -f2 -D)"
     ]
   },
   "enableAllProjectMcpServers": true,
