@@ -8,7 +8,8 @@
       "research-1c",
       "bsl-dev",
       "bsl-debug",
-      "1c-mcp-data"
+      "1c-mcp-data",
+      "va-bdd"
     ],
     "framework": [
       "search",
