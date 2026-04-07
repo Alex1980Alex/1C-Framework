@@ -21,10 +21,10 @@
       "sources": ["github.com/vladimir-kharin/1c_mcp", "github.com/alkoleft/mcp-bsl-platform-context", "github.com/alkoleft/mcp-onec-test-runner", "github.com/ROCTUP/1c-mcp-toolkit", "github.com/FSerg/mcp-1c-v1", "github.com/hawkxtreme/mini-ai-1c"]
     },
     "vanessa-automation-steps": {
-      "title": "Vanessa Automation — справочник шагов BDD",
-      "keywords": ["vanessa automation", "VA", "BDD", "шаги", "steps", "кнопка", "поле", "форма", "ввожу текст", "нажимаю на кнопку", "выбираю по строке", "feature", "gherkin", "ФормаСоздать"],
-      "last_verified": "2026-04-06",
-      "sources": ["github.com/Pr-Mex/vanessa-automation", "testdb1c calibration"]
+      "title": "Vanessa Automation — полный справочник шагов BDD для форм 1С",
+      "keywords": ["vanessa automation", "VA", "BDD", "шаги", "steps", "кнопка", "поле", "форма", "ввожу текст", "нажимаю на кнопку", "выбираю по строке", "feature", "gherkin", "ФормаСоздать", "навигационная ссылка", "открылось окно", "закрываю окно", "кнопка выбора", "выпадающий список", "таблица", "перехожу к строке", "стал равен", "проведение", "TestClient", "e1cib"],
+      "last_verified": "2026-04-08",
+      "sources": ["github.com/Pr-Mex/vanessa-automation", "locales/Steps/Templates", "docs/Changelog.md", "docs/FAQ/index.md", "features/", "testdb1c calibration"]
     }
   }
 }
