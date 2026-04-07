@@ -515,7 +515,11 @@
       "mcp__edt-mcp__get_form_screenshot",
       "Bash(uniq -f2 -D)",
       "Bash(MSYS_NO_PATHCONV=1 PYTHONIOENCODING=utf-8 python3:*)",
-      "Bash(MSYS_NO_PATHCONV=1 D:/1С-Framework/.venv/Scripts/python.exe:*)"
+      "Bash(MSYS_NO_PATHCONV=1 D:/1С-Framework/.venv/Scripts/python.exe:*)",
+      "mcp__1c-mcp-crud__get_metadata_structure",
+      "mcp__1c-mcp-crud__get_form_structure",
+      "mcp__1c-mcp-crud__execute_query",
+      "mcp__1c-mcp-crud__list_metadata_objects"
     ]
   },
   "enableAllProjectMcpServers": true,
