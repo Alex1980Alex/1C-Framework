@@ -272,7 +272,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     try:
         from shared.semantic_search import embed_query_ollama, search_qdrant_semantic
 
-        embedding = embed_query_ollama(query_text, timeout=0.5)
+        embedding = embed_query_ollama(query_text, timeout=2.5)
         if embedding:
             results = []
             for collection, ctype in SEMANTIC_COLLECTIONS:
