@@ -96,8 +96,7 @@ class TestGetSemanticSearcher:
                 )):
                     # Reset and import fresh
                     self.mod._semantic_searcher = None
-                    result = self.mod._get_semantic_searcher()
-                    # Either returns the module or None (import path may not resolve in test)
+                    self.mod._get_semantic_searcher()
                     # The key test: it doesn't crash
         self.mod._semantic_searcher = None
 
@@ -108,8 +107,7 @@ class TestGetSemanticSearcher:
             os.environ.pop("SKILL_ROUTER_NO_SEMANTIC", None)
             # Force import to fail
             with patch("builtins.__import__", side_effect=ImportError("no module")):
-                result = self.mod._get_semantic_searcher()
-                assert result is None
+                assert self.mod._get_semantic_searcher() is None
         self.mod._semantic_searcher = None
 
 
