@@ -490,7 +490,7 @@ class SkillRouter(BaseHook):
                 break  # First workflow bundle wins (highest score)
 
         # --- Log match ---
-        _log_match(prompt_lower[:80], matched_bundle_names, required_skills)
+        _log_match(prompt_lower[:80], matched_bundle_names, required_skills, matched_by)
 
         # --- Accuracy tracking: generate prompt_id and log recommend event ---
         all_recommended = list(required_skills) + list(optional_skills)
