@@ -49,7 +49,7 @@ def search_qdrant_semantic(
     try:
         from qdrant_client import QdrantClient
 
-        client = QdrantClient(host="localhost", port=6333, timeout=int(timeout))
+        client = QdrantClient(host="localhost", port=6333, timeout=max(1, int(timeout)))
         response = client.query_points(
             collection_name=collection,
             query=embedding,
