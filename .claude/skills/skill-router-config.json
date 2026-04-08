@@ -1905,5 +1905,15 @@
     "moderate_bonus": 1,
     "weak_bonus": 0,
     "top_k": 2
+  },
+  "semantic_thresholds": {
+    "enabled": true,
+    "fallback_trigger": 2,
+    "strong": 0.75,
+    "moderate": 0.50,
+    "strong_bonus": 2,
+    "moderate_bonus": 1,
+    "timeout_ms": 500,
+    "collection": "skill_library"
   }
 }
