@@ -122,6 +122,19 @@
       "last_verified": "2026-04-03",
       "sources_count": 30,
       "github_repos_count": 17
+    },
+    {
+      "file": "hook-memory-context-injection.md",
+      "title": "Hook Memory Context Injection — подходы к обогащению контекста через хуки",
+      "keywords": [
+        "hook", "memory", "context-injection", "ClawMem", "claude-mem",
+        "Continuous-Claude", "UserPromptSubmit", "stdout", "systemMessage",
+        "Qdrant", "semantic-search", "RRF", "retrieval", "proactive-recall",
+        "session-context", "memory-first-hook", "experience-bank"
+      ],
+      "last_verified": "2026-04-09",
+      "sources_count": 8,
+      "github_repos_count": 6
     }
   ]
 }
