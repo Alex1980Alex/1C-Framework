@@ -73,7 +73,7 @@ src/
 - **Паттерны**: `docs/architecture/PATTERNS.md` (15 arch + 13 automation), skill `framework-patterns`
 - **Профили**: `.mcp/pdf.json`, `.mcp/bsl.json`, `.mcp/full.json`, `.mcp/lazy-mcp.json`
 - **Lazy MCP**: `infra/lazy-mcp/` (proxy, 11 категорий, 27 on-demand серверов)
-- **Qdrant коллекции**: `bsl_code_v2` (768d nomic), `ai_memory` (768d), `learned_patterns` (768d)
+- **Qdrant коллекции**: `bsl_code_v2` (768d nomic), `ai_memory` (768d), `learned_patterns` (768d), `skill_library` (768d nomic, 75 skills), `experience_bank` (768d nomic)
 - **BSL hook**: `bsl-tool-router.py` — routes BSL/1C queries to bsl-development skill
 
 ## Research
