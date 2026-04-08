@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -97,7 +97,7 @@ def main():
     total = len(skill_files)
 
     for i, filepath in enumerate(skill_files, 1):
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
 
         meta = parse_frontmatter(content)
@@ -127,7 +127,7 @@ def main():
                 "description": description,
                 "triggers": triggers,
                 "content_preview": content_preview[:500],
-                "indexed_at": datetime.now(timezone.utc).isoformat(),
+                "indexed_at": datetime.now(UTC).isoformat(),
             },
         )
 
