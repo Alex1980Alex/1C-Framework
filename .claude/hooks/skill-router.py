@@ -105,14 +105,37 @@ def _get_fuzzy_matcher(all_keywords: list[str]):
     return _fuzzy_matcher if _fuzzy_matcher is not False else None
 
 
-def _log_match(prompt_snippet: str, bundles: list[str], skills: list[str]) -> None:
+def _get_semantic_searcher():
+    """Lazy-load semantic search from shared module (Layer D).
+
+    Returns the module or None if unavailable.
+    Respects SKILL_ROUTER_NO_SEMANTIC env var for ablation testing.
+    """
+    global _semantic_searcher
+    if _semantic_searcher is None:
+        if os.environ.get("SKILL_ROUTER_NO_SEMANTIC"):
+            _semantic_searcher = False
+        else:
+            try:
+                from shared import semantic_search
+                _semantic_searcher = semantic_search
+            except Exception:
+                _semantic_searcher = False
+    return _semantic_searcher if _semantic_searcher is not False else None
+
+
+def _log_match(prompt_snippet: str, bundles: list[str], skills: list[str],
+               matched_by: dict[str, str] | None = None) -> None:
     """Append match info to data/skill-router.log for monitoring (Phase 10)."""
     try:
         project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
         log_path = os.path.join(project_dir, "data", "skill-router.log")
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        line = f"{ts} | bundles={','.join(bundles)} | skills={','.join(skills)} | prompt={prompt_snippet}\n"
+        mb_str = ""
+        if matched_by:
+            mb_str = f" | matched_by={','.join(f'{k}:{v}' for k, v in matched_by.items())}"
+        line = f"{ts} | bundles={','.join(bundles)} | skills={','.join(skills)}{mb_str} | prompt={prompt_snippet}\n"
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(line)
     except Exception:
