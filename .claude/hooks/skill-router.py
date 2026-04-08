@@ -37,6 +37,8 @@ _CONFIG_LOCATIONS = [
 _fuzzy_matcher = None
 # Lazy-load TF-IDF scorer (Layer C)
 _tfidf_scorer = None
+# Lazy-load semantic searcher (Layer D)
+_semantic_searcher = None
 
 
 def _get_tfidf_scorer():

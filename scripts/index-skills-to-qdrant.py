@@ -127,7 +127,7 @@ def main():
                 "description": description,
                 "triggers": triggers,
                 "content_preview": content_preview[:500],
-                "indexed_at": datetime.now(UTC).isoformat(),
+                "indexed_at": datetime.now(timezone.utc).isoformat(),
             },
         )
 
