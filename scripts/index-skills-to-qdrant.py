@@ -7,9 +7,9 @@ import os
 import re
 import sys
 import uuid
-from datetime import datetime, timezone
-from urllib.request import Request, urlopen
+from datetime import UTC, datetime
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
