@@ -43,8 +43,6 @@ class TestLogMatchWithMatchedBy:
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = log_dir / "skill-router.log"
 
-        original_func = self.mod._log_match.__wrapped__ if hasattr(self.mod._log_match, '__wrapped__') else self.mod._log_match
-
         # Direct test: write to a temp file
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         matched_by = {"bsl-dev": "semantic", "research-1c": "keyword"}
