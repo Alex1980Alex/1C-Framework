@@ -66,9 +66,9 @@ SEMANTIC_COLLECTIONS = [
 
 # Timeout budgets (seconds)
 SQLITE_TIMEOUT = 0.200
-QDRANT_TIMEOUT = 0.800
+QDRANT_TIMEOUT = 3.500  # Ollama embed ~2s + Qdrant queries ~0.5s
 MD_TIMEOUT = 0.500
-TOTAL_BUDGET = 1.5
+TOTAL_BUDGET = 4.0  # Hook timeout 5s, budget 4s
 
 # Russian suffix stemming (29 suffixes, ordered by length desc)
 _RU_SUFFIXES_3 = [
