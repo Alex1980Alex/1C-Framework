@@ -80,6 +80,11 @@
           },
           {
             "type": "command",
+            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/session-context-enforcer.py",
+            "timeout": 2
+          },
+          {
+            "type": "command",
             "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/skill-router.py",
             "timeout": 5
           },
