@@ -264,7 +264,10 @@
 
 > **Цель:** Заменить keyword matching в Skill Router на семантический поиск с fallback
 > **Срок:** 1-2 сессии | **Зависимости:** нет (параллельно с Phase 1-3) | **Приоритет:** P1
-> **Реализовано:** 2026-04-08 | **Тесты:** 32/32 passed
+> **Реализовано:** 2026-04-08 | **Тесты:** 37/37 passed
+> **Qdrant коллекции:** `skill_library` (75 skills, 768d nomic-embed-text), `experience_bank` (768d, empty — ожидает Phase 1)
+> **Файлы:** `.claude/hooks/shared/semantic_search.py`, `scripts/index-skills-to-qdrant.py`, `scripts/hooks/learning/experience-embedder.py`, `cache/experience-bank/schema.json`
+> **Router:** Layer D в `.claude/hooks/skill-router.py` (semantic fallback + hybrid boost + A/B logging). Env: `SKILL_ROUTER_NO_SEMANTIC=1` для отключения
 
 ### 4.1. Skill Indexing в 1c-docs-rag
 
