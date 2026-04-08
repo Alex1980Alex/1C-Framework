@@ -454,8 +454,8 @@
 |-------|----------|----------|-------------|-----------|--------|
 | **1** | Experience Distillation Engine | 24 | нет | P0 | 8-10 ч |
 | **2** | Failure Capture System | 20 | 1.1 | P0 | 6-8 ч |
-| **3** | Hierarchical Consolidation | 17 | 1, 2 | P1 | ~~6-8 ч~~ DONE |
-| **4** | Semantic Skill Retrieval | 17 | нет | P1 | ~~5-7 ч~~ DONE |
+| **3** | Hierarchical Consolidation | 17 | 1, 2 | P1 | 6-8 ч (NOT DONE) |
+| **4** | Semantic Skill Retrieval | 17 | нет | P1 | ~~5-7 ч~~ DONE (37 tests) |
 | **5** | Continuous Learning Loop | 20 | 1, 3, 4 | P1 | 8-10 ч |
 | **6** | Cross-Model Knowledge Profiling | 9 | 5.1 | P2 | 3-4 ч |
 | **7** | Observability & Metrics | 11 | 1-5 | P2 | 3-5 ч |
