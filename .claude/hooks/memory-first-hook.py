@@ -305,7 +305,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     try:
         from qdrant_client import QdrantClient
 
-        client = QdrantClient(host="localhost", port=6333, timeout=1)
+        client = QdrantClient(host="127.0.0.1", port=6333, timeout=1)
         scroll_result = client.scroll(
             collection_name="learned_patterns",
             limit=100,
