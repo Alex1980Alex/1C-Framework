@@ -354,6 +354,63 @@ class SkillRouter(BaseHook):
                 if bonus > 0:
                     scores[name] = scores.get(name, 0) + bonus
 
+        # --- Layer D: Semantic search fallback (Phase 4 XSkill) ---
+        matched_by: dict[str, str] = {}
+        # Track which bundles were matched by keywords (Layer A/B/C)
+        for name, score in scores.items():
+            if score >= min_score:
+                matched_by[name] = "keyword"
+
+        semantic = _get_semantic_searcher()
+        if semantic is not None:
+            sem_cfg = config.get("semantic_thresholds", {})
+            max_kw_score = max(scores.values()) if scores else 0
+            fallback_trigger = sem_cfg.get("fallback_trigger", min_score)
+
+            # Fallback: keyword scores too low → try semantic
+            if max_kw_score < fallback_trigger:
+                sem_results = semantic.search_skills_semantic(
+                    prompt_lower, limit=3, total_timeout=0.5,
+                )
+                strong_th = sem_cfg.get("strong", 0.75)
+                moderate_th = sem_cfg.get("moderate", 0.50)
+                strong_bonus = sem_cfg.get("strong_bonus", 2)
+                moderate_bonus = sem_cfg.get("moderate_bonus", 1)
+
+                for sr in sem_results:
+                    skill_name = sr.get("skill_name", "")
+                    sem_score = sr.get("score", 0.0)
+                    # Find bundle containing this skill
+                    for bname, bundle in bundles.items():
+                        all_skills = bundle.get("skills", []) + bundle.get("optional", [])
+                        if skill_name in all_skills:
+                            if sem_score >= strong_th:
+                                bonus = strong_bonus
+                            elif sem_score >= moderate_th:
+                                bonus = moderate_bonus
+                            else:
+                                continue
+                            scores[bname] = scores.get(bname, 0) + bonus
+                            matched_by[bname] = "semantic"
+                            break
+
+            # Hybrid boost: keyword matched but weak → semantic can strengthen
+            elif max_kw_score < 4:
+                sem_results = semantic.search_skills_semantic(
+                    prompt_lower, limit=2, total_timeout=0.5,
+                )
+                for sr in sem_results:
+                    if sr.get("score", 0.0) < 0.7:
+                        continue
+                    skill_name = sr.get("skill_name", "")
+                    for bname, bundle in bundles.items():
+                        all_skills = bundle.get("skills", []) + bundle.get("optional", [])
+                        if skill_name in all_skills and bname in scores and scores[bname] > 0:
+                            scores[bname] += 1
+                            if bname not in matched_by or matched_by[bname] == "keyword":
+                                matched_by[bname] = "hybrid"
+                            break
+
         # --- Filter bundles above min_score ---
         matched = {
             name: score for name, score in scores.items()
