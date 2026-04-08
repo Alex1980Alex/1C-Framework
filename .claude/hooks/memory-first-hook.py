@@ -7,14 +7,19 @@ Purpose: Auto-inject relevant memory context from 3 layers (SQLite + Qdrant + .m
 Timeout: 2s (total budget 1.5s for searches)
 
 3-layer federated search with RRF merge:
-  - Layer 1: SQLite important_messages (weight 0.40, 200ms)
-  - Layer 2: Qdrant learned_patterns (weight 0.35, 800ms, optional via QDRANT_HOOK_ENABLED=1)
+  - Layer 1: SQLite important_messages (weight 0.35, 200ms)
+  - Layer 2: Qdrant SEMANTIC search (weight 0.40, 800ms, 3 collections)
+    - skill_library (75 skills), experience_embeddings (61 exp), conversation_memory (372 msgs)
+    - Embedding: Ollama nomic-embed-text (768d)
+    - Fallback: token overlap on learned_patterns if Ollama unavailable
+    - Disable: MEMORY_HOOK_NO_SEMANTIC=1
   - Layer 3: .md memory files (weight 0.25, 500ms)
 
 Exit codes:
   0 = always allow (advisory, non-blocking)
 
 Pattern: Advisory (search + inject). Part of P5.2 Session Memory Bridge.
+ClawMem-inspired: hook does 90% retrieval internally, agent calls MCP for remaining 10%.
 """
 
 import hashlib
