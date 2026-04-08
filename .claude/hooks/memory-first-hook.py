@@ -225,15 +225,82 @@ def search_sqlite(query_tokens: set, limit: int = 10) -> list:
 
 
 # ---------------------------------------------------------------------------
-# Layer 2 — Qdrant search (OPTIONAL, via QDRANT_HOOK_ENABLED=1)
+# Layer 2 — Qdrant SEMANTIC search (default ON, disable via MEMORY_HOOK_NO_SEMANTIC=1)
 # ---------------------------------------------------------------------------
-def search_qdrant(query_tokens: set, limit: int = 10) -> list:
-    """Search Qdrant learned_patterns via scroll + token overlap (no embedding model)."""
-    if os.environ.get("QDRANT_HOOK_ENABLED") != "1":
+def _extract_content(payload: dict, collection_type: str) -> str:
+    """Extract displayable content from Qdrant payload by collection type."""
+    if collection_type == "skill":
+        name = payload.get("skill_name", "")
+        desc = payload.get("description", "")
+        return f"{name}: {desc}" if name else desc
+    if collection_type == "experience":
+        reason = payload.get("reason", "")
+        task = payload.get("task_type", "")
+        tool = payload.get("tool_preference", "")
+        parts = [p for p in [task, tool, reason] if p]
+        return " | ".join(parts)
+    if collection_type == "conversation":
+        return payload.get("content_preview", "")
+    return payload.get("content") or payload.get("description") or ""
+
+
+def _extract_category(payload: dict, collection_type: str) -> str:
+    """Extract category from Qdrant payload by collection type."""
+    if collection_type == "skill":
+        return "skill"
+    if collection_type == "experience":
+        return payload.get("category", "experience")
+    if collection_type == "conversation":
+        return payload.get("role", "conversation")
+    return "pattern"
+
+
+def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
+    """Semantic search across 3 Qdrant collections via Ollama embeddings.
+
+    Falls back to token overlap on learned_patterns if Ollama is unavailable.
+    """
+    if os.environ.get("MEMORY_HOOK_NO_SEMANTIC") == "1":
         return []
     if not query_tokens:
         return []
+
     start = time.monotonic()
+    query_text = prompt or " ".join(query_tokens)
+
+    # Try semantic search first
+    try:
+        from shared.semantic_search import embed_query_ollama, search_qdrant_semantic
+
+        embedding = embed_query_ollama(query_text, timeout=0.5)
+        if embedding:
+            results = []
+            for collection, ctype in SEMANTIC_COLLECTIONS:
+                if time.monotonic() - start > QDRANT_TIMEOUT:
+                    break
+                remaining = QDRANT_TIMEOUT - (time.monotonic() - start)
+                hits = search_qdrant_semantic(
+                    collection, embedding, limit=5, timeout=max(0.2, remaining),
+                )
+                for hit in hits:
+                    payload = hit.get("payload", {})
+                    content = _extract_content(payload, ctype)
+                    if not content:
+                        continue
+                    results.append({
+                        "source": "qdrant",
+                        "id": hit.get("id", ""),
+                        "content": content[:200],
+                        "category": _extract_category(payload, ctype),
+                        "score": round(hit.get("score", 0.0), 4),
+                    })
+            if results:
+                results.sort(key=lambda x: -x["score"])
+                return results[:limit]
+    except Exception:
+        pass
+
+    # Fallback: token overlap on learned_patterns (no embedding needed)
     results = []
     try:
         from qdrant_client import QdrantClient
