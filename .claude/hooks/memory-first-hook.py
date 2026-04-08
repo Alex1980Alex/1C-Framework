@@ -54,8 +54,15 @@ COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
 MAX_RESULTS = 5
 
-LAYER_WEIGHTS = {"sqlite": 0.40, "qdrant": 0.35, "md": 0.25}
+LAYER_WEIGHTS = {"sqlite": 0.35, "qdrant": 0.40, "md": 0.25}
 SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md"}
+
+# Qdrant semantic search collections (768d nomic-embed-text)
+SEMANTIC_COLLECTIONS = [
+    ("skill_library", "skill"),
+    ("experience_embeddings", "experience"),
+    ("conversation_memory", "conversation"),
+]
 
 # Timeout budgets (seconds)
 SQLITE_TIMEOUT = 0.200
