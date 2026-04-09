@@ -521,7 +521,11 @@
       "mcp__1c-mcp-crud__execute_query",
       "mcp__1c-mcp-crud__list_metadata_objects",
       "mcp__1c-mcp-crud__execute_code",
-      "Bash(\"C:/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe\" serve:*)"
+      "Bash(\"C:/Users/AlexT/AppData/Local/Programs/Ollama/ollama.exe\" serve:*)",
+      "Bash(venv/Scripts/python.exe -c \"import sys; print\\(sys.version\\)\")",
+      "Bash(venv/Scripts/pip.exe list:*)",
+      "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/TestDB MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex MCP_LOG_LEVEL=DEBUG venv/Scripts/python.exe mcp_entrypoint.py)",
+      "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/TestDB MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex MCP_LOG_LEVEL=INFO venv/Scripts/python.exe mcp_entrypoint.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
