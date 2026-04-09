@@ -26,6 +26,12 @@
       "last_verified": "2026-04-08",
       "sources": ["github.com/Pr-Mex/vanessa-automation", "locales/Steps/Templates", "docs/Changelog.md", "docs/FAQ/index.md", "features/", "testdb1c calibration"]
     },
+    "va-form-controls-steps": {
+      "title": "Vanessa Automation — шаги для элементов управления форм (CheckBox, RadioButton, SpinEdit, Date, CompositeType, кнопки документов)",
+      "keywords": ["vanessa automation", "VA", "BDD", "checkbox", "флаг", "radiobutton", "переключатель", "SpinEdit", "числовое поле", "дата", "составной тип", "composite type", "ПровестиИЗакрыть", "ФормаЗаписать", "ФормаПровести", "кнопки документа", "элементы управления", "form controls", "steps", "шаги", "устанавливаю флаг", "снимаю флаг", "изменяю флаг", "меняю значение переключателя", "выпадающий список", "кнопка выбора"],
+      "last_verified": "2026-04-09",
+      "sources": ["github.com/Pr-Mex/vanessa-automation", "ИсследовательФормы/Module.bsl", "UIAutomation01.feature", "ExpectedSteps.feature", "РаботаСФлагами.feature", "Changelog.md"]
+    },
     "testdb-registration-plk-data": {
       "title": "Реальные данные TestDB для тестирования РегистрацияНаПЛК",
       "keywords": ["TestDB", "РегистрацияНаПЛК", "тестовые данные", "ПЛК Светлый", "GKSTCPLK-2256", "табло", "настройки табло", "реальные данные", "Х985ХМ36", "СОДРУЖЕСТВО-СОЯ"],
