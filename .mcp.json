@@ -133,7 +133,8 @@
     "1c-mcp-toolkit": {
       "type": "http",
       "url": "http://localhost:6003/mcp",
-      "timeout": 180000
+      "timeout": 180000,
+      "disabled": true
     },
     "edt-mcp": {
       "command": "npx",
