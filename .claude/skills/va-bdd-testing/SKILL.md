@@ -673,15 +673,33 @@ mcp__1c-mcp-server__execute_query(
 
 ## Known Issues and Gotchas
 
-### 1. Transport Vehicle Names are LATIN with RUS suffix
+### 1. Transport Vehicle Names are CYRILLIC (calibrated 2026-04-10)
 
-Vehicle plate numbers in the database use Latin characters with a RUS suffix:
+**CORRECTION:** In the TestDB, TS names are **Cyrillic**, NOT Latin:
 ```
-X985XM36RUS, X987BT193RUS, A088EA62RUS, M012YX
+Х985ХМ36RUS, Х987ВТ193RUS, А088ЕА62RUS, М012УХ, М360ЕВ, М213КВ
 ```
-They are NOT Cyrillic. Do not confuse: `X` (Latin) vs `Х` (Cyrillic), `A` (Latin) vs `А` (Cyrillic).
+All characters before `RUS` are **Cyrillic**. Using Latin lookalikes (`M`, `X`, `Y`, `A`)
+causes search to return 0 rows. Verified via `mcp__1c-mcp-crud__execute_code` —
+database returns Cyrillic representations.
 
-When searching in catalogs, use the Latin name. Some names have RUS suffix, some do not.
+**Choice form filter `ЭтоСправочникПЛК=Истина`:** When selecting TS from a
+Регистрация/НнР form, the choice form pre-filters by `ЭтоСправочникПЛК=Истина`
+AND `ВидПеревозки=Автомобиль`. If the TS you search for has `ЭтоСправочникПЛК=Нет`,
+the search returns 0 rows even though the TS exists.
+
+Query to find usable ПЛК ТС without active registrations:
+```sql
+ВЫБРАТЬ ТС.Наименование ИЗ Справочник.ТранспортныеСредства КАК ТС
+    ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.гкс_СостоянияРегистрации.СрезПоследних КАК Сост
+        ПО Сост.ДокументРегистрации.ТранспортноеСредство = ТС.Ссылка
+            И Сост.Состояние <> ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Убыл)
+ГДЕ ТС.ЭтоСправочникПЛК = ИСТИНА
+    И НЕ ТС.ПометкаУдаления
+    И ТС.ВидПеревозки = ЗНАЧЕНИЕ(Перечисление.гкс_ТипыТранспортныхСредствДоставки.Автомобиль)
+СГРУППИРОВАТЬ ПО ТС.Наименование
+ИМЕЮЩИЕ КОЛИЧЕСТВО(Сост.Состояние) = 0
+```
 
 ### 2. Search in Catalog vs ARM Table
 
