@@ -1,0 +1,4 @@
+[submodule "tools/bsl-debug-server"]
+	path = tools/bsl-debug-server
+	url = https://github.com/Alex1980Alex/bsl-debug-server.git
+	branch = master
