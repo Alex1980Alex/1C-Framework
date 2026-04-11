@@ -664,6 +664,90 @@ exists first.** 4 out of 6 real-world test failures in calibration sessions were
 caused by missing test data — not by logic errors. VA takes 120–200 seconds per
 scenario before failing on a missing catalog entry; pre-checks eliminate this waste.
 
+### Automated preflight (YAML-driven, since 2026-04-11)
+
+Pre-check is automated via **`tools/vanessa/preflight-probe.py`** — a universal,
+YAML-driven probe engine. Drop probe definitions into `tools/vanessa/probes/*.yaml`
+and reference them from the METADATA header of the `.feature` file:
+
+```gherkin
+# METADATA:
+#   Task: GKSTCPLK-2256                # freeform — used by /run-1c-tests
+#   Dependencies: 00_smoke.feature     # freeform — chain graph
+#
+#   # Machine-readable probes — consumed by preflight-probe.py
+#   TS: М012УХ, Х985ХМ36RUS (fresh, PLK)
+#   Catalog: Номенклатура[Рапс (Россия), Пшеница 3 кл 13.5% протеин]
+#   Catalog: Контрагенты[ЯхимовщинаАгро]
+#   Setting: НастройкаЭлектронногоТабло[ПЛК Светлый/НеПрошедшиеРегистрацию]
+#   Role: ДоступенДиспетчер
+```
+
+**Built-in probes** (`tools/vanessa/probes/`):
+
+| Tag | YAML file | Scope | Parser |
+|-----|-----------|-------|--------|
+| `Catalog` | `catalog.yaml` | Universal — any 1C catalog | `bracketed_list` |
+| `Role` | `role.yaml` | Universal — always SKIP | `literal` |
+| `TS` | `ts.yaml` | Project-specific (ТранспортныеСредства + ЭтоСправочникПЛК + гкс_СостоянияРегистрации) | `csv_with_flags` |
+| `Setting` | `setting.yaml` | Project-specific (гкс_НастройкаЭлектронногоТабло) | `bracketed_slashed` |
+
+**Adding a new probe** (no Python changes needed):
+
+```yaml
+# tools/vanessa/probes/document.yaml
+tag: Document
+enabled: true
+parser:
+  type: bracketed_list
+  pattern: '^(?P<catalog>\S+)\[(?P<items>.+)\]$'
+  item_separator: ","
+  item_label: "{catalog}[{item}]"
+checks:
+  - name: exists
+    always: true
+    query: |
+      ВЫБРАТЬ КОЛИЧЕСТВО(*) КАК Cnt ИЗ Документ.{catalog}
+      ГДЕ Номер = &Name И НЕ ПометкаУдаления
+    params: {Name: "{item}"}
+    expect: field_positive
+    expect_field: Cnt
+    on_fail: "not found"
+    on_pass_label: "found"
+```
+
+After saving the YAML, add `Document: ЗаказКлиента[ЗК-001, ЗК-002]` to any
+feature file's METADATA — preflight auto-discovers the new probe.
+
+**Check engine primitives** (all probes compose from these):
+
+| `expect` type | Behaviour | Use for |
+|---|---|---|
+| `non_empty` | At least 1 row returned | existence / role |
+| `field_truthy` | `rows[0][<field>]` is truthy | boolean flags like `ЭтоСправочникПЛК` |
+| `field_positive` | `int(rows[0][<field>]) > 0` | `КОЛИЧЕСТВО(*)` > 0 |
+| `field_zero` | `int(rows[0][<field>]) == 0` or empty | freshness / "no active X" |
+| `field_equals` | `rows[0][<field>] == expect_value` | exact value match |
+
+**Parser types** (how METADATA raw string becomes check items):
+
+| Parser | METADATA example | Items produced |
+|---|---|---|
+| `csv_with_flags` | `Name1, Name2 (fresh, PLK)` | `[{item: Name1, flags: {fresh, plk}}, {item: Name2, ...}]` |
+| `bracketed_list` | `Catalog[item1, item2]` | `[{catalog: Catalog, item: item1}, ...]` |
+| `bracketed_slashed` | `Name[Point/Kind]` | `[{name, point, kind, item: raw}]` |
+| `literal` | `RoleName` | `[{item: RoleName, literal: RoleName}]` |
+
+**Reglament triggers** (`tools/vanessa/jobs/*.yaml`) use the same pattern:
+each YAML defines a named BSL snippet. `trigger-reglament.py --job <name>`
+loads and executes it. Add new jobs without touching Python.
+
+Freeform METADATA fields (`Task`, `Logical block`, `Dependencies`, `Configuration objects`,
+`CALIBRATION LOG`) **coexist** in the same block — preflight-probe ignores unknown
+tags; `/run-1c-tests` reads `Dependencies` for its chain graph.
+
+---
+
 ### Why This Matters
 
 Every `.feature` file implicitly depends on TestDB state:
