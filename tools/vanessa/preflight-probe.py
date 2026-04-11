@@ -86,31 +86,88 @@ class FeatureReport:
 # 1C MCP Toolkit communication
 # ---------------------------------------------------------------------------
 
+def _rpc_call(
+    rpc_url: str,
+    auth: tuple[str, str],
+    tool_name: str,
+    arguments: dict,
+) -> object:
+    """Call a 1C MCP tool via JSON-RPC 2.0.
+
+    The 1C HTTP service exposes tools at {rpc_url} and responds with MCP
+    CallToolResult wrapped in a JSON-RPC envelope:
+        {"jsonrpc":"2.0","id":N,"result":{"content":[{"type":"text","text":"<inner-json>"}],"isError":false}}
+    The inner text is itself a JSON string of shape {"success": bool, "data"|"error": ...}.
+
+    Returns the unwrapped `data` field from the inner payload.
+    Raises RuntimeError on tool-level errors, requests.HTTPError on transport errors.
+    """
+    rpc_request = {
+        "jsonrpc": "2.0",
+        "id": next(_rpc_id_counter),
+        "method": "tools/call",
+        "params": {
+            "name": tool_name,
+            "arguments": arguments,
+        },
+    }
+
+    resp = requests.post(rpc_url, json=rpc_request, auth=auth, timeout=HTTP_TIMEOUT)
+    resp.raise_for_status()
+    envelope = resp.json()
+
+    if "error" in envelope:
+        err = envelope["error"]
+        raise RuntimeError(f"JSON-RPC error {err.get('code')}: {err.get('message')}")
+
+    result = envelope.get("result") or {}
+    content = result.get("content") or []
+    if not content:
+        raise RuntimeError("Empty result from 1C tool")
+
+    text = content[0].get("text", "")
+    try:
+        inner = json.loads(text)
+    except json.JSONDecodeError:
+        # Some tools return raw text; propagate as-is
+        return text
+
+    if isinstance(inner, dict) and not inner.get("success", True):
+        raise RuntimeError(inner.get("error", "Unknown 1C tool error"))
+
+    if isinstance(inner, dict) and "data" in inner:
+        return inner["data"]
+
+    return inner
+
+
 def run_query(
     toolkit_url: str,
     query: str,
     params: dict | None = None,
     channel: str | None = None,
+    auth: tuple[str, str] = (DEFAULT_USERNAME, DEFAULT_PASSWORD),
 ) -> list:
-    """Execute a 1C query via the MCP toolkit HTTP API.
+    """Execute a 1C query via the MCP toolkit JSON-RPC endpoint.
+
+    `channel` is accepted for CLI back-compat but unused — the JSON-RPC endpoint
+    does not support channel isolation (that was a 1c-mcp-toolkit HTTP-only feature).
 
     Returns the list of rows from the response.
-    Raises on HTTP errors or toolkit-level failures.
     """
-    payload: dict = {"query": query}
+    del channel  # intentionally unused
+    arguments: dict = {"query": query}
     if params:
-        payload["params"] = params
-    if channel:
-        payload["channel"] = channel
+        arguments["params"] = params
 
-    resp = requests.post(toolkit_url, json=payload, timeout=HTTP_TIMEOUT)
-    resp.raise_for_status()
-    body = resp.json()
+    data = _rpc_call(toolkit_url, auth, "execute_query", arguments)
 
-    if not body.get("success", False):
-        raise RuntimeError(body.get("error", "Unknown toolkit error"))
-
-    return body.get("data", [])
+    # Tool returns either a list of rows or a dict with metadata
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict) and "rows" in data:
+        return data["rows"]
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -480,17 +537,26 @@ def main() -> None:
     toolkit_url: str = args.toolkit_url
     channel: str | None = args.channel
 
-    # Verify toolkit is reachable (host-level only, endpoint may return 404 for GET)
+    # Verify toolkit is reachable via a cheap ping query
     try:
-        requests.get(toolkit_url.replace("/api/execute_query", "/"), timeout=HTTP_TIMEOUT)
+        _rpc_call(
+            toolkit_url,
+            (DEFAULT_USERNAME, DEFAULT_PASSWORD),
+            "execute_code",
+            {"code": 'Результат = "ping";'},
+        )
     except requests.ConnectionError:
         print(
-            f"{_RED}[ERROR]{_RESET} Cannot reach 1c-mcp-toolkit at {toolkit_url}",
+            f"{_RED}[ERROR]{_RESET} Cannot reach 1C HTTP service at {toolkit_url}",
             file=sys.stderr,
         )
         sys.exit(2)
-    except Exception:
-        pass
+    except Exception as exc:
+        print(
+            f"{_RED}[ERROR]{_RESET} 1C HTTP service ping failed: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
     feature_files: list[str] = []
 
