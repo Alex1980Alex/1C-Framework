@@ -1,0 +1,68 @@
+# ts.yaml — probe для транспортных средств (проект GKSTCPLK).
+#
+# Проверяет:
+#   - existence  : ТС существует в Справочник.ТранспортныеСредства (не помечен на удаление)
+#   - PLK flag   : ТС имеет ЭтоСправочникПЛК = Истина (если задан флаг "PLK")
+#   - fresh flag : у ТС нет активных регистраций в гкс_СостоянияРегистрации.СрезПоследних
+#                  (все предыдущие регистрации в состоянии "Убыл"), если задан флаг "fresh"
+#
+# METADATA syntax:
+#   TS: <Имя1>, <Имя2>, ... (флаг1, флаг2)
+#
+# Примеры:
+#   TS: М012УХ (fresh, PLK)
+#   TS: Х985ХМ36RUS, А117СО62 (fresh, PLK)
+#   TS: В123АБ45                   # без флагов — только existence
+#
+# Чтобы переиспользовать для другой конфигурации, поменяй имена справочника и регистра
+# на свои и этого YAML-файла достаточно.
+
+tag: TS
+description: Transport vehicles with PLK catalog and freshness flags (GKSTCPLK)
+enabled: true
+
+parser:
+  type: csv_with_flags
+  item_separator: ","
+  flags_regex: '\(([^)]*)\)'
+  flag_separator: ","
+
+checks:
+  - name: exists
+    always: true
+    query: |
+      ВЫБРАТЬ ТС.Наименование
+      ИЗ Справочник.ТранспортныеСредства КАК ТС
+      ГДЕ ТС.Наименование = &Name И НЕ ТС.ПометкаУдаления
+    params:
+      Name: "{item}"
+    expect: non_empty
+    on_fail: "not found in TestDB"
+    on_pass_label: "exists"
+
+  - name: plk_flag
+    if_flag: "PLK"
+    query: |
+      ВЫБРАТЬ ТС.ЭтоСправочникПЛК КАК PLK
+      ИЗ Справочник.ТранспортныеСредства КАК ТС
+      ГДЕ ТС.Наименование = &Name И НЕ ТС.ПометкаУдаления
+    params:
+      Name: "{item}"
+    expect: field_truthy
+    expect_field: PLK
+    on_fail: "exists but ЭтоСправочникПЛК=False"
+    on_pass_label: "PLK"
+
+  - name: fresh
+    if_flag: "fresh"
+    query: |
+      ВЫБРАТЬ КОЛИЧЕСТВО(*) КАК Active
+      ИЗ РегистрСведений.гкс_СостоянияРегистрации.СрезПоследних КАК Сост
+      ГДЕ Сост.ДокументРегистрации.ТранспортноеСредство.Наименование = &Name
+        И Сост.Состояние <> ЗНАЧЕНИЕ(Перечисление.гкс_СостоянияРегистрации.Убыл)
+    params:
+      Name: "{item}"
+    expect: field_zero
+    expect_field: Active
+    on_fail: "has {Active} active registrations — not fresh"
+    on_pass_label: "fresh"

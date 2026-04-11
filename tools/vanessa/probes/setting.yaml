@@ -1,0 +1,32 @@
+# setting.yaml — probe для настроек электронных табло (проект GKSTCPLK).
+#
+# METADATA syntax:
+#   Setting: <ИмяНастройки>[<ТочкаМаршрута>/<ВидТабло>]
+#
+# Пример:
+#   Setting: НастройкаЭлектронногоТабло[ПЛК Светлый/НеПрошедшиеРегистрацию]
+#   Setting: НастройкаЭлектронногоТабло[КАТ/НазначениеНаВыгрузку]
+
+tag: Setting
+description: Electronic board settings (GKSTCPLK, РегистрСведений.гкс_НастройкаЭлектронногоТабло)
+enabled: true
+
+parser:
+  type: bracketed_slashed
+  pattern: '^(?P<name>\S+)\[(?P<point>[^/]+)/(?P<kind>[^\]]+)\]$'
+  item_label: "{name}[{point}/{kind}]"
+
+checks:
+  - name: exists
+    always: true
+    query: |
+      ВЫБРАТЬ КОЛИЧЕСТВО(*) КАК Cnt
+      ИЗ РегистрСведений.гкс_НастройкаЭлектронногоТабло
+      ГДЕ ТочкаМаршрута.Наименование = &Point
+        И ВидТабло = ЗНАЧЕНИЕ(Перечисление.гкс_ВидыЭлектронныхТабло.{kind})
+    params:
+      Point: "{point}"
+    expect: field_positive
+    expect_field: Cnt
+    on_fail: "not found"
+    on_pass_label: "found"

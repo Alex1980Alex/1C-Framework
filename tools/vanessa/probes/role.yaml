@@ -1,0 +1,22 @@
+# role.yaml — универсальная probe для проверки доступности роли.
+#
+# ВАЖНО: Надёжная проверка роли требует активной пользовательской сессии,
+# которой нет в контексте HTTP-сервиса. По умолчанию возвращает SKIP.
+# Это корректное поведение: ролевые проверки выполняются вручную или
+# в рамках VA BDD при реальном заходе в систему.
+#
+# METADATA syntax:
+#   Role: <ИмяРоли>
+#
+# Пример:
+#   Role: ДоступенДиспетчер
+
+tag: Role
+description: Role availability check (SKIP by default)
+enabled: true
+default_status: SKIP
+default_message: "manual check required"
+
+parser:
+  type: literal
+  item_label: "{literal}"
