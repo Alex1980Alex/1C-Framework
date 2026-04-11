@@ -33,6 +33,8 @@ description: "Используй этот скилл для понимания �
 | `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
 | `search-optimizer.py` | Bash | Оптимизация параметров Search API |
 
+`code-skill-enforcer.py` читает конфигурацию из `shared/code-skill-patterns.json` (массив правил `{pattern, skill, label, domain}`). Каждое правило связывает regex-паттерн команды/файла с обязательным для активации скиллом. **Важно**: `skill` должен существовать в каталоге `.claude/skills/` — entries с несуществующими target-скиллами создают phantom-блокировки (enforcer требует активации скилла, которого нет), поэтому при удалении скилла нужно сразу чистить соответствующие правила.
+
 #### PostToolUse (13)
 
 | Hook | Matcher | Назначение |
