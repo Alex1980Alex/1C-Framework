@@ -338,6 +338,7 @@ def _parse_bracketed_slashed(raw: str, cfg: dict) -> list[dict]:
 
 def _parse_literal(raw: str, cfg: dict) -> list[dict]:
     """Whole raw string is one item."""
+    del cfg  # unused — signature required for registry protocol
     val = raw.strip()
     return [{"item": val, "literal": val, "flags": set()}]
 
