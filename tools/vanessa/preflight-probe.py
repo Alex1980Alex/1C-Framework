@@ -5,6 +5,7 @@ Verifies that all referenced test data exists before launching Vanessa Automatio
 """
 
 import argparse
+import itertools
 import json
 import os
 import re
@@ -19,8 +20,17 @@ import requests
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_TOOLKIT_URL = "http://localhost:6003/api/execute_query"
+# 1C HTTP service endpoint (published as "mcp" on TestDB)
+# Full path: {base}/hs/{service_root}/rpc
+DEFAULT_TOOLKIT_URL = os.environ.get(
+    "ONEC_RPC_URL", "http://localhost/TestDB/hs/mcp/rpc"
+)
+DEFAULT_USERNAME = os.environ.get("ONEC_USERNAME", "a.terletskiy@sodru.com")
+DEFAULT_PASSWORD = os.environ.get("ONEC_PASSWORD", "Alex80Alex")
 HTTP_TIMEOUT = 10
+
+# Monotonic JSON-RPC request id generator
+_rpc_id_counter = itertools.count(1)
 
 # ANSI colour helpers (safe on Windows 10+ with ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 _GREEN = "\033[92m"
