@@ -2,12 +2,13 @@
 name: va-bdd-testing
 description: >
   Comprehensive skill for VA BDD (Vanessa Automation) testing of 1C:Enterprise
-  configurations. Covers the complete 4-stage workflow: configuration analysis,
-  VA documentation lookup, test writing with calibrated step patterns, and
-  database verification. Based on real calibration experience with ARM forms,
-  DynamicList tables, tumblers, modal dialogs, and complex business process
-  chains. Use when writing, debugging, or calibrating .feature files for any
-  1C configuration objects.
+  configurations. Covers the complete workflow: configuration analysis, VA
+  documentation lookup, test writing with calibrated step patterns, MANDATORY
+  pre-scenario TestDB data check (Stage 4a), and post-execution database
+  verification. Based on real calibration experience with ARM forms, DynamicList
+  tables, tumblers, modal dialogs, and complex business process chains. Use when
+  writing, debugging, or calibrating .feature files for any 1C configuration
+  objects.
 allowed-tools:
   - Read
   - Write
