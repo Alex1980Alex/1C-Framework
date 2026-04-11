@@ -143,6 +143,10 @@ SKIP_PATTERNS = [
     "dockerfile",
     "docker-compose",
     ".log",
+    # Git infrastructure (submodule/ignore/attributes config — not product code)
+    ".gitmodules",
+    ".gitignore",
+    ".gitattributes",
     # Empty module markers (no logic to document)
     "__init__.py",
     # 1C project task folders (separate repos, not framework code)
