@@ -30,9 +30,12 @@ allowed-tools:
   - mcp__1c-mcp-server__search_code
   - mcp__ast-grep-mcp__ast_grep
   - mcp__ripgrep__search
-version: 1.0.0
-updated: 2026-04-10
-tags: [va, bdd, vanessa-automation, testing, gherkin, 1c, feature, calibration, arm]
+version: 1.1.0
+updated: 2026-04-11
+tags: [va, bdd, vanessa-automation, testing, gherkin, 1c, feature, calibration, arm, pre-check, testdb]
+changelog:
+  - "1.1.0 (2026-04-11): Added Stage 4a — mandatory pre-scenario TestDB data check (5 query templates, 8-point checklist, blocker handling)"
+  - "1.0.0 (2026-04-10): Initial skill with 4-stage workflow (analyze config, VA docs, write tests, verify DB)"
 ---
 
 # VA BDD Testing (Vanessa Automation)
