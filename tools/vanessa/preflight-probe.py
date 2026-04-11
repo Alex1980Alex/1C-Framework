@@ -27,7 +27,6 @@ _GREEN = "\033[92m"
 _RED = "\033[91m"
 _YELLOW = "\033[93m"
 _CYAN = "\033[96m"
-_BOLD = "\033[1m"
 _RESET = "\033[0m"
 
 
@@ -80,8 +79,8 @@ class FeatureReport:
 def run_query(
     toolkit_url: str,
     query: str,
-    params: Optional[dict] = None,
-    channel: Optional[str] = None,
+    params: dict | None = None,
+    channel: str | None = None,
 ) -> list:
     """Execute a 1C query via the MCP toolkit HTTP API.
 
@@ -167,7 +166,7 @@ def parse_metadata(feature_path: str) -> list[dict]:
 def probe_ts(
     toolkit_url: str,
     raw: str,
-    channel: Optional[str],
+    channel: str | None,
 ) -> list[CheckResult]:
     """Probe transport vehicles for existence and freshness."""
     results: list[CheckResult] = []
@@ -257,7 +256,7 @@ def probe_ts(
 def probe_catalog(
     toolkit_url: str,
     raw: str,
-    channel: Optional[str],
+    channel: str | None,
 ) -> list[CheckResult]:
     """Probe catalog items for existence."""
     results: list[CheckResult] = []
@@ -298,7 +297,7 @@ def probe_catalog(
 def probe_role(
     toolkit_url: str,
     raw: str,
-    channel: Optional[str],
+    channel: str | None,
 ) -> list[CheckResult]:
     """Probe role availability.
 
@@ -323,7 +322,7 @@ def probe_role(
 def probe_setting(
     toolkit_url: str,
     raw: str,
-    channel: Optional[str],
+    channel: str | None,
 ) -> list[CheckResult]:
     """Probe electronic board settings."""
     results: list[CheckResult] = []
@@ -382,12 +381,12 @@ def probe_setting(
 def check_feature(
     feature_path: str,
     toolkit_url: str,
-    channel: Optional[str],
+    channel: str | None,
 ) -> FeatureReport:
     """Run all pre-flight probes for a single feature file."""
     report = FeatureReport(
         feature=os.path.basename(feature_path),
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
     print(f"{_CYAN}[preflight]{_RESET} feature: {report.feature}")
@@ -469,7 +468,7 @@ def main() -> None:
     args = parser.parse_args()
 
     toolkit_url: str = args.toolkit_url
-    channel: Optional[str] = args.channel
+    channel: str | None = args.channel
 
     # Verify toolkit is reachable (host-level only, endpoint may return 404 for GET)
     try:
@@ -519,7 +518,7 @@ def main() -> None:
     if args.json_path:
         json_data = {
             "toolkit_url": toolkit_url,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "features": [r.to_dict() for r in reports],
             "total_exit_code": 1 if any(r.exit_code == 1 for r in reports) else 0,
         }
