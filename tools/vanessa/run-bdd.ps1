@@ -19,7 +19,8 @@ param(
     [int]$TimeoutSec = 120,
     [switch]$KeepRunning,
     [string]$OutputJson = "",
-    [string]$RunId = ""
+    [string]$RunId = "",
+    [switch]$SkipPreflight
 )
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -30,7 +31,8 @@ $startedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss")
 $startedTicks = (Get-Date).Ticks
 
 $projectDir = "D:\va-test"
-$featuresSource = (Get-Item "D:\1*-Framework" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '1' }).FullName + "\features"
+$frameworkRoot = (Get-Item "D:\1*-Framework" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '1' }).FullName
+$featuresSource = "$frameworkRoot\features"
 $featuresDest = "$projectDir\features"
 $exe = "C:\Program Files\1Cv8\8.3.27.1859\bin\1cv8c.exe"
 $vaEpf = "$projectDir\va.epf"
@@ -38,6 +40,12 @@ $vaParams = "$projectDir\VAParams.json"
 $buildStatus = "$projectDir\BuildStatus.log"
 $vaLog = "$projectDir\va-out.txt"
 $reportDir = "$projectDir\build\reports"
+
+# Sources for the reglament-trigger helper (invoked from VA via "я запускаю команду ОС")
+$triggerSourceDir = "$frameworkRoot\tools\vanessa"
+$triggerPs1Src    = "$triggerSourceDir\trigger-reglament.ps1"
+$triggerPySrc     = "$triggerSourceDir\trigger-reglament.py"
+$preflightPySrc   = "$triggerSourceDir\preflight-probe.py"
 
 # 1. Kill old 1C processes
 Get-Process -Name '1cv8c','1cv8' -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -53,6 +61,46 @@ if (Test-Path $featuresSource) {
         Copy-Item $_.FullName "$featuresDest\$relPath" -Force
         Write-Host "  copied: $relPath"
     }
+}
+
+# 2b. Sync trigger-reglament helpers to $projectDir
+#     (VA calls "powershell -File D:\va-test\trigger-reglament.ps1" which delegates
+#     to trigger-reglament.py through the project venv; the .py file also lives
+#     in $projectDir so both are visible from the latin-path working directory.)
+foreach ($src in @($triggerPs1Src, $triggerPySrc)) {
+    if (Test-Path $src) {
+        Copy-Item $src (Join-Path $projectDir (Split-Path $src -Leaf)) -Force
+        Write-Host "  synced: $(Split-Path $src -Leaf)"
+    } else {
+        Write-Host "  [WARN] missing: $src"
+    }
+}
+
+# 2c. Pre-flight data probe against live TestDB (unless -SkipPreflight)
+if (-not $SkipPreflight) {
+    $python = Join-Path $frameworkRoot ".venv\Scripts\python.exe"
+    if ((Test-Path $python) -and (Test-Path $preflightPySrc)) {
+        $preflightArgs = @($preflightPySrc)
+        if ($Feature) {
+            $preflightArgs += @("--feature", (Join-Path $featuresDest $Feature))
+        } else {
+            $preflightArgs += @("--feature", $featuresDest)
+        }
+        $env:PYTHONIOENCODING = "utf-8"
+        Write-Host "[PREFLIGHT] $python preflight-probe.py"
+        & $python @preflightArgs
+        $preflightExit = $LASTEXITCODE
+        if ($preflightExit -ne 0) {
+            Write-Host "[PREFLIGHT] BLOCKER detected (exit $preflightExit) -- aborting VA launch."
+            Write-Host "[PREFLIGHT] Fix the flagged data items, or re-run with -SkipPreflight to bypass."
+            exit $preflightExit
+        }
+        Write-Host "[PREFLIGHT] OK"
+    } else {
+        Write-Host "[PREFLIGHT] skipped (python or preflight script missing)"
+    }
+} else {
+    Write-Host "[PREFLIGHT] skipped (-SkipPreflight)"
 }
 
 # 3. If specific feature requested, disable others

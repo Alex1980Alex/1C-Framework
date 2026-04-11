@@ -526,7 +526,8 @@
       "Bash(venv/Scripts/pip.exe list:*)",
       "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/TestDB MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex MCP_LOG_LEVEL=DEBUG venv/Scripts/python.exe mcp_entrypoint.py)",
       "Bash(PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/TestDB MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex MCP_LOG_LEVEL=INFO venv/Scripts/python.exe mcp_entrypoint.py)",
-      "mcp__1c-mcp-crud__search_code"
+      "mcp__1c-mcp-crud__search_code",
+      "Bash(mkdir -p build/preflight-test)"
     ]
   },
   "enableAllProjectMcpServers": true,
