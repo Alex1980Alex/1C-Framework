@@ -150,8 +150,8 @@ description: "Используй этот скилл для понимания �
 | `brownfield-validate` | Валидация реализации vs OpenSpec (Gap/Design/Impl валидаторы) |
 | `activate-project` | Активация 1С-проекта в Serena с проверкой и индексацией |
 
-Команды: `/analyze-1c-task` → `/implement-1c-task` → `/write-1c-tests` (→ будущий `/run-1c-tests`).
-Pipeline: анализ задачи → реализация кода → написание тестов → прогон тестов.
+Команды: `/analyze-1c-task` → `/implement-1c-task` → `/write-1c-tests` → `/run-1c-tests`.
+Pipeline: анализ задачи → реализация кода → написание тестов → цепочный прогон тестов (секции с resume, переиспользование артефактов, `.run-state.json`).
 
 ### Skill Router — МАРШРУТИЗАЦИЯ
 
