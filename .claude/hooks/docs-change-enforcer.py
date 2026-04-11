@@ -143,9 +143,9 @@ SKIP_PATTERNS = [
     "dockerfile",
     "docker-compose",
     ".log",
-    # Git infrastructure (submodule/ignore/attributes config — not product code)
+    # Git infrastructure (submodule/attributes config — not product code)
+    # (.gitignore already listed above)
     ".gitmodules",
-    ".gitignore",
     ".gitattributes",
     # Empty module markers (no logic to document)
     "__init__.py",
