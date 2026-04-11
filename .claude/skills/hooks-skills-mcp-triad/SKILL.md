@@ -136,6 +136,23 @@ description: "Используй этот скилл для понимания �
 | `claude-code-vscode` | VS Code extension, shortcuts, MCP |
 | `claude-code-terminal-ux` | Chrome, statusline, terminal setup |
 
+#### 1С разработка (9)
+
+| Skill | Назначение |
+|-------|-----------|
+| `analyze-1c-task-v2` | 5-фазный анализ задачи 1С (требования → объекты → алгоритм → план → верификация), SDD delta-specs |
+| `analyze-1c-research` | 3-агентный анализ (Executor + Reviewer + Comparator) с итеративным скорингом |
+| `implement-1c-task` | 8-этапная реализация задачи: EDT-MCP + 1c-mcp-toolkit + bsl-debug-server, обязательные циклы валидации |
+| `bsl-development` | Разработка BSL: процедуры, обработка проведения, модули, 3 стратегии reasoner |
+| `1c-mcp-toolkit` | MCP доступ к живой базе 1С: execute_query, execute_code, get_metadata, event_log |
+| `va-bdd-testing` | VA BDD тестирование: калиброванные step-паттерны, Stage 4a pre-scenario TestDB check, post-verification |
+| `auto-test-after-write` | Автопроверка BSL после Write через MCP (syntax + тесты) |
+| `brownfield-validate` | Валидация реализации vs OpenSpec (Gap/Design/Impl валидаторы) |
+| `activate-project` | Активация 1С-проекта в Serena с проверкой и индексацией |
+
+Команды: `/analyze-1c-task` → `/implement-1c-task` → `/write-1c-tests` (→ будущий `/run-1c-tests`).
+Pipeline: анализ задачи → реализация кода → написание тестов → прогон тестов.
+
 ### Skill Router — МАРШРУТИЗАЦИЯ
 
 Config-driven маршрутизация промптов к скиллам через `skill-router-config.json`:
