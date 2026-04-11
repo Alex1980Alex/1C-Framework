@@ -1,0 +1,33 @@
+# catalog.yaml — универсальная probe для проверки существования записей справочника.
+# Работает для любой конфигурации 1С.
+#
+# METADATA syntax:
+#   Catalog: <ИмяСправочника>[Элемент1, Элемент2, ...]
+#
+# Пример:
+#   Catalog: Номенклатура[Пшеница 3 кл, Рапс (Россия)]
+#   Catalog: Контрагенты[ЯхимовщинаАгро]
+
+tag: Catalog
+description: Universal catalog item existence check
+enabled: true
+
+parser:
+  type: bracketed_list
+  pattern: '^(?P<catalog>\S+)\[(?P<items>.+)\]$'
+  item_separator: ","
+  item_label: "{catalog}[{item}]"
+
+checks:
+  - name: exists
+    always: true
+    query: |
+      ВЫБРАТЬ КОЛИЧЕСТВО(*) КАК Cnt
+      ИЗ Справочник.{catalog}
+      ГДЕ Наименование = &Name И НЕ ПометкаУдаления
+    params:
+      Name: "{item}"
+    expect: field_positive
+    expect_field: Cnt
+    on_fail: "not found"
+    on_pass_label: "found"
