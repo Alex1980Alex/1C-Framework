@@ -426,11 +426,70 @@ features/<task-slug>/
 #   TestDB data: {список реальных записей, которые используются}
 #   Dependencies: {имена других feature-файлов, которые должны пройти первыми}
 #
+#   # Машиночитаемые pre-flight probes (преобразуются tools/vanessa/preflight-probe.py).
+#   # Эти поля обязательны — без них preflight не сможет проверить данные до запуска VA.
+#   TS: <Имя1>, <Имя2> (fresh, PLK)
+#   Catalog: <ИмяСправочника>[элемент1, элемент2]
+#   Setting: <ИмяНастройки>[<точка>/<вид>]
+#   Role: <ИмяРоли>
+#
 # CALIBRATION LOG:
 #   V1  confirmed   Окно "*часть-заголовка*" — подтверждено probe 2026-XX-XX
 #   V2  pending     Кнопка <Имя> — требует probe
 #   V3  source      Инфостарт: https://... (паттерн для <control>)
 ```
+
+**Машиночитаемые probe-поля** (раздел METADATA после freeform полей):
+
+| Тег | Формат | Что проверяет |
+|-----|--------|---------------|
+| `TS:` | `Имя1, Имя2 (fresh, PLK)` | Транспортные средства в `Справочник.ТранспортныеСредства`: existence + `ЭтоСправочникПЛК=Истина` (флаг PLK) + нет активных регистраций в `гкс_СостоянияРегистрации` (флаг fresh) |
+| `Catalog:` | `<ИмяСправочника>[элемент1, элемент2]` | Существование записей в любом справочнике 1С (универсально) |
+| `Setting:` | `НастройкаЭлектронногоТабло[<Точка>/<Вид>]` | Существование настройки в `РегистрСведений.гкс_НастройкаЭлектронногоТабло` |
+| `Role:` | `ИмяРоли` | Наличие роли у тестового пользователя (по умолчанию SKIP — ручная проверка) |
+
+**Определения probes** лежат в `tools/vanessa/probes/*.yaml`. Чтобы добавить новый тип probe (например, `Document:` или `Accumulation:`) для другой задачи — создай YAML-файл с полями `tag`, `parser`, `checks` — Python-код править не нужно. Пример добавления нового probe:
+
+```yaml
+# tools/vanessa/probes/document.yaml
+tag: Document
+description: Document existence by number
+enabled: true
+parser:
+  type: bracketed_list
+  pattern: '^(?P<catalog>\S+)\[(?P<items>.+)\]$'
+  item_separator: ","
+  item_label: "{catalog}[{item}]"
+checks:
+  - name: exists
+    always: true
+    query: |
+      ВЫБРАТЬ КОЛИЧЕСТВО(*) КАК Cnt ИЗ Документ.{catalog}
+      ГДЕ Номер = &Name И НЕ ПометкаУдаления
+    params: {Name: "{item}"}
+    expect: field_positive
+    expect_field: Cnt
+    on_fail: "not found"
+    on_pass_label: "found"
+```
+
+**Запуск регламентов** через `tools/vanessa/trigger-reglament.py --job <name>` — загружает BSL из `tools/vanessa/jobs/<name>.yaml`. Чтобы добавить новый регламент:
+
+```yaml
+# tools/vanessa/jobs/<new_job>.yaml
+name: <полное имя регламентного задания>
+description: <для чего>
+bsl: |
+  БлокировкаРаботыСВнешнимиРесурсами.РазрешитьРаботуСВнешнимиРесурсами();
+  ОбщийМодуль.ИмяПроцедуры();
+```
+
+Вызов из `.feature`-файла:
+```gherkin
+И я запускаю команду операционной системы "powershell -ExecutionPolicy Bypass -File D:\va-test\trigger-reglament.ps1"
+```
+
+По умолчанию `.ps1` вызывает Python с `--job table_update`. Для другого job — `trigger-reglament.ps1 -Job other_name` (если нужна параметризация) или отдельный wrapper-скрипт.
 
 **Definition of Done (Фаза 4):**
 - [ ] `.feature`-файл создан в `features/<task-slug>/`

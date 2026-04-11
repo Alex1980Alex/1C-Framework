@@ -173,9 +173,7 @@ def main() -> int:
     elapsed = round(time.perf_counter() - started, 1)
 
     if isinstance(inner, dict) and inner.get("success"):
-        print(
-            f"[OK] регламент гкс_ОбновлениеТаблоЭлектроннойОчереди выполнен за {elapsed} сек"
-        )
+        print(f"[OK] job '{job_label}' выполнен за {elapsed} сек")
         return 0
 
     error_msg = (
