@@ -119,11 +119,11 @@ mcp__1c-mcp-crud__execute_query(
       "attempts": 1
     },
     {
-      "section": "02_tm3_exclude",
-      "feature_file": "02_tm3_exclude.feature",
+      "section": "02_documents",
+      "feature_file": "02_documents.feature",
       "status": "failed",
-      "error": "Pre-check FAIL: ТС не найден в справочнике",
-      "dependencies": ["01_tm1_states"],
+      "error": "Pre-check FAIL: объект не найден в справочнике",
+      "dependencies": ["01_catalogs"],
       "retry_required": true,
       "attempts": 2,
       "error_category": "logical",
