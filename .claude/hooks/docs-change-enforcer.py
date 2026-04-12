@@ -159,6 +159,9 @@ SKIP_PATTERNS = [
     "_write_test",
     "_gen_test",
     "_gen_eval",
+    # VA BDD test artifacts (features, run state — test infra, not product code)
+    "features/",
+    ".run-state.json",
 ]
 
 
