@@ -300,7 +300,7 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
      {
        "error_id": "button_not_found",
        "original": "ФормаПровестиИЗакрыть",
-       "fixed_to": "ФормаДокументТМ1ИЗакрытьДокумент",
+       "fixed_to": "Форма<Документ>ИЗакрытьДокумент",
        "confidence": 85,
        "applied": true,
        "retry_result": "passed"
