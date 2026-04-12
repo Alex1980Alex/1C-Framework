@@ -251,9 +251,69 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 4. Предложить пользователю конкретный fix для feature-файла
 5. Зафиксировать в state: `status: failed`, `retry_required: true`, `last_error_step`
 
-**Важно:** не пытаться автоматически исправить feature-файл. Это работа `/write-1c-tests`
-(или ручная правка пользователем). Задача `/run-1c-tests` — **точно определить место
-сбоя** и дать пользователю данные для исправления.
+### Этап 6.5 — Auto-fix типовых ошибок (NEW)
+
+**Каталог ошибок:** `tools/vanessa/error-catalog.yaml` — 6 типов ошибок с алгоритмами fix.
+Режим задаётся параметром `--fix-mode`:
+
+| Режим | Поведение | Когда использовать |
+|---|---|---|
+| `--fix-mode suggest` (default) | Показать fix, не применять | Интерактивная работа |
+| `--fix-mode auto` | Применить fix + retry автоматически | CI/CD, ночные прогоны |
+| `--fix-mode off` | Только диагностика (как раньше) | Отладка |
+
+**Алгоритм:**
+
+1. **Классификация ошибки** — сопоставить текст ошибки из VA log / JUnit XML
+   с паттернами из `error-catalog.yaml`. Извлечь named groups (element, title, step).
+
+2. **Lookup правильного значения** через MCP (зависит от типа ошибки):
+
+   | Тип ошибки | MCP lookup | Что ищем |
+   |---|---|---|
+   | `button_not_found` | `get_form_structure` → buttons | Fuzzy match имени кнопки |
+   | `field_not_found` | `get_form_structure` → elements | Fuzzy match + DataPath проверка |
+   | `window_not_found` | Проверить nav link prefix | Добавить wildcards к заголовку |
+   | `row_not_found` | `get_form_structure` → table columns | Reference column → `первой строке` |
+   | `wrong_nav_link` | Определить тип объекта | Обработка→app, Документ→list |
+   | `step_not_found` | WebSearch VA docs | **Только suggest**, НЕ auto-fix |
+
+3. **Fuzzy match** (для `button_not_found`, `field_not_found`):
+   - Использовать `rapidfuzz.fuzz.ratio()` (уже есть в `shared/fuzzy_match.py`)
+   - Threshold из `error-catalog.yaml` (обычно 75-80%)
+   - Если match < threshold → НЕ применять, только suggest
+
+4. **Применение fix** (если `--fix-mode auto` и confidence >= threshold):
+   - Прочитать `.feature`-файл
+   - Найти строку с ошибочным значением
+   - Заменить на найденное правильное значение
+   - Записать файл
+
+5. **Retry** (если fix применён):
+   - Повторить запуск секции через `run-bdd.ps1` (используя retry loop из Этапа 4)
+   - Если снова FAIL с ДРУГОЙ ошибкой → ещё один цикл auto-fix (макс 3 итерации)
+   - Если снова FAIL с ТОЙ ЖЕ ошибкой → fix не помог, STOP
+
+6. **Запись в state:**
+   ```json
+   "auto_fixes": [
+     {
+       "error_id": "button_not_found",
+       "original": "ФормаПровестиИЗакрыть",
+       "fixed_to": "ФормаДокументТМ1ИЗакрытьДокумент",
+       "confidence": 85,
+       "applied": true,
+       "retry_result": "passed"
+     }
+   ]
+   ```
+
+**Ограничения:**
+- `step_not_found` **никогда** не auto-fix (confidence слишком низкий) — только suggest
+- Макс 3 итерации auto-fix на секцию (защита от бесконечного цикла)
+- Если fix применён но retry failed → **откатить fix** (восстановить оригинал)
+- Для `window_not_found` wildcard-fix применяется только если исходный заголовок
+  без wildcards (не ломать уже wildcarded заголовки)
 
 ### Этап 7 — Обновление state + отчёт
 
