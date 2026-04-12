@@ -262,7 +262,7 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
    ```
    Chain: GKSTCPLK-2256 (6 секций)
      [OK]     00_smoke            25s  (passed, 1 attempt)
-     [OK]     01_tm1_states       195s (passed, 1 attempt)
+     [OK]     01_tm1_states       195s (passed, 2 attempts, 1 transient retry)
      [FAIL]   02_tm3_exclude      ---  (pre-check: ТС не найден)
      [SKIP]   03_m1_settings      ---  (depends on 02)
      [SKIP]   05_regression       ---  (depends on 02)
