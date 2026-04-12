@@ -320,18 +320,18 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 1. Записать `.run-state.json` с новыми статусами
 2. Краткий отчёт в чате:
    ```
-   Chain: GKSTCPLK-2256 (6 секций)
+   Chain: <TASK-ID> (N секций)
      [OK]     00_smoke            25s  (passed, 1 attempt)
-     [OK]     01_tm1_states       195s (passed, 2 attempts, 1 transient retry)
-     [FAIL]   02_tm3_exclude      ---  (pre-check: ТС не найден)
-     [SKIP]   03_m1_settings      ---  (depends on 02)
-     [SKIP]   05_regression       ---  (depends on 02)
-     [SKIP]   06_arm_workflow     ---  (depends on 05)
+     [OK]     01_catalogs         195s (passed, 2 attempts, 1 transient retry)
+     [FAIL]   02_documents        ---  (pre-check: объект не найден)
+     [SKIP]   03_registers        ---  (depends on 02)
+     [SKIP]   04_reports          ---  (depends on 02)
+     [SKIP]   05_workflow         ---  (depends on 04)
 
-   BLOCKER at 02_tm3_exclude:
-     Error: Pre-check FAIL — ТС "М012ВР" не найден в справочнике
-     Action: создать ТС через execute_code ИЛИ исправить feature на другой ТС
-     Resume: /run-1c-tests <TASK> --from 02_tm3_exclude
+   BLOCKER at 02_documents:
+     Error: Pre-check FAIL — <описание ошибки из preflight>
+     Action: создать данные через execute_code ИЛИ исправить feature
+     Resume: /run-1c-tests <путь> --from 02_documents
    ```
 
 ---
