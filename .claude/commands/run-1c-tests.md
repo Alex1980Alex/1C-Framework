@@ -108,8 +108,8 @@ mcp__1c-mcp-crud__execute_query(
       "attempts": 1
     },
     {
-      "section": "01_tm1_states",
-      "feature_file": "01_tm1_states.feature",
+      "section": "01_catalogs",
+      "feature_file": "01_catalogs.feature",
       "status": "passed",
       "duration_s": 195,
       "dependencies": ["00_smoke"],
