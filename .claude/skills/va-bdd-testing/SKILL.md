@@ -1401,7 +1401,7 @@ Maintain a calibration log in feature file comments:
 
 - **Use unique identifiers** in test data (`'ARM-TM1-001'`, `'KAT-FULL-001'`) for traceability
 - **Document real TestDB data** in feature file comments (TS names, catalog values)
-- **Remember: TS names are Latin** — `M012YX` not `М012УХ`
+- **Check TS name encoding** — in GKSTCPLK TestDB, TS names use Cyrillic characters that look like Latin (М, Х, А, В, Е). Always verify via `execute_query` for your specific configuration
 
 ### Calibration
 
