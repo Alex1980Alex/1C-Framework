@@ -340,7 +340,7 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 
 | Параметр | Назначение | Пример |
 |---|---|---|
-| `<путь>` (обязательный) | Путь к TEST-PLAN / папке задачи / features-директории | `features/gkstcplk2256/` |
+| `<путь>` (обязательный) | Путь к TEST-PLAN / папке задачи / features-директории | `features/<task-slug>/` |
 | `--section <NAME>` | Запустить только указанную секцию (не влияет на state других) | `--section 06_arm_workflow` |
 | `--from <NAME>` | Запустить секцию и все последующие по цепочке | `--from 02_tm3_exclude` |
 | `--fresh` | Сбросить state и прогнать цепочку с начала | `--fresh` |
@@ -355,33 +355,33 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 
 **1. Первый прогон всей цепочки:**
 ```
-/run-1c-tests features/gkstcplk2256/
+/run-1c-tests features/<task-slug>/
 ```
 
 **2. Возобновление после падения:**
 ```
 # State знает, где упало — просто запускаем без параметров
-/run-1c-tests features/gkstcplk2256/
+/run-1c-tests features/<task-slug>/
 ```
 
 **3. Прогон одной секции (для отладки):**
 ```
-/run-1c-tests features/gkstcplk2256/ --section 06_arm_workflow
+/run-1c-tests features/<task-slug>/ --section 06_arm_workflow
 ```
 
 **4. Прогон с конкретной точки:**
 ```
-/run-1c-tests features/gkstcplk2256/ --from 02_tm3_exclude
+/run-1c-tests features/<task-slug>/ --from 02_tm3_exclude
 ```
 
 **5. Только проверка готовности (без запуска):**
 ```
-/run-1c-tests features/gkstcplk2256/ --dry-run
+/run-1c-tests features/<task-slug>/ --dry-run
 ```
 
 **6. Принудительный перезапуск с нуля:**
 ```
-/run-1c-tests features/gkstcplk2256/ --fresh
+/run-1c-tests features/<task-slug>/ --fresh
 ```
 
 ---
