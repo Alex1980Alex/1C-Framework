@@ -1,7 +1,28 @@
 {
   "task": "GKSTCPLK-2256",
-  "last_run": "2026-04-12T17:17:21",
+  "last_run": "2026-04-12T22:10:00",
   "chain": [
+    {
+      "section": "02_tm3_exclude",
+      "feature_file": "02_tm3_exclude.feature",
+      "status": "blocked",
+      "started_at": "2026-04-12T22:10:00",
+      "duration_s": 0,
+      "dependencies": ["00_smoke"],
+      "created_objects": [],
+      "pre_check": "fail",
+      "pre_check_details": "B1: М012УХ (PLK) has 9 active registrations (not fresh) @ L178; B2: Х985ХМ36RUS is not PLK (ЭтоСправочникПЛК=False) @ L318. Cosmetic: C1 METADATA nomenclature name missing comma (body uses Рапс only); C2 METADATA contragent missing ООО (body uses partial match).",
+      "post_check": "skipped",
+      "attempts": 0,
+      "error_category": "data_blocker",
+      "retry_required": true,
+      "suggested_fix": {
+        "L178": "'М012УХ' -> 'К859МУ' (fresh PLK)",
+        "L318": "'Х985ХМ36' -> 'М855АК' (fresh PLK)",
+        "L20-23 METADATA": "update TS/Catalog preflight probes to match real TestDB names"
+      },
+      "notes": "VA run aborted by /run-1c-tests pre-check. Feature body references stale/non-PLK TS. Fresh PLK candidates from DB query: К859МУ, К860МУ, М855АК, М857АК, Н292ХХ, Н389НК, Н477ОВ. Resume via /write-1c-tests to update feature, then /run-1c-tests --from 02_tm3_exclude."
+    },
     {
       "section": "04_tm2_nomenclature_filter",
       "feature_file": "04_tm2_nomenclature_filter.feature",
