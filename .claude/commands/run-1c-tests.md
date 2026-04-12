@@ -341,7 +341,7 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 | Параметр | Назначение | Пример |
 |---|---|---|
 | `<путь>` (обязательный) | Путь к TEST-PLAN / папке задачи / features-директории | `features/<task-slug>/` |
-| `--section <NAME>` | Запустить только указанную секцию (не влияет на state других) | `--section 06_arm_workflow` |
+| `--section <NAME>` | Запустить только указанную секцию (не влияет на state других) | `--section 05_workflow` |
 | `--from <NAME>` | Запустить секцию и все последующие по цепочке | `--from 02_tm3_exclude` |
 | `--fresh` | Сбросить state и прогнать цепочку с начала | `--fresh` |
 | `--dry-run` | Только pre-check всех секций, без запуска VA | `--dry-run` |
@@ -366,7 +366,7 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 
 **3. Прогон одной секции (для отладки):**
 ```
-/run-1c-tests features/<task-slug>/ --section 06_arm_workflow
+/run-1c-tests features/<task-slug>/ --section 05_workflow
 ```
 
 **4. Прогон с конкретной точки:**
