@@ -348,6 +348,7 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 | `--timeout <SEC>` | Таймаут на секцию (по умолчанию 120) | `--timeout 300` |
 | `--retries <N>` | Макс. попыток на секцию при транзиентных ошибках (по умолчанию 3) | `--retries 5` |
 | `--no-retry` | Отключить auto-retry (эквивалент `--retries 1`) | `--no-retry` |
+| `--fix-mode <MODE>` | Режим auto-fix: `suggest` (default), `auto`, `off` | `--fix-mode auto` |
 | `--verbose` | Подробный вывод pre-check и post-check | `--verbose` |
 
 ### Типовые сценарии использования
