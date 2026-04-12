@@ -217,10 +217,15 @@ Search VA documentation when you encounter ANY of these:
 | Object Type | Pattern |
 |-------------|---------|
 | Data processor (open) | `e1cib/app/Обработка.{Name}` |
+| Report (open) | `e1cib/app/Отчет.{Name}` |
 | Document list | `e1cib/list/Документ.{Name}` |
 | Catalog list | `e1cib/list/Справочник.{Name}` |
 | Info register list | `e1cib/list/РегистрСведений.{Name}` |
 | Accumulation register list | `e1cib/list/РегистрНакопления.{Name}` |
+| Business process list | `e1cib/list/БизнесПроцесс.{Name}` |
+| Task list | `e1cib/list/Задача.{Name}` |
+| Exchange plan list | `e1cib/list/ПланОбмена.{Name}` |
+| Chart of accounts list | `e1cib/list/ПланСчетов.{Name}` |
 
 ### 3.2 Window Title Matching
 
