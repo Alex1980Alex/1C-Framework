@@ -529,7 +529,8 @@
       "mcp__1c-mcp-crud__search_code",
       "Bash(mkdir -p build/preflight-test)",
       "Bash(xxd \"D:/1С-Framework/tools/vanessa/run-bdd.ps1\")",
-      "mcp__1c-mcp-crud__validate_query"
+      "mcp__1c-mcp-crud__validate_query",
+      "mcp__1c-mcp-crud__get_metadata"
     ]
   },
   "enableAllProjectMcpServers": true,
