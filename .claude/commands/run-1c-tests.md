@@ -271,6 +271,8 @@ powershell -File tools\vanessa\run-bdd.ps1 -Feature "<slug>/<section>.feature" -
 | `--fresh` | Сбросить state и прогнать цепочку с начала | `--fresh` |
 | `--dry-run` | Только pre-check всех секций, без запуска VA | `--dry-run` |
 | `--timeout <SEC>` | Таймаут на секцию (по умолчанию 120) | `--timeout 300` |
+| `--retries <N>` | Макс. попыток на секцию при транзиентных ошибках (по умолчанию 3) | `--retries 5` |
+| `--no-retry` | Отключить auto-retry (эквивалент `--retries 1`) | `--no-retry` |
 | `--verbose` | Подробный вывод pre-check и post-check | `--verbose` |
 
 ### Типовые сценарии использования
