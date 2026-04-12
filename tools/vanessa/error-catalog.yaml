@@ -1,0 +1,207 @@
+# VA BDD Error Auto-Fix Catalog
+# Used by /run-1c-tests Этап 6.5 to classify errors and suggest fixes
+# Each entry: regex pattern to match in VA log, fix algorithm, MCP calls needed
+version: "1.0"
+
+errors:
+  - id: button_not_found
+    name: "Кнопка не найдена"
+    pattern: 'Кнопка не найдена[:\s]*["'']?(?P<element>[^"''\n]+)["'']?'
+    category: element_name
+    auto_fixable: true
+    confidence_threshold: 80
+    fix_algorithm:
+      description: "Find correct button name via form structure"
+      steps:
+        - action: extract_metadata
+          field: "Logical block"
+          description: "Get object type from feature METADATA header"
+        - action: mcp_call
+          tool: "mcp__1c-mcp-crud__get_form_structure"
+          params:
+            object_description:
+              name: "{metadata_object}"
+          extract: "buttons"
+          description: "Get all buttons from the form"
+        - action: fuzzy_match
+          source: "{element}"
+          candidates: "{buttons}"
+          threshold: 80
+          description: "Find closest matching button name"
+        - action: replace_in_feature
+          pattern: "кнопку с именем '{element}'"
+          replacement: "кнопку с именем '{best_match}'"
+    examples:
+      - error: "Кнопка не найдена: ФормаПровестиИЗакрыть"
+        fix: "ФормаДокументТМ1ИЗакрытьДокумент"
+        reason: "Custom post button replaces standard"
+      - error: "Кнопка не найдена: ФормаСоздать"
+        fix: "ФормаСоздатьДокументТМ1"
+        reason: "Custom create button with object type suffix"
+
+  - id: field_not_found
+    name: "Поле формы не найдено"
+    pattern: '(?:Поле формы не существует|Поле не найдено|Неизвестный элемент формы)[:\s]*["'']?(?P<element>[^"''\n]+)["'']?'
+    category: element_name
+    auto_fixable: true
+    confidence_threshold: 75
+    fix_algorithm:
+      description: "Find correct field name via form structure, check DataPath vs element name"
+      steps:
+        - action: extract_metadata
+          field: "Logical block"
+          description: "Get object type from feature METADATA header"
+        - action: mcp_call
+          tool: "mcp__1c-mcp-crud__get_form_structure"
+          params:
+            object_description:
+              name: "{metadata_object}"
+          extract: "elements"
+          description: "Get all form elements with DataPath info"
+        - action: check_datapath_confusion
+          source: "{element}"
+          candidates: "{elements}"
+          description: "Check if element name used instead of DataPath or vice versa"
+        - action: fuzzy_match
+          source: "{element}"
+          candidates: "{element_names}"
+          threshold: 75
+          description: "Find closest matching field name"
+        - action: replace_in_feature
+          pattern: "с именем '{element}'"
+          replacement: "с именем '{best_match}'"
+    examples:
+      - error: "Поле формы не существует: Вес"
+        fix: "ВесБрутто"
+        reason: "Element name 'ВесБрутто', 'Вес' is display title"
+      - error: "Поле не найдено: Грузополучатель"
+        fix: "Организация"
+        reason: "Form label 'Грузополучатель' but metadata attribute is 'Организация'"
+
+  - id: window_not_found
+    name: "Окно не найдено"
+    pattern: 'Не найдено окно[:\s]*["'']?(?P<title>[^"''\n]+)["'']?'
+    category: navigation
+    auto_fixable: true
+    confidence_threshold: 70
+    fix_algorithm:
+      description: "Check navigation link format and add wildcards to title"
+      steps:
+        - action: check_nav_link_in_feature
+          description: "Find the navigation link step preceding the window check"
+        - action: check_nav_prefix
+          description: "Verify e1cib/app/ vs /list/ vs /form/ matches object type"
+        - action: add_wildcards
+          source: "{title}"
+          description: "Convert exact title to wildcard pattern: skip first char, bridge gaps"
+        - action: replace_in_feature
+          pattern: 'открылось окно "{title}"'
+          replacement: 'открылось окно "{wildcard_title}"'
+    wildcard_rules:
+      - "Start with * to skip first char (capitalization, [КОПИЯ] prefix)"
+      - "Use * to bridge optional words (version, mode suffix)"
+      - "Keep 5+ unique chars for disambiguation"
+    examples:
+      - error: "Не найдено окно: Управление транспортом"
+        fix: '"*правление транспорто*"'
+        reason: "Real title: [КОПИЯ] Управление транспортом (Светлый) /"
+      - error: "Не найдено окно: Регистрации на ПЛК"
+        fix: '"*егистрации на ПЛК*"'
+        reason: "Title may have prefix/suffix in different environments"
+
+  - id: row_not_found
+    name: "Строка не найдена в таблице"
+    pattern: '(?:Строка не найдена в таблице|Не удалось перейти к строке)[:\s]*["'']?(?P<table>[^"''\n]*)["'']?'
+    category: table_navigation
+    auto_fixable: true
+    confidence_threshold: 65
+    fix_algorithm:
+      description: "Check DynamicList column type, suggest first row if reference column"
+      steps:
+        - action: extract_metadata
+          field: "Logical block"
+          description: "Get object type from feature METADATA header"
+        - action: mcp_call
+          tool: "mcp__1c-mcp-crud__get_form_structure"
+          params:
+            object_description:
+              name: "{metadata_object}"
+          extract: "table_columns"
+          description: "Get table column types to detect reference columns"
+        - action: check_dynamiclist_ref
+          description: "If search column is reference type in DynamicList, switch to first row"
+        - action: check_data_exists
+          tool: "mcp__1c-mcp-crud__execute_query"
+          description: "Verify search value actually exists in TestDB"
+        - action: replace_in_feature
+          pattern: 'я перехожу к строке'
+          replacement: 'я перехожу к первой строке'
+    examples:
+      - error: "Строка не найдена в таблице: М012ВР"
+        fix: "я перехожу к первой строке"
+        reason: "DynamicList reference column — value representation mismatch"
+
+  - id: wrong_nav_link
+    name: "Неверный тип навигационной ссылки"
+    pattern: 'Неверный тип навигационной ссылки'
+    category: navigation
+    auto_fixable: true
+    confidence_threshold: 90
+    fix_algorithm:
+      description: "Determine correct nav link prefix by object type"
+      steps:
+        - action: find_nav_link_in_feature
+          description: "Extract e1cib link from the feature step that failed"
+        - action: parse_object_type
+          description: "Extract object type: Обработка, Документ, Справочник, РегистрСведений"
+        - action: determine_nav_type
+          mapping:
+            Обработка: "app"
+            Документ: "list"
+            Справочник: "list"
+            РегистрСведений: "list"
+            РегистрНакопления: "list"
+          description: "Map object type to correct navigation prefix"
+        - action: replace_in_feature
+          pattern: "e1cib/{wrong_prefix}/"
+          replacement: "e1cib/{correct_prefix}/"
+    examples:
+      - error: "e1cib/form/Обработка.гкс_ПриемкаТранспорта"
+        fix: "e1cib/app/Обработка.гкс_ПриемкаТранспорта"
+        reason: "Обработка requires /app/ not /form/"
+      - error: "e1cib/app/Документ.гкс_РегистрацияНаПЛК"
+        fix: "e1cib/list/Документ.гкс_РегистрацияНаПЛК"
+        reason: "Документ requires /list/ not /app/"
+
+  - id: step_not_found
+    name: "Не найдена процедура для шага"
+    pattern: 'Не найдена процедура для шага[:\s]*["'']?(?P<step>[^"''\n]+)["'']?'
+    category: step_definition
+    auto_fixable: false
+    confidence_threshold: 30
+    fix_algorithm:
+      description: "Search VA docs for correct step syntax — suggest only, do NOT auto-apply"
+      steps:
+        - action: search_va_docs
+          url: "https://pr-mex.github.io/vanessa-automation/dev/"
+          query: "{step}"
+          description: "Search Vanessa Automation documentation"
+        - action: web_search
+          query: "vanessa automation шаг {step} site:github.com OR site:infostart.ru"
+          description: "Search for step pattern examples"
+        - action: suggest_fix
+          description: "Present found alternatives without auto-applying"
+    common_mistakes:
+      - wrong: 'я нажимаю кнопку "Да"'
+        correct: "я нажимаю на кнопку 'Да'"
+        note: "Missing 'на', wrong quotes"
+      - wrong: 'я ввожу значение "text"'
+        correct: "в поле с именем 'X' я ввожу текст 'text'"
+        note: "Missing field specifier"
+      - wrong: 'я устанавливаю переключатель'
+        correct: "я меняю значение переключателя с именем 'X' на 'Y'"
+        note: "Wrong step for RadioButtonField"
+    examples:
+      - error: "Не найдена процедура для шага: И я нажимаю кнопку Автоперевозка"
+        fix: "И я меняю значение переключателя с именем 'ОтборВидПеревозки' на 'Автоперевозка'"
+        reason: "RadioButtonField requires tumbler step, not button click"
