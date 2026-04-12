@@ -1,14 +1,19 @@
-# VA BDD Test Runner for 1С-Framework
+﻿# VA BDD Test Runner for 1С-Framework
 # Features sync from project -> D:\va-test, VA runs there, results copy back
 # Usage: powershell -ExecutionPolicy Bypass -File tools\vanessa\run-bdd.ps1 [-Feature "smoke_testclient.feature"]
 #
 # Parameters:
-#   -Feature     single feature file to run (relative to features/ directory)
-#   -TimeoutSec  timeout in seconds (default 120)
-#   -KeepRunning do not kill 1C processes after the run
-#   -OutputJson  absolute path to write a structured result JSON (for /run-1c-tests integration)
-#   -RunId       unique run identifier; when set, va-log and JUnit are copied to
-#                build/reports/runs/<RunId>/ for isolation between sequential runs
+#   -Feature           single feature file to run (relative to features/ directory)
+#   -TimeoutSec        timeout in seconds (default 120)
+#   -KeepRunning       do not kill 1C processes after the run
+#   -OutputJson        absolute path to write a structured result JSON (for /run-1c-tests integration)
+#   -RunId             unique run identifier; when set, va-log and JUnit are copied to
+#                      build/reports/runs/<RunId>/ for isolation between sequential runs
+#   -MaxRetries        max attempts per feature (1 = no retry, default 1)
+#   -BackoffBaseSec    base delay in seconds before first retry (default 5)
+#   -BackoffMultiplier delay multiplier per subsequent retry (default 3.0: 5s, 15s, 45s)
+#   -BackoffMaxSec     max delay cap in seconds (default 60)
+#   -JitterPct         random jitter +/-% added to delay to avoid thundering herd (default 30)
 #
 # When -OutputJson is set, the script writes a JSON summary with fields:
 #   feature, started_at, finished_at, duration_s, exit_code, build_status,
@@ -20,7 +25,12 @@ param(
     [switch]$KeepRunning,
     [string]$OutputJson = "",
     [string]$RunId = "",
-    [switch]$SkipPreflight
+    [switch]$SkipPreflight,
+    [int]$MaxRetries = 1,
+    [int]$BackoffBaseSec = 5,
+    [double]$BackoffMultiplier = 3.0,
+    [int]$BackoffMaxSec = 60,
+    [int]$JitterPct = 30
 )
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -29,6 +39,68 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # Capture start time ISO-8601 for structured output
 $startedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss")
 $startedTicks = (Get-Date).Ticks
+
+# --- Error classification for retry logic ---
+function Test-TransientError {
+    param(
+        [string]$vaLogPath,
+        [string]$buildStatusPath
+    )
+
+    # Crash: no build status AND no/empty VA log → transient
+    $buildStatusExists = Test-Path -LiteralPath $buildStatusPath
+    $vaLogExists = Test-Path -LiteralPath $vaLogPath
+    $vaLogHasContent = $false
+    if ($vaLogExists) {
+        $vaLogHasContent = ((Get-Item -LiteralPath $vaLogPath).Length -gt 0)
+    }
+
+    if (-not $buildStatusExists -and (-not $vaLogExists -or -not $vaLogHasContent)) {
+        return $true
+    }
+
+    if (-not $vaLogExists -or -not $vaLogHasContent) {
+        return $false
+    }
+
+    $logContent = Get-Content -LiteralPath $vaLogPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+
+    # Logical errors — never retry (wrong test, not infrastructure)
+    $logicalPatterns = @(
+        'Не найдена процедура для шага'
+        'Неверный тип навигационной ссылки'
+        'Кнопка не найдена'
+        'Строка не найдена в таблице'
+        'Поле формы не существует'
+        'Неизвестный элемент формы'
+    )
+    foreach ($pattern in $logicalPatterns) {
+        if ($logContent -match [regex]::Escape($pattern)) {
+            return $false
+        }
+    }
+
+    # Transient errors — worth retrying (infrastructure, timing)
+    $transientPatterns = @(
+        'Не найдено окно'
+        'не удалось подключить клиент тестирования'
+        'TestClient.*не отвечает'
+        'Таймаут ожидания'
+        'Поле не доступно'
+        'Ошибка при подключении'
+        'Could not connect'
+        'Connection refused'
+        'Время ожидания операции истекло'
+    )
+    foreach ($pattern in $transientPatterns) {
+        if ($logContent -match $pattern) {
+            return $true
+        }
+    }
+
+    # Conservative default: don't retry unknown errors
+    return $false
+}
 
 $projectDir = "D:\va-test"
 $frameworkRoot = (Get-Item "D:\1*-Framework" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '1' }).FullName
@@ -119,10 +191,33 @@ if ($Feature) {
     Write-Host "[RUN] All features in $featuresDest"
 }
 
+# === RETRY LOOP ===
+$allAttempts = @()
+$currentAttempt = 0
+$errorCategory = "none"
+
+do {
+$currentAttempt++
+
+# Backoff delay + kill stale processes (skip on first attempt)
+if ($currentAttempt -gt 1) {
+    $delay = [Math]::Min($BackoffBaseSec * [Math]::Pow($BackoffMultiplier, $currentAttempt - 2), $BackoffMaxSec)
+    $jitterRange = $delay * $JitterPct / 100
+    $jitter = (Get-Random -Minimum (-1000) -Maximum 1000) / 1000 * $jitterRange
+    $delay = [Math]::Max(1, [Math]::Round($delay + $jitter, 1))
+    Write-Host "`n[RETRY] Attempt $currentAttempt/$MaxRetries after ${delay}s backoff..."
+    Start-Sleep -Seconds ([Math]::Ceiling($delay))
+    Get-Process -Name '1cv8c','1cv8' -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 2
+}
+
 # 4. Clean old results
 Remove-Item $buildStatus -ErrorAction SilentlyContinue
 Remove-Item $vaLog -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
+
+$attemptStartedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss")
+$attemptStartTicks = (Get-Date).Ticks
 
 # 5. Launch VA
 $cParam = "StartFeaturePlayer;DisableFirstRunHelper;VAParams=$vaParams"
@@ -173,6 +268,53 @@ if (Test-Path $vaLog) {
     Get-Content $vaLog -Encoding UTF8
 }
 
+# Extract last executed VA step from log (needed for retry classification + output)
+$lastStep = ""
+if (Test-Path $vaLog) {
+    try {
+        $logLines = Get-Content $vaLog -Encoding UTF8 -ErrorAction SilentlyContinue
+        if ($logLines) {
+            $stepLine = $logLines |
+                Where-Object { $_ -match '^\s*\p{IsCyrillic}+\s+' } |
+                Select-Object -Last 1
+            if ($stepLine) { $lastStep = $stepLine.Trim() }
+        }
+    } catch { $lastStep = "" }
+}
+
+# Classify error and record attempt
+$attemptDurationS = [Math]::Round(((Get-Date).Ticks - $attemptStartTicks) / 10000000.0, 1)
+$isTransient = $false
+$errorCategory = "none"
+if ($exitCode -ne 0) {
+    $isTransient = Test-TransientError -vaLogPath $vaLog -buildStatusPath $buildStatus
+    $errorCategory = if ($isTransient) { "transient" } else { "logical" }
+}
+
+$attemptRecord = [PSCustomObject]@{
+    attempt        = $currentAttempt
+    started_at     = $attemptStartedAt
+    duration_s     = $attemptDurationS
+    exit_code      = $exitCode
+    error_category = $errorCategory
+    last_step      = $lastStep
+}
+$allAttempts += $attemptRecord
+
+if ($exitCode -eq 0) {
+    Write-Host "[ATTEMPT $currentAttempt] PASSED in ${attemptDurationS}s"
+} else {
+    Write-Host "[ATTEMPT $currentAttempt] FAILED ($errorCategory) in ${attemptDurationS}s"
+    if ($isTransient -and $currentAttempt -lt $MaxRetries) {
+        Write-Host "[ATTEMPT $currentAttempt] Transient error — will retry"
+    }
+}
+
+$shouldRetry = ($exitCode -ne 0) -and ($currentAttempt -lt $MaxRetries) -and $isTransient
+
+} while ($shouldRetry)
+# === END RETRY LOOP ===
+
 # 8. Copy results back to project
 $projectBuild = (Get-Item "D:\1*-Framework" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '1' }).FullName + "\build"
 if (Test-Path "$reportDir\*.xml") {
@@ -216,38 +358,26 @@ if ($OutputJson -or $RunId) {
         if (Test-Path $vaLog) { $vaLogCopiedPath = $vaLog }
     }
 
-    # Best-effort extraction of the last executed VA step from the log
-    # (helps /run-1c-tests diagnose where the scenario stopped).
-    # VA step lines start with a Cyrillic keyword: I / Kogda / Togda / Dopustim / Esli.
-    # We match any line starting with one or more Cyrillic letters followed by whitespace,
-    # using \p{IsCyrillic} so the regex is ASCII-safe in the source file (avoids encoding traps).
-    $lastStep = ""
-    if (Test-Path $vaLog) {
-        try {
-            $logLines = Get-Content $vaLog -Encoding UTF8 -ErrorAction SilentlyContinue
-            if ($logLines) {
-                $stepLine = $logLines |
-                    Where-Object { $_ -match '^\s*\p{IsCyrillic}+\s+' } |
-                    Select-Object -Last 1
-                if ($stepLine) { $lastStep = $stepLine.Trim() }
-            }
-        } catch { $lastStep = "" }
-    }
+    # $lastStep already extracted inside retry loop (before error classification)
 
     # Build structured result object
     $result = [PSCustomObject]@{
-        feature      = $Feature
-        run_id       = $RunId
-        started_at   = $startedAt
-        finished_at  = $finishedAt
-        duration_s   = $durationS
-        exit_code    = $exitCode
-        build_status = if (Test-Path $buildStatus) { (Get-Content $buildStatus -Encoding UTF8).Trim() } else { "missing" }
-        junit_xml    = $junitCopiedPath
-        va_log       = $vaLogCopiedPath
-        process_pid  = $proc.Id
-        last_step    = $lastStep
-        timeout_sec  = $TimeoutSec
+        feature        = $Feature
+        run_id         = $RunId
+        started_at     = $startedAt
+        finished_at    = $finishedAt
+        duration_s     = $durationS
+        exit_code      = $exitCode
+        build_status   = if (Test-Path $buildStatus) { (Get-Content $buildStatus -Encoding UTF8).Trim() } else { "missing" }
+        junit_xml      = $junitCopiedPath
+        va_log         = $vaLogCopiedPath
+        process_pid    = $proc.Id
+        last_step      = $lastStep
+        timeout_sec    = $TimeoutSec
+        total_attempts = $currentAttempt
+        retried        = ($currentAttempt -gt 1)
+        error_category = $errorCategory
+        attempts       = $allAttempts
     }
 
     # Resolve OutputJson target: explicit path OR conventional runs/<RunId>/result.json
