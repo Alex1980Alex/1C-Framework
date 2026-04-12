@@ -126,7 +126,12 @@ mcp__1c-mcp-crud__execute_query(
       "dependencies": ["01_tm1_states"],
       "retry_required": true,
       "attempts": 2,
-      "last_error_step": "И в таблице \"Список\" я перехожу к первой строке"
+      "error_category": "logical",
+      "last_error_step": "И в таблице \"Список\" я перехожу к первой строке",
+      "attempt_log": [
+        {"attempt": 1, "exit_code": 1, "error_category": "transient", "duration_s": 32, "last_step": "..."},
+        {"attempt": 2, "exit_code": 1, "error_category": "logical", "duration_s": 28, "last_step": "..."}
+      ]
     }
   ],
   "blockers": []
