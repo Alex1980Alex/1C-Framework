@@ -1,6 +1,6 @@
 {
   "task": "GKSTCPLK-2256",
-  "last_run": "2026-04-12T16:52:16",
+  "last_run": "2026-04-12T17:17:21",
   "chain": [
     {
       "section": "04_tm2_nomenclature_filter",
@@ -16,6 +16,21 @@
       "error_category": "none",
       "run_id": "tm2-r2-20260412-165147",
       "notes": "First attempt failed: step_not_found 'запускаю команду операционной системы'. Fixed: removed OS command step, reglament runs separately."
+    },
+    {
+      "section": "04_tm4_write_filter",
+      "feature_file": "04_tm4_write_filter.feature",
+      "status": "passed",
+      "started_at": "2026-04-12T17:16:29",
+      "duration_s": 53,
+      "dependencies": ["00_smoke", "01_tm1_states"],
+      "created_objects": [],
+      "pre_check": "ok (manual MCP: nomenclature exists, TS fictional for execute_code setup; preflight skipped: comma in nomenclature name)",
+      "post_check": "ok (baseline: 64 НазначениеНаВесы unchanged, Пшеница 3кл records present)",
+      "attempts": 1,
+      "error_category": "none",
+      "run_id": "tm4-r1-20260412",
+      "notes": "RG-1.4.1 fixed pre-run: removed unsupported OS command step (same fix as TM-2). All 4 scenarios passed first attempt."
     }
   ],
   "blockers": []
