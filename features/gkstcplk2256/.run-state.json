@@ -1,0 +1,22 @@
+{
+  "task": "GKSTCPLK-2256",
+  "last_run": "2026-04-12T16:52:16",
+  "chain": [
+    {
+      "section": "04_tm2_nomenclature_filter",
+      "feature_file": "04_tm2_nomenclature_filter.feature",
+      "status": "passed",
+      "started_at": "2026-04-12T16:51:47",
+      "duration_s": 30,
+      "dependencies": ["00_smoke"],
+      "created_objects": [],
+      "pre_check": "ok (manual MCP, preflight skipped: comma in nomenclature name)",
+      "post_check": "ok (baseline: 64/29/5 unchanged)",
+      "attempts": 1,
+      "error_category": "none",
+      "run_id": "tm2-r2-20260412-165147",
+      "notes": "First attempt failed: step_not_found 'запускаю команду операционной системы'. Fixed: removed OS command step, reglament runs separately."
+    }
+  ],
+  "blockers": []
+}
