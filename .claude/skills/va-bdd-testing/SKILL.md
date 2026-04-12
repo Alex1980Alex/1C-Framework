@@ -942,7 +942,51 @@ Pre-check would have caught all 4 in ~30 seconds.
 
 ## Stage 4: Database Verification
 
-### Checking Created Documents
+### Generic Verification Templates (any configuration)
+
+**Document exists by number:**
+```python
+mcp__1c-mcp-crud__execute_query(
+    query="""ВЫБРАТЬ Номер, Дата, Проведен
+    ИЗ Документ.{ТипДокумента}
+    ГДЕ Номер = &Num И НЕ ПометкаУдаления""",
+    parameters={"Num": "TEST-001"}
+)
+```
+
+**Register records created by document:**
+```python
+mcp__1c-mcp-crud__execute_query(
+    query="""ВЫБРАТЬ * ИЗ РегистрНакопления.{ИмяРегистра}
+    ГДЕ Регистратор = &Ref""",
+    parameters={"Ref": "<document-uuid>"}
+)
+```
+
+**Catalog element by name:**
+```python
+mcp__1c-mcp-crud__execute_query(
+    query="""ВЫБРАТЬ Ссылка, Код, Наименование
+    ИЗ Справочник.{ИмяСправочника}
+    ГДЕ Наименование = &Name И НЕ ПометкаУдаления""",
+    parameters={"Name": "TestValue"}
+)
+```
+
+**Info register latest value:**
+```python
+mcp__1c-mcp-crud__execute_query(
+    query="""ВЫБРАТЬ * ИЗ РегистрСведений.{ИмяРегистра}.СрезПоследних(, {Измерение} = &Val)""",
+    parameters={"Val": "SomeValue"}
+)
+```
+
+### GKSTCPLK Project Examples
+
+> The examples below use `гкс_*` object names from the GKSTCPLK transport management
+> configuration. Replace with your own object names.
+
+**Checking Created Documents** *(GKSTCPLK example)*
 
 ```python
 # After test run, verify documents were created:
