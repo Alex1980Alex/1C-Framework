@@ -456,7 +456,14 @@ confirmed from the final calibrated probe tests. Use Pattern B only when you kno
 the exact dialog title. When uncertain, run a probe test to determine which works
 in your specific VA + platform version combination.
 
-### 3.9 Weight Input (Complex Modal Pattern)
+---
+
+> **Sections 3.9–3.15 below are CALIBRATED EXAMPLES from the GKSTCPLK transport
+> management project.** They illustrate patterns for specific forms and objects.
+> For your configuration, perform Stage 1 analysis to discover equivalent patterns.
+> The universal VA step syntax (3.1–3.8) applies to any configuration.
+
+### 3.9 Weight Input (Complex Modal Pattern) — *GKSTCPLK example*
 
 When the weight field on the main form is a LabelField (readonly), weight is entered
 through a separate mechanism:
