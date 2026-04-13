@@ -361,14 +361,20 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - **Миграция SQLite:** создать `migrations/001_extend_link_types.sql` с `ALTER TABLE links DROP CONSTRAINT ...; ALTER TABLE links ADD CHECK (link_type IN (<10 types>));` (текущий CHECK constraint в [link_registry.py:219-222](../../src/memory/orchestrator/link_registry.py#L219))
   - Написать `scripts/migrate_link_registry.py` с dry-run режимом и rollback
   - Unit-тесты для 4 новых связей + тест миграции на снапшоте БД
-- [ ] Расширить `src/memory/orchestrator/unified_search.py`:
-  - Добавить backend `WikiSearchBackend` (вызывает obsidian-mcp через MCP клиент)
-  - Добавить backend `GraphSearchBackend` (заглушка до Phase 4, возвращает пустой результат)
-  - Реализовать дедупликацию: если результат из L2 имеет link `superseded_by: wiki:...` — исключить из выдачи
-  - Приоритизация: L3 wiki > L4 derived indices > L1 episodic
-- [ ] Расширить `src/memory/orchestrator/memory_router.py`:
-  - Добавить маршрут `route_to_wiki_draft` — создаёт draft страницу в `docs/wiki/drafts/` (не финальный файл)
-  - Логирование маршрутизации в event bus (`memory_publish`)
+- [ ] **Использовать существующий adapter pattern** в `unified_search.py` (найдено v1.3.2):
+  - Класс `BaseSearchAdapter(ABC)` уже определён [line 135], с методами `async def search()` и `source_name`
+  - Класс `UnifiedSearchEngine` имеет `register_adapter(adapter)` [line 361] — extension-point готов
+  - **Создать** `src/memory/orchestrator/adapters/wiki_adapter.py` с классом `WikiSearchAdapter(BaseSearchAdapter)` — вызывает obsidian-mcp через MCP клиент
+  - **Создать** `src/memory/orchestrator/adapters/graph_adapter.py` с `GraphSearchAdapter(BaseSearchAdapter)` — proxy к `entity_embeddings.py` (Phase 38)
+  - Зарегистрировать через `engine.register_adapter()` в `memory_orchestrator.py:__init__` — **не трогать core**
+  - Дедупликация через существующий `Deduplicator` [line 250] и `LinkEnricher` [line 306] (уже учитывают LinkRegistry)
+- [ ] **Расширить существующий `ContentClassifier`** в `memory_router.py` [line 277], а не создавать новый (найдено v1.3.2):
+  - Уже есть 3-фазная классификация: `_phase1_rule_classification` → `_phase2_keyword_scoring` → `_phase3_select_targets`
+  - Добавить target `"wiki"` в список возможных таргетов `_phase3_select_targets`
+  - Добавить ключевые слова для wiki в `_phase2_keyword_scoring` (confidence/usage-based, не keyword alone)
+  - `MemoryRouter.route()` [line 476] автоматически начнёт возвращать wiki target в `RoutingDecision.targets`
+  - `_save_to_target()` в orchestrator получит обработку нового target "wiki" → создание draft в `docs/wiki/drafts/`
+- [ ] Использовать существующий `_emit_event()` в memory_orchestrator для событий `wiki.draft.created` / `wiki.promoted` (event bus уже работает)
 - [ ] Добавить tool `vector-memory.promote_to_wiki(pattern_id)`:
   - Читает pattern из Qdrant `learned_patterns`
   - Вызывает `route_to_wiki_draft` с содержимым
