@@ -25,13 +25,14 @@ description: "Используй этот скилл для понимания �
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
 
-#### PreToolUse (3)
+#### PreToolUse (4)
 
 | Hook | Matcher | Назначение |
 |------|---------|-----------|
 | `code-skill-enforcer.py` | Write\|Edit\|Bash | Skill-First: BLOCK если скилл не активирован (уровни A-C) |
 | `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
 | `search-optimizer.py` | Bash | Оптимизация параметров Search API |
+| `approval-gate.py` | Skill | SDD Phase 3: блокировка implementation-skills (`implement-1c-task`, `opsx:apply`) без `approval.status: approved` в `.openspec.yaml`. Читает `profile` field (default `1c-bsl`). Поддерживаемые профили: `1c-bsl` (BSL changes), `python-framework` (Python framework changes, см. `openspec/profiles/python-framework.yaml`). Для new profile добавить YAML файл в `openspec/profiles/` — hook автоматически подхватит через `_read_profile()`. |
 
 `code-skill-enforcer.py` читает конфигурацию из `shared/code-skill-patterns.json` (массив правил `{pattern, skill, label, domain}`). Каждое правило связывает regex-паттерн команды/файла с обязательным для активации скиллом. **Важно**: `skill` должен существовать в каталоге `.claude/skills/` — entries с несуществующими target-скиллами создают phantom-блокировки (enforcer требует активации скилла, которого нет), поэтому при удалении скилла нужно сразу чистить соответствующие правила.
 
