@@ -425,6 +425,14 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [ ] Создать `.obsidian/` директорию в корне проекта с `app.json`, `workspace.json`, `community-plugins.json`
 - [ ] Настроить `workspace.json` для монтирования `docs/`, `.claude/skills/*/cache/` как единое пространство (НЕ `memory/` — не существует в проекте)
 - [ ] Создать `docs/wiki/` как целевой каталог для structured wiki-страниц (новый, git-controlled)
+- [ ] **Миграция существующих прото-wiki (новое v1.3):** `docs/architecture/` уже содержит 8 файлов, работающих как knowledge base:
+  - `overview.md`, `triad-architecture.md`, `ralph-wiggum.md` — концептуальные страницы
+  - `hooks-reference.md`, `skills-reference.md` — reference pages
+  - `PATTERNS.md` — **каталог 15 архитектурных + 13 автоматизационных паттернов** (это готовая entity-wiki)
+  - `bsl-integration.md`, `core-framework-separation.md` — ADR-подобные документы
+  - **Задача:** добавить `[[wiki-links]]` между ними + frontmatter (status, tags, related), НЕ переписывать. Пример: `triad-architecture.md` → `hooks-reference.md` через `[[hooks-reference]]`
+- [ ] **Split `PATTERNS.md`** на отдельные страницы (опционально): каждый паттерн → `docs/wiki/patterns/<pattern-name>.md` для точечной ссылаемости. Исходный PATTERNS.md остаётся как index-страница
+- [ ] Обновить `memory-first-hook.py` Layer 3 — уже сейчас читает `docs/`, убедиться что после добавления frontmatter парсинг не ломается
 - [ ] Проверить 7 стандартных tools из `mcp-obsidian`: `list_files_in_vault`, `get_file_contents`, `search`, `patch_content`, `append_content`, `delete_file`, `batch_get_file_contents`
 - [ ] Дополнить 2 custom tools для frontmatter/tags (если недостаточно patch_content) — **или** переключиться на [cyanheads/obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server) как альтернативу с нативной поддержкой
 - [ ] Создать `docs/wiki/_index.md` с картой wiki-страниц и cross-reference таблицей
