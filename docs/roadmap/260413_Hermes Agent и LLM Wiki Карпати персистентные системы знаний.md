@@ -1,10 +1,33 @@
 # Дорожная карта: Hermes Agent / LLM Wiki Карпаты → PDF Framework
 
-**Версия:** 1.3
+**Версия:** 1.3.2
 **Дата:** 2026-04-13
-**Статус:** draft
+**Статус:** draft (после 3 проходов аудита)
 **Автор:** Claude Opus 4.6
 **Исследование:** [hermes-llm-wiki-github-landscape.md](../../.claude/skills/architecture-research/cache/hermes-llm-wiki-github-landscape.md)
+
+---
+
+## Покрытие аудита (v1.3.2)
+
+Все фазы roadmap прошли **3 прохода аудита** против реального кода:
+
+| Фаза | 1-й проход (v1.3) | 2-й проход (v1.3.1) | 3-й проход (v1.3.2) | Итоговый статус |
+|------|-------------------|---------------------|---------------------|-----------------|
+| 0 Memory Alignment | NEEDS_REVISION | — | **Adapter pattern найден + ContentClassifier extension** | VERIFIED |
+| 1 Obsidian Vault | ACCURATE | **docs/architecture/ proto-wiki** | — | VERIFIED |
+| 2 DSPy Deepening | MAJOR_REWRITE | — | — | VERIFIED |
+| 3 Auto-Librarian | MAJOR_REWRITE | — | **MemoryRouter уже есть** | VERIFIED |
+| 4 PDF → Wiki | Phase 38 уже готов | — | — | VERIFIED |
+| 5 Sandbox | ACCURATE | **LangSmith sandbox в .venv** | — | VERIFIED |
+| 6 OAuth | ACCURATE (но deferred) | **Phase 12.3 DONE — не defer!** | — | VERIFIED, приоритет P3→P2 |
+
+**3-й проход нашёл дополнительно:**
+1. `memory-first-hook` Layer 3 читает **user-level** `memory/`, не `docs/` — критично для Фазы 0
+2. `openspec/changes/archive/` **пустая** — SDD workflow идёт только через active changes
+3. `unified_search.py` **уже имеет** `BaseSearchAdapter(ABC)` + `register_adapter()` — extension-point готов
+4. `memory_orchestrator.py` имеет готовые методы `unified_search`/`route_and_save`/`create_link`/`_emit_event` — в Фазе 0 не писать заново
+5. `src/memory/librarian/` **не существует** — моё предложение в Фазе 3 корректно
 
 ---
 
