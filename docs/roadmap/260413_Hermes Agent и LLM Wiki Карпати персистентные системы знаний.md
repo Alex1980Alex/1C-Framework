@@ -521,18 +521,30 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 - [ ] `pip install kb-lint` + `npm i -D markdownlint-cli2` — базовые инструменты в dev-dependencies
 - [ ] Настроить `.kb-lint.toml` (exclusions для .claude/, src/, tests/) и `.markdownlint.jsonc`
-- [ ] Создать `.claude/hooks/auto-librarian.py` как тонкий wrapper: запускает `kb-lint --ci`, парсит JSON output, возвращает systemMessage
-- [ ] Триггер hook: PostToolUse (Write, Edit) в docs/, memory/ — без блокировки (fail-safe)
-- [ ] **L2→L3 промоция (v1.2):** периодический режим librarian (cron или Stop hook) — сканирует `learned_patterns` Qdrant, находит паттерны с `confidence ≥ 0.8` И `usage_count ≥ 5`, вызывает `vector-memory.promote_to_wiki(pattern_id)` из Фазы 0
-- [ ] **Проверка дубликатов перед созданием draft:** hook вызывает `unified_search` из orchestrator (Фаза 0) — если существующая wiki-страница имеет cosine ≥0.85 с кандидатом, draft не создаётся, вместо этого pattern помечается `superseded_by: wiki:<existing>`
-- [ ] Доп. логика поверх kb-lint: семантический детект дубликатов между новыми wiki-страницами через `unified_search` (не только `skill_library`, а весь L3+L4)
-- [ ] Создать `.claude/skills/auto-librarian/SKILL.md` — процедуры и заимствованные паттерны из `llm-wiki-agent`
-- [ ] Интегрировать с memory-orchestrator MCP: `memory_publish` событие `wiki.draft.created` / `wiki.promoted` / `wiki.conflict.detected` в event bus
-- [ ] Реализовать авто-обновление `docs/wiki/_index.json` при добавлении/изменении страниц (использовать `kb-lint --fix` где возможно)
-- [ ] Добавить логирование действий в `memory/log.md` через librarian (каждая промоция L2→L3 — отдельная запись)
+- [ ] **Расширить** `.claude/hooks/docs-change-tracker.py`:
+  - Сохранить существующий CODE_TO_DOMAIN маппинг (50+ правил)
+  - Добавить wiki-specific валидацию: запуск `kb-lint --ci` на измененных `docs/wiki/*.md` файлах
+  - Добавить parse `[[wiki-links]]`, проверка target существует в vault
+  - Существующая cooldown логика (5 мин, max 3 pending) остаётся
+- [ ] **Создать новый компонент, НЕ новый hook** — `src/memory/librarian/wiki_promoter.py`:
+  - Периодический scanner (Stop hook trigger через существующий `docs-change-enforcer`)
+  - Читает `learned_patterns` Qdrant через `vector-memory` MCP
+  - Фильтр: `confidence ≥ 0.8` AND `usage_count ≥ 5`
+  - Для каждого кандидата: `unified_search` (Фаза 0 extension) для дедуп-проверки
+  - Если дубликат с cosine ≥0.85 → `create_link(pattern, wiki_page, type="superseded_by")` — no draft
+  - Если новый → создать draft в `docs/wiki/drafts/<slug>.md` с frontmatter (source_pattern_id, confidence, usage_count, created_at)
+  - Создать link `pattern → wiki_draft` через `create_link(type="promoted_to")`
+- [ ] **Расширить** `.claude/hooks/docs-change-enforcer.py`:
+  - Добавить проверку: при Stop, если есть новые `docs/wiki/drafts/*.md` → напоминание "review drafts before merging to main wiki"
+  - Сохранить существующую логику enforce code→docs синхронизации
+- [ ] **Интеграция с событиями Phase 6.5 incremental graph:**
+  - Использовать существующий `src/pdf_framework/graph_store/incremental.py::IncrementalGraphUpdater`
+  - При Write в wiki-страницу → trigger `IncrementalGraphUpdater.update()` для пересбора только изменённой части графа (80-95% экономия CPU)
+- [ ] `memory_publish` события через существующий orchestrator event bus: `wiki.draft.created`, `wiki.promoted`, `wiki.conflict.detected`
 - [ ] Добавить `kb-lint` + `markdownlint-cli2` в pre-commit hook (`.pre-commit-config.yaml`)
-- [ ] Протестировать на существующих wiki-страницах: 0 false positives на начальном наборе
-- [ ] Интеграционный тест: создать 10 синтетических паттернов с confidence 0.9, запустить librarian, проверить что создано 10 drafts без дубликатов
+- [ ] Добавить логирование промоций в `docs/wiki/log.md` (НЕ `memory/log.md`)
+- [ ] Интеграционный тест: создать 10 синтетических паттернов с confidence 0.9, запустить wiki_promoter, проверить 10 drafts без дубликатов
+- [ ] Smoke-тест: все существующие тесты docs-change-tracker проходят без регрессии
 
 #### Критерии готовности
 
