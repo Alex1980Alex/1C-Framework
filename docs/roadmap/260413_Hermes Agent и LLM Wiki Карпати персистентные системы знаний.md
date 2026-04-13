@@ -567,12 +567,19 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ### Фаза 4: PDF → Structured Wiki Pages
 
-**Цель:** Создать альтернативу raw-chunks RAG — LLM pipeline, который читает PDF и генерирует структурированные markdown wiki-страницы с извлечёнными сущностями, связями и фактами.
+**Цель:** Экспортировать существующие entity embeddings + граф из **Phase 38 LightRAG (уже в production)** в markdown wiki-страницы, использовать **Phase 6.5 incremental updates** для инкрементальной синхронизации. **Не внедрять LightRAG заново — он уже работает.**
 
 **Приоритет:** P2
-**Трудозатраты:** XL → **L** (drop-in engine вместо self-rolled)
-**Зависимости:** Фазы 1, 2
-**OSS база:** [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) — **33.1k stars, Python, MIT**. Hybrid retrieval, **incremental updates** (критично для компаундинга), backends: Neo4j/PostgreSQL/MongoDB + Ollama. Fallback: [gusye1234/nano-graphrag](https://github.com/gusye1234/nano-graphrag) (3.8k, ~1100 LOC, hackable)
+**Трудозатраты:** L → **M** (базовый engine готов, остался markdown export)
+**Зависимости:** Фазы 0, 1, 2
+**Существующая основа в коде (не OSS drop-in):**
+- [`src/pdf_framework/graph_store/entity_embeddings.py`](../../src/pdf_framework/graph_store/entity_embeddings.py) (556 LoC, Phase 38) — готовые entity/relation embeddings в Qdrant
+- [`src/pdf_framework/graph_store/incremental.py`](../../src/pdf_framework/graph_store/incremental.py) (293 LoC, Phase 6.5) — `IncrementalGraphUpdater` с 80-95% CPU экономией
+- [`src/pdf_framework/graph_store/change_detector.py`](../../src/pdf_framework/graph_store/change_detector.py) (254 LoC) — diff графов
+- [`src/pdf_framework/graph_store/summarizer.py`](../../src/pdf_framework/graph_store/summarizer.py) — community summaries
+- [`src/pdf_framework/search/strategies/graphrag_light.py`](../../src/pdf_framework/search/strategies/graphrag_light.py) — LightRAGStrategy поиск
+
+**OSS (только fallback):** [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) — если собственная реализация упрётся в ограничения, можно переехать на upstream
 
 #### Задачи
 
