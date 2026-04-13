@@ -876,6 +876,198 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
+## Pre-flight checklist перед реализацией (v1.3.4)
+
+Этот раздел описывает операционные действия, которые нужно выполнить **перед** запуском `/opsx:apply hermes-llm-wiki` для старта Фазы 0. После approval (v1.3.4) reality check показал: не вся подготовка автоматизируема через OpenSpec, есть ручные шаги.
+
+### 1. Git state: закоммитить подготовительную работу
+
+Файлы, созданные в рамках SDD-подготовки (Phase 6.1 — profile + formal change), **должны быть в git** до старта `/opsx:apply`, иначе `auto-git-save` hook блокирует первый Write:
+
+**Новые файлы (12):**
+- `openspec/profiles/python-framework.yaml`
+- `openspec/changes/hermes-llm-wiki/.openspec.yaml`
+- `openspec/changes/hermes-llm-wiki/proposal.md`
+- `openspec/changes/hermes-llm-wiki/design.md`
+- `openspec/changes/hermes-llm-wiki/tasks.md`
+- `openspec/changes/hermes-llm-wiki/specs/memory-layer-alignment/spec.md`
+- `openspec/changes/hermes-llm-wiki/specs/obsidian-vault/spec.md`
+- `openspec/changes/hermes-llm-wiki/specs/dspy-signatures/spec.md`
+- `openspec/changes/hermes-llm-wiki/specs/wiki-librarian/spec.md`
+- `openspec/changes/hermes-llm-wiki/specs/wiki-export-pipeline/spec.md`
+- `openspec/changes/hermes-llm-wiki/specs/agent-sandbox/spec.md`
+- `openspec/changes/hermes-llm-wiki/specs/oauth-extraction/spec.md`
+
+**Изменённые файлы (3):**
+- `.claude/hooks/approval-gate.py` (+25 LoC: `_read_profile()` + profile info в block message)
+- `.claude/hooks/docs-change-enforcer.py` (+1 строка: `openspec/` в `SKIP_PATTERNS`)
+- `.claude/skills/hooks-skills-mcp-triad/SKILL.md` (+1 строка PreToolUse table с approval-gate + SKIP_PATTERNS update)
+
+**Commit message (conventional):**
+```
+feat(hermes): SDD Phase 6.1 — python-framework profile + Hermes change formalized
+
+- Add openspec/profiles/python-framework.yaml (6.4KB profile config)
+- Extend .claude/hooks/approval-gate.py with profile field support
+- Add openspec/ to docs-change-enforcer SKIP_PATTERNS
+- Create openspec/changes/hermes-llm-wiki/ with proposal/design/tasks
+- Add 7 phase specs (~3172 LoC): memory-layer-alignment, obsidian-vault,
+  dspy-signatures, wiki-librarian, wiki-export-pipeline, agent-sandbox,
+  oauth-extraction
+- Change status: approved (self-review after 5-pass iterative audit)
+- Update hooks-skills-mcp-triad SKILL.md with approval-gate profile support
+
+Ready for /opsx:apply hermes-llm-wiki to start Phase 0.
+Roadmap: docs/roadmap/260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md v1.3.4
+```
+
+### 2. Baseline regression tests (защита от регрессий)
+
+Перед запуском любых Фаза 0 задач — **зафиксировать текущее состояние** критических тестов. Они будут regression guards:
+
+```bash
+cd D:/1С-Framework
+.venv/Scripts/python.exe -m pytest tests/integration/test_memory_unified.py -v --tb=no \
+    2>&1 | tee data/baseline_memory_pre_hermes.log
+.venv/Scripts/python.exe -m pytest tests/unit/api/test_auth.py -v --tb=no \
+    2>&1 | tee data/baseline_auth_pre_hermes.log
+```
+
+**Ожидаемо:**
+- `test_memory_unified.py`: 26 тестов passed
+- `test_auth.py`: 288 тестов passed
+
+**Если хоть один красный ДО старта Фазы 0** — сначала чинить существующие проблемы, потом `/opsx:apply`. Это pre-existing issues, не связанные с Hermes.
+
+### 3. Backup SQLite orchestrator.db (критично для Ф0 задачи 0.2)
+
+Задача **0.2 LinkRegistry SQL migration** — единственный breaking change во всей Фазе 0. Расширяет `CHECK (link_type IN (...))` constraint через CREATE NEW + COPY DATA + DROP OLD паттерн (SQLite не поддерживает `ALTER TABLE DROP CONSTRAINT`).
+
+Перед запуском migration — backup:
+
+```bash
+# Найти актуальный путь к БД
+find D:/1С-Framework -name "orchestrator*.db" -not -path "*/.venv/*" 2>&1
+
+# Физический backup
+cp data/orchestrator.db data/orchestrator.db.backup-pre-hermes
+
+# Логический backup (SQL dump) — на случай если binary повреждён
+.venv/Scripts/python.exe -c "
+import sqlite3
+src = sqlite3.connect('data/orchestrator.db')
+with open('data/orchestrator.db.sql.backup-pre-hermes', 'w', encoding='utf-8') as f:
+    f.write('\n'.join(src.iterdump()))
+src.close()
+print('Backup OK')
+"
+```
+
+Rollback procedure:
+```bash
+# Если migration сломала БД
+cp data/orchestrator.db.backup-pre-hermes data/orchestrator.db
+
+# Или через скрипт миграции (будет создан в задаче 0.2)
+.venv/Scripts/python.exe scripts/migrate_link_registry.py --rollback
+```
+
+### 4. Sanity checks перед `/opsx:apply`
+
+Выполнить в начале следующей сессии, чтобы убедиться что всё на месте:
+
+**4.1 Approval gate разрешает apply:**
+
+```bash
+cd D:/1С-Framework
+echo '{"tool_name":"Skill","tool_input":{"skill":"opsx:apply"},"hook_event_name":"PreToolUse"}' | \
+    .venv/Scripts/python.exe .claude/hooks/approval-gate.py
+echo "exit=$?"
+```
+
+**Ожидаемо:** exit=0 без JSON вывода (passthrough). Если выдаёт `{"decision":"block"}` — проверить `.openspec.yaml` content, там должно быть `approval.status: approved`.
+
+**4.2 Active changes state:**
+
+```bash
+cd D:/1С-Framework
+PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -c "
+import sys
+sys.path.insert(0, '.claude/hooks')
+import importlib.util
+spec = importlib.util.spec_from_file_location('approval_gate', '.claude/hooks/approval-gate.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+for name, yaml in mod._get_active_changes():
+    print(f'{name}: status={mod._read_approval_status(yaml)}, profile={mod._read_profile(yaml)}')
+"
+```
+
+**Ожидаемо:**
+```
+gkstcplk-2256-exclude-registered-vehicles: status=approved, profile=1c-bsl
+gkstcplk-mcp-toolkit-extension: status=approved, profile=1c-bsl
+hermes-llm-wiki: status=approved, profile=python-framework
+```
+
+**4.3 DSPy установлен (для Фазы 2 позже, но убедимся):**
+
+```bash
+.venv/Scripts/python.exe -c "import dspy; print('dspy:', dspy.__version__)" 2>&1
+```
+
+Если `ModuleNotFoundError` — `pip install dspy-ai` (не блокирует Фазу 0, но пригодится к Фазе 2).
+
+### 5. Последовательность действий в следующей сессии
+
+```
+1. Открыть Claude Code в D:/1С-Framework
+2. Sanity check 4.1 + 4.2 (2 минуты)
+3. Baseline regression tests (шаг 2, 5-10 минут)
+4. Backup orchestrator.db (шаг 3, 1 минута)
+5. /opsx:apply hermes-llm-wiki
+   → skill openspec-apply-change активируется
+   → читает tasks.md Фаза 0
+   → предлагает первую невыполненную задачу (0.1 UnifiedID extension)
+6. Выполнение задач 0.1 → 0.2 → 0.3 → ... → 0.7 по порядку
+7. После каждой задачи — regression test run
+8. Commit после каждой завершённой задачи (не batch!)
+```
+
+### 6. Правила безопасности для Фазы 0
+
+**Обязательно:**
+- [ ] Dry-run перед каждой SQL migration: `scripts/migrate_link_registry.py --dry-run` до `--apply`
+- [ ] Regression tests после каждой подзадачи 0.1-0.7
+- [ ] Один commit = одна завершённая задача (не batch всё вместе)
+- [ ] При первой красной регрессии → немедленный rollback, не пытаться «допатчить»
+
+**Нельзя в Фазе 0:**
+- [ ] НЕ устанавливать `obsidian-mcp`, `mcp-obsidian` — это Фаза 1
+- [ ] НЕ трогать `src/pdf_framework/agents/*.py` — это Фаза 2
+- [ ] НЕ создавать `.obsidian/` или `docs/wiki/` (кроме `docs/wiki/drafts/` как output для `_save_to_target`) — это Фаза 1
+- [ ] НЕ модифицировать `src/bsl/mcp_server/auth/oauth2.py` — это Фаза 6
+- [ ] НЕ расширять `docs-change-tracker.py` — это Фаза 3
+
+Фаза 0 = **только memory orchestration extensions** в `src/memory/orchestrator/` + hook update. Всё остальное — следующие фазы с собственными approval checkpoints.
+
+### 7. Ожидаемый результат Фазы 0
+
+После выполнения всех 7 задач:
+
+- ✓ `MemoryType.WIKI` и `MemoryType.GRAPH` работают в `unified_id.py`
+- ✓ `LinkRegistry` поддерживает 10 link types (6 existing + 4 new), SQLite migration применена
+- ✓ `MemoryCube.to_wiki_page()` / `from_wiki_page()` работают (roundtrip тесты зелёные)
+- ✓ `WikiSearchAdapter` + `GraphSearchAdapter` зарегистрированы в `UnifiedSearchEngine` (пока stub-адаптеры, реальные вызовы в Фазе 1+4)
+- ✓ `MemoryRouter` возвращает target `"wiki"` для подходящих запросов
+- ✓ `memory-first-hook` имеет Layer 4 для wiki (пока ищет по пустому `docs/wiki/`, наполнение в Фазе 1)
+- ✓ 26 memory tests + 288 auth tests **остаются зелёными** (zero regression)
+- ✓ Новый `tests/integration/test_memory_layers_v13.py` зелёный
+
+**После Фазы 0 можно** переходить к Фазе 1 (Obsidian Vault Integration) — установка Obsidian desktop, миграция `docs/architecture/` на frontmatter, создание `docs/wiki/` структуры.
+
+---
+
 ## Ссылки
 
 ### Внутренние
