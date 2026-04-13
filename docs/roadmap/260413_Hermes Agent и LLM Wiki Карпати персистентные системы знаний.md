@@ -266,22 +266,24 @@ Progressive disclosure (3 уровня детализации), negative boundar
 **Цель:** Создать альтернативу raw-chunks RAG — LLM pipeline, который читает PDF и генерирует структурированные markdown wiki-страницы с извлечёнными сущностями, связями и фактами.
 
 **Приоритет:** P2
-**Трудозатраты:** XL
+**Трудозатраты:** XL → **L** (drop-in engine вместо self-rolled)
 **Зависимости:** Фазы 1, 2
+**OSS база:** [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) — **33.1k stars, Python, MIT**. Hybrid retrieval, **incremental updates** (критично для компаундинга), backends: Neo4j/PostgreSQL/MongoDB + Ollama. Fallback: [gusye1234/nano-graphrag](https://github.com/gusye1234/nano-graphrag) (3.8k, ~1100 LOC, hackable)
 
 #### Задачи
 
-- [ ] Создать `src/pdf_framework/indexing/wiki_pipeline.py` с LangGraph StateGraph
-- [ ] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md`
-- [ ] Реализовать узел extraction: LLM извлекает сущности и связи из PDF chunks
-- [ ] Реализовать узел structuring: LLM генерирует markdown по шаблону из извлеченных данных
-- [ ] Реализовать узел validation: проверка schema, wiki-links, полноты фактов
-- [ ] Создать prompt templates в `src/pdf_framework/prompts/wiki_extraction.py` (MPF format)
-- [ ] Реализовать параллельную индексацию: wiki_chunks в Qdrant collection `wiki_pages_v1`
-- [ ] Создать eval suite: `tests/eval/wiki_pipeline_eval.py` с метриками precision, recall, F1
-- [ ] Провести сравнение: structured wiki pages vs baseline chunk RAG на 10 тестовых PDF
-- [ ] Интегрировать pipeline в `src/pdf_framework/agents/` как дополнительный маршрут обработки
+- [ ] `pip install lightrag-hku` — оценить совместимость с существующими `src/pdf_framework/graph_store/`
+- [ ] **Spike**: запустить LightRAG на 3 тестовых PDF, измерить качество извлечения сущностей vs существующий graph_store
+- [ ] Создать адаптер `src/pdf_framework/indexing/lightrag_adapter.py` — унифицированный интерфейс между нашими loaders и LightRAG API
+- [ ] Настроить LightRAG backends: Qdrant как vector store (если поддерживается) или PostgreSQL как альтернатива
+- [ ] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md` — **LightRAG уже генерирует entity summaries**, шаблоны нужны только для output rendering
+- [ ] Создать pipeline: `PDF → PyMuPDF4LLM loader → LightRAG insert → Obsidian export` — обёртка в LangGraph StateGraph для совместимости с нашими агентами
+- [ ] Использовать `LightRAG.query(mode="hybrid")` вместо собственного SearchManager для wiki-слоя
+- [ ] Настроить incremental updates: при добавлении нового PDF — `lightrag.insert()` не пересобирает весь граф
+- [ ] Создать eval suite: `tests/eval/wiki_pipeline_eval.py` — сравнение LightRAG hybrid vs baseline chunk RAG на 10 PDF
+- [ ] Интегрировать hallucination-check из существующего `src/pdf_framework/agents/` поверх LightRAG output
 - [ ] Добавить `.claude/skills/wiki-pipeline/SKILL.md` с инструкциями запуска и настройки
+- [ ] **Решение go/no-go после spike**: если LightRAG не подошёл (производительность, совместимость) — fallback на nano-graphrag (~1100 LOC можно inline-встроить)
 
 #### Критерии готовности
 
