@@ -80,6 +80,28 @@ def _read_approval_status(yaml_path):
         return None
 
 
+def _read_profile(yaml_path):
+    """Read top-level `profile` field from .openspec.yaml.
+
+    Returns the profile name (e.g. "python-framework") or "1c-bsl" as default
+    when the field is absent (backward-compat for existing BSL changes).
+    """
+    try:
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        for line in content.splitlines():
+            stripped = line.strip()
+            # Top-level field only (no leading indent)
+            if (not line.startswith(" ") and not line.startswith("\t")
+                    and stripped.startswith("profile:")):
+                value = stripped.split(":", 1)[1].strip().strip("'\"")
+                if value:
+                    return value
+        return "1c-bsl"  # default for existing changes without profile field
+    except Exception:
+        return "1c-bsl"
+
+
 class ApprovalGate(BaseHook):
     """PreToolUse:Skill - blocks implementation skills without approved design."""
 
