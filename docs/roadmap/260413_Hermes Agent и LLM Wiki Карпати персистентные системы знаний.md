@@ -673,36 +673,55 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
-### Фаза 6: Defer — OAuth 2.1 MCP TTL
+### Фаза 6: OAuth 2.1 Generalization (переработано v1.3 — НЕ defer!)
 
-**Цель:** Добавить OAuth 2.1 авторизацию с TTL для MCP-серверов при переходе к multi-tenant production. В текущем single-user режиме не требуется.
+**Критическая переформулировка v1.3:** OAuth 2.1 + PKCE **уже реализован** для BSL MCP server (Phase 12.3, 350 LoC). В v1.0-1.2 я ошибочно считал эту фазу "deferred". Реально задача — **обобщить** существующую реализацию на остальные MCP-серверы.
 
-**Приоритет:** P3
-**Трудозатраты:** L
-**Зависимости:** Фаза 5
+**Цель:** Экстрагировать `src/bsl/mcp_server/auth/oauth2.py` в переиспользуемый `src/shared/mcp_oauth.py`, подключить к pdf-vector-graph MCP и другим серверам по необходимости. JWT-based auth уже работает для REST API (`src/api/auth/jwt_handler.py`).
+
+**Приоритет:** P2 (повышен с P3 — инфраструктура готова на 70%)
+**Трудозатраты:** L → **M** (рефакторинг существующего кода, не с нуля)
+**Зависимости:** Фаза 0
+**Уже реализовано (Phase 12.3):**
+- [`src/bsl/mcp_server/auth/oauth2.py`](../../src/bsl/mcp_server/auth/oauth2.py) (350 LoC) — `OAuth2Service`, PKCE validation, auth code flow, refresh tokens, TTL cleanup task
+- [`src/api/auth/jwt_handler.py`](../../src/api/auth/jwt_handler.py) (159 LoC) — `JWTHandler` для REST API с multi-tenant support
+- [`src/api/auth/dependencies.py`](../../src/api/auth/dependencies.py) (179 LoC) — FastAPI dependency injection auth
+- [`src/api/routes/auth.py`](../../src/api/routes/auth.py) (95 LoC) — `/auth/token` endpoint
+- [`tests/unit/api/test_auth.py`](../../tests/unit/api/test_auth.py) (288 LoC) — unit тесты JWT flow
+- **RFC 9728 PRM** (Protected Resource Metadata) support — `generate_prm_document()` метод уже есть
+- CLI: `python -m src.cli.main auth token --tenant <id> --role <role>` — команда выдачи токенов
 
 #### Задачи
 
-- [ ] Спроектировать OAuth 2.1 flow для MCP: `docs/design/oauth-mcp-flow.md`
-- [ ] Реализовать `src/shared/mcp_oauth.py` с token management, TTL, refresh
-- [ ] Добавить auth middleware в MCP серверы (поэтапно, начиная с pdf-vector-graph)
-- [ ] Создать `.claude/skills/oauth-setup/SKILL.md` для deployment
-- [ ] Настроить token storage: encrypted local или vault secret backend
-- [ ] Провести security review: audit log, token revocation, scope validation
+- [ ] **Аудит:** прочитать все 5 файлов auth, задокументировать API в `docs/wiki/auth/oauth2-service.md`
+- [ ] Экстрагировать `OAuth2Service` из `src/bsl/mcp_server/auth/oauth2.py` в `src/shared/mcp_oauth/service.py` — generic переиспользуемый компонент
+- [ ] `src/shared/mcp_oauth/store.py` — `OAuth2Store` с pluggable backends (in-memory, SQLite, Redis)
+- [ ] Backward-compat: `src/bsl/mcp_server/auth/oauth2.py` становится thin wrapper вокруг `src/shared/mcp_oauth`
+- [ ] Подключить `OAuth2Service` к `pdf-vector-graph` MCP server (опционально, за feature flag `MCP_OAUTH_ENABLED`)
+- [ ] Обновить `.mcp.json`: документировать env переменные для OAuth (`OAUTH_CLIENT_ID`, `OAUTH_REDIRECT_URI` и т.п.)
+- [ ] Создать `docs/wiki/auth/oauth-setup.md` — инструкции для deployment multi-tenant (было бы `.claude/skills/oauth-setup/SKILL.md`, но wiki лучше — можно связать `[[wiki-link]]`)
+- [ ] Расширить `tests/unit/api/test_auth.py` на generic `OAuth2Service` (проверка PKCE, TTL, refresh flow)
+- [ ] Security review: audit log через существующий `memory_audit_log` tool в orchestrator (уже P4 готово)
+- [ ] Интеграция с `memory_audit_log` (существующий tool): каждый token issue/revoke → запись в audit
 
 #### Критерии готовности
 
-- [ ] MCP-серверы отклоняют запросы без валидного токена
-- [ ] Токены имеют TTL ≤1 час, refresh token ≤24 часа
-- [ ] Audit log содержит все запросы с токенами
-- [ ] Token revocation работает мгновенно
+- [ ] `src/shared/mcp_oauth/` модуль создан, BSL MCP server использует его (backward-compat)
+- [ ] 288 существующих тестов `test_auth.py` проходят без регрессии
+- [ ] Новые тесты покрывают generic Service (≥10 тестов)
+- [ ] PKCE validation работает для authorization_code + code_challenge flow (RFC 7636)
+- [ ] TTL: access_token ≤1 час, refresh_token ≤24 часа, auth_code ≤10 мин (уже в существующем коде)
+- [ ] RFC 9728 PRM endpoint работает для всех OAuth-enabled MCP серверов
+- [ ] `memory_audit_log` содержит записи обо всех token операциях
 
 #### Риски и митигация
 
 | Риск | Митигация |
 |------|-----------|
-| Overhead для single-user | Feature flag: OAuth включается только при MULTI_TENANT=true |
-| Сложность refresh flow | Использовать проверенные библиотеки (authlib, pyjwt) |
+| Экстракция сломает BSL MCP server | Жёсткая backward-compat: старый путь `src/bsl/mcp_server/auth/oauth2.py` остаётся как re-export |
+| Over-engineering для single-user | Feature flag `MCP_OAUTH_ENABLED=false` по умолчанию |
+| Несовместимость с существующими тестами | Сначала убедиться что все 288 тестов зелёные, только потом рефакторить |
+| Конфликт с JWT handler из api/auth/ | Разделение: `api/auth/` = REST API (JWT), `shared/mcp_oauth/` = MCP серверы (OAuth 2.1 с PKCE). Не пересекаются, но могут шарить TokenStore |
 
 ---
 
