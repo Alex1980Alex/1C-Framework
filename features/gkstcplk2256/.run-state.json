@@ -5,23 +5,55 @@
     {
       "section": "02_tm3_exclude",
       "feature_file": "02_tm3_exclude.feature",
-      "status": "blocked",
-      "started_at": "2026-04-12T22:10:00",
-      "duration_s": 0,
+      "status": "passed_smoke_blocked_logic",
+      "started_at": "2026-04-12T23:36:14",
+      "duration_s": 84,
       "dependencies": ["00_smoke"],
       "created_objects": [],
-      "pre_check": "fail",
-      "pre_check_details": "B1: М012УХ (PLK) has 9 active registrations (not fresh) @ L178; B2: Х985ХМ36RUS is not PLK (ЭтоСправочникПЛК=False) @ L318. Cosmetic: C1 METADATA nomenclature name missing comma (body uses Рапс only); C2 METADATA contragent missing ООО (body uses partial match).",
-      "post_check": "skipped",
-      "attempts": 0,
-      "error_category": "data_blocker",
-      "retry_required": true,
-      "suggested_fix": {
-        "L178": "'М012УХ' -> 'К859МУ' (fresh PLK)",
-        "L318": "'Х985ХМ36' -> 'М855АК' (fresh PLK)",
-        "L20-23 METADATA": "update TS/Catalog preflight probes to match real TestDB names"
+      "pre_check": "ok (6/6 after TS fix: Н925УВ, С566ЕН, О016В — unique PLK Авто, 0 regs at ПЛК Светлый)",
+      "post_check": "blocked_by_schedule_infra",
+      "attempts": 6,
+      "error_category": "infra_gap",
+      "retry_required": false,
+      "junit": {
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "passed": ["FN-1.3.0", "FN-1.3.1", "FN-1.3.2", "EC-1.3.2"]
       },
-      "notes": "VA run aborted by /run-1c-tests pre-check. Feature body references stale/non-PLK TS. Fresh PLK candidates from DB query: К859МУ, К860МУ, М855АК, М857АК, Н292ХХ, Н389НК, Н477ОВ. Resume via /write-1c-tests to update feature, then /run-1c-tests --from 02_tm3_exclude."
+      "fixes_applied": [
+        "TS rotation: ТМ3-ТС* → Н925УВ/С566ЕН/О016В (unique PLK Авто, 0 regs at Светлый; previous К859МУ had 31 regs blocking exclusion JOIN)",
+        "Critical discovery: RC-5 JOIN uses ОчередьПриемкиПЛК.НомерТС = ТранспортныеСредства.Наименование — string-to-name match, so ЗаписьВОчередь string MUST equal catalog TS name",
+        "ТочкаМаршрута direct input: 'И в поле с именем ТочкаМаршрута я ввожу текст ПЛК Светлый' (user-hinted; choice form navigation failed due to hierarchical tree with leaf hidden under ПЛК Светлый (группа))",
+        "All attributes filled per screenshot: НачалоПериода, ОкончаниеПериода, УсловиеПроезда (DAP), Контрагент, Номенклатура (auto), НомерТС, Комментарий",
+        "OS command step removed: 'я запускаю команду операционной системы' not supported by VA",
+        "In-VA scoreboard navigation removed: VA cannot assertRowNotExists for DynamicList — must use SQL anchors post-run",
+        "Контрагент via direct input instead of choice form search bar",
+        "Preflight: added fresh-PLK-Авто candidates check via MCP query"
+      ],
+      "va_calibration_notes": [
+        "FN-1.3.0 PASS (10s): list open/close only",
+        "FN-1.3.1 PASS (32s): ЗаписьВОчередь + РегистрацияНаПЛК + trigger placeholder",
+        "FN-1.3.2 PASS (8s): state pollution — form may have reused FN-1.3.1 values. NEEDS calibration for clean isolation",
+        "EC-1.3.2 PASS (33s): unposted Регистрация created"
+      ],
+      "sql_anchors_blocked": {
+        "reason": "RC-5 regulation logic cannot be validated via execute_code because of cascading infrastructure requirements",
+        "blockers": [
+          "КорректировкаВМинутах = 0 for ПЛК Светлый → regulation query filters НачалоПериода >= ТекущаяДата (only future periods processed)",
+          "РегистрСведений.гкс_ГрафикПриемкиПЛК has NO records for 2026 (latest = 2025-09-15); creating график via doc fails on ЗаписьВГрафикПриемкиПЛК validation",
+          "РежимЗаписиДокумента.Проведение of ЗаписьВОчередь fails ПроверитьДоступностьМестВГрафикеИОчереди (no admin bypass) when график not filled for period",
+          "Direct НаборЗаписей write to RecorderSubordinate register auto-syncs Активность with registrator.Проведен — inactive if doc not posted",
+          "Historic periods (2024-11-25 with free slots) excluded by regulation's current-time filter"
+        ],
+        "unblock_options": [
+          "Admin UI: populate ГрафикПриемкиПЛК for current period manually",
+          "Test harness: coordinated доc creation (график + очередь + регистрация) bypassing ПроверитьДоступностьМест via ДополнительныеСвойства",
+          "Test at SQL level: directly manipulate РегистрСведений records + call ПолучитьСписокЗаписейВОчередьДляТабло() with mocked period params (requires code change or test helper)",
+          "Use a TestDB snapshot where the schedule is pre-populated for fixed test dates"
+        ]
+      },
+      "notes": "VA 4/4 PASSED at smoke level. Documents created via form submit, but business logic of RC-5 exclusion CANNOT be verified in this TestDB state due to missing schedule infrastructure for current period. The feature file is now structurally correct and future-proofed for when график is populated. All fixes above are reusable for future sessions."
     },
     {
       "section": "04_tm2_nomenclature_filter",
