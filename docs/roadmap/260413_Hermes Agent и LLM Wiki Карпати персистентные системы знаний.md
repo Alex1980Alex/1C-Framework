@@ -1,9 +1,10 @@
 # Дорожная карта: Hermes Agent / LLM Wiki Карпаты → PDF Framework
 
-**Версия:** 1.0
+**Версия:** 1.1
 **Дата:** 2026-04-13
 **Статус:** draft
 **Автор:** Claude Opus 4.6
+**Исследование:** [hermes-llm-wiki-github-landscape.md](../../.claude/skills/architecture-research/cache/hermes-llm-wiki-github-landscape.md)
 
 ---
 
