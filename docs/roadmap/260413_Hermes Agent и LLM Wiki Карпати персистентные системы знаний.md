@@ -349,14 +349,16 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Задачи
 
-- [ ] Создать `memory/SCHEMA.md` с формальным описанием 5-слойной модели (скопировать из секции "Интеграция с существующей памятью" этого roadmap)
+- [ ] Создать `docs/wiki/SCHEMA.md` с формальным описанием 5-слойной модели (НЕ `memory/SCHEMA.md` — `memory/` это user-level auto-memory Claude Code, не git-controlled. Используем `docs/wiki/` в проекте)
 - [ ] Расширить `src/memory/orchestrator/unified_id.py`:
-  - Добавить memory types: `wiki`, `graph`
-  - Добавить sources: `obsidian-vault`, `lightrag`
-  - Обновить валидацию `parse_unified_id()`
-- [ ] Расширить `src/memory/orchestrator/link_registry.py`:
-  - Добавить link types: `promoted_to`, `superseded_by`, `mirrors`, `graph_node`
-  - Unit-тесты для новых связей
+  - Добавить в `MemoryType` enum: `WIKI = "wiki"`, `GRAPH = "graph"` (файл [unified_id.py:26-40](../../src/memory/orchestrator/unified_id.py#L26))
+  - Добавить в `SourceServer` enum: `OBSIDIAN_VAULT = "obsidian-vault"`, `LIGHTRAG = "lightrag"` (файл [unified_id.py:43-70](../../src/memory/orchestrator/unified_id.py#L43))
+  - Обновить валидацию `parse_unified_id()` + тесты на legacy IDs (backward compat)
+- [ ] Расширить `src/memory/orchestrator/link_registry.py` (**требует миграцию БД, не просто enum**):
+  - Добавить в `LinkType` enum: `PROMOTED_TO`, `SUPERSEDED_BY`, `MIRRORS`, `GRAPH_NODE` + их `description` (файл [link_registry.py:22-43](../../src/memory/orchestrator/link_registry.py#L22))
+  - **Миграция SQLite:** создать `migrations/001_extend_link_types.sql` с `ALTER TABLE links DROP CONSTRAINT ...; ALTER TABLE links ADD CHECK (link_type IN (<10 types>));` (текущий CHECK constraint в [link_registry.py:219-222](../../src/memory/orchestrator/link_registry.py#L219))
+  - Написать `scripts/migrate_link_registry.py` с dry-run режимом и rollback
+  - Unit-тесты для 4 новых связей + тест миграции на снапшоте БД
 - [ ] Расширить `src/memory/orchestrator/unified_search.py`:
   - Добавить backend `WikiSearchBackend` (вызывает obsidian-mcp через MCP клиент)
   - Добавить backend `GraphSearchBackend` (заглушка до Phase 4, возвращает пустой результат)
