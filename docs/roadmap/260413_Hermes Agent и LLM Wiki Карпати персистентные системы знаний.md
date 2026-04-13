@@ -639,8 +639,10 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 **Приоритет:** P3
 **Трудозатраты:** M → **S** (официальный SDK)
-**Зависимости:** Фаза 2 (MPF для промптов sandbox-агентов)
+**Зависимости:** Фаза 2 (DSPy-deepened промпты для sandbox-агентов)
+**Уже доступно (v1.3):** `langsmith/sandbox/_sandbox.py` — **уже установлен в .venv** как транзитивная зависимость LangSmith. Не используется, но доступен как zero-cost альтернатива для простых сценариев (без Firecracker изоляции).
 **OSS база:** [e2b-dev/code-interpreter](https://github.com/e2b-dev/code-interpreter) — 2.3k stars, Apache-2.0, Python/TS SDK. Firecracker microVMs, ~150ms startup, 24h sessions. **Отвергнуто:** Daytona (AGPL-3.0 → enterprise-блокер)
+**Новая задача v1.3:** оценить LangSmith sandbox как первый шаг (без E2B API key), переехать на E2B только если нужна strong isolation
 
 #### Задачи
 
