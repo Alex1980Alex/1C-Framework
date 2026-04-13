@@ -405,14 +405,32 @@ Progressive disclosure (3 уровня детализации), negative boundar
 
 ## Ссылки
 
+### Внутренние
 - `CLAUDE.md` — основной конфигурационный файл агента
 - `AGENTS.md` — спецификация LangGraph-агентов
 - `memory/MEMORY.md` — текущий flat index памяти (~240 строк)
 - `.claude/skills/architecture-research/SKILL.md` — скилл архитектурного исследования
+- `.claude/skills/architecture-research/cache/hermes-llm-wiki-github-landscape.md` — **полный отчёт GitHub research (v1.1)**
 - `.claude/skills/tech-research/SKILL.md` — скилл технического исследования
 - `.claude/skills/hooks-skills-mcp-triad/SKILL.md` — паттерн Triad (hooks + skills + MCP)
 - `.claude/skills/memory-unified/SKILL.md` — оркестрация 4 систем памяти
+- `.claude/skills/prompt-engineering/SKILL.md` — DSPy для типизированных промптов (Фаза 2)
+- `.claude/skills/graph-operations/SKILL.md` — работа с графами знаний (Фаза 4)
 - `docs/roadmap/` — другие роадмапы фреймворка (LLM Rotation, AutoResearch, BSL Intelligence)
+
+### Внешние OSS (v1.1)
+- [MarkusPfundstein/mcp-obsidian](https://github.com/MarkusPfundstein/mcp-obsidian) — Фаза 1
+- [cyanheads/obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server) — Фаза 1 (альтернатива)
+- [btfranklin/promptdown](https://github.com/btfranklin/promptdown) — Фаза 2
+- [stanfordnlp/dspy](https://github.com/stanfordnlp/dspy) — Фаза 2 (structured contracts)
+- [kb-lint (PyPI)](https://pypi.org/project/kb-lint/) — Фаза 3
+- [DavidAnson/markdownlint](https://github.com/DavidAnson/markdownlint) — Фаза 3
+- [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) — Фаза 3 (паттерны)
+- [Astro-Han/karpathy-llm-wiki](https://github.com/Astro-Han/karpathy-llm-wiki) — Фаза 1 (шаблоны)
+- [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) — Фаза 4 (основной engine)
+- [gusye1234/nano-graphrag](https://github.com/gusye1234/nano-graphrag) — Фаза 4 (fallback)
+- [e2b-dev/code-interpreter](https://github.com/e2b-dev/code-interpreter) — Фаза 5
+- [Karpathy LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — первоисточник концепции
 
 ---
 
@@ -421,3 +439,4 @@ Progressive disclosure (3 уровня детализации), negative boundar
 | Дата | Версия | Описание |
 |------|--------|----------|
 | 2026-04-13 | v1.0 | Initial draft — на основе анализа первоисточника Hermes Agent / LLM Wiki Карпати |
+| 2026-04-13 | v1.1 | GitHub research: 5 из 6 фаз заменяются готовыми OSS (LightRAG, mcp-obsidian, E2B code-interpreter, kb-lint, promptdown/DSPy). Трудозатраты снижены: Фаза 3 M→S, Фаза 4 XL→L, Фаза 5 M→S. Добавлен принцип "OSS-first". Экономия ~8-12 недель |
