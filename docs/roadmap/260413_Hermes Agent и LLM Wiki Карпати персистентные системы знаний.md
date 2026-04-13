@@ -1,10 +1,56 @@
 # Дорожная карта: Hermes Agent / LLM Wiki Карпаты → PDF Framework
 
-**Версия:** 1.2
+**Версия:** 1.3
 **Дата:** 2026-04-13
 **Статус:** draft
 **Автор:** Claude Opus 4.6
 **Исследование:** [hermes-llm-wiki-github-landscape.md](../../.claude/skills/architecture-research/cache/hermes-llm-wiki-github-landscape.md)
+
+---
+
+## Критические факты, подтверждённые аудитом кода (v1.3)
+
+Это блок честности: что в версиях 1.0-1.2 было предложено **неправильно** и исправлено в v1.3 после глубокого аудита реального кода фреймворка.
+
+### Уже реализовано — не создавать повторно
+
+| Компонент | Файлы | Статус | Что из roadmap v1.2 отменено |
+|-----------|-------|--------|------------------------------|
+| **LightRAG Phase 38** | `src/pdf_framework/graph_store/entity_embeddings.py` (18KB), `search/strategies/graphrag_light.py` | **DONE, in production** | Фаза 4 v1.2 "добавить LightRAG" → v1.3 "экспорт markdown из готового Phase 38" |
+| **Incremental Graph Updates Phase 6.5** | `graph_store/incremental.py` (9KB), `change_detector.py` (7KB) | **DONE**, экономит 80-95% | v1.2 не учитывала → v1.3 использует как основу для auto-librarian |
+| **Memory P5.1/P5.2** | `.claude/hooks/session-memory-save.py`, `memory-first-hook.py` (3-слойная архитектура SQLite/Qdrant/MD) | **DONE**, tested | v1.2 предлагала "v2→v3" — на самом деле уже v2 с 3 слоями работает |
+| **UnifiedID + LinkRegistry** | `src/memory/orchestrator/unified_id.py`, `link_registry.py` (SQLite, 798 LoC) | **DONE**, 26 тестов | v1.2 "расширить" корректно, но не учла что это **миграция БД**, не просто enum |
+| **docs-change-tracker + docs-change-enforcer** | `.claude/hooks/docs-change-tracker.py` (28KB), `docs-change-enforcer.py` (20KB) | **DONE**, 50+ code→doc mappings | v1.2 Фаза 3 auto-librarian дублирует. v1.3 **расширяет** эти hooks |
+| **DSPy интеграция** | `.claude/skills/prompt-engineering/SKILL.md`, но **НЕ используется** в `src/pdf_framework/agents/` | Частично | v1.2 предлагала MPF helper — v1.3 отменяет, углубляет DSPy |
+| **OpenSpec SDD** | `openspec/` директория, skills `openspec-*`, hook `sdd-approval-gate` | **DONE** все 5 фаз | v1.2 не упоминала — v1.3 интегрирует wiki promotion с OpenSpec ADR |
+| **Skill caches** | `.claude/skills/*/cache/_index.json` (минимум 11 активных каталогов) | **Уже работает как прото-wiki** | v1.2 "wiki это новое" → v1.3 признаёт что L3 уже частично существует в cache |
+
+### Неочевидные факты инфраструктуры
+
+1. **`memory/` — это НЕ директория в проекте.** `MEMORY.md` живёт по пути `C:\Users\AlexT\.claude\projects\D--1--Framework\memory\MEMORY.md` (user-level Claude Code auto-memory), **не в git**. Все ссылки `memory/log.md`, `memory/SCHEMA.md` в v1.0-1.2 были **архитектурно неверны** — эти файлы нельзя положить рядом с проектом в git-обычном смысле.
+
+2. **LinkType ограничен SQL CHECK-constraint:**
+   ```sql
+   CHECK (link_type IN ('based_on', 'supports', 'contradicts',
+                        'extends', 'derives_from', 'session_context'))
+   ```
+   Добавление `promoted_to`, `superseded_by`, `mirrors`, `graph_node` требует **ALTER TABLE + migration скрипт**, не просто enum extension.
+
+3. **memory-first-hook v2** уже реализует 3-слойную архитектуру (SQLite episodic / Qdrant semantic / MD docs). v1.2 ошибочно называла её "v2→v3 upgrade" — на самом деле нужно **расширение слоёв**, не замена.
+
+4. **Номенклатура слоёв расходится.** В коде: Layer 1/2/3 (существующий memory-first-hook). В roadmap v1.2: L0/L1/L2/L3/L4. v1.3 сохраняет **5-слойную модель как концептуальную**, но в код маппится через расширение существующих Layer1-3 в Layer0-4.
+
+### Что было MAJOR_REWRITE в v1.2
+
+| Фаза v1.2 | Вердикт аудита | Действие в v1.3 |
+|-----------|---------------|-----------------|
+| Ф0 Memory Layer Alignment | NEEDS_REVISION | Добавлена миграция БД, признан существующий P5.1/P5.2 |
+| Ф1 Obsidian Vault | ACCURATE | Добавлено решение по user-level `memory/` (symlink/include) |
+| Ф2 MPF + anti_triggers | **MAJOR_REWRITE** | MPF **отменён**, anti_triggers **отменены**, углубление DSPy вместо них |
+| Ф3 Auto-Librarian | **MAJOR_REWRITE** | Не новый hook, а **расширение** docs-change-tracker |
+| Ф4 PDF → Wiki (LightRAG) | ACCURATE (но устарел) | Отменено "внедрить LightRAG", осталось **markdown export** из существующего Phase 38 |
+| Ф5 Sandbox | ACCURATE | Без изменений |
+| Ф6 OAuth | ACCURATE | Без изменений |
 
 ---
 
