@@ -137,15 +137,20 @@ Progressive disclosure (3 уровня детализации), negative boundar
 **Приоритет:** P0
 **Трудозатраты:** S
 **Зависимости:** Нет
+**OSS база:** [MarkusPfundstein/mcp-obsidian](https://github.com/MarkusPfundstein/mcp-obsidian) (3.3k stars, Python, MIT)
 
 #### Задачи
 
-- [ ] Добавить `obsidian-mcp` сервер в `.mcp.json` с конфигурацией vault path
+- [ ] Установить Obsidian desktop + плагин **Local REST API** (требование `mcp-obsidian`)
+- [ ] `pip install mcp-obsidian` (или git clone для editable mode)
+- [ ] Добавить `obsidian-mcp` сервер в `.mcp.json` с env переменными: `OBSIDIAN_API_KEY`, `OBSIDIAN_HOST`, `OBSIDIAN_PORT`
 - [ ] Создать `.obsidian/` директорию в корне vault с `app.json`, `workspace.json`, `community-plugins.json`
 - [ ] Настроить `workspace.json` для монтирования `docs/`, `memory/`, `.claude/skills/*/cache/` как единое пространство
+- [ ] Проверить 7 стандартных tools из `mcp-obsidian`: `list_files_in_vault`, `get_file_contents`, `search`, `patch_content`, `append_content`, `delete_file`, `batch_get_file_contents`
+- [ ] Дополнить 2 custom tools для frontmatter/tags (если недостаточно patch_content) — **или** переключиться на [cyanheads/obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server) как альтернативу с нативной поддержкой
 - [ ] Создать `docs/wiki/_index.md` с картой wiki-страниц и cross-reference таблицей
-- [ ] Добавить wiki-links в существующие `memory/MEMORY.md` на связанные документы
-- [ ] Настроить `.obsidian/templates/` для шаблонов новых wiki-страниц (entity, concept, how-to)
+- [ ] Добавить wiki-links `[[...]]` в существующий `memory/MEMORY.md` на связанные документы
+- [ ] Настроить `.obsidian/templates/` для шаблонов новых wiki-страниц (entity, concept, how-to) — можно заимствовать из [Astro-Han/karpathy-llm-wiki](https://github.com/Astro-Han/karpathy-llm-wiki)
 - [ ] Создать `.claude/skills/obsidian-vault/SKILL.md` с инструкциями по работе с vault
 - [ ] Протестировать graph view: убедиться что ≥30 узлов видны и связаны
 - [ ] Добавить `.gitignore` правила для `.obsidian/workspace.json` (пользовательский state)
