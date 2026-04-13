@@ -610,6 +610,9 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | Token usage per query | Baseline | -15% за счёт MPF | Логирование token_count в eval |
 | Wiki pages from PDF | 0 | ≥3 pages/PDF | Wiki pipeline stats |
 | MPF prompt compliance | 0% (f-string) | 100% агентов | Код-ревью: 0 f-string промптов |
+| **L2→L3 promotion rate** (v1.2) | 0 | ≥3 promotions/week | `memory/log.md` + `unified_search(type="wiki")` count |
+| **Deduplication via UnifiedID** (v1.2) | 0 | 100% запросов | `superseded_by` links в `unified_search` output |
+| **Memory layer coverage in read path** (v1.2) | 1 слой (skill_library) | Все 5 слоёв через `memory-first-hook v3` | Логи memory-first-hook: `matched_by_layer` |
 
 ---
 
