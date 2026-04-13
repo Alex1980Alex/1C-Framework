@@ -413,11 +413,16 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Задачи
 
+- [ ] **Решение по структуре vault (v1.3):** `memory/` в проекте **НЕ существует** (MEMORY.md живёт в `C:\Users\AlexT\.claude\projects\D--1--Framework\memory\`, user-level). Варианты:
+  - **Вариант A (выбран):** vault root = project root, includes `docs/`, `.claude/skills/*/cache/`, игнор `src/`, `tests/`. User-level `MEMORY.md` остаётся отдельно, НЕ в vault
+  - **Вариант B:** создать git-controlled `docs/wiki/memory/` как зеркало user-level памяти, с hook для sync (сложнее)
+  - **Вариант C:** symlink `docs/wiki/user-memory` → user-level папка (Windows junction), не в git — отклонён (не переносимо между машинами)
 - [ ] Установить Obsidian desktop + плагин **Local REST API** (требование `mcp-obsidian`)
 - [ ] `pip install mcp-obsidian` (или git clone для editable mode)
-- [ ] Добавить `obsidian-mcp` сервер в `.mcp.json` с env переменными: `OBSIDIAN_API_KEY`, `OBSIDIAN_HOST`, `OBSIDIAN_PORT`
-- [ ] Создать `.obsidian/` директорию в корне vault с `app.json`, `workspace.json`, `community-plugins.json`
-- [ ] Настроить `workspace.json` для монтирования `docs/`, `memory/`, `.claude/skills/*/cache/` как единое пространство
+- [ ] Добавить `obsidian-mcp` сервер в `.mcp.json` с env переменными: `OBSIDIAN_API_KEY`, `OBSIDIAN_HOST`, `OBSIDIAN_PORT`, `OBSIDIAN_VAULT_PATH=D:/1С-Framework`
+- [ ] Создать `.obsidian/` директорию в корне проекта с `app.json`, `workspace.json`, `community-plugins.json`
+- [ ] Настроить `workspace.json` для монтирования `docs/`, `.claude/skills/*/cache/` как единое пространство (НЕ `memory/` — не существует в проекте)
+- [ ] Создать `docs/wiki/` как целевой каталог для structured wiki-страниц (новый, git-controlled)
 - [ ] Проверить 7 стандартных tools из `mcp-obsidian`: `list_files_in_vault`, `get_file_contents`, `search`, `patch_content`, `append_content`, `delete_file`, `batch_get_file_contents`
 - [ ] Дополнить 2 custom tools для frontmatter/tags (если недостаточно patch_content) — **или** переключиться на [cyanheads/obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server) как альтернативу с нативной поддержкой
 - [ ] Создать `docs/wiki/_index.md` с картой wiki-страниц и cross-reference таблицей
