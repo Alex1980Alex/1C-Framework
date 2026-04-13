@@ -47,6 +47,14 @@
 | **DSPy интеграция** | `.claude/skills/prompt-engineering/SKILL.md`, но **НЕ используется** в `src/pdf_framework/agents/` | Частично | v1.2 предлагала MPF helper — v1.3 отменяет, углубляет DSPy |
 | **OpenSpec SDD** | `openspec/` директория, skills `openspec-*`, hook `sdd-approval-gate` | **DONE** все 5 фаз | v1.2 не упоминала — v1.3 интегрирует wiki promotion с OpenSpec ADR |
 | **Skill caches** | `.claude/skills/*/cache/_index.json` (минимум 11 активных каталогов) | **Уже работает как прото-wiki** | v1.2 "wiki это новое" → v1.3 признаёт что L3 уже частично существует в cache |
+| **OAuth 2.1 + PKCE Phase 12.3** | `src/bsl/mcp_server/auth/oauth2.py` (350 LoC), `src/api/auth/jwt_handler.py` (159 LoC), `tests/unit/api/test_auth.py` (288 LoC) | **DONE** | Фаза 6 "defer" → "generalization" (v1.3.1) |
+| **Event Bus + Event Store + Subscription Manager** (v1.3.3) | `src/memory/infrastructure/event_bus.py` (10KB), `event_store.py` (12KB, hot buffer + cold SQLite + JSONL), `subscription_manager.py` (10KB) | **DONE**, production-grade event sourcing | v1.2 упоминала "memory_publish" как концепт — v1.3.3 подтверждает что это **32KB реальной инфраструктуры** с persistence, replay, query |
+| **ConflictResolver** (v1.3.3) | `src/memory/infrastructure/conflict_resolver.py` (10KB, 260+ LoC) | **DONE** | Фаза 3 "детектировать конфликты в wiki" — ConflictResolver **уже умеет**: `_resolve_last_write_wins`, `_resolve_source_priority`, `_resolve_merge_fields`, `_resolve_manual`. Auto-librarian **использует**, не пишет свой |
+| **PropagationEngine** (v1.3.3) | `src/memory/orchestrator/propagation_engine.py` (557 LoC) | **DONE** | v1.2 предлагала "добавить confidence decay" — propagation уже работает с async workers, queues, `_calculate_delta` |
+| **MemoryCube** (v1.3.3) | `src/memory/orchestrator/memcube.py` (229 LoC) | **DONE** | v1.3 предлагала создать "unified format" — `MemoryCube` **уже есть** с `to_ai_memory_row()`, `to_vector_memory_payload()`, `to_skill_learning_record()`. **Нужно добавить `to_wiki_page()`** |
+| **Orchestrator HybridSearchService** (v1.3.3) | `src/memory/orchestrator/search/hybrid_search.py` (12KB) + `bsl_scorer.py` (11KB) | **DONE** | Отдельный hybrid search внутри orchestrator: `BM25Index` + `HybridSearchService` с RRF fusion, BSL-aware tokenization. Может использоваться для wiki_pages_v1 |
+| **Orchestrator P3 Tools** (v1.3.3) | `orchestrator/tools/` — `id_management.py`, `research.py`, `surprise.py` (novelty scoring), `warmup.py` (cache preloading) | **DONE** | v1.2 упоминала P3 concept — реально все 4 инструмента существуют |
+| **Resilience infrastructure** (v1.3.3) | `infrastructure/circuit_breaker.py` (9KB), `retry.py` (6KB), `timeout.py`, `metrics.py`, `cache.py` | **DONE** | Полная production-grade инфраструктура, не нужно дублировать в новых компонентах |
 
 ### Неочевидные факты инфраструктуры
 
