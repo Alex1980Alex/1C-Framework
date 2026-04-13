@@ -445,23 +445,36 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
-### Фаза 2: Foundation — MPF + anti_triggers + log/schema
+### Фаза 2: DSPy Deepening + Wiki Schema (переработано v1.3)
 
-**Цель:** Формализовать паттерны столпов 1-2: MPF helper для структурированных промптов, anti_triggers для негативных границ скиллов, log.md и SCHEMA.md для хронологии и правил ведения знаний.
+**Цель:** Формализовать промпты агентов через **существующий** DSPy (skill `prompt-engineering`) вместо создания MPF helper. Создать схему wiki и хронологию в `docs/wiki/` (не в user-level `memory/`).
+
+**Изменения v1.3 vs v1.2:**
+- ❌ **ОТМЕНЕНО:** `src/shared/mpf_prompt.py` helper — DSPy уже решает эту задачу, parallel систему создавать не надо
+- ❌ **ОТМЕНЕНО:** `anti_triggers` в `skill-router-config.json` — skill-router использует 4-слойную архитектуру (phrase/fuzzy/TF-IDF/semantic), anti_triggers — band-aid, лучше добавить contradicts detection через LinkRegistry
+- ✅ **НОВОЕ:** углубление DSPy — все LangGraph агенты на `Signature`
+- ✅ **НОВОЕ:** `docs/wiki/SCHEMA.md` и `docs/wiki/log.md` (вместо `memory/*`)
 
 **Приоритет:** P1
-**Трудозатраты:** M
-**Зависимости:** Нет
-**OSS база:** [btfranklin/promptdown](https://github.com/btfranklin/promptdown) (Python, MIT) для базового MD→chat_messages + существующий скилл `prompt-engineering` (DSPy, 33.7k stars) для типизированных контрактов
+**Трудозатраты:** S (большинство задач v1.2 отменены)
+**Зависимости:** Фаза 0
+**OSS база:** [stanfordnlp/dspy](https://github.com/stanfordnlp/dspy) (33.7k stars, MIT) — **уже в проекте как skill**
 
 #### Задачи
 
-- [ ] `pip install promptdown` — проверить покрытие use-cases (секции ask/context/constraints/example)
-- [ ] Создать `src/shared/mpf_prompt.py` — тонкий wrapper над `promptdown.StructuredPrompt` с нашими секциями; валидация обязательных полей
-- [ ] Для структурированного извлечения (grader score, hallucination verdict) — использовать DSPy Signatures через `prompt-engineering` скилл, не self-rolled MPF
-- [ ] Мигрировать промпты `src/pdf_framework/agents/grader.py` на MPF helper (простые) или DSPy (если нужен structured output)
-- [ ] Мигрировать промпты `src/pdf_framework/agents/rewriter.py` на MPF helper
-- [ ] Мигрировать промпты `src/pdf_framework/agents/hallucination_check.py` на DSPy Signature (формат `grounded/not_grounded` → типизированный)
+- [ ] **Аудит:** проверить, используется ли `import dspy` в `src/pdf_framework/agents/` — ожидается 0 мест (f-string промпты)
+- [ ] Создать `src/pdf_framework/prompts/signatures.py` с DSPy Signatures:
+  - `GraderSignature` — `query, document → relevance_score: Literal["relevant","partial","irrelevant"]`
+  - `HallucinationCheckSignature` — `answer, context → grounded: bool, reasoning: str`
+  - `RewriterSignature` — `query, history → rewritten_query: str`
+- [ ] Мигрировать `src/pdf_framework/agents/grader.py` на `dspy.Predict(GraderSignature)` — сохранить Ralph Wiggum self-correction в виде DSPy `Suggest` hooks
+- [ ] Мигрировать `src/pdf_framework/agents/rewriter.py` на `dspy.ChainOfThought(RewriterSignature)`
+- [ ] Мигрировать `src/pdf_framework/agents/hallucination_check.py` на `dspy.Predict(HallucinationCheckSignature)` — типизированный `grounded: bool` вместо парсинга `"grounded/not_grounded"` строки
+- [ ] **НЕ ТРОГАТЬ** промпты в `context_generator.py`, `entity_extractor.py`, `query_expansion.py`, `hyde.py` — они работают, не ломать
+- [ ] Создать `docs/wiki/SCHEMA.md` — правила именования wiki-страниц, структура frontmatter, cross-references rules, 5-слойная модель (скопировать из секции "Интеграция с существующей памятью")
+- [ ] Создать `docs/wiki/log.md` — хронология промоций L2→L3, начальная запись с текущим статусом фреймворка
+- [ ] Расширить `.claude/hooks/session-memory-save.py` — при Stop hook дополнительно аппендить краткую summary в `docs/wiki/log.md` (markdown-аналог существующей записи в `memory_ai.db`, параллельно)
+- [ ] Eval-сравнение: измерить качество 3 мигрированных агентов (grader/rewriter/hallucination) **до и после** DSPy. Метрика: accuracy на существующем eval набор. Если регрессия >5% — rollback
 - [ ] Добавить `anti_triggers` в JSON schema `.claude/skills/skill-router-config.json`
 - [ ] Обновить `src/skill_router.py` слой A (phrase matching) для проверки anti_triggers
 - [ ] Добавить anti_triggers в 5-10 наиболее конфликтующих скиллов (по данным роутинга)
