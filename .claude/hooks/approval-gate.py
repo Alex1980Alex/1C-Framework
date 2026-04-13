@@ -120,14 +120,16 @@ class ApprovalGate(BaseHook):
         unapproved = []
         for name, yaml_path in changes:
             status = _read_approval_status(yaml_path)
+            profile = _read_profile(yaml_path)
             if status != "approved":
-                unapproved.append((name, status or "pending"))
+                unapproved.append((name, status or "pending", profile))
 
         if not unapproved:
             return None  # All approved
 
         change_list = "\n".join(
-            f"  - {name} (status: {status})" for name, status in unapproved
+            f"  - {name} [profile: {profile}] (status: {status})"
+            for name, status, profile in unapproved
         )
         first_name = unapproved[0][0]
         return HookOutput().block(
@@ -135,7 +137,8 @@ class ApprovalGate(BaseHook):
             f"Unapproved changes:\n{change_list}\n\n"
             f"To approve: /opsx:approve {first_name}\n"
             f"To reject:  /opsx:approve {first_name} --reject --comment \"reason\"\n\n"
-            f"Review design.md and specs/ before approving."
+            f"Review design.md and specs/ before approving.\n"
+            f"Profile rules: openspec/profiles/<profile>.yaml"
         )
 
 
