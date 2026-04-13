@@ -1,0 +1,114 @@
+# OpenSpec Profile: python-framework
+# Применяется к крупным архитектурным изменениям Python-частей PDF Framework
+# (LangChain/LangGraph agents, Qdrant, embeddings, memory subsystems, FastAPI, MCP)
+
+profile_name: "python-framework"
+description: "SDD workflow для значимых изменений Python-частей фреймворка"
+version: "1.0"
+created: "2026-04-14"
+
+# Когда применять этот profile
+applicability:
+  criteria:
+    - "Затрагивает ≥4 файла в разных модулях src/"
+    - "Вводит новый Python package / subsystem"
+    - "Breaking API change (публичные функции, pydantic schemas)"
+    - "Требует миграции данных (БД, Qdrant collections, configs)"
+    - "Multi-phase roadmap (как Hermes/LLM Wiki)"
+    - "Cost > 1 неделя разработки"
+  not_applicable:
+    - "Bugfix одного файла"
+    - "Добавление env переменной"
+    - "Type hint fixes, docstring updates"
+    - "Рефакторинг без изменения контракта"
+
+# Tech stack для профиля
+tech_stack:
+  language: "Python 3.11+"
+  frameworks:
+    - "LangChain / LangGraph"
+    - "FastAPI / uvicorn"
+    - "Pydantic v2 / pydantic-settings"
+    - "pytest / pytest-asyncio"
+  storage:
+    - "Qdrant (vector)"
+    - "SQLite (memory_ai.db, LinkRegistry)"
+    - "Neo4j / NetworkX (graph_store)"
+  mcp_servers:
+    - "pdf-vector-graph (search, index)"
+    - "serena (code search, refactoring)"
+    - "bsl-semantic-search (code patterns, шире чем BSL)"
+    - "memory-orchestrator (memory operations)"
+    - "openspec-mcp (spec workflow)"
+
+# Правила для этого профиля
+rules:
+  proposal:
+    - "Описывать бизнес-проблему или архитектурную цель, не техническую реализацию"
+    - "Явно указывать затронутые модули src/ (пути)"
+    - "Scope: что меняется, что НЕ меняется"
+    - "Breaking changes: явный раздел с перечнем"
+    - "Ссылки на связанные roadmap-файлы в docs/roadmap/ если есть"
+
+  specs:
+    # Delta-spec формат (brownfield-first, адаптация под Python)
+    - "КАЖДЫЙ requirement начинается с маркера: ## ADDED или ## MODIFIED"
+    - "ADDED — новый класс / модуль / пакет / публичная функция / endpoint / tool"
+    - "MODIFIED — изменение существующего публичного контракта или семантики"
+    - "Для MODIFIED указывать: что именно меняется, было/стало, какой модуль затронут"
+    # Содержание specs
+    - "Pydantic схемы с полями и типами для data contracts"
+    - "OpenAPI paths для новых REST endpoints (если применимо)"
+    - "Type hints для публичных функций (сигнатуры полностью)"
+    - "Проверка существующих символов через serena MCP (find_symbol)"
+    - "Given/When/Then для сценариев использования"
+    - "Граничные условия: None, пустые коллекции, ошибки"
+
+  design:
+    - "Перечислить затронутые модули с подмодулями"
+    - "Для каждого модуля: новые/изменённые классы и публичные методы"
+    - "Искать аналогичные паттерны через bsl-semantic-search / serena"
+    - "Использовать существующие абстракции: SearchManager, BaseSearchAdapter, GraphStore, BaseHook"
+    - "НЕ дублировать функционал из src/memory/infrastructure/ (event_bus, circuit_breaker, retry, conflict_resolver)"
+    - "НЕ дублировать MemoryCube — расширять существующий"
+    - "Для миграций БД: прикладывать migration script с dry-run и rollback"
+    - "Для Qdrant изменений: указывать collection name и schema diff"
+
+  tests:
+    - "Unit tests для новых публичных классов (pytest)"
+    - "Integration tests для subsystem-level изменений"
+    - "Не ломать существующие тесты — запускать регрессию перед submit"
+    - "Для breaking API changes — migration tests (старый → новый формат)"
+    - "Coverage: новый код ≥80%, critical paths ≥95%"
+
+  tasks:
+    - "Чекбокс-формат [ ] / [x]"
+    - "Ссылки на specs (REQ-N) для каждой задачи где применимо"
+    - "Указывать файлы которые будут изменены"
+    - "Порядок исполнения с учётом зависимостей"
+    - "Оценка трудоёмкости для каждой секции (часы/дни)"
+    - "Verification секция с командами для проверки (pytest, mypy, linter)"
+
+# Skills, которые блокируются approval-gate если change не approved
+# (same as default, см. approval-gate.py _IMPLEMENTATION_SKILLS)
+gated_skills:
+  - "opsx:apply"
+  - "opsx-apply"
+  - "openspec-apply-change"
+  # Note: implement-1c-task НЕ блокируется этим profile — он для 1C BSL
+
+# Интеграция с существующими компонентами фреймворка
+references:
+  memory_subsystems:
+    - "src/memory/orchestrator/ (UnifiedID, LinkRegistry, MemoryRouter)"
+    - "src/memory/infrastructure/ (EventBus, ConflictResolver, CircuitBreaker)"
+    - "src/memory/ai_memory/, vector_memory/, skill_learning/"
+  pdf_framework_core:
+    - "src/pdf_framework/agents/ (LangGraph agents)"
+    - "src/pdf_framework/graph_store/ (LightRAG Phase 38)"
+    - "src/pdf_framework/search/ (strategies, hybrid, RRF)"
+    - "src/pdf_framework/vector_store/ (Qdrant providers)"
+  claude_code_integration:
+    - ".claude/hooks/ (task protocol, approval-gate, docs-change-tracker)"
+    - ".claude/skills/ (75 skills with YAML frontmatter)"
+    - ".mcp.json (17 MCP servers)"
