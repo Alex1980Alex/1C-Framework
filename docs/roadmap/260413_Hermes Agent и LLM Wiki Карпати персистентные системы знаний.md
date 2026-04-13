@@ -75,6 +75,58 @@
 
 4. **Номенклатура слоёв расходится.** В коде: Layer 1/2/3 (существующий memory-first-hook). В roadmap v1.2: L0/L1/L2/L3/L4. v1.3 сохраняет **5-слойную модель как концептуальную**, но в код маппится через расширение существующих Layer1-3 в Layer0-4.
 
+### OpenSpec ↔ Wiki integration (v1.3.3 — исправление v1.2 ошибки)
+
+**Реальность OpenSpec** (подтверждено 5-м проходом аудита):
+- OpenSpec — это **1C BSL-специфичный** SDD DSL, не общий spec-workflow
+- `config.yaml` явно декларирует `platform: 1С:Предприятие 8.3.27`, `code_language: BSL`
+- Delta-specs с маркерами `## ADDED`/`## MODIFIED` для brownfield 1C changes
+- Approval требует `GKSTCPLK-XXXX` task number
+- Проверка метаданных через `get_metadata` (1c-mcp-toolkit)
+- 2 active approved changes, 0 archived (архивация event-driven, после завершения всех tasks)
+
+**Неверное предположение v1.2:**
+> "When pattern promoted to wiki → create ADR spec в openspec/"
+
+**Почему неверно:** OpenSpec требует BSL-контекст, номер задачи, 1c-mcp-toolkit проверки. Для wiki-промоций (RAG паттерны, embeddings, Python code) это абсурдное требование.
+
+**Правильная интеграция (v1.3.3):**
+
+**Одностороннее отношение OpenSpec → wiki**, НЕ двустороннее:
+
+```
+OpenSpec change lifecycle      →    Wiki reflection
+─────────────────────────            ────────────────
+proposal created                →    (ничего)
+approved                        →    docs/wiki/changes/<id>.md (stub: title + link)
+tasks implemented (все [x])     →    update с summary of what was built
+archived via openspec-archive   →    docs/wiki/archive/<id>.md (immutable mirror)
+```
+
+**Механизм:**
+- **Расширение `docs-change-tracker.py`** (из Фазы 3): добавить watcher на `openspec/changes/*/tasks.md`
+- При изменении `tasks.md` → парсить completion rate (`[x]` vs `[ ]`)
+- Если `100%` → создать/обновить `docs/wiki/changes/<id>.md` с:
+  - Frontmatter: `openspec_change`, `approval_status`, `completed_at`, `change_type: 1c-bsl`
+  - Body: короткая выжимка из `proposal.md` + линки на `design.md`, `specs/`, список tasks
+- Когда `openspec-archive-change` срабатывает → создать `docs/wiki/archive/<id>.md` как immutable snapshot
+
+**Что НЕ делаем:**
+- НЕ промоцируем wiki-страницы в openspec-specs автоматически
+- НЕ создаём OpenSpec changes из L2 patterns
+- НЕ требуем openspec approval для wiki-промоций (wiki имеет свой review механизм через PR в git)
+- НЕ смешиваем два формата: OpenSpec для 1C BSL, wiki для всего остального знания
+
+**Зависимость фаз:** Эта интеграция — **опциональное расширение Фазы 3 auto-librarian**, не отдельная фаза. Если не делать — OpenSpec и wiki остаются независимыми. Если делать — получаем navigation: из wiki видно какие OpenSpec changes реализованы, из OpenSpec changes — ссылки на wiki-summary.
+
+**Ошибка логической модели в v1.2:** я считал, что wiki и OpenSpec имеют один и тот же смысл (структурированные знания). Реально:
+- **OpenSpec** = "спецификация того, что мы хотим построить в 1С" (forward-looking, prescriptive)
+- **Wiki** = "знание о том, что есть и как работает" (descriptive, retrospective)
+
+Это два разных contents — не надо объединять.
+
+---
+
 ### Что было MAJOR_REWRITE в v1.2
 
 | Фаза v1.2 | Вердикт аудита | Действие в v1.3 |
