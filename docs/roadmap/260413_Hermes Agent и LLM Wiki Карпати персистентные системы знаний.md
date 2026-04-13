@@ -309,18 +309,20 @@ Progressive disclosure (3 уровня детализации), negative boundar
 **Цель:** Интегрировать E2B SDK для безопасного исполнения Python-кода агентов (research скрипты, eval, тестовые запросы) без риска для основной среды.
 
 **Приоритет:** P3
-**Трудозатраты:** M
+**Трудозатраты:** M → **S** (официальный SDK)
 **Зависимости:** Фаза 2 (MPF для промптов sandbox-агентов)
+**OSS база:** [e2b-dev/code-interpreter](https://github.com/e2b-dev/code-interpreter) — 2.3k stars, Apache-2.0, Python/TS SDK. Firecracker microVMs, ~150ms startup, 24h sessions. **Отвергнуто:** Daytona (AGPL-3.0 → enterprise-блокер)
 
 #### Задачи
 
-- [ ] Создать `src/pdf_framework/sandbox/e2b_backend.py` с интерфейсом SandboxBackend
-- [ ] Реализовать методы: execute(code), install(package), upload(files), download(files)
-- [ ] Создать `src/pdf_framework/sandbox/dry_run_backend.py` как fallback без E2B
-- [ ] Интегрировать sandbox в research-скиллы: `architecture-research`, `tech-research`
+- [ ] `pip install e2b-code-interpreter` + получить E2B API key (`E2B_API_KEY` в `.env`)
+- [ ] Создать `src/pdf_framework/sandbox/e2b_backend.py` с интерфейсом `SandboxBackend` — тонкая обёртка над `CodeInterpreter` классом
+- [ ] Реализовать методы: `execute(code)`, `install(package)`, `upload(files)`, `download(files)` через стандартный E2B SDK
+- [ ] Создать `src/pdf_framework/sandbox/dry_run_backend.py` как fallback без E2B API (для локальной разработки и CI)
+- [ ] Интегрировать sandbox в research-скиллы: `architecture-research`, `tech-research` (eval скрипты запускать в sandbox)
 - [ ] Добавить `.claude/skills/sandbox-execution/SKILL.md` с правилами использования
-- [ ] Настроить timeout и resource limits для sandbox-сессий
-- [ ] Реализовать dry-run режим для 1C execute_code как мягкая альтернатива full sandbox
+- [ ] Настроить timeout 30s и resource limits для sandbox-сессий (лимит: 50 сессий/день)
+- [ ] Реализовать dry-run режим для 1C `execute_code` как мягкая альтернатива full sandbox (1C платформа Windows-only, реальный sandbox невозможен)
 
 #### Критерии готовности
 
