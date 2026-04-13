@@ -137,6 +137,8 @@ SKIP_PATTERNS = [
     "docker/",
     "infra/",
     "pyproject.toml",
+    # OpenSpec SDD artifacts (specs/proposals/designs/tasks — self-documenting via openspec-* skills)
+    "openspec/",
     ".env.example",
     "mcp-server.log",
     # Root-level infra files (Dockerfiles, compose, logs)
