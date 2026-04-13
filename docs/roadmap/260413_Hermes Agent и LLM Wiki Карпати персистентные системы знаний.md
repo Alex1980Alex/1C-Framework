@@ -278,16 +278,17 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ## Фазы реализации
 
-### Сводная таблица фаз (обновлено в v1.1)
+### Сводная таблица фаз (обновлено в v1.2)
 
-| Фаза | Название | Приоритет | Трудозатраты v1.0 → v1.1 | Зависимости | Готовое OSS |
-|------|----------|-----------|--------------------------|-------------|-------------|
-| 1 | Obsidian Vault Integration | P0 | S → S | Нет | mcp-obsidian |
-| 2 | Foundation — MPF + anti_triggers + log/schema | P1 | M → M | Нет | promptdown + DSPy |
-| 3 | Auto-Librarian Hook | P1 | M → **S** | Фаза 1 | kb-lint + markdownlint |
-| 4 | PDF → Structured Wiki Pages | P2 | XL → **L** | Фазы 1, 2 | **LightRAG** |
-| 5 | Sandbox для агентов | P3 | M → **S** | Фаза 2 | e2b-code-interpreter |
-| 6 | Defer — OAuth 2.1 MCP TTL | P3 | L → L | Фаза 5 | — |
+| Фаза | Название | Приоритет | Трудозатраты | Зависимости | Готовое OSS |
+|------|----------|-----------|--------------|-------------|-------------|
+| **0** | **Memory Layer Alignment** (NEW v1.2) | **P0** | **M** | Нет | существующий memory-orchestrator |
+| 1 | Obsidian Vault Integration | P0 | S | Фаза 0 | mcp-obsidian |
+| 2 | Foundation — MPF + anti_triggers + log/schema | P1 | M | Фаза 0 | promptdown + DSPy |
+| 3 | Auto-Librarian Hook (+ L2→L3 промоция) | P1 | S | Фазы 0, 1 | kb-lint + markdownlint |
+| 4 | PDF → Structured Wiki Pages | P2 | L | Фазы 0, 1, 2 | **LightRAG** |
+| 5 | Sandbox для агентов | P3 | S | Фаза 2 | e2b-code-interpreter |
+| 6 | Defer — OAuth 2.1 MCP TTL | P3 | L | Фаза 5 | — |
 
 ---
 
