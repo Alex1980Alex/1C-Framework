@@ -329,14 +329,14 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | Фаза | Название | Приоритет | Трудозатраты v1.2→v1.3 | Зависимости | База (код или OSS) |
 |------|----------|-----------|------------------------|-------------|--------------------|
 | 0 | Memory Layer Alignment + **DB migration** | P0 | M → M | Нет | existing `memory_orchestrator` (расширение) |
-| 1 | Obsidian Vault Integration | P0 | S → S | Фаза 0 | mcp-obsidian (OSS) |
+| 1 | Obsidian Vault Integration + **миграция `docs/architecture/`** | P0 | S → M | Фаза 0 | mcp-obsidian + existing PATTERNS.md |
 | 2 | **DSPy Deepening** + Wiki Schema | P1 | M → **S** | Фаза 0 | existing `prompt-engineering` skill (DSPy) |
 | 3 | Auto-Librarian **через расширение docs-change-tracker** | P1 | M → **S** | Фазы 0, 1 | existing docs-change-tracker/enforcer + kb-lint |
 | 4 | **Markdown Export из существующего Phase 38** (не внедрение LightRAG) | P2 | XL → **M** | Фазы 0, 1, 2 | existing `graph_store/entity_embeddings.py` + `incremental.py` |
-| 5 | Sandbox для агентов | P3 | M → S | Фаза 2 | e2b-code-interpreter (OSS) |
-| 6 | Defer — OAuth 2.1 MCP TTL | P3 | L → L | Фаза 5 | — |
+| 5 | Sandbox для агентов (+LangSmith fallback) | P3 | M → S | Фаза 2 | LangSmith sandbox (уже в .venv) + e2b-code-interpreter |
+| 6 | **OAuth 2.1 Generalization** (не defer!) | **P2** ↑ | L → **M** | Фаза 0 | existing `src/bsl/mcp_server/auth/oauth2.py` (Phase 12.3, 350 LoC) |
 
-**Итого экономия v1.2 → v1.3:** ещё ~3-4 недели за счёт отмены MPF helper, признания существующих Phase 38/6.5/P5.1-2, расширения вместо дублирования docs-change hooks.
+**Итого экономия v1.2 → v1.3:** ещё ~3-4 недели за счёт отмены MPF helper, признания существующих Phase 38/6.5/P5.1-2/Phase 12.3, расширения вместо дублирования. **Фаза 6 из "defer" в P2 активную** благодаря существующей инфраструктуре.
 
 ---
 
