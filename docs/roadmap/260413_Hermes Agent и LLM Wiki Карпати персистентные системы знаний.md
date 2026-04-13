@@ -371,13 +371,16 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - Читает pattern из Qdrant `learned_patterns`
   - Вызывает `route_to_wiki_draft` с содержимым
   - Создаёт link `promoted_to: wiki:<draft-slug>` через `create_link`
-- [ ] Обновить `.claude/hooks/memory-first-hook.py` (v2 → v3):
-  - Layer 0 (новый): obsidian-mcp search по vault
-  - Layer 1 (существующий): semantic search skill_library/experience_embeddings/conversation_memory
-  - Fallback: learned_patterns
-- [ ] Обновить скилл `.claude/skills/memory-unified/SKILL.md`: 5-слойная модель вместо 4-подсистемной
-- [ ] Создать `memory/log.md` с шаблоном записей о промоциях L1→L2→L3
-- [ ] Интеграционный тест `tests/integration/test_memory_layers_v2.py`: полный цикл L0→L1→L2→L3→L4 на синтетических данных
+- [ ] Расширить `.claude/hooks/memory-first-hook.py` v2 (**уже имеет 3 слоя**: SQLite/Qdrant/MD — добавляем 4-й):
+  - Существует Layer 1: SQLite episodic (memory-ai)
+  - Существует Layer 2: Qdrant semantic (skill_library, experience_embeddings, conversation_memory)
+  - Существует Layer 3: MD файлы (текущий поиск по docs/)
+  - **НОВОЕ Layer 0 (приоритетный):** obsidian-mcp search по vault — выполняется **перед** существующими слоями
+  - Дедуп через `superseded_by` links из LinkRegistry
+- [ ] Обновить скилл `.claude/skills/memory-unified/SKILL.md`: задокументировать L0-L4 модель как **концептуальную надстройку** над реальными Layer 1-3 hook'а
+- [ ] Создать `docs/wiki/log.md` (НЕ `memory/log.md` — см. выше) с шаблоном записей о промоциях L2→L3
+- [ ] Интеграционный тест `tests/integration/test_memory_layers_v13.py`: полный цикл (session → episodic → pattern → wiki → index) на синтетических данных
+- [ ] **НЕ ЛОМАТЬ** 26 существующих тестов `test_memory_unified.py` — все должны проходить без изменений
 
 #### Критерии готовности
 
