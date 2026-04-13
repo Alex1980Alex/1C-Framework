@@ -32,6 +32,7 @@
 			<Form>НастройкиПечатиАктОтбораПроб</Form>
 			<Form>НастройкиПечатиАктОтбораПроб_ru</Form>
 			<Template>ПФ_MXL_АктЗабраковкиПартии_ru</Template>
+			<Template>ПФ_MXL_АктЗабраковкиТовара_ru</Template>
 			<Template>ПФ_MXL_АктОтбораПроб_ru</Template>
 			<Template>ПФ_MXL_ЗПП47_ru</Template>
 			<Template>ПФ_MXL_ЗПП42_ru</Template>
