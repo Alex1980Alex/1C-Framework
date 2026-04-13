@@ -872,6 +872,12 @@
 												<CommandName>Form.Command.КомандаПечатьАктЗабраковкиПартии</CommandName>
 												<ExtendedTooltip name="СписокРегистрацииКомандаПечатьАктЗабраковкиПартииРасширеннаяПодсказка" id="629"/>
 											</Button>
+											<!-- GKSTCPLK-2377 -->
+											<Button name="СписокРегистрацииКомандаПечатьАктЗабраковкиТовара" id="916">
+												<Type>CommandBarButton</Type>
+												<CommandName>Form.Command.КомандаПечатьАктЗабраковкиТовара</CommandName>
+												<ExtendedTooltip name="СписокРегистрацииКомандаПечатьАктЗабраковкиТовараРасширеннаяПодсказка" id="918"/>
+											</Button>
 											<Button name="СписокРегистрацииКомандаПечатьАктРасхожденияВВесе" id="680">
 												<Type>CommandBarButton</Type>
 												<CommandName>Form.Command.КомандаПечатьАктРасхожденияВВесе</CommandName>
@@ -5484,6 +5490,22 @@
 				</v8:item>
 			</ToolTip>
 			<Action>КомандаПечатьАктЗабраковкиПартии</Action>
+		</Command>
+		<!-- GKSTCPLK-2377 -->
+		<Command name="КомандаПечатьАктЗабраковкиТовара" id="917">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Акт забраковки товара</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Команда печать акт забраковки товара</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>КомандаПечатьАктЗабраковкиТовара</Action>
 		</Command>
 		<Command name="КомандаОткрытьФормуПринятыеТС" id="39">
 			<Title>
