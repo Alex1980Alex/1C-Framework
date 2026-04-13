@@ -379,12 +379,15 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - Читает pattern из Qdrant `learned_patterns`
   - Вызывает `route_to_wiki_draft` с содержимым
   - Создаёт link `promoted_to: wiki:<draft-slug>` через `create_link`
-- [ ] Расширить `.claude/hooks/memory-first-hook.py` v2 (**уже имеет 3 слоя**: SQLite/Qdrant/MD — добавляем 4-й):
-  - Существует Layer 1: SQLite episodic (memory-ai)
-  - Существует Layer 2: Qdrant semantic (skill_library, experience_embeddings, conversation_memory)
-  - Существует Layer 3: MD файлы (текущий поиск по docs/)
-  - **НОВОЕ Layer 0 (приоритетный):** obsidian-mcp search по vault — выполняется **перед** существующими слоями
-  - Дедуп через `superseded_by` links из LinkRegistry
+- [ ] Расширить `.claude/hooks/memory-first-hook.py` v2 (**уже имеет 3 слоя** с RRF merge, 504 LoC):
+  - Layer 1 (вес **0.35**, 200ms): SQLite `important_messages`
+  - Layer 2 (вес **0.40**, 800ms): Qdrant semantic search по 3 коллекциям (skill_library, experience_embeddings, conversation_memory)
+  - Layer 3 (вес **0.25**, 500ms): MD файлы из `MEMORY_DIR = Path.home() / ".claude/projects/D--1--Framework/memory"` — **это user-level Claude Code auto-memory, НЕ `docs/`!** Token overlap scoring
+  - **КРИТИЧНО v1.3.2:** Layer 3 **НЕ читает `docs/`, `docs/architecture/`, `docs/wiki/`** — это было моё ошибочное предположение в v1.3. Hook видит только user-level `memory/MEMORY.md` и соседние файлы
+  - **НОВЫЙ Layer 4 (приоритетный, semantic):** расширить `MEMORY_DIR` или добавить отдельный `WIKI_DIR = PROJECT_ROOT / "docs" / "wiki"` + вызов `search_wiki()` параллельно со `search_md()` в `execute()` [line 483]
+  - Вес нового слоя: **0.30** (выше Layer 3 token-overlap, так как semantic поиск по curated содержимому), перераспределить RRF веса: L1=0.30, L2=0.35, L3=0.15, L4=0.20
+  - Использовать obsidian-mcp или прямое чтение `docs/wiki/**/*.md` с эмбеддингом через existing Qdrant `wiki_pages_v1` collection
+  - Дедуп через `superseded_by` links из LinkRegistry (после Phase 0 migration)
 - [ ] Обновить скилл `.claude/skills/memory-unified/SKILL.md`: задокументировать L0-L4 модель как **концептуальную надстройку** над реальными Layer 1-3 hook'а
 - [ ] Создать `docs/wiki/log.md` (НЕ `memory/log.md` — см. выше) с шаблоном записей о промоциях L2→L3
 - [ ] Интеграционный тест `tests/integration/test_memory_layers_v13.py`: полный цикл (session → episodic → pattern → wiki → index) на синтетических данных
