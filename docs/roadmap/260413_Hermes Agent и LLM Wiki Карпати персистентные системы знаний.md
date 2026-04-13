@@ -82,6 +82,37 @@ Progressive disclosure (3 уровня детализации), negative boundar
 
 7. **Fail-safe defaults.** При ошибке в новых компонентах (librarian, wiki pipeline) система деградирует к текущему поведению, не ломается.
 
+8. **OSS-first (v1.1).** Перед собственной реализацией — искать production-ready OSS под MIT/Apache-2.0. Своя разработка только как integration glue. AGPL-лицензии исключены (conflict с enterprise-сценариями).
+
+---
+
+## Матрица переиспользования OSS (v1.1)
+
+Результат GitHub-исследования (см. `architecture-research/cache/hermes-llm-wiki-github-landscape.md`). 5 из 6 фаз полностью или частично заменяются готовыми проектами — экономия ~8-12 недель разработки → 2-3 недели glue-интеграции.
+
+| Фаза | Готовое OSS | Stars | Лицензия | Стратегия |
+|------|-------------|-------|----------|-----------|
+| 1. Obsidian Vault | [MarkusPfundstein/mcp-obsidian](https://github.com/MarkusPfundstein/mcp-obsidian) | 3.3k | MIT | Drop-in MCP сервер, 7 tools, Python |
+| 2. MPF helper | [btfranklin/promptdown](https://github.com/btfranklin/promptdown) + существующий `prompt-engineering` скилл (DSPy) | ~100 / 33.7k | MIT | Базовый MD → structured prompt; серьёзные контракты через DSPy |
+| 3. Auto-librarian | [kb-lint](https://pypi.org/project/kb-lint/) + [DavidAnson/markdownlint](https://github.com/DavidAnson/markdownlint) + паттерны [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) / [ussumant/llm-wiki-compiler](https://github.com/ussumant/llm-wiki-compiler) | ~100 / 18k / 1.8k | MIT | Готовые CLI в pre-commit + заимствовать `/wiki-lint` паттерн |
+| 4. PDF → Wiki | [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) | **33.1k** | MIT | **Drop-in engine**: hybrid retrieval, **incremental updates**, Neo4j/PG/Mongo/Ollama backends |
+| 5. Sandbox | [e2b-dev/code-interpreter](https://github.com/e2b-dev/code-interpreter) | 2.3k | Apache-2.0 | Firecracker microVMs, ~150ms startup, 24h sessions, Python SDK |
+| 6. OAuth 2.1 MCP | — | — | — | Стандартные библиотеки (authlib, pyjwt), без готового OSS |
+
+**Дополнительные референсные проекты (для паттернов, не drop-in):**
+
+- [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) — 1.8k stars, слэш-команды `/wiki-ingest`, `/wiki-query`, `/wiki-lint`, `/wiki-graph`, NetworkX + Louvain + vis.js
+- [Astro-Han/karpathy-llm-wiki](https://github.com/Astro-Han/karpathy-llm-wiki) — готовые Claude Code Agent Skills в YAML, можно заимствовать в `.claude/skills/`
+- [Ar9av/obsidian-wiki](https://github.com/Ar9av/obsidian-wiki) — archive/rebuild snapshots vault, паттерн для версионирования знаний
+- [cyanheads/obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server) — 445 stars, TS, альтернатива #1 с отдельными tools для frontmatter/tags
+- [gusye1234/nano-graphrag](https://github.com/gusye1234/nano-graphrag) — 3.8k stars, ~1100 LOC, fallback для inline-встраивания если LightRAG окажется тяжёлым
+- [Karpathy LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — первоисточник концепции: `raw/` (immutable) + `wiki/` (LLM-maintained) + `CLAUDE.md` schema
+
+**Отвергнуто:**
+- `daytonaio/daytona` (72.3k stars) — AGPL-3.0, конфликт с enterprise-лицензированием. Выбран E2B (Apache-2.0)
+- Собственный MPF DSL — достаточно `promptdown` + DSPy
+- `platers/obsidian-linter` — только Obsidian плагин, без CLI
+
 ---
 
 ## Фазы реализации
