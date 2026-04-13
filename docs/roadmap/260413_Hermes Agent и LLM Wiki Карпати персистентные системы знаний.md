@@ -392,6 +392,11 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - **Миграция SQLite:** создать `migrations/001_extend_link_types.sql` с `ALTER TABLE links DROP CONSTRAINT ...; ALTER TABLE links ADD CHECK (link_type IN (<10 types>));` (текущий CHECK constraint в [link_registry.py:219-222](../../src/memory/orchestrator/link_registry.py#L219))
   - Написать `scripts/migrate_link_registry.py` с dry-run режимом и rollback
   - Unit-тесты для 4 новых связей + тест миграции на снапшоте БД
+- [ ] **Расширить MemoryCube (v1.3.3)** — `src/memory/orchestrator/memcube.py` уже имеет унифицированный контейнер с `to_ai_memory_row()`, `to_vector_memory_payload()`, `to_skill_learning_record()`. Добавить:
+  - `to_wiki_page() -> str` — сериализация в markdown с YAML frontmatter
+  - `from_wiki_page(md: str) -> MemoryCube` — обратный парсинг
+  - Добавить `ContentType.WIKI = "wiki"` в enum
+  - Это снимает 80% работы по "созданию единого формата" из v1.2 — MemoryCube уже универсален
 - [ ] **Использовать существующий adapter pattern** в `unified_search.py` (найдено v1.3.2):
   - Класс `BaseSearchAdapter(ABC)` уже определён [line 135], с методами `async def search()` и `source_name`
   - Класс `UnifiedSearchEngine` имеет `register_adapter(adapter)` [line 361] — extension-point готов
