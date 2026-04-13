@@ -84,6 +84,167 @@ Progressive disclosure (3 уровня детализации), negative boundar
 
 8. **OSS-first (v1.1).** Перед собственной реализацией — искать production-ready OSS под MIT/Apache-2.0. Своя разработка только как integration glue. AGPL-лицензии исключены (conflict с enterprise-сценариями).
 
+9. **Единый источник истины = Wiki (v1.2).** Markdown-файлы vault — канонический слой знаний. Все индексы в Qdrant (включая существующие `ai_memory`, `learned_patterns`, `wiki_pages_v1` и др.) — **производные представления**, которые можно полностью пересобрать из Wiki. Миграция из текущих 4 подсистем памяти идёт через явные пути промоции, не через дублирование.
+
+---
+
+## Интеграция с существующей памятью (v1.2)
+
+### Проблема
+
+В фреймворке уже работает **4 подсистемы памяти** (см. скилл `memory-unified`, orchestrator `src/memory/orchestrator/memory_orchestrator.py`, 33 MCP tools):
+
+| # | Подсистема | Бэкенд | Назначение |
+|---|-----------|--------|-----------|
+| 1 | **Memory AI** | SQLite `data/memory_ai.db` | Episodic: важные сообщения, session summaries (`session-memory-save.py`) |
+| 2 | **Vector Memory** | Qdrant `learned_patterns` (1024d) | Semantic patterns с confidence decay, auto-prune <0.3 |
+| 3 | **Skill Learning** | JSONL `data/skill_learning/` | Pattern capture workflow (pending/confirmed/rejected) |
+| 4 | **PDF Docs** | Qdrant (chunks) | RAG индекс документов |
+
+Плюс:
+- `skill_library` (75 скиллов, 768d nomic) — для skill-router
+- `experience_bank`, `conversation_memory`, `experience_embeddings` — memory-first-hook v2
+- `memory-orchestrator` с UnifiedID (`{memory_type}:{source}:{id}`) и LinkRegistry (based_on, supports, contradicts, extends, derives_from, session_context)
+
+**Наивное добавление Wiki создаст 5-ю систему рядом → фрагментация хуже исходной.** Правильный подход — переосмыслить все 4+ подсистемы как **слои одной вертикали** с явными путями промоции.
+
+### 5-слойная модель памяти (целевая архитектура)
+
+```
+                        READ PATH (unified_search + memory-first-hook)
+                                        ▲
+                                        │
+┌───────────────────────────────────────┴────────────────────────────────────┐
+│  L4: Индексы (derived, rebuildable)                                        │
+│  ├─ Qdrant wiki_pages_v1      — эмбеддинги wiki-страниц (NEW)              │
+│  ├─ LightRAG entity graph     — граф сущностей и связей (NEW, Phase 4)     │
+│  ├─ Qdrant learned_patterns   — semantic patterns (существует)             │
+│  ├─ Qdrant skill_library      — 75 скиллов (существует)                    │
+│  └─ Qdrant experience_bank    — опыт сессий (существует)                   │
+│     ▲ auto-reindex on L3 write                                             │
+├─────┴──────────────────────────────────────────────────────────────────────┤
+│  L3: Wiki (canonical, version-controlled, human+LLM curated) ◄── NEW       │
+│  ├─ docs/wiki/        — структурированные entity/concept/procedure pages   │
+│  ├─ docs/roadmap/     — роадмапы (уже есть)                                │
+│  ├─ docs/architecture/ — ADR, patterns (уже есть)                          │
+│  ├─ memory/MEMORY.md  — index (существует, станет частью vault)            │
+│  ├─ memory/SCHEMA.md  — правила ведения (NEW, Phase 2)                     │
+│  ├─ memory/log.md     — хронология промоций L1→L3 (NEW, Phase 2)           │
+│  └─ .claude/skills/*/cache/ — research cache (существует)                  │
+│     ▲ промоция: auto-librarian (Phase 3)                                   │
+├─────┴──────────────────────────────────────────────────────────────────────┤
+│  L2: Semantic patterns (confidence-weighted, auto-decay)                   │
+│  ├─ Qdrant learned_patterns (vector-memory MCP, 7 tools)                   │
+│  └─ JSONL skill_learning/ (pending→confirmed→rejected workflow)            │
+│     ▲ capture: skill-learning MCP on tool use                              │
+├─────┴──────────────────────────────────────────────────────────────────────┤
+│  L1: Episodic (important, long-term)                                       │
+│  └─ SQLite data/memory_ai.db (memory-ai MCP, 5 tools)                      │
+│     ▲ session-memory-save.py на Stop hook                                  │
+├─────┴──────────────────────────────────────────────────────────────────────┤
+│  L0: Raw sources (immutable, ephemeral-ok)                                 │
+│  ├─ Conversation logs (Stop hook raw dumps)                                │
+│  ├─ PDF documents (input для Phase 4 pipeline)                             │
+│  └─ Git history (код как raw source)                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                        ▲
+                                        │
+                        WRITE PATH (session → promote → curate → index)
+```
+
+### Правила движения данных
+
+**Write path (снизу вверх — промоция):**
+
+1. **L0 → L1:** `session-memory-save.py` (Stop hook, существует) извлекает важные моменты сессии (diff, активированные скиллы, commits, completed tasks) и пишет в `memory_ai.db` с auto-importance 0.5-0.95.
+
+2. **L1 → L2:** skill-learning MCP `capture_pattern` детектит повторяющиеся паттерны в episodic памяти и создаёт `pending` записи в JSONL. Пользователь или auto-confirmation промоцирует `pending → confirmed` → embedding в Qdrant `learned_patterns` с начальным confidence 0.5.
+
+3. **L2 → L3 (новое, Phase 3):** **auto-librarian** hook отслеживает паттерны в `learned_patterns`:
+   - `confidence ≥ 0.8` И `usage_count ≥ 5` → создать draft wiki-страницу в `docs/wiki/` (формат entity/concept/procedure)
+   - Hook вызывает `unified_search` перед созданием → проверка что такой страницы ещё нет
+   - Если draft apropved (вручную или авто) → паттерн в L2 получает link `promoted_to: wiki:<slug>` через `create_link`
+   - Pattern в L2 остаётся как кеш, но при запросах приоритет отдаётся wiki (L3)
+
+4. **L3 → L4 (auto, Phase 1+4):** любая запись в `docs/wiki/` или `memory/` триггерит реиндексацию:
+   - Obsidian MCP `patch_content` → hook `auto-librarian` → re-embed в `wiki_pages_v1` (Qdrant)
+   - LightRAG `insert()` для обновления графа сущностей
+   - Event через `memory_publish` в orchestrator event bus (P3 подсистема)
+
+**Read path (сверху вниз — единый запрос):**
+
+```python
+# Расширение memory-orchestrator.unified_search()
+# Сейчас: обходит memory-ai + vector-memory + skill-learning + pdf-docs
+# Станет: + wiki (via obsidian-mcp) + lightrag graph
+
+results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", "l1_episodic"])
+# Дедупликация через UnifiedID LinkRegistry
+# Приоритет: L3 wiki > L4 patterns > L1 episodic
+# Если wiki-страница существует — L2/L4 результаты помечаются как "superseded_by: wiki:<slug>"
+```
+
+**Demotion / cleanup:**
+
+| Слой | Стратегия очистки |
+|------|-------------------|
+| L0 raw logs | TTL 30 дней, затем архив или удаление |
+| L1 episodic | Существующая importance-based фильтрация (memory-ai) |
+| L2 patterns | Existing confidence decay: `confidence * exp(-0.05 * days/30)`, auto-prune <0.3 |
+| L3 wiki | **Никогда не удаляется.** `status: deprecated` во frontmatter, auto-librarian фильтрует из новых подсказок |
+| L4 индексы | Rebuild-on-change, при конфликте с L3 — truth is L3 |
+
+### Расширение UnifiedID и LinkRegistry
+
+Текущий формат: `{memory_type}:{source}:{identifier}`.
+Существующие types: `episodic`, `semantic`, `docs`, `learning`.
+Существующие sources: `memory-ai`, `vector-memory`, `skill-learning`, `pdf-docs`.
+
+**Требуемые расширения для v1.2:**
+
+| Новый type | Новый source | Identifier | Пример |
+|-----------|-------------|------------|--------|
+| `wiki` | `obsidian-vault` | `<relative-path>#<heading>` | `wiki:obsidian-vault:docs/wiki/entities/qdrant.md#operations` |
+| `graph` | `lightrag` | `<entity-uuid>` | `graph:lightrag:7a8b9c10-d11e-f12a-13b4-c15d16e17f18` |
+
+**Новые link types:**
+- `promoted_to` — L2 pattern → L3 wiki (обратная связь `based_on`)
+- `superseded_by` — для демоции устаревших паттернов
+- `mirrors` — L3 ↔ L4 (wiki-страница ↔ её embedding)
+- `graph_node` — L3 ↔ LightRAG entity
+
+### Конфликты и противоречия
+
+| Сценарий | Обработка |
+|---------|-----------|
+| L2 pattern противоречит L3 wiki | L3 побеждает. Auto-librarian создаёт `contradicts` link, помечает pattern `superseded_by: wiki:<slug>`. Используется L3 |
+| L3 wiki-страница противоречит другой L3 wiki-странице | Auto-librarian детектит при Write, создаёт ADR-draft в `docs/architecture/`, блокирует обе страницы до резолва (human-in-the-loop) |
+| L4 индекс рассинхронизирован с L3 | `memory_ttl_check` → force rebuild через `auto-librarian --reindex` |
+| L1 episodic содержит устаревший факт | Existing importance decay + при промоции в L2/L3 — явный `supersedes` link |
+
+### Маппинг на существующие системы
+
+| Существующий компонент | Слой | Изменения в v1.2 |
+|------------------------|------|------------------|
+| `session-memory-save.py` | L0→L1 | **Без изменений** — продолжает писать в `memory_ai.db` |
+| `memory-ai` MCP (5 tools) | L1 | **Без изменений** |
+| `vector-memory` MCP (7 tools) | L2 | Добавить `promote_to_wiki(pattern_id)` tool |
+| `skill-learning` MCP (7 tools) | L2 | **Без изменений** |
+| `pdf-docs` (Qdrant collections) | L4 | **Без изменений** для обратной совместимости, плюс новый `wiki_pages_v1` рядом |
+| `memory-orchestrator` `unified_search` | read path | **Расширить:** добавить источники `wiki` и `graph` |
+| `memory-orchestrator` `route_and_save` | write path | **Расширить:** маршрутизация на L3 (auto-librarian draft) |
+| `memory-orchestrator` `create_link` | LinkRegistry | **Расширить:** добавить `promoted_to`, `superseded_by`, `mirrors`, `graph_node` |
+| `memory-first-hook v2` | read path | **Обновить:** добавить L3 (obsidian-mcp search) как первый слой перед L4 (Qdrant semantic) |
+| `memory/MEMORY.md` | L3 | Становится частью Obsidian vault, wiki-links на связанные страницы |
+
+### Что дают эти изменения
+
+1. **Нет дублирования.** Каждый факт живёт в одном каноничном слое (L3 wiki), остальные слои — производные индексы или ephemeral sources
+2. **Compound knowledge работает.** Промоция L1→L2→L3 формализована, метрика "knowledge compound rate" становится измеримой (количество L2→L3 промоций за период)
+3. **Обратная совместимость.** Существующие 33 MCP tools orchestrator'а работают без изменений, только расширяются новыми источниками
+4. **Единая точка запроса.** `memory-first-hook v2` получает доступ к wiki через `unified_search` автоматически — не нужны отдельные интеграции в каждом скилле
+5. **Versioning.** L3 живёт в git → бесплатная история изменений. L2 patterns — derived, при сломе пересобираются. Не нужны отдельные `memory_version_history`/`rollback` tools для wiki (они уже есть в git)
+
 ---
 
 ## Матрица переиспользования OSS (v1.1)
