@@ -586,14 +586,16 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - Добавить wiki-specific валидацию: запуск `kb-lint --ci` на измененных `docs/wiki/*.md` файлах
   - Добавить parse `[[wiki-links]]`, проверка target существует в vault
   - Существующая cooldown логика (5 мин, max 3 pending) остаётся
-- [ ] **Создать новый компонент, НЕ новый hook** — `src/memory/librarian/wiki_promoter.py`:
+- [ ] **Создать тонкий компонент** (50-100 LoC) — `src/memory/librarian/wiki_promoter.py`:
   - Периодический scanner (Stop hook trigger через существующий `docs-change-enforcer`)
   - Читает `learned_patterns` Qdrant через `vector-memory` MCP
   - Фильтр: `confidence ≥ 0.8` AND `usage_count ≥ 5`
   - Для каждого кандидата: `unified_search` (Фаза 0 extension) для дедуп-проверки
-  - Если дубликат с cosine ≥0.85 → `create_link(pattern, wiki_page, type="superseded_by")` — no draft
-  - Если новый → создать draft в `docs/wiki/drafts/<slug>.md` с frontmatter (source_pattern_id, confidence, usage_count, created_at)
-  - Создать link `pattern → wiki_draft` через `create_link(type="promoted_to")`
+  - **Конфликт-резолюция через существующий** `src/memory/infrastructure/conflict_resolver.py`: при обнаружении дубликата (cosine ≥0.85) вызвать `ConflictResolver.resolve(existing, candidate, strategy=ConflictStrategy.SOURCE_PRIORITY)` — приоритет L3 wiki над L2 pattern
+  - Если стратегия `SOURCE_PRIORITY` решает в пользу wiki → `create_link(pattern, wiki_page, type=SUPERSEDED_BY)` — no draft
+  - Если нужна ручная проверка → `_resolve_manual` создаёт `ConflictRecord` для review
+  - Если новый → использовать `MemoryCube(content_type=WIKI).to_wiki_page()` (Фаза 0) + запись в `docs/wiki/drafts/<slug>.md`
+  - Создать link `pattern → wiki_draft` через `create_link(type=PROMOTED_TO)` из Фазы 0
 - [ ] **Расширить** `.claude/hooks/docs-change-enforcer.py`:
   - Добавить проверку: при Stop, если есть новые `docs/wiki/drafts/*.md` → напоминание "review drafts before merging to main wiki"
   - Сохранить существующую логику enforce code→docs синхронизации
