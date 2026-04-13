@@ -602,7 +602,11 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [ ] **Интеграция с событиями Phase 6.5 incremental graph:**
   - Использовать существующий `src/pdf_framework/graph_store/incremental.py::IncrementalGraphUpdater`
   - При Write в wiki-страницу → trigger `IncrementalGraphUpdater.update()` для пересбора только изменённой части графа (80-95% экономия CPU)
-- [ ] `memory_publish` события через существующий orchestrator event bus: `wiki.draft.created`, `wiki.promoted`, `wiki.conflict.detected`
+- [ ] `memory_publish` события через **реальный EventBus** (`src/memory/infrastructure/event_bus.py`, 10KB, production-grade): `wiki.draft.created`, `wiki.promoted`, `wiki.conflict.detected`
+  - EventBus имеет `publish()`, `subscribe()`, `_dispatch_loop()`, `_fan_out()` — pub/sub готов
+  - EventStore (12KB) — hot buffer (memory) + cold SQLite + JSONL spooling → события persistent и queryable для replay
+  - Использование: `await self._event_bus.publish("wiki.promoted", {...}, source="wiki_promoter")`
+  - Subscribers могут replay'ить историю промоций через `EventStore.replay()`
 - [ ] Добавить `kb-lint` + `markdownlint-cli2` в pre-commit hook (`.pre-commit-config.yaml`)
 - [ ] Добавить логирование промоций в `docs/wiki/log.md` (НЕ `memory/log.md`)
 - [ ] Интеграционный тест: создать 10 синтетических паттернов с confidence 0.9, запустить wiki_promoter, проверить 10 drafts без дубликатов
