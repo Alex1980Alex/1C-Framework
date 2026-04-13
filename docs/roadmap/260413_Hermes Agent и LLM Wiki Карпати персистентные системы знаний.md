@@ -501,13 +501,17 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
-### Фаза 3: Auto-Librarian Hook
+### Фаза 3: Auto-Librarian через расширение docs-change-tracker (переработано v1.3)
 
-**Цель:** Реализовать агента-библиотекаря (столп 4) как hook на запись в docs/ и memory/, который проверяет целостность wiki-links, детектирует конфликты и обновляет индексы.
+**Цель:** **Расширить** существующие hooks `docs-change-tracker.py` (28KB) и `docs-change-enforcer.py` (20KB) логикой L2→L3 промоции и wiki validation, **не создавать новый `auto-librarian.py`**.
+
+**Изменения v1.3 vs v1.2:**
+- ❌ **ОТМЕНЕНО:** создание нового `.claude/hooks/auto-librarian.py` — дублирует docs-change-tracker
+- ✅ **НОВОЕ:** расширение существующих hooks, сохранение их 50+ code→doc маппингов
 
 **Приоритет:** P1
-**Трудозатраты:** M → **S** (благодаря готовым линтерам)
-**Зависимости:** Фаза 1 (Obsidian vault)
+**Трудозатраты:** S (благодаря существующей инфраструктуре)
+**Зависимости:** Фаза 0 (extended UnifiedID), Фаза 1 (Obsidian vault)
 **OSS база:**
 - [kb-lint](https://pypi.org/project/kb-lint/) — CLI для wiki: orphans, broken `[[links]]`, frontmatter валидация
 - [DavidAnson/markdownlint](https://github.com/DavidAnson/markdownlint) (18k stars) — де-факто стандарт форматирования
