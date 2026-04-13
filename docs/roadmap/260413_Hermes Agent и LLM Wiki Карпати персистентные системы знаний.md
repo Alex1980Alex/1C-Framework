@@ -292,6 +292,65 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
+### Фаза 0: Memory Layer Alignment (NEW v1.2)
+
+**Цель:** Привести существующие 4 подсистемы памяти (Memory AI, Vector Memory, Skill Learning, PDF Docs) в соответствие с 5-слойной моделью, расширить UnifiedID и LinkRegistry для работы с wiki-слоем и графом LightRAG. **Блокер для всех остальных фаз** — без выравнивания слоёв Wiki превратится в 5-ю изолированную подсистему.
+
+**Приоритет:** P0 (блокер)
+**Трудозатраты:** M
+**Зависимости:** Нет
+**OSS база:** Не требуется — работа над существующим `src/memory/orchestrator/`
+
+#### Задачи
+
+- [ ] Создать `memory/SCHEMA.md` с формальным описанием 5-слойной модели (скопировать из секции "Интеграция с существующей памятью" этого roadmap)
+- [ ] Расширить `src/memory/orchestrator/unified_id.py`:
+  - Добавить memory types: `wiki`, `graph`
+  - Добавить sources: `obsidian-vault`, `lightrag`
+  - Обновить валидацию `parse_unified_id()`
+- [ ] Расширить `src/memory/orchestrator/link_registry.py`:
+  - Добавить link types: `promoted_to`, `superseded_by`, `mirrors`, `graph_node`
+  - Unit-тесты для новых связей
+- [ ] Расширить `src/memory/orchestrator/unified_search.py`:
+  - Добавить backend `WikiSearchBackend` (вызывает obsidian-mcp через MCP клиент)
+  - Добавить backend `GraphSearchBackend` (заглушка до Phase 4, возвращает пустой результат)
+  - Реализовать дедупликацию: если результат из L2 имеет link `superseded_by: wiki:...` — исключить из выдачи
+  - Приоритизация: L3 wiki > L4 derived indices > L1 episodic
+- [ ] Расширить `src/memory/orchestrator/memory_router.py`:
+  - Добавить маршрут `route_to_wiki_draft` — создаёт draft страницу в `docs/wiki/drafts/` (не финальный файл)
+  - Логирование маршрутизации в event bus (`memory_publish`)
+- [ ] Добавить tool `vector-memory.promote_to_wiki(pattern_id)`:
+  - Читает pattern из Qdrant `learned_patterns`
+  - Вызывает `route_to_wiki_draft` с содержимым
+  - Создаёт link `promoted_to: wiki:<draft-slug>` через `create_link`
+- [ ] Обновить `.claude/hooks/memory-first-hook.py` (v2 → v3):
+  - Layer 0 (новый): obsidian-mcp search по vault
+  - Layer 1 (существующий): semantic search skill_library/experience_embeddings/conversation_memory
+  - Fallback: learned_patterns
+- [ ] Обновить скилл `.claude/skills/memory-unified/SKILL.md`: 5-слойная модель вместо 4-подсистемной
+- [ ] Создать `memory/log.md` с шаблоном записей о промоциях L1→L2→L3
+- [ ] Интеграционный тест `tests/integration/test_memory_layers_v2.py`: полный цикл L0→L1→L2→L3→L4 на синтетических данных
+
+#### Критерии готовности
+
+- [ ] UnifiedID парсит и генерирует `wiki:obsidian-vault:...` и `graph:lightrag:...`
+- [ ] `unified_search` возвращает результаты из wiki vault (mock или реальный Obsidian MCP)
+- [ ] `vector-memory.promote_to_wiki` создаёт draft и link (без реального wiki engine, stub путь)
+- [ ] 26 существующих тестов `test_memory_unified.py` проходят без регрессии
+- [ ] Новые тесты `test_memory_layers_v2.py` покрывают дедупликацию по `superseded_by`
+- [ ] `memory/SCHEMA.md` описывает все 5 слоёв, все link types, правила промоции
+
+#### Риски и митигация
+
+| Риск | Митигация |
+|------|-----------|
+| Обратная несовместимость UnifiedID | Новые types/sources добавляются, существующие не трогаем. Parser делает fallback на `legacy` для старых IDs |
+| `unified_search` замедляется из-за дополнительного backend | Параллельный asyncio.gather, кеширование wiki embeddings в памяти, таймаут 2s на backend |
+| Promotion pattern→wiki создаёт мусор в `docs/wiki/drafts/` | Drafts в gitignore до approved статуса, TTL 7 дней для неаппрувленных |
+| Конфликт с in-progress работой memory P5 | Синхронизация с автором memory P5 перед началом, возможно слияние в один спринт |
+
+---
+
 ### Фаза 1: Obsidian Vault Integration
 
 **Цель:** Создать единый Obsidian vault поверх существующих markdown-файлов (docs/, memory/, cache/), обеспечив навигацию по знаниям через wiki-links и graph view.
