@@ -324,17 +324,19 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ## Фазы реализации
 
-### Сводная таблица фаз (обновлено в v1.2)
+### Сводная таблица фаз (обновлено в v1.3 после аудита)
 
-| Фаза | Название | Приоритет | Трудозатраты | Зависимости | Готовое OSS |
-|------|----------|-----------|--------------|-------------|-------------|
-| **0** | **Memory Layer Alignment** (NEW v1.2) | **P0** | **M** | Нет | существующий memory-orchestrator |
-| 1 | Obsidian Vault Integration | P0 | S | Фаза 0 | mcp-obsidian |
-| 2 | Foundation — MPF + anti_triggers + log/schema | P1 | M | Фаза 0 | promptdown + DSPy |
-| 3 | Auto-Librarian Hook (+ L2→L3 промоция) | P1 | S | Фазы 0, 1 | kb-lint + markdownlint |
-| 4 | PDF → Structured Wiki Pages | P2 | L | Фазы 0, 1, 2 | **LightRAG** |
-| 5 | Sandbox для агентов | P3 | S | Фаза 2 | e2b-code-interpreter |
-| 6 | Defer — OAuth 2.1 MCP TTL | P3 | L | Фаза 5 | — |
+| Фаза | Название | Приоритет | Трудозатраты v1.2→v1.3 | Зависимости | База (код или OSS) |
+|------|----------|-----------|------------------------|-------------|--------------------|
+| 0 | Memory Layer Alignment + **DB migration** | P0 | M → M | Нет | existing `memory_orchestrator` (расширение) |
+| 1 | Obsidian Vault Integration | P0 | S → S | Фаза 0 | mcp-obsidian (OSS) |
+| 2 | **DSPy Deepening** + Wiki Schema | P1 | M → **S** | Фаза 0 | existing `prompt-engineering` skill (DSPy) |
+| 3 | Auto-Librarian **через расширение docs-change-tracker** | P1 | M → **S** | Фазы 0, 1 | existing docs-change-tracker/enforcer + kb-lint |
+| 4 | **Markdown Export из существующего Phase 38** (не внедрение LightRAG) | P2 | XL → **M** | Фазы 0, 1, 2 | existing `graph_store/entity_embeddings.py` + `incremental.py` |
+| 5 | Sandbox для агентов | P3 | M → S | Фаза 2 | e2b-code-interpreter (OSS) |
+| 6 | Defer — OAuth 2.1 MCP TTL | P3 | L → L | Фаза 5 | — |
+
+**Итого экономия v1.2 → v1.3:** ещё ~3-4 недели за счёт отмены MPF helper, признания существующих Phase 38/6.5/P5.1-2, расширения вместо дублирования docs-change hooks.
 
 ---
 
