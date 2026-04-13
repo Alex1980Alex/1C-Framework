@@ -180,14 +180,16 @@ Progressive disclosure (3 уровня детализации), negative boundar
 **Приоритет:** P1
 **Трудозатраты:** M
 **Зависимости:** Нет
+**OSS база:** [btfranklin/promptdown](https://github.com/btfranklin/promptdown) (Python, MIT) для базового MD→chat_messages + существующий скилл `prompt-engineering` (DSPy, 33.7k stars) для типизированных контрактов
 
 #### Задачи
 
-- [ ] Создать `src/shared/mpf_prompt.py` с классом `MPFPrompt` (поля: ask, context, constraints, example, output_format)
-- [ ] Реализовать валидацию MPF-структуры: обязательные поля, длина секций, формат example
-- [ ] Мигрировать промпты `src/pdf_framework/agents/grader.py` на MPF helper
+- [ ] `pip install promptdown` — проверить покрытие use-cases (секции ask/context/constraints/example)
+- [ ] Создать `src/shared/mpf_prompt.py` — тонкий wrapper над `promptdown.StructuredPrompt` с нашими секциями; валидация обязательных полей
+- [ ] Для структурированного извлечения (grader score, hallucination verdict) — использовать DSPy Signatures через `prompt-engineering` скилл, не self-rolled MPF
+- [ ] Мигрировать промпты `src/pdf_framework/agents/grader.py` на MPF helper (простые) или DSPy (если нужен structured output)
 - [ ] Мигрировать промпты `src/pdf_framework/agents/rewriter.py` на MPF helper
-- [ ] Мигрировать промпты `src/pdf_framework/agents/hallucination_check.py` на MPF helper
+- [ ] Мигрировать промпты `src/pdf_framework/agents/hallucination_check.py` на DSPy Signature (формат `grounded/not_grounded` → типизированный)
 - [ ] Добавить `anti_triggers` в JSON schema `.claude/skills/skill-router-config.json`
 - [ ] Обновить `src/skill_router.py` слой A (phrase matching) для проверки anti_triggers
 - [ ] Добавить anti_triggers в 5-10 наиболее конфликтующих скиллов (по данным роутинга)
