@@ -583,18 +583,29 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Задачи
 
-- [ ] `pip install lightrag-hku` — оценить совместимость с существующими `src/pdf_framework/graph_store/`
-- [ ] **Spike**: запустить LightRAG на 3 тестовых PDF, измерить качество извлечения сущностей vs существующий graph_store
-- [ ] Создать адаптер `src/pdf_framework/indexing/lightrag_adapter.py` — унифицированный интерфейс между нашими loaders и LightRAG API
-- [ ] Настроить LightRAG backends: Qdrant как vector store (если поддерживается) или PostgreSQL как альтернатива
-- [ ] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md` — **LightRAG уже генерирует entity summaries**, шаблоны нужны только для output rendering
-- [ ] Создать pipeline: `PDF → PyMuPDF4LLM loader → LightRAG insert → Obsidian export` — обёртка в LangGraph StateGraph для совместимости с нашими агентами
-- [ ] Использовать `LightRAG.query(mode="hybrid")` вместо собственного SearchManager для wiki-слоя
-- [ ] Настроить incremental updates: при добавлении нового PDF — `lightrag.insert()` не пересобирает весь граф
-- [ ] Создать eval suite: `tests/eval/wiki_pipeline_eval.py` — сравнение LightRAG hybrid vs baseline chunk RAG на 10 PDF
-- [ ] Интегрировать hallucination-check из существующего `src/pdf_framework/agents/` поверх LightRAG output
-- [ ] Добавить `.claude/skills/wiki-pipeline/SKILL.md` с инструкциями запуска и настройки
-- [ ] **Решение go/no-go после spike**: если LightRAG не подошёл (производительность, совместимость) — fallback на nano-graphrag (~1100 LOC можно inline-встроить)
+- [ ] **Аудит Phase 38:** запустить существующий pipeline на 3 тестовых PDF, измерить качество entity extraction, зафиксировать baseline
+- [ ] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md` с frontmatter (unified_id, source_pdf, confidence, created_at)
+- [ ] Создать `src/pdf_framework/indexing/wiki_exporter.py`:
+  - Читает existing `GraphStore` (NetworkX или Neo4j)
+  - Для каждого entity node → генерирует `docs/wiki/entities/<entity-id>.md`
+  - Для каждого relation → добавляет `[[wiki-link]]` между entity pages
+  - Использует existing `summarizer.py` для community summaries
+  - Идемпотентность: повторный запуск = upsert, не дубликаты
+- [ ] Создать `scripts/export_graph_to_wiki.py` CLI: `python -m scripts.export_graph_to_wiki --since <timestamp> --output docs/wiki/entities/`
+- [ ] **Incremental sync (ключевое, использует Phase 6.5):**
+  - Подписаться на события `IncrementalGraphUpdater.update()`
+  - При изменении графа → `wiki_exporter` реэкспортирует только affected entities (не весь граф)
+  - Логирование в `docs/wiki/log.md` количества обновлённых страниц
+- [ ] **Reverse sync (wiki → graph):**
+  - При Write в `docs/wiki/entities/<id>.md` → parse frontmatter + body → обновить entity в graph_store
+  - Использовать existing `change_detector.py` для вычисления дельты
+  - Граф становится derived view на wiki (L3 = canonical, L4 = index)
+- [ ] Обновить существующий `src/pdf_framework/search/strategies/graphrag_light.py`:
+  - Добавить payload field `wiki_page_path` в entity embeddings
+  - В результатах поиска возвращать ссылку на wiki-страницу (L3), не только entity_id
+- [ ] Eval-регрессия: existing GraphRAG eval suite должен показывать **те же метрики** или лучше (не хуже) после wiki export
+- [ ] Добавить `.claude/skills/wiki-pipeline/SKILL.md` с инструкциями запуска и троублшутинга
+- [ ] **НЕ ТРОГАТЬ** существующий pipeline индексации PDF — wiki export работает как sidecar, не заменяет основной путь
 
 #### Критерии готовности
 
