@@ -653,10 +653,15 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [ ] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md` с frontmatter (unified_id, source_pdf, confidence, created_at)
 - [ ] Создать `src/pdf_framework/indexing/wiki_exporter.py`:
   - Читает existing `GraphStore` (NetworkX или Neo4j)
-  - Для каждого entity node → генерирует `docs/wiki/entities/<entity-id>.md`
+  - Для каждого entity node → генерирует `docs/wiki/entities/<entity-id>.md` через **`MemoryCube.to_wiki_page()`** (Фаза 0)
   - Для каждого relation → добавляет `[[wiki-link]]` между entity pages
   - Использует existing `summarizer.py` для community summaries
   - Идемпотентность: повторный запуск = upsert, не дубликаты
+- [ ] **Индексация wiki через существующий `src/memory/orchestrator/search/hybrid_search.py`** (v1.3.3 находка):
+  - `BM25Index` с BSL-aware tokenization уже готов в orchestrator/search/
+  - `HybridSearchService` делает RRF fusion BM25 + dense — используем для wiki_pages_v1
+  - Вместо создания отдельного index для wiki — добавить wiki-коллекцию в существующий HybridSearchService
+  - Экономия: ~500 LoC (не пишем свой BM25 для wiki)
 - [ ] Создать `scripts/export_graph_to_wiki.py` CLI: `python -m scripts.export_graph_to_wiki --since <timestamp> --output docs/wiki/entities/`
 - [ ] **Incremental sync (ключевое, использует Phase 6.5):**
   - Подписаться на события `IncrementalGraphUpdater.update()`
