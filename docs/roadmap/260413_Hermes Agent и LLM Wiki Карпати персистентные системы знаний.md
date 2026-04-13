@@ -8,26 +8,30 @@
 
 ---
 
-## Покрытие аудита (v1.3.2)
+## Покрытие аудита (v1.3.3)
 
-Все фазы roadmap прошли **3 прохода аудита** против реального кода:
+Все фазы roadmap прошли **5 проходов аудита** против реального кода:
 
-| Фаза | 1-й проход (v1.3) | 2-й проход (v1.3.1) | 3-й проход (v1.3.2) | Итоговый статус |
-|------|-------------------|---------------------|---------------------|-----------------|
-| 0 Memory Alignment | NEEDS_REVISION | — | **Adapter pattern найден + ContentClassifier extension** | VERIFIED |
-| 1 Obsidian Vault | ACCURATE | **docs/architecture/ proto-wiki** | — | VERIFIED |
-| 2 DSPy Deepening | MAJOR_REWRITE | — | — | VERIFIED |
-| 3 Auto-Librarian | MAJOR_REWRITE | — | **MemoryRouter уже есть** | VERIFIED |
-| 4 PDF → Wiki | Phase 38 уже готов | — | — | VERIFIED |
-| 5 Sandbox | ACCURATE | **LangSmith sandbox в .venv** | — | VERIFIED |
-| 6 OAuth | ACCURATE (но deferred) | **Phase 12.3 DONE — не defer!** | — | VERIFIED, приоритет P3→P2 |
+| Фаза | 1-й проход (v1.3) | 2-й проход (v1.3.1) | 3-й проход (v1.3.2) | 5-й проход (v1.3.3) | Итоговый |
+|------|---|---|---|---|---|
+| 0 Memory Alignment | NEEDS_REVISION | — | Adapter pattern + ContentClassifier | **MemoryCube + ConflictResolver + EventBus найдены** | VERIFIED |
+| 1 Obsidian Vault | ACCURATE | docs/architecture/ proto-wiki | — | — | VERIFIED |
+| 2 DSPy Deepening | MAJOR_REWRITE | — | — | — | VERIFIED |
+| 3 Auto-Librarian | MAJOR_REWRITE | — | MemoryRouter уже есть | **ConflictResolver готов — не писать свой** | VERIFIED |
+| 4 PDF → Wiki | Phase 38 уже готов | — | — | **HybridSearchService в orchestrator для wiki BM25** | VERIFIED |
+| 5 Sandbox | ACCURATE | LangSmith в .venv | — | — | VERIFIED |
+| 6 OAuth | ACCURATE (deferred) | **Phase 12.3 DONE** | — | — | VERIFIED, P3→P2 |
 
-**3-й проход нашёл дополнительно:**
-1. `memory-first-hook` Layer 3 читает **user-level** `memory/`, не `docs/` — критично для Фазы 0
-2. `openspec/changes/archive/` **пустая** — SDD workflow идёт только через active changes
-3. `unified_search.py` **уже имеет** `BaseSearchAdapter(ABC)` + `register_adapter()` — extension-point готов
-4. `memory_orchestrator.py` имеет готовые методы `unified_search`/`route_and_save`/`create_link`/`_emit_event` — в Фазе 0 не писать заново
-5. `src/memory/librarian/` **не существует** — моё предложение в Фазе 3 корректно
+**5-й проход нашёл 7 компонентов, не учтённых в проходах 1-3:**
+1. **EventBus + EventStore + SubscriptionManager** (32KB) — production event sourcing с persistence, replay, pub/sub
+2. **ConflictResolver** (10KB, 260+ LoC) — 4 стратегии resolution, merge_dicts для deep merge
+3. **PropagationEngine** (557 LoC) — async workers + queues для confidence propagation через graph
+4. **MemoryCube** (229 LoC) — унифицированный контейнер `to_ai_memory_row/to_vector_memory_payload/to_skill_learning_record`, добавить `to_wiki_page()`
+5. **Orchestrator HybridSearchService** (12KB) — BM25Index + RRF fusion, BSL-aware tokenization
+6. **P3 Tools** (id_management, research, surprise, warmup) — полностью реализованы
+7. **Resilience layer**: circuit_breaker, retry, timeout, metrics, cache — production-grade
+
+**Итог:** фреймворк на **~85% готов** к Hermes/LLM Wiki (оценка v1.3.3, была ~70% в v1.3.2). Нового кода ~1500-1800 LoC glue.
 
 ---
 
