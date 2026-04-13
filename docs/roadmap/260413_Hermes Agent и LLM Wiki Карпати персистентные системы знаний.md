@@ -221,19 +221,25 @@ Progressive disclosure (3 уровня детализации), negative boundar
 **Цель:** Реализовать агента-библиотекаря (столп 4) как hook на запись в docs/ и memory/, который проверяет целостность wiki-links, детектирует конфликты и обновляет индексы.
 
 **Приоритет:** P1
-**Трудозатраты:** M
+**Трудозатраты:** M → **S** (благодаря готовым линтерам)
 **Зависимости:** Фаза 1 (Obsidian vault)
+**OSS база:**
+- [kb-lint](https://pypi.org/project/kb-lint/) — CLI для wiki: orphans, broken `[[links]]`, frontmatter валидация
+- [DavidAnson/markdownlint](https://github.com/DavidAnson/markdownlint) (18k stars) — де-факто стандарт форматирования
+- Паттерны `/wiki-lint` из [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) (1.8k) и [ussumant/llm-wiki-compiler](https://github.com/ussumant/llm-wiki-compiler)
 
 #### Задачи
 
-- [ ] Создать `.claude/hooks/auto-librarian.py` с триггером на PostToolUse (Write, Edit) в docs/, memory/
-- [ ] Реализовать проверку wiki-links: парсинг `[[link]]`, валидация target существует
-- [ ] Реализовать детект конфликтов: семантический поиск через Qdrant skill_library для новых страниц
-- [ ] Создать `.claude/skills/auto-librarian/SKILL.md` с описанием процедур библиотекаря
+- [ ] `pip install kb-lint` + `npm i -D markdownlint-cli2` — базовые инструменты в dev-dependencies
+- [ ] Настроить `.kb-lint.toml` (exclusions для .claude/, src/, tests/) и `.markdownlint.jsonc`
+- [ ] Создать `.claude/hooks/auto-librarian.py` как тонкий wrapper: запускает `kb-lint --ci`, парсит JSON output, возвращает systemMessage
+- [ ] Триггер hook: PostToolUse (Write, Edit) в docs/, memory/ — без блокировки (fail-safe)
+- [ ] Доп. логика поверх kb-lint: семантический детект дубликатов через Qdrant `skill_library` (cosine >0.85)
+- [ ] Создать `.claude/skills/auto-librarian/SKILL.md` — процедуры и заимствованные паттерны из `llm-wiki-agent`
 - [ ] Интегрировать с memory-orchestrator MCP для уведомлений о конфликтах
-- [ ] Реализовать авто-обновление `docs/wiki/_index.json` при добавлении/изменении страниц
+- [ ] Реализовать авто-обновление `docs/wiki/_index.json` при добавлении/изменении страниц (использовать `kb-lint --fix` где возможно)
 - [ ] Добавить логирование действий в `memory/log.md` через librarian
-- [ ] Настроить конфигурацию: `.claude/hooks/auto-librarian-config.json` (исключения, пороги)
+- [ ] Добавить `kb-lint` + `markdownlint-cli2` в pre-commit hook (`.pre-commit-config.yaml`)
 - [ ] Протестировать на существующих wiki-страницах: 0 false positives на начальном наборе
 
 #### Критерии готовности
