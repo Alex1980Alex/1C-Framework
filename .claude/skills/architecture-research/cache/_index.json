@@ -135,6 +135,25 @@
       "last_verified": "2026-04-09",
       "sources_count": 8,
       "github_repos_count": 6
+    },
+    {
+      "file": "hermes-llm-wiki-github-landscape.md",
+      "title": "Hermes Agent / LLM Wiki — GitHub Landscape (6 тем)",
+      "keywords": [
+        "hermes-agent", "llm-wiki", "karpathy", "obsidian-mcp", "mcp-obsidian",
+        "obsidian", "vault", "knowledge-base", "markdown-prompt", "mpf",
+        "promptdown", "dspy", "baml", "kb-lint", "obsidian-linter",
+        "markdown-link-check", "auto-librarian", "wiki-maintenance",
+        "lightrag", "nano-graphrag", "microsoft-graphrag", "graphrag",
+        "pdf-to-knowledge-graph", "e2b", "daytona", "sandbox", "code-interpreter",
+        "firecracker", "samuraigpt", "llm-wiki-agent", "obsidian-wiki",
+        "second-brain", "llm-wiki-compiler", "cyanheads",
+        "roadmap-hermes", "self-maintaining-wiki", "agent-librarian",
+        "compounding-knowledge", "immutable-sources", "raw-wiki-schema"
+      ],
+      "last_verified": "2026-04-13",
+      "sources_count": 22,
+      "github_repos_count": 22
     }
   ]
 }
