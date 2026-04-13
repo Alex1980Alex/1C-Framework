@@ -455,13 +455,16 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [ ] Настроить `.kb-lint.toml` (exclusions для .claude/, src/, tests/) и `.markdownlint.jsonc`
 - [ ] Создать `.claude/hooks/auto-librarian.py` как тонкий wrapper: запускает `kb-lint --ci`, парсит JSON output, возвращает systemMessage
 - [ ] Триггер hook: PostToolUse (Write, Edit) в docs/, memory/ — без блокировки (fail-safe)
-- [ ] Доп. логика поверх kb-lint: семантический детект дубликатов через Qdrant `skill_library` (cosine >0.85)
+- [ ] **L2→L3 промоция (v1.2):** периодический режим librarian (cron или Stop hook) — сканирует `learned_patterns` Qdrant, находит паттерны с `confidence ≥ 0.8` И `usage_count ≥ 5`, вызывает `vector-memory.promote_to_wiki(pattern_id)` из Фазы 0
+- [ ] **Проверка дубликатов перед созданием draft:** hook вызывает `unified_search` из orchestrator (Фаза 0) — если существующая wiki-страница имеет cosine ≥0.85 с кандидатом, draft не создаётся, вместо этого pattern помечается `superseded_by: wiki:<existing>`
+- [ ] Доп. логика поверх kb-lint: семантический детект дубликатов между новыми wiki-страницами через `unified_search` (не только `skill_library`, а весь L3+L4)
 - [ ] Создать `.claude/skills/auto-librarian/SKILL.md` — процедуры и заимствованные паттерны из `llm-wiki-agent`
-- [ ] Интегрировать с memory-orchestrator MCP для уведомлений о конфликтах
+- [ ] Интегрировать с memory-orchestrator MCP: `memory_publish` событие `wiki.draft.created` / `wiki.promoted` / `wiki.conflict.detected` в event bus
 - [ ] Реализовать авто-обновление `docs/wiki/_index.json` при добавлении/изменении страниц (использовать `kb-lint --fix` где возможно)
-- [ ] Добавить логирование действий в `memory/log.md` через librarian
+- [ ] Добавить логирование действий в `memory/log.md` через librarian (каждая промоция L2→L3 — отдельная запись)
 - [ ] Добавить `kb-lint` + `markdownlint-cli2` в pre-commit hook (`.pre-commit-config.yaml`)
 - [ ] Протестировать на существующих wiki-страницах: 0 false positives на начальном наборе
+- [ ] Интеграционный тест: создать 10 синтетических паттернов с confidence 0.9, запустить librarian, проверить что создано 10 drafts без дубликатов
 
 #### Критерии готовности
 
