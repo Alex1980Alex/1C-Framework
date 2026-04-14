@@ -78,9 +78,11 @@ Skill определяет:
 ---
 
 ## ВАЖНО:
+- **Этап 0 обязателен**: без `mcp__serena__activate_project` не переходить к Этапу 1
 - Применяется ПОСЛЕ analyze-1c-task-v2 — нужен готовый ANALYSIS-REPORT
 - Вносить изменения строго в порядке из ANALYSIS-REPORT
 - КАЖДЫЙ SQL → validate_query + execute_query ДО записи
 - КАЖДАЯ запись → get_project_errors ПОСЛЕ записи
 - Проведение документов = ПОЛЬЗОВАТЕЛЬ (Claude не имеет GUI)
 - НЕ модифицировать файлы вне списка из ANALYSIS-REPORT
+- Если Serena недоступна — зафиксировать это в IMPLEMENTATION-PROGRESS.md и работать через EDT-MCP + Grep/Glob как fallback
