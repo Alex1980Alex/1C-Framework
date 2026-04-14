@@ -82,7 +82,11 @@ Skill для реализации задачи по конфигурации 1С
 |---|---|
 | `bsl-semantic-search` | Этап 1: поиск похожего кода в конфигурации |
 | `bsl-platform-context` | Этап 3: API платформы 1С (методы, свойства, типы) |
-| `Serena` | Этап 1: символьный анализ кода (если EDT-MCP недоступен) |
+| `mcp__serena__activate_project` | **Этап 0: активация проекта (ОБЯЗАТЕЛЬНО первым)** |
+| `mcp__serena__list_dir` / `find_file` | Этап 0, 1: навигация по структуре проекта |
+| `mcp__serena__find_symbol` / `get_symbols_overview` | Этап 1: символьный обзор модулей (Python/JS/XML части) |
+| `mcp__serena__find_referencing_symbols` | Этап 5: поиск ссылок (если EDT-MCP недоступен) |
+| `mcp__serena__read_memory` / `write_memory` | Этап 0, 7: чтение/обновление memories проекта |
 | `Grep/Glob` | Этап 1: поиск файлов и паттернов на диске |
 
 ---
