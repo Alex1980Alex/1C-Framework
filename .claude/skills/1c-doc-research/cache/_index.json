@@ -37,6 +37,14 @@
       "keywords": ["TestDB", "РегистрацияНаПЛК", "тестовые данные", "ПЛК Светлый", "GKSTCPLK-2256", "табло", "настройки табло", "реальные данные", "Х985ХМ36", "СОДРУЖЕСТВО-СОЯ"],
       "last_verified": "2026-04-08",
       "sources": ["MCP get_metadata_structure", "MCP execute_query", "MCP get_form_structure"]
+    },
+    "transfer-predefined-items": {
+      "title": "Перенос предопределённых элементов справочников между идентичными базами 1С",
+      "file": "transfer-predefined-items.md",
+      "keywords": ["перенос предопределённых", "предопределённые элементы", "справочник", "идентичные конфигурации", "ВыгрузкаЗагрузкаДанныхXML", "GUID", "дубли предопределённых", "XDTO сериализация", "перенос между базами", "ИмяПредопределённыхДанных", "перенос справочников"],
+      "created": "2026-04-14",
+      "last_verified": "2026-04-14",
+      "sources": ["infostart.ru/public/194523", "infostart.ru/1c/tools/195955", "infostart.ru/1c/tools/190384", "forum.infostart.ru/forum9/topic232303", "forum.infostart.ru/forum15/topic163957"]
     }
   }
 }
