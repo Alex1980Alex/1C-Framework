@@ -1,25 +1,9 @@
 # Реализация задачи 1С
 
-Выполни реализацию задачи по конфигурации 1С, используя **skill implement-1c-task** (9-этапный pipeline v2.1).
+Выполни реализацию задачи по конфигурации 1С, используя **skill implement-1c-task** (8-этапный pipeline v2).
 
 ## Задача от пользователя:
 $ARGUMENTS
-
----
-
-## Этап 0 (ОБЯЗАТЕЛЬНО ПЕРВЫМ): активация проекта в Serena
-
-Перед любыми другими действиями:
-
-1. Определи имя проекта из `$ARGUMENTS` (тикет / полное имя / путь к папке с ANALYSIS-REPORT.md).
-   При необходимости найди в `cache/projects-registry.json` по тикету.
-2. Вызови `mcp__serena__activate_project(project="<имя>")`.
-3. Обработай `claudeFallback` от хука `serena-index-checker` в порядке:
-   Memory tasks → Git commit → (опционально) индексация → создание memories.
-   Подробный алгоритм — в команде [activate-project](activate-project.md).
-4. Прочитай memories проекта (`list_memories` → `read_memory project_overview`, `project_tasks`) и используй их как контекст для реализации.
-
-Только после этого переходи к skill-методологии.
 
 ---
 
@@ -28,10 +12,12 @@ $ARGUMENTS
 **Используй skill implement-1c-task** — единый источник методологии реализации.
 
 Skill определяет:
-- 9 последовательных этапов (Serena-активация → Подготовка → Валидация запросов → BSL → Статанализ → Верификация → Тестирование → Документация → Git)
+- 8 последовательных этапов (Подготовка → Валидация запросов → BSL → Статанализ → Верификация → Тестирование → Документация → Git)
 - 3 основных MCP-сервера: **EDT-MCP**, **1c-mcp-toolkit**, **bsl-debug-server**
-- Вспомогательные: **Serena (обязательно на Этапе 0)**, bsl-semantic-search, bsl-platform-context
+- Вспомогательные: Serena, bsl-semantic-search, bsl-platform-context
 - Обязательные циклы проверки и правила
+
+> **История версий скилла:** v2.1.1 (2026-04-14) — откат Этапа 0 «Активация Serena» после [углублённого аудита](../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Serena на BSL-задачах ценности не даёт (LSP для BSL не существует, `.serena/project.yml` с `language: bsl` невалиден).
 
 ### 3 MCP-сервера — обязательное использование
 
@@ -78,11 +64,9 @@ Skill определяет:
 ---
 
 ## ВАЖНО:
-- **Этап 0 обязателен**: без `mcp__serena__activate_project` не переходить к Этапу 1
 - Применяется ПОСЛЕ analyze-1c-task-v2 — нужен готовый ANALYSIS-REPORT
 - Вносить изменения строго в порядке из ANALYSIS-REPORT
 - КАЖДЫЙ SQL → validate_query + execute_query ДО записи
 - КАЖДАЯ запись → get_project_errors ПОСЛЕ записи
 - Проведение документов = ПОЛЬЗОВАТЕЛЬ (Claude не имеет GUI)
 - НЕ модифицировать файлы вне списка из ANALYSIS-REPORT
-- Если Serena недоступна — зафиксировать это в IMPLEMENTATION-PROGRESS.md и работать через EDT-MCP + Grep/Glob как fallback

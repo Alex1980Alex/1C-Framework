@@ -1,9 +1,9 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.1.0
+version: 2.1.1
 updated: 2026-04-14
-tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger, serena]
+tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger]
 triggers:
   - реализовать задачу 1С
   - implement 1c task
@@ -11,7 +11,12 @@ triggers:
   - реализация по ANALYSIS-REPORT
 ---
 
-# Реализация задачи 1С — 9-этапный pipeline (v2.1)
+# Реализация задачи 1С — 8-этапный pipeline (v2)
+
+> **История версий:**
+> - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
+> - **v2.1.0 (2026-04-14):** добавлен Этап 0 (откачен).
+> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-toolkit + bsl-debug-server.
 
 ## Overview
 
@@ -82,57 +87,12 @@ Skill для реализации задачи по конфигурации 1С
 |---|---|
 | `bsl-semantic-search` | Этап 1: поиск похожего кода в конфигурации |
 | `bsl-platform-context` | Этап 3: API платформы 1С (методы, свойства, типы) |
-| `mcp__serena__activate_project` | **Этап 0: активация проекта (ОБЯЗАТЕЛЬНО первым)** |
-| `mcp__serena__list_dir` / `find_file` | Этап 0, 1: навигация по структуре проекта |
-| `mcp__serena__find_symbol` / `get_symbols_overview` | Этап 1: символьный обзор модулей (Python/JS/XML части) |
-| `mcp__serena__find_referencing_symbols` | Этап 5: поиск ссылок (если EDT-MCP недоступен) |
-| `mcp__serena__read_memory` / `write_memory` | Этап 0, 7: чтение/обновление memories проекта |
+| `Serena` | Этап 1: символьный анализ кода (если EDT-MCP недоступен) — **НЕ работает на BSL**, см. [аудит](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) |
 | `Grep/Glob` | Этап 1: поиск файлов и паттернов на диске |
 
 ---
 
-## 9 этапов реализации
-
-### Этап 0: Активация проекта в Serena (ОБЯЗАТЕЛЬНО ПЕРВЫМ)
-
-**Цель:** Подключить проект к Serena LSP и запустить хук `serena-index-checker.py`
-(проверка git/индексации/memories). Без этого шага символьные операции Serena
-и восстановление контекста memories недоступны.
-
-**Шаги:**
-
-1. Определить имя проекта:
-   - Из аргументов команды (тикет/полное имя/путь), или
-   - Из пути к папке с ANALYSIS-REPORT.md (обычно `src/projects/configuration/<имя>/docs/`)
-   - Fallback: поиск в `cache/projects-registry.json` по тикету
-
-2. Активировать проект:
-   ```
-   mcp__serena__activate_project(project="<полное_имя_проекта>")
-   ```
-
-3. Обработать `claudeFallback` из хука `serena-index-checker` (в порядке приоритета):
-   - 🔴 **MEMORY SAVE MANDATORY** → сохранить pending memory задачи (ПЕРВЫМИ)
-   - 🔴 **GIT COMMIT PENDING** → выполнить commit незакоммиченных изменений проекта
-   - ⚠️ **INDEX OPTIONAL** → спросить пользователя (`AskUserQuestion`) об индексации
-   - ⚠️ **MEMORIES MISSING** → создать `project_overview` и `project_tasks` memories
-
-4. Восстановить контекст memories:
-   ```
-   mcp__serena__list_memories()
-   mcp__serena__read_memory("project_overview")
-   mcp__serena__read_memory("project_tasks")  # если есть
-   ```
-   Использовать прочитанное как контекст для всех последующих этапов.
-
-**Контрольная точка:** Serena активна на проекте, git чистый или закоммичен,
-memories прочитаны и учтены в плане реализации.
-
-**Если Serena недоступна:** Зафиксировать в IMPLEMENTATION-PROGRESS.md и
-продолжить работу через EDT-MCP + Grep/Glob как fallback.
-См. полный workflow: [activate-project](../../commands/activate-project.md).
-
----
+## 8 этапов реализации
 
 ### Этап 1: Подготовка
 
@@ -511,7 +471,6 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 
 ## Чеклист завершения (проверить перед Этапом 8)
 
-- [ ] Проект активирован в Serena (`mcp__serena__activate_project`), memories прочитаны
 - [ ] Все точки модификации из ANALYSIS-REPORT реализованы
 - [ ] Каждый блок кода имеет комментарий с номером задачи
 - [ ] EDT-MCP: get_project_errors = 0 ошибок
