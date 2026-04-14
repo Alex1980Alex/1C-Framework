@@ -1,9 +1,9 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.0.0
-updated: 2026-03-13
-tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger]
+version: 2.1.0
+updated: 2026-04-14
+tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger, serena]
 triggers:
   - реализовать задачу 1С
   - implement 1c task
