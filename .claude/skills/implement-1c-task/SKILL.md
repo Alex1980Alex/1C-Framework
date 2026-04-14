@@ -11,7 +11,7 @@ triggers:
   - реализация по ANALYSIS-REPORT
 ---
 
-# Реализация задачи 1С — 8-этапный pipeline (v2)
+# Реализация задачи 1С — 9-этапный pipeline (v2.1)
 
 ## Overview
 
