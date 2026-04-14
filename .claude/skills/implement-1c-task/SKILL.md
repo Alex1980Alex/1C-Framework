@@ -91,7 +91,48 @@ Skill для реализации задачи по конфигурации 1С
 
 ---
 
-## 8 этапов реализации
+## 9 этапов реализации
+
+### Этап 0: Активация проекта в Serena (ОБЯЗАТЕЛЬНО ПЕРВЫМ)
+
+**Цель:** Подключить проект к Serena LSP и запустить хук `serena-index-checker.py`
+(проверка git/индексации/memories). Без этого шага символьные операции Serena
+и восстановление контекста memories недоступны.
+
+**Шаги:**
+
+1. Определить имя проекта:
+   - Из аргументов команды (тикет/полное имя/путь), или
+   - Из пути к папке с ANALYSIS-REPORT.md (обычно `src/projects/configuration/<имя>/docs/`)
+   - Fallback: поиск в `cache/projects-registry.json` по тикету
+
+2. Активировать проект:
+   ```
+   mcp__serena__activate_project(project="<полное_имя_проекта>")
+   ```
+
+3. Обработать `claudeFallback` из хука `serena-index-checker` (в порядке приоритета):
+   - 🔴 **MEMORY SAVE MANDATORY** → сохранить pending memory задачи (ПЕРВЫМИ)
+   - 🔴 **GIT COMMIT PENDING** → выполнить commit незакоммиченных изменений проекта
+   - ⚠️ **INDEX OPTIONAL** → спросить пользователя (`AskUserQuestion`) об индексации
+   - ⚠️ **MEMORIES MISSING** → создать `project_overview` и `project_tasks` memories
+
+4. Восстановить контекст memories:
+   ```
+   mcp__serena__list_memories()
+   mcp__serena__read_memory("project_overview")
+   mcp__serena__read_memory("project_tasks")  # если есть
+   ```
+   Использовать прочитанное как контекст для всех последующих этапов.
+
+**Контрольная точка:** Serena активна на проекте, git чистый или закоммичен,
+memories прочитаны и учтены в плане реализации.
+
+**Если Serena недоступна:** Зафиксировать в IMPLEMENTATION-PROGRESS.md и
+продолжить работу через EDT-MCP + Grep/Glob как fallback.
+См. полный workflow: [activate-project](../../commands/activate-project.md).
+
+---
 
 ### Этап 1: Подготовка
 
