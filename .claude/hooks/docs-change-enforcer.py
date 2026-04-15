@@ -251,6 +251,13 @@ def get_session_files() -> set:
     except Exception:
         pass
 
+    # Filter out files that no longer exist in working tree.
+    # `git log --name-only` includes deleted files, which are noise for the
+    # staleness check — we can't update docs for code that isn't there anymore,
+    # and stray artifacts (e.g. accidental tool output committed + deleted)
+    # otherwise trigger UNMAPPED blocks for up to 6 hours.
+    files = {fp for fp in files if (PROJECT_ROOT / fp).exists()}
+
     return files
 
 
