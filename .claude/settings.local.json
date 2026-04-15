@@ -587,7 +587,8 @@
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /N /P /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /WA+ /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
-      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')"
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /UpdateDBCfg -Extension MCP_Сервер /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\upddb_MCP_DAILY.log')"
     ]
   },
   "enableAllProjectMcpServers": true,
