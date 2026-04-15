@@ -570,7 +570,20 @@
       "Bash(MSYS_NO_PATHCONV=1 tasklist.exe /FI \"IMAGENAME eq ragent.exe\" /FO CSV /NH)",
       "Bash(MSYS_NO_PATHCONV=1 tasklist.exe /FI \"IMAGENAME eq rmngr.exe\" /FO CSV /NH)",
       "Bash(MSYS_NO_PATHCONV=1 tasklist.exe /FI \"IMAGENAME eq ras.exe\" /FO CSV /NH)",
-      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=AILY_TM_BAT;DBMS=MSSQLServer;DBSrvr=localhost;DB=AILY_TM_BAT;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SUsr=;SPwd=;\" /DisableStartupDialogs /DisableStartupMessages /Out \"C:\\\\Temp\\\\createib_AILY_TM_BAT.log\")"
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=AILY_TM_BAT;DBMS=MSSQLServer;DBSrvr=localhost;DB=AILY_TM_BAT;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SUsr=;SPwd=;\" /DisableStartupDialogs /DisableStartupMessages /Out \"C:\\\\Temp\\\\createib_AILY_TM_BAT.log\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/ras.exe\" cluster --port=1545 KOMPUTER:1540)",
+      "Bash(MSYS_NO_PATHCONV=1 PYTHONIOENCODING=utf-8 /c/Program Files/1cv8/8.3.27.1859/bin/rac.exe cluster *)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f summary list KOMPUTER:1545)",
+      "Bash(MSYS_NO_PATHCONV=1 PYTHONIOENCODING=utf-8 /c/Program Files/1cv8/8.3.27.1859/bin/rac.exe infobase *)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f update --infobase=abf57c60-5125-4430-b370-e6bf7684c316 --infobase-user= --infobase-pwd= --sessions-deny=on --scheduled-jobs-deny=on --denied-message=Renaming KOMPUTER:1545)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' session --cluster=3aed02f3-8611-42f3-aec4-5c642501055f list --infobase=abf57c60-5125-4430-b370-e6bf7684c316 KOMPUTER:1545)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' connection --cluster=3aed02f3-8611-42f3-aec4-5c642501055f disconnect --process=c3134bee-2cbd-47c9-aeda-bd0dc41740c7 --connection=5429e68a-0a65-4356-8a4a-4d807f47502b --infobase-user= --infobase-pwd= KOMPUTER:1545)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' connection --cluster=3aed02f3-8611-42f3-aec4-5c642501055f list --infobase=abf57c60-5125-4430-b370-e6bf7684c316 KOMPUTER:1545)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f update --infobase=abf57c60-5125-4430-b370-e6bf7684c316 --infobase-user= --infobase-pwd= --db-user=sa --db-pwd=1980 --name=DAILY_TM_BAT --db-name=DAILY_TM_BAT --sessions-deny=off --scheduled-jobs-deny=off --denied-message= KOMPUTER:1545)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f info --infobase=abf57c60-5125-4430-b370-e6bf7684c316 KOMPUTER:1545)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f drop --infobase=abf57c60-5125-4430-b370-e6bf7684c316 --infobase-user= --infobase-pwd= KOMPUTER:1545)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=DAILY_TM_BAT;DBMS=MSSQLServer;DBSrvr=localhost;DB=DAILY_TM_BAT;DBUID=sa;DBPwd=1980;CrSQLDB=N;SUsr=;SPwd=;\" /DisableStartupDialogs /DisableStartupMessages /Out \"C:\\\\Temp\\\\reg_DAILY_TM_BAT.log\")",
+      "Bash(MSYS_NO_PATHCONV=1 taskkill.exe /IM ras.exe /F)"
     ]
   },
   "enableAllProjectMcpServers": true,
