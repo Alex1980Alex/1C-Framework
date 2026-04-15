@@ -554,7 +554,8 @@
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")",
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -iis -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")",
       "Bash(/c/Windows/System32/inetsrv/appcmd.exe list *)",
-      "Bash(MSYS_NO_PATHCONV=1 \"/c/Windows/System32/inetsrv/appcmd.exe\" list app)"
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Windows/System32/inetsrv/appcmd.exe\" list app)",
+      "mcp__1c-mcp-crud-infeeda__get_metadata_tree"
     ]
   },
   "enableAllProjectMcpServers": true,
