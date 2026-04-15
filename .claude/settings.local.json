@@ -541,7 +541,10 @@
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=tm_infeeda;DBMS=MSSQLServer;DBSrvr=localhost;DB=tm_infeeda;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SL=ru;\" /AddInList tm_infeeda /DisableStartupMessages /Out \"C:\\\\Temp\\\\create_tm_infeeda.log\" /DumpResult \"C:\\\\Temp\\\\create_tm_infeeda.result\")",
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/SQLCMD.EXE\" -S localhost -U sa -P 1980 -Q \"SELECT name FROM sys.databases WHERE name IN \\('tm_infeeda','tm_infeed','testdb1c'\\) ORDER BY name\" -h -1)",
       "Bash(MSYS_NO_PATHCONV=1 sqlcmd -S localhost -U sa -P 1980 -Q \"SELECT name FROM sys.databases WHERE name IN \\('tm_infeeda','tm_infeed','testdb1c'\\) ORDER BY name\" -h -1)",
-      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" /DumpIBList \"C:\\\\Temp\\\\iblist.txt\" /DisableStartupMessages)"
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" /DumpIBList \"C:\\\\Temp\\\\iblist.txt\" /DisableStartupMessages)",
+      "Bash(MSYS_NO_PATHCONV=1 curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost/TestDB/hs/)",
+      "Bash(mkdir -p \"/c/inetpub/wwwroot/tm_infeeda\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -dir \"C:\\\\inetpub\\\\wwwroot\\\\tm_infeeda\" -connstr \"Srvr=localhost;Ref=tm_infeeda;\" -confname \"tm_infeeda\" -httpshost \"localhost\" -wsdir \"tm_infeeda\")"
     ]
   },
   "enableAllProjectMcpServers": true,
