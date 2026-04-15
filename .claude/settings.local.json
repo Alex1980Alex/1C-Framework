@@ -544,7 +544,15 @@
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" /DumpIBList \"C:\\\\Temp\\\\iblist.txt\" /DisableStartupMessages)",
       "Bash(MSYS_NO_PATHCONV=1 curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost/TestDB/hs/)",
       "Bash(mkdir -p \"/c/inetpub/wwwroot/tm_infeeda\")",
-      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -dir \"C:\\\\inetpub\\\\wwwroot\\\\tm_infeeda\" -connstr \"Srvr=localhost;Ref=tm_infeeda;\" -confname \"tm_infeeda\" -httpshost \"localhost\" -wsdir \"tm_infeeda\")"
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -dir \"C:\\\\inetpub\\\\wwwroot\\\\tm_infeeda\" -connstr \"Srvr=localhost;Ref=tm_infeeda;\" -confname \"tm_infeeda\" -httpshost \"localhost\" -wsdir \"tm_infeeda\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -?)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" /?)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -help)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\")",
+      "Bash(MSYS_NO_PATHCONV=1 cmd //c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\1cv8\\\\\\\\8.3.27.1859\\\\\\\\bin\\\\\\\\webinst.exe\\\\\" -publish 2>&1\")",
+      "Bash(MSYS_NO_PATHCONV=1 cmd //c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\1cv8\\\\\\\\8.3.27.1859\\\\\\\\bin\\\\\\\\webinst.exe\\\\\" -publish -iis 1>webinst_out.txt 2>&1 & type webinst_out.txt\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -iis -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")"
     ]
   },
   "enableAllProjectMcpServers": true,
