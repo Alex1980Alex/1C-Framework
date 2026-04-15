@@ -559,7 +559,18 @@
       "mcp__1c-mcp-crud-infeeda__list_metadata_objects",
       "mcp__1c-mcp-crud-infeeda__get_metadata",
       "mcp__1c-mcp-crud-infeeda__get_metadata_structure",
-      "mcp__1c-mcp-crud-infeeda__execute_query"
+      "mcp__1c-mcp-crud-infeeda__execute_query",
+      "Bash(MSYS_NO_PATHCONV=1 /c/Program Files/1cv8/8.3.27.1859/bin/rac.exe cluster *)",
+      "Bash(MSYS_NO_PATHCONV=1 PYTHONIOENCODING=utf-8 \"/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" cluster list KOMPUTER)",
+      "Bash(tasklist.exe /FO CSV)",
+      "Bash(chcp.com 65001)",
+      "Bash(tasklist.exe /FI \"IMAGENAME eq ragent.exe\" /FO CSV)",
+      "Bash(tasklist.exe /FI \"IMAGENAME eq rmngr.exe\" /FO CSV)",
+      "Bash(tasklist.exe /FI \"IMAGENAME eq ras.exe\" /FO CSV)",
+      "Bash(MSYS_NO_PATHCONV=1 tasklist.exe /FI \"IMAGENAME eq ragent.exe\" /FO CSV /NH)",
+      "Bash(MSYS_NO_PATHCONV=1 tasklist.exe /FI \"IMAGENAME eq rmngr.exe\" /FO CSV /NH)",
+      "Bash(MSYS_NO_PATHCONV=1 tasklist.exe /FI \"IMAGENAME eq ras.exe\" /FO CSV /NH)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=AILY_TM_BAT;DBMS=MSSQLServer;DBSrvr=localhost;DB=AILY_TM_BAT;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SUsr=;SPwd=;\" /DisableStartupDialogs /DisableStartupMessages /Out \"C:\\\\Temp\\\\createib_AILY_TM_BAT.log\")"
     ]
   },
   "enableAllProjectMcpServers": true,
