@@ -71,6 +71,8 @@ docker run -d -p 6003:6003 \
 }
 ```
 
+> **Доп. инструменты (не описаны ниже):** `get_metadata_structure`, `list_metadata_objects`. Контракт параметров отличается от `get_metadata` (требует `metaType` из английского enum + `name`). Точный API и антипаттерны — [cache/get_metadata_structure-api.md](cache/get_metadata_structure-api.md).
+
 ## 8 MCP-инструментов (все протестированы 2026-03-12)
 
 | Tool | Назначение | Когда использовать | Статус |
