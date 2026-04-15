@@ -552,7 +552,9 @@
       "Bash(MSYS_NO_PATHCONV=1 cmd //c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\1cv8\\\\\\\\8.3.27.1859\\\\\\\\bin\\\\\\\\webinst.exe\\\\\" -publish 2>&1\")",
       "Bash(MSYS_NO_PATHCONV=1 cmd //c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\1cv8\\\\\\\\8.3.27.1859\\\\\\\\bin\\\\\\\\webinst.exe\\\\\" -publish -iis 1>webinst_out.txt 2>&1 & type webinst_out.txt\")",
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")",
-      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -iis -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")"
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -publish -iis -dir \"C:\\\\Temp\\\\webinst_test_nope\" -connstr \"Srvr=KOMPUTER;Ref=nonexistent_base;\" -wsdir \"nope\")",
+      "Bash(/c/Windows/System32/inetsrv/appcmd.exe list *)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Windows/System32/inetsrv/appcmd.exe\" list app)"
     ]
   },
   "enableAllProjectMcpServers": true,
