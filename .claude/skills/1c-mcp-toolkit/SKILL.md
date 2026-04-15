@@ -5,11 +5,33 @@ description: "1c-mcp-toolkit — MCP доступ к данным и метад�
 
 # 1c-mcp-toolkit — MCP доступ к данным и метаданным 1С:Предприятие
 
+> ## ⚠️ СТАТУС: ОТКЛЮЧЁН В `.mcp.json` (`disabled: true`)
+>
+> Этот скилл описывает **ROCTUP `1c-mcp-toolkit`** (.epf на порту 6003). **Сейчас НЕ используется.** В рабочих сессиях активен **другой** MCP-сервер с похожим именем — **`1c-mcp-crud`** (Python stdio → IIS `/hs/mcp/rpc`). Их легко перепутать потому что:
+>
+> - Оба предоставляют tools вроде `execute_query`, `execute_code`, `get_metadata`
+> - Оба описаны в `.mcp.json`, но у ROCTUP стоит `"disabled": true`
+> - Tool prefix в Claude Code: **`mcp__1c-mcp-crud__*`** — это именно `1c-mcp-crud`, НЕ toolkit
+> - Набор tools у `1c-mcp-crud` **шире** (17 vs 9): добавлены `create_object`, `update_object`, `post_document`, `mark_for_deletion`, `validate_query`, `search_code`, `list_metadata_objects`, `get_metadata_structure`, `get_bsl_syntax_help`
+>
+> **Если ты сейчас хочешь работать с live-данными 1С — используй `mcp__1c-mcp-crud__*` напрямую**, а этот скилл читай только если намеренно поднимаешь ROCTUP .epf обратно.
+>
+> Различия архитектуры:
+>
+> | | `1c-mcp-crud` (ACTIVE) | `1c-mcp-toolkit` (DISABLED) |
+> |---|---|---|
+> | Транспорт | stdio (Python process) | HTTP :6003 |
+> | Доступ к 1С | IIS publication `/hs/mcp/rpc` | NativeAPI HTTP в .epf |
+> | Требует | `webinst.exe -publish` + расширение `MCP_Сервер` | Открытая 1С-сессия с .epf |
+> | Source | `D:\1C-Enterprise_Framework\src\external\1c_mcp\` | `tools/1c-mcp-toolkit/MCP_Toolkit_v1.5.0.epf` |
+> | Auth | HTTP Basic (в `env` .mcp.json) | Внутри 1С-сессии |
+> | TOON/Anonymization | нет | есть (779 правил) |
+
 ## Обзор
 
 MCP-сервер для работы с базой 1С:Предприятие через AI-агенты. 9 инструментов: запросы, выполнение кода, метаданные, журнал регистрации, навигационные ссылки, права доступа, анонимизация. Встроенный NativeAPI HTTP-сервер в .epf (без Docker). TOON-формат (экономия 30-60% токенов).
 
-**Сервер:** ROCTUP/1c-mcp-toolkit v1.5.0 (Native HTTP)
+**Сервер:** ROCTUP/1c-mcp-toolkit v1.5.0 (Native HTTP) — ⚠️ сейчас disabled
 **Репозиторий:** https://github.com/ROCTUP/1c-mcp-toolkit
 
 ## Триггеры
