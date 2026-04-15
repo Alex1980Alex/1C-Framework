@@ -583,7 +583,11 @@
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f info --infobase=abf57c60-5125-4430-b370-e6bf7684c316 KOMPUTER:1545)",
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f drop --infobase=abf57c60-5125-4430-b370-e6bf7684c316 --infobase-user= --infobase-pwd= KOMPUTER:1545)",
       "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=DAILY_TM_BAT;DBMS=MSSQLServer;DBSrvr=localhost;DB=DAILY_TM_BAT;DBUID=sa;DBPwd=1980;CrSQLDB=N;SUsr=;SPwd=;\" /DisableStartupDialogs /DisableStartupMessages /Out \"C:\\\\Temp\\\\reg_DAILY_TM_BAT.log\")",
-      "Bash(MSYS_NO_PATHCONV=1 taskkill.exe /IM ras.exe /F)"
+      "Bash(MSYS_NO_PATHCONV=1 taskkill.exe /IM ras.exe /F)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /N /P /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /WA+ /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER /S 'KOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /RestoreIB 'C:\\\\Users\\\\AlexT\\\\Downloads\\\\260415_DAILY_TM_BAT.dt' /DisableStartupDialogs /DisableStartupMessages /Out 'C:\\\\Temp\\\\restore_DAILY_TM_BAT.log')"
     ]
   },
   "enableAllProjectMcpServers": true,
