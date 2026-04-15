@@ -176,8 +176,7 @@
         "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
         "MCP_ONEC_PASSWORD": "Alex80Alex"
       },
-      "timeout": 60000,
-      "disabled": true
+      "timeout": 60000
     },
     "1c-debug": {
       "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
