@@ -531,7 +531,17 @@
       "Bash(xxd \"D:/1С-Framework/tools/vanessa/run-bdd.ps1\")",
       "mcp__1c-mcp-crud__validate_query",
       "mcp__1c-mcp-crud__get_metadata",
-      "mcp__edt-mcp__revalidate_objects"
+      "mcp__edt-mcp__revalidate_objects",
+      "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" localhost:1545 cluster list)",
+      "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=tm_infeeda;DBMS=MSSQLServer;DBSrvr=localhost;DB=tm_infeeda;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SL=ru;\" /AddInList tm_infeeda /DisableStartupMessages /Out create_tm_infeeda.log)",
+      "Bash(iconv -f utf-16le -t utf-8 create_tm_infeeda.log)",
+      "Bash(cat create_tm_infeeda.log)",
+      "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=tm_infeeda;DBMS=MSSQLServer;DBSrvr=localhost;DB=tm_infeeda;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SL=ru;\" /AddInList tm_infeeda /DisableStartupMessages /Out \"C:\\\\Temp\\\\create_tm_infeeda.log\" /DumpResult \"C:\\\\Temp\\\\create_tm_infeeda.result\")",
+      "Bash(mkdir -p /c/Temp)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" CREATEINFOBASE \"Srvr=KOMPUTER;Ref=tm_infeeda;DBMS=MSSQLServer;DBSrvr=localhost;DB=tm_infeeda;DBUID=sa;DBPwd=1980;CrSQLDB=Y;SL=ru;\" /AddInList tm_infeeda /DisableStartupMessages /Out \"C:\\\\Temp\\\\create_tm_infeeda.log\" /DumpResult \"C:\\\\Temp\\\\create_tm_infeeda.result\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/SQLCMD.EXE\" -S localhost -U sa -P 1980 -Q \"SELECT name FROM sys.databases WHERE name IN \\('tm_infeeda','tm_infeed','testdb1c'\\) ORDER BY name\" -h -1)",
+      "Bash(MSYS_NO_PATHCONV=1 sqlcmd -S localhost -U sa -P 1980 -Q \"SELECT name FROM sys.databases WHERE name IN \\('tm_infeeda','tm_infeed','testdb1c'\\) ORDER BY name\" -h -1)",
+      "Bash(MSYS_NO_PATHCONV=1 \"/c/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" /DumpIBList \"C:\\\\Temp\\\\iblist.txt\" /DisableStartupMessages)"
     ]
   },
   "enableAllProjectMcpServers": true,
