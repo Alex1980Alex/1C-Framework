@@ -5,8 +5,6 @@ Tests: references, rename, document_symbols with bulk workspace preload.
 """
 import asyncio
 import json
-import os
-import sys
 import time
 from pathlib import Path
 from typing import Any
