@@ -597,7 +597,8 @@
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f summary list --ras=localhost:1545)",
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f summary list)",
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/ras.exe\" cluster --port=1545)",
-      "Bash(MSYS_NO_PATHCONV=1 C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe infobase *)"
+      "Bash(MSYS_NO_PATHCONV=1 C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe infobase *)",
+      "Bash(MSYS_NO_PATHCONV=1 C:/Program Files/1cv8/8.3.27.1859/bin/webinst.exe *)"
     ]
   },
   "enableAllProjectMcpServers": true,
