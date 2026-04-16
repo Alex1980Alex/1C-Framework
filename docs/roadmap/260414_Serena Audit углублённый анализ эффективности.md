@@ -16,6 +16,7 @@
 5. **План реализации:** Phases 0a-7 (ядро), оценка 6-9 дней. Дополнительно Phases 8-10 (v4.1 extension) — context/mode system, Tier 4 tools, dashboard/observability, +5-7 дней.
 6. **Дополнительно (v4.1, 2026-04-15):** из Serena переносятся не только инструменты, но и **архитектурные концепции**: context-aware tool gating (excluded_tools per harness), modes (planning/interactive/editing), evaluation методология (20 задач × 5 категорий × (a)(b)(c) таксономия), automated onboarding, dashboard observability, Tier 4 navigation tools (`bsl_find_code_snippets`, `bsl_type_hierarchy`, `bsl_find_implementations`, `bsl_project_overview`). См. секцию 4.9.
 7. **Немедленный первый коммит** — откат Этапа 0 из `implement-1c-task` (зависит от несуществующего хука) + Recon BSL LS + spec гибридного плана.
+8. **Phase 0b выполнена (2026-04-17) — Scenario 2 подтверждён.** BSL LS v0.22.0 запускается standalone через stdio (cold 4.0-4.8s), in-file rename работает, **cross-file rename не работает даже с `Configuration.xml` + `.mdo`** (архитектура «per-document» — LS видит только файлы открытые через `didOpen`). `textDocument/references` возвращает `[]` для экспортной функции; rename экспорта даёт только 1 edit в declaration-файле. Routing matrix скорректирована: `module_export_proc` переведён с `A+B parallel` на **`B only`**. Variant A сокращён до in-file kinds (`local_var`, `parameter`, `module_private_proc`), срок 2-3 дн → 1-1.5 дн. Полный отчёт: [bsl-ls-recon-results.md](bsl-ls-recon-results.md).
 
 ---
 
