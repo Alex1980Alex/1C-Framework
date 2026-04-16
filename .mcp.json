@@ -195,8 +195,8 @@
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "MCP_ONEC_URL": "http://localhost/DEV_ATERLETSKIY_39144_MFM",
-        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
-        "MCP_ONEC_PASSWORD": "Alex80Alex"
+        "MCP_ONEC_USERNAME": "",
+        "MCP_ONEC_PASSWORD": ""
       },
       "timeout": 60000
     },
