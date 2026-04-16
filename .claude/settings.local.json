@@ -605,7 +605,10 @@
       "mcp__1c-mcp-crud-dev39144__search_code",
       "mcp__1c-mcp-crud-dev39144__list_metadata_objects",
       "mcp__1c-mcp-crud-dev39144__get_metadata",
-      "mcp__1c-mcp-crud-dev39144__execute_code"
+      "mcp__1c-mcp-crud-dev39144__execute_code",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\DEV_ATERLETSKIY_39144_MFM\" /N \"a.terletskiy@sodru.com\" /P \"Alex80Alex\" /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\src\\\\projects\\\\configuration\\\\260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников\\\\src\" /UpdateDBCfg /Out \"D:\\\\1С-Framework\\\\logs\\\\load_config.log\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\DEV_ATERLETSKIY_39144_MFM\" /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\src\\\\projects\\\\configuration\\\\260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников\\\\src\" /UpdateDBCfg /Out \"D:\\\\1С-Framework\\\\logs\\\\load_config.log\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\DEV_ATERLETSKIY_39144_MFM\" /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\src\\\\projects\\\\configuration\\\\260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников\\\\src\" /UpdateDBCfg /Out \"D:\\\\1С-Framework\\\\logs\\\\load_config2.log\")"
     ]
   },
   "enableAllProjectMcpServers": true,
