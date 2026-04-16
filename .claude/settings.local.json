@@ -604,7 +604,8 @@
       "mcp__1c-mcp-crud-dev39144__get_metadata_tree",
       "mcp__1c-mcp-crud-dev39144__search_code",
       "mcp__1c-mcp-crud-dev39144__list_metadata_objects",
-      "mcp__1c-mcp-crud-dev39144__get_metadata"
+      "mcp__1c-mcp-crud-dev39144__get_metadata",
+      "mcp__1c-mcp-crud-dev39144__execute_code"
     ]
   },
   "enableAllProjectMcpServers": true,
