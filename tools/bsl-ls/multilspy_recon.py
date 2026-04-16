@@ -62,7 +62,7 @@ class BSLLanguageServer(LanguageServer):
         if not JAR.exists():
             raise FileNotFoundError(f"BSL LS JAR not found: {JAR}")
         launch_info = ProcessLaunchInfo(
-            cmd=f'java -jar "{JAR}" --stdio',
+            cmd=f'java -jar "{JAR}" --lsp',
             cwd=repository_root_path,
         )
         super().__init__(config, logger, repository_root_path, launch_info,
