@@ -137,6 +137,22 @@
       "github_repos_count": 6
     },
     {
+      "file": "multilspy-research.md",
+      "title": "Multilspy — Microsoft Python LSP Client Library (full API, BSL adapter pattern)",
+      "keywords": [
+        "multilspy", "lsp", "language-server-protocol", "microsoft-research",
+        "language-server", "python-api", "sync-async", "bsl-adapter",
+        "request-definition", "request-references", "request-rename",
+        "process-launch-info", "psutil", "subprocess-lifecycle",
+        "workspace-edit", "cross-file-refactoring", "text-document",
+        "json-rpc", "stdio", "context-manager", "language-adapter",
+        "bsl-language-server", "1c-enterprise", "custom-language"
+      ],
+      "last_verified": "2026-04-17",
+      "sources_count": 4,
+      "github_repos_count": 1
+    },
+    {
       "file": "hermes-llm-wiki-github-landscape.md",
       "title": "Hermes Agent / LLM Wiki — GitHub Landscape (6 тем)",
       "keywords": [
