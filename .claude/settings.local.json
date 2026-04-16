@@ -593,7 +593,11 @@
       "Bash(touch \"/c/inetpub/wwwroot/DAILY_TM_BAT/.testwrite\")",
       "Bash(rm \"/c/inetpub/wwwroot/DAILY_TM_BAT/.testwrite\")",
       "Bash(MSYS_NO_PATHCONV=1 powershell.exe -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\\\Temp\\\\publish-daily_tm_bat.ps1' -Verb RunAs -Wait\")",
-      "Bash(MSYS_NO_PATHCONV=1 powershell.exe -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\\\Temp\\\\fix-daily-vrd.ps1' -Verb RunAs -Wait\")"
+      "Bash(MSYS_NO_PATHCONV=1 powershell.exe -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\\\Temp\\\\fix-daily-vrd.ps1' -Verb RunAs -Wait\")",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f summary list --ras=localhost:1545)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe\" infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f summary list)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/ras.exe\" cluster --port=1545)",
+      "Bash(MSYS_NO_PATHCONV=1 C:/Program Files/1cv8/8.3.27.1859/bin/rac.exe infobase *)"
     ]
   },
   "enableAllProjectMcpServers": true,
