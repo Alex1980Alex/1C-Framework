@@ -2422,3 +2422,9 @@
 10:44:27.625 WARN  - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
 10:44:27.718 INFO  - Started MainKt in 2.995 seconds (process running for 3.881)
 10:44:27.742 INFO  - EDT формат не выбран, автозапуск пропущен
+2026-04-16 10:56:45.257 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"tools/list","jsonrpc":"2.0","id":5}
+2026-04-16 10:56:45.257 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"tools/list","jsonrpc":"2.0","id":5}
+2026-04-16 10:56:45.257 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=tools/list, id=5, params=null]
+2026-04-16 10:56:45.258 [pool-2-thread-1] DEBUG i.m.s.t.StdioServerTransportProvider - Received JSON message: {"method":"prompts/list","jsonrpc":"2.0","id":6}
+2026-04-16 10:56:45.258 [pool-2-thread-1] DEBUG i.m.spec.McpSchema - Received JSON message: {"method":"prompts/list","jsonrpc":"2.0","id":6}
+2026-04-16 10:56:45.259 [pool-2-thread-1] DEBUG i.m.spec.McpServerSession - Received request: JSONRPCRequest[jsonrpc=2.0, method=prompts/list, id=6, params=null]
