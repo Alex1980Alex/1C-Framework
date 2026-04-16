@@ -1,0 +1,23 @@
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "result": {
+    "changes": {
+      "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестоваяУтилита/Ext/Module.bsl": [
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 24
+            }
+          },
+          "newText": "ПолучитьПараметрНовый"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "capabilities": {
+      "textDocumentSync": {
+        "openClose": true,
+        "change": 1,
+        "willSave": false,
+        "willSaveWaitUntil": false,
+        "save": {
+          "includeText": false
+        }
+      },
+      "hoverProvider": {
+        "workDoneProgress": false
+      },
+      "definitionProvider": {
+        "workDoneProgress": false
+      },
+      "referencesProvider": {
+        "workDoneProgress": false
+      },
+      "documentSymbolProvider": {
+        "label": "BSL Language Server",
+        "workDoneProgress": false
+      },
+      "workspaceSymbolProvider": {
+        "workDoneProgress": false
+      },
+      "codeActionProvider": {
+        "codeActionKinds": [
+          "quickfix",
+          "refactor"
+        ],
+        "resolveProvider": false,
+        "workDoneProgress": false
+      },
+      "codeLensProvider": {
+        "resolveProvider": true,
+        "workDoneProgress": false
+      },
+      "documentFormattingProvider": {
+        "workDoneProgress": false
+      },
+      "documentRangeFormattingProvider": {
+        "workDoneProgress": false
+      },
+      "renameProvider": {
+        "prepareProvider": true,
+        "workDoneProgress": false
+      },
+      "documentLinkProvider": {
+        "resolveProvider": false
+      },
+      "colorProvider": {
+        "workDoneProgress": false
+      },
+      "foldingRangeProvider": {
+        "workDoneProgress": false
+      },
+      "executeCommandProvider": {
+        "commands": [
+          "toggleCognitiveComplexityInlayHints",
+          "toggleCyclomaticComplexityInlayHints"
+        ],
+        "workDoneProgress": false
+      },
+      "callHierarchyProvider": {
+        "workDoneProgress": false
+      },
+      "selectionRangeProvider": {
+        "workDoneProgress": false
+      },
+      "inlayHintProvider": {
+        "resolveProvider": false,
+        "workDoneProgress": false
+      }
+    },
+    "serverInfo": {
+      "name": "BSL Language Server",
+      "version": "0.22.0"
+    }
+  }
+}

@@ -626,7 +626,10 @@
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\DEV_ATERLETSKIY_39144_MFM\" /DisableStartupDialogs /DisableStartupMessages /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\logs\\\\dump_cfg\" /UpdateDBCfg /Out \"D:\\\\1С-Framework\\\\logs\\\\load_v2.log\")",
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\DEV_ATERLETSKIY_39144_MFM\" /DisableStartupDialogs /DisableStartupMessages /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\logs\\\\dump_cfg\" /UpdateDBCfg /Out \"D:\\\\1С-Framework\\\\logs\\\\load_minimal.log\")",
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\DEV_ATERLETSKIY_39144_MFM\" /DisableStartupDialogs /DisableStartupMessages /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\logs\\\\dump_cfg\" /UpdateDBCfg /Out \"D:\\\\1С-Framework\\\\logs\\\\load_module.log\")",
-      "Read(//d/1С-Framework/.git/**)"
+      "Read(//d/1С-Framework/.git/**)",
+      "Bash(cp -r recon-logs recon-logs-run1)",
+      "Bash(rm -rf recon-logs)",
+      "Bash(mkdir recon-logs *)"
     ]
   },
   "enableAllProjectMcpServers": true,

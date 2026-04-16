@@ -1,0 +1,59 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "method": "window/logMessage",
+    "params": {
+      "type": 1,
+      "message": "[ERROR - 2026-04-16T20:49:16.711707200Z] [compute-configuration-3] [com.github._1c_syntax.mdclasses.unmarshal.XStreamFactory]: Can't read file 'D:\\1С-Framework\\tools\\bsl-ls\\test-workspace\\Configuration.xml' - it's broken \n: "
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "window/logMessage",
+    "params": {
+      "type": 1,
+      "message": "[ERROR - 2026-04-16T20:49:16.717710200Z] [populate-context-1] [com.github._1c_syntax.bsl.languageserver.context.ServerContext]: Can't parse configuration metadata. Execution exception."
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестоваяУтилита/Ext/Module.bsl",
+      "diagnostics": [
+        {
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 1
+            },
+            "end": {
+              "line": 5,
+              "character": 9
+            }
+          },
+          "severity": 3,
+          "code": "DeprecatedMessage",
+          "codeDescription": {
+            "href": "https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedMessage"
+          },
+          "source": "bsl-language-server",
+          "message": "Не следует использовать устаревший метод \"Сообщить\"",
+          "tags": [
+            2
+          ]
+        }
+      ],
+      "version": 1
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестовыйВызыватель/Ext/Module.bsl",
+      "diagnostics": [],
+      "version": 1
+    }
+  }
+]
