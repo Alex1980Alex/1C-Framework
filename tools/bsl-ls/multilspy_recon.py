@@ -5,10 +5,11 @@ Tests: references, rename, document_symbols with bulk workspace preload.
 """
 import asyncio
 import json
+import logging
 import time
-from contextlib import ExitStack
+from contextlib import ExitStack, asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
 from multilspy.language_server import LanguageServer
 from multilspy.lsp_protocol_handler.server import ProcessLaunchInfo
@@ -36,15 +37,48 @@ class BSLLanguageServer(LanguageServer):
         super().__init__(config, logger, repository_root_path, launch_info,
                          language_id="bsl")
 
+    @asynccontextmanager
+    async def start_server(self) -> AsyncIterator["BSLLanguageServer"]:
+        """Start BSL LS, send initialize, wait for ready, yield self."""
+        async def do_nothing(params):
+            return
+
+        async def log_message(msg):
+            self.logger.log(f"LSP: window/logMessage: {msg}", logging.INFO)
+
+        self.server.on_request("client/registerCapability", do_nothing)
+        self.server.on_notification("language/status", do_nothing)
+        self.server.on_notification("window/logMessage", log_message)
+        self.server.on_notification("window/showMessage", do_nothing)
+        self.server.on_notification("textDocument/publishDiagnostics", do_nothing)
+        self.server.on_notification("$/progress", do_nothing)
+
+        async with super().start_server():
+            self.logger.log("Starting BSL Language Server process", logging.INFO)
+            await self.server.start()
+
+            init_params = self._get_initialize_params(self.repository_root_path)
+            self.logger.log("Sending initialize request", logging.INFO)
+            init_response = await self.server.send.initialize(init_params)
+            caps = init_response.get("capabilities", {})
+            self.logger.log(f"Server capabilities: {list(caps.keys())}", logging.INFO)
+
+            self.server.notify.initialized({})
+            self.logger.log("BSL LS initialized", logging.INFO)
+
+            yield self
+
+            await self.server.shutdown()
+            await self.server.stop()
+
 
 class FileLogger(MultilspyLogger):
     """Simple file-based logger matching MultilspyLogger interface."""
 
     def __init__(self, log_path: Path):
-        import logging as _logging
         self._fh = open(log_path, "w", encoding="utf-8")
-        self.logger = _logging.Logger("multilspy_bsl", level=_logging.DEBUG)
-        self.logger.addHandler(_logging.StreamHandler(self._fh))
+        self.logger = logging.Logger("multilspy_bsl", level=logging.DEBUG)
+        self.logger.addHandler(logging.StreamHandler(self._fh))
 
     def close(self):
         self._fh.close()
@@ -65,8 +99,8 @@ async def run_recon():
     print(f"Workspace: {WORKSPACE}")
 
     config = MultilspyConfig(
-        code_language=Language.PYTHON,  # placeholder; BSLLanguageServer overrides
-        trace_lsp_communication=True,
+        code_language=Language.PYTHON,
+        trace_lsp_communication=False,
     )
     logger = FileLogger(LOGDIR / "trace.log")
 
@@ -78,21 +112,18 @@ async def run_recon():
     t0 = time.time()
     async with server.start_server():
         init_ms = int((time.time() - t0) * 1000)
-        print(f"Server started in {init_ms}ms")
+        print(f"Server initialized in {init_ms}ms")
 
         # Bulk preload ALL files — keep them open via ExitStack
         preload_t0 = time.time()
         with ExitStack() as stack:
-            rel_paths = []
             for fpath in sorted(bsl_files):
                 rel = fpath.relative_to(WORKSPACE.resolve())
                 rel_str = str(rel).replace("\\", "/")
                 stack.enter_context(server.open_file(rel_str))
-                rel_paths.append(rel_str)
             preload_ms = int((time.time() - preload_t0) * 1000)
             print(f"Bulk preload {len(bsl_files)} files in {preload_ms}ms")
 
-            # Let LS index
             await asyncio.sleep(3)
 
             util_rel = "CommonModules/ТестоваяУтилита/Ext/Module.bsl"
@@ -133,7 +164,7 @@ async def run_recon():
                 print(f"  Error: {e}")
 
             # 3. Definition from caller (cross-file)
-            print("\n--- Definition from caller (cross-file) ---")
+            print("\n--- Definition from caller ---")
             try:
                 defs = await server.request_definition(caller_rel, 1, 20)
                 d_list = defs if defs else []
@@ -151,7 +182,7 @@ async def run_recon():
                 print(f"  Error: {e}")
 
             # 4. Prepare rename
-            print("\n--- Prepare Rename (ПолучитьПараметр) ---")
+            print("\n--- Prepare Rename ---")
             try:
                 prep = await server.server.send.prepare_rename({
                     "textDocument": {"uri": util_uri},
@@ -191,7 +222,7 @@ async def run_recon():
                 print(f"  Error: {e}")
 
             # 6. Rename local function
-            print("\n--- Rename local (ПолучитьЗначениеПоУмолчанию) ---")
+            print("\n--- Rename local ---")
             try:
                 rename_local = await server.server.send.rename({
                     "textDocument": {"uri": util_uri},
@@ -206,21 +237,6 @@ async def run_recon():
                 print(f"  Files: {len(ch)}, edits: {sum(len(v) for v in ch.values())}")
             except Exception as e:
                 dump("06_rename_local", {"error": str(e)})
-                print(f"  Error: {e}")
-
-            # 7. Workspace symbol search
-            print("\n--- Workspace Symbol (Получить) ---")
-            try:
-                ws_symbols = await server.request_workspace_symbol("Получить")
-                ws = ws_symbols if ws_symbols else []
-                dump("07_workspace_symbol", {
-                    "count": len(ws),
-                    "symbols": [{"name": s.get("name"), "kind": s.get("kind")}
-                                for s in ws[:10]],
-                })
-                print(f"  Found {len(ws)} symbols")
-            except Exception as e:
-                dump("07_workspace_symbol", {"error": str(e)})
                 print(f"  Error: {e}")
 
     logger.close()
