@@ -5,7 +5,6 @@ Tests: references, rename, document_symbols with bulk workspace preload.
 """
 import asyncio
 import json
-import logging
 import time
 from contextlib import ExitStack
 from pathlib import Path
