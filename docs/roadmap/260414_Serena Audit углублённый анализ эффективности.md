@@ -264,7 +264,7 @@ def classify(file_path: Path, line: int, col: int) -> SymbolKind:
 | `local_var` | **A** (BSL LS in-file) | — | Scope = один метод. BSL LS знает scope |
 | `parameter` | **A** (BSL LS in-file) | **B** граф для cross-module callers | A точен для объявления, B для cross-file вызовов |
 | `module_private_proc` | **A** (BSL LS in-module) | — | Scope = один модуль |
-| `module_export_proc` | **A + B параллельно** | Сравнение edits — расхождение → confirm | A находит cross-module, B проверяет через граф |
+| `module_export_proc` | **B only** (после Phase 0b, 2026-04-17) | **EDT-MCP** `find_references` | Recon показал: BSL LS v0.22.0 per-document — cross-file rename не работает даже с метаданными. Ранее планировалось A+B parallel, отклонено по факту. См. [bsl-ls-recon-results.md](bsl-ls-recon-results.md) |
 | `manager_method` | **B** (граф) | **EDT-MCP** `find_references` | BSL LS не знает `Справочники.X.Модуль.Y()` контекст |
 | `object_method` | **B** (граф) | **EDT-MCP** `find_references` | То же |
 | `form_handler` | **B** (стандартные имена) | — | Handlers — metadata-aware |
