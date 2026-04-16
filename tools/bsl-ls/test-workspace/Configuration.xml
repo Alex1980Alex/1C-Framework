@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Configuration uuid="00000000-0000-0000-0000-000000000001">
+    <Properties>
+      <Name>ReconTestConfig</Name>
+      <Synonym><v8:item><v8:lang>ru</v8:lang><v8:content>Recon</v8:content></v8:item></Synonym>
+      <ScriptVariant>Russian</ScriptVariant>
+      <CompatibilityMode>8.3.15</CompatibilityMode>
+    </Properties>
+    <ChildObjects>
+      <CommonModule>ТестоваяУтилита</CommonModule>
+      <CommonModule>ТестовыйВызыватель</CommonModule>
+    </ChildObjects>
+  </Configuration>
+</MetaDataObject>
