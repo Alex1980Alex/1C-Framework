@@ -1081,7 +1081,7 @@ Meta-principle общий: **«загружай минимально необх�
 | **0b** | Recon BSL LS ✅ **DONE (2026-04-17)** | Запуск JAR standalone, тест `textDocument/rename`, разбор issues #802/#798/#792. Артефакт: [bsl-ls-recon-results.md](bsl-ls-recon-results.md). Итог: **Scenario 2** — in-file rename работает, cross-file не работает. Routing matrix скорректирована (§4.6): `module_export_proc` → B only | 4-6 ч (факт ~3 ч) | — | — |
 | **1** | Tier 2 skill + helpers | Skill `bsl-symbol-editing` + 3 helper-обёртки над EDT-MCP. Не требует LSP | 1 день | — | — |
 | **2** | Variant B core | Symbol classifier. Граф-based rename для `manager_method`, `object_method`, `form_handler`. Dry-run + verification | 2 дня | — | Phase 1 |
-| **3** | Variant A core *(условно)* | Минимальный LSP client, subprocess lifecycle, `textDocument/rename` + `findReferences` | 2-3 дня | Phase 0b = Scenario 1/2 | Phase 0b |
+| **3** | Variant A core (in-file only, после Phase 0b) | Минимальный LSP client, subprocess lifecycle, `textDocument/rename` + `findReferences`. Покрывает ТОЛЬКО `local_var`, `parameter`, `module_private_proc`. Cross-file вынесен в Variant B | 1-1.5 дня (было 2-3) | — | Phase 0b (DONE) |
 | **4** | Orchestrator + Routing | Объединение A и B, merge logic, confidence scoring, fallback chain | 1 день | — | Phase 2 + Phase 3 |
 | **5** | Symbol-first workflow skill | Skill `bsl-refactoring-workflow` с 5-категорийной матрицей, интеграция с `implement-1c-task` | 0.5 дня | — | Phase 1-4 |
 | **6** | Benchmark (Serena methodology) | 20 задач из git history × 5 категорий × (a)(b)(c) таксономия. Git diff verification + auto-revert. Артефакт: `docs/roadmap/bsl-refactor-benchmark-YYYY-MM.md` | 1.5 дня (было 0.5 — расширено до Serena-стандарта) | — | Phase 4 |
