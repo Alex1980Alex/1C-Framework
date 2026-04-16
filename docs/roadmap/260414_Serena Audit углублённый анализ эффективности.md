@@ -1078,7 +1078,7 @@ Meta-principle общий: **«загружай минимально необх�
 | # | Фаза | Что делает | Усилие | Блокер? | Зависит от |
 |---|---|---|---|---|---|
 | **0a** | Rollback Этап 0 | `implement-1c-task.md/SKILL.md` → 8 этапов, версия 2.1.1. Почистить `/activate-project.md` | 30 мин | — | — |
-| **0b** | Recon BSL LS | Запуск JAR standalone, тест `textDocument/rename`, разбор issues #802/#798/#792. Артефакт: `docs/roadmap/bsl-ls-recon-results.md` | 4-6 ч | ДА для Phase 3 | — |
+| **0b** | Recon BSL LS ✅ **DONE (2026-04-17)** | Запуск JAR standalone, тест `textDocument/rename`, разбор issues #802/#798/#792. Артефакт: [bsl-ls-recon-results.md](bsl-ls-recon-results.md). Итог: **Scenario 2** — in-file rename работает, cross-file не работает. Routing matrix скорректирована (§4.6): `module_export_proc` → B only | 4-6 ч (факт ~3 ч) | — | — |
 | **1** | Tier 2 skill + helpers | Skill `bsl-symbol-editing` + 3 helper-обёртки над EDT-MCP. Не требует LSP | 1 день | — | — |
 | **2** | Variant B core | Symbol classifier. Граф-based rename для `manager_method`, `object_method`, `form_handler`. Dry-run + verification | 2 дня | — | Phase 1 |
 | **3** | Variant A core *(условно)* | Минимальный LSP client, subprocess lifecycle, `textDocument/rename` + `findReferences` | 2-3 дня | Phase 0b = Scenario 1/2 | Phase 0b |
