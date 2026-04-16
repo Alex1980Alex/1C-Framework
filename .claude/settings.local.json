@@ -601,7 +601,10 @@
       "Bash(MSYS_NO_PATHCONV=1 C:/Program Files/1cv8/8.3.27.1859/bin/webinst.exe *)",
       "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/webinst.exe\" -help)",
       "mcp__1c-mcp-crud-dev39144__execute_query",
-      "mcp__1c-mcp-crud-dev39144__get_metadata_tree"
+      "mcp__1c-mcp-crud-dev39144__get_metadata_tree",
+      "mcp__1c-mcp-crud-dev39144__search_code",
+      "mcp__1c-mcp-crud-dev39144__list_metadata_objects",
+      "mcp__1c-mcp-crud-dev39144__get_metadata"
     ]
   },
   "enableAllProjectMcpServers": true,
