@@ -38,14 +38,13 @@ class BSLLanguageServer(LanguageServer):
 
 
 class FileLogger(MultilspyLogger):
-    """Simple file-based logger."""
+    """Simple file-based logger matching MultilspyLogger interface."""
 
     def __init__(self, log_path: Path):
+        import logging as _logging
         self._fh = open(log_path, "w", encoding="utf-8")
-
-    def log(self, message: str, level: int = 0):
-        self._fh.write(message + "\n")
-        self._fh.flush()
+        self.logger = _logging.Logger("multilspy_bsl", level=_logging.DEBUG)
+        self.logger.addHandler(_logging.StreamHandler(self._fh))
 
     def close(self):
         self._fh.close()
