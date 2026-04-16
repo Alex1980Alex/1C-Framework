@@ -1231,6 +1231,108 @@ Meta-principle общий: **«загружай минимально необх�
 
 ---
 
+## §4.10 GitHub Reference Implementations (результаты Phase 0b research, 2026-04-17)
+
+По итогам анализа GitHub были отобраны 10 проектов, подтверждающих архитектурные подходы к LSP-индексации, AST-поиску и рефакторингу. Все решения проверены и могут быть использованы как референсы или прямые зависимости для преодоления ограничений per-document архитектуры BSL LS.
+
+1. **[microsoft/multilspy](https://github.com/microsoft/multilspy)** — 566⭐, Python, LSP preload. Python LSP-клиент с bulk `didOpen` всех файлов workspace перед references/rename. Serena использует этот паттерн. **Прямое решение per-document архитектуры BSL LS без форка.**
+2. **[ast-grep/ast-grep](https://github.com/ast-grep/ast-grep)** — 13.5k⭐, Rust, AST-rewrite. CLI structural search/replace на tree-sitter grammars. Multi-file patterns, YAML rules, codemod-режим. Не требует LSP workspace indexing.
+3. **[alkoleft/tree-sitter-bsl](https://github.com/alkoleft/tree-sitter-bsl)** — 36⭐, 1C Enterprise. Tree-sitter grammar для BSL. Критически нужна для ast-grep/codemod. Покрытие (препроцессор, запросы, инструкции) требует проверки.
+4. **[comby-tools/comby](https://github.com/comby-tools/comby)** — 2.6k⭐, OCaml, AST-rewrite. Language-agnostic structural search & replace. Балансирует скобки/кавычки без формальной грамматики. Полезно для fallback (динамика `Выполнить()`, комментарии-документация).
+5. **[sourcegraph/scip](https://github.com/sourcegraph/scip)** — ~300⭐, Go, Graph. Source Code Intelligence Protocol (наследник LSIF). Бинарный индекс symbols/occurrences/references (protobuf). Можно генерировать из существующего `bsl_call_graph` (Neo4j/NetworkX).
+6. **[1c-syntax/bsl-language-server](https://github.com/1c-syntax/bsl-language-server)** — 403⭐, Java, upstream LS. Источник per-document проблемы. Альтернатива форку — PR с `workspace/didChangeWorkspaceFolders` handler вызывающим ServerContext.populateContext на всю папку.
+7. **[sorbet/sorbet](https://github.com/sorbet/sorbet)** — 3.8k⭐, C++, reference. Type checker для Ruby. Решил аналогичную проблему Ruby constants (dynamic resolution) через full workspace scan + global symbol table. Архитектурный прецедент для BSL dot-нотации (`ОбщийМодуль.X`).
+8. **[python-rope/rope](https://github.com/python-rope/rope)** — 2.2k⭐, Python, reference. Refactoring library. Project-level model (all .py files) перед rename. `ChangeSet` abstraction — атомарный apply с rollback.
+9. **[semgrep/semgrep](https://github.com/semgrep/semgrep)** — 14.8k⭐, OCaml, AST-rewrite. Pattern matching + autofix. Отклонено как дубликат ast-grep без BSL grammar, но CLI UX хороший ориентир.
+10. **[kythe/kythe](https://github.com/kythe/kythe)** — 2.1k⭐, Go, Graph. Google's pluggable code-indexing. Extractor → indexer → serving layer. Overkill для BSL, упоминается как reference architecture.
+
+**Рекомендация (3 подхода для v4.5):** multilspy (#1) + ast-grep+tree-sitter-bsl (#2+#3) + SCIP (#5) как кэш-слой на 2-й итерации. Полный анализ в [bsl-ls-recon-results.md](bsl-ls-recon-results.md).
+
+## §5.5 Детальная дорожная карта v4.5 — гибрид A+B с multilspy и ast-grep
+
+Дорожная карта декомпозиции интеграции на основе референсных решений. Вариант A (multilspy) обеспечивает глубокий анализ через LSP, Вариант B (ast-grep) выступает быстрым fallback-механизмом.
+
+#### Этап R0 — Research validation (1-2 дня, блокер для R1-R2)
+
+- **R0.1 multilspy quick-test:** форкнуть/инсталлировать multilspy, заменить `lsp_recon.py` на multilspy-based client, прогнать на test-workspace. **Артефакт:** `tools/bsl-ls/multilspy_recon.py` + лог. **DoD:** cross-file rename экспортной функции возвращает ≥2 edits.
+- **R0.2 tree-sitter-bsl coverage test:** клонировать репо, прогнать grammar на 3 реальных модулях проекта (`гкс_ОчередьСообщенийRMQ`, `гкс_ФормировательСообщенийRMQ`, одна форма). **Артефакт:** `tools/bsl-ls/tree-sitter-coverage.md`. **DoD:** выявлены gap'ы по препроцессору/запросам.
+- **R0.3 ast-grep dry-run:** установить ast-grep, написать 3 тестовых правила (rename export method, rename local var, rename catalog manager method), применить к test-workspace. **Артефакт:** `tools/bsl-ls/ast-grep-rules/*.yml`. **DoD:** 3 правила работают, есть baseline timing.
+- **R0.4 Serena open_all_files pattern review:** прочитать исходник `multilspy.LanguageServer.open_files()` + Serena's workflow. **Артефакт:** заметки в `docs/roadmap/multilspy-pattern-notes.md`. **DoD:** понятна механика bulk-preload.
+- **R0.5 Architectural decision:** Scenario 1 (multilspy закрывает cross-file) vs Scenario 2 (multilspy не помог — идём на форк BSL LS) vs Scenario 3 (полностью на ast-grep). **Артефакт:** ADR-004. **DoD:** выбран путь для R1.
+
+#### Этап R1 — Variant A rewrite на multilspy (3-5 дней, зависит от R0.5=Scenario 1)
+
+- **R1.1 Protocol-based backend контракт:** MultilspyBackend класс. **Артефакт:** `src/bsl/semantic_search/refactor/backends/multilspy_backend.py`. **DoD:** реализует `plan_rename`, `can_handle`, `confidence_for`.
+- **R1.2 Subprocess lifecycle (persistent):** spawn → health-check → circuit breaker (3 краша → disable). **Артефакт:** `src/bsl/semantic_search/refactor/lsp_subprocess.py`. **DoD:** процесс живёт >1 часа без restart.
+- **R1.3 bulk_open_workspace():** async scan всех `.bsl`, батчированный didOpen с throttling (10 файлов/с). **Артефакт:** метод + тест. **DoD:** открытие 2027 файлов за <60s без OOM.
+- **R1.4 Rename driver:** single entry `rename(uri, pos, newName, dryRun)`. **Артефакт:** метод. **DoD:** возвращает WorkspaceEdit или BackendError.
+- **R1.5 WorkspaceEdit applier:** атомарный apply с snapshot для rollback. **Артефакт:** `src/bsl/semantic_search/refactor/workspace_edit.py`. **DoD:** rollback на 5-файловом WorkspaceEdit работает.
+- **R1.6 Symbol classifier update:** `module_export_proc` → A (cross-file через preload). **Артефакт:** обновление classifier + routing matrix. **DoD:** routing matrix v2 опубликована.
+- **R1.7 MCP tool exposure:** `bsl_rename_symbol` через `bsl-semantic-search` сервер с dry_run/confirm_token контрактом. **Артефакт:** handler в `mcp.py`. **DoD:** tool виден в Claude Code.
+- **R1.8 Verification layer:** до/после apply — `edt-mcp get_project_errors`, auto-rollback при росте ошибок. **Артефакт:** `refactor/verification.py`. **DoD:** интеграционный тест с намеренно ломающимся rename.
+
+#### Этап R2 — Variant B на ast-grep + tree-sitter-bsl (3-5 дней, параллельно R1)
+
+- **R2.1 tree-sitter-bsl integration:** добавить grammar как git submodule, собрать parser. **Артефакт:** `tools/tree-sitter-bsl/`. **DoD:** парсит 3 тестовых модуля без ошибок.
+- **R2.2 Fill coverage gaps:** если R0.2 нашёл пробелы — форкнуть grammar, добавить правила для препроцессора/запросов. **Артефакт:** PR в upstream или локальный fork. **DoD:** покрытие ≥95% на выборке из 20 модулей.
+- **R2.3 Rule authoring:** structural patterns для rename export method, local var, manager method, form handler. **Артефакт:** `tools/bsl-ls/ast-grep-rules/*.yml`. **DoD:** 4 правила + unit-тесты.
+- **R2.4 ast-grep runner:** Rust subprocess с JSON output. **Артефакт:** `src/bsl/semantic_search/refactor/backends/ast_grep_backend.py`. **DoD:** возвращает список правок, применяемых через WorkspaceEdit applier (R1.5).
+- **R2.5 Fallback orchestration:** если A timeout/error → автопереключение на B. **Артефакт:** обновление Orchestrator. **DoD:** интеграционный тест с remove multilspy → B работает.
+- **R2.6 Edge-case тесты:** динамика `Выполнить(«Метод()»)`, комментарии-документация, строковые вызовы в `ОтправитьСобытие`. **Артефакт:** тестовые модули + тесты. **DoD:** результаты документированы.
+
+#### Этап R3 — SCIP index как кэш-слой (5-7 дней, после R1)
+
+- **R3.1 SCIP schema design для BSL:** symbol naming convention (`Module#Method`, `Catalog.Name#ManagerMethod`). **Артефакт:** `docs/roadmap/scip-bsl-schema.md`. **DoD:** схема покрывает 8 SymbolKind из §4.5.
+- **R3.2 SCIP emitter из call_graph:** читать existing Neo4j/NetworkX граф, генерировать SCIP protobuf. **Артефакт:** `src/bsl/knowledge_graph/scip_emitter.py`. **DoD:** SCIP файл валидируется `scip validate`.
+- **R3.3 Incremental update:** file watcher (watchdog Python) + rebuild только изменённых symbols. **Артефакт:** `scip_watcher.py`. **DoD:** изменение 1 файла обновляет SCIP за <1s.
+- **R3.4 Query layer:** быстрый xref (`scip query symbol X`) без LSP/graph hop. **Артефакт:** `scip_query.py`. **DoD:** latency <10ms на запрос.
+- **R3.5 MCP integration:** `bsl_xref(symbol)` через `bsl-semantic-search`. **Артефакт:** handler. **DoD:** tool работает в Claude Code.
+
+#### Этап R4 — Orchestrator v2 + routing matrix (1-2 дня, после R1+R2)
+
+- **R4.1 Routing matrix v2:** `module_export_proc` → A (высокий confidence с preload), B (parallel verify на 10% выборки). **Артефакт:** обновление §4.6. **DoD:** таблица обсуждена и зафиксирована.
+- **R4.2 Confidence scoring калибровка:** измерить factual success rate per symbol kind на R0-R2 данных. **Артефакт:** confidence table в ADR. **DoD:** confidence values привязаны к реальным метрикам.
+- **R4.3 Fallback chain:** A (multilspy) → B (ast-grep) → manual prompt. **Артефакт:** flowchart в документации. **DoD:** все 3 уровня покрыты интеграционными тестами.
+- **R4.4 Telemetry:** call counts, latencies, failure modes в JSONL. **Артефакт:** `data/refactor-telemetry.jsonl` + агрегатор. **DoD:** метрики видны в Phase 10 dashboard.
+
+#### Этап R5 — Benchmark + validation (2-3 дня, после R4)
+
+- **R5.1 Benchmark tasks.json:** 20 реальных git commits с rename-операциями. **Артефакт:** `docs/roadmap/benchmark/tasks.json`. **DoD:** 20 задач × 5 категорий.
+- **R5.2 Dual execution runner:** Claude API + isolated worktree. **Артефакт:** `docs/roadmap/benchmark/runner.py`. **DoD:** запуск одной задачи с обоими инструментами + git reset между.
+- **R5.3 Comparison report:** A (multilspy) vs B (ast-grep) vs A+B merge. **Артефакт:** `docs/roadmap/benchmark/results-2026-05.md`. **DoD:** таксономия заполнена для всех 20 задач.
+- **R5.4 Trend tracker:** агрегат по всем прогонам. **Артефакт:** `trend.md`. **DoD:** 3+ прогона зафиксированы.
+
+#### Этап R6 — Upstream contributions (опционально, 2-3 дня, после R5)
+
+- **R6.1 PR в multilspy:** BSL language adapter (language_id="bsl", JAR launcher). **Артефакт:** PR. **DoD:** PR принят или получен отзыв.
+- **R6.2 PR в bsl-language-server:** `workspace/didChangeWorkspaceFolders` handler. **Артефакт:** PR + changelog. **DoD:** PR submitted.
+- **R6.3 PR в tree-sitter-bsl:** улучшения грамматики (если из R2.2 найдено). **Артефакт:** PR. **DoD:** submitted.
+- **R6.4 PR в Serena:** опциональный BSL context (contexts/bsl.yml). **Артефакт:** PR. **DoD:** submitted.
+
+#### Сводная таблица этапов и оценки трудозатрат
+
+| Этап | Задача | Оценка | Зависимости |
+|------|--------|--------|-------------|
+| **R0** | Research validation | 1-2 дня | Блокер для R1-R2 |
+| **R1** | Variant A rewrite (multilspy) | 3-5 дней | R0.5 = Scenario 1 |
+| **R2** | Variant B (ast-grep) | 3-5 дней | Параллельно R1 |
+| **R3** | SCIP cache layer | 5-7 дней | После R1 |
+| **R4** | Orchestrator v2 + routing | 1-2 дня | После R1+R2 |
+| **R5** | Benchmark + validation | 2-3 дня | После R4 |
+| **R6** | Upstream PRs | 2-3 дня | После R5 |
+
+**Итого v4.5:**
+- **Критический путь:** R0 → R1 → R4 → R5 = **7-12 дней**
+- **Полный объём:** R0-R6 = **17-27 дней**
+
+**Критерии успеха (обновлены для §7):**
+- Cross-file rename работает (через multilspy preload): >90% задач категории «Multi-File Changes» в benchmark.
+- Fallback B покрывает случаи, где A не справился: >95% комбинированного покрытия.
+- Latency rename end-to-end: <30s для workspace из 2000 файлов.
+- Auto-rollback frequency: <5% (низкий false-positive rate).
+
+---
+
 ## Ссылки
 
 ### Serena upstream
