@@ -1,12 +1,9 @@
-import importlib
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-# Fix namespace collision: tests/bsl/__init__.py shadows src/bsl/
-# Pre-load src.bsl into sys.modules as 'bsl' before any bsl.* import
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
 
@@ -20,19 +17,20 @@ from benchmark.runner import (
     WorktreeManager,
 )
 
-# Import via importlib to bypass tests/bsl/ package shadowing
-_types_spec = importlib.util.spec_from_file_location(
-    "bsl_types",
-    REPO_ROOT / "src" / "bsl" / "semantic_search" / "refactor" / "types.py",
+# Namespace collision: tests/bsl/__init__.py shadows src/bsl/.
+# Force-load src/bsl/ into sys.modules as 'bsl' before importing types.
+import importlib  # noqa: E402
+_bsl_pkg = importlib.import_module("src.bsl")
+sys.modules["bsl"] = _bsl_pkg
+
+from bsl.semantic_search.refactor.types import (  # noqa: E402
+    BackendError,
+    FileEdit,
+    Position,
+    Range,
+    TextEdit,
+    WorkspaceEdit,
 )
-_types_mod = importlib.util.module_from_spec(_types_spec)
-_types_spec.loader.exec_module(_types_mod)
-BackendError = _types_mod.BackendError
-FileEdit = _types_mod.FileEdit
-Position = _types_mod.Position
-Range = _types_mod.Range
-TextEdit = _types_mod.TextEdit
-WorkspaceEdit = _types_mod.WorkspaceEdit
 
 
 class MockBackend:
