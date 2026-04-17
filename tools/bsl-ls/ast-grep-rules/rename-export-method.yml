@@ -5,7 +5,7 @@
 id: rename-export-method
 language: bsl
 rule:
-  anyOf:
+  any:
     - kind: function_definition
       has:
         kind: EXPORT_KEYWORD
