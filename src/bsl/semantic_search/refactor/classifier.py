@@ -117,7 +117,7 @@ class RoutingMatrix:
             )
 
         cls._ROUTES = new_routes
-        log.info("Loaded %d routes from %s", len(new_routes, path))
+        log.info("Loaded %d routes from %s", len(new_routes), path)
 
     @classmethod
     def reset(cls) -> None:
