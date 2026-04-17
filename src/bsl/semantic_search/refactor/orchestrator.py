@@ -12,6 +12,17 @@ from .types import BackendError, WorkspaceEdit
 from .verification import RenameVerifier
 
 
+@dataclass(frozen=True, slots=True)
+class ManualFallbackInstruction:
+    uri: str
+    symbol_kind: SymbolKind
+    old_name: str
+    new_name: str
+    suggested_approach: str
+    warnings: list[str]
+    rationale: str
+
+
 @dataclass(slots=True)
 class OrchestratorResult:
     applied: bool
@@ -25,6 +36,7 @@ class OrchestratorResult:
     fallback_used: bool = False
     confidence: float = 0.0
     reason: str | None = None
+    manual_instruction: ManualFallbackInstruction | None = None
 
     @property
     def ok(self) -> bool:
