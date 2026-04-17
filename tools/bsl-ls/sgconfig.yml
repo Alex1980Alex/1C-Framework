@@ -1,5 +1,5 @@
 # ast-grep configuration for BSL (1C:Enterprise) Language Server
-# R0.3: ast-grep dry-run config
+# R0.3: ast-grep dry-run config — WORKING
 
 ruleDirs:
   - ast-grep-rules
@@ -9,11 +9,15 @@ languageGlobs:
     - "*.bsl"
 
 # Custom language: BSL via tree-sitter-bsl
-# TODO: Compile binding.c from tree-sitter-bsl into native .dll
-# Source: pip install tree-sitter-bsl -> C:\...\site-packages\tree_sitter_bsl\binding.c
-# Compilation: gcc -shared -fPIC -o tree_sitter_bsl.dll binding.c -I<tree_sitter_include>
+# Built from source: https://github.com/alkoleft/tree-sitter-bsl
+# Compilation: npx tree-sitter build -o tree_sitter_bsl.dll (in tree-sitter-bsl-src/)
+# Grammar: 162 node kinds, ABI 15
 customLanguages:
   bsl:
     libraryPath: ./tree_sitter_bsl.dll
     extensions: [bsl]
     # languageSymbol defaults to tree_sitter_{name} = tree_sitter_bsl
+
+# Baseline timing: 528ms for 2-file workspace, 3 rules, 6 matches (incl. npx overhead)
+# BSL note: $metavars in patterns cause ERROR nodes due to BSL grammar not recognizing $
+# Use kind-based rules (kind + has/any/all) for reliable matching
