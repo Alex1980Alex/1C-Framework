@@ -1590,6 +1590,25 @@ CLI flags: `--min-samples N`, `--delta-threshold X`, `--since YYYY-MM-DD`, `--st
 
 ---
 
+> **Прогресс R5 (обновлено 2026-04-17 23:30):**
+>
+> | Подэтап | Статус | Артефакты | Тесты | Примечание |
+> |---------|--------|-----------|-------|------------|
+> | **R5.1** tasks.json | **DONE** | `docs/roadmap/benchmark/tasks.json` (20 задач, 5×4), `scripts/build_benchmark_tasks.py`, `tests/bsl/refactor/test_benchmark_tasks_schema.py` | 7/7 PASS | Все задачи используют `"synthetic"` SHA (нет реальных rename-коммитов в git истории). Ground truth заполнен вручную. |
+> | **R5.2** Runner | **DONE** | `docs/roadmap/benchmark/runner.py` (WorktreeManager, TaskExecutor, ReportBuilder, BenchmarkRunner), `scripts/run_benchmark.py` (CLI), `tests/bsl/refactor/test_benchmark_runner.py` | 6/6 PASS | B-only (ast-grep) с synthetic SHAs. Lazy import обходит namespace collision `tests/bsl/__init__.py` vs `src/bsl/`. parent_sha regex validation + atexit worktree cleanup (code-verify). |
+> | **R5.3** Report | **DONE** | `ReportBuilder.render_markdown()` + `render_csv()` внутри `runner.py` | Покрыто test_markdown_contains_backends + test_csv_has_header_and_rows | Markdown: per-backend summary + per-category breakdown + failure taxonomy. CSV: pandas-ready. |
+> | **R5.4** Trend | **DONE** | `docs/roadmap/benchmark/trend.md`, `scripts/check_benchmark_regression.py` | Smoke-tested (synthetic JSONL) | trend.md — append-only таблица. `check_benchmark_regression.py` — exit 1 при rate < threshold (default 0.70). |
+> | **R5.5** Calibration | **DEFERRED** | — | — | Требует реального benchmark-прогона (pilot-B) с ≥20 telemetry событий. Разблокируется после интеграции ast-grep backend с runner. |
+>
+> **Итого R5:** R5.1–R5.4 реализованы за 1 день (вместо 2-3 дней по оценке). 13/13 тестов зелёные (7 schema + 6 runner). R5.5 отложен до первого реального прогона.
+>
+> **Известные ограничения:**
+> - Все 20 задач используют `"commit_sha": "synthetic"` — runner работает напрямую в repo_root, git worktree не создаётся. Для production benchmark нужны реальные rename-коммиты.
+> - `tests/bsl/__init__.py` создаёт namespace collision с `src/bsl/` — фиксировано через `sys.modules["bsl"] = importlib.import_module("src.bsl")` в тесте.
+> - CLI `run_benchmark.py` содержит `_StubBackend` — реальный `AstGrepBackend` пока не подключён (требует `ast-grep` binary в PATH).
+
+---
+
 ##### R5.1 — Benchmark tasks.json (4 ч)
 
 **Проблема:** без канонического датасета сравнение backends деградирует в «у меня сработало» vs «у меня не сработало». Нужна замороженная выборка реальных rename-задач, где ground truth известен.
