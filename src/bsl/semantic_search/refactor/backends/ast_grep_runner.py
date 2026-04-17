@@ -40,7 +40,7 @@ class SubprocessAstGrepRunner:
         self, workspace_root: Path, old_name: str, new_name: str
     ) -> list[AstGrepMatch]:
         """Run ast-grep scan; return matches of `old_name` in workspace_root."""
-        args = [self._binary, "scan", "--json"]
+        args = [self._binary, "scan", "--json=compact"]
         if self._config is not None:
             args += ["-c", str(self._config)]
         inline_rule = (
@@ -58,13 +58,14 @@ class SubprocessAstGrepRunner:
                 encoding="utf-8",
                 timeout=self._timeout,
                 check=False,
+                cwd=str(workspace_root),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise BackendError(
                 f"ast-grep subprocess failed: {exc!r}", code="subprocess_failed"
             ) from exc
 
-        if proc.returncode not in (0, 1):
+        if proc.returncode != 0:
             raise BackendError(
                 f"ast-grep exit {proc.returncode}: {proc.stderr[:200]}",
                 code="subprocess_nonzero",
