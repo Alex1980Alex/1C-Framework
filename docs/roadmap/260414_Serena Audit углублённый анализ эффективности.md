@@ -1377,8 +1377,8 @@ Meta-principle общий: **«загружай минимально необх�
 | **R2.6** | ⏸ DEFERRED | — | — |
 
 **Агрегатно:**
-- **77/77 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`).
-- **10 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/).
+- **90/90 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`, +13 orchestrator integration-тестов).
+- **10 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/) (включая [`orchestrator.py`](../../src/bsl/semantic_search/refactor/orchestrator.py) с fallback chain).
 - **12 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment), robustness (process leak, stale state, counter reset, best-effort rollback), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
 - **Делегирование Z.AI:** большинство кода сгенерировано через `mcp__llm-rotation__llm_complete` (glm-5.1), Opus — планнер + ревьюер + ассемблер. Периодические перебои провайдеров → Opus fallback для тестов.
 
