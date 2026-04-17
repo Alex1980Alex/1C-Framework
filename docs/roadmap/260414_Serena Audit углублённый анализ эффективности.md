@@ -2002,6 +2002,12 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 | **R4.4** | ✅ DONE | [aggregate_refactor_telemetry.py](../../scripts/aggregate_refactor_telemetry.py) + synthetic dataset | 3 |
 | **R4.5** | ⏸ DEFERRED | — (ждёт R5 benchmark или ≥50 реальных событий) | — |
 | **R4.6** | ⏸ DEFERRED | — (ждёт Phase 10 dashboard) | — |
+| **R5.1** | ✅ DONE | [tasks.json](../../docs/roadmap/benchmark/tasks.json) (20 задач, 5×4), [build_benchmark_tasks.py](../../scripts/build_benchmark_tasks.py), [test_benchmark_tasks_schema.py](../../tests/bsl/refactor/test_benchmark_tasks_schema.py) | 7 |
+| **R5.2** | ✅ DONE | [runner.py](../../docs/roadmap/benchmark/runner.py) (WorktreeManager, TaskExecutor, ReportBuilder, BenchmarkRunner), [run_benchmark.py](../../scripts/run_benchmark.py) (CLI), [test_benchmark_runner.py](../../tests/bsl/refactor/test_benchmark_runner.py) | 6 |
+| **R5.3** | ✅ DONE | `ReportBuilder.render_markdown()` + `render_csv()` внутри runner.py | (покрыто R5.2 тестами) |
+| **R5.4** | ✅ DONE | [trend.md](../../docs/roadmap/benchmark/trend.md), [check_benchmark_regression.py](../../scripts/check_benchmark_regression.py) | — (smoke-tested) |
+| **R5.5** | ⏸ DEFERRED | — (ждёт pilot-B прогон с ast-grep для calibration data) | — |
+| **R6** | 🔲 TODO | — | — |
 
 **Агрегатно:**
 - **111/111 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`, +19 R4 тестов + 2 dopоl. после ревью).
