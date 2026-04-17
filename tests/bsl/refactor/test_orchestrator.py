@@ -238,8 +238,8 @@ def test_local_variable_no_fallback_fails_hard(tmp_path: Path) -> None:
     assert runner.calls == 0
 
 
-def test_unknown_kind_routes_ast_grep_no_fallback(tmp_path: Path) -> None:
-    """UNKNOWN → ast-grep primary, no fallback."""
+def test_unknown_kind_routes_ast_grep_returns_manual(tmp_path: Path) -> None:
+    """UNKNOWN → ast-grep primary, no fallback, manual_fallback=True → manual instruction."""
     file_a = tmp_path / "module.bsl"
     file_a.write_text("// просто комментарий\n", encoding="utf-8")
     uri = _file_uri(file_a)
@@ -248,10 +248,11 @@ def test_unknown_kind_routes_ast_grep_no_fallback(tmp_path: Path) -> None:
     runner = _FakeRunner()
     orch, _ = _make_orchestrator(tmp_path, lsp, runner)
 
-    with pytest.raises(BackendError) as exc_info:
-        orch.rename(uri, 0, 3, "X", dry_run=True, content=None)
-
-    assert exc_info.value.code == "all_backends_failed"
+    result = orch.rename(uri, 0, 3, "X", dry_run=True, content=None)
+    assert result.symbol_kind == SymbolKind.UNKNOWN
+    assert result.reason == "manual_required"
+    assert result.manual_instruction is not None
+    assert result.manual_instruction.suggested_approach != ""
     assert runner.calls == 1
     assert lsp.calls == 0
 
