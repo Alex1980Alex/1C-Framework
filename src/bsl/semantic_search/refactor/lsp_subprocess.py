@@ -81,6 +81,7 @@ class LspSubprocess:
             self.start()
         if self._process is None or not self._process.is_alive():
             self.breaker.record_failure()
+            self._discard_process()
             self._state = LspState.FAILED
             if self.breaker.is_open():
                 raise BackendError(
@@ -97,10 +98,20 @@ class LspSubprocess:
             return result
         except Exception as exc:
             self.breaker.record_failure()
+            self._discard_process()
             self._state = LspState.FAILED
             raise BackendError(
                 f"request failed: {exc!r}", code="request_failed"
             ) from exc
+
+    def _discard_process(self) -> None:
+        """Best-effort terminate + null out the current process handle."""
+        if self._process is not None:
+            try:
+                self._process.terminate()
+            except Exception:
+                pass
+            self._process = None
 
     @property
     def state(self) -> LspState:
