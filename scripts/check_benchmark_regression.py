@@ -15,7 +15,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def _latest_run(data_dir: Path) -> Path | None:
-    jsonl_files = sorted(data_dir.glob("*.jsonl"), key=lambda p: p.stat().st_mtime)
+    # Look for benchmark-specific JSONL (run_id.jsonl with "primary_backend" field)
+    candidates = sorted(data_dir.glob("*_report.csv"), key=lambda p: p.stat().st_mtime)
+    if not candidates:
+        return None
+    # Derive JSONL from the report CSV directory
+    report_dir = candidates[-1].parent
+    jsonl_files = sorted(report_dir.glob("*.jsonl"), key=lambda p: p.stat().st_mtime)
     return jsonl_files[-1] if jsonl_files else None
 
 
