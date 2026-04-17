@@ -1,3 +1,4 @@
+import importlib
 import json
 import subprocess
 import sys
@@ -16,14 +17,14 @@ from benchmark.runner import (
     TaskResult,
     WorktreeManager,
 )
-from bsl.semantic_search.refactor.types import (
-    BackendError,
-    FileEdit,
-    Position,
-    Range,
-    TextEdit,
-    WorkspaceEdit,
-)
+
+_types = importlib.import_module("bsl.semantic_search.refactor.types")
+BackendError = _types.BackendError
+FileEdit = _types.FileEdit
+Position = _types.Position
+Range = _types.Range
+TextEdit = _types.TextEdit
+WorkspaceEdit = _types.WorkspaceEdit
 
 
 class MockBackend:
