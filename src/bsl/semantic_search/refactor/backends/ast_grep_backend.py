@@ -128,11 +128,16 @@ class AstGrepBackend:
 
     @staticmethod
     def _matches_to_edit(
-        matches: list[AstGrepMatch], new_name: str
+        matches: list[AstGrepMatch], new_name: str, workspace_root: Path
     ) -> WorkspaceEdit:
-        """Group matches by file and emit one FileEdit per file."""
+        """Group matches by file and emit one FileEdit per file.
+
+        Relative match paths are resolved against `workspace_root` so that the
+        resulting URIs are absolute regardless of the current process CWD.
+        """
         by_file: dict[Path, list[TextEdit]] = {}
         for m in matches:
+            path = m.file if m.file.is_absolute() else workspace_root / m.file
             edit = TextEdit(
                 range=Range(
                     Position(m.start_line, m.start_character),
@@ -140,7 +145,7 @@ class AstGrepBackend:
                 ),
                 new_text=new_name,
             )
-            by_file.setdefault(m.file, []).append(edit)
+            by_file.setdefault(path, []).append(edit)
         file_edits = [
             FileEdit(uri=p.resolve().as_uri(), edits=edits)
             for p, edits in by_file.items()
