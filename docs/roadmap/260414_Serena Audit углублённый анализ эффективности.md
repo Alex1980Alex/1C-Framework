@@ -1373,7 +1373,7 @@ Meta-principle общий: **«загружай минимально необх�
 | **R2.2** | ⏸ DEFERRED | — | — |
 | **R2.3** | ✅ DONE (в R0.3) | 3 YAML правила | — |
 | **R2.4** | ✅ DONE | [ast_grep_backend.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_backend.py), [ast_grep_runner.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_runner.py) | 13 |
-| **R2.5** | 🔜 NEXT | — | — |
+| **R2.5** | ✅ DONE | [orchestrator.py](../../src/bsl/semantic_search/refactor/orchestrator.py), [test_orchestrator.py](../../tests/bsl/refactor/test_orchestrator.py) | 13 |
 | **R2.6** | ⏸ DEFERRED | — | — |
 
 **Агрегатно:**
