@@ -1,15 +1,15 @@
-# R0.3 Rule 1: Match exported BSL methods (functions/procedures with Экспорт)
-# Purpose: Validate ast-grep rule syntax for BSL rename operations
+# R0.3 Rule 1: Match exported BSL functions (function_definition with EXPORT_KEYWORD child)
+# Uses kind-based matching because BSL tree-sitter doesn't support $metavars in patterns well
+# AST: function_definition -> [FUNCTION_KEYWORD, identifier($NAME), parameters, EXPORT_KEYWORD, ...body, ENDFUNCTION_KEYWORD]
 id: rename-export-method
 language: bsl
 rule:
-  pattern: |
-    Функция $NAME($$$PARAMS) Экспорт
-      $$$BODY
-    КонецФункции
-message: "Exported function '$NAME' matched for rename"
+  kind: function_definition
+  has:
+    kind: EXPORT_KEYWORD
+message: "Exported function found - candidate for rename"
 severity: hint
 note: |
-  This rule matches all exported BSL functions.
-  For rename: change $NAME to the new identifier.
-  Test target: ПолучитьПараметр, УстановитьПараметр in ТестоваяУтилита
+  Matches all exported BSL functions (function_definition containing EXPORT_KEYWORD).
+  For rename: target the 'identifier' child after FUNCTION_KEYWORD.
+  Test target: ПолучитьПараметр in ТестоваяУтилита (line 1)
