@@ -2027,7 +2027,7 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 | **R2** | Variant B (ast-grep) | 3-5 дней | Параллельно R1 |
 | **R3** | SCIP cache layer | 5-7 дней | После R1 |
 | **R4** | Orchestrator v2 + routing | 1-2 дня | После R1+R2 |
-| **R5** | Benchmark + validation | 2-3 дня | После R4 |
+| **R5** | Benchmark + validation | 2-3 дня | После R4 | **R5.1–R5.4 DONE**, R5.5 DEFERRED |
 | **R6** | Upstream PRs | 2-3 дня | После R5 |
 
 **Итого v4.5:**
