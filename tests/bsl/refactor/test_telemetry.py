@@ -10,17 +10,12 @@ from src.bsl.semantic_search.refactor import (
     AstGrepMatch,
     HeuristicClassifier,
     MultilspyBackend,
-    OrchestratorResult,
     RefactorOrchestrator,
     RenameVerifier,
     SymbolKind,
     WorkspaceEditApplier,
 )
-from src.bsl.semantic_search.refactor.telemetry import (
-    JsonlTelemetryWriter,
-    NullTelemetryWriter,
-    RenameTelemetryEvent,
-)
+from src.bsl.semantic_search.refactor.telemetry import JsonlTelemetryWriter
 from src.bsl.semantic_search.refactor.types import BackendError
 
 
