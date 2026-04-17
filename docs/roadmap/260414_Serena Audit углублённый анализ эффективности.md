@@ -1611,11 +1611,18 @@ CLI flags: `--min-samples N`, `--delta-threshold X`, `--since YYYY-MM-DD`, `--st
 | **R2.4** | ✅ DONE | [ast_grep_backend.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_backend.py), [ast_grep_runner.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_runner.py) | 13 |
 | **R2.5** | ✅ DONE | [orchestrator.py](../../src/bsl/semantic_search/refactor/orchestrator.py), [test_orchestrator.py](../../tests/bsl/refactor/test_orchestrator.py) | 13 |
 | **R2.6** | ⏸ DEFERRED | — | — |
+| **R4.0** | ✅ DONE | [routing_matrix.yaml](../../src/bsl/semantic_search/refactor/routing_matrix.yaml) + `RoutingMatrix.load/reset()` | 5 |
+| **R4.1** | ✅ DONE | [telemetry.py](../../src/bsl/semantic_search/refactor/telemetry.py) + try/finally интеграция в orchestrator | 7 |
+| **R4.2** | ✅ DONE | `ManualFallbackInstruction` + 3-tier fallback + MCP `bsl_rename_symbol` surface | 4 |
+| **R4.3** | ✅ DONE | [refactor-fallback-chain.md](./refactor-fallback-chain.md) | — |
+| **R4.4** | ✅ DONE | [aggregate_refactor_telemetry.py](../../scripts/aggregate_refactor_telemetry.py) + synthetic dataset | 3 |
+| **R4.5** | ⏸ DEFERRED | — (ждёт R5 benchmark или ≥50 реальных событий) | — |
+| **R4.6** | ⏸ DEFERRED | — (ждёт Phase 10 dashboard) | — |
 
 **Агрегатно:**
-- **90/90 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`, +13 orchestrator integration-тестов).
-- **10 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/) (включая [`orchestrator.py`](../../src/bsl/semantic_search/refactor/orchestrator.py) с fallback chain).
-- **12 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment), robustness (process leak, stale state, counter reset, best-effort rollback), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
+- **111/111 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`, +19 R4 тестов + 2 dopоl. после ревью).
+- **11 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/) (добавлен [`telemetry.py`](../../src/bsl/semantic_search/refactor/telemetry.py); [`orchestrator.py`](../../src/bsl/semantic_search/refactor/orchestrator.py) расширен manual-tier и telemetry-интеграцией).
+- **13 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment), robustness (process leak, stale state, counter reset, best-effort rollback, **blocking I/O inside write lock — fix в R4**), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
 - **Делегирование Z.AI:** большинство кода сгенерировано через `mcp__llm-rotation__llm_complete` (glm-5.1), Opus — планнер + ревьюер + ассемблер. Периодические перебои провайдеров → Opus fallback для тестов.
 
 **Что блокирует прогресс по R1.3 / реальному multilspy:** решение об установке `pip install multilspy` + wiring BSL JAR + async↔sync мост. Целесообразно откладывать до R5 benchmark, чтобы данные показали реальную цену lazy-open vs bulk-preload.
