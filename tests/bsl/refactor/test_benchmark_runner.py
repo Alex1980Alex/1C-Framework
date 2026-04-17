@@ -7,7 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
 
-import pytest
+import pytest  # noqa: I001
 
 from benchmark.runner import (
     BenchmarkRunner,
