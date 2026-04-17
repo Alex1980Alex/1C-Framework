@@ -9,7 +9,7 @@ try:
 except ImportError:
     pytest.skip("jsonschema not installed", allow_module_level=True)
 
-PROJECT_ROOT = Path(__file__).resolve().parents[4]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 TASKS_FILE = PROJECT_ROOT / "docs" / "roadmap" / "benchmark" / "tasks.json"
 
 VALID_CATEGORIES = [
