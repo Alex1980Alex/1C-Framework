@@ -647,7 +647,11 @@
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 connection --cluster=3aed02f3-8611-42f3-aec4-5c642501055f disconnect --process=c3134bee-2cbd-47c9-aeda-bd0dc41740c7 --connection=7566eda3-c25d-4271-a64b-1f487974b188)",
       "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase --help)",
       "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe' infobase --help)",
-      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe' infobase)"
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe' infobase)",
+      "mcp__1c-mcp-crud-daily__get_form_structure",
+      "Bash(mkdir -p /d/temp/daily_config_dump)",
+      "Read(//d/temp/**)",
+      "Bash('C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER '/SKOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /DisableStartupMessages /DisableStartupDialogs /DumpConfigToFiles 'D:\\\\temp\\\\daily_config_dump' /Out 'D:\\\\temp\\\\daily_config_dump\\\\_dump.log')"
     ]
   },
   "enableAllProjectMcpServers": true,
