@@ -116,6 +116,9 @@ class RoutingMatrix:
                 manual_fallback=entry.get("manual_fallback", False),
             )
 
+        if SymbolKind.UNKNOWN not in new_routes and SymbolKind.UNKNOWN in _DEFAULT_ROUTES:
+            new_routes[SymbolKind.UNKNOWN] = _DEFAULT_ROUTES[SymbolKind.UNKNOWN]
+            log.warning("YAML missing 'unknown' route; using default")
         cls._ROUTES = new_routes
         log.info("Loaded %d routes from %s", len(new_routes), path)
 
