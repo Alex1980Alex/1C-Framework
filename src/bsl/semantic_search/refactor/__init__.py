@@ -30,6 +30,7 @@ __all__ = [
     "BackendError",
     "FileEdit",
     "HeuristicClassifier",
+    "ManualFallbackInstruction",
     "MultilspyBackend",
     "OrchestratorResult",
     "Position",
