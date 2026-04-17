@@ -87,22 +87,26 @@ class HeuristicClassifier:
         if line < 0 or line >= len(lines):
             return SymbolKind.UNKNOWN
 
-        target = lines[line]
-        is_export = any(marker in target for marker in self._EXPORT_MARKERS)
+        # Strip trailing `// ...` line comment so "Экспорт" in a comment
+        # doesn't flip a local proc to export.
+        code = lines[line].split("//", 1)[0]
+        is_export = any(marker in code for marker in self._EXPORT_MARKERS)
 
-        if "Процедура" in target or "Procedure" in target:
+        if "Процедура" in code or "Procedure" in code:
             return (
                 SymbolKind.MODULE_EXPORT_PROC
                 if is_export
                 else SymbolKind.MODULE_LOCAL_PROC
             )
-        if "Функция" in target or "Function" in target:
+        if "Функция" in code or "Function" in code:
             return (
                 SymbolKind.MODULE_EXPORT_FUNC
                 if is_export
                 else SymbolKind.MODULE_LOCAL_FUNC
             )
-        if target.lstrip().startswith(("Перем ", "Var ")):
+        # First token check — tolerates tabs / multiple spaces after `Перем`/`Var`.
+        first_token = code.split(maxsplit=1)[0] if code.strip() else ""
+        if first_token in ("Перем", "Var"):
             return SymbolKind.LOCAL_VARIABLE
 
         return SymbolKind.UNKNOWN
