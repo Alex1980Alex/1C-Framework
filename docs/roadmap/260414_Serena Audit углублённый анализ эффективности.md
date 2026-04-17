@@ -1580,10 +1580,375 @@ CLI flags: `--min-samples N`, `--delta-threshold X`, `--since YYYY-MM-DD`, `--st
 
 #### Этап R5 — Benchmark + validation (2-3 дня, после R4)
 
-- **R5.1 Benchmark tasks.json:** 20 реальных git commits с rename-операциями. **Артефакт:** `docs/roadmap/benchmark/tasks.json`. **DoD:** 20 задач × 5 категорий.
-- **R5.2 Dual execution runner:** Claude API + isolated worktree. **Артефакт:** `docs/roadmap/benchmark/runner.py`. **DoD:** запуск одной задачи с обоими инструментами + git reset между.
-- **R5.3 Comparison report:** A (multilspy) vs B (ast-grep) vs A+B merge. **Артефакт:** `docs/roadmap/benchmark/results-2026-05.md`. **DoD:** таксономия заполнена для всех 20 задач.
-- **R5.4 Trend tracker:** агрегат по всем прогонам. **Артефакт:** `trend.md`. **DoD:** 3+ прогона зафиксированы.
+**Цель этапа:** превратить субъективные заявления «A работает, B работает» в воспроизводимые числа — success rate, latency p50/p95, fallback-rate, rollback-rate — на 20 реальных задачах. Побочно: собрать ≥80 событий телеметрии как быстрый бутстрап [R4.5 confidence calibration](#L1509) без ожидания недельного продакшн-наблюдения.
+
+**Стартовая точка (2026-04-17):** R1-R4 закрыты, 111/111 refactor-тестов зелёные на моках. `multilspy_backend.py` не подключён к реальному LSP ([R1.3 DEFERRED](#L1300)); `ast-grep_backend.py` работает с реальным `ast-grep` Rust CLI (baseline: 1.2-1.7s на 2027 `.bsl`). Для R5 это значит: первый прогон реалистично делать **B-only** либо предварительно разблокировать R1.3.
+
+**Критический путь R5:** R5.1 → R5.2 → R5.3 → R5.4 → R5.5 (calibration feedback). R5.1 независим от кода (задачи собираются офлайн из git log), может стартовать сразу. R5.2 для A-ветки требует R1.3; B-ветка прогоняется без блокировок.
+
+**Инверсия порядка (если R1.3 не готов):** прогоняем только B, в R5.3 ставим `n/a` в A-колонке, A-ветку добавляем в следующий прогон после разблокировки. Это всё равно закрывает R5.4 (trend tracker) и R5.5 (calibration для B).
+
+---
+
+##### R5.1 — Benchmark tasks.json (4 ч)
+
+**Проблема:** без канонического датасета сравнение backends деградирует в «у меня сработало» vs «у меня не сработало». Нужна замороженная выборка реальных rename-задач, где ground truth известен.
+
+**Источник задач:** git-история `D:\1С-Framework` (и, опционально, публичные BSL-конфигурации: StandardSubsystemsLibrary, ERP fragments). Отбираются коммиты, где diff содержит rename identifier. Эвристики поиска:
+
+- `-Процедура X(` + `+Процедура Y(` в соседних строках одного файла
+- Одноимённые правки одного identifier в 2+ файлах коммита
+- `git log -S 'OldName' -p --reverse` — коммит, убирающий идентификатор
+- `git log --diff-filter=M --grep 'rename\|переименование'` — явные rename-коммиты
+
+**Таксономия (5 категорий × 4 задачи = 20):**
+
+| # | Категория | Описание | Ожидаемый winner | Ожидаемый `SymbolKind` |
+|---|-----------|----------|------------------|------------------------|
+| **CAT-1** | Local variable | `Перем Старый` → `Перем Новый` внутри тела процедуры | multilspy (scope-aware) | `local_variable` |
+| **CAT-2** | Module-local proc/func | приватная процедура/функция с внутренними callers в одном модуле | multilspy | `module_local_proc`/`_func` |
+| **CAT-3** | Cross-file export | `Экспорт` метод общего модуля/менеджера, вызываемый из 2+ модулей | multilspy (через preload) | `module_export_proc`/`_func` |
+| **CAT-4** | Form handler | обработчик события формы, упоминается и в BSL-модуле, и в XML формы | ast-grep (multilspy не видит XML) | `form_handler` |
+| **CAT-5** | Edge-case / known-hard | dynamic `Выполнить("Метод()")`, string literal в `ОтправитьСобытие`, mention в комментарии-документации | оба провалятся → manual tier | `unknown` |
+
+**Схема `docs/roadmap/benchmark/tasks.json`:**
+
+```json
+{
+  "version": 1,
+  "created_at": "2026-04-XX",
+  "source_repo": "D:\\1С-Framework",
+  "tasks": [
+    {
+      "id": "T03",
+      "category": "CAT-3-cross-file-export",
+      "commit_sha": "abc12345",
+      "parent_sha": "abc12344",
+      "file_uri": "file:///workspace/ОбщиеМодули/РасчётыКлиентСервер/Ext/Module.bsl",
+      "line": 42,
+      "character": 10,
+      "old_name": "РассчитатьОстаток",
+      "new_name": "ПересчитатьОстаток",
+      "expected_files_affected": 3,
+      "expected_edits": 7,
+      "expected_files": [
+        "ОбщиеМодули/РасчётыКлиентСервер/Ext/Module.bsl",
+        "Справочники/Контрагенты/Ext/ManagerModule.bsl",
+        "ОбщиеМодули/Служебные/Ext/Module.bsl"
+      ],
+      "notes": "Основное объявление в РасчётыКлиентСервер; вызовы из ManagerModule (2 раза) и Служебные (1 раз). Verify error count до/после должен быть 0."
+    }
+  ]
+}
+```
+
+**Артефакт:**
+- `docs/roadmap/benchmark/tasks.json` — замороженный датасет (20 задач).
+- `scripts/build_benchmark_tasks.py` — генератор-кандидат: сканирует git log по эвристикам, предлагает задачи для ручного ревью, записывает принятые в JSON.
+- `tests/bsl/refactor/test_benchmark_tasks_schema.py` — валидация JSON schema (version=1, 5 категорий, ground truth non-empty).
+
+**DoD:**
+- 20 задач, распределение **4/4/4/4/4** по категориям.
+- Каждая задача имеет `commit_sha` + `parent_sha` — воспроизводимо на любом checkout.
+- `expected_files_affected`, `expected_edits`, `expected_files` проставлены **вручную** (ground truth, не автоматически из git diff — автоматика может ошибиться на edge-case).
+- Schema валидируется `test_benchmark_tasks_schema` (jsonschema validate → 0 ошибок на всех 20 задачах).
+- В каждой задаче хотя бы 2 файла в `expected_files` для CAT-3/CAT-4 (чтобы B без preload действительно был challenged).
+
+---
+
+##### R5.2 — Dual execution runner (6 ч)
+
+**Проблема:** 20 задач × 2 backend × {dry_run, apply} = 80 прогонов. Ручное выполнение невозможно — нужен runner с полной изоляцией: каждая задача работает в отдельном git-worktree, между прогонами `git reset --hard`, telemetry пишется пер-run.
+
+**Архитектура runner'а:**
+
+```
+BenchmarkRunner (docs/roadmap/benchmark/runner.py)
+  │
+  ├── WorktreeManager
+  │     ├─ create(parent_sha) → tmp_path/worktree_{task_id}_{backend}/
+  │     ├─ (внутри) git worktree add --detach <path> <parent_sha>
+  │     ├─ cleanup() — git worktree remove --force + shutil.rmtree
+  │     └─ retry 3× на Windows file locks (AntiVirus/IDE держат дескрипторы)
+  │
+  ├── BackendFactory
+  │     ├─ build("multilspy")  → MultilspyBackend + LspSubprocess
+  │     ├─ build("ast-grep")   → AstGrepBackend + SubprocessAstGrepRunner
+  │     └─ build("orchestrator") → RefactorOrchestrator({both})
+  │
+  ├── TaskExecutor.run(task, backend) -> TaskResult
+  │     1. worktree = WorktreeManager.create(task.parent_sha)
+  │     2. Читает task.file_uri в content (для HeuristicClassifier)
+  │     3. plan  = backend.rename(uri, line, char, new_name, dry_run=True, content=...)
+  │     4. apply = backend.rename(..., dry_run=False, confirm_token=plan.confirm_token, ...)
+  │     5. RenameTelemetryEvent → data/benchmark-telemetry-{run_id}.jsonl
+  │     6. diff_vs_expected = compare_workspace_edit(apply.edit, task.expected_files)
+  │     7. WorktreeManager.cleanup()
+  │
+  └── ReportBuilder
+        ├─ aggregate JSONL → per-(task, backend) rollup
+        ├─ render markdown (R5.3 format)
+        └─ render CSV (для Grafana / Excel)
+```
+
+**CLI (`scripts/run_benchmark.py`):**
+
+```bash
+# Базовый прогон — оба backend + orchestrator
+python scripts/run_benchmark.py \
+    --tasks docs/roadmap/benchmark/tasks.json \
+    --backends multilspy,ast-grep,orchestrator \
+    --run-id full-1 \
+    --output data/benchmark-run-2026-05-01/
+
+# B-only пилотный прогон (R1.3 ещё не готов)
+python scripts/run_benchmark.py --backends ast-grep --run-id pilot-B
+
+# Выборочно — одна категория или одна задача
+python scripts/run_benchmark.py --categories CAT-3-cross-file-export
+python scripts/run_benchmark.py --task-id T07
+
+# Append в trend.md
+python scripts/run_benchmark.py --run-id full-2 --append-trend
+```
+
+**Измеряемые поля на каждую пару (task, backend):**
+
+| Поле | Источник | Назначение |
+|------|----------|-----------|
+| `applied` | `OrchestratorResult.applied` | success rate |
+| `rolled_back` | `OrchestratorResult.rolled_back` | false-positive rate |
+| `files_affected` | `WorkspaceEdit` | сравнение с `expected_files_affected` |
+| `files_match_expected` | set comparison | precision: ни одного «чужого» файла |
+| `edits_match_expected` | diff vs ground truth | количественное совпадение |
+| `duration_ms_plan` / `_apply` | `perf_counter` | p50/p95 отдельно для dry-run и apply |
+| `error_code` | `BackendError.code` | failure taxonomy |
+| `fallback_used` | `OrchestratorResult.fallback_used` | частота active fallback |
+| `manual_required` | `reason == "manual_required"` | tier 3 активаций |
+| `classifier_confidence` | telemetry | для R4.5 feedback |
+| `matrix_confidence` | telemetry | для R4.5 feedback |
+
+**Артефакт:**
+- `docs/roadmap/benchmark/runner.py` — main `BenchmarkRunner` + components.
+- `scripts/run_benchmark.py` — CLI wrapper (Typer).
+- `tests/bsl/refactor/test_benchmark_runner.py` — интеграционные тесты на synthetic tmp_path.
+
+**DoD:**
+- Runner прогоняет 1 задачу с обоими backend за <60s (включая worktree setup).
+- `git reset --hard` + `git worktree remove` чистит всё — нет orphan-директорий после N прогонов.
+- JSONL события совместимы со схемой `RenameTelemetryEvent` v1 и читаются `scripts/aggregate_refactor_telemetry.py` без модификаций.
+- `test_runner_processes_single_task_both_backends` — synthetic 2-файловая задача в tmp_path, оба backend возвращают ожидаемый WorkspaceEdit.
+- `test_runner_worktree_isolation` — параллельный запуск двух задач, изменения worktree #1 не видны в worktree #2 (проверка через `git -C <worktree> status`).
+- Retry-логика: при `PermissionError` на `shutil.rmtree` (Windows AV) — 3 попытки с экспоненциальной паузой.
+
+---
+
+##### R5.3 — Comparison report A vs B vs A+B (4 ч)
+
+**Проблема:** 80+ сырых JSONL событий — не отчёт. Нужна читаемая markdown-страница с агрегатами, per-category breakdown и failure-taxonomy, чтобы команда могла принять решение «какие задачи отдать какому backend».
+
+**Формат `docs/roadmap/benchmark/results-YYYY-MM.md`:**
+
+```markdown
+# Benchmark Results 2026-05
+
+**Dataset:** docs/roadmap/benchmark/tasks.json v1, 20 tasks
+**Run ID:** full-1
+**Commits sampled:** 2025-10-01 → 2026-04-15 (D:\1С-Framework)
+**Machine:** Win11 IoT 10.0.22631, Python 3.11.x, 1C 8.3.27.1859
+**BSL LS:** 0.23.0 (multilspy preload)
+**tree-sitter-bsl:** 0.1.6, ast-grep 0.x.y
+
+## Summary
+
+| Метрика              | A (multilspy) | B (ast-grep) | A+B (orchestrator) |
+|----------------------|--------------:|-------------:|-------------------:|
+| Applied (success)    |         14/20 |        12/20 |              17/20 |
+| Rolled back          |             1 |            0 |                  1 |
+| Manual tier          |           n/a |          n/a |               3/20 |
+| p50 latency (ms)     |           320 |          180 |                350 |
+| p95 latency (ms)     |          1420 |          620 |               1500 |
+| p99 latency (ms)     |          2100 |          780 |               2200 |
+
+## Per-category breakdown
+
+| Категория              | A      | B     | A+B    | Orchestrator winner |
+|------------------------|-------:|------:|-------:|---------------------|
+| CAT-1 Local variable   |   4/4  |  3/4  |   4/4  | A                   |
+| CAT-2 Module-local     |   4/4  |  3/4  |   4/4  | A                   |
+| CAT-3 Cross-file exp.  |   4/4  |  2/4  |   4/4  | A (B fails w/o preload) |
+| CAT-4 Form handler     |   1/4  |  3/4  |   4/4  | B primary, A fallback |
+| CAT-5 Edge-case        |   0/4  |  0/4  |  1/4+3 manual | Tier 3       |
+
+## Failure taxonomy
+
+### A succeeded, B failed
+- **T04 (CAT-3):** ast-grep без preload нашёл только вызовы в том же файле (2 хита из 3 expected)
+- **T15 (CAT-2):** B не отличает module-local от export без LSP → перекрасил один лишний файл
+
+### B succeeded, A failed
+- **T07 (CAT-4):** multilspy не видит XML-форм → пропустил ссылку в `Form.xml`
+- **T12 (CAT-5-like):** dynamic call `Выполнить("Метод()")` — multilspy видит только AST, не строковые литералы
+
+### Both failed (manual tier active)
+- **T18, T19, T20 (CAT-5):** string-literal call в `ОтправитьСобытие`, comment-only mention, metadata reference. `manual_instruction` возвращён корректно с `suggested_approach`.
+
+## Per-task table
+
+| Task | Category | A applied | B applied | A+B used | A ms | B ms | Notes |
+|------|----------|:---------:|:---------:|:--------:|-----:|-----:|-------|
+| T01  | CAT-1    |     ✓     |     ✓     |    A     |  120 |   85 | both OK |
+| T02  | CAT-1    |     ✓     |     ✗     |    A     |  110 | fail | B: scope error |
+| ...  | ...      |           |           |          |      |      |       |
+
+## Confidence calibration input (для R4.5)
+
+Per (kind, backend) success_rate × (1 - rollback_rate):
+
+| SymbolKind           | multilspy | ast-grep |
+|----------------------|----------:|---------:|
+| module_export_proc   |     0.95  |    0.62  |
+| module_local_proc    |     0.92  |    0.70  |
+| local_variable       |     0.95  |    0.70  |
+| form_handler         |     0.30  |    0.75  |
+| unknown              |     0.12  |    0.18  |
+
+Apply via: `python scripts/aggregate_refactor_telemetry.py --since 2026-05-01 > data/refactor-telemetry-proposed.yaml`
+```
+
+**Артефакт:**
+- `docs/roadmap/benchmark/results-YYYY-MM.md` — человекочитаемый отчёт.
+- `docs/roadmap/benchmark/results-YYYY-MM.csv` — сырой per-(task, backend) CSV (для Excel / Grafana / pandas).
+- Функция `ReportBuilder.render_markdown(jsonl_glob) -> str` в `runner.py`.
+
+**DoD:**
+- Все 20 задач × 3 колонки (A, B, A+B) заполнены (без пропусков, `n/a` только если backend не поддерживается в этом run).
+- Failure taxonomy разделена на 3 секции: A-only-wins, B-only-wins, both-fail.
+- Per-category success rates + latency percentiles (p50/p95/p99) присутствуют.
+- Секция «Confidence calibration input» содержит таблицу `success_rate × (1 - rollback_rate)` per (kind, backend) — прямой вход в [R4.5](#L1506).
+- CSV валиден для `pandas.read_csv` (нет сломанных строк при Cyrillic).
+
+---
+
+##### R5.4 — Trend tracker (2 ч)
+
+**Проблема:** один прогон — слепок во времени. Нужен тренд: улучшается или деградирует система между версиями BSL LS, обновлением grammar, пересчитанной calibration.
+
+**Артефакт:** `docs/roadmap/benchmark/trend.md` — append-only таблица, обновляется из `run_benchmark.py --append-trend`.
+
+**Формат:**
+
+```markdown
+# Benchmark Trend
+
+| Run ID   | Date       | Commit    | BSL LS | Grammar | A success | B success | A+B success | Rollback % | Notes |
+|----------|------------|-----------|--------|---------|----------:|----------:|------------:|-----------:|-------|
+| pilot-B  | 2026-05-01 | 70f1ba82  |  n/a   | 0.1.6   |   n/a     |  12/20    |   n/a       |   0%       | multilspy deferred |
+| full-1   | 2026-05-10 | abc12345  | 0.23.0 | 0.1.6   | 14/20     | 12/20     | 17/20       |   5%       | first full run |
+| full-2   | 2026-06-15 | def56789  | 0.24.0 | 0.1.7   | 16/20     | 13/20     | 18/20       |   0%       | BSL LS upgrade +2 A |
+| full-3   | 2026-07-01 | 9876abcd  | 0.24.0 | 0.1.7   | 16/20     | 13/20     | 19/20       |   0%       | R4.5 calibration applied → +1 A+B |
+```
+
+**Regression gate (опционально в CI):**
+
+```yaml
+# .github/workflows/benchmark.yml
+- name: Run benchmark
+  run: python scripts/run_benchmark.py --run-id ci-${{ github.sha }} --append-trend
+- name: Regression check
+  run: python scripts/check_benchmark_regression.py --min-success 17 --max-rollback-pct 5
+```
+
+**DoD:**
+- Пилотный прогон (**pilot-B**, без multilspy) в таблице.
+- После разблокировки R1.3: минимум 2 **full** прогона зафиксированы (full-1, full-2).
+- `check_benchmark_regression.py` падает с exit 1 при `A+B success < previous - 2` или `rollback_pct > 5`.
+- Regression gate интегрирован в CI (если CI существует) либо документирован как manual pre-release check.
+
+---
+
+##### R5.5 — Feed calibration back into R4.5 (1 ч)
+
+**Проблема:** [R4.5 calibration](#L1506) ждёт реальных данных. R5 их генерирует. Нужен явный шаг, замыкающий цикл «benchmark → proposed.yaml → routing_matrix.yaml».
+
+**Алгоритм:**
+
+```bash
+# 1. Скопировать benchmark telemetry в общий pool
+cp data/benchmark-run-2026-05-01/benchmark-telemetry-*.jsonl \
+   data/refactor-telemetry-benchmark-2026-05-01.jsonl
+
+# 2. Сгенерировать proposed changes
+python scripts/aggregate_refactor_telemetry.py \
+    --since 2026-05-01 \
+    --min-samples 4 \
+    --delta-threshold 0.05
+
+# 3. Review proposed YAML (diff против routing_matrix.yaml)
+diff src/bsl/semantic_search/refactor/routing_matrix.yaml \
+     data/refactor-telemetry-proposed.yaml
+
+# 4. Применить вручную селективно к routing_matrix.yaml
+#    (принимаем только confidence, у которых MIN_SAMPLES >= 4 per kind/backend)
+
+# 5. Pytest → 111/111 (обновить test_routing_matrix_yaml_roundtrip
+#    если numeric значения изменились)
+pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
+
+# 6. Записать в CHANGELOG этого roadmap-документа before/after таблицу
+```
+
+**Special case:** для первого прогона `min_samples=4` вместо дефолтных 20 — на 20 задачах × 5 категорий в одной ячейке (kind, backend) будет ровно 4 события. DELTA_THRESHOLD=0.05 остаётся.
+
+**Артефакт:**
+- `data/refactor-telemetry-proposed.yaml` — сгенерирован aggregator'ом.
+- Апдейт `src/bsl/semantic_search/refactor/routing_matrix.yaml` на реальных данных.
+- Секция «CHANGELOG (R4.5 calibration)» в этом документе — before/after таблица per (kind, backend).
+
+**DoD:**
+- `routing_matrix.yaml` обновлён минимум для CAT-3 (cross-file export) и CAT-4 (form handler) — самые волатильные категории.
+- 111+/111+ тестов зелёные после апдейта (17 classifier-тестов + 5 routing_matrix-тестов покрывают consistency).
+- CHANGELOG содержит ссылку на `pilot-B` и `full-1` прогоны в `trend.md`.
+
+---
+
+##### Сводная таблица R5
+
+| Подзадача | Артефакт                                                           | Оценка | Блокеры                        |
+|-----------|--------------------------------------------------------------------|--------|---------------------------------|
+| **R5.1**  | `tasks.json` + `build_benchmark_tasks.py` + schema-тест            | 4 ч    | — (офлайн работа)               |
+| **R5.2**  | `runner.py` + `run_benchmark.py` CLI + 2 integration-теста         | 6 ч    | R5.1, R1.3 (только A-ветка)     |
+| **R5.3**  | `results-YYYY-MM.md` + CSV + `ReportBuilder.render_markdown`        | 4 ч    | R5.2 (нужны JSONL события)      |
+| **R5.4**  | `trend.md` + `check_benchmark_regression.py` + опциональный CI yml  | 2 ч    | R5.3 (хотя бы 1 прогон)         |
+| **R5.5**  | Apply calibration → `routing_matrix.yaml` + CHANGELOG              | 1 ч    | R5.3 + aggregator из R4.4       |
+
+**Критический путь:** R5.1 (офлайн, старт немедленный) → R5.2 (блокер R1.3 для A-ветки) → R5.3 → {R5.4 ∥ R5.5}. **Итого: 17 ч чистого кода + ревью ≈ 2 дня** с подключённым multilspy; **13 ч ≈ 1.5 дня** для B-only пилота (пропускаем R5.5 до второго прогона).
+
+---
+
+##### Риски R5
+
+| Риск | Вероятность | Митигация |
+|------|-------------|-----------|
+| Ground truth в `tasks.json` неверен (expected_edits промахивается) | Средняя | Manual review каждой задачи при её создании; хранить diff из парного коммита как reference; прогон aggregator'а с `--verify-ground-truth` покажет аномалии |
+| `git worktree` не изолирует на Windows (file locks от AV/IDE) | Высокая | Retry 3× с 500ms/1s/2s задержкой на `PermissionError`; `git worktree remove --force`; fallback на `--worktree-dir %TEMP%` вне проектной директории |
+| BSL LS недоступен в CI → A-ветка не прогоняется | Высокая на старте | Флаг `--skip-unavailable`: runner пишет `"skipped"` вместо `"failed"`; B-only прогон засчитывается как partial success; отдельный entry в trend.md с `A=n/a` |
+| ast-grep grammar 0.9% ERR → парсинг падает на специфических конструкциях | Средняя | В runner логировать `parse_error` отдельно от rename-failure; не учитывать в success/failure matrix, репортить в отдельной секции отчёта |
+| Calibration на 80 событиях даёт overfit под benchmark-датасет | Средняя | MIN_SAMPLES=4 per (kind, backend) — минимально жизнеспособный порог; DELTA_THRESHOLD=0.05 фильтрует шум; при `full-2` используем MIN_SAMPLES=8 (накопилось уже 40 событий на категорию) |
+| Flaky тесты (race condition между worktree и LSP subprocess) | Средняя | Retry-логика в TaskExecutor: при падении 3× подряд — пометить задачу `flaky`, исключить из success rate, но сохранить в failure taxonomy |
+| Cyrillic в git log ломает parsing на Windows (default cp1251) | Высокая | `git config --global core.quotepath false` + `GIT_TERMINAL_PROMPT=0` + `PYTHONIOENCODING=utf-8` во всех subprocess вызовах |
+| `git worktree` создаёт артефакты в `.git/worktrees/` — загаживает репо | Низкая | `runner.py` на exit делает `git worktree prune`; unit-тест `test_runner_cleans_up_git_worktrees` |
+
+---
+
+##### Критерии успеха R5
+
+- **Покрытие:** 20/20 задач прогнаны хотя бы одним backend, 0 задач с необработанным исключением в runner.
+- **Orchestrator value:** A+B merge превосходит одиночный backend минимум на 3 задачах (иначе roadmap §7.3 orchestration нужно пересмотреть).
+- **Latency p95:** < 30s на CAT-1/CAT-2 (single-file), < 60s на CAT-3 (cross-file через multilspy preload).
+- **Auto-rollback:** < 5% (≤1 задача из 20) — валидация §7.4 безопасности verifier'а.
+- **R4.5 feedback loop замкнут:** минимум 1 confidence обновлён в `routing_matrix.yaml` на основе реальных данных из `trend.md`.
+- **Manual tier корректность:** для всех 3-4 CAT-5 задач `manual_instruction` возвращён с непустым `suggested_approach` и хотя бы 1 warning.
 
 #### Этап R6 — Upstream contributions (опционально, 2-3 дня, после R5)
 
