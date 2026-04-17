@@ -1927,3 +1927,15 @@ Caused by: java.io.IOException: Запрошенную операцию нель
 2026-04-17 20:41:51.306 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
 2026-04-17 20:41:51.306 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
 2026-04-17 20:41:51.333 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 2.938 seconds (process running for 4.118)
+20:42:02.238 INFO  - Starting MainKt v0.5.1 using Java 17.0.13 with PID 23484 (D:\1С-Framework\tools\mcp-jars\mcp-yaxunit-runner-0.5.1.jar started by AlexT in D:\1С-Framework)
+20:42:02.240 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
+20:42:02.241 INFO  - The following 2 profiles are active: "mcp", "testdb"
+20:42:04.095 INFO  - Enable tools capabilities, notification: true
+20:42:04.209 INFO  - Registered tools: 8
+20:42:04.210 INFO  - Enable resources capabilities, notification: true
+20:42:04.211 INFO  - Enable prompts capabilities, notification: true
+20:42:04.212 INFO  - Enable completions capabilities
+20:42:04.503 INFO  - Client initialize request - Protocol: 2025-11-25, Capabilities: ClientCapabilities[experimental=null, roots=RootCapabilities[listChanged=null], sampling=null], Info: Implementation[name=claude-code, version=2.1.112]
+20:42:04.521 WARN  - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
+20:42:04.638 INFO  - Started MainKt in 3.087 seconds (process running for 3.986)
+20:42:04.656 INFO  - EDT формат не выбран, автозапуск пропущен
