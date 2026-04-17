@@ -66,7 +66,7 @@ class JsonlTelemetryWriter:
     def _resolve_path(self) -> Path:
         if not self._rotate_daily:
             return self._base_path
-        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
         return (
             self._base_path.parent
             / f"{self._base_path.stem}-{today}{self._base_path.suffix}"
