@@ -268,8 +268,6 @@ async def run_recon():
                 dump("06_rename_local", {"error": str(e)})
                 print(f"  Error: {e}")
 
-    logger.close()
-
     # Summary
     print("\n=== Summary ===")
     rename_file = LOGDIR / "05_rename_cross_file.json"
