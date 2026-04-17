@@ -7,7 +7,11 @@ from .backends.base import RenameBackend
 from .backends.multilspy_backend import MultilspyBackend
 from .classifier import HeuristicClassifier, RouteDecision, RoutingMatrix, SymbolKind
 from .driver import RenameDriver, RenameResult
-from .orchestrator import OrchestratorResult, RefactorOrchestrator
+from .orchestrator import (
+    ManualFallbackInstruction,
+    OrchestratorResult,
+    RefactorOrchestrator,
+)
 from .types import (
     BackendError,
     FileEdit,
