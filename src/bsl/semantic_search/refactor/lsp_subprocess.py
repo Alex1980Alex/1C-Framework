@@ -50,7 +50,6 @@ class LspSubprocess:
             if self.health_check and not self.health_check(self._process):
                 raise BackendError("health check failed", code="health_check")
             self._state = LspState.READY
-            self.breaker.record_success()
         except BackendError:
             self._state = LspState.FAILED
             self.breaker.record_failure()
