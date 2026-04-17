@@ -50,9 +50,11 @@ def test_aggregator_emits_proposal_above_delta():
 
 
 def test_aggregator_synthetic_dataset():
-    synthetic = Path("data/refactor-telemetry-synthetic.jsonl")
-    if not synthetic.exists():
-        return
+    synthetic = Path(__file__).resolve().parents[3] / "data" / "refactor-telemetry-synthetic.jsonl"
+    assert synthetic.exists(), (
+        f"Synthetic DoD dataset missing at {synthetic}. "
+        "R4.4 requires this artefact to validate the aggregator end-to-end."
+    )
     events = [
         json.loads(line)
         for line in synthetic.read_text(encoding="utf-8").strip().splitlines()

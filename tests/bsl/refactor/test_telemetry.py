@@ -215,6 +215,53 @@ def test_telemetry_emits_on_token_mismatch(tmp_path):
     assert events[0]["error_code"] == "token_mismatch"
 
 
+def test_telemetry_event_includes_version_field(tmp_path):
+    log_file = tmp_path / "tel.jsonl"
+    tw = JsonlTelemetryWriter(log_file, rotate_daily=False)
+    file_a = tmp_path / "module.bsl"
+    content = "Процедура Старая() Экспорт\nКонецПроцедуры\n"
+    file_a.write_text(content, encoding="utf-8")
+    uri = _file_uri(file_a)
+
+    lsp = _StubLspClient(_lsp_edit(uri, 0, 10, 16, "Новая"))
+    orch = _make_orchestrator(tmp_path, lsp_client=lsp, telemetry=tw)
+    orch.rename(uri, 0, 10, "Новая", dry_run=True, content=content)
+
+    events = _read_events(log_file)
+    assert events[0]["version"] == 1
+    # old_name extracted from content at the cursor
+    assert events[0]["old_name"] == "Старая"
+    # matrix_confidence from RoutingMatrix (0.95 for export proc)
+    # classifier_confidence = 1.0 (content-based, kind != UNKNOWN)
+    assert events[0]["matrix_confidence"] == pytest.approx(0.95)
+    assert events[0]["classifier_confidence"] == pytest.approx(1.0)
+
+
+def test_telemetry_gzips_old_rotated_files(tmp_path):
+    import gzip
+
+    base = tmp_path / "tel.jsonl"
+    old_file = tmp_path / "tel-2025-01-01.jsonl"
+    old_file.write_text('{"stale":1}\n', encoding="utf-8")
+    recent_file = tmp_path / f"tel-{_today_utc()}.jsonl"
+    recent_file.write_text('{"fresh":1}\n', encoding="utf-8")
+
+    JsonlTelemetryWriter(base, compress_after_days=30)
+
+    assert not old_file.exists(), "stale file should have been compressed away"
+    gz = tmp_path / "tel-2025-01-01.jsonl.gz"
+    assert gz.exists()
+    with gzip.open(gz, "rt", encoding="utf-8") as fh:
+        assert fh.read() == '{"stale":1}\n'
+    # recent file untouched
+    assert recent_file.exists()
+
+
+def _today_utc() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
+
+
 def test_telemetry_none_noop(tmp_path):
     file_a = tmp_path / "module.bsl"
     content = "Процедура Старая() Экспорт\nКонецПроцедуры\n"

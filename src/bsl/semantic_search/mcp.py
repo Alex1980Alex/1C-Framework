@@ -34,7 +34,13 @@ except ImportError:
 
 # Импорты сервисов
 from .config import get_bsl_settings
-from .refactor import BackendError, RenameDriver, RenameResult
+from .refactor import (
+    BackendError,
+    OrchestratorResult,
+    RefactorOrchestrator,
+    RenameDriver,
+    RenameResult,
+)
 from .services.embedding import EmbeddingService
 from .services.search import BSLSearchService, SearchMode, SearchRequest
 
@@ -895,25 +901,31 @@ def bsl_coding_context(
 # ---------------------------------------------------------------------------
 # Rename driver wiring — R1.7
 # ---------------------------------------------------------------------------
-_RENAME_DRIVER_FACTORY: Callable[[], RenameDriver] | None = None
-_RENAME_DRIVER_CACHED: RenameDriver | None = None
+_RenameEngine = RenameDriver | RefactorOrchestrator
+_RENAME_DRIVER_FACTORY: Callable[[], _RenameEngine] | None = None
+_RENAME_DRIVER_CACHED: _RenameEngine | None = None
 
 
 def register_rename_driver_factory(
-    factory: Callable[[], RenameDriver] | None,
+    factory: Callable[[], _RenameEngine] | None,
 ) -> None:
-    """Register a factory that produces a configured RenameDriver on demand.
+    """Register a factory producing a rename engine (RenameDriver or RefactorOrchestrator).
 
     The factory is invoked at most once per registration; its result is cached.
     Re-registering (or passing `None`) clears the cache, so a persistent LSP
     subprocess is not re-spawned on every tool call.
+
+    Accepts either a legacy single-backend `RenameDriver` or the multi-backend
+    `RefactorOrchestrator`. When the orchestrator is used and both backends
+    fail for a kind with `manual_fallback=True`, the tool surfaces the
+    `manual_instruction` payload instead of raising.
     """
     global _RENAME_DRIVER_FACTORY, _RENAME_DRIVER_CACHED
     _RENAME_DRIVER_FACTORY = factory
     _RENAME_DRIVER_CACHED = None
 
 
-def _get_rename_driver() -> RenameDriver | None:
+def _get_rename_driver() -> _RenameEngine | None:
     global _RENAME_DRIVER_CACHED
     if _RENAME_DRIVER_FACTORY is None:
         return None
@@ -922,8 +934,8 @@ def _get_rename_driver() -> RenameDriver | None:
     return _RENAME_DRIVER_CACHED
 
 
-def _rename_result_to_dict(r: RenameResult) -> dict[str, Any]:
-    return {
+def _rename_result_to_dict(r: RenameResult | OrchestratorResult) -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "ok": r.ok,
         "applied": r.applied,
         "rolled_back": r.rolled_back,
@@ -932,6 +944,19 @@ def _rename_result_to_dict(r: RenameResult) -> dict[str, Any]:
         "total_edits": r.total_edits,
         "reason": r.reason,
     }
+    manual = getattr(r, "manual_instruction", None)
+    if manual is not None:
+        payload["status"] = "manual_required"
+        payload["manual_instruction"] = {
+            "uri": manual.uri,
+            "symbol_kind": manual.symbol_kind.value,
+            "old_name": manual.old_name,
+            "new_name": manual.new_name,
+            "suggested_approach": manual.suggested_approach,
+            "warnings": list(manual.warnings),
+            "rationale": manual.rationale,
+        }
+    return payload
 
 
 @mcp.tool()

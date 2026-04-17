@@ -105,19 +105,38 @@ def test_manual_instruction_includes_suggested_approach_per_kind(tmp_path):
 
 
 def test_mcp_rename_surfaces_manual_instruction(tmp_path):
+    """Real MCP handler must serialize manual_instruction + status='manual_required'."""
+    from src.bsl.semantic_search.mcp import (
+        bsl_rename_symbol,
+        register_rename_driver_factory,
+    )
+
     file_a = tmp_path / "forms" / "form.bsl"
     file_a.parent.mkdir(parents=True)
     file_a.write_text("Процедура ПриОткрытии() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
     uri = _file_uri(file_a)
 
-    lsp = _StubLspClient(raise_exc=RuntimeError("dead"))
-    runner = _FakeRunner(matches=[])
-    orch = _make_orchestrator(tmp_path, lsp, runner)
+    def factory():
+        return _make_orchestrator(
+            tmp_path,
+            lsp_client=_StubLspClient(raise_exc=RuntimeError("dead")),
+            runner=_FakeRunner(matches=[]),
+        )
 
-    result = orch.rename(uri, 0, 10, "ПриЗагрузке", dry_run=True)
-    assert result.manual_instruction is not None
-    mi = result.manual_instruction
-    assert mi.uri == uri
-    assert mi.new_name == "ПриЗагрузке"
-    assert mi.symbol_kind == SymbolKind.FORM_HANDLER
-    assert mi.rationale != ""
+    register_rename_driver_factory(factory)
+    try:
+        result = bsl_rename_symbol(
+            uri=uri, line=0, character=10, new_name="ПриЗагрузке", dry_run=True
+        )
+    finally:
+        register_rename_driver_factory(None)
+
+    assert result["status"] == "manual_required"
+    assert result["reason"] == "manual_required"
+    mi = result["manual_instruction"]
+    assert mi["uri"] == uri
+    assert mi["new_name"] == "ПриЗагрузке"
+    assert mi["symbol_kind"] == SymbolKind.FORM_HANDLER.value
+    assert mi["rationale"]
+    assert isinstance(mi["warnings"], list)
+    assert isinstance(mi["suggested_approach"], str)

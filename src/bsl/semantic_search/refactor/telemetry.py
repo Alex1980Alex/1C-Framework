@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
+import logging
+import re
+import shutil
 import threading
+import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Protocol
+
+logger = logging.getLogger(__name__)
+
+SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,9 +34,11 @@ class RenameTelemetryEvent:
     classifier_confidence: float
     matrix_confidence: float
     token_matched: bool | None
+    version: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict:
         return {
+            "version": self.version,
             "timestamp": self.timestamp,
             "uri": self.uri,
             "symbol_kind": self.symbol_kind,
@@ -50,18 +61,24 @@ class TelemetryWriter(Protocol):
 
 
 class JsonlTelemetryWriter:
+    _DATE_PATTERN = re.compile(r"^(?P<stem>.+)-(?P<date>\d{4}-\d{2}-\d{2})(?P<suffix>\.[^.]+)$")
+
     def __init__(
         self,
         path: Path,
         *,
         rotate_daily: bool = True,
         redact_names: bool = False,
+        compress_after_days: int = 30,
     ) -> None:
         self._base_path = Path(path)
         self._rotate_daily = rotate_daily
         self._redact_names = redact_names
+        self._compress_after_days = compress_after_days
         self._lock = threading.Lock()
+        self._last_compress_check: float = 0.0
         self._base_path.parent.mkdir(parents=True, exist_ok=True)
+        self.compress_old_files()
 
     def _resolve_path(self) -> Path:
         if not self._rotate_daily:
@@ -89,6 +106,57 @@ class JsonlTelemetryWriter:
             with target.open("a", encoding="utf-8") as fh:
                 fh.write(line)
                 fh.write("\n")
+            now = time.monotonic()
+            if now - self._last_compress_check >= 3600:
+                self._last_compress_check = now
+                self.compress_old_files()
+
+    def compress_old_files(self) -> None:
+        """Gzip-compress rotated files older than `compress_after_days`. Best-effort."""
+        if self._compress_after_days <= 0:
+            return
+
+        cutoff = datetime.now(tz=timezone.utc) - timedelta(days=self._compress_after_days)  # noqa: UP017
+        parent = self._base_path.parent
+        stem = self._base_path.stem
+        suffix = self._base_path.suffix
+
+        if not parent.is_dir():
+            return
+
+        try:
+            entries = list(parent.iterdir())
+        except OSError:
+            logger.warning("Failed to list %s for compression", parent, exc_info=True)
+            return
+
+        for entry in entries:
+            if not entry.is_file() or entry.suffix == ".gz":
+                continue
+            match = self._DATE_PATTERN.match(entry.name)
+            if not match or match["stem"] != stem or match["suffix"] != suffix:
+                continue
+            try:
+                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)  # noqa: UP017
+            except ValueError:
+                continue
+            if file_date >= cutoff:
+                continue
+
+            gz_path = entry.with_suffix(entry.suffix + ".gz")
+            if gz_path.exists():
+                continue
+            try:
+                with entry.open("rb") as f_in, gzip.open(gz_path, "wb") as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                entry.unlink()
+            except OSError:
+                logger.warning("Failed to compress %s", entry, exc_info=True)
+                if gz_path.exists():
+                    try:
+                        gz_path.unlink()
+                    except OSError:
+                        pass
 
 
 class NullTelemetryWriter:

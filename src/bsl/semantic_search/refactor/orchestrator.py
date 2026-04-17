@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from time import perf_counter
@@ -10,6 +11,8 @@ from .driver import RenameDriver
 from .telemetry import NullTelemetryWriter, RenameTelemetryEvent, TelemetryWriter
 from .types import BackendError, WorkspaceEdit
 from .verification import RenameVerifier
+
+_IDENT_RE = re.compile(r"[A-Za-z_\u0400-\u04FF][A-Za-z0-9_\u0400-\u04FF]*")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +75,11 @@ class RefactorOrchestrator:
         t0 = perf_counter()
         error_code: str | None = None
         result: OrchestratorResult | None = None
+        ctx: dict = {
+            "classifier_confidence": 0.0,
+            "matrix_confidence": 0.0,
+            "old_name": _extract_identifier(content, line, character),
+        }
 
         try:
             result = self._rename_inner(
@@ -79,6 +87,7 @@ class RefactorOrchestrator:
                 dry_run=dry_run,
                 confirm_token=confirm_token,
                 content=content,
+                ctx=ctx,
             )
             return result
         except BackendError as exc:
@@ -93,6 +102,7 @@ class RefactorOrchestrator:
                 duration_ms=duration_ms,
                 result=result,
                 error_code=error_code,
+                ctx=ctx,
             )
             self._telemetry.write(event)
 
@@ -106,9 +116,12 @@ class RefactorOrchestrator:
         dry_run: bool = True,
         confirm_token: str | None = None,
         content: str | None = None,
+        ctx: dict,
     ) -> OrchestratorResult:
         kind = self._classifier.classify(uri, line, character, content)
         decision = RoutingMatrix.route_for(kind)
+        ctx["classifier_confidence"] = _classifier_confidence(kind, content)
+        ctx["matrix_confidence"] = decision.confidence
 
         primary_name = decision.primary
         primary_backend = self._backends.get(primary_name)
@@ -243,12 +256,13 @@ class RefactorOrchestrator:
         duration_ms: int,
         result: OrchestratorResult | None,
         error_code: str | None,
+        ctx: dict,
     ) -> RenameTelemetryEvent:
         return RenameTelemetryEvent(
             timestamp=datetime.now(tz=timezone.utc).isoformat(),  # noqa: UP017
             uri=uri,
             symbol_kind=result.symbol_kind.value if result else "unknown",
-            old_name=None,
+            old_name=ctx.get("old_name"),
             new_name=new_name,
             primary_backend=result.primary_backend if result else None,
             fallback_used=result.fallback_used if result else False,
@@ -256,7 +270,30 @@ class RefactorOrchestrator:
             rolled_back=result.rolled_back if result else False,
             duration_ms=duration_ms,
             error_code=error_code,
-            classifier_confidence=result.confidence if result else 0.0,
-            matrix_confidence=result.confidence if result else 0.0,
+            classifier_confidence=ctx.get("classifier_confidence", 0.0),
+            matrix_confidence=ctx.get("matrix_confidence", 0.0),
             token_matched=None if dry_run else (result is not None and result.ok),
         )
+
+
+def _extract_identifier(content: str | None, line: int, character: int) -> str | None:
+    """Return the identifier under (line, character) in content, or None."""
+    if content is None:
+        return None
+    lines = content.splitlines()
+    if line < 0 or line >= len(lines):
+        return None
+    text = lines[line]
+    if character < 0 or character >= len(text):
+        return None
+    for m in _IDENT_RE.finditer(text):
+        if m.start() <= character < m.end():
+            return m.group(0)
+    return None
+
+
+def _classifier_confidence(kind: SymbolKind, content: str | None) -> float:
+    """Heuristic confidence that the classifier correctly determined `kind`."""
+    if content is None:
+        return 0.8 if kind == SymbolKind.FORM_HANDLER else 0.2
+    return 0.3 if kind == SymbolKind.UNKNOWN else 1.0
