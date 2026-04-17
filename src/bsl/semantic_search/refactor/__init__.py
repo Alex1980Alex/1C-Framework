@@ -48,6 +48,7 @@ __all__ = [
     "RenameDriver",
     "RenameResult",
     "RenameVerifier",
+    "RenameTelemetryEvent",
     "RouteDecision",
     "RoutingMatrix",
     "SymbolKind",
