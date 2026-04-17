@@ -53,6 +53,7 @@ __all__ = [
     "RoutingMatrix",
     "SymbolKind",
     "TextEdit",
+    "TelemetryWriter",
     "VerifyResult",
     "WorkspaceEdit",
     "WorkspaceEditApplier",
