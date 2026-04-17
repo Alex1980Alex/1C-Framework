@@ -1252,13 +1252,43 @@ Meta-principle общий: **«загружай минимально необх�
 
 Дорожная карта декомпозиции интеграции на основе референсных решений. Вариант A (multilspy) обеспечивает глубокий анализ через LSP, Вариант B (ast-grep) выступает быстрым fallback-механизмом.
 
-#### Этап R0 — Research validation (1-2 дня, блокер для R1-R2)
+#### Этап R0 — Research validation (1-2 дня, блокер для R1-R2) — ✅ ЗАКРЫТ 2026-04-17 (commit `00b76192`)
 
 - **R0.1 multilspy quick-test:** форкнуть/инсталлировать multilspy, заменить `lsp_recon.py` на multilspy-based client, прогнать на test-workspace. **Артефакт:** `tools/bsl-ls/multilspy_recon.py` + лог. **DoD:** cross-file rename экспортной функции возвращает ≥2 edits.
+  - **Статус:** ✅ **PASS** (после правки workspace). Первая итерация → 1 edit (FAIL); после изучения исходников BSL LS на GitHub выяснено, что `ServerContext.populateContext` требует per-module XML-дескрипторов для `mdclasses`. После добавления `ТестоваяУтилита.xml`/`ТестовыйВызыватель.xml` + правильного `xmlns="http://v8.1c.ru/8.3/MDClasses"` в `Configuration.xml` → **2 edits / 2 файла**.
+  - **R0.1-EXT (расширение):** `bench_multilspy_real.py` на реальном проекте `260304_GKSTCPLK-2182` (2 027 `.bsl`), target `гкс_ОчередьСообщенийRMQ.СоздатьСообщенияПоСобытиюОбъекта`. Два прогона детерминированно → **10 edits / 7 файлов**. Метрики: init ~4.7 s, preload ~5.7 s (340–375 files/s), prepare_rename ~22–28 s (bottleneck — populateContext/ReferenceIndex build), rename ~10 ms по прогретому индексу.
+  - **Артефакты:** `tools/bsl-ls/multilspy_recon.py`, `multilspy-logs/`, `bench_multilspy_real.py`, `multilspy-logs-real/summary.json`.
+
 - **R0.2 tree-sitter-bsl coverage test:** клонировать репо, прогнать grammar на 3 реальных модулях проекта (`гкс_ОчередьСообщенийRMQ`, `гкс_ФормировательСообщенийRMQ`, одна форма). **Артефакт:** `tools/bsl-ls/tree-sitter-coverage.md`. **DoD:** выявлены gap'ы по препроцессору/запросам.
+  - **Статус:** ✅ **DONE**. `гкс_ОчередьСообщенийRMQ` (679 lines, 12 ERRs), `гкс_ФормировательСообщенийRMQ.ObjectModule` (217 lines, 2 ERRs), `гкс_Взвешивание.ФормаДокумента` (622 lines, **0 ERRs**, parse OK). Итого 14 ERRs / 1 518 lines ≈ 0.9%.
+  - **Gap preprocessor:** покрыт (`preprocessor` node + `text_match:#Область/#КонецОбласти`).
+  - **Gap directives:** покрыты (`annotation` node) — только для форм.
+  - **Gap queries:** подтверждён отдельным скриптом `check_query_gap.py` на `АдресныйКлассификатор.Module.bsl` (11 литеральных `ВЫБРАТЬ` в коде) → 0 query-specific AST nodes; SQL остаётся `const_expression` string.
+  - **Gap скобочных выражений:** обнаружен не в ТЗ — line-level inspection показал, что все 14 ERRs = parenthesized grouping в RHS/условиях (`= (X = Y);`, `Если ... И (X ИЛИ Y) Тогда`). Это отдельный gap grammar для R2.2.
+  - **Артефакты:** `tools/bsl-ls/tree-sitter-coverage.{md,json}`, `tree-sitter-coverage.v1.{md,json}` (предыдущий run для истории), `check_query_gap.py`.
+
 - **R0.3 ast-grep dry-run:** установить ast-grep, написать 3 тестовых правила (rename export method, rename local var, rename catalog manager method), применить к test-workspace. **Артефакт:** `tools/bsl-ls/ast-grep-rules/*.yml`. **DoD:** 3 правила работают, есть baseline timing.
+  - **Статус:** ✅ **DONE**. ast-grep 0.39.5 + tree-sitter-bsl 0.1.6 через `tree_sitter_bsl.dll` (customLanguage в `sgconfig.yml`).
+  - **3 YAML правила:** `rename-export-method` (pattern-based), `rename-local-var` (kind=assignment_statement), `rename-catalog-method` (kind=call_expression + has access).
+  - **Baseline timing** (5 прогонов/правило, `bench_ast_grep.py`):
+    - test-workspace (2 файла): median 27–38 ms (startup-dominated).
+    - real-project (**2 027 .bsl**): median **1.2–1.7 s**, throughput **1 050–1 720 files/sec**.
+  - **Артефакты:** `tools/bsl-ls/ast-grep-rules/*.yml`, `sgconfig.yml`, `tree_sitter_bsl.dll`, `bench_ast_grep.py`, `ast-grep-baseline.{md,json}`.
+
 - **R0.4 Serena open_all_files pattern review:** прочитать исходник `multilspy.LanguageServer.open_files()` + Serena's workflow. **Артефакт:** заметки в `docs/roadmap/multilspy-pattern-notes.md`. **DoD:** понятна механика bulk-preload.
+  - **Статус:** ✅ **DONE** + углублено. Механика: `multilspy.open_file` — ref-counted context manager, `ExitStack` держит все `didOpen` активными. Работает корректно, но **не триггерит BSL LS `ReferenceIndexFiller`** автоматически: индекс заполняется через `@EventListener` на `DocumentContextContentChangedEvent` при `rebuild()` DocumentContext, что запускается BSL LS автоматически в `initialized()` callback через `populateContext()`.
+  - **Важная находка:** prepare_rename блокируется ~22–28 s на первый запрос, пока идёт `populateContext` асинхронно в ForkJoinPool. Для R1.3 нужно ожидание `$/progress` / `window/workDoneProgress` вместо фикс. `sleep()`.
+  - **Артефакт:** `docs/roadmap/multilspy-pattern-notes.md` (revised с двумя итерациями).
+
 - **R0.5 Architectural decision:** Scenario 1 (multilspy закрывает cross-file) vs Scenario 2 (multilspy не помог — идём на форк BSL LS) vs Scenario 3 (полностью на ast-grep). **Артефакт:** ADR-004. **DoD:** выбран путь для R1.
+  - **Статус:** ✅ **DONE**. **Решение: гибрид Scenario 1 + Scenario 3.**
+    - **Scenario 1 (multilspy) — primary** для реальных 1С-выгрузок (XML-дескрипторы всегда есть): семантический cross-file rename, детерминированный, 10 мс по прогретому индексу.
+    - **Scenario 3 (ast-grep) — fallback**: (а) workspace'ы без XML, (б) pattern-based массовые замены, (в) случаи, когда `mdclasses` не парсит конфигурацию.
+    - **Scenario 2 (fork BSL LS) — отклонён**: высокая стоимость поддержки Java fork, не нужен после R0.1 PASS.
+  - **Новое требование R1.9 (pre-flight validator):** проверка per-module XML перед вызовом rename; нет XML → routing в ast-grep.
+  - **Артефакт:** `docs/roadmap/ADR-004-bsl-refactoring-architecture.md`.
+
+> **Итог R0:** `R1 возвращён в план` (был пропущен в первой версии ADR-004), обоснованы все требования R1.1–R1.9. Коммит `00b76192`, 26 файлов, +4459/-2525.
 
 #### Этап R1 — Variant A rewrite на multilspy (3-5 дней, зависит от R0.5=Scenario 1)
 
