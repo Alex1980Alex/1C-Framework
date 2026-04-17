@@ -2,8 +2,8 @@
 """tree-sitter-bsl coverage test against real BSL modules."""
 
 import json
-from collections import Counter
 from pathlib import Path
+from collections import Counter
 
 import tree_sitter_bsl as tsbsl
 from tree_sitter import Language, Parser
