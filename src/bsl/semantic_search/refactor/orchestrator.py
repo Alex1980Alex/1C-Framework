@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from time import perf_counter
 
 from .backends.base import RenameBackend
 from .classifier import HeuristicClassifier, RoutingMatrix, SymbolKind
 from .driver import RenameDriver
+from .telemetry import NullTelemetryWriter, RenameTelemetryEvent, TelemetryWriter
 from .types import BackendError, WorkspaceEdit
 from .verification import RenameVerifier
 
@@ -29,21 +32,19 @@ class OrchestratorResult:
 
 
 class RefactorOrchestrator:
-    """Multi-backend rename orchestrator with automatic fallback routing.
-
-    Classifies the symbol, routes to primary/fallback backend via
-    RoutingMatrix, and falls back on primary failure or empty edit.
-    """
+    """Multi-backend rename orchestrator with automatic fallback routing."""
 
     def __init__(
         self,
         backends: dict[str, RenameBackend],
         classifier: HeuristicClassifier,
         verifier: RenameVerifier,
+        telemetry: TelemetryWriter | None = None,
     ) -> None:
         self._backends = backends
         self._classifier = classifier
         self._verifier = verifier
+        self._telemetry = telemetry or NullTelemetryWriter()
 
     def rename(
         self,
@@ -56,13 +57,47 @@ class RefactorOrchestrator:
         confirm_token: str | None = None,
         content: str | None = None,
     ) -> OrchestratorResult:
-        # 1. Classify symbol kind
-        kind = self._classifier.classify(uri, line, character, content)
+        t0 = perf_counter()
+        error_code: str | None = None
+        result: OrchestratorResult | None = None
 
-        # 2. Get routing decision
+        try:
+            result = self._rename_inner(
+                uri, line, character, new_name,
+                dry_run=dry_run,
+                confirm_token=confirm_token,
+                content=content,
+            )
+            return result
+        except BackendError as exc:
+            error_code = exc.code
+            raise
+        finally:
+            duration_ms = int((perf_counter() - t0) * 1000)
+            event = self._build_event(
+                uri=uri,
+                new_name=new_name,
+                dry_run=dry_run,
+                duration_ms=duration_ms,
+                result=result,
+                error_code=error_code,
+            )
+            self._telemetry.write(event)
+
+    def _rename_inner(
+        self,
+        uri: str,
+        line: int,
+        character: int,
+        new_name: str,
+        *,
+        dry_run: bool = True,
+        confirm_token: str | None = None,
+        content: str | None = None,
+    ) -> OrchestratorResult:
+        kind = self._classifier.classify(uri, line, character, content)
         decision = RoutingMatrix.route_for(kind)
 
-        # 3. Try primary backend
         primary_name = decision.primary
         primary_backend = self._backends.get(primary_name)
         if primary_backend is None:
@@ -81,7 +116,6 @@ class RefactorOrchestrator:
         except BackendError:
             edit = None
 
-        # 4. If primary failed or returned empty, try fallback
         fallback_used = False
         if (edit is None or not edit.file_edits) and decision.fallback is not None:
             fallback_name = decision.fallback
@@ -99,18 +133,15 @@ class RefactorOrchestrator:
                 except BackendError:
                     pass
 
-        # 5. Both failed
         if edit is None or not edit.file_edits:
             raise BackendError(
                 "all backends failed to produce edits",
                 code="all_backends_failed",
             )
 
-        # 6. Compute token and summary
         token = RenameDriver._compute_token(edit)
         files_affected, total_edits = RenameDriver._summarize(edit)
 
-        # 7. Dry run — return plan
         if dry_run:
             return OrchestratorResult(
                 applied=False,
@@ -126,7 +157,6 @@ class RefactorOrchestrator:
                 reason=decision.reason,
             )
 
-        # 8. Apply — verify token first
         if confirm_token != token:
             raise BackendError(
                 "confirm token mismatch; re-run with dry_run=True",
@@ -147,4 +177,31 @@ class RefactorOrchestrator:
             fallback_used=fallback_used,
             confidence=decision.confidence,
             reason=vr.reason,
+        )
+
+    @staticmethod
+    def _build_event(
+        *,
+        uri: str,
+        new_name: str,
+        dry_run: bool,
+        duration_ms: int,
+        result: OrchestratorResult | None,
+        error_code: str | None,
+    ) -> RenameTelemetryEvent:
+        return RenameTelemetryEvent(
+            timestamp=datetime.now(tz=timezone.utc).isoformat(),  # noqa: UP017
+            uri=uri,
+            symbol_kind=result.symbol_kind.value if result else "unknown",
+            old_name=None,
+            new_name=new_name,
+            primary_backend=result.primary_backend if result else None,
+            fallback_used=result.fallback_used if result else False,
+            applied=result.applied if result else False,
+            rolled_back=result.rolled_back if result else False,
+            duration_ms=duration_ms,
+            error_code=error_code,
+            classifier_confidence=result.confidence if result else 0.0,
+            matrix_confidence=result.confidence if result else 0.0,
+            token_matched=None if dry_run else (result is not None and result.ok),
         )
