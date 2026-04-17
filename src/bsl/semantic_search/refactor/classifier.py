@@ -1,7 +1,19 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError as exc:
+    raise ImportError(
+        "PyYAML is required for routing matrix loading. "
+        "Install it with: pip install pyyaml"
+    ) from exc
+
+log = logging.getLogger(__name__)
 
 
 class SymbolKind(Enum):
@@ -22,34 +34,39 @@ class RouteDecision:
     fallback: str | None
     confidence: float
     reason: str
+    manual_fallback: bool = False
+
+
+_DEFAULT_ROUTES: dict[SymbolKind, RouteDecision] = {
+    SymbolKind.MODULE_EXPORT_PROC: RouteDecision(
+        "multilspy", "ast-grep", 0.95, "cross-file rename via LSP preload"
+    ),
+    SymbolKind.MODULE_EXPORT_FUNC: RouteDecision(
+        "multilspy", "ast-grep", 0.95, "cross-file rename via LSP preload"
+    ),
+    SymbolKind.MODULE_LOCAL_PROC: RouteDecision(
+        "multilspy", "ast-grep", 0.85, "module-scope LSP rename"
+    ),
+    SymbolKind.MODULE_LOCAL_FUNC: RouteDecision(
+        "multilspy", "ast-grep", 0.85, "module-scope LSP rename"
+    ),
+    SymbolKind.LOCAL_VARIABLE: RouteDecision(
+        "multilspy", None, 0.70, "local scope, single file"
+    ),
+    SymbolKind.FORM_HANDLER: RouteDecision(
+        "ast-grep", "multilspy", 0.60,
+        "form handlers may have XML-side refs", manual_fallback=True,
+    ),
+    SymbolKind.UNKNOWN: RouteDecision(
+        "ast-grep", None, 0.30, "pattern-based fallback", manual_fallback=True,
+    ),
+}
 
 
 class RoutingMatrix:
     """Routing Matrix v2 — maps SymbolKind to backend selection."""
 
-    _ROUTES: dict[SymbolKind, RouteDecision] = {
-        SymbolKind.MODULE_EXPORT_PROC: RouteDecision(
-            "multilspy", "ast-grep", 0.95, "cross-file rename via LSP preload"
-        ),
-        SymbolKind.MODULE_EXPORT_FUNC: RouteDecision(
-            "multilspy", "ast-grep", 0.95, "cross-file rename via LSP preload"
-        ),
-        SymbolKind.MODULE_LOCAL_PROC: RouteDecision(
-            "multilspy", "ast-grep", 0.85, "module-scope LSP rename"
-        ),
-        SymbolKind.MODULE_LOCAL_FUNC: RouteDecision(
-            "multilspy", "ast-grep", 0.85, "module-scope LSP rename"
-        ),
-        SymbolKind.LOCAL_VARIABLE: RouteDecision(
-            "multilspy", None, 0.70, "local scope, single file"
-        ),
-        SymbolKind.FORM_HANDLER: RouteDecision(
-            "ast-grep", "multilspy", 0.60, "form handlers may have XML-side refs"
-        ),
-        SymbolKind.UNKNOWN: RouteDecision(
-            "ast-grep", None, 0.30, "pattern-based fallback"
-        ),
-    }
+    _ROUTES: dict[SymbolKind, RouteDecision] = dict(_DEFAULT_ROUTES)
 
     @classmethod
     def route_for(cls, kind: SymbolKind) -> RouteDecision:
@@ -60,6 +77,52 @@ class RoutingMatrix:
     def all_kinds(cls) -> list[SymbolKind]:
         """Return all SymbolKinds defined in the matrix."""
         return list(cls._ROUTES.keys())
+
+    @classmethod
+    def load(cls, path: Path | None = None) -> None:
+        """Load routing matrix from YAML, updating the class-level routes."""
+        if path is None:
+            path = Path(__file__).parent / "routing_matrix.yaml"
+
+        with path.open("r", encoding="utf-8") as fh:
+            data = yaml.safe_load(fh)
+
+        if data is None:
+            raise ValueError(f"Routing matrix file is empty: {path}")
+
+        version = data.get("version")
+        if version != 2:
+            raise ValueError(
+                f"Unsupported routing matrix version {version!r} "
+                f"(expected 2) in {path}"
+            )
+
+        raw_routes: dict[str, dict] = data.get("routes")
+        if not isinstance(raw_routes, dict):
+            raise ValueError(f"Missing or invalid 'routes' section in {path}")
+
+        new_routes: dict[SymbolKind, RouteDecision] = {}
+        for name, entry in raw_routes.items():
+            try:
+                kind = SymbolKind(name)
+            except ValueError:
+                log.warning("Skipping unknown route name %r in %s", name, path)
+                continue
+            new_routes[kind] = RouteDecision(
+                primary=entry["primary"],
+                fallback=entry.get("fallback"),
+                confidence=float(entry["confidence"]),
+                reason=entry["reason"],
+                manual_fallback=entry.get("manual_fallback", False),
+            )
+
+        cls._ROUTES = new_routes
+        log.info("Loaded %d routes from %s", len(new_routes, path))
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset routes to bundled defaults (useful in tests)."""
+        cls._ROUTES = dict(_DEFAULT_ROUTES)
 
 
 class HeuristicClassifier:
