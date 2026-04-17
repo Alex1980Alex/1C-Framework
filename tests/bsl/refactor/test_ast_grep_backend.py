@@ -115,6 +115,31 @@ def test_plan_rename_builds_workspace_edit(workspace: Path) -> None:
     assert all(e.new_text == "НоваяФункция" for e in all_edits)
 
 
+def test_relative_match_paths_resolved_against_workspace(workspace: Path) -> None:
+    """ast-grep emits paths relative to CWD — backend must resolve against workspace_root."""
+    file_a = workspace / "sub" / "a.bsl"
+    file_a.parent.mkdir(parents=True)
+    _write(file_a, "СтараяФункция();\n")
+
+    matches = [
+        AstGrepMatch(
+            file=Path("sub/a.bsl"),
+            start_line=0,
+            start_character=0,
+            end_line=0,
+            end_character=13,
+        )
+    ]
+    backend = AstGrepBackend(_FakeRunner(matches=matches), workspace)
+    file_b = workspace / "b.bsl"
+    _write(file_b, "СтараяФункция();\n")
+    result = backend.plan_rename(file_b.resolve().as_uri(), 0, 0, "НоваяФункция")
+
+    assert len(result.file_edits) == 1
+    expected_uri = file_a.resolve().as_uri()
+    assert result.file_edits[0].uri == expected_uri
+
+
 def test_plan_rename_empty_matches_returns_empty_edit(workspace: Path) -> None:
     file_a = workspace / "a.bsl"
     _write(file_a, "Процедура X()\nКонецПроцедуры\n")
