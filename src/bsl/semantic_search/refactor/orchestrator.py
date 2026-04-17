@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from time import perf_counter
 
 from .backends.base import RenameBackend
-from .classifier import HeuristicClassifier, RoutingMatrix, SymbolKind
+from .classifier import HeuristicClassifier, RouteDecision, RoutingMatrix, SymbolKind
 from .driver import RenameDriver
 from .telemetry import NullTelemetryWriter, RenameTelemetryEvent, TelemetryWriter
 from .types import BackendError, WorkspaceEdit
