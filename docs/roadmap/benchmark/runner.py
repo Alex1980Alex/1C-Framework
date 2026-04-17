@@ -153,7 +153,7 @@ class TaskExecutor:
             elif files_match_expected and edit.file_edits:
                 edits_match_expected = True
 
-        except BackendError as exc:
+        except _lazy_import_types()[0] as exc:
             error_code = exc.code or "UNKNOWN"
         except Exception:  # noqa: BLE001
             error_code = "UNHANDLED"
