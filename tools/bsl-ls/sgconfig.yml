@@ -1,0 +1,19 @@
+# ast-grep configuration for BSL (1C:Enterprise) Language Server
+# R0.3: ast-grep dry-run config
+
+ruleDirs:
+  - ast-grep-rules
+
+languageGlobs:
+  bsl:
+    - "*.bsl"
+
+# Custom language: BSL via tree-sitter-bsl
+# TODO: Compile binding.c from tree-sitter-bsl into native .dll
+# Source: pip install tree-sitter-bsl -> C:\...\site-packages\tree_sitter_bsl\binding.c
+# Compilation: gcc -shared -fPIC -o tree_sitter_bsl.dll binding.c -I<tree_sitter_include>
+customLanguages:
+  bsl:
+    libraryPath: ./tree_sitter_bsl.dll
+    extensions: [bsl]
+    # languageSymbol defaults to tree_sitter_{name} = tree_sitter_bsl
