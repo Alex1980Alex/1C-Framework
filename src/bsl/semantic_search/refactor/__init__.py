@@ -1,3 +1,8 @@
+from .backends.ast_grep_backend import (
+    AstGrepBackend,
+    AstGrepMatch,
+    AstGrepRunner,
+)
 from .backends.base import RenameBackend
 from .backends.multilspy_backend import MultilspyBackend
 from .classifier import HeuristicClassifier, RouteDecision, RoutingMatrix, SymbolKind
