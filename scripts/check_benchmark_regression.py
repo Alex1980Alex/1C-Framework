@@ -15,14 +15,30 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def _latest_run(data_dir: Path) -> Path | None:
-    # Look for benchmark-specific JSONL (run_id.jsonl with "primary_backend" field)
-    candidates = sorted(data_dir.glob("*_report.csv"), key=lambda p: p.stat().st_mtime)
-    if not candidates:
-        return None
-    # Derive JSONL from the report CSV directory
-    report_dir = candidates[-1].parent
-    jsonl_files = sorted(report_dir.glob("*.jsonl"), key=lambda p: p.stat().st_mtime)
-    return jsonl_files[-1] if jsonl_files else None
+    # Strategy 1: find benchmark output dirs (contain *_report.csv)
+    candidates = sorted(data_dir.rglob("*_report.csv"), key=lambda p: p.stat().st_mtime)
+    if candidates:
+        report_dir = candidates[-1].parent
+        jsonl_files = sorted(report_dir.glob("*.jsonl"), key=lambda p: p.stat().st_mtime)
+        if jsonl_files:
+            return jsonl_files[-1]
+
+    # Strategy 2: find any JSONL with benchmark events
+    jsonl_files = sorted(data_dir.rglob("*.jsonl"), key=lambda p: p.stat().st_mtime)
+    for jf in reversed(jsonl_files):
+        with open(jf, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    ev = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if "primary_backend" in ev:
+                    return jf
+                break
+    return None
 
 
 def check(run_dir: Path, threshold: float) -> int:
