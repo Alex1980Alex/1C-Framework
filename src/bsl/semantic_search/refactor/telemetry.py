@@ -100,6 +100,7 @@ class JsonlTelemetryWriter:
                 record["old_name"] = self._sha1(record["old_name"])
             record["new_name"] = self._sha1(record["new_name"])
         line = json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+        should_compress = False
         with self._lock:
             target = self._resolve_path()
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -109,7 +110,11 @@ class JsonlTelemetryWriter:
             now = time.monotonic()
             if now - self._last_compress_check >= 3600:
                 self._last_compress_check = now
-                self.compress_old_files()
+                should_compress = True
+        # Compression touches only rotated (non-active) files, so it runs
+        # outside the write lock to avoid blocking concurrent writers.
+        if should_compress:
+            self.compress_old_files()
 
     def compress_old_files(self) -> None:
         """Gzip-compress rotated files older than `compress_after_days`. Best-effort."""
