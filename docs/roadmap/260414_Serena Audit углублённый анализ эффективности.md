@@ -1337,10 +1337,219 @@ Meta-principle общий: **«загружай минимально необх�
 
 #### Этап R4 — Orchestrator v2 + routing matrix (1-2 дня, после R1+R2)
 
-- **R4.1 Routing matrix v2:** `module_export_proc` → A (высокий confidence с preload), B (parallel verify на 10% выборки). **Артефакт:** обновление §4.6. **DoD:** таблица обсуждена и зафиксирована.
-- **R4.2 Confidence scoring калибровка:** измерить factual success rate per symbol kind на R0-R2 данных. **Артефакт:** confidence table в ADR. **DoD:** confidence values привязаны к реальным метрикам.
-- **R4.3 Fallback chain:** A (multilspy) → B (ast-grep) → manual prompt. **Артефакт:** flowchart в документации. **DoD:** все 3 уровня покрыты интеграционными тестами.
-- **R4.4 Telemetry:** call counts, latencies, failure modes в JSONL. **Артефакт:** `data/refactor-telemetry.jsonl` + агрегатор. **DoD:** метрики видны в Phase 10 dashboard.
+**Цель этапа:** превратить статический `RoutingMatrix` и текущий `RefactorOrchestrator` (R2.5 DONE) в data-driven систему с 3-уровневым fallback (A → B → manual), телеметрией JSONL и калиброванными confidence на реальных данных.
+
+**Стартовая точка:** [`classifier.py`](../../src/bsl/semantic_search/refactor/classifier.py) содержит hard-coded `_ROUTES` (7 `SymbolKind`, статические confidence 0.30-0.95); [`orchestrator.py`](../../src/bsl/semantic_search/refactor/orchestrator.py) делает 2-уровневый fallback (primary → fallback → `BackendError(all_backends_failed)`). Данных телеметрии нет.
+
+**Инверсия порядка:** R4.2 калибровка блокируется данными → R4.4 telemetry ставится первым, R4.2 — последним (или параллельно R5 benchmark).
+
+---
+
+##### R4.0 — вынести routing matrix в YAML-конфиг (30 мин)
+
+**Проблема:** `_ROUTES` захардкожен в [classifier.py:30-52](../../src/bsl/semantic_search/refactor/classifier.py#L30). Без внешнего конфига R4.2 калибровка потребует правки Python + ревью + деплой на каждую пересборку весов.
+
+**Артефакт:** `src/bsl/semantic_search/refactor/routing_matrix.yaml` + loader `RoutingMatrix.load(path: Path | None = None)`. Initial YAML — копия текущих значений; `None` → bundled default в пакете (для unit-тестов без файла).
+
+**Схема YAML:**
+```yaml
+version: 2
+routes:
+  module_export_proc:
+    primary: multilspy
+    fallback: ast-grep
+    manual_fallback: false
+    confidence: 0.95
+    reason: "cross-file rename via LSP preload"
+  # ... 7 kinds total
+```
+
+**DoD:**
+- Тест `test_routing_matrix_yaml_roundtrip` — загрузка YAML даёт identical matrix статическому `_ROUTES`.
+- Тест `test_routing_matrix_yaml_missing_kind_falls_back_to_unknown` — отсутствующий kind → route_for возвращает UNKNOWN-декоратор.
+- Обратная совместимость: existing 17 тестов classifier без изменений.
+
+---
+
+##### R4.1 — Telemetry writer + интеграция в orchestrator (2 ч)
+
+**Артефакт:** `src/bsl/semantic_search/refactor/telemetry.py`:
+
+```python
+@dataclass(frozen=True, slots=True)
+class RenameTelemetryEvent:
+    timestamp: str              # ISO-8601 UTC
+    uri: str
+    symbol_kind: str            # SymbolKind.value
+    old_name: str | None        # may be redacted (SHA-1) if opt-in
+    new_name: str               # target name
+    primary_backend: str | None # winning backend, None if all failed
+    fallback_used: bool
+    applied: bool
+    rolled_back: bool
+    duration_ms: int
+    error_code: str | None      # backend_missing|all_backends_failed|token_mismatch|...
+    classifier_confidence: float
+    matrix_confidence: float
+    token_matched: bool | None  # apply-phase only; None in dry_run
+
+class TelemetryWriter(Protocol):
+    def write(self, event: RenameTelemetryEvent) -> None: ...
+
+class JsonlTelemetryWriter:
+    def __init__(self, path: Path, rotate_daily: bool = True, redact_names: bool = False): ...
+```
+
+**Интеграция в `RefactorOrchestrator.__init__`:** новый опциональный параметр `telemetry: TelemetryWriter | None = None`. В `rename()` — `perf_counter()` до/после каждой ветки (primary-success, fallback-success, all-failed, applied, rolled-back, token-mismatch). Exception-safe: `try/finally` на выдачу события.
+
+**Файл:** `data/refactor-telemetry.jsonl` + daily rotation → `data/refactor-telemetry-YYYY-MM-DD.jsonl`, gzip для файлов >30 дней.
+
+**DoD:**
+- 6 unit-тестов: `test_telemetry_emits_on_primary_success`, `..._on_fallback_success`, `..._on_all_failed`, `..._on_applied`, `..._on_rolled_back`, `..._on_token_mismatch`.
+- Тест `test_telemetry_none_noop` — `telemetry=None` не ломает orchestrator.
+- Проверка всех 12+ полей в каждом событии.
+
+---
+
+##### R4.2 — Fallback chain v2: A → B → manual prompt (3 ч)
+
+**Проблема текущей реализации:** `RouteDecision` — только `primary + fallback`. При `all_backends_failed` → `BackendError`. Вызывающий агент остаётся без инструкций «что делать дальше».
+
+**Решение:** tier 3 = структурированный manual prompt, возвращаемый как полноценный `OrchestratorResult`.
+
+**Изменения типов:**
+
+```python
+@dataclass(frozen=True, slots=True)
+class RouteDecision:
+    primary: str
+    fallback: str | None
+    manual_fallback: bool       # NEW — если True, при all-fail не raise
+    confidence: float
+    reason: str
+
+@dataclass(frozen=True, slots=True)
+class ManualFallbackInstruction:
+    uri: str
+    symbol_kind: SymbolKind
+    old_name: str
+    new_name: str
+    suggested_approach: str     # "Grep+Edit", "EDT GUI refactor F2", "ast-grep --interactive"
+    warnings: list[str]         # известные pitfalls для этого kind
+    rationale: str              # почему автоматика не справилась
+```
+
+`OrchestratorResult` дополняется полем `manual_instruction: ManualFallbackInstruction | None = None`.
+
+**Logic в `orchestrator.rename()`:**
+1. Primary try → fallback try (как сейчас)
+2. Оба пустые/failed И `decision.manual_fallback=True` → построить `ManualFallbackInstruction`, вернуть `OrchestratorResult(applied=False, rolled_back=False, manual_instruction=<...>, reason="manual_required")`
+3. Оба failed И `manual_fallback=False` → `BackendError(all_backends_failed)` (существующее поведение сохраняется для LOCAL_VARIABLE).
+
+**Конфиг в `routing_matrix.yaml`:** включить `manual_fallback: true` для сложных `SymbolKind` (FORM_HANDLER, UNKNOWN); оставить `false` для MODULE_LOCAL_*, LOCAL_VARIABLE где ожидается 100% автоматика.
+
+**MCP surface (`bsl_rename_symbol`):** при manual tier возвращает `{"status": "manual_required", "instruction": {...}}` вместо raise. Handler в [mcp.py](../../src/bsl/semantic_search/mcp.py) расширяется.
+
+**DoD:**
+- 4 теста: `test_manual_fallback_returned_when_both_backends_fail`, `test_manual_fallback_disabled_still_raises_backend_error`, `test_manual_instruction_includes_suggested_approach_per_kind`, `test_mcp_rename_surfaces_manual_instruction`.
+- Обновление 17 classifier-тестов под новую сигнатуру `RouteDecision` (добавить `manual_fallback=False` default).
+
+---
+
+##### R4.3 — Flowchart + документация fallback chain (1 ч)
+
+**Артефакт:** `docs/roadmap/refactor-fallback-chain.md`:
+
+- ASCII flowchart: `classify → route → primary.plan_rename → (ok? apply : fallback.plan_rename) → (ok? apply : manual_instruction | BackendError)`
+- Per-`SymbolKind` таблица: primary, fallback, manual enabled, expected latency p50/p95, known limitations, когда раскалибровать confidence.
+- Раздел «Когда срабатывает manual tier» — warnings для вызывающего агента, примеры suggested_approach per kind.
+- Раздел «Инвалидация calibration» — когда пересчитать confidence (смена версии BSL LS, изменение правил ast-grep, расширение `SymbolKind` enum).
+
+**DoD:** markdown существует; таблица покрывает все 7 `SymbolKind`; flowchart ссылается на конкретные строки `orchestrator.py`.
+
+---
+
+##### R4.4 — Aggregator + calibration script (2 ч)
+
+**Артефакт:** `scripts/aggregate_refactor_telemetry.py`:
+
+```
+Input:  data/refactor-telemetry-*.jsonl (glob + merge)
+Output: data/refactor-telemetry-summary.md (или stdout --stdout)
+        data/refactor-telemetry-proposed.yaml (предлагаемые обновления routing_matrix.yaml)
+
+Per (symbol_kind, backend):
+  - total_calls, total_dry_runs, total_applies
+  - success_rate = (applied and not rolled_back) / total_applies
+  - fallback_rate = fallback_used / total
+  - rollback_rate = rolled_back / total_applies
+  - p50/p95/p99 duration_ms
+  - top-5 error_codes с процентами
+  - proposed_confidence = success_rate * (1 - rollback_rate), clamp [0.1, 0.95]
+
+Confidence update rule:
+  - IF total_calls < MIN_SAMPLES (20) → keep existing confidence (insufficient data)
+  - ELSE IF abs(proposed - current) > DELTA_THRESHOLD (0.05) → emit in proposed.yaml
+  - ELSE → no change
+```
+
+CLI flags: `--min-samples N`, `--delta-threshold X`, `--since YYYY-MM-DD`, `--stdout`.
+
+**DoD:**
+- Запуск на synthetic dataset (`data/refactor-telemetry-synthetic.jsonl`, 20 событий) → корректный markdown report.
+- Unit-тест `test_aggregator_skips_under_min_samples` — 19 событий → proposed.yaml пустой.
+- Unit-тест `test_aggregator_emits_proposal_above_delta` — 25 событий с success_rate=0.72 → proposed confidence=0.72, отличающийся от текущего на >0.05.
+
+---
+
+##### R4.5 — Confidence calibration (1 ч чистой работы + недели данных)
+
+**Бутстрап-путь A:** продакшн-наблюдение 1-2 недели на daily dev rename (≥50 реальных вызовов) → aggregator → review proposed.yaml → commit → наблюдение за откликом.
+
+**Бутстрап-путь B (быстрый):** привязать к R5 benchmark: 20 git-commit задач × 2 backends × dry+apply = ~80 data points. Достаточно для first calibration без ожидания продакшена.
+
+**DoD (отложенный):** `routing_matrix.yaml` обновлён ≥1 раз на основе ≥50 реальных событий; CHANGELOG в этом документе фиксирует before/after confidence таблицы.
+
+---
+
+##### R4.6 (Опциональный) — Dashboard integration
+
+**Зависит от:** Phase 10 dashboard (v4.1 extension). Если Phase 10 готов — panel «Refactor health»: success_rate, rollback_count, avg_latency, top errors, последние 10 calls. Иначе отложить как P2 follow-up.
+
+**Артефакт:** дополнение к Phase 10 dashboard HTML/CLI.
+
+**DoD (условный):** панель отображает агрегаты R4.4 с обновлением на каждый новый JSONL event.
+
+---
+
+##### Сводная таблица R4
+
+| Подзадача | Артефакт | Оценка | Блокеры |
+|-----------|----------|--------|---------|
+| **R4.0** | `routing_matrix.yaml` + loader | 30 мин | — |
+| **R4.1** | `telemetry.py` + JSONL writer + orchestrator integration | 2 ч | R4.0 |
+| **R4.2** | `ManualFallbackInstruction` + 3-tier orchestrator + MCP surface | 3 ч | R4.1 |
+| **R4.3** | `refactor-fallback-chain.md` + flowchart | 1 ч | R4.2 |
+| **R4.4** | `aggregate_refactor_telemetry.py` + proposed.yaml | 2 ч | R4.1 |
+| **R4.5** | Калибровка confidence в YAML | 1 ч (+ 1-2 недели данных или R5 benchmark) | R4.1, R4.4, данные |
+| **R4.6** | Dashboard panel | 2 ч | Phase 10 |
+
+**Критический путь:** R4.0 → R4.1 → R4.2 → R4.3 ≈ **6.5 ч чистого кода**. R4.4 параллельно R4.2/R4.3. R4.5 отложен до накопления данных или R5 benchmark.
+
+**Итого:** **1 день** плотной работы на код + документацию (R4.0-R4.4); R4.5 и R4.6 — хвосты после наблюдения или интеграции с Phase 10.
+
+---
+
+##### Риски R4
+
+| Риск | Вероятность | Митигация |
+|------|-------------|-----------|
+| Telemetry PII (бизнес-идентификаторы в `old_name`) | Высокая (кириллические имена реквизитов часто содержат бизнес-термины) | Opt-in флаг `redact_names=True` в `JsonlTelemetryWriter` → хэширование `old_name` SHA-1; default `false` для dev-окружений |
+| JSONL файл растёт без ограничений | Средняя | Daily rotation + gzip старше 30 дней; ротация в `JsonlTelemetryWriter` |
+| Manual tier → Claude/агент в бесконечный цикл без действия | Средняя | В `ManualFallbackInstruction.suggested_approach` явно указывать инструменты (Grep, Edit, EDT GUI F2, ast-grep --interactive); НЕ делать silent retry в orchestrator |
+| Калибровка на малой выборке даёт нестабильные confidence | Высокая на старте | Threshold: не обновлять confidence пока `total_calls < MIN_SAMPLES=20` per (kind, backend); `DELTA_THRESHOLD=0.05` для фильтрации шума |
+| Schema `RenameTelemetryEvent` меняется → старый JSONL нечитаем | Низкая | Поле `version: 1` в каждом событии; aggregator умеет читать v1+ |
+| Routing YAML содержит опечатки (backend name, confidence out of [0,1]) | Низкая | Валидация в `RoutingMatrix.load`: проверка backend в whitelist, clamp confidence, raise при unknown kind |
 
 #### Этап R5 — Benchmark + validation (2-3 дня, после R4)
 
