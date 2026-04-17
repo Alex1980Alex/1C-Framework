@@ -101,7 +101,7 @@ class AstGrepBackend:
                 f"ast-grep runner failed: {exc!r}", code="runner_error"
             ) from exc
 
-        return self._matches_to_edit(matches, new_name)
+        return self._matches_to_edit(matches, new_name, self._workspace_root)
 
     @staticmethod
     def _uri_to_path(uri: str) -> Path:
