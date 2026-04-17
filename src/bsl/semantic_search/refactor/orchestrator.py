@@ -204,6 +204,37 @@ class RefactorOrchestrator:
         )
 
     @staticmethod
+    def _build_manual_instruction(
+        uri: str,
+        kind: SymbolKind,
+        new_name: str,
+        decision: RouteDecision,
+    ) -> ManualFallbackInstruction:
+        approach_map: dict[SymbolKind, str] = {
+            SymbolKind.FORM_HANDLER: "Grep+Edit or EDT GUI refactor F2",
+            SymbolKind.UNKNOWN: "ast-grep --interactive or Grep+Edit",
+        }
+        warnings_map: dict[SymbolKind, list[str]] = {
+            SymbolKind.FORM_HANDLER: [
+                "Form handlers may have XML-side references not visible to text tools",
+                "Check form property bindings after manual rename",
+            ],
+            SymbolKind.UNKNOWN: [
+                "Symbol type unknown — rename may miss references",
+                "Verify with Grep after manual rename",
+            ],
+        }
+        return ManualFallbackInstruction(
+            uri=uri,
+            symbol_kind=kind,
+            old_name="<unknown>",
+            new_name=new_name,
+            suggested_approach=approach_map.get(kind, "Grep+Edit"),
+            warnings=warnings_map.get(kind, []),
+            rationale=f"Primary={decision.primary}, fallback={decision.fallback} both failed for {kind.value}",
+        )
+
+    @staticmethod
     def _build_event(
         *,
         uri: str,
