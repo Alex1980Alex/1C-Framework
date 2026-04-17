@@ -258,3 +258,324 @@
 2026-04-17 02:15:54.667 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
 2026-04-17 02:15:54.667 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
 2026-04-17 02:15:54.699 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 4.158 seconds (process running for 5.683)
+02:16:08.594 INFO  - Starting MainKt v0.5.1 using Java 17.0.13 with PID 19264 (D:\1С-Framework\tools\mcp-jars\mcp-yaxunit-runner-0.5.1.jar started by AlexT in D:\1С-Framework)
+02:16:08.596 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
+02:16:08.597 INFO  - The following 2 profiles are active: "mcp", "testdb"
+02:16:11.120 INFO  - Enable tools capabilities, notification: true
+02:16:11.246 INFO  - Registered tools: 8
+02:16:11.247 INFO  - Enable resources capabilities, notification: true
+02:16:11.249 INFO  - Enable prompts capabilities, notification: true
+02:16:11.250 INFO  - Enable completions capabilities
+02:16:11.568 INFO  - Client initialize request - Protocol: 2025-11-25, Capabilities: ClientCapabilities[experimental=null, roots=RootCapabilities[listChanged=null], sampling=null], Info: Implementation[name=claude-code, version=2.1.112]
+02:16:11.581 WARN  - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
+02:16:11.761 INFO  - Started MainKt in 4.079 seconds (process running for 5.181)
+02:16:11.800 INFO  - EDT формат не выбран, автозапуск пропущен
+02:20:08.603 INFO  - Выполнение сборки проекта
+02:20:08.607 INFO  - Создание HashStorage для source set: designer
+02:20:08.607 INFO  - Инициализация хранилища хешей для source set 'designer' по пути: C:\Users\AlexT\AppData\Local\Temp\mcp-yaxunit-runner\testdb\hash-storages\designer.db
+02:20:08.819 WARN  - Could not delete file: C:\Users\AlexT\AppData\Local\Temp\mcp-yaxunit-runner\testdb\hash-storages\designer.db.wal.0
+02:20:08.845 INFO  - Хранилище хешей для source set 'designer' инициализировано с 0 хешами
+02:20:08.847 INFO  - Анализ изменений по проекту (1 source sets)
+02:20:08.847 DEBUG - Анализ изменений для source set: testdb
+02:20:08.858 DEBUG - Анализ изменений: D:\1С-Framework\src\bsl
+02:20:08.863 DEBUG - Проверка потенциальных изменений с вычислением хешей
+02:20:08.882 DEBUG - Сканирование изменений временных меток в: D:\1С-Framework\src\bsl\.
+02:20:08.887 DEBUG - Сканирование изменений временных меток в: D:\1С-Framework\src\bsl\exts\YAXUNIT
+02:20:08.888 DEBUG - Сканирование изменений временных меток в: D:\1С-Framework\src\bsl\exts\Smoke
+02:20:11.091 DEBUG - Проверка хешей завершена: обнаружено 9394 фактических изменений
+02:20:11.092 INFO  - Обнаружение изменений завершено за 2234мс: 9394 фактических изменений
+02:20:11.095 DEBUG - Анализ source set 'testdb': найдено 9394 измененных файлов
+02:20:11.098 DEBUG - Анализ 9394 изменений для группировки по source set
+02:20:11.110 DEBUG - Source set 'testdb': 8992 changes (8992 new, 0 modified, 0 deleted)
+02:20:11.114 DEBUG - Source set 'YAXUNIT': 389 changes (389 new, 0 modified, 0 deleted)
+02:20:11.117 DEBUG - Source set 'Smoke': 13 changes (13 new, 0 modified, 0 deleted)
+02:20:11.118 INFO  - Проанализированы изменения для 3 затронутых source sets из 3 всего
+02:20:11.120 INFO  - Изменения сгруппированы в 3 подпроектов для source set 'testdb'
+02:20:11.122 INFO  - Обнаружены изменения: testdb, YAXUNIT, Smoke
+02:20:11.123 DEBUG - Сборка проекта с поддержкой частичной загрузки
+02:20:11.126 INFO  - Количество изменений (8992) >= порога (20), используется полная загрузка
+02:20:11.126 INFO  - Полная загрузка конфигурации
+02:20:11.128 DEBUG - Начало поиска утилиты: DESIGNER, версия: 8.3.27.1859
+02:20:11.129 DEBUG - Промах кэша для утилиты: DESIGNER, версия: 8.3.27.1859
+02:20:11.132 DEBUG - Поиск в локациях
+02:20:11.144 DEBUG - Сохранено в кэш: DESIGNER, версия: 8.3.27.1859 по пути C:\Program Files\1cv8\8.3.27.1859\bin\1cv8.exe
+02:20:11.145 INFO  - Загрузка конфигурации из файлов: LoadConfigFromFiles (sourcePath=D:\1С-Framework\src\bsl\., updateDBCfg=true)
+02:20:11.146 DEBUG - ============ ЗАПУСК ПРОЦЕССА ============
+02:20:11.146 DEBUG - Команда: C:\Program Files\1cv8\8.3.27.1859\bin\1cv8.exe DESIGNER /IBConnectionString "Srvr=""KOMPUTER"";Ref=""TestDB"";" /N"a.terletskiy@sodru.com" /P"Alex80Alex" /DisableStartupDialogs /DisableStartupMessages /LoadConfigFromFiles D:\1С-Framework\src\bsl\. /UpdateDBCfg /Out C:\Users\AlexT\AppData\Local\Temp\onec_log_7972523347683575372.log
+02:20:11.146 DEBUG - Файл логов: C:\Users\AlexT\AppData\Local\Temp\onec_log_7972523347683575372.log
+02:20:11.146 DEBUG - Рабочий каталог: D:\1С-Framework
+
+02:20:11.154 DEBUG - Процесс запущен с PID: 22832
+02:21:43.711 DEBUG - Завершено чтение вывода. STDOUT: 0 строк, STDERR: 0 строк
+02:21:43.732 DEBUG - Успешно прочитан файл логов: C:\Users\AlexT\AppData\Local\Temp\onec_log_7972523347683575372.log (244 символов)
+02:21:43.736 DEBUG - Процесс завершен: PID: 22832, Код завершения: 0, Время выполнения: 92586ms
+02:21:43.736 DEBUG - Логи 1С: ﻿Обработка структуры базы данных...
+
+Сбор служебной информации...
+
+Объект удален: Константа.гкс_РазрешитьВходнойКонтрольДоВзвешиванияАвто
+Принятие изменений...
+
+Построение индекса справки...
+
+Обновление конфигурации успешно завершено
+
+02:21:43.736 DEBUG - ============ ПРОЦЕСС ВЫПОЛНЕН УСПЕШНО ============
+02:21:43.737 DEBUG - Загрузка конфигурации : успешно
+02:21:43.737 INFO  - Загружаю 2 расширений: YAXUNIT, Smoke
+02:21:43.738 INFO  - Количество изменений (389) >= порога (20), используется полная загрузка
+02:21:43.738 INFO  - Полная загрузка расширения YAXUNIT
+02:21:43.738 DEBUG - Начало поиска утилиты: DESIGNER, версия: 8.3.27.1859
+02:21:43.738 DEBUG - Попадание в кэш для утилиты: DESIGNER, версия: 8.3.27.1859
+02:21:43.738 DEBUG - Найдена кэшированная локация утилиты: C:\Program Files\1cv8\8.3.27.1859\bin\1cv8.exe
+02:21:43.738 INFO  - Загрузка конфигурации из файлов: LoadConfigFromFiles (sourcePath=D:\1С-Framework\src\bsl\exts\YAXUNIT, extension=YAXUNIT, updateDBCfg=true)
+02:21:43.738 DEBUG - ============ ЗАПУСК ПРОЦЕССА ============
+02:21:43.739 DEBUG - Команда: C:\Program Files\1cv8\8.3.27.1859\bin\1cv8.exe DESIGNER /IBConnectionString "Srvr=""KOMPUTER"";Ref=""TestDB"";" /N"a.terletskiy@sodru.com" /P"Alex80Alex" /DisableStartupDialogs /DisableStartupMessages /LoadConfigFromFiles D:\1С-Framework\src\bsl\exts\YAXUNIT -Extension YAXUNIT /UpdateDBCfg /Out C:\Users\AlexT\AppData\Local\Temp\onec_log_1871508574362755111.log
+02:21:43.739 DEBUG - Файл логов: C:\Users\AlexT\AppData\Local\Temp\onec_log_1871508574362755111.log
+02:21:43.739 DEBUG - Рабочий каталог: D:\1С-Framework
+
+02:21:43.740 DEBUG - Процесс запущен с PID: 22540
+02:21:56.660 DEBUG - Завершено чтение вывода. STDOUT: 0 строк, STDERR: 0 строк
+02:21:56.676 DEBUG - Успешно прочитан файл логов: C:\Users\AlexT\AppData\Local\Temp\onec_log_1871508574362755111.log (1 символов)
+02:21:56.676 DEBUG - Процесс завершен: PID: 22540, Код завершения: 0, Время выполнения: 12937ms
+02:21:56.676 DEBUG - Логи 1С: ﻿
+02:21:56.676 DEBUG - ============ ПРОЦЕСС ВЫПОЛНЕН УСПЕШНО ============
+02:21:56.677 DEBUG - Загрузка расширения YAXUNIT : успешно
+02:21:56.677 INFO  - Обнаружены изменения в Configuration.xml, используется полная загрузка
+02:21:56.677 INFO  - Полная загрузка расширения Smoke
+02:21:56.678 DEBUG - Начало поиска утилиты: DESIGNER, версия: 8.3.27.1859
+02:21:56.678 DEBUG - Попадание в кэш для утилиты: DESIGNER, версия: 8.3.27.1859
+02:21:56.678 DEBUG - Найдена кэшированная локация утилиты: C:\Program Files\1cv8\8.3.27.1859\bin\1cv8.exe
+02:21:56.678 INFO  - Загрузка конфигурации из файлов: LoadConfigFromFiles (sourcePath=D:\1С-Framework\src\bsl\exts\Smoke, extension=Smoke, updateDBCfg=true)
+02:21:56.678 DEBUG - ============ ЗАПУСК ПРОЦЕССА ============
+02:21:56.678 DEBUG - Команда: C:\Program Files\1cv8\8.3.27.1859\bin\1cv8.exe DESIGNER /IBConnectionString "Srvr=""KOMPUTER"";Ref=""TestDB"";" /N"a.terletskiy@sodru.com" /P"Alex80Alex" /DisableStartupDialogs /DisableStartupMessages /LoadConfigFromFiles D:\1С-Framework\src\bsl\exts\Smoke -Extension Smoke /UpdateDBCfg /Out C:\Users\AlexT\AppData\Local\Temp\onec_log_9389693919307908306.log
+02:21:56.678 DEBUG - Файл логов: C:\Users\AlexT\AppData\Local\Temp\onec_log_9389693919307908306.log
+02:21:56.678 DEBUG - Рабочий каталог: D:\1С-Framework
+
+02:21:56.679 DEBUG - Процесс запущен с PID: 15620
+02:22:02.393 DEBUG - Завершено чтение вывода. STDOUT: 0 строк, STDERR: 0 строк
+02:22:02.405 DEBUG - Успешно прочитан файл логов: C:\Users\AlexT\AppData\Local\Temp\onec_log_9389693919307908306.log (1 символов)
+02:22:02.406 DEBUG - Процесс завершен: PID: 15620, Код завершения: 0, Время выполнения: 5727ms
+02:22:02.406 DEBUG - Логи 1С: ﻿
+02:22:02.406 DEBUG - ============ ПРОЦЕСС ВЫПОЛНЕН УСПЕШНО ============
+02:22:02.406 DEBUG - Загрузка расширения Smoke : успешно
+02:22:02.406 INFO  - Сборка завершена успешно
+02:22:02.407 INFO  - Сборка проекта завершена за 1m 51.284173600s
+02:22:02.407 DEBUG - Сохранение состояния подпроекта: testdb
+02:22:02.605 WARN  - Не удалось сохранить хеши файлов (8992 шт.) - кэш будет перестроен при следующей сборке
+02:22:02.606 DEBUG - Детали ошибки сохранения хешей
+org.mapdb.DBException$VolumeIOError: null
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:285)
+	at org.mapdb.WriteAheadLog.destroyWalFiles(WriteAheadLog.java:791)
+	at org.mapdb.StoreWAL.commit(StoreWAL.kt:645)
+	at org.mapdb.DB.commit(DB.kt:435)
+	at io.github.alkoleft.mcp.infrastructure.storage.HashStorage.batchUpdate(HashStorage.kt:112)
+	at io.github.alkoleft.mcp.infrastructure.storage.FileBuildStateManager.updateHashes(FileBuildStateManager.kt:89)
+	at io.github.alkoleft.mcp.application.actions.change.FileSystemChangeAnalysisAction.saveSourceSetState(FileSystemChangeAnalysisAction.kt:145)
+	at io.github.alkoleft.mcp.application.services.LauncherService.build(LauncherService.kt:126)
+	at io.github.alkoleft.mcp.server.McpServer.buildProject(McpServer.kt:182)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.ai.tool.method.MethodToolCallback.callMethod(MethodToolCallback.java:166)
+	at org.springframework.ai.tool.method.MethodToolCallback.call(MethodToolCallback.java:109)
+	at org.springframework.ai.mcp.McpToolUtils.lambda$toSyncToolSpecification$0(McpToolUtils.java:175)
+	at io.modelcontextprotocol.server.McpServerFeatures$AsyncToolSpecification.lambda$fromSync$0(McpServerFeatures.java:249)
+	at reactor.core.publisher.MonoCallable.call(MonoCallable.java:72)
+	at reactor.core.publisher.FluxSubscribeOnCallable$CallableSubscribeOnSubscription.run(FluxSubscribeOnCallable.java:228)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate(FileDispatcherImpl.java:90)
+	at java.base/sun.nio.ch.FileChannelImpl.truncate(FileChannelImpl.java:437)
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:283)
+	... 25 common frames omitted
+02:22:02.648 DEBUG - Обновлено 8992 хешей файлов для подпроекта: testdb
+02:22:02.655 WARN  - Не удалось сохранить временную метку для 'designer' - кэш будет перестроен при следующей сборке
+02:22:02.656 DEBUG - Детали ошибки сохранения временной метки
+org.mapdb.DBException$VolumeIOError: null
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:285)
+	at org.mapdb.WriteAheadLog.destroyWalFiles(WriteAheadLog.java:791)
+	at org.mapdb.StoreWAL.commit(StoreWAL.kt:645)
+	at org.mapdb.DB.commit(DB.kt:435)
+	at io.github.alkoleft.mcp.infrastructure.storage.HashStorage.storeTimestamp(HashStorage.kt:137)
+	at io.github.alkoleft.mcp.infrastructure.storage.FileBuildStateManager.storeTimestamp(FileBuildStateManager.kt:93)
+	at io.github.alkoleft.mcp.application.actions.change.FileSystemChangeAnalysisAction.saveSourceSetState(FileSystemChangeAnalysisAction.kt:152)
+	at io.github.alkoleft.mcp.application.services.LauncherService.build(LauncherService.kt:126)
+	at io.github.alkoleft.mcp.server.McpServer.buildProject(McpServer.kt:182)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.ai.tool.method.MethodToolCallback.callMethod(MethodToolCallback.java:166)
+	at org.springframework.ai.tool.method.MethodToolCallback.call(MethodToolCallback.java:109)
+	at org.springframework.ai.mcp.McpToolUtils.lambda$toSyncToolSpecification$0(McpToolUtils.java:175)
+	at io.modelcontextprotocol.server.McpServerFeatures$AsyncToolSpecification.lambda$fromSync$0(McpServerFeatures.java:249)
+	at reactor.core.publisher.MonoCallable.call(MonoCallable.java:72)
+	at reactor.core.publisher.FluxSubscribeOnCallable$CallableSubscribeOnSubscription.run(FluxSubscribeOnCallable.java:228)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate(FileDispatcherImpl.java:90)
+	at java.base/sun.nio.ch.FileChannelImpl.truncate(FileChannelImpl.java:437)
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:283)
+	... 25 common frames omitted
+02:22:02.673 DEBUG - Сохранение состояния подпроекта: YAXUNIT
+02:22:02.674 WARN  - Source set 'YAXUNIT' не найден, используем основной source set
+02:22:02.689 WARN  - Не удалось сохранить хеши файлов (389 шт.) - кэш будет перестроен при следующей сборке
+02:22:02.689 DEBUG - Детали ошибки сохранения хешей
+org.mapdb.DBException$VolumeIOError: null
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:285)
+	at org.mapdb.WriteAheadLog.destroyWalFiles(WriteAheadLog.java:791)
+	at org.mapdb.StoreWAL.commit(StoreWAL.kt:645)
+	at org.mapdb.DB.commit(DB.kt:435)
+	at io.github.alkoleft.mcp.infrastructure.storage.HashStorage.batchUpdate(HashStorage.kt:112)
+	at io.github.alkoleft.mcp.infrastructure.storage.FileBuildStateManager.updateHashes(FileBuildStateManager.kt:89)
+	at io.github.alkoleft.mcp.application.actions.change.FileSystemChangeAnalysisAction.saveSourceSetState(FileSystemChangeAnalysisAction.kt:145)
+	at io.github.alkoleft.mcp.application.services.LauncherService.build(LauncherService.kt:126)
+	at io.github.alkoleft.mcp.server.McpServer.buildProject(McpServer.kt:182)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.ai.tool.method.MethodToolCallback.callMethod(MethodToolCallback.java:166)
+	at org.springframework.ai.tool.method.MethodToolCallback.call(MethodToolCallback.java:109)
+	at org.springframework.ai.mcp.McpToolUtils.lambda$toSyncToolSpecification$0(McpToolUtils.java:175)
+	at io.modelcontextprotocol.server.McpServerFeatures$AsyncToolSpecification.lambda$fromSync$0(McpServerFeatures.java:249)
+	at reactor.core.publisher.MonoCallable.call(MonoCallable.java:72)
+	at reactor.core.publisher.FluxSubscribeOnCallable$CallableSubscribeOnSubscription.run(FluxSubscribeOnCallable.java:228)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate(FileDispatcherImpl.java:90)
+	at java.base/sun.nio.ch.FileChannelImpl.truncate(FileChannelImpl.java:437)
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:283)
+	... 25 common frames omitted
+02:22:02.707 DEBUG - Обновлено 389 хешей файлов для подпроекта: YAXUNIT
+02:22:02.713 WARN  - Не удалось сохранить временную метку для 'designer' - кэш будет перестроен при следующей сборке
+02:22:02.713 DEBUG - Детали ошибки сохранения временной метки
+org.mapdb.DBException$VolumeIOError: null
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:285)
+	at org.mapdb.WriteAheadLog.destroyWalFiles(WriteAheadLog.java:791)
+	at org.mapdb.StoreWAL.commit(StoreWAL.kt:645)
+	at org.mapdb.DB.commit(DB.kt:435)
+	at io.github.alkoleft.mcp.infrastructure.storage.HashStorage.storeTimestamp(HashStorage.kt:137)
+	at io.github.alkoleft.mcp.infrastructure.storage.FileBuildStateManager.storeTimestamp(FileBuildStateManager.kt:93)
+	at io.github.alkoleft.mcp.application.actions.change.FileSystemChangeAnalysisAction.saveSourceSetState(FileSystemChangeAnalysisAction.kt:152)
+	at io.github.alkoleft.mcp.application.services.LauncherService.build(LauncherService.kt:126)
+	at io.github.alkoleft.mcp.server.McpServer.buildProject(McpServer.kt:182)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.ai.tool.method.MethodToolCallback.callMethod(MethodToolCallback.java:166)
+	at org.springframework.ai.tool.method.MethodToolCallback.call(MethodToolCallback.java:109)
+	at org.springframework.ai.mcp.McpToolUtils.lambda$toSyncToolSpecification$0(McpToolUtils.java:175)
+	at io.modelcontextprotocol.server.McpServerFeatures$AsyncToolSpecification.lambda$fromSync$0(McpServerFeatures.java:249)
+	at reactor.core.publisher.MonoCallable.call(MonoCallable.java:72)
+	at reactor.core.publisher.FluxSubscribeOnCallable$CallableSubscribeOnSubscription.run(FluxSubscribeOnCallable.java:228)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate(FileDispatcherImpl.java:90)
+	at java.base/sun.nio.ch.FileChannelImpl.truncate(FileChannelImpl.java:437)
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:283)
+	... 25 common frames omitted
+02:22:02.730 DEBUG - Сохранение состояния подпроекта: Smoke
+02:22:02.730 WARN  - Source set 'Smoke' не найден, используем основной source set
+02:22:02.736 WARN  - Не удалось сохранить хеши файлов (13 шт.) - кэш будет перестроен при следующей сборке
+02:22:02.736 DEBUG - Детали ошибки сохранения хешей
+org.mapdb.DBException$VolumeIOError: null
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:285)
+	at org.mapdb.WriteAheadLog.destroyWalFiles(WriteAheadLog.java:791)
+	at org.mapdb.StoreWAL.commit(StoreWAL.kt:645)
+	at org.mapdb.DB.commit(DB.kt:435)
+	at io.github.alkoleft.mcp.infrastructure.storage.HashStorage.batchUpdate(HashStorage.kt:112)
+	at io.github.alkoleft.mcp.infrastructure.storage.FileBuildStateManager.updateHashes(FileBuildStateManager.kt:89)
+	at io.github.alkoleft.mcp.application.actions.change.FileSystemChangeAnalysisAction.saveSourceSetState(FileSystemChangeAnalysisAction.kt:145)
+	at io.github.alkoleft.mcp.application.services.LauncherService.build(LauncherService.kt:126)
+	at io.github.alkoleft.mcp.server.McpServer.buildProject(McpServer.kt:182)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.ai.tool.method.MethodToolCallback.callMethod(MethodToolCallback.java:166)
+	at org.springframework.ai.tool.method.MethodToolCallback.call(MethodToolCallback.java:109)
+	at org.springframework.ai.mcp.McpToolUtils.lambda$toSyncToolSpecification$0(McpToolUtils.java:175)
+	at io.modelcontextprotocol.server.McpServerFeatures$AsyncToolSpecification.lambda$fromSync$0(McpServerFeatures.java:249)
+	at reactor.core.publisher.MonoCallable.call(MonoCallable.java:72)
+	at reactor.core.publisher.FluxSubscribeOnCallable$CallableSubscribeOnSubscription.run(FluxSubscribeOnCallable.java:228)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate(FileDispatcherImpl.java:90)
+	at java.base/sun.nio.ch.FileChannelImpl.truncate(FileChannelImpl.java:437)
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:283)
+	... 25 common frames omitted
+02:22:02.753 DEBUG - Обновлено 13 хешей файлов для подпроекта: Smoke
+02:22:02.758 WARN  - Не удалось сохранить временную метку для 'designer' - кэш будет перестроен при следующей сборке
+02:22:02.758 DEBUG - Детали ошибки сохранения временной метки
+org.mapdb.DBException$VolumeIOError: null
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:285)
+	at org.mapdb.WriteAheadLog.destroyWalFiles(WriteAheadLog.java:791)
+	at org.mapdb.StoreWAL.commit(StoreWAL.kt:645)
+	at org.mapdb.DB.commit(DB.kt:435)
+	at io.github.alkoleft.mcp.infrastructure.storage.HashStorage.storeTimestamp(HashStorage.kt:137)
+	at io.github.alkoleft.mcp.infrastructure.storage.FileBuildStateManager.storeTimestamp(FileBuildStateManager.kt:93)
+	at io.github.alkoleft.mcp.application.actions.change.FileSystemChangeAnalysisAction.saveSourceSetState(FileSystemChangeAnalysisAction.kt:152)
+	at io.github.alkoleft.mcp.application.services.LauncherService.build(LauncherService.kt:126)
+	at io.github.alkoleft.mcp.server.McpServer.buildProject(McpServer.kt:182)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.ai.tool.method.MethodToolCallback.callMethod(MethodToolCallback.java:166)
+	at org.springframework.ai.tool.method.MethodToolCallback.call(MethodToolCallback.java:109)
+	at org.springframework.ai.mcp.McpToolUtils.lambda$toSyncToolSpecification$0(McpToolUtils.java:175)
+	at io.modelcontextprotocol.server.McpServerFeatures$AsyncToolSpecification.lambda$fromSync$0(McpServerFeatures.java:249)
+	at reactor.core.publisher.MonoCallable.call(MonoCallable.java:72)
+	at reactor.core.publisher.FluxSubscribeOnCallable$CallableSubscribeOnSubscription.run(FluxSubscribeOnCallable.java:228)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.truncate(FileDispatcherImpl.java:90)
+	at java.base/sun.nio.ch.FileChannelImpl.truncate(FileChannelImpl.java:437)
+	at org.mapdb.volume.MappedFileVol.truncate(MappedFileVol.java:283)
+	... 25 common frames omitted
