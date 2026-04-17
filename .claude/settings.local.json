@@ -651,7 +651,8 @@
       "mcp__1c-mcp-crud-daily__get_form_structure",
       "Bash(mkdir -p /d/temp/daily_config_dump)",
       "Read(//d/temp/**)",
-      "Bash('C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER '/SKOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /DisableStartupMessages /DisableStartupDialogs /DumpConfigToFiles 'D:\\\\temp\\\\daily_config_dump' /Out 'D:\\\\temp\\\\daily_config_dump\\\\_dump.log')"
+      "Bash('C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER '/SKOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /DisableStartupMessages /DisableStartupDialogs /DumpConfigToFiles 'D:\\\\temp\\\\daily_config_dump' /Out 'D:\\\\temp\\\\daily_config_dump\\\\_dump.log')",
+      "Bash('/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe' -S localhost -U sa -P 1980 -C -Q ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,
