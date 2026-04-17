@@ -109,6 +109,7 @@ class TaskExecutor:
         self._repo_root = repo_root.resolve()
 
     def run(self, task: dict, backend: RenameBackendProto, worktree_path: Path) -> TaskResult:
+        BackendError, _ = _lazy_import_types()
         task_id = task["id"]
         file_uri = task["file_uri"]
         line = task["line"]
