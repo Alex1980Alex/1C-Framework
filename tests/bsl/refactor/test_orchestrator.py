@@ -30,6 +30,7 @@ class _StubLspClient:
 
     def rename(self, params: dict) -> Any:
         self.calls += 1
+        self.last_params = params
         if self._raise is not None:
             raise self._raise
         return self._response
