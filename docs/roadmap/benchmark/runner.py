@@ -19,7 +19,10 @@ _SRC_ROOT = _REPO_ROOT / "src"
 if str(_SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(_SRC_ROOT))
 
-from bsl.semantic_search.refactor.types import BackendError, WorkspaceEdit
+
+def _lazy_import_types():  # noqa: ANN202
+    from bsl.semantic_search.refactor.types import BackendError, WorkspaceEdit
+    return BackendError, WorkspaceEdit
 
 
 class RenameBackendProto(Protocol):
