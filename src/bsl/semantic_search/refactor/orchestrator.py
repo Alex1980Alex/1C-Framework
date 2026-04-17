@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .classifier import HeuristicClassifier, RouteDecision, RoutingMatrix, SymbolKind
+from .backends.base import RenameBackend
+from .classifier import HeuristicClassifier, RoutingMatrix, SymbolKind
 from .driver import RenameDriver
 from .types import BackendError, WorkspaceEdit
 from .verification import RenameVerifier
