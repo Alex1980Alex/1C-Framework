@@ -104,6 +104,26 @@ def test_english_keywords(classifier: HeuristicClassifier) -> None:
     )
 
 
+def test_trailing_comment_with_export_not_misclassified(
+    classifier: HeuristicClassifier,
+) -> None:
+    """`// TODO: сделать Экспорт` must NOT flip a local proc to export."""
+    content = "Процедура X() // TODO: сделать Экспорт\nКонецПроцедуры\n"
+    assert (
+        classifier.classify("file:///x/Module.bsl", 0, 10, content)
+        == SymbolKind.MODULE_LOCAL_PROC
+    )
+
+
+def test_perem_with_tab_separator(classifier: HeuristicClassifier) -> None:
+    """`Перем\\tX;` must still classify as LOCAL_VARIABLE (tab, not space)."""
+    content = "Перем\tТабуляцияX;\n"
+    assert (
+        classifier.classify("file:///x/Module.bsl", 0, 5, content)
+        == SymbolKind.LOCAL_VARIABLE
+    )
+
+
 def test_no_content_returns_unknown(classifier: HeuristicClassifier) -> None:
     assert (
         classifier.classify("file:///proj/CommonModules/X/Module.bsl", 0, 0, None)
