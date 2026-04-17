@@ -146,6 +146,18 @@ class RefactorOrchestrator:
                     pass
 
         if edit is None or not edit.file_edits:
+            if decision.manual_fallback:
+                return OrchestratorResult(
+                    applied=False,
+                    rolled_back=False,
+                    edit=WorkspaceEdit(),
+                    symbol_kind=kind,
+                    confidence=decision.confidence,
+                    reason="manual_required",
+                    manual_instruction=self._build_manual_instruction(
+                        uri, kind, new_name, decision,
+                    ),
+                )
             raise BackendError(
                 "all backends failed to produce edits",
                 code="all_backends_failed",
