@@ -204,12 +204,13 @@
       "character": 9,
       "old_name": "НастройкиАвторизации",
       "new_name": "ПараметрыАвторизации",
-      "expected_files_affected": 1,
-      "expected_edits": 1,
+      "expected_files_affected": 2,
+      "expected_edits": 2,
       "expected_files": [
-        "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl"
+        "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
+        "src/bsl/CommonModules/GoogleПереводчикПовтИсп/Ext/Module.bsl"
       ],
-      "notes": "Export function for auth settings. Expected to be called from form modules or other common modules."
+      "notes": "Export function for auth settings. Caller in GoogleПереводчикПовтИсп module."
     },
     {
       "id": "T13",
