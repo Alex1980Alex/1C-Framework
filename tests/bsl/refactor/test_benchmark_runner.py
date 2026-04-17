@@ -2,13 +2,13 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import patch
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
 
 import pytest
+
 from benchmark.runner import (
     BenchmarkRunner,
     ReportBuilder,
