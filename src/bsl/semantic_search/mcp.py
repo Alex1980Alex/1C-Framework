@@ -34,6 +34,7 @@ except ImportError:
 
 # Импорты сервисов
 from .config import get_bsl_settings
+from .refactor import BackendError, RenameDriver, RenameResult
 from .services.embedding import EmbeddingService
 from .services.search import BSLSearchService, SearchMode, SearchRequest
 
