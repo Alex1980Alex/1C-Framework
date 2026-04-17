@@ -631,7 +631,8 @@
       "Bash(rm -rf recon-logs)",
       "Bash(mkdir recon-logs *)",
       "mcp__1c-mcp-crud-daily__execute_code",
-      "mcp__1c-mcp-crud-infeeda__execute_code"
+      "mcp__1c-mcp-crud-infeeda__execute_code",
+      "Bash($SQLCMD *)"
     ]
   },
   "enableAllProjectMcpServers": true,
