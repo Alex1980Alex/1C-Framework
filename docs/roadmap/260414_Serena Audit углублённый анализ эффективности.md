@@ -2010,9 +2010,10 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 | **R6** | 🔲 TODO | — | — |
 
 **Агрегатно:**
-- **111/111 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`, +19 R4 тестов + 2 dopоl. после ревью).
+- **124/124 тестов зелёные** (`pytest tests/bsl/refactor/`, +19 R4 тестов + 13 R5 тестов + 2 доп. после ревью). Из них: 111 refactor unit + 7 benchmark schema + 6 benchmark runner.
 - **11 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/) (добавлен [`telemetry.py`](../../src/bsl/semantic_search/refactor/telemetry.py); [`orchestrator.py`](../../src/bsl/semantic_search/refactor/orchestrator.py) расширен manual-tier и telemetry-интеграцией).
-- **13 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment), robustness (process leak, stale state, counter reset, best-effort rollback, **blocking I/O inside write lock — fix в R4**), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
+- **4 Python-модуля + 1 JSON + 1 markdown** в [`docs/roadmap/benchmark/`](../../docs/roadmap/benchmark/) (runner.py, __init__.py, tasks.json, trend.md) + 2 CLI скрипта.
+- **13 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment, **parent_sha injection — fix в R5.2**), robustness (process leak, stale state, counter reset, best-effort rollback, **atexit worktree leak — fix в R5.2**, blocking I/O inside write lock — fix в R4), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
 - **Делегирование Z.AI:** большинство кода сгенерировано через `mcp__llm-rotation__llm_complete` (glm-5.1), Opus — планнер + ревьюер + ассемблер. Периодические перебои провайдеров → Opus fallback для тестов.
 
 **Что блокирует прогресс по R1.3 / реальному multilspy:** решение об установке `pip install multilspy` + wiring BSL JAR + async↔sync мост. Целесообразно откладывать до R5 benchmark, чтобы данные показали реальную цену lazy-open vs bulk-preload.
