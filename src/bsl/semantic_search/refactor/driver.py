@@ -42,7 +42,12 @@ class RenameDriver:
         dry_run: bool = True,
         confirm_token: str | None = None,
     ) -> RenameResult:
-        """Plan (dry-run) or apply (with matching token) a rename."""
+        """Plan (dry-run) or apply (with matching token) a rename.
+
+        Note: confirm_token binds the planned WorkspaceEdit, not on-disk file
+        state. If files change between dry_run and confirm, positions may drift;
+        the verifier's error-count check is the safety net in that case.
+        """
         if not self._backend.can_handle(uri):
             raise BackendError(
                 f"backend cannot handle uri: {uri}", code="unsupported_uri"
