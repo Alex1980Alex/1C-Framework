@@ -179,9 +179,12 @@ def test_telemetry_emits_on_rolled_back(tmp_path):
     uri = _file_uri(file_a)
 
     lsp = _StubLspClient(_lsp_edit(uri, 0, 10, 16, "Новая"))
-    errors = ["err1", "err2", "err3"]
+    call_count = [0]
+    def growing_errors():
+        call_count[0] += 1
+        return ["err"] * call_count[0]
     orch = _make_orchestrator(
-        tmp_path, lsp_client=lsp, error_provider=lambda: errors, telemetry=tw
+        tmp_path, lsp_client=lsp, error_provider=growing_errors, telemetry=tw
     )
 
     plan = orch.rename(uri, 0, 10, "Новая", dry_run=True, content=original)
