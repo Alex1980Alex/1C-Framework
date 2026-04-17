@@ -19,6 +19,9 @@ from .verification import RenameVerifier, VerifyResult
 from .workspace_edit import WorkspaceEditApplier
 
 __all__ = [
+    "AstGrepBackend",
+    "AstGrepMatch",
+    "AstGrepRunner",
     "BackendError",
     "FileEdit",
     "HeuristicClassifier",
