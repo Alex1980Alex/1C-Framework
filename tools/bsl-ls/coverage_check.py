@@ -10,20 +10,21 @@ from tree_sitter import Language, Parser
 
 
 BASE = Path(r"D:\1С-Framework")
+_PROJECT = BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src"
 FILES = [
     {
-        "name": "гкс_АсинхронныеСервисы (CommonModule Server)",
-        "path": BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonModules/гкс_АсинхронныеСервисы/Ext/Module.bsl",
-        "type": "CommonModule (server)",
+        "name": "гкс_ОчередьСообщенийRMQ (CommonModule)",
+        "path": _PROJECT / "CommonModules/гкс_ОчередьСообщенийRMQ/Ext/Module.bsl",
+        "type": "CommonModule (RMQ queue)",
     },
     {
-        "name": "гкс_ИнтеграцияMFM (CommonModule Integration)",
-        "path": BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonModules/гкс_ИнтеграцияMFM/Ext/Module.bsl",
-        "type": "CommonModule (integration)",
+        "name": "гкс_ФормировательСообщенийRMQ (DataProcessor ObjectModule)",
+        "path": _PROJECT / "DataProcessors/гкс_ФормировательСообщенийRMQ/Ext/ObjectModule.bsl",
+        "type": "DataProcessor ObjectModule (RMQ serializer)",
     },
     {
-        "name": "MCPToolkit Form (Form Module)",
-        "path": BASE / "tools/1c-mcp-toolkit/toolkit/1c-mcp-toolkit-main/1c/MCPToolkit/MCPToolkit/Forms/Форма/Ext/Form/Module.bsl",
+        "name": "гкс_Взвешивание.ФормаДокумента (Form Module)",
+        "path": _PROJECT / "Documents/гкс_Взвешивание/Forms/ФормаДокумента/Ext/Form/Module.bsl",
         "type": "Form Module (managed)",
     },
 ]

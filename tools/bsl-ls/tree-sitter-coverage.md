@@ -8,52 +8,164 @@ tree-sitter version: 0.25.2
 
 | # | Module | Type | Lines | Parse OK | Errors |
 |---|--------|------|-------|----------|--------|
-| 1 | гкс_АсинхронныеСервисы (CommonModule Server) | CommonModule (server) | 102 | NO | 6 |
-| 2 | гкс_ИнтеграцияMFM (CommonModule Integration) | CommonModule (integration) | 528 | YES | 0 |
-| 3 | MCPToolkit Form (Form Module) | Form Module (managed) | 12442 | NO | 181 |
+| 1 | гкс_ОчередьСообщенийRMQ (CommonModule) | CommonModule (RMQ queue) | 679 | NO | 12 |
+| 2 | гкс_ФормировательСообщенийRMQ (DataProcessor ObjectModule) | DataProcessor ObjectModule (RMQ serializer) | 217 | NO | 2 |
+| 3 | гкс_Взвешивание.ФормаДокумента (Form Module) | Form Module (managed) | 622 | YES | 0 |
 
-## File 1: гкс_АсинхронныеСервисы (CommonModule Server)
+## File 1: гкс_ОчередьСообщенийRMQ (CommonModule)
 
-- **Path**: `D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src\CommonModules\гкс_АсинхронныеСервисы\Ext\Module.bsl`
-- **Lines**: 102
+- **Path**: `D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src\CommonModules\гкс_ОчередьСообщенийRMQ\Ext\Module.bsl`
+- **Lines**: 679
 - **Parse error**: True
 - **Root node type**: `source_file`
-- **Total nodes**: 770
-- **Top-level nodes**: 12
+- **Total nodes**: 3900
+- **Top-level nodes**: 120
 
 ### Top-level Node Types
 
 - `preprocessor`
+- `procedure_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `function_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `function_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `function_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
 - `line_comment`
 - `line_comment`
 - `function_definition`
 - `preprocessor`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `procedure_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `procedure_definition`
 - `preprocessor`
+- `preprocessor`
+- `function_definition`
+- `preprocessor`
+- `preprocessor`
+- `preprocessor`
+- `preprocessor`
+- `function_definition`
 - `function_definition`
 - `function_definition`
 - `preprocessor`
 - `preprocessor`
 - `procedure_definition`
 - `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `function_definition`
+- `function_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `function_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `preprocessor`
+- `function_definition`
+- `function_definition`
+- `function_definition`
+- `function_definition`
+- `preprocessor`
+- `procedure_definition`
+- `function_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `procedure_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `line_comment`
+- `procedure_definition`
+- `line_comment`
+- `procedure_definition`
+- `line_comment`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
 
 ### ERROR Nodes
 
-**6 ERROR nodes found.** First 10:
+**12 ERROR nodes found.** First 10:
 
 | Line | Col | Text |
 |------|-----|------|
-| 89 | 28 | `(` |
-| 89 | 86 | `)` |
-| 90 | 22 | `(` |
-| 90 | 74 | `)` |
-| 92 | 15 | `(` |
-| 92 | 66 | `)` |
+| 11 | 35 | `(` |
+| 11 | 140 | `)` |
+| 130 | 1 | `(` |
+| 130 | 169 | `)` |
+| 477 | 44 | `(` |
+| 478 | 91 | `)` |
+| 507 | 78 | `(` |
+| 507 | 141 | `)` |
+| 518 | 66 | `(` |
+| 518 | 129 | `)` |
 
 ### Preprocessor Directives
 
-- **Count**: 6
+- **Count**: 28
 - **Node types found**: ['preprocessor', 'text_match:#КонецОбласти', 'text_match:#Область']
-- **Text matches**: ['text_match:#КонецОбласти', 'text_match:#Область']
+- **Text matches**: ['text_match:#Область', 'text_match:#КонецОбласти']
 
 ### Compile Directives
 
@@ -63,8 +175,8 @@ tree-sitter version: 0.25.2
 
 ### Export Keyword
 
-- **Count**: 7
-- **Node types**: ['EXPORT_KEYWORD', 'function_definition', 'source_file']
+- **Count**: 53
+- **Node types**: ['EXPORT_KEYWORD', 'function_definition', 'procedure_definition', 'source_file']
 
 ### Query Language in Strings
 
@@ -75,125 +187,262 @@ tree-sitter version: 0.25.2
 
 | Node Type | Count |
 |-----------|-------|
-| `identifier` | 120 |
-| `expression` | 87 |
-| `(` | 43 |
-| `)` | 43 |
-| `;` | 41 |
-| `method_call` | 36 |
-| `arguments` | 36 |
-| `"` | 36 |
-| `access` | 30 |
-| `.` | 29 |
-| `call_expression` | 20 |
-| `const_expression` | 20 |
-| `assignment_statement` | 19 |
-| `=` | 19 |
-| `string` | 18 |
-| `string_content` | 18 |
-| `,` | 11 |
-| `operator` | 10 |
-| `call_statement` | 9 |
-| `property` | 9 |
+| `identifier` | 628 |
+| `expression` | 372 |
+| `(` | 227 |
+| `)` | 227 |
+| `;` | 197 |
+| `arguments` | 177 |
+| `method_call` | 171 |
+| `access` | 165 |
+| `.` | 159 |
+| `,` | 101 |
+| `"` | 94 |
+| `call_expression` | 90 |
+| `parameter` | 74 |
+| `call_statement` | 70 |
+| `const_expression` | 69 |
+| `=` | 62 |
+| `property` | 62 |
+| `assignment_statement` | 52 |
+| `line_comment` | 50 |
+| `//` | 50 |
 
-## File 2: гкс_ИнтеграцияMFM (CommonModule Integration)
+## File 2: гкс_ФормировательСообщенийRMQ (DataProcessor ObjectModule)
 
-- **Path**: `D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src\CommonModules\гкс_ИнтеграцияMFM\Ext\Module.bsl`
-- **Lines**: 528
-- **Parse error**: False
+- **Path**: `D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src\DataProcessors\гкс_ФормировательСообщенийRMQ\Ext\ObjectModule.bsl`
+- **Lines**: 217
+- **Parse error**: True
 - **Root node type**: `source_file`
-- **Total nodes**: 3481
-- **Top-level nodes**: 88
+- **Total nodes**: 1039
+- **Top-level nodes**: 51
 
 ### Top-level Node Types
 
 - `preprocessor`
 - `preprocessor`
+- `var_definition`
+- `var_definition`
+- `var_definition`
+- `var_definition`
+- `var_definition`
+- `var_definition`
+- `var_definition`
+- `var_definition`
+- `var_definition`
 - `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `procedure_definition`
-- `line_comment`
-- `preprocessor`
-- `line_comment`
-- `procedure_definition`
-- `preprocessor`
+- `var_definition`
+- `var_definition`
 - `preprocessor`
 - `preprocessor`
 - `procedure_definition`
-- `function_definition`
+- `procedure_definition`
+- `procedure_definition`
+- `procedure_definition`
 - `function_definition`
 - `preprocessor`
-- `preprocessor`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
-- `function_definition`
 - `preprocessor`
 - `preprocessor`
 - `function_definition`
 - `procedure_definition`
 - `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `function_definition`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `function_definition`
+- `preprocessor`
+- `preprocessor`
 - `procedure_definition`
 - `procedure_definition`
 - `preprocessor`
 - `preprocessor`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `function_definition`
-- `function_definition`
-- `procedure_definition`
 - `function_definition`
 - `preprocessor`
+- `preprocessor`
+- `preprocessor`
+- `assignment_statement`
+- `assignment_statement`
+- `assignment_statement`
+- `preprocessor`
+- `preprocessor`
+- `rise_error_statement`
+- `preprocessor`
+
+### ERROR Nodes
+
+**2 ERROR nodes found.** First 10:
+
+| Line | Col | Text |
+|------|-----|------|
+| 119 | 60 | `(` |
+| 119 | 161 | `)` |
+
+### Preprocessor Directives
+
+- **Count**: 21
+- **Node types found**: ['preprocessor', 'text_match:#Если', 'text_match:#Иначе', 'text_match:#КонецЕсли', 'text_match:#КонецОбласти', 'text_match:#Область']
+- **Text matches**: ['text_match:#Область', 'text_match:#Если', 'text_match:#КонецОбласти', 'text_match:#КонецЕсли', 'text_match:#Иначе']
+
+### Compile Directives
+
+- **Count**: 0
+- **Node types found**: []
+- **Text matches**: []
+
+### Export Keyword
+
+- **Count**: 11
+- **Node types**: ['EXPORT_KEYWORD', 'function_definition', 'procedure_definition', 'source_file']
+
+### Query Language in Strings
+
+- **Count**: 0
+- **Node types**: []
+
+### Node Type Distribution (top 20)
+
+| Node Type | Count |
+|-----------|-------|
+| `identifier` | 177 |
+| `expression` | 105 |
+| `;` | 73 |
+| `(` | 55 |
+| `)` | 55 |
+| `arguments` | 40 |
+| `method_call` | 39 |
+| `access` | 32 |
+| `.` | 32 |
+| `assignment_statement` | 24 |
+| `=` | 24 |
+| `call_expression` | 23 |
+| `preprocessor` | 21 |
+| `const_expression` | 16 |
+| `parameters` | 14 |
+| `"` | 14 |
+| `operator` | 13 |
+| `THEN_KEYWORD` | 13 |
+| `,` | 13 |
+| `if_statement` | 12 |
+
+## File 3: гкс_Взвешивание.ФормаДокумента (Form Module)
+
+- **Path**: `D:\1С-Framework\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src\Documents\гкс_Взвешивание\Forms\ФормаДокумента\Ext\Form\Module.bsl`
+- **Lines**: 622
+- **Parse error**: False
+- **Root node type**: `source_file`
+- **Total nodes**: 3606
+- **Top-level nodes**: 106
+
+### Top-level Node Types
+
+- `preprocessor`
+- `preprocessor`
+- `var_definition`
+- `preprocessor`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `line_comment`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `line_comment`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `function_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `line_comment`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `function_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `preprocessor`
+- `procedure_definition`
+- `preprocessor`
+- `function_definition`
 - `preprocessor`
 
 ### ERROR Nodes
@@ -202,15 +451,15 @@ No ERROR nodes found.
 
 ### Preprocessor Directives
 
-- **Count**: 14
+- **Count**: 55
 - **Node types found**: ['preprocessor', 'text_match:#КонецОбласти', 'text_match:#Область']
-- **Text matches**: ['text_match:#КонецОбласти', 'text_match:#Область']
+- **Text matches**: ['text_match:#Область', 'text_match:#КонецОбласти']
 
 ### Compile Directives
 
-- **Count**: 0
-- **Node types found**: []
-- **Text matches**: []
+- **Count**: 43
+- **Node types found**: ['annotation', 'text_match:&НаКлиенте', 'text_match:&НаСервере']
+- **Text matches**: ['text_match:&НаСервере', 'text_match:&НаКлиенте']
 
 ### Export Keyword
 
@@ -226,1187 +475,35 @@ No ERROR nodes found.
 
 | Node Type | Count |
 |-----------|-------|
-| `identifier` | 563 |
-| `expression` | 384 |
-| `;` | 195 |
-| `)` | 176 |
-| `(` | 172 |
-| `arguments` | 148 |
-| `access` | 146 |
-| `.` | 146 |
-| `method_call` | 130 |
-| `=` | 107 |
-| `assignment_statement` | 103 |
-| `,` | 102 |
-| `"` | 102 |
-| `property` | 81 |
-| `const_expression` | 75 |
-| `property_access` | 71 |
+| `identifier` | 529 |
+| `expression` | 350 |
+| `;` | 200 |
+| `access` | 188 |
+| `.` | 185 |
+| `(` | 181 |
+| `)` | 181 |
+| `arguments` | 139 |
+| `method_call` | 134 |
+| `property` | 120 |
+| `"` | 82 |
+| `assignment_statement` | 82 |
+| `=` | 82 |
+| `property_access` | 80 |
+| `const_expression` | 73 |
+| `call_statement` | 68 |
 | `call_expression` | 65 |
-| `string_content` | 56 |
-| `line_comment` | 53 |
-| `//` | 53 |
-
-## File 3: MCPToolkit Form (Form Module)
-
-- **Path**: `D:\1С-Framework\tools\1c-mcp-toolkit\toolkit\1c-mcp-toolkit-main\1c\MCPToolkit\MCPToolkit\Forms\Форма\Ext\Form\Module.bsl`
-- **Lines**: 12442
-- **Parse error**: True
-- **Root node type**: `source_file`
-- **Total nodes**: 109186
-- **Top-level nodes**: 1076
-
-### Top-level Node Types
-
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `preprocessor`
-- `var_definition`
-- `preprocessor`
-- `var_definition`
-- `preprocessor`
-- `var_definition`
-- `preprocessor`
-- `var_definition`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `preprocessor`
-- `var_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `line_comment`
-- `line_comment`
-- `line_comment`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `procedure_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-- `preprocessor`
-- `function_definition`
-
-### ERROR Nodes
-
-**181 ERROR nodes found.** First 10:
-
-| Line | Col | Text |
-|------|-----|------|
-| 1178 | 33 | `(` |
-| 1178 | 96 | `)` |
-| 1766 | 18 | `(` |
-| 1766 | 113 | `)` |
-| 1829 | 22 | `;` |
-| 1995 | 40 | `(` |
-| 1995 | 94 | `)` |
-| 1995 | 103 | `(` |
-| 1995 | 217 | `)` |
-| 2105 | 38 | `(` |
-
-### Preprocessor Directives
-
-- **Count**: 236
-- **Node types found**: ['preprocessor']
-- **Text matches**: []
-
-### Compile Directives
-
-- **Count**: 236
-- **Node types found**: ['annotation', 'text_match:&НаКлиенте', 'text_match:&НаСервере']
-- **Text matches**: ['text_match:&НаСервере', 'text_match:&НаКлиенте']
-
-### Export Keyword
-
-- **Count**: 27
-- **Node types**: ['EXPORT_KEYWORD', 'procedure_definition', 'source_file']
-
-### Query Language in Strings
-
-- **Count**: 183
-- **Node types**: ['arguments', 'assignment_statement', 'binary_expression', 'call_expression', 'call_statement', 'const_expression', 'else_clause', 'elseif_clause', 'expression', 'function_definition', 'if_statement', 'line_comment', 'method_call', 'new_expression', 'source_file', 'string', 'string_content', 'try_statement']
-
-### Node Type Distribution (top 20)
-
-| Node Type | Count |
-|-----------|-------|
-| `expression` | 14202 |
-| `identifier` | 13705 |
-| `"` | 6868 |
-| `;` | 5834 |
-| `const_expression` | 4997 |
-| `)` | 4482 |
-| `(` | 4468 |
-| `arguments` | 4169 |
-| `method_call` | 3886 |
-| `string` | 3435 |
-| `string_content` | 3434 |
-| `access` | 3245 |
-| `.` | 3178 |
-| `,` | 2410 |
-| `operator` | 2209 |
-| `call_expression` | 2184 |
-| `binary_expression` | 2074 |
-| `call_statement` | 1880 |
-| `=` | 1820 |
-| `assignment_statement` | 1762 |
+| `,` | 58 |
+| `preprocessor` | 55 |
+| `operator` | 50 |
 
 ## Gap Analysis Summary
 
 ### Overall Statistics
 
 - **Total files analyzed**: 3
-- **Total ERROR nodes**: 187
-- **Unique node types seen**: 35
-- **Preprocessor node types**: ['preprocessor', 'text_match:#КонецОбласти', 'text_match:#Область']
+- **Total ERROR nodes**: 14
+- **Unique node types seen**: 41
+- **Preprocessor node types**: ['preprocessor', 'text_match:#Если', 'text_match:#Иначе', 'text_match:#КонецЕсли', 'text_match:#КонецОбласти', 'text_match:#Область']
 - **Compile directive node types**: ['annotation', 'text_match:&НаКлиенте', 'text_match:&НаСервере']
 
 ### Preprocessor Directive Coverage
@@ -1419,8 +516,7 @@ No ERROR nodes found.
 
 ### Query Language Coverage
 
-- Queries are present in source files (inside string literals).
-- **GAP**: Query language inside strings is NOT parsed as query AST nodes. This is expected for a BSL grammar (queries are string-domain), but means tree-sitter cannot provide query-level AST without a separate grammar.
+- No query constructs found in analyzed files.
 
 ### Export Keyword Coverage
 

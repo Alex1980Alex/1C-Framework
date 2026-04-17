@@ -1,4 +1,9 @@
 {
-  "count": 0,
-  "locations": []
+  "count": 1,
+  "locations": [
+    {
+      "uri": "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестовыйВызыватель/Ext/Module.bsl",
+      "line": 1
+    }
+  ]
 }

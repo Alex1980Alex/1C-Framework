@@ -1,0 +1,70 @@
+[
+  {
+    "label": "test-workspace",
+    "target": "D:\\1С-Framework\\tools\\bsl-ls\\test-workspace",
+    "file_count": 2,
+    "rules": [
+      {
+        "rule": "rename-export-method",
+        "runs": 5,
+        "matches": 3,
+        "min_ms": 25.8,
+        "median_ms": 26.8,
+        "mean_ms": 26.9,
+        "max_ms": 28.2
+      },
+      {
+        "rule": "rename-local-var",
+        "runs": 5,
+        "matches": 1,
+        "min_ms": 26.5,
+        "median_ms": 27.4,
+        "mean_ms": 30.9,
+        "max_ms": 37.5
+      },
+      {
+        "rule": "rename-catalog-method",
+        "runs": 5,
+        "matches": 2,
+        "min_ms": 32.9,
+        "median_ms": 37.6,
+        "mean_ms": 37.0,
+        "max_ms": 41.2
+      }
+    ]
+  },
+  {
+    "label": "real-project (260304_GKSTCPLK-2182)",
+    "target": "D:\\1С-Framework\\src\\projects\\configuration\\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\\src",
+    "file_count": 2027,
+    "rules": [
+      {
+        "rule": "rename-export-method",
+        "runs": 5,
+        "matches": 10969,
+        "min_ms": 1175.7,
+        "median_ms": 1234.8,
+        "mean_ms": 1269.5,
+        "max_ms": 1379.3
+      },
+      {
+        "rule": "rename-local-var",
+        "runs": 5,
+        "matches": 151282,
+        "min_ms": 1542.0,
+        "median_ms": 1711.2,
+        "mean_ms": 1725.6,
+        "max_ms": 1875.3
+      },
+      {
+        "rule": "rename-catalog-method",
+        "runs": 5,
+        "matches": 124989,
+        "min_ms": 1633.3,
+        "median_ms": 1712.4,
+        "mean_ms": 1745.2,
+        "max_ms": 1897.8
+      }
+    ]
+  }
+]

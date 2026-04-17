@@ -162,7 +162,8 @@ async def _run_tests(server: BSLLanguageServer, logger: FileLogger,
             preload_ms = int((time.time() - preload_t0) * 1000)
             print(f"Bulk preload {len(bsl_files)} files in {preload_ms}ms")
 
-            await asyncio.sleep(3)
+            # Give BSL LS more time to populate ServerContext after bulk preload
+            await asyncio.sleep(10)
 
             util_rel = "CommonModules/ТестоваяУтилита/Ext/Module.bsl"
             caller_rel = "CommonModules/ТестовыйВызыватель/Ext/Module.bsl"
@@ -231,7 +232,7 @@ async def _run_tests(server: BSLLanguageServer, logger: FileLogger,
                 dump("04_prepare_rename", {"error": str(e)})
                 print(f"  Error: {e}")
 
-            # 5. Rename cross-file
+            # 5. Rename cross-file (log raw response fully — may use documentChanges)
             print("\n--- Rename cross-file (dry run) ---")
             try:
                 rename_result = await server.server.send.rename({
@@ -240,22 +241,42 @@ async def _run_tests(server: BSLLanguageServer, logger: FileLogger,
                     "newName": "ПолучитьПараметрНовый",
                 })
                 changes = rename_result.get("changes", {}) if rename_result else {}
+                doc_changes = rename_result.get("documentChanges", []) if rename_result else []
                 total_edits = sum(len(v) for v in changes.values())
+                doc_edit_total = sum(len(dc.get("edits", [])) for dc in doc_changes)
                 dump("05_rename_cross_file", {
                     "total_edits": total_edits,
+                    "doc_changes_count": len(doc_changes),
+                    "doc_changes_edit_total": doc_edit_total,
                     "files_affected": list(changes.keys()),
-                    "changes": {
-                        k: [{"line": e.get("range", {}).get("start", {}).get("line"),
-                             "newText": e.get("newText", "")}
-                            for e in v]
-                        for k, v in changes.items()
-                    } if changes else {},
+                    "raw_response": rename_result,
                 })
-                print(f"  Files: {len(changes)}, edits: {total_edits}")
+                print(f"  Files: {len(changes)}, edits: {total_edits} "
+                      f"(documentChanges={len(doc_changes)}, doc_edits={doc_edit_total})")
                 for file_uri, edits in changes.items():
                     print(f"    {file_uri}: {len(edits)} edits")
             except Exception as e:
                 dump("05_rename_cross_file", {"error": str(e)})
+                print(f"  Error: {e}")
+
+            # 5b. Workspace symbol — test if LS can resolve symbol workspace-wide
+            print("\n--- Workspace Symbol (ПолучитьПараметр) ---")
+            try:
+                ws_syms = await server.server.send.workspace_symbol({
+                    "query": "ПолучитьПараметр",
+                })
+                ws_list = ws_syms if ws_syms else []
+                dump("05b_workspace_symbol", {
+                    "count": len(ws_list),
+                    "items": [
+                        {"name": s.get("name"),
+                         "location": str(s.get("location", {}).get("uri", ""))}
+                        for s in ws_list[:10]
+                    ],
+                })
+                print(f"  Found {len(ws_list)} workspace symbols")
+            except Exception as e:
+                dump("05b_workspace_symbol", {"error": str(e)})
                 print(f"  Error: {e}")
 
             # 6. Rename local

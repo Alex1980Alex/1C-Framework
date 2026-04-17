@@ -1,0 +1,21 @@
+{
+  "total_edits": 10,
+  "files_affected": [
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Catalogs/гкс_ВходящиеСообщенияRMQ/Ext/ManagerModule.bsl",
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Catalogs/гкс_ОчередьОтложенногоФормированияИсходящихСообщений/Ext/ManagerModule.bsl",
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Catalogs/гкс_ЭлектронныеТабло/Forms/ФормаЭлемента/Ext/Form/Module.bsl",
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/CommonModules/гкс_ИнтеграцияСЭлектроннымТаблоСервер/Ext/Module.bsl",
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/CommonModules/гкс_ОчередьСообщенийRMQ/Ext/Module.bsl",
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/DataProcessors/гкс_УправлениеОбъектамиИнтеграции/Ext/ObjectModule.bsl",
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Documents/гкс_РеестрНакладныхЗПП3/Ext/ObjectModule.bsl"
+  ],
+  "edit_counts": {
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Catalogs/гкс_ЭлектронныеТабло/Forms/ФормаЭлемента/Ext/Form/Module.bsl": 1,
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/CommonModules/гкс_ОчередьСообщенийRMQ/Ext/Module.bsl": 4,
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Catalogs/гкс_ВходящиеСообщенияRMQ/Ext/ManagerModule.bsl": 1,
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/CommonModules/гкс_ИнтеграцияСЭлектроннымТаблоСервер/Ext/Module.bsl": 1,
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/DataProcessors/гкс_УправлениеОбъектамиИнтеграции/Ext/ObjectModule.bsl": 1,
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Documents/гкс_РеестрНакладныхЗПП3/Ext/ObjectModule.bsl": 1,
+    "file:///D:/1С-Framework/src/projects/configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/src/Catalogs/гкс_ОчередьОтложенногоФормированияИсходящихСообщений/Ext/ManagerModule.bsl": 1
+  }
+}

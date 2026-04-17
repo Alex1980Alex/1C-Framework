@@ -1,14 +1,43 @@
 {
-  "total_edits": 1,
+  "total_edits": 2,
+  "doc_changes_count": 0,
+  "doc_changes_edit_total": 0,
   "files_affected": [
-    "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестоваяУтилита/Ext/Module.bsl"
+    "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестоваяУтилита/Ext/Module.bsl",
+    "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестовыйВызыватель/Ext/Module.bsl"
   ],
-  "changes": {
-    "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестоваяУтилита/Ext/Module.bsl": [
-      {
-        "line": 0,
-        "newText": "ПолучитьПараметрНовый"
-      }
-    ]
+  "raw_response": {
+    "changes": {
+      "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестоваяУтилита/Ext/Module.bsl": [
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 24
+            }
+          },
+          "newText": "ПолучитьПараметрНовый"
+        }
+      ],
+      "file:///D:/1С-Framework/tools/bsl-ls/test-workspace/CommonModules/ТестовыйВызыватель/Ext/Module.bsl": [
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 28
+            },
+            "end": {
+              "line": 1,
+              "character": 44
+            }
+          },
+          "newText": "ПолучитьПараметрНовый"
+        }
+      ]
+    }
   }
 }
