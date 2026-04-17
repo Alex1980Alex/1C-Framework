@@ -140,6 +140,14 @@ async def run_recon():
 
     server = BSLLanguageServer(config, logger, str(WORKSPACE.resolve()))
 
+    try:
+        await _run_tests(server, logger, bsl_files)
+    finally:
+        logger.close()
+
+
+async def _run_tests(server: BSLLanguageServer, logger: FileLogger,
+                     bsl_files: list) -> None:
     t0 = time.time()
     async with server.start_server():
         init_ms = int((time.time() - t0) * 1000)
