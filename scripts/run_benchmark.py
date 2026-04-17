@@ -96,7 +96,7 @@ def main() -> None:
 
     total = len(results)
     successes = sum(1 for r in results if r.applied)
-    print(f"\n=== Benchmark Summary ===")
+    print("\n=== Benchmark Summary ===")
     print(f"Run ID:    {args.run_id}")
     print(f"Total:     {total}")
     print(f"Successes: {successes}")
