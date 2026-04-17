@@ -1356,6 +1356,34 @@ Meta-principle общий: **«загружай минимально необх�
 - **R6.3 PR в tree-sitter-bsl:** улучшения грамматики (если из R2.2 найдено). **Артефакт:** PR. **DoD:** submitted.
 - **R6.4 PR в Serena:** опциональный BSL context (contexts/bsl.yml). **Артефакт:** PR. **DoD:** submitted.
 
+#### Промежуточный итог (2026-04-17)
+
+| Этап | Статус | Артефакты | Тесты |
+|------|--------|-----------|------:|
+| **R0** | ✅ DONE | recon-отчёты, ADR-004, 3 ast-grep правила, sgconfig.yml, tree_sitter_bsl.dll | — |
+| **R1.1** | ✅ DONE (на моках) | [multilspy_backend.py](../../src/bsl/semantic_search/refactor/backends/multilspy_backend.py) | 10 |
+| **R1.2** | ✅ DONE (на моках) | [circuit_breaker.py](../../src/bsl/semantic_search/refactor/circuit_breaker.py), [lsp_subprocess.py](../../src/bsl/semantic_search/refactor/lsp_subprocess.py) | 17 |
+| **R1.3** | ⏸ DEFERRED | — | — |
+| **R1.4** | ✅ DONE | [driver.py](../../src/bsl/semantic_search/refactor/driver.py) | 9 |
+| **R1.5** | ✅ DONE | [workspace_edit.py](../../src/bsl/semantic_search/refactor/workspace_edit.py) | 4 |
+| **R1.6** | ✅ DONE | [classifier.py](../../src/bsl/semantic_search/refactor/classifier.py), [routing-matrix-v2.md](./routing-matrix-v2.md) | 17 |
+| **R1.7** | ✅ DONE | [mcp.py](../../src/bsl/semantic_search/mcp.py) (`bsl_rename_symbol` + `register_rename_driver_factory`) | 6 |
+| **R1.8** | ✅ DONE | [verification.py](../../src/bsl/semantic_search/refactor/verification.py) | — (покрыто R1.5 тестами) |
+| **R2.1** | ✅ DONE (в R0.3) | tree_sitter_bsl.dll | — |
+| **R2.2** | ⏸ DEFERRED | — | — |
+| **R2.3** | ✅ DONE (в R0.3) | 3 YAML правила | — |
+| **R2.4** | ✅ DONE | [ast_grep_backend.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_backend.py), [ast_grep_runner.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_runner.py) | 13 |
+| **R2.5** | 🔜 NEXT | — | — |
+| **R2.6** | ⏸ DEFERRED | — | — |
+
+**Агрегатно:**
+- **77/77 refactor-тестов зелёные** (`pytest tests/bsl/refactor/`).
+- **10 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/).
+- **12 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment), robustness (process leak, stale state, counter reset, best-effort rollback), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
+- **Делегирование Z.AI:** большинство кода сгенерировано через `mcp__llm-rotation__llm_complete` (glm-5.1), Opus — планнер + ревьюер + ассемблер. Периодические перебои провайдеров → Opus fallback для тестов.
+
+**Что блокирует прогресс по R1.3 / реальному multilspy:** решение об установке `pip install multilspy` + wiring BSL JAR + async↔sync мост. Целесообразно откладывать до R5 benchmark, чтобы данные показали реальную цену lazy-open vs bulk-preload.
+
 #### Сводная таблица этапов и оценки трудозатрат
 
 | Этап | Задача | Оценка | Зависимости |
