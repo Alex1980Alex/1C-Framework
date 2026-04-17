@@ -12,6 +12,12 @@ from .orchestrator import (
     OrchestratorResult,
     RefactorOrchestrator,
 )
+from .telemetry import (
+    JsonlTelemetryWriter,
+    NullTelemetryWriter,
+    RenameTelemetryEvent,
+    TelemetryWriter,
+)
 from .types import (
     BackendError,
     FileEdit,
@@ -19,12 +25,6 @@ from .types import (
     Range,
     TextEdit,
     WorkspaceEdit,
-)
-from .telemetry import (
-    JsonlTelemetryWriter,
-    NullTelemetryWriter,
-    RenameTelemetryEvent,
-    TelemetryWriter,
 )
 from .verification import RenameVerifier, VerifyResult
 from .workspace_edit import WorkspaceEditApplier
