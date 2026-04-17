@@ -893,11 +893,8 @@ def bsl_coding_context(
 # ---------------------------------------------------------------------------
 # Rename driver wiring — R1.7
 # ---------------------------------------------------------------------------
-from collections.abc import Callable
-
-from .refactor import BackendError, RenameDriver, RenameResult
-
 _RENAME_DRIVER_FACTORY: Callable[[], RenameDriver] | None = None
+_RENAME_DRIVER_CACHED: RenameDriver | None = None
 
 
 def register_rename_driver_factory(
@@ -905,16 +902,22 @@ def register_rename_driver_factory(
 ) -> None:
     """Register a factory that produces a configured RenameDriver on demand.
 
-    Pass `None` to unregister (useful in tests).
+    The factory is invoked at most once per registration; its result is cached.
+    Re-registering (or passing `None`) clears the cache, so a persistent LSP
+    subprocess is not re-spawned on every tool call.
     """
-    global _RENAME_DRIVER_FACTORY
+    global _RENAME_DRIVER_FACTORY, _RENAME_DRIVER_CACHED
     _RENAME_DRIVER_FACTORY = factory
+    _RENAME_DRIVER_CACHED = None
 
 
 def _get_rename_driver() -> RenameDriver | None:
+    global _RENAME_DRIVER_CACHED
     if _RENAME_DRIVER_FACTORY is None:
         return None
-    return _RENAME_DRIVER_FACTORY()
+    if _RENAME_DRIVER_CACHED is None:
+        _RENAME_DRIVER_CACHED = _RENAME_DRIVER_FACTORY()
+    return _RENAME_DRIVER_CACHED
 
 
 def _rename_result_to_dict(r: RenameResult) -> dict[str, Any]:
