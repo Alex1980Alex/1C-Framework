@@ -50,6 +50,7 @@ class _FakeRunner:
         self, workspace_root: Path, old_name: str, new_name: str
     ) -> list[AstGrepMatch]:
         self.calls += 1
+        self.last_call = (workspace_root, old_name, new_name)
         if self._raise is not None:
             raise self._raise
         return list(self._matches)
