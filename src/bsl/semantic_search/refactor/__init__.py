@@ -20,6 +20,12 @@ from .types import (
     TextEdit,
     WorkspaceEdit,
 )
+from .telemetry import (
+    JsonlTelemetryWriter,
+    NullTelemetryWriter,
+    RenameTelemetryEvent,
+    TelemetryWriter,
+)
 from .verification import RenameVerifier, VerifyResult
 from .workspace_edit import WorkspaceEditApplier
 
