@@ -5,6 +5,7 @@ import io
 import json
 import math
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -64,6 +65,8 @@ class WorktreeManager:
         self._repo_root = repo_root.resolve()
         self._base_tmp = (base_tmp or Path(tempfile.gettempdir())).resolve()
         self._active_worktrees: list[Path] = []
+        import atexit
+        atexit.register(self._cleanup_all)
 
     def _run_git(self, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
@@ -72,6 +75,8 @@ class WorktreeManager:
         )
 
     def create(self, parent_sha: str, task_id: str, backend: str) -> Path:
+        if not re.fullmatch(r"[0-9a-fA-F]{4,40}", parent_sha):
+            raise ValueError(f"Invalid git SHA: {parent_sha!r}")
         worktree_path = self._base_tmp / f"wt_{task_id}_{backend}"
         res = self._run_git("worktree", "add", "--detach", str(worktree_path), parent_sha)
         if res.returncode != 0:
@@ -100,6 +105,13 @@ class WorktreeManager:
             self._active_worktrees.remove(worktree_path)
         if not self._active_worktrees:
             self._run_git("worktree", "prune")
+
+    def _cleanup_all(self) -> None:
+        for wt in list(self._active_worktrees):
+            try:
+                self.cleanup(wt)
+            except Exception:  # noqa: BLE001
+                pass
 
 
 class TaskExecutor:
