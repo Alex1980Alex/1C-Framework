@@ -6,14 +6,12 @@ import pytest
 
 from src.bsl.semantic_search.refactor import (
     AstGrepBackend,
-    AstGrepMatch,
     HeuristicClassifier,
     ManualFallbackInstruction,
     MultilspyBackend,
     RefactorOrchestrator,
     RenameVerifier,
     SymbolKind,
-    WorkspaceEdit,
     WorkspaceEditApplier,
 )
 from src.bsl.semantic_search.refactor.types import BackendError
