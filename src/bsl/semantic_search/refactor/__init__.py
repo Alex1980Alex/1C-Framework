@@ -1,5 +1,6 @@
 from .backends.base import RenameBackend
 from .backends.multilspy_backend import MultilspyBackend
+from .driver import RenameDriver, RenameResult
 from .types import (
     BackendError,
     FileEdit,
@@ -18,6 +19,8 @@ __all__ = [
     "Position",
     "Range",
     "RenameBackend",
+    "RenameDriver",
+    "RenameResult",
     "RenameVerifier",
     "TextEdit",
     "VerifyResult",
