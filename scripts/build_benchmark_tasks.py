@@ -100,7 +100,7 @@ def build_tasks(repo_root: Path, output: Path, limit: int) -> None:
             })
     payload = {
         "version": 1,
-        "created_at": datetime.now(tz=timezone.UTC).strftime("%Y-%m-%d"),
+        "created_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),  # noqa: UP017
         "source_repo": str(repo_root),
         "tasks": tasks,
     }
