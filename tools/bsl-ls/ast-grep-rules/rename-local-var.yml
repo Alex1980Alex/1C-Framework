@@ -1,0 +1,13 @@
+# R0.3 Rule 2: Match local variable assignments in BSL
+# Purpose: Validate ast-grep can identify local variable patterns
+id: rename-local-var
+language: bsl
+rule:
+  pattern: |
+    $VAR = $EXPR
+message: "Local variable '$VAR' assignment matched for rename"
+severity: hint
+note: |
+  This rule matches all BSL local variable assignments.
+  For rename: change $VAR to the new identifier name.
+  Test target: Значение = ... in ТестовыйВызыватель

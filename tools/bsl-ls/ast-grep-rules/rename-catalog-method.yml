@@ -1,0 +1,13 @@
+# R0.3 Rule 3: Match catalog module method calls in BSL
+# Purpose: Validate ast-grep can match qualified method invocation (Module.Method pattern)
+id: rename-catalog-method
+language: bsl
+rule:
+  pattern: |
+    $MODULE.$METHOD($$$ARGS)
+message: "Catalog module call '$MODULE.$METHOD' matched for rename"
+severity: hint
+note: |
+  This rule matches all qualified method calls (Module.Method pattern).
+  For rename: change $METHOD to the new method name.
+  Test target: ТестоваяУтилита.ПолучитьПараметр, ТестоваяУтилита.УстановитьПараметр

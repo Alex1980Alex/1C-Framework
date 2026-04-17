@@ -1,0 +1,15 @@
+# R0.3 Rule 1: Match exported BSL methods (functions/procedures with Экспорт)
+# Purpose: Validate ast-grep rule syntax for BSL rename operations
+id: rename-export-method
+language: bsl
+rule:
+  pattern: |
+    Функция $NAME($$$PARAMS) Экспорт
+      $$$BODY
+    КонецФункции
+message: "Exported function '$NAME' matched for rename"
+severity: hint
+note: |
+  This rule matches all exported BSL functions.
+  For rename: change $NAME to the new identifier.
+  Test target: ПолучитьПараметр, УстановитьПараметр in ТестоваяУтилита
