@@ -34,7 +34,10 @@ def check(run_dir: Path, threshold: float) -> int:
             line = line.strip()
             if not line:
                 continue
-            event = json.loads(line)
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
             total += 1
             backend = event.get("primary_backend", "unknown")
             if backend not in per_backend:
