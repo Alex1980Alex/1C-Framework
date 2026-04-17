@@ -212,7 +212,7 @@ def main():
         print(f"  Compile directives: {r['compile_directives']}")
         print(f"  Export keyword: {r['export_keyword']}")
         print(f"  Queries: {r['queries']}")
-        print(f"  Node types (top 15):")
+        print("  Node types (top 15):")
         for k, v in list(r['node_type_distribution'].items())[:15]:
             print(f"    {k}: {v}")
 
