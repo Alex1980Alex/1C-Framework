@@ -1551,6 +1551,33 @@ CLI flags: `--min-samples N`, `--delta-threshold X`, `--since YYYY-MM-DD`, `--st
 | Schema `RenameTelemetryEvent` меняется → старый JSONL нечитаем | Низкая | Поле `version: 1` в каждом событии; aggregator умеет читать v1+ |
 | Routing YAML содержит опечатки (backend name, confidence out of [0,1]) | Низкая | Валидация в `RoutingMatrix.load`: проверка backend в whitelist, clamp confidence, raise при unknown kind |
 
+##### Итог R4 (2026-04-17)
+
+| Подзадача | Статус | Артефакт | Тесты |
+|-----------|--------|----------|------:|
+| **R4.0** | ✅ DONE | [routing_matrix.yaml](../../src/bsl/semantic_search/refactor/routing_matrix.yaml) + `RoutingMatrix.load/reset()` в [classifier.py](../../src/bsl/semantic_search/refactor/classifier.py) | 5 |
+| **R4.1** | ✅ DONE | [telemetry.py](../../src/bsl/semantic_search/refactor/telemetry.py) (`RenameTelemetryEvent`, `JsonlTelemetryWriter`, `NullTelemetryWriter`) + интеграция через `try/finally` в [orchestrator.py](../../src/bsl/semantic_search/refactor/orchestrator.py) `rename()` | 7 |
+| **R4.2** | ✅ DONE | `ManualFallbackInstruction` + `manual_fallback` слот `RouteDecision` + 3-tier fallback в `RefactorOrchestrator` + MCP surface `bsl_rename_symbol` → `{status: "manual_required", manual_instruction: {...}}` | 4 |
+| **R4.3** | ✅ DONE | [refactor-fallback-chain.md](./refactor-fallback-chain.md) — ASCII flowchart + таблица на все 7 `SymbolKind` + invalidation rules | — |
+| **R4.4** | ✅ DONE | [aggregate_refactor_telemetry.py](../../scripts/aggregate_refactor_telemetry.py) + [refactor-telemetry-synthetic.jsonl](../../data/refactor-telemetry-synthetic.jsonl) (20 событий DoD fixture) | 3 |
+| **R4.5** | ⏸ DEFERRED | — блокируется накоплением ≥50 реальных событий или R5 benchmark (~80 data points) | — |
+| **R4.6** | ⏸ DEFERRED | — условный, зависит от Phase 10 dashboard | — |
+
+**Агрегатно по R4:**
+- **111/111 refactor-тестов зелёные** (`pytest tests/bsl/refactor/` → 90 до R4 → +19 новых тестов: 5+7+4+3). 2 дополнительных теста (`test_telemetry_event_includes_version_field`, `test_telemetry_gzips_old_rotated_files`) добавлены после quality-review.
+- **Схема telemetry:** `version: int = 1` в каждом событии (митигация риска schema-change), `old_name` извлекается из `content` через Cyrillic-aware regex `[A-Za-z_\u0400-\u04FF][\w\u0400-\u04FF]*`, `classifier_confidence` отделён от `matrix_confidence` (разные источники).
+- **Gzip-ротация:** `JsonlTelemetryWriter(compress_after_days=30)` упаковывает rotated-файлы в `.gz`, запускается в `__init__` + не чаще раза/час через `write()`. Вызов вынесен **после** `self._lock` (fix по quality-review, коммит `c41f6afd`).
+- **Quality-review цикл (subagent):** flagged blocking I/O внутри write lock → fixed в `c41f6afd`. Остальное — PASS (нет injection, regex ReDoS-safe, `@dataclass(frozen, slots)` сохранён, backward-compat через `getattr(r, "manual_instruction", None)`).
+- **Коммиты:** `70f1ba82` (основной DoD gap-close) + `c41f6afd` (lock-hold fix).
+
+**Что отложено:**
+- **R4.5 calibration** — бутстрап через R5 benchmark (20 задач × 2 backend × dry+apply = ~80 event, хватит для first calibration без ожидания продакшена). После сбора: `python scripts/aggregate_refactor_telemetry.py` → review `data/refactor-telemetry-proposed.yaml` → commit.
+- **R4.6 dashboard** — ждёт Phase 10.
+
+**Непокрытые DoD-детали (низкий приоритет):**
+- Формальная JSON-схема `manual_instruction` в docs или YAML header (сейчас контракт де-факто закреплён в `test_mcp_rename_surfaces_manual_instruction`).
+- `aggregate_refactor_telemetry.py` пока читает `event.get("version")` неявно (default → обрабатывается как v1); при введении v2 потребуется branch-логика.
+
 #### Этап R5 — Benchmark + validation (2-3 дня, после R4)
 
 - **R5.1 Benchmark tasks.json:** 20 реальных git commits с rename-операциями. **Артефакт:** `docs/roadmap/benchmark/tasks.json`. **DoD:** 20 задач × 5 категорий.
