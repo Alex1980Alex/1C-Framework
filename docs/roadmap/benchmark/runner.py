@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -19,14 +19,7 @@ _SRC_ROOT = _REPO_ROOT / "src"
 if str(_SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(_SRC_ROOT))
 
-from bsl.semantic_search.refactor.types import (
-    BackendError,
-    FileEdit,
-    Position,
-    Range,
-    TextEdit,
-    WorkspaceEdit,
-)
+from bsl.semantic_search.refactor.types import BackendError, WorkspaceEdit
 
 
 class RenameBackendProto(Protocol):
