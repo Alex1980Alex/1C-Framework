@@ -1,0 +1,44 @@
+version: 2
+routes:
+  module_export_proc:
+    primary: multilspy
+    fallback: ast-grep
+    manual_fallback: false
+    confidence: 0.95
+    reason: "cross-file rename via LSP preload"
+  module_export_func:
+    primary: multilspy
+    fallback: ast-grep
+    manual_fallback: false
+    confidence: 0.95
+    reason: "cross-file rename via LSP preload"
+  module_local_proc:
+    primary: multilspy
+    fallback: ast-grep
+    manual_fallback: false
+    confidence: 0.85
+    reason: "module-scope LSP rename"
+  module_local_func:
+    primary: multilspy
+    fallback: ast-grep
+    manual_fallback: false
+    confidence: 0.85
+    reason: "module-scope LSP rename"
+  local_variable:
+    primary: multilspy
+    fallback: null
+    manual_fallback: false
+    confidence: 0.70
+    reason: "local scope, single file"
+  form_handler:
+    primary: ast-grep
+    fallback: multilspy
+    manual_fallback: true
+    confidence: 0.60
+    reason: "form handlers may have XML-side refs"
+  unknown:
+    primary: ast-grep
+    fallback: null
+    manual_fallback: true
+    confidence: 0.30
+    reason: "pattern-based fallback"
