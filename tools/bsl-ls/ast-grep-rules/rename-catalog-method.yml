@@ -1,13 +1,15 @@
-# R0.3 Rule 3: Match catalog module method calls in BSL
-# Purpose: Validate ast-grep can match qualified method invocation (Module.Method pattern)
+# R0.3 Rule 3: Match catalog module method calls in BSL (Module.Method pattern)
+# Uses kind-based matching for call_expression nodes with access + method_call
+# AST: call_expression -> [access -> identifier($MODULE), ., method_call -> [identifier($METHOD), arguments]]
 id: rename-catalog-method
 language: bsl
 rule:
-  pattern: |
-    $MODULE.$METHOD($$$ARGS)
-message: "Catalog module call '$MODULE.$METHOD' matched for rename"
+  kind: call_expression
+  has:
+    kind: access
+message: "Qualified method call found - candidate for rename"
 severity: hint
 note: |
-  This rule matches all qualified method calls (Module.Method pattern).
-  For rename: change $METHOD to the new method name.
-  Test target: ТестоваяУтилита.ПолучитьПараметр, ТестоваяУтилита.УстановитьПараметр
+  Matches all qualified method calls (Module.Method pattern) via call_expression with access child.
+  For rename: target the identifier inside method_call.
+  Test target: ТестоваяУтилита.ПолучитьПараметр, ТестоваяУтилита.УстановитьПараметр in ТестовыйВызыватель
