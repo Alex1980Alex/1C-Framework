@@ -632,7 +632,22 @@
       "Bash(mkdir recon-logs *)",
       "mcp__1c-mcp-crud-daily__execute_code",
       "mcp__1c-mcp-crud-infeeda__execute_code",
-      "Bash($SQLCMD *)"
+      "Bash($SQLCMD *)",
+      "Bash(mkdir *)",
+      "Bash('/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe' -S localhost -U sa -P 1980 -C -b -Q ' *)",
+      "Bash('/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe' -S localhost -U sa -P 1980 -C -h -1 -W -Q 'SET NOCOUNT ON; SELECT CONVERT\\(varchar\\(max\\), BinaryData, 2\\) FROM tm_infeeda.dbo.Params WHERE FileName='\\\\''users.usr'\\\\'' AND PartNo=0;' -y 0)",
+      "Bash('/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe' -S localhost -U sa -P 1980 -C -h -1 -W -Q 'SET NOCOUNT ON; SELECT CONVERT\\(varchar\\(max\\), BinaryData, 2\\) FROM DAILY_TM_BAT.dbo.Params WHERE FileName='\\\\''users.usr'\\\\'' AND PartNo=0;' -y 0)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 cluster list)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 infobase --cluster=3aed02f3-8611-42f3-aec4-5c642501055f summary list)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 session --cluster=3aed02f3-8611-42f3-aec4-5c642501055f list --infobase=883963e6-0cb1-4368-915e-b053f6480273)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 session --cluster=3aed02f3-8611-42f3-aec4-5c642501055f terminate --session=6e73ae40-0c89-4140-a404-88915a483953)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 process --cluster=3aed02f3-8611-42f3-aec4-5c642501055f list)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 connection --cluster=3aed02f3-8611-42f3-aec4-5c642501055f list --infobase=883963e6-0cb1-4368-915e-b053f6480273)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 connection --cluster=3aed02f3-8611-42f3-aec4-5c642501055f disconnect --process=c3134bee-2cbd-47c9-aeda-bd0dc41740c7 --connection=7566eda3-c25d-4271-a64b-1f487974b188 --infobase=883963e6-0cb1-4368-915e-b053f6480273)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/rac.exe' localhost:1545 connection --cluster=3aed02f3-8611-42f3-aec4-5c642501055f disconnect --process=c3134bee-2cbd-47c9-aeda-bd0dc41740c7 --connection=7566eda3-c25d-4271-a64b-1f487974b188)",
+      "Bash(\"/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe\" infobase --help)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe' infobase --help)",
+      "Bash('/c/Program Files/1cv8/8.3.27.1859/bin/ibcmd.exe' infobase)"
     ]
   },
   "enableAllProjectMcpServers": true,
