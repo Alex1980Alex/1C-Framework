@@ -890,6 +890,105 @@ def bsl_coding_context(
     return result
 
 
+# ---------------------------------------------------------------------------
+# Rename driver wiring — R1.7
+# ---------------------------------------------------------------------------
+from collections.abc import Callable
+
+from .refactor import BackendError, RenameDriver, RenameResult
+
+_RENAME_DRIVER_FACTORY: Callable[[], RenameDriver] | None = None
+
+
+def register_rename_driver_factory(
+    factory: Callable[[], RenameDriver] | None,
+) -> None:
+    """Register a factory that produces a configured RenameDriver on demand.
+
+    Pass `None` to unregister (useful in tests).
+    """
+    global _RENAME_DRIVER_FACTORY
+    _RENAME_DRIVER_FACTORY = factory
+
+
+def _get_rename_driver() -> RenameDriver | None:
+    if _RENAME_DRIVER_FACTORY is None:
+        return None
+    return _RENAME_DRIVER_FACTORY()
+
+
+def _rename_result_to_dict(r: RenameResult) -> dict[str, Any]:
+    return {
+        "ok": r.ok,
+        "applied": r.applied,
+        "rolled_back": r.rolled_back,
+        "confirm_token": r.confirm_token,
+        "files_affected": r.files_affected,
+        "total_edits": r.total_edits,
+        "reason": r.reason,
+    }
+
+
+@mcp.tool()
+def bsl_rename_symbol(
+    uri: str,
+    line: int,
+    character: int,
+    new_name: str,
+    dry_run: bool = True,
+    confirm_token: str | None = None,
+) -> dict[str, Any]:
+    """Rename a BSL symbol across the workspace.
+
+    Two-phase contract:
+    1. Call with dry_run=True (default) to get a planned edit + `confirm_token`.
+       Files are NOT modified. Review `files_affected` / `total_edits` before applying.
+    2. Call with dry_run=False + the `confirm_token` from step 1 to apply.
+       The verification layer will auto-rollback if the BSL error count rises.
+
+    Args:
+        uri: file:// URI of the module containing the symbol
+        line: 0-based line number of the symbol occurrence
+        character: 0-based character column
+        new_name: new identifier for the symbol
+        dry_run: True (default) returns a plan; False applies with matching token
+        confirm_token: required when dry_run=False, obtained from a prior dry-run call
+
+    Returns:
+        Dict with keys: ok, applied, rolled_back, confirm_token, files_affected,
+        total_edits, reason. On error: {"error": str, "code": str, "details": dict|None}.
+    """
+    driver = _get_rename_driver()
+    if driver is None:
+        return {
+            "error": "rename pipeline not initialized",
+            "code": "not_initialized",
+            "hint": "call register_rename_driver_factory() at server startup",
+        }
+    try:
+        result = driver.rename(
+            uri,
+            line,
+            character,
+            new_name,
+            dry_run=dry_run,
+            confirm_token=confirm_token,
+        )
+        return _rename_result_to_dict(result)
+    except BackendError as exc:
+        return {
+            "error": str(exc),
+            "code": exc.code,
+            "details": exc.details,
+        }
+    except Exception as exc:
+        logger.exception("bsl_rename_symbol unexpected error")
+        return {
+            "error": f"unexpected: {exc!r}",
+            "code": "unexpected",
+        }
+
+
 if __name__ == "__main__":
     logger.info("=== Starting BSL Semantic Search MCP Server ===")
     mcp.run()
