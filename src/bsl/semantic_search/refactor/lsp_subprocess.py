@@ -40,10 +40,10 @@ class LspSubprocess:
 
     def start(self) -> None:
         """Spawn the process; raise BackendError(code='breaker_open') when breaker is open."""
-        if self.breaker.is_open():
-            raise BackendError("circuit breaker is open", code="breaker_open")
         if self._state in (LspState.READY, LspState.STARTING):
             return
+        if self.breaker.is_open():
+            raise BackendError("circuit breaker is open", code="breaker_open")
         self._state = LspState.STARTING
         try:
             self._process = self.process_factory()
