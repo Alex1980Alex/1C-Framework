@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 from ..types import BackendError
 from .ast_grep_backend import AstGrepMatch
+
+_WINDOWS_SHELL = sys.platform == "win32"
 
 
 class SubprocessAstGrepRunner:
