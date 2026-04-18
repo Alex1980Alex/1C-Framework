@@ -1,29 +1,20 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
-import sys
+import tempfile
 from pathlib import Path
 
 from ..types import BackendError
 from .ast_grep_backend import AstGrepMatch
 
-_WINDOWS_SHELL = sys.platform == "win32"
-
 
 class SubprocessAstGrepRunner:
     """Invokes the ast-grep binary as a subprocess and parses --json output.
 
-    ast-grep JSON format (per match):
-      {
-        "file": "path/to/file.bsl",
-        "range": {
-          "start": {"line": 0, "column": 10},
-          "end":   {"line": 0, "column": 16}
-        },
-        "text": "OldName",
-        ...
-      }
+    Uses a temp file for rules instead of --inline-rules because
+    multiline YAML breaks with Windows shell escaping.
     """
 
     def __init__(
@@ -33,27 +24,35 @@ class SubprocessAstGrepRunner:
         rule_template: str | None = None,
         timeout_seconds: float = 60.0,
     ) -> None:
-        """Config points to sgconfig.yml; rule_template reserved for R2.3."""
         self._binary = binary
         self._config = config_path
         self._rule_template = rule_template
         self._timeout = timeout_seconds
 
     def run_rename(
-        self, workspace_root: Path, old_name: str, new_name: str
+        self, workspace_root: Path, old_name: str, new_name: str  # noqa: ARG002
     ) -> list[AstGrepMatch]:
         """Run ast-grep scan; return matches of `old_name` in workspace_root."""
-        args = [self._binary, "scan", "--json=compact"]
-        if self._config is not None:
-            args += ["-c", str(self._config)]
-        inline_rule = (
+        rule_content = (
             f"id: rename-{old_name}\n"
             f"language: bsl\n"
             f"rule:\n"
             f"  pattern: {old_name}\n"
         )
-        args += ["--inline-rules", inline_rule, str(workspace_root)]
+
+        rule_path: str | None = None
         try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".yml", delete=False, encoding="utf-8"
+            ) as rule_file:
+                rule_file.write(rule_content)
+                rule_path = rule_file.name
+
+            args = [self._binary, "scan", "--json=compact"]
+            if self._config is not None:
+                args += ["-c", str(self._config)]
+            args += ["-r", rule_path, str(workspace_root)]
+
             proc = subprocess.run(
                 args,
                 capture_output=True,
@@ -62,12 +61,17 @@ class SubprocessAstGrepRunner:
                 timeout=self._timeout,
                 check=False,
                 cwd=str(workspace_root),
-                shell=_WINDOWS_SHELL,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise BackendError(
                 f"ast-grep subprocess failed: {exc!r}", code="subprocess_failed"
             ) from exc
+        finally:
+            if rule_path:
+                try:
+                    os.unlink(rule_path)
+                except OSError:
+                    pass
 
         if proc.returncode != 0:
             raise BackendError(
@@ -91,7 +95,6 @@ class SubprocessAstGrepRunner:
 
     @staticmethod
     def _parse_match(m: dict) -> AstGrepMatch:
-        """Parse a single ast-grep JSON match object."""
         try:
             r = m["range"]
             s = r["start"]
