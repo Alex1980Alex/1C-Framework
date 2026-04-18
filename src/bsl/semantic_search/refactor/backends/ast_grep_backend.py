@@ -78,12 +78,14 @@ class AstGrepBackend:
             ) from exc
 
         lines = text.splitlines()
-        if line < 0 or line >= len(lines):
+        # Convert 1-based line (from EDT-MCP/Serena) to 0-based index.
+        line_idx = line - 1 if line > 0 else line
+        if line_idx < 0 or line_idx >= len(lines):
             raise BackendError(
                 f"line {line} out of range (file has {len(lines)} lines)",
                 code="position_out_of_range",
             )
-        old_name = self._word_at(lines[line], character)
+        old_name = self._word_at(lines[line_idx], character)
         if not old_name:
             raise BackendError(
                 f"no identifier at line {line}, character {character}",
