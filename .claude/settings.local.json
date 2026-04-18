@@ -652,7 +652,14 @@
       "Bash(mkdir -p /d/temp/daily_config_dump)",
       "Read(//d/temp/**)",
       "Bash('C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe' DESIGNER '/SKOMPUTER\\\\DAILY_TM_BAT' /Na.terletskiy@sodru.com /P1980 /DisableStartupMessages /DisableStartupDialogs /DumpConfigToFiles 'D:\\\\temp\\\\daily_config_dump' /Out 'D:\\\\temp\\\\daily_config_dump\\\\_dump.log')",
-      "Bash('/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe' -S localhost -U sa -P 1980 -C -Q ' *)"
+      "Bash('/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe' -S localhost -U sa -P 1980 -C -Q ' *)",
+      "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\pip.exe\" list *)",
+      "Bash(C:\\\\Users\\\\AlexT\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe *)",
+      "Read(//c/BuildTools/**)",
+      "Read(//c/BuildTools/VC/Auxiliary/Build/**)",
+      "Read(//mingw64/bin/**)",
+      "Read(//usr/bin/**)",
+      "Bash(\"C:\\\\Users\\\\AlexT\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -m pip download tree-sitter-bsl==0.1.6 --no-deps --dest /tmp/tsbsl_wheel)"
     ]
   },
   "enableAllProjectMcpServers": true,
