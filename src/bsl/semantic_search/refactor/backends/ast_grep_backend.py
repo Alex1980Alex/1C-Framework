@@ -112,16 +112,23 @@ class AstGrepBackend:
     @staticmethod
     def _word_at(line_text: str, character: int) -> str:
         """Extract the identifier (Unicode word chars) at the given position."""
-        if character < 0 or character > len(line_text):
+        if character < 0 or character >= len(line_text):
             return ""
 
         def _is_id(ch: str) -> bool:
             return ch.isalnum() or ch == "_"
 
-        start = character
+        # If position is on whitespace, scan forward to find the identifier.
+        pos = character
+        while pos < len(line_text) and not _is_id(line_text[pos]):
+            pos += 1
+        if pos >= len(line_text):
+            return ""
+
+        start = pos
         while start > 0 and _is_id(line_text[start - 1]):
             start -= 1
-        end = character
+        end = pos
         while end < len(line_text) and _is_id(line_text[end]):
             end += 1
         return line_text[start:end]
