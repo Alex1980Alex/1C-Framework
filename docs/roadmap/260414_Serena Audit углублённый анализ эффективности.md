@@ -1971,10 +1971,245 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 
 #### Этап R6 — Upstream contributions (опционально, 2-3 дня, после R5)
 
-- **R6.1 PR в multilspy:** BSL language adapter (language_id="bsl", JAR launcher). **Артефакт:** PR. **DoD:** PR принят или получен отзыв.
-- **R6.2 PR в bsl-language-server:** `workspace/didChangeWorkspaceFolders` handler. **Артефакт:** PR + changelog. **DoD:** PR submitted.
-- **R6.3 PR в tree-sitter-bsl:** улучшения грамматики (если из R2.2 найдено). **Артефакт:** PR. **DoD:** submitted.
-- **R6.4 PR в Serena:** опциональный BSL context (contexts/bsl.yml). **Артефакт:** PR. **DoD:** submitted.
+**Цель этапа:** заменить внутренние патчи и кастомные адаптеры на принятые upstream-изменения, снизив долгосрочную стоимость обслуживания. Побочно — публикация результатов R0-R5 в сообществах `multilspy` / `bsl-language-server` / `tree-sitter-bsl` / `Serena`, что легитимизирует выбранный подход и открывает доступ к bug-fix'ам core-maintainer'ов.
+
+**Стартовая точка (планируемая, после R5):** R0-R5.4 закрыты, воспроизводимый benchmark (минимум `pilot-B`), [13 багов исправлены](#L2016) собственным ревью-циклом, покрытие grammar 99.1% (14 ERRs / 1 518 lines на наших модулях) — это и есть evidence base для любых PR discovery-issue'ов.
+
+**Почему «опционально»:**
+- Все артефакты R1-R5 работают self-hosted — upstream-приём не блокирует продакшн.
+- Upstream-циклы ревью непредсказуемы (от недель до кварталов).
+- Часть изменений может быть отклонена по reasons-of-scope — это не регрессия для нашей стороны, лишь фиксация long-term maintenance в internal fork.
+
+**Критерии запуска R6:**
+- [R5.4 trend.md](../../docs/roadmap/benchmark/trend.md) содержит минимум 2 прогона (`pilot-B` + `full-1`).
+- [R4.5 calibration](#L1889) применена хотя бы к одному (kind, backend) — иначе нечего предъявлять как эмпирическое обоснование.
+- Legal/licensing check: лицензии всех четырёх upstream — **MIT**, совместимо с нашим кодом. Документ `docs/legal/upstream-license-matrix.md` (создать при запуске R6).
+- Issue в каждом upstream открыт **ДО** PR — избегаем «code dump» без предварительного согласования scope.
+
+**Порядок приоритизации (по соотношению impact/effort/acceptance probability):**
+
+| # | PR | Impact на нас | Вероятность приёма | Сложность |
+|---|----|---------------|--------------------|-----------|
+| **R6.3** | tree-sitter-bsl: parenthesized expressions | Средний (снимает 0.9% ERR) | Высокая (mini-PR, evidence готов) | Низкая (4-6 ч) |
+| **R6.4** | Serena: BSL context | Низкий (удобство + discovery) | Высокая (yml-only, opt-in) | Низкая (2-3 ч) |
+| **R6.1** | multilspy: BSL language adapter | Высокий (убирает internal fork) | Средняя (mainstream maintainer, ниша — BSL) | Высокая (1-2 дня) |
+| **R6.2** | bsl-language-server: `didChangeWorkspaceFolders` | Высокий (убирает bulk-didOpen workaround) | **Низкая** (меняет core поведение LS) | Высокая (Java 17, 1-2 дня) |
+
+**Рекомендация:** сначала R6.3 + R6.4 (быстрые win'ы, строят репутацию contributor'а в каждом сообществе), затем R6.1, и лишь опционально R6.2 (если core-team согласовала scope в discovery issue).
+
+---
+
+##### R6.1 — PR в multilspy: BSL language adapter (1-2 дня)
+
+**Проблема:** [multilspy_backend.py](../../src/bsl/semantic_search/refactor/backends/multilspy_backend.py) использует `multilspy` через тонкую обёртку, но BSL отсутствует в upstream `Language` enum. Сейчас наш код вынужден либо форкать `multilspy`, либо лезть в приватные API (`_start_server`, custom `LanguageServerManager`). И то, и другое — технический долг.
+
+**Upstream repo:** https://github.com/microsoft/multilspy (566⭐, MIT, активно развивается).
+
+**Scope PR:**
+1. `src/multilspy/multilspy_types.py` — добавить `Language.BSL = "bsl"` в enum + mapping `"bsl" → .bsl file extension`.
+2. `src/multilspy/language_servers/bsl_language_server/` (новый пакет):
+   - `bsl_language_server.py` — подкласс `LanguageServer`, JAR launcher (`java -jar bsl-language-server.jar --lsp`), shutdown-handler.
+   - `runtime_dependencies.json` — pin-версия `bsl-language-server-0.23.0.jar` с SHA256 + download URL (GitHub releases `1c-syntax/bsl-language-server`).
+   - `initialize_params.json` — BSL-specific `initializationOptions` (configurationRoot, диалект `Server`/`Thick`/`Thin`).
+3. `src/multilspy/language_server.py` — регистрация `bsl` в factory (`if language == Language.BSL: return BSLLanguageServer(...)`).
+4. Tests: `tests/multilspy/test_bsl/test_hover.py`, `test_references.py`, `test_rename.py` — три синтетических `.bsl` модуля (переиспользовать из R0.2 — `гкс_ОчередьСообщенийRMQ`, `гкс_ФормировательСообщенийRMQ`, `гкс_Взвешивание.ФормаДокумента`).
+5. `README.md` — BSL в списке поддерживаемых языков; упомянуть known limitation (per-document indexing) с отсылкой к R6.2.
+
+**Процесс подачи PR:**
+1. Fork `microsoft/multilspy` → branch `feat/bsl-language`.
+2. Open discovery issue `Proposal: add BSL (1C Enterprise) language support` со ссылкой на [bsl-ls-recon-results.md](bsl-ls-recon-results.md) и [routing-matrix-v2.md](./routing-matrix-v2.md). Подкрепить цифрами из R5 (latency, success rate) — **ДО** PR.
+3. Дождаться green light от core-maintainer (< 1 нед обычно у microsoft/* проектов).
+4. Подготовить PR — линкуется к issue, включает скриншоты `pilot-B` / `full-1` (если готовы).
+5. Ответить на review comments в 48 ч.
+6. После merge — заменить наш self-hosted fork на upstream dep (`multilspy>=X.Y.Z`), удалить `tools/bsl-ls/vendor/multilspy-fork/` (если существовал).
+
+**Артефакт:**
+- PR в `microsoft/multilspy` (URL сохранить в [bsl-ls-recon-results.md](bsl-ls-recon-results.md) секция `## Upstream status`).
+- Internal vendor fork удалён или помечен `deprecated` (если PR declined).
+
+**DoD:**
+- PR открыт и CI maintainer'а зелёный (GitHub Actions: unit-тесты, type-checking).
+- Получен минимум 1 review от core-maintainer (merged / requested-changes / declined).
+- **Если merged:** [multilspy_backend.py](../../src/bsl/semantic_search/refactor/backends/multilspy_backend.py) переведён с private API на public (`Language.BSL`), удалены private-import'ы, прогнаны 111 refactor-тестов → все зелёные.
+- **Если declined:** reason задокументирован в [bsl-ls-recon-results.md](bsl-ls-recon-results.md); internal adapter сохраняется с attribution комментарием на declined-issue.
+
+---
+
+##### R6.2 — PR в bsl-language-server: `workspace/didChangeWorkspaceFolders` handler (1-2 дня)
+
+**Проблема:** upstream BSL LS игнорирует `workspace/didChangeWorkspaceFolders` notification — индексация выполняется лениво per-document на `textDocument/didOpen`. Это первопричина per-document архитектуры, из-за которой мы строили весь multilspy+bulk-didOpen workaround (см. [bsl-ls-recon-results.md](bsl-ls-recon-results.md) §«per-document problem»).
+
+**Upstream repo:** https://github.com/1c-syntax/bsl-language-server (403⭐, Java 17, Maven, MIT).
+
+**Scope PR (Java, 2-4 класса + тесты):**
+1. `language-server/src/main/java/com/github/_1c_syntax/bsl/languageserver/ClientNotifications.java` (или exact equivalent) — handler для `@Notification("workspace/didChangeWorkspaceFolders")`.
+2. Вызов `ServerContext.populateContext(WorkspaceFolder)` на все `added` folders; обработка `removed` (инвалидация context).
+3. Инкрементальность: сравнить set новых folders с текущим, `populateContext` только для delta.
+4. Config flag: `workspaceFolders.eagerLoad = true|false` в `.bsl-language-server.json`. **Default: `false`** для backward-compat. Клиент (наш multilspy) явно включает через `initializationOptions`.
+5. Tests (JUnit 5 + Mockito): `ClientNotificationsTest.testWorkspaceFoldersEagerLoads` — mocked `WorkspaceFolder`, проверка что `ServerContext` получил `populateContext` с правильным URI.
+
+**Процесс подачи PR:**
+1. **Discovery issue ОБЯЗАТЕЛЬНО:** «Proposal: eager indexing on didChangeWorkspaceFolders». Прикрепить:
+   - Цифры из R5 (p95 latency до/после preload — сравнение `multilspy_backend` vs hypothetical eager LS).
+   - Ссылку на [bench_multilspy_real.py](../../tools/bsl-ls/bench_multilspy_real.py) summary (`multilspy-logs-real/summary.json`).
+   - Use case: IDE с multi-root workspace (VS Code, IntelliJ plugin).
+2. Дождаться reaction core-maintainer (Nikita @nixel2007 или @theshadowco). Если negative — PR не отправлять, закрыть R6.2 как `declined`.
+3. Если green light: fork, branch `feat/workspace-folders-eager`, PR.
+4. CI требует `mvn verify` + checkstyle + SonarQube. Установить локально Java 17 + Maven 3.9+.
+5. Ответить на review в 48-72 ч (учитывая time-zone Europe/Moscow maintainer'ов).
+
+**Специфичные риски:**
+- **Breaking change risk:** eager indexing на больших ERP-конфигурациях (>10 000 модулей) существенно увеличит start-up latency LS. **Митигация:** конфиг-флаг `eagerLoad = false` по умолчанию; evidence в issue описывает cost на 2 027 модулей (наш workspace).
+- **Java expertise gap:** команда — BSL/Python; если maintainer запросит глубокий рефакторинг `ServerContext`, сил не хватит. **Митигация:** исключить R6.2 из обязательных; оставить как «contribution opportunity». Внутренний workaround (bulk-didOpen) остаётся permanent.
+- **Cyrillic paths на CI:** CI maintainer'а запускается на Linux; наш workspace — Windows+cp1251. **Митигация:** `core.quotepath=false` + тесты на латинских путях.
+
+**Артефакт:**
+- PR в `1c-syntax/bsl-language-server` (или declined-issue с reason и ссылкой на наш internal workaround).
+- `docs/roadmap/benchmark/results-YYYY-MM.md` дополнен секцией «BSL LS version used» — привязка к версии с handler'ом (если merged).
+
+**DoD:**
+- Discovery issue открыт с полным evidence из R5.
+- **Если green light:** PR submitted, CI (Maven+SonarQube+checkstyle) зелёный, минимум 1 maintainer review получен.
+- **Если declined-by-scope:** reason задокументирован в [bsl-ls-recon-results.md](bsl-ls-recon-results.md); R6.2 помечен `won't-do` в итоговой таблице этого роадмапа; bulk-didOpen признан permanent workaround.
+
+---
+
+##### R6.3 — PR в tree-sitter-bsl: grammar gaps (4-6 ч)
+
+**Проблема:** из [R0.2 coverage test](#L1262) известны два конкретных gap'а в upstream grammar:
+
+1. **Parenthesized expressions** — 14 ERRs / 1 518 lines (≈0.9%). Примеры: `Результат = (X = Y);`, `Если А И (X ИЛИ Y) Тогда`, `Возврат (-Число);`. Grammar не парсит bracketed group в RHS / условиях / unary.
+2. **Query literals** — `ВЫБРАТЬ ... ИЗ ...` внутри `Запрос.Текст = "..."` парсится как `const_expression` строка. Не блокирует rename (не нужно для R1-R5), но полезно для будущего BSL intelligence.
+
+**Upstream repo:** https://github.com/alkoleft/tree-sitter-bsl (36⭐, JavaScript grammar → C parser, MIT).
+
+**Scope PR (два отдельных PR для изоляции риска):**
+
+**PR #1 «fix: parenthesized expressions in RHS and conditions»** (primary target R6.3):
+1. `grammar.js` — добавить `parenthesized_expression: $ => seq('(', $._expression, ')')` в hierarchy `_expression` с корректной precedence.
+2. Убедиться: `Если ... И (X) Тогда` не конфликтует с function-call parsing (префер — assoc.left, precedence выше binary_op).
+3. Regen parser: `tree-sitter generate`; пересобрать C parser в `src/parser.c`.
+4. `test/corpus/expressions.txt` — 5 новых кейсов: (а) bool bracket `Если (X И Y) Тогда`, (б) assignment bracket `А = (X + Y);`, (в) nested `((X = Y) И Z)`, (г) mixed with call `Функция((X))`, (д) unary `(-X)` / `(Не X)`.
+5. `tree-sitter test` — все старые + новые кейсы зелёные; no regressions.
+
+**PR #2 «feat: query language nodes inside string literals»** (опционально, defer на R7+):
+- Inline query grammar как injection (`injection.scm`) — сложнее, отдельный PR, scope может быть отвергнут как «out of tree-sitter scope» (SQL вообще отдельный проект).
+- **Рекомендация:** defer PR #2 до явного запроса от bsl-intelligence community.
+
+**Процесс подачи PR:**
+1. Fork `alkoleft/tree-sitter-bsl` → branch `fix/parenthesized-expression`.
+2. Прогнать локально `scripts/test` (или `npm test`) — все старые тесты зелёные baseline.
+3. Добавить новые corpus tests, прогнать снова.
+4. Подать PR #1 с short description + link на [tree-sitter-coverage.md](../../tools/bsl-ls/tree-sitter-coverage.md) v1.
+5. После merge (или одновременно с review): прогнать `tools/bsl-ls/tree-sitter-coverage.py` на 1 518 lines → ожидаем 14 ERRs → 0-2 ERRs. Записать в v2-коверейдж секцию.
+
+**Артефакт:**
+- PR #1 в `alkoleft/tree-sitter-bsl`.
+- Обновлённый [tree-sitter-coverage.md](../../tools/bsl-ls/tree-sitter-coverage.md) — секция «v2 coverage after R6.3» с новыми цифрами ERR rate.
+- `tools/bsl-ls/tree_sitter_bsl.dll` пересобран из upstream HEAD (если merged) или из нашего fork (если declined, vendored в `tools/bsl-ls/vendor/tree-sitter-bsl-fork/` + `PATCHED.md`).
+
+**DoD:**
+- PR #1 открыт, CI (`tree-sitter test` + matrix по OS если есть) зелёный.
+- **Если merged:** ERR rate ≤ 0.2% на наших 1 518 lines; [R2.2 Fill coverage gaps](#L1319) в таблице статусов обновлён с `DEFERRED` → `DONE (via R6.3)`.
+- **Если declined:** fork поддерживается в `tools/bsl-ls/vendor/tree-sitter-bsl-fork/`, `PATCHED.md` описывает diff и причину декли́на.
+
+---
+
+##### R6.4 — PR в Serena: BSL context (2-3 ч)
+
+**Проблема:** Serena (framework для LLM-based кодирования поверх LSP — основной inspiration источник этого аудита) не имеет BSL в bundled contexts. Наш аудит разработал routing-matrix + classifier + 3-tier fallback chain, которые переиспользуемы другими Serena-based проектами.
+
+**Upstream repo:** https://github.com/oraios/serena. BSL отсутствует в `src/serena/resources/config/contexts/` (см. [Ссылки §Serena configuration](#L2055)).
+
+**Scope PR:**
+
+1. `src/serena/resources/config/contexts/bsl.yml`:
+   ```yaml
+   description: Context for 1C Enterprise BSL development
+   prompt: |
+     You are working with a 1C Enterprise codebase (BSL language).
+     Guidelines:
+     - Use Cyrillic-aware identifier regex: [A-Za-zА-Яа-я_][A-Za-zА-Яа-я0-9_]*
+     - Prefer semantic tools (find_symbol, find_referencing_symbols) for rename
+     - For cross-file operations, check forms (.xml) in addition to modules (.bsl)
+     - Manager modules, forms, info registers, and common modules have different
+       visibility semantics — consult SymbolKind before renaming.
+     - `Экспорт` methods are visible across modules; module-local methods are not.
+   allowed_tools:
+     - find_symbol
+     - find_referencing_symbols
+     - replace_symbol_body
+     - insert_after_symbol
+     - insert_before_symbol
+     - search_for_pattern
+   excluded_tools:
+     - execute_shell_command  # BSL не имеет REPL-эквивалента shell
+   ```
+2. `docs/contexts/bsl.md` (короткая страница): «Using Serena with 1C Enterprise» со ссылкой на наш аудит (после consent core-team).
+3. Optional: `src/serena/resources/config/modes/bsl-editing.yml` — стандартный editing mode с consersative allowed_tools (без `replace_symbol_body` для `form_handler` и `unknown` kinds — форсировать manual tier как в нашей [routing-matrix-v2.md](./routing-matrix-v2.md)).
+
+**Процесс подачи PR:**
+1. Discovery issue «Proposal: add BSL (1C Enterprise) context + mode».
+2. Fork → branch `feat/bsl-context`.
+3. PR — минимальные изменения вне `contexts/` и `modes/`.
+4. Если core-team просит тесты: добавить `test_bsl_context_loads` в соответствующий test suite (yml parser validation).
+
+**Специфичные риски:**
+- **Scope push-back:** Serena поддерживает mainstream (Python/TS/Go/Rust). BSL — нишевый язык. **Митигация:** PR делает **opt-in** контекст (активируется только при `--context bsl`), не влияет на default behavior; нет изменений в core logic.
+
+**Артефакт:**
+- PR в `oraios/serena`.
+- Fallback: BSL context в нашем internal fork — `tools/serena-fork/contexts/bsl.yml` (yml-only, maintenance cost ≈ 0).
+
+**DoD:**
+- PR submitted с discovery issue.
+- **Если merged:** update [bsl-ls-recon-results.md](bsl-ls-recon-results.md) секция «Serena integration: upstream ready».
+- **Если declined:** рекомендация fork Serena для internal use с yml-only патчем, maintenance cost отметить как `low` в `docs/legal/upstream-license-matrix.md`.
+
+---
+
+##### Сводная таблица R6
+
+| Подзадача | Upstream repo | ⭐ | Язык | Оценка | Вероятность приёма | Блокеры |
+|-----------|--------------|-----|------|--------|--------------------|---------|
+| **R6.3** | alkoleft/tree-sitter-bsl | 36 | JS+C | 4-6 ч | Высокая | — |
+| **R6.4** | oraios/serena | — | Python+YAML | 2-3 ч | Высокая | — |
+| **R6.1** | microsoft/multilspy | 566 | Python | 1-2 дня | Средняя | R5.4 trend (≥2 прогона) |
+| **R6.2** | 1c-syntax/bsl-language-server | 403 | Java 17 | 1-2 дня | Низкая | R5.4 + discovery issue approval |
+
+**Критический путь:** R5.4 → (R6.3 ∥ R6.4) → R6.1 → R6.2. Параллельно: R6.3 и R6.4 независимы, можно запускать в один день. R6.1 → R6.2 последовательно — R6.2 зависит от того, что наш multilspy-client валидно демонстрирует eager-loading через R6.1-опубликованный adapter.
+
+**Итого:** 4-5 дней чистой работы над PR-подготовкой; с учётом upstream review cycles — календарно **2-4 недели** до закрытия (merge или final decline).
+
+---
+
+##### Риски R6
+
+| Риск | Вероятность | Митигация |
+|------|-------------|-----------|
+| Upstream review затягивается > 1 мес, блокирует наш release | Высокая | Все PR помечены «optional» — отсутствие не блокирует продакшн. Используем self-hosted forks, переключаемся на upstream только после merge. |
+| PR declined by scope — core-team считает BSL нишевым | Средняя (R6.1), Высокая (R6.2) | Поддерживаем internal adapter; документируем decision в [bsl-ls-recon-results.md](bsl-ls-recon-results.md) `## Upstream status`. |
+| Breaking change в upstream API между нашим fork и upstream HEAD | Средняя | CI-задача: периодический `git fetch upstream && diff` + compatibility-тест (1 задача из tasks.json прогоняется на `pip install --upgrade multilspy`). |
+| Java expertise отсутствует — R6.2 нельзя довести до merge при request-changes | Высокая | Исключить R6.2 из обязательных; оставить как contribution opportunity. Fallback — ждать, пока 1c-syntax core добавят handler сами после нашего issue. |
+| License incompatibility между нашими патчами и upstream | Низкая | Все четыре upstream — MIT. Наш код также MIT. Юридическая проверка через `docs/legal/upstream-license-matrix.md` при запуске R6. |
+| Upstream merge меняет семантику — наш consuming code ломается после `pip upgrade` | Средняя | Pin version в `requirements.txt` / `pyproject.toml`; upgrade через explicit PR + smoke-test на 1 задаче из [tasks.json](../../docs/roadmap/benchmark/tasks.json). |
+| PR в tree-sitter-bsl сломает существующие corpus тесты (grammar ambiguity) | Средняя | Обязательный прогон `tree-sitter test` baseline до изменений; если ломаются — адаптировать corpus или добавить precedence rules. |
+| Discovery issue получил негативный feedback → весь подзадачник закрыт | Средняя | issue — cheap-to-submit; при negative → документируем как «validated negative» (тоже полезный результат исследования). |
+| Cyrillic в PR description / test-fixtures ломается на CI maintainer'а | Низкая | UTF-8 BOM в corpus файлах; латинские комментарии в grammar.js; описание PR полностью на английском. |
+| Core-maintainer запрашивает changes, на которые ушло > 1 нед → PR stale | Средняя | SLA ответа на review: 48-72 ч. Если не успеваем — явно комментируем в PR «ETA: YYYY-MM-DD». |
+
+---
+
+##### Критерии успеха R6
+
+- **Минимум 2 PR submitted** (любые две из R6.1-R6.4), независимо от merge-статуса. PR submitted — это уже validated outreach.
+- **Минимум 1 PR merged** (наиболее реалистично R6.3 или R6.4 — mini-PR'ы с низкой политической сложностью).
+- **Internal fork cleanup:** если R6.1 или R6.3 merged — наш self-host код переключён на upstream версию (минус строки в `tools/bsl-ls/vendor/`).
+- **Upstream status** секция в [bsl-ls-recon-results.md](bsl-ls-recon-results.md) обновлена таблицей PR-статусов (URL, дата submit, статус, reviewer, последний apdate).
+- **Lessons-learned** в конец R6-секции роадмапа: что core-teams принимают быстро, что медленно, каких evidence не хватало, сколько iteration'ов review было в среднем.
+- **R2.2 DEFERRED** закрыт: или через merged R6.3, или явной формулировкой «won't-do, 0.9% ERR acceptable».
+
+---
 
 #### Промежуточный итог (2026-04-17)
 
