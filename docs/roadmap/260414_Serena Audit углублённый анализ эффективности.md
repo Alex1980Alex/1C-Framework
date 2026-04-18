@@ -2294,6 +2294,60 @@ ERR rate: **0.9% → 0.0%**. Отчёт: [tree-sitter-coverage.md](../../tools/b
 
 **Что блокирует прогресс по R1.3 / реальному multilspy:** решение об установке `pip install multilspy` + wiring BSL JAR + async↔sync мост. Целесообразно откладывать до R5 benchmark, чтобы данные показали реальную цену lazy-open vs bulk-preload.
 
+#### ⏸ Осталось реализовать (по приоритету, 2026-04-18)
+
+Список открытых подзадач, отсортированных по критерию «impact / вероятность приёма / отсутствие блокеров».
+
+##### P1 — Быстрые win'ы (готовы к запуску, блокеров нет)
+
+| # | Задача | Оценка | Действие | Вероятность / ценность |
+|---|--------|--------|----------|-----------------------|
+| **1** | **R6.3 upstream PR** (tree-sitter-bsl: parenthesized expressions) | 1-2 ч | Fork `alkoleft/tree-sitter-bsl` → open discovery issue → PR с evidence (0.9% → 0.0% ERR на 1 518 lines) | Высокая — mini-PR, grammar-changes локальны, 27/27 corpus tests зелёные |
+| **2** | **R6.4** (Serena BSL context) | 2-3 ч | Fork `oraios/serena` → `feat/bsl-context` → [bsl.yml](#L2163) + discovery issue | Высокая — yml-only, opt-in (`--context bsl`), не влияет на default |
+
+##### P2 — Требует benchmark-данных (R5.4 trend ≥2 прогона)
+
+| # | Задача | Оценка | Блокер | Действие |
+|---|--------|--------|--------|----------|
+| **3** | **R5.5 Calibration feedback** | 1 ч + данные | pilot-B прогон ≥20 telemetry событий | Запустить `scripts/aggregate_refactor_telemetry.py` → обновить `routing_matrix.yaml` |
+| **4** | **R4.5 Confidence calibration** | 1 ч + данные | ≥50 реальных событий (или выход R5.5) | Применить delta-правки confidence по (kind, backend) в `routing_matrix.yaml`; MIN_SAMPLES=4 |
+
+##### P3 — Требует стратегического решения (реальный multilspy)
+
+| # | Задача | Оценка | Блокер | Действие |
+|---|--------|--------|--------|----------|
+| **5** | **R1.3** (real multilspy integration) | 1-2 дня | Решение: `pip install multilspy` + BSL JAR wiring + async↔sync мост + soak test против 2027 `.bsl` | Разблокирует R6.1; альтернативы — lazy open, SCIP pre-index |
+| **6** | **R6.1** (PR в `microsoft/multilspy`: BSL adapter) | 1-2 дня | R5.4 trend ≥2 прогона (сейчас 0); желательно R1.3 | Discovery issue → fork → `Language.BSL` enum + `bsl_language_server/` package + 3 теста |
+
+##### P4 — Опциональные / долгосрочные
+
+| # | Задача | Оценка | Приоритет | Комментарий |
+|---|--------|--------|-----------|-------------|
+| **7** | **R2.6** (form-handler ast-grep rule) | ~4 ч | Low | После R5 benchmark — если покрытие form-handler промахивается, добавить YAML-правило |
+| **8** | **R4.6** (Dashboard integration) | — | Low | Условный — зависит от Phase 10 dashboard (не в scope аудита) |
+| **9** | **R3 целиком** (SCIP cache layer: R3.1 schema + R3.2 emitter + R3.3 incremental watcher) | 5-7 дней | Low | После R1.3 реального multilspy. Ускорит cross-file rename; отдельный ROI-расчёт перед запуском |
+| **10** | **R6.2** (PR в `1c-syntax/bsl-language-server`: `didChangeWorkspaceFolders`) | 1-2 дня | Won't-do default | Java 17 expertise gap; низкая вероятность приёма (меняет core поведение LS). Реализовать только при явном green light от @nixel2007 в discovery issue |
+
+##### Критический путь
+
+```
+P1 (R6.3 PR ∥ R6.4)           ← запустить немедленно, 1 рабочий день
+    ↓
+pilot-B benchmark прогон      ← накопление telemetry (≥20 событий)
+    ↓
+P2 (R5.5 → R4.5 calibration)  ← ~2 ч чистой работы после данных
+    ↓
+[стратегическое решение]
+    ↓
+P3 (R1.3 → R6.1)              ← 2-4 дня при решении ставить multilspy
+    ↓
+P4 опционально (R3, R2.6)
+```
+
+**Календарный прогноз:** P1+P2 закрываемы за 2-3 дня. P3 — 1-2 недели (включая upstream review). P4 — отдельное решение с ROI-обоснованием.
+
+---
+
 #### Сводная таблица этапов и оценки трудозатрат
 
 | Этап | Задача | Оценка | Зависимости |
