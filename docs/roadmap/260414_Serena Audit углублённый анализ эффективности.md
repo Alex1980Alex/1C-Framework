@@ -2121,7 +2121,7 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 1. `grammar.js` — добавлено правило `parenthesized_expression: ($) => seq('(', field('inner', $.expression), ')'),` + включено в `expression` choices (строка 401).
 2. GLR-конфликты — 2 объявления в `conflicts`: `[$.execute_statement, $.parenthesized_expression]` + `[$.parenthesized_expression, $.arguments]` (tree-sitter не может разрешить `(expr)` ambiguities между call args и standalone grouping без подсказки).
 3. 5 corpus tests — [expressions.bsl](../../tools/bsl-ls/tree-sitter-bsl-src/test/corpus/expressions.bsl): assignment, condition, nested, unary, double-parens-in-call. Обновлён [execute.bsl](../../tools/bsl-ls/tree-sitter-bsl-src/test/corpus/execute.bsl) — `Выполнить("1+1")` теперь ожидает `parenthesized_expression` wrapper.
-4. Parser regenerated — `npx tree-sitter generate` → `src/parser.c` (147 456 bytes).
+4. Parser regenerated — `npx tree-sitter generate` → `src/parser.c` (966 299 bytes).
 5. DLL rebuilt — `npx tree-sitter build` → `tree_sitter_bsl.dll` (147 456 bytes, загружается через ctypes).
 6. **Все 27 corpus tests PASS** (22 existing + 5 new).
 
