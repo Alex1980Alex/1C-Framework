@@ -3,3 +3,8 @@
 | Run ID | Date | Commit | Backends | Success | Total | Notes |
 |--------|------|--------|----------|---------|-------|-------|
 | run-20260418-195101 | 2026-04-18 | HEAD | ast-grep | BLOCKED | 20 | tree-sitter-bsl .dll missing |
+| run-20260418-203328 | 2026-04-18 | HEAD | ast-grep | 0% | 20 | --inline-rules broken on Windows |
+| run-20260418-203702 | 2026-04-18 | HEAD | ast-grep | 0% | 20 | shell=True breaks multiline YAML |
+| run-20260418-204045 | 2026-04-18 | HEAD | ast-grep | 30% | 20 | temp file fix works; 1-based line bug |
+| run-20260418-204337 | 2026-04-18 | HEAD | ast-grep | 35% | 20 | _word_at whitespace scan fix |
+| run-20260418-204655 | 2026-04-18 | HEAD | ast-grep | **95%** | 20 | 1-based line fix; CAT1-4 100%, CAT5 75% |
