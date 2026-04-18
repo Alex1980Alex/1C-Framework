@@ -25,7 +25,7 @@ TASKS_JSON_SCHEMA = {
     "required": ["version", "created_at", "source_repo", "tasks"],
     "additionalProperties": False,
     "properties": {
-        "version": {"type": "integer", "const": 1},
+        "version": {"type": "integer", "minimum": 1},
         "created_at": {"type": "string", "format": "date"},
         "source_repo": {"type": "string", "minLength": 1},
         "tasks": {

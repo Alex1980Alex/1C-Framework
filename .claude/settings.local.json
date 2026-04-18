@@ -659,7 +659,10 @@
       "Read(//c/BuildTools/VC/Auxiliary/Build/**)",
       "Read(//mingw64/bin/**)",
       "Read(//usr/bin/**)",
-      "Bash(\"C:\\\\Users\\\\AlexT\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -m pip download tree-sitter-bsl==0.1.6 --no-deps --dest /tmp/tsbsl_wheel)"
+      "Bash(\"C:\\\\Users\\\\AlexT\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -m pip download tree-sitter-bsl==0.1.6 --no-deps --dest /tmp/tsbsl_wheel)",
+      "Bash(gh pr *)",
+      "Bash(ast-grep --version)",
+      "Bash(ast-grep --lang-help)"
     ]
   },
   "enableAllProjectMcpServers": true,
