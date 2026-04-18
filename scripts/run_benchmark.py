@@ -30,7 +30,15 @@ def main() -> None:
     output_dir = REPO_ROOT / "docs" / "roadmap" / "benchmark" / "results"
     run_id = f"run-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
-    runner_impl = SubprocessAstGrepRunner(binary=_ast_grep_binary())
+    sgconfig = REPO_ROOT / "tools" / "bsl-ls" / "sgconfig.yml"
+    if not sgconfig.exists():
+        print(f"ERROR: sgconfig.yml not found at {sgconfig}", file=sys.stderr)
+        sys.exit(1)
+
+    runner_impl = SubprocessAstGrepRunner(
+        binary=_ast_grep_binary(),
+        config_path=sgconfig,
+    )
     ast_grep_backend = AstGrepBackend(runner=runner_impl, workspace_root=REPO_ROOT / "src" / "bsl")
 
     benchmark = BenchmarkRunner(REPO_ROOT, tasks_path, output_dir)
