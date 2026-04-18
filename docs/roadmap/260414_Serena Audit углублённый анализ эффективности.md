@@ -1973,7 +1973,7 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 
 **Цель этапа:** заменить внутренние патчи и кастомные адаптеры на принятые upstream-изменения, снизив долгосрочную стоимость обслуживания. Побочно — публикация результатов R0-R5 в сообществах `multilspy` / `bsl-language-server` / `tree-sitter-bsl` / `Serena`, что легитимизирует выбранный подход и открывает доступ к bug-fix'ам core-maintainer'ов.
 
-**Стартовая точка (планируемая, после R5):** R0-R5.4 закрыты, воспроизводимый benchmark (минимум `pilot-B`), [13 багов исправлены](#L2016) собственным ревью-циклом, покрытие grammar 99.1% (14 ERRs / 1 518 lines на наших модулях) — это и есть evidence base для любых PR discovery-issue'ов.
+**Стартовая точка (планируемая, после R5):** R0-R5.4 закрыты, воспроизводимый benchmark (минимум `pilot-B`), [13 багов исправлены](#L2016) собственным ревью-циклом, покрытие grammar **100.0%** (0 ERRs / 1 518 lines после R6.3) — это и есть evidence base для любых PR discovery-issue'ов.
 
 **Почему «опционально»:**
 - Все артефакты R1-R5 работают self-hosted — upstream-приём не блокирует продакшн.
@@ -2113,6 +2113,42 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 - **Если merged:** ERR rate ≤ 0.2% на наших 1 518 lines; [R2.2 Fill coverage gaps](#L1319) в таблице статусов обновлён с `DEFERRED` → `DONE (via R6.3)`.
 - **Если declined:** fork поддерживается в `tools/bsl-ls/vendor/tree-sitter-bsl-fork/`, `PATCHED.md` описывает diff и причину декли́на.
 
+###### R6.3 — Промежуточные результаты (2026-04-18)
+
+**Локальная реализация COMPLETE.** Upstream PR pending.
+
+**Что сделано:**
+1. `grammar.js` — добавлено правило `parenthesized_expression: ($) => seq('(', field('inner', $.expression), ')'),` + включено в `expression` choices (строка 401).
+2. GLR-конфликты — 2 объявления в `conflicts`: `[$.execute_statement, $.parenthesized_expression]` + `[$.parenthesized_expression, $.arguments]` (tree-sitter не может разрешить `(expr)` ambiguities между call args и standalone grouping без подсказки).
+3. 5 corpus tests — [expressions.bsl](../../tools/bsl-ls/tree-sitter-bsl-src/test/corpus/expressions.bsl): assignment, condition, nested, unary, double-parens-in-call. Обновлён [execute.bsl](../../tools/bsl-ls/tree-sitter-bsl-src/test/corpus/execute.bsl) — `Выполнить("1+1")` теперь ожидает `parenthesized_expression` wrapper.
+4. Parser regenerated — `npx tree-sitter generate` → `src/parser.c` (147 456 bytes).
+5. DLL rebuilt — `npx tree-sitter build` → `tree_sitter_bsl.dll` (147 456 bytes, загружается через ctypes).
+6. **Все 27 corpus tests PASS** (22 existing + 5 new).
+
+**Coverage результаты:**
+
+| Файл | Lines | ERR до | ERR после |
+|------|-------|--------|-----------|
+| гкс_ОчередьСообщенийRMQ | 679 | 12 | **0** |
+| гкс_ФормировательСообщенийRMQ | 217 | 2 | **0** |
+| гкс_Взвешивание.ФормаДокумента | 622 | 0 | 0 |
+| **Итого** | **1 518** | **14** | **0** |
+
+ERR rate: **0.9% → 0.0%**. Отчёт: [tree-sitter-coverage.md](../../tools/bsl-ls/tree-sitter-coverage.md) v2.
+
+**Ветка:** `fix/parenthesized-expression` в submodule `tree-sitter-bsl-src` (commit `4edc527`).
+
+**Следующие шаги R6 (приоритет):**
+
+| # | Задача | Оценка | Что делать | Примечание |
+|---|--------|--------|-----------|------------|
+| **1** | R6.3 upstream PR | 1-2 ч | Fork `alkoleft/tree-sitter-bsl` → push branch → open discovery issue + PR с coverage evidence | Высокая вероятность приёма |
+| **2** | R6.4 Serena BSL context | 2-3 ч | Создать `bsl.yml` в `serena/resources/config/contexts/` + PR в `oraios/serena` | yml-only, opt-in, высокая вероятность |
+| **3** | R6.1 multilspy adapter | 1-2 дня | Ждёт R5.4 trend ≥2 прогона. Затем: fork multilspy → BSL enum + adapter | Средняя вероятность, нишевый язык |
+| **4** | R6.2 bsl-ls workspace folders | 1-2 дня | Опционально, после discovery issue approval в `1c-syntax/bsl-language-server` | Низкая вероятность, меняет core |
+
+**Рекомендуемый порядок:** R6.3 PR → R6.4 → benchmark pilot-B → R6.1 → (опционально R6.2).
+
 ---
 
 ##### R6.4 — PR в Serena: BSL context (2-3 ч)
@@ -2211,7 +2247,7 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 
 ---
 
-#### Промежуточный итог (2026-04-17)
+#### Промежуточный итог (2026-04-17, обновлено 2026-04-18)
 
 | Этап | Статус | Артефакты | Тесты |
 |------|--------|-----------|------:|
@@ -2225,7 +2261,7 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 | **R1.7** | ✅ DONE | [mcp.py](../../src/bsl/semantic_search/mcp.py) (`bsl_rename_symbol` + `register_rename_driver_factory`) | 6 |
 | **R1.8** | ✅ DONE | [verification.py](../../src/bsl/semantic_search/refactor/verification.py) | — (покрыто R1.5 тестами) |
 | **R2.1** | ✅ DONE (в R0.3) | tree_sitter_bsl.dll | — |
-| **R2.2** | ⏸ DEFERRED | — | — |
+| **R2.2** | ✅ DONE (via R6.3) | [grammar.js](../../tools/bsl-ls/tree-sitter-bsl-src/grammar.js) (`parenthesized_expression`), [tree_sitter_bsl.dll](../../tools/bsl-ls/tree_sitter_bsl.dll) | 27 tree-sitter corpus |
 | **R2.3** | ✅ DONE (в R0.3) | 3 YAML правила | — |
 | **R2.4** | ✅ DONE | [ast_grep_backend.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_backend.py), [ast_grep_runner.py](../../src/bsl/semantic_search/refactor/backends/ast_grep_runner.py) | 13 |
 | **R2.5** | ✅ DONE | [orchestrator.py](../../src/bsl/semantic_search/refactor/orchestrator.py), [test_orchestrator.py](../../tests/bsl/refactor/test_orchestrator.py) | 13 |
@@ -2242,10 +2278,15 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 | **R5.3** | ✅ DONE | `ReportBuilder.render_markdown()` + `render_csv()` внутри runner.py | (покрыто R5.2 тестами) |
 | **R5.4** | ✅ DONE | [trend.md](../../docs/roadmap/benchmark/trend.md), [check_benchmark_regression.py](../../scripts/check_benchmark_regression.py) | — (smoke-tested) |
 | **R5.5** | ⏸ DEFERRED | — (ждёт pilot-B прогон с ast-grep для calibration data) | — |
-| **R6** | 🔲 TODO | — | — |
+| **R6.3** | ✅ DONE | [grammar.js](../../tools/bsl-ls/tree-sitter-bsl-src/grammar.js) (`parenthesized_expression` + 2 conflict declarations), 5 corpus tests, rebuilt DLL, [tree-sitter-coverage.md](../../tools/bsl-ls/tree-sitter-coverage.md) v2 | 27/27 tree-sitter tests |
+| **R6.4** | 🔲 TODO | — (Serena BSL context, yml-only PR, 2-3 ч) | — |
+| **R6.1** | 🔲 TODO | — (multilspy BSL adapter, ждёт R5.4 trend ≥2 прогона) | — |
+| **R6.2** | 🔲 TODO | — (bsl-language-server workspace folders, низкая вероятность приёма) | — |
 
 **Агрегатно:**
 - **124/124 тестов зелёные** (`pytest tests/bsl/refactor/`, +19 R4 тестов + 13 R5 тестов + 2 доп. после ревью). Из них: 111 refactor unit + 7 benchmark schema + 6 benchmark runner.
+- **27/27 tree-sitter corpus tests** (22 existing + 5 new для parenthesized expressions).
+- **Tree-sitter ERR rate: 0.0%** (14→0 на 1 518 lines, [tree-sitter-coverage.md](../../tools/bsl-ls/tree-sitter-coverage.md) v2).
 - **11 Python-модулей** в [`src/bsl/semantic_search/refactor/`](../../src/bsl/semantic_search/refactor/) (добавлен [`telemetry.py`](../../src/bsl/semantic_search/refactor/telemetry.py); [`orchestrator.py`](../../src/bsl/semantic_search/refactor/orchestrator.py) расширен manual-tier и telemetry-интеграцией).
 - **4 Python-модуля + 1 JSON + 1 markdown** в [`docs/roadmap/benchmark/`](../../docs/roadmap/benchmark/) (runner.py, __init__.py, tasks.json, trend.md) + 2 CLI скрипта.
 - **13 багов** найдено и исправлено ревью-циклом (subagent quality-review): security (path traversal, workspace-root containment, **parent_sha injection — fix в R5.2**), robustness (process leak, stale state, counter reset, best-effort rollback, **atexit worktree leak — fix в R5.2**, blocking I/O inside write lock — fix в R4), correctness (ast-grep json format, exit codes, relative path resolution, trailing comment parsing, tab separator), singleton cache.
@@ -2263,11 +2304,11 @@ pytest tests/bsl/refactor/test_routing_matrix_yaml.py -v
 | **R3** | SCIP cache layer | 5-7 дней | После R1 |
 | **R4** | Orchestrator v2 + routing | 1-2 дня | После R1+R2 |
 | **R5** | Benchmark + validation | 2-3 дня | После R4 | **R5.1–R5.4 DONE**, R5.5 DEFERRED |
-| **R6** | Upstream PRs | 2-3 дня | После R5 |
+| **R6** | Upstream PRs | 2-3 дня | После R5 | **R6.3 DONE**, R6.4/R6.1/R6.2 TODO |
 
 **Итого v4.5:**
-- **Критический путь:** R0 → R1 → R4 → R5 = **7-12 дней** (фактически: R0-R4 + R5.1-R5.4 завершены, R5.5 и R6 отложены)
-- **Полный объём:** R0-R6 = **17-27 дней** (оставшиеся: R5.5 calibration ~1 день после pilot-B, R6 upstream ~2-3 дня)
+- **Критический путь:** R0 → R1 → R4 → R5 = **7-12 дней** (фактически: R0-R4 + R5.1-R5.4 завершены, R5.5 и R6.3 завершены)
+- **Полный объём:** R0-R6 = **17-27 дней** (оставшиеся: R5.5 calibration ~1 день после pilot-B, R6.3 upstream PR ~1-2 ч, R6.4 ~2-3 ч, R6.1 ~1-2 дня)
 
 **Критерии успеха (обновлены для §7):**
 - Cross-file rename работает (через multilspy preload): >90% задач категории «Multi-File Changes» в benchmark.
