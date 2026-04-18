@@ -62,6 +62,7 @@ class SubprocessAstGrepRunner:
                 timeout=self._timeout,
                 check=False,
                 cwd=str(workspace_root),
+                shell=_WINDOWS_SHELL,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise BackendError(
