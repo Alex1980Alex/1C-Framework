@@ -33,6 +33,11 @@ class SubprocessAstGrepRunner:
         self, workspace_root: Path, old_name: str, new_name: str  # noqa: ARG002
     ) -> list[AstGrepMatch]:
         """Run ast-grep scan; return matches of `old_name` in workspace_root."""
+        if not all(c.isalnum() or c == "_" for c in old_name):
+            raise BackendError(
+                f"invalid identifier for ast-grep pattern: {old_name!r}",
+                code="invalid_identifier",
+            )
         rule_content = (
             f"id: rename-{old_name}\n"
             f"language: bsl\n"
