@@ -2283,7 +2283,7 @@ ERR rate: **0.9% → 0.0%**. Отчёт: [tree-sitter-coverage.md](../../tools/b
 | **R5.5** | ⏸ DEFERRED | — (ждёт pilot-B прогон с ast-grep для calibration data) | — |
 | **R6.3** | ✅ PR SUBMITTED | [PR #8](https://github.com/alkoleft/tree-sitter-bsl/pull/8) + [Issue #7](https://github.com/alkoleft/tree-sitter-bsl/issues/7) — parenthesized expressions fix, 0.9%→0.0% ERR | 27/27 tree-sitter tests |
 | **R6.4** | ✅ PR SUBMITTED | [PR #1379](https://github.com/oraios/serena/pull/1379) + [Issue #1378](https://github.com/oraios/serena/issues/1378) — BSL context yml | — |
-| **R6.1** | 🔲 TODO | — (multilspy BSL adapter, ждёт R5.4 trend ≥2 прогона) | — |
+| **R6.1** | ⏳ LOCAL DONE — ждёт push & submit | [fork commit `e985819`](../roadmap/upstream-prs/R6.1-multilspy-bsl-adapter.md) в `tools/multilspy-fork/` на ветке `feat/bsl-language`. 9 файлов, +387/−2 строк | 3/3 BSL integration (27.74 s) |
 | **R6.2** | 🔲 TODO | — (bsl-language-server workspace folders, низкая вероятность приёма) | — |
 
 **Агрегатно (2026-04-19):**
