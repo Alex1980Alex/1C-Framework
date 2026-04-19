@@ -212,6 +212,9 @@ class RefactorOrchestrator:
         token = RenameDriver._compute_token(edit)
         files_affected, total_edits = RenameDriver._summarize(edit)
 
+        prefilter_used = ctx.get("prefilter_used", False)
+        prefilter_dropped = ctx.get("prefilter_dropped", 0)
+
         if dry_run:
             return OrchestratorResult(
                 applied=False,
@@ -225,6 +228,8 @@ class RefactorOrchestrator:
                 fallback_used=fallback_used,
                 confidence=decision.confidence,
                 reason=decision.reason,
+                prefilter_used=prefilter_used,
+                prefilter_dropped=prefilter_dropped,
             )
 
         if confirm_token != token:
@@ -235,6 +240,7 @@ class RefactorOrchestrator:
             )
 
         vr = self._verifier.verify_and_apply(edit)
+        vr.prefilter_dropped = prefilter_dropped
         return OrchestratorResult(
             applied=vr.applied,
             rolled_back=vr.rolled_back,
@@ -247,6 +253,8 @@ class RefactorOrchestrator:
             fallback_used=fallback_used,
             confidence=decision.confidence,
             reason=vr.reason,
+            prefilter_used=prefilter_used,
+            prefilter_dropped=prefilter_dropped,
         )
 
     @staticmethod
