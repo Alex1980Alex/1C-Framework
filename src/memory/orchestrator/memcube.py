@@ -278,20 +278,19 @@ class MemoryCube:
         content_lines = []
 
         for line in body.split("\n"):
-            if line.startswith("## What"):
-                current_section = "what"
-            elif line.startswith("## Why"):
-                current_section = "why"
-            elif line.startswith("## Where"):
-                current_section = "where"
-            elif line.startswith("## Learned"):
-                current_section = "learned"
+            if line.startswith("## "):
+                section_name = line[3:].strip().lower()
+                if section_name in sections:
+                    current_section = section_name
+                else:
+                    current_section = None
+                    content_lines.append(line)
             elif current_section and line.strip():
                 sections[current_section] = (sections[current_section] or "") + line + "\n"
-            elif not line.startswith("## ") and not current_section:
-                content_lines.append(line)
             elif current_section and not line.strip():
-                pass  # skip blank lines between sections
+                pass  # skip blank lines between section content
+            else:
+                content_lines.append(line)
 
         content = "\n".join(content_lines).strip()
 
