@@ -11,3 +11,5 @@
 | run-20260418-210222 | 2026-04-18 | HEAD | ast-grep | **95%** | 20 | verification run; R5.5 calibration applied: local_variable 0.70→0.95, module_local 0.85→0.95, form_handler 0.60→0.95 |
 | full-1 | 2026-04-19 | HEAD | multilspy,ast-grep | 22/40 | 40 | first real multilspy run; ast-grep 95% (19/20), multilspy 15% (3/20); workspace_root=REPO_ROOT |
 | full-1b | 2026-04-19 | HEAD | multilspy,ast-grep | 22/40 | 40 | verify with workspace_root=src/bsl (Configuration.xml present) — same 15% multilspy → confirms BSL LS per-doc indexing limitation, not workspace-root issue; motivates R6.2 |
+| full-1c | 2026-04-19 | HEAD | multilspy,ast-grep | 20/40 | 40 | investigation: tasks.json manually 0-based'd → multilspy 80%, ast-grep 20% (regressed) → exposed convention mismatch between backends |
+| full-1d | 2026-04-19 | HEAD | multilspy,ast-grep | **36/40** | 40 | **root cause fixed**: tasks.json is 1-based (EDT-MCP conv), MultilspyBackend now converts to LSP 0-based internally. multilspy **85%** (17/20), ast-grep **95%** (19/20); CAT-2/3/4 both 100%, only CAT-5 edge cases fail |
