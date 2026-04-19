@@ -124,8 +124,6 @@ class AstGrepBackend:
                 f"ast-grep runner failed: {exc!r}", code="runner_error"
             ) from exc
 
-        self.last_prefilter_dropped = 0
-        self.last_prefilter_used = False
         if self._prefilter is not None:
             module_hint = (
                 str(path.relative_to(self._workspace_root))
