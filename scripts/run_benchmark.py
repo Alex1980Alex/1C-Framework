@@ -24,6 +24,9 @@ from benchmark.runner import BenchmarkRunner
 
 from src.bsl.semantic_search.refactor.backends.ast_grep_backend import AstGrepBackend
 from src.bsl.semantic_search.refactor.backends.ast_grep_runner import SubprocessAstGrepRunner
+from src.bsl.semantic_search.refactor.backends.call_graph_prefilter import (
+    CallGraphPreFilter,
+)
 
 
 def _build_multilspy_backend(repo_root: Path):
