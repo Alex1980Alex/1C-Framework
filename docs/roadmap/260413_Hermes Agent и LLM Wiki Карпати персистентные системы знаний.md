@@ -545,8 +545,8 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - **Вариант A (выбран):** vault root = project root, includes `docs/`, `.claude/skills/*/cache/`, игнор `src/`, `tests/`. User-level `MEMORY.md` остаётся отдельно, НЕ в vault
   - **Вариант B:** создать git-controlled `docs/wiki/memory/` как зеркало user-level памяти, с hook для sync (сложнее)
   - **Вариант C:** symlink `docs/wiki/user-memory` → user-level папка (Windows junction), не в git — отклонён (не переносимо между машинами)
-- [ ] Установить Obsidian desktop + плагин **Local REST API** (требование `mcp-obsidian`) — **ручной шаг**
-- [ ] `pip install mcp-obsidian` (или git clone для editable mode) — **ручной шаг**
+- [x] Установить Obsidian desktop + плагин **Local REST API** — **ВЫПОЛНЕНО 2026-04-20**: Obsidian 1.7.7 (`C:\Program Files\Obsidian\Obsidian.exe`), plugin v3.6.1 скачан в `.obsidian/plugins/obsidian-local-rest-api/` (main.js + manifest.json + styles.css из github releases), `data.json` pre-seeded с apiKey + insecure HTTP server, vault зарегистрирован в `%APPDATA%/obsidian/obsidian.json`, REST API слушает оба порта (HTTP :27123 + HTTPS :27124, self-signed cert auto-generated)
+- [x] `pip install mcp-obsidian` — покрыто `uvx` в `.mcp.json` (lazy-install on first MCP call)
 - [x] Добавить `obsidian-mcp` сервер в `.mcp.json` с env переменными: `OBSIDIAN_API_KEY`, `OBSIDIAN_HOST`, `OBSIDIAN_PORT` (vault path не нужен — root=project)
 - [x] Создать `.obsidian/` директорию в корне проекта с `app.json`, `core-plugins.json`, `community-plugins.json`, `appearance.json`, `graph.json`, `templates.json`
 - [x] Создать `docs/wiki/` как целевой каталог для structured wiki-страниц (новый, git-controlled) — `drafts/`, `patterns/`, `assets/`
