@@ -138,6 +138,7 @@ class RefactorOrchestrator:
 
         edit: WorkspaceEdit | None = None
         backend_used: str | None = None
+        active_backend = None
 
         # Skip ast-grep entirely when name is denylisted (over-match risk).
         # Multilspy is scope-aware and stays in play.
@@ -149,6 +150,7 @@ class RefactorOrchestrator:
                         uri, line, character, new_name
                     )
                     backend_used = primary_name
+                    active_backend = primary_backend
             except BackendError:
                 edit = None
 
@@ -173,8 +175,16 @@ class RefactorOrchestrator:
                             edit = fallback_edit
                             backend_used = fallback_name
                             fallback_used = True
+                            active_backend = fallback_backend
                 except BackendError:
                     pass
+
+        ctx["prefilter_used"] = bool(
+            getattr(active_backend, "last_prefilter_used", False)
+        )
+        ctx["prefilter_dropped"] = int(
+            getattr(active_backend, "last_prefilter_dropped", 0)
+        )
 
         if edit is None or not edit.file_edits:
             denied_chain = (
