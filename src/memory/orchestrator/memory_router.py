@@ -209,6 +209,11 @@ CATEGORY_KEYWORDS: dict[str, list[str]] = {
         "процесс", "алгоритм", "подход",
         "эффективный", "working", "проверенный",
     ],
+    "wiki": [
+        "wiki", "статья", "article", "заметка", "note",
+        "promote", "продвинуть", "опубликовать", "publish",
+        "obsidian", "драфт", "draft", "карточка", "card",
+    ],
 }
 
 # Valid target subsystems
