@@ -1,0 +1,18 @@
+{
+  "file-explorer": true,
+  "global-search": true,
+  "graph-view": true,
+  "backlinks": true,
+  "outgoing-links": true,
+  "tag-pane": true,
+  "markdown-importer": false,
+  "word-count": true,
+  "slides": false,
+  "audio-recorder": false,
+  "canvas": true,
+  "bookmarks": true,
+  "outline": true,
+  "templates": true,
+  "daily-notes": false,
+  "command-palette": true
+}

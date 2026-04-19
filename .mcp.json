@@ -225,6 +225,17 @@
         "LAZY_MCP_CONFIG": "D:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
       },
       "timeout": 60000
+    },
+    "obsidian-mcp": {
+      "command": "uvx",
+      "args": ["mcp-obsidian"],
+      "env": {
+        "OBSIDIAN_API_KEY": "${OBSIDIAN_API_KEY}",
+        "OBSIDIAN_HOST": "127.0.0.1",
+        "OBSIDIAN_PORT": "27124"
+      },
+      "timeout": 30000,
+      "disabled": true
     }
   }
 }
