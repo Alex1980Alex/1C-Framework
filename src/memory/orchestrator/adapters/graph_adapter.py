@@ -6,7 +6,7 @@ provides the actual graph store connection.
 
 import logging
 
-from ..unified_id import MemoryType, SourceServer
+from ..unified_id import SourceServer
 from ..unified_search import BaseSearchAdapter, SearchResultItem
 
 logger = logging.getLogger(__name__)

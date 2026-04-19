@@ -65,6 +65,8 @@ from .tools.id_management import IDManagementTool
 from .tools.research import ResearchTool
 from .tools.surprise import SurpriseTool
 from .tools.warmup import WarmupTool
+from .adapters.graph_adapter import GraphSearchAdapter
+from .adapters.wiki_adapter import WikiSearchAdapter
 from .unified_id import MemoryType, SourceServer, UnifiedID
 from .unified_search import (
     BaseSearchAdapter,
@@ -365,6 +367,9 @@ class MemoryOrchestrator:
         self._search_engine.register_adapter(SkillLearningSearchAdapter(
             _PROJECT_ROOT / "data" / "skill_learning"
         ))
+
+        self._search_engine.register_adapter(WikiSearchAdapter())
+        self._search_engine.register_adapter(GraphSearchAdapter())
 
         # Pre-warm vector-memory (Qdrant gRPC connect + E5 model load)
         try:
