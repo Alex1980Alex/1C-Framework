@@ -40,6 +40,8 @@ class OrchestratorResult:
     confidence: float = 0.0
     reason: str | None = None
     manual_instruction: ManualFallbackInstruction | None = None
+    prefilter_used: bool = False
+    prefilter_dropped: int = 0
 
     @property
     def ok(self) -> bool:
