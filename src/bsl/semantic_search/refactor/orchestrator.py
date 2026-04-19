@@ -123,6 +123,9 @@ class RefactorOrchestrator:
         ctx["classifier_confidence"] = _classifier_confidence(kind, content)
         ctx["matrix_confidence"] = decision.confidence
 
+        old_name = ctx.get("old_name")
+        name_denied = RoutingMatrix.is_denied(old_name)
+
         primary_name = decision.primary
         primary_backend = self._backends.get(primary_name)
         if primary_backend is None:
@@ -134,15 +137,28 @@ class RefactorOrchestrator:
         edit: WorkspaceEdit | None = None
         backend_used: str | None = None
 
-        try:
-            if primary_backend.can_handle(uri):
-                edit = primary_backend.plan_rename(uri, line, character, new_name)
-                backend_used = primary_name
-        except BackendError:
-            edit = None
+        # Skip ast-grep entirely when name is denylisted (over-match risk).
+        # Multilspy is scope-aware and stays in play.
+        primary_skipped_by_denylist = name_denied and primary_name == "ast-grep"
+        if not primary_skipped_by_denylist:
+            try:
+                if primary_backend.can_handle(uri):
+                    edit = primary_backend.plan_rename(
+                        uri, line, character, new_name
+                    )
+                    backend_used = primary_name
+            except BackendError:
+                edit = None
 
         fallback_used = False
-        if (edit is None or not edit.file_edits) and decision.fallback is not None:
+        fallback_skipped_by_denylist = (
+            name_denied and decision.fallback == "ast-grep"
+        )
+        if (
+            (edit is None or not edit.file_edits)
+            and decision.fallback is not None
+            and not fallback_skipped_by_denylist
+        ):
             fallback_name = decision.fallback
             fallback_backend = self._backends.get(fallback_name)
             if fallback_backend is not None:
@@ -159,7 +175,10 @@ class RefactorOrchestrator:
                     pass
 
         if edit is None or not edit.file_edits:
-            if decision.manual_fallback:
+            denied_chain = (
+                primary_skipped_by_denylist or fallback_skipped_by_denylist
+            )
+            if decision.manual_fallback or denied_chain:
                 return OrchestratorResult(
                     applied=False,
                     rolled_back=False,
@@ -169,6 +188,8 @@ class RefactorOrchestrator:
                     reason="manual_required",
                     manual_instruction=self._build_manual_instruction(
                         uri, kind, new_name, decision,
+                        old_name=old_name,
+                        denied=denied_chain,
                     ),
                 )
             raise BackendError(
