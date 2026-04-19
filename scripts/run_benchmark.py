@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import sys
 from datetime import datetime
@@ -21,7 +20,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
 
-from src.bsl.semantic_search.refactor.backends.ast_grep_backend import AstGrepBackend
 from src.bsl.semantic_search.refactor.backends.ast_grep_runner import SubprocessAstGrepRunner
 
 from benchmark.runner import BenchmarkRunner
