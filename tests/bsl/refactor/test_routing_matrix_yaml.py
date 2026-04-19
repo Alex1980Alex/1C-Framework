@@ -81,6 +81,54 @@ def test_routing_matrix_yaml_bad_version_raises(tmp_path):
         RoutingMatrix.load(yaml_path)
 
 
+def test_global_ast_grep_defaults_when_block_missing(tmp_path):
+    yaml_path = tmp_path / "routes.yaml"
+    _write_yaml(yaml_path, {"version": 2, "routes": {}})
+    RoutingMatrix.load(yaml_path)
+    cfg = RoutingMatrix.ast_grep_global()
+    assert cfg["use_call_graph_prefilter"] is False
+    assert cfg["call_graph_db"] == "cache/bsl_call_graph.db"
+    assert cfg["graph_stale_threshold_days"] == 7
+
+
+def test_global_ast_grep_overrides_loaded(tmp_path):
+    yaml_path = tmp_path / "routes.yaml"
+    _write_yaml(yaml_path, {
+        "version": 2,
+        "global": {
+            "ast_grep": {
+                "use_call_graph_prefilter": True,
+                "call_graph_db": "cache/custom.db",
+                "graph_stale_threshold_days": 3,
+            },
+        },
+        "routes": {},
+    })
+    RoutingMatrix.load(yaml_path)
+    cfg = RoutingMatrix.ast_grep_global()
+    assert cfg["use_call_graph_prefilter"] is True
+    assert cfg["call_graph_db"] == "cache/custom.db"
+    assert cfg["graph_stale_threshold_days"] == 3
+
+
+def test_global_ast_grep_unknown_keys_dropped(tmp_path):
+    yaml_path = tmp_path / "routes.yaml"
+    _write_yaml(yaml_path, {
+        "version": 2,
+        "global": {
+            "ast_grep": {
+                "use_call_graph_prefilter": True,
+                "rogue_key": "ignored",
+            },
+        },
+        "routes": {},
+    })
+    RoutingMatrix.load(yaml_path)
+    cfg = RoutingMatrix.ast_grep_global()
+    assert "rogue_key" not in cfg
+    assert cfg["use_call_graph_prefilter"] is True
+
+
 def test_routing_matrix_reset_restores_defaults(tmp_path):
     yaml_path = tmp_path / "routes.yaml"
     _write_yaml(yaml_path, {
