@@ -2394,11 +2394,40 @@ P4 опционально (R3, R2.6)
 
 | Проверка | Команда | Результат |
 |---|---|---|
-| Refactor suite | `pytest tests/bsl/refactor/ -q` | **124 passed** in 23.27s |
-| Collect-only | `pytest ... --collect-only -q` | **124 tests collected** in 0.42s |
+| Refactor suite | `pytest tests/bsl/refactor/ -q` | **139 passed** in 37s (134 + 5 denylist tests, 2026-04-19) |
 | tree-sitter corpus | `tree-sitter test` (in `tree-sitter-bsl-src`) | **27/27 passed** (22 existing + 5 new) |
 | tree-sitter ERR rate | `coverage_check.py` на 1518 строк | **0.0%** (0 ERRs; было 14) |
-| Pilot-B benchmark | Трек в `docs/roadmap/benchmark/trend.md` | **95% success** (19/20, ast-grep only) |
+| Pilot-B benchmark (LAX) | `run-20260418-210222`, ast-grep only | **95% applied** (19/20) |
+| Full-1g benchmark (STRICT) | `run-20260419-…`, multilspy + ast-grep, 40 задач | **multilspy 55% / ast-grep 15%** см. ниже |
+
+#### ⚠️ Метрика «95%» относится к LAX-замеру (`applied`), не к корректности
+
+Pilot-B (`run-20260418-210222`) считал успех как **`applied=True && rolled_back=False`** — то есть «пайплайн применил edits без верификационного отката». Это **НЕ** проверяет, что edits затронули **именно те файлы**, что ожидались задачей. Полноценный strict-метрика (`edits_match_expected` — `actual_files == sorted(expected_files)` из `tasks.json`) реализована в `aggregator.py:170` и используется в full-1+ прогонах.
+
+**Полный прогон full-1g (2026-04-19, 40 результатов = 20 задач × 2 backend, strict-метрика):**
+
+| Backend | Strict success | CAT-1 local | CAT-2 module | CAT-3 cross-file | CAT-4 form | CAT-5 edge |
+|---|---|---|---|---|---|---|
+| MultilspyBackend | **55%** (11/20) | 100% | 100% | 25% | 0% | 50% |
+| AstGrepBackend | **15%** (3/20) | 25% | 0% | 25% | 0% | 25% |
+
+**Почему ast-grep падает с 95% (LAX) до 15% (STRICT):** text-based pattern matching не учитывает scope. Эмпирическая проверка на живых 2027 `.bsl`:
+- `Параметры` (T04 target) — встречается в **1 679 файлах**, 64 549 раз
+- `РезультатЗапроса` (T02) — в **223 файлах**, 1 536 раз
+- `СписокРегионов` (T01) — в **2 файлах**, 11 раз
+
+При rename ast-grep правит **все** вхождения, включая совпадения в несвязанных модулях → `actual_files != expected_files` → strict fail. Проблема **частично смягчена в production routing matrix v2** (multilspy primary для всех in-scope kinds), но `form_handler` (`primary: ast-grep`) и fallback-цепочки оставались уязвимы.
+
+#### 🩹 Митигация (2026-04-19, +1 коммит после v4.5 верификации)
+
+В `routing_matrix.yaml` добавлен **denylist** (~30 имён: `Параметры`, `Результат`, `Запрос`, `Ссылка`, `Объект`, `Значение`, `Имя`, `Текст`, `Строка`, `Элемент`, `Форма`, `ЭтотОбъект`, … + английские алиасы). Орхестратор (`orchestrator.py`) при совпадении имени с denylist:
+- **пропускает ast-grep** как primary (если route это ast-grep) → сразу `manual_required`
+- **пропускает ast-grep как fallback** (если multilspy primary вернул empty) → `manual_required`
+- **multilspy остаётся в игре** — он scope-aware, его не блокируем
+
+Покрытие: 5 новых тестов в `test_orchestrator.py` (form_handler+denied → manual, module_export+denied+empty multilspy → manual, local_variable+denied → multilspy всё равно работает, не-denylist имя → ast-grep как обычно, YAML загрузка). Все 139/139 тестов проходят.
+
+**Эффект:** для refactoring-задач с общеупотребительными именами пользователь получает явную инструкцию `manual_required` вместо тихой порчи 1 679 файлов. На бенчмарке прирост strict-метрики ожидается в CAT-4 form_handler (был 0%, теперь имена из denylist уйдут в manual вместо false-success).
 
 ### Артефакты ядра (Phases 0-7)
 
