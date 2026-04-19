@@ -663,7 +663,8 @@
       "Bash(ast-grep --lang-help)",
       "Bash(ast-grep scan *)",
       "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy//**)",
-      "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy/language_servers//**)"
+      "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy/language_servers//**)",
+      "Bash(awk -F',' 'NR>1 {print $1, $9, $18}')"
     ]
   },
   "enableAllProjectMcpServers": true,
