@@ -4,10 +4,16 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-if TYPE_CHECKING:
-    from .call_graph_prefilter import CallGraphPreFilter
+
+@runtime_checkable
+class PreFilter(Protocol):
+    """Structural type for pre-filters limiting matches to expected files."""
+
+    def allowed_files(
+        self, old_name: str, module_hint: str | None = None
+    ) -> set[Path] | None: ...
 
 from ..types import (
     BackendError,
