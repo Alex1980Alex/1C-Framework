@@ -149,13 +149,19 @@ class TaskExecutor:
             applied = bool(edit.file_edits)
             files_affected = len(edit.file_edits)
 
+            from urllib.parse import unquote
+
+            wt_prefix = worktree_path.as_posix()
             for fe in edit.file_edits:
                 uri_norm = fe.uri.replace("\\", "/")
-                wt_prefix = worktree_path.as_posix()
-                if uri_norm.startswith(wt_prefix):
-                    uri_norm = uri_norm[len(wt_prefix):].lstrip("/")
+                # Strip scheme BEFORE comparing to worktree path — LSP URIs
+                # are always `file:///...` and may be URL-encoded (Cyrillic
+                # becomes %XX%XX).
                 if uri_norm.startswith("file:///"):
                     uri_norm = uri_norm[8:]
+                uri_norm = unquote(uri_norm)
+                if uri_norm.startswith(wt_prefix):
+                    uri_norm = uri_norm[len(wt_prefix):].lstrip("/")
                 actual_files.append(uri_norm)
 
             actual_files = sorted(set(actual_files))
