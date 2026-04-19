@@ -21,10 +21,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
 
-from benchmark.runner import BenchmarkRunner
-
 from src.bsl.semantic_search.refactor.backends.ast_grep_backend import AstGrepBackend
 from src.bsl.semantic_search.refactor.backends.ast_grep_runner import SubprocessAstGrepRunner
+
+from benchmark.runner import BenchmarkRunner
 
 
 def _build_multilspy_backend(repo_root: Path):
