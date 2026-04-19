@@ -20,6 +20,8 @@ class CallGraphPreFilter:
         self, old_name: str, module_hint: str | None = None
     ) -> set[Path] | None:
         """Return files where edits are expected, or None for fallback."""
+        if self._store._conn is None:
+            return None
         callers = self._store.callers_of(old_name, module=module_hint)
         defining = self._defining_modules(old_name, module_hint)
 
