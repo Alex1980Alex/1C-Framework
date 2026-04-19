@@ -143,11 +143,25 @@ Skill для комплексного анализа задачи по конф�
 
 ## Инструменты
 
-- **bsl-semantic-search** — поиск аналогичного кода в конфигурации (ОБЯЗАТЕЛЬНО)
+- **bsl-semantic-search** — поиск аналогичного кода в конфигурации (ОБЯЗАТЕЛЬНО); для `[REFACTOR]` точек — routing matrix `src/bsl/semantic_search/refactor/routing_matrix.yaml` для определения ожидаемого backend
 - **1c-mcp-toolkit** — get_metadata для структуры объектов, execute_query для верификации
 - **bsl-platform-context** — API платформы 1С
-- **Serena** — символьный анализ кода
 - **Grep/Glob** — поиск файлов и паттернов
+
+### Маркировка точек модификации в плане (Фаза 4)
+
+Для каждой точки указать **все применимые** маркеры:
+
+| Маркер | Значение | Источник |
+|---|---|---|
+| `[ADDED]` | Новый объект метаданных | get_metadata → не найден |
+| `[MODIFIED]` | Существующий объект | get_metadata → найден |
+| `[REFACTOR]` | Операция = рефакторинг существующего символа (rename / replace body / safe delete) | Refactor gate в Фазе 2 |
+
+**Пример:**
+- Точка 1: `[MODIFIED]` Документ.гкс_Xxx — добавить новый реквизит (не refactoring)
+- Точка 2: `[MODIFIED] [REFACTOR]` ОбщийМодуль.гкс_Yyy — переименовать `СтараяФункция` → `НоваяФункция` (symbol_type: `module_export_proc`, backend: ast-grep cross-file, confidence: 0.85)
+- Точка 3: `[ADDED]` РегистрСведений.гкс_Zzz — новый регистр
 
 ## Итеративный режим: /analyze-1c-task:research
 
