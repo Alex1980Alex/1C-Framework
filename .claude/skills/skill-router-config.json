@@ -55,7 +55,8 @@
       "tenacity-retry",
       "code-verify",
       "learning-loop",
-      "task-protocol"
+      "task-protocol",
+      "obsidian-vault"
     ]
   },
   "affinities": {
