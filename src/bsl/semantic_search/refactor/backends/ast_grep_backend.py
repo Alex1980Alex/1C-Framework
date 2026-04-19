@@ -112,6 +112,22 @@ class AstGrepBackend:
                 f"ast-grep runner failed: {exc!r}", code="runner_error"
             ) from exc
 
+        if self._prefilter is not None:
+            module_hint = (
+                str(path.relative_to(self._workspace_root))
+                if path.is_relative_to(self._workspace_root)
+                else None
+            )
+            allowed = self._prefilter.allowed_files(
+                old_name, module_hint=module_hint
+            )
+            if allowed is not None:
+                resolved_allowed = {p.resolve() for p in allowed}
+                matches = [
+                    m for m in matches
+                    if m.file.resolve() in resolved_allowed
+                ]
+
         return self._matches_to_edit(matches, new_name, self._workspace_root)
 
     @staticmethod
