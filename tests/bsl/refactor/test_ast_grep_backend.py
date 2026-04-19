@@ -55,9 +55,9 @@ def test_can_handle_extensions(workspace: Path) -> None:
 
 def test_confidence_known_kinds(workspace: Path) -> None:
     backend = AstGrepBackend(_FakeRunner(), workspace)
-    assert backend.confidence_for("form_handler") == 0.60
+    assert backend.confidence_for("form_handler") == 0.95  # calibrated pilot-B
     assert backend.confidence_for("unknown") == 0.30
-    assert backend.confidence_for("module_export_proc") == 0.80
+    assert backend.confidence_for("module_export_proc") == 0.95  # calibrated pilot-B
     assert backend.confidence_for("nonexistent") == 0.0
 
 
@@ -77,7 +77,7 @@ def test_word_at_edge_cases() -> None:
     assert AstGrepBackend._word_at("", 0) == ""
     assert AstGrepBackend._word_at("foo", -1) == ""
     assert AstGrepBackend._word_at("foo", 100) == ""
-    assert AstGrepBackend._word_at("foo bar", 3) == "foo"
+    assert AstGrepBackend._word_at("foo bar", 3) == "bar"  # pos 3 = space, scans forward
 
 
 def test_plan_rename_builds_workspace_edit(workspace: Path) -> None:

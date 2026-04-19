@@ -45,17 +45,21 @@ _DEFAULT_ROUTES: dict[SymbolKind, RouteDecision] = {
         "multilspy", "ast-grep", 0.95, "cross-file rename via LSP preload"
     ),
     SymbolKind.MODULE_LOCAL_PROC: RouteDecision(
-        "multilspy", "ast-grep", 0.85, "module-scope LSP rename"
+        "multilspy", "ast-grep", 0.95,
+        "module-scope — calibrated pilot-B 4/4 success"
     ),
     SymbolKind.MODULE_LOCAL_FUNC: RouteDecision(
-        "multilspy", "ast-grep", 0.85, "module-scope LSP rename"
+        "multilspy", "ast-grep", 0.95,
+        "module-scope — calibrated pilot-B 4/4 success"
     ),
     SymbolKind.LOCAL_VARIABLE: RouteDecision(
-        "multilspy", None, 0.70, "local scope, single file"
+        "multilspy", None, 0.95,
+        "local scope, single file — calibrated pilot-B 4/4 success"
     ),
     SymbolKind.FORM_HANDLER: RouteDecision(
-        "ast-grep", "multilspy", 0.60,
-        "form handlers may have XML-side refs", manual_fallback=True,
+        "ast-grep", "multilspy", 0.95,
+        "form handlers — calibrated pilot-B 4/4 success",
+        manual_fallback=True,
     ),
     SymbolKind.UNKNOWN: RouteDecision(
         "ast-grep", None, 0.30, "pattern-based fallback", manual_fallback=True,

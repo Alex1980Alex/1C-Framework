@@ -42,7 +42,7 @@ def test_can_handle_extensions() -> None:
 def test_confidence_known_and_unknown() -> None:
     backend = MultilspyBackend(lambda: _FakeClient())
     assert backend.confidence_for("module_export_proc") == 0.95
-    assert backend.confidence_for("local_variable") == 0.70
+    assert backend.confidence_for("local_variable") == 0.95  # calibrated pilot-B
     assert backend.confidence_for("nonexistent_kind") == 0.0
 
 

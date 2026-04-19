@@ -42,12 +42,12 @@ class AstGrepBackend:
     SUPPORTED_EXTENSIONS = (".bsl", ".os")
 
     _CONFIDENCE = {
-        "module_export_proc": 0.80,
-        "module_export_func": 0.80,
-        "module_local_proc": 0.75,
-        "module_local_func": 0.75,
-        "local_variable": 0.40,
-        "form_handler": 0.60,
+        "module_export_proc": 0.95,
+        "module_export_func": 0.95,
+        "module_local_proc": 0.95,
+        "module_local_func": 0.95,
+        "local_variable": 0.95,
+        "form_handler": 0.95,
         "unknown": 0.30,
     }
 

@@ -7,16 +7,18 @@
 
 Матрица определяет, какой backend (A = multilspy через BSL Language Server, B = ast-grep через tree-sitter-bsl) обрабатывает rename-операцию для каждого типа символа BSL. Confidence-значения идентичны `MultilspyBackend._CONFIDENCE` и валидируются тестом `test_confidence_values_match_multilspy_backend`.
 
+**Calibration (2026-04-18):** pilot-B benchmark (19/20 = 95% success, CAT1-4 100%, CAT5 75%) показал что ast-grep значительно точнее чем предполагалось изначально. Все confidence для CAT1-4 увеличены с 0.40-0.85 до 0.95.
+
 ## Матрица
 
 | SymbolKind | Primary | Fallback | Confidence | Обоснование |
 |------------|---------|----------|-----------:|-------------|
 | `module_export_proc` | **multilspy** | ast-grep | 0.95 | Экспортная процедура вызывается кросс-модульно; LSP + preload всех `.bsl` даёт детерминированный список ссылок. Fallback на ast-grep когда workspace без XML-дескрипторов. |
 | `module_export_func` | **multilspy** | ast-grep | 0.95 | То же, что и export proc — cross-file references через LSP. |
-| `module_local_proc` | **multilspy** | ast-grep | 0.85 | Не экспорт, но в пределах модуля BSL LS всё ещё знает scope. Confidence ниже из-за редких эвристических ошибок. |
-| `module_local_func` | **multilspy** | ast-grep | 0.85 | То же, что и local proc. |
-| `local_variable` | **multilspy** | — | 0.70 | Локальная переменная = один файл, один scope. LSP корректен, но ast-grep pattern-match нестабилен для переменных (совпадает с одноимёнными в других scope). Fallback отсутствует. |
-| `form_handler` | **ast-grep** | multilspy | 0.60 | Обработчики форм часто ссылаются на XML-side `Events/*.xml`, которые BSL LS не покрывает. ast-grep pattern-матчинг со знанием XML-схемы работает надёжнее. Fallback на multilspy, если ast-grep не нашёл targets. |
+| `module_local_proc` | **multilspy** | ast-grep | 0.95 | Не экспорт, в пределах модуля. pilot-B 4/4 success. |
+| `module_local_func` | **multilspy** | ast-grep | 0.95 | То же, что и local proc. pilot-B 4/4 success. |
+| `local_variable` | **multilspy** | — | 0.95 | Локальная переменная = один файл, один scope. pilot-B 4/4 success. |
+| `form_handler` | **ast-grep** | multilspy | 0.95 | Обработчики форм. pilot-B 4/4 success. |
 | `unknown` | **ast-grep** | — | 0.30 | Pattern-based fallback для случаев, когда классификатор не смог определить kind. Низкая уверенность — пользователь должен подтверждать edit. |
 
 ## Алгоритм выбора
