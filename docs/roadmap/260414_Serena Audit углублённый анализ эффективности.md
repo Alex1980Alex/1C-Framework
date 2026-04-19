@@ -2293,7 +2293,7 @@ ERR rate: **0.9% → 0.0%**. Отчёт: [tree-sitter-coverage.md](../../tools/b
 - **Pilot-B benchmark: 95% success** (ast-grep only, 19/20 tasks)
 - **R5.5 calibration applied:** local_var/module_local/form_handler → 0.95
 - **R1.3 DONE (DoD PASS):** real multilspy wiring, async↔sync bridge, bulk_open_workspace с throttling, E2E c `MultilspyBackend`. Soak test: 2027 `.bsl` за **12.93 s** (DoD <60 s), RSS 52→201 MB (DoD <4 GB)
-- **Upstream PRs:** R6.3 [PR #8](https://github.com/alkoleft/tree-sitter-bsl/pull/8) (OPEN, CI green), R6.4 [PR #1379](https://github.com/oraios/serena/pull/1379) (OPEN), R6.1 локально готов — [draft](../roadmap/upstream-prs/R6.1-multilspy-bsl-adapter.md), commit `e985819`, тесты 3/3, ждёт push на личный fork
+- **Upstream PRs:** R6.3 [PR #8](https://github.com/alkoleft/tree-sitter-bsl/pull/8) (OPEN, CI green), R6.4 [PR #1379](https://github.com/oraios/serena/pull/1379) (OPEN), **R6.1 [PR #148](https://github.com/microsoft/multilspy/pull/148) + [Issue #147](https://github.com/microsoft/multilspy/issues/147) (OPEN, 2026-04-19)**
 - **Skills created:** `bsl-symbol-editing` (Tier 2 helpers), `bsl-refactoring-workflow` (5-category matrix)
 - **Serena:** disabled in `.mcp.json`, `.serena/` kept for Python LSP potential
 - **13 багов** найдено и исправлено ревью-циклом
