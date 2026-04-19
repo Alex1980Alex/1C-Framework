@@ -71,6 +71,7 @@ class RoutingMatrix:
     """Routing Matrix v2 — maps SymbolKind to backend selection."""
 
     _ROUTES: dict[SymbolKind, RouteDecision] = dict(_DEFAULT_ROUTES)
+    _DENYLIST: frozenset[str] = frozenset()
 
     @classmethod
     def route_for(cls, kind: SymbolKind) -> RouteDecision:
@@ -81,6 +82,11 @@ class RoutingMatrix:
     def all_kinds(cls) -> list[SymbolKind]:
         """Return all SymbolKinds defined in the matrix."""
         return list(cls._ROUTES.keys())
+
+    @classmethod
+    def is_denied(cls, name: str | None) -> bool:
+        """True if name is in the over-match denylist (ast-grep should skip it)."""
+        return bool(name) and name in cls._DENYLIST
 
     @classmethod
     def load(cls, path: Path | None = None) -> None:
@@ -124,12 +130,21 @@ class RoutingMatrix:
             new_routes[SymbolKind.UNKNOWN] = _DEFAULT_ROUTES[SymbolKind.UNKNOWN]
             log.warning("YAML missing 'unknown' route; using default")
         cls._ROUTES = new_routes
-        log.info("Loaded %d routes from %s", len(new_routes), path)
+
+        raw_denylist = data.get("denylist") or []
+        if not isinstance(raw_denylist, list):
+            raise ValueError(f"'denylist' must be a list in {path}")
+        cls._DENYLIST = frozenset(str(n) for n in raw_denylist if n)
+        log.info(
+            "Loaded %d routes and %d denylist entries from %s",
+            len(new_routes), len(cls._DENYLIST), path,
+        )
 
     @classmethod
     def reset(cls) -> None:
         """Reset routes to bundled defaults (useful in tests)."""
         cls._ROUTES = dict(_DEFAULT_ROUTES)
+        cls._DENYLIST = frozenset()
 
 
 class HeuristicClassifier:
