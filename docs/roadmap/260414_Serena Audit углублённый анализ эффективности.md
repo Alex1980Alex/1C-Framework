@@ -2527,4 +2527,241 @@ python coverage_check.py
 - Исходный Этап 0 (для отката): коммит `docs(hermes)...` на ветке master, 2026-04-14
 - Spec гибридного подхода (создаётся в Phase 1): `docs/roadmap/hybrid-refactor-spec.md`
 - Recon plan (создаётся в Phase 0b): `docs/roadmap/bsl-ls-recon-plan.md`
+
+---
+
+## Roadmap: Option A — Pre-filter ast-grep по call graph
+
+**Статус:** PROPOSED (2026-04-19), дополняет v4.6 denylist-митигацию.
+**Цель:** поднять strict-метрику `AstGrepBackend` с 15% в сторону multilspy (55%) за счёт scope-aware pre-filter.
+**Scope:** строго additive — не трогаем routing matrix, denylist, `MultilspyBackend`. Только `AstGrepBackend` + tangential verification.
+
+### Проблема (baseline из §R5.4 / full-1g)
+
+`AstGrepBackend` при STRICT-метрике выдаёт 15% (3/20). Причина — text pattern matching без scope:
+
+| Символ | Файлов в репо | Вхождений | Ожидаемых файлов (по задаче) |
+|---|---|---|---|
+| `Параметры` | 1 679 | 64 549 | 1 (T04) |
+| `РезультатЗапроса` | 223 | 1 536 | 1 (T02) |
+| `СписокРегионов` | 2 | 11 | 1 (T01) |
+
+Denylist v4.6 решает ~30 общеупотребительных имён (`Параметры`, `Результат`, …) переводя их в `manual_required`. Но **не решает** случаи, где имя уникально локально, но pattern matching всё равно ловит совпадения в модулях, не входящих в callchain (например, local helper function с популярным названием в 2-5 файлах).
+
+### Гипотеза
+
+Если перед применением edits из ast-grep сузить множество файлов до тех, где call graph видит **реальный вызов** целевого символа (плюс модуль-определитель), strict-метрика вырастет за счёт отсечения «шумовых» попаданий в неродственных модулях.
+
+### Уточнение: хранилище — SQLite, не Neo4j
+
+В исходной формулировке от пользователя упомянут Neo4j. Фактическое хранилище call graph — **SQLite** (`cache/bsl_call_graph.db`, ~560 MB, последний rebuild 2026-04-02), доступ через `src/bsl/call_graph/store.py::CallGraphStore`. Релевантные API:
+
+- `callers_of(name, module=None) -> list[dict]` — символы-коллеры с `module_path` в полях
+- `impact_analysis(name, module=None, depth=3)` — транзитивные callers по BFS
+- `get_symbol(symbol_id)` / `symbol_id = f"{module_path}::{name}"`
+
+Neo4j в проекте есть как опциональный стор (`src/pdf_framework/graph_store/`), но BSL call graph туда не пишется. Roadmap ориентируется на существующий SQLite API.
+
+### Фазы
+
+#### Phase A.0 — Recon (0.5 ч)
+
+**Задачи:**
+- [ ] Проверить актуальность `cache/bsl_call_graph.db` против `src/bsl/` (последний rebuild 2026-04-02, код менялся после — нужен свежий snapshot)
+- [ ] Измерить покрытие: сколько из 20 strict-задач benchmark имеют callers в графе (по `old_name` из `tasks.json`). Если <80% — Phase A блокируется на rebuild
+- [ ] Зафиксировать стартовую метрику: `scripts/run_benchmark.py --backends ast-grep --run-id pre-option-a`
+
+**Артефакты:** `docs/roadmap/option-a-recon.md` (coverage %, stale symbols, решение go/no-go).
+
+#### Phase A.1 — Rebuild call graph (при необходимости, 1-2 ч)
+
+**Триггер:** coverage <80% в Phase A.0.
+
+**Задачи:**
+- [ ] `python scripts/build_call_graph.py --source src/bsl --out cache/bsl_call_graph.db --clear`
+- [ ] Валидация: `CallGraphStore.stats()` → ожидаемо >50k symbols, >100k calls (исторический baseline)
+- [ ] Повторный coverage-замер
+
+**Риск:** rebuild занимает 10-30 мин на 2027 `.bsl`. Не критично, один раз.
+
+#### Phase A.2 — CallGraphPreFilter (2-3 ч)
+
+**Новый компонент:** `src/bsl/semantic_search/refactor/backends/call_graph_prefilter.py`
+
+**API:**
+```python
+class CallGraphPreFilter:
+    def __init__(self, store: CallGraphStore): ...
+
+    def allowed_files(
+        self, old_name: str, module_hint: str | None = None
+    ) -> set[Path] | None:
+        """
+        Возвращает множество module_path, где ОЖИДАЕМЫ правки:
+        - определяющий модуль (где объявлен символ)
+        - все callers_of(old_name, module_hint)
+        Возвращает None, если символ неизвестен графу → fallback на текущее поведение
+        (без фильтрации, чтобы не ломать задачи с непокрытыми символами).
+        """
+```
+
+**Семантика `None` vs `set()`:**
+- `None` → символ не в графе → **не фильтруем** (безопасный fallback)
+- `set()` → символ в графе, но 0 callers → правим только определяющий модуль
+- `{paths...}` → фильтруем edits только по этому множеству
+
+**Тесты:** `tests/bsl/refactor/test_call_graph_prefilter.py` (8-10 кейсов: unknown symbol, 0 callers, 1 caller, cross-module, module_hint mismatch, depth=1 vs transitive).
+
+#### Phase A.3 — Интеграция в AstGrepBackend (1-2 ч)
+
+**Файл:** `src/bsl/semantic_search/refactor/backends/ast_grep_backend.py`
+
+**Точка вставки:** после `run_rename()` возвращает `list[AstGrepMatch]`, до построения `WorkspaceEdit`.
+
+**Изменения (~30-50 строк):**
+```python
+class AstGrepBackend:
+    def __init__(
+        self,
+        runner: AstGrepRunner,
+        workspace_root: Path,
+        prefilter: CallGraphPreFilter | None = None,   # NEW, optional
+    ) -> None:
+        ...
+        self._prefilter = prefilter
+
+    def rename_symbol(self, ..., old_name, new_name, ...):
+        matches = self._runner.run_rename(...)
+        if self._prefilter is not None:
+            allowed = self._prefilter.allowed_files(old_name, module_hint)
+            if allowed is not None:
+                before = len(matches)
+                matches = [m for m in matches if m.file in allowed]
+                self._telemetry.record("prefilter", dropped=before - len(matches))
+        return self._matches_to_workspace_edit(matches, ...)
+```
+
+**Ключевые инварианты:**
+- `prefilter=None` (default) → поведение идентично текущему (backward-compat, CI зелёный)
+- Фильтр применяется **до** `WorkspaceEditApplier`, чтобы отброшенные edits не попали даже в baseline verification
+- Telemetry: `dropped_by_prefilter`, `prefilter_cache_hit`, `symbol_unknown_to_graph` — для R4 аналитики
+
+#### Phase A.4 — Тангенциальный update verification.py (0.5 ч)
+
+**Файл:** `src/bsl/semantic_search/refactor/verification.py`
+
+**Изменение:** добавить поле в `VerifyResult`:
+```python
+prefilter_dropped: int = 0  # сколько match-ей отсечено до verify
+```
+
+Используется в `scripts/aggregate_refactor_telemetry.py` для разделения метрики «precision edits» (после pre-filter) от «raw matches» (до pre-filter).
+
+#### Phase A.5 — Wiring в Orchestrator (0.5 ч)
+
+**Файл:** `src/bsl/semantic_search/refactor/orchestrator.py` (+ `driver.py`, если DI там)
+
+**Изменение:** при построении `AstGrepBackend` передавать `CallGraphPreFilter`, если включён флаг:
+```yaml
+# routing_matrix.yaml (новое поле)
+global:
+  ast_grep:
+    use_call_graph_prefilter: true
+    call_graph_db: cache/bsl_call_graph.db
+    graph_stale_threshold_days: 7   # warn в telemetry, но не блок
+```
+
+Flag по умолчанию **ON**. Выключение — env `BSL_REFACTOR_NO_PREFILTER=1` для A/B замеров.
+
+#### Phase A.6 — Benchmark + A/B (1 ч)
+
+**Задачи:**
+- [ ] `scripts/run_benchmark.py --backends ast-grep --run-id option-a-on --append-trend`
+- [ ] `BSL_REFACTOR_NO_PREFILTER=1 scripts/run_benchmark.py --backends ast-grep --run-id option-a-off --append-trend`
+- [ ] Diff в `trend.md`: strict success, CAT-wise, `edits_match_expected`
+- [ ] Acceptance gate: **strict-метрика ≥35%** (минимум +20 п.п. к baseline 15%), без регрессий в CAT-1 (local) и CAT-5 (edge)
+
+**Если gate не пройден:**
+1. Разобрать false negatives: символ был в графе, но реальный файл отсутствовал в `allowed` → graph-bug, не pre-filter
+2. Разобрать false positives: символ не в графе → fallback без фильтра → текст оверматчит → `manual_required` через denylist
+
+#### Phase A.7 — Документация (0.5 ч)
+
+- [ ] Обновить `ADR-004-bsl-refactoring-architecture.md`: добавить раздел «Call-graph pre-filter»
+- [ ] Обновить `routing-matrix-v2.md`: новый флаг и его эффект
+- [ ] Обновить MEMORY.md: `ast-grep pre-filter ON, strict-метрика X%` (после Phase A.6)
+
+### Метрики
+
+| Метрика | Baseline (ast-grep) | Target | Stretch |
+|---|---|---|---|
+| Strict success (full-1, 20 задач) | 15% | **≥35%** | ≥45% |
+| CAT-4 form_handler | 0% | ≥25% | ≥50% |
+| CAT-3 cross-file | 25% | ≥40% | ≥60% |
+| False positive rate (edits в невалидных файлах) | high | **0%** при known symbol | 0% |
+| Coverage (символ в графе) | — | ≥80% | ≥95% |
+
+### Риски и митигации
+
+| Риск | Вероятность | Impact | Митигация |
+|---|---|---|---|
+| Устаревший граф → false negatives (символ есть, граф не знает) | MED | HIGH | Phase A.0 recon + automated staleness check в `core_paths.py`; при stale >7 дней → warn, но не блок; `None`-fallback не ломает задачу |
+| Медленный rebuild блокирует CI | LOW | MED | rebuild не в CI, только локально; CI использует `cache/` snapshot из репо или zero-prefilter если cache отсутствует |
+| Over-filter: символ в графе, но задача правит ещё и определяющий модуль, которого pre-filter не включил | LOW | MED | `allowed_files` явно добавляет `defining_module` через `get_symbol(symbol_id)` |
+| Race condition при hot-reload графа в долгоживущем процессе | LOW | LOW | `CallGraphStore` уже WAL + `check_same_thread=False`; read-only путь в pre-filter |
+| ConfusinG `manual_required` vs `0_edits`: symbol known + 0 callers + 0 definition file | LOW | LOW | Если `allowed == set()` → не применяем edits, возвращаем `BackendError("no in-graph sites")`; orchestrator эскалирует в `manual_required` |
+| Взаимодействие с denylist | LOW | LOW | Denylist срабатывает **раньше** (в orchestrator), pre-filter — **позже** (в backend). Порядок: denylist → routing → ast-grep → pre-filter → verify. Тесты на композицию в Phase A.2/A.6 |
+
+### Цена реализации
+
+| Компонент | Файлов | Строк (нетто) |
+|---|---|---|
+| `call_graph_prefilter.py` (новый) | 1 | ~80 |
+| `ast_grep_backend.py` (правка) | 1 | ~30 |
+| `verification.py` (правка) | 1 | ~5 |
+| `orchestrator.py` / `driver.py` wiring | 1-2 | ~15 |
+| `routing_matrix.yaml` (конфиг) | 1 | ~5 |
+| Тесты | 1-2 | ~150 |
+| **Итого** | **6-8** | **~285** |
+
+Оценка усилий: **6-9 часов** (включая Phase A.1 rebuild, recon, benchmark, доку). Без rebuild — 4-6 часов.
+
+### Rollback
+
+1. Поставить `use_call_graph_prefilter: false` в `routing_matrix.yaml` → орхестратор не передаёт `CallGraphPreFilter` в backend → поведение идентично pre-Option-A
+2. Env `BSL_REFACTOR_NO_PREFILTER=1` — то же самое для одного запуска
+3. При критических регрессиях: revert 1 коммита с Phase A.3 (все остальные изменения backward-compat, могут остаться merged)
+
+### Команды воспроизведения (после релиза)
+
+```bash
+cd D:\1С-Framework
+
+# 1. Rebuild call graph (если A.0 сказал stale)
+python scripts/build_call_graph.py --source src/bsl --clear
+
+# 2. Unit tests
+python -m pytest tests/bsl/refactor/test_call_graph_prefilter.py -q
+python -m pytest tests/bsl/refactor/test_ast_grep_backend.py -q
+
+# 3. A/B benchmark
+python scripts/run_benchmark.py --backends ast-grep --run-id option-a-on --append-trend
+BSL_REFACTOR_NO_PREFILTER=1 python scripts/run_benchmark.py --backends ast-grep --run-id option-a-off --append-trend
+
+# 4. Diff
+python scripts/check_benchmark_regression.py --base option-a-off --target option-a-on
+```
+
+### Зависимости и non-goals
+
+**Зависит от:**
+- Phase 61 (Knowledge Graph, `src/bsl/call_graph/store.py`) — ✅ DONE
+- `scripts/build_call_graph.py` — ✅ существует
+- R4 telemetry (`src/bsl/semantic_search/refactor/telemetry.py`) — ✅ DONE
+
+**Non-goals:**
+- Не меняем routing_matrix v2 решения (multilspy primary → ast-grep fallback) — только улучшаем сам ast-grep
+- Не трогаем multilspy backend (у него свой LSP scope)
+- Не пересобираем denylist — он остаётся первым фильтром для общеупотребительных имён
+- Не мигрируем call graph на Neo4j — SQLite API достаточен, миграция — отдельный roadmap
 - Benchmark report (создаётся в Phase 6): `docs/roadmap/bsl-refactor-benchmark-YYYY-MM.md`
