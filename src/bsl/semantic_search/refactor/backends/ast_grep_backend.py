@@ -64,7 +64,7 @@ class AstGrepBackend:
         self,
         runner: AstGrepRunner,
         workspace_root: Path,
-        prefilter: CallGraphPreFilter | None = None,
+        prefilter: PreFilter | None = None,
     ) -> None:
         self._runner = runner
         self._workspace_root = workspace_root.resolve()
