@@ -93,19 +93,19 @@ class TestNewTypeOperations:
     def test_promoted_to_round_trip(self, tmp_db):
         registry, _ = tmp_db
         registry.create_link("mem:1", "wiki:page-1", LinkType.PROMOTED_TO)
-        related = registry.get_related("mem:1")
-        assert any(r["target_id"] == "wiki:page-1" for r in related)
+        links = registry.get_links_from("mem:1")
+        assert any(r.target_id == "wiki:page-1" for r in links)
 
     def test_graph_node_round_trip(self, tmp_db):
         registry, _ = tmp_db
         registry.create_link("mem:2", "graph:entity-42", LinkType.GRAPH_NODE)
-        related = registry.get_related("mem:2")
-        assert any(r["target_id"] == "graph:entity-42" for r in related)
+        links = registry.get_links_from("mem:2")
+        assert any(r.target_id == "graph:entity-42" for r in links)
 
     def test_mirrors_bidirectional(self, tmp_db):
         registry, _ = tmp_db
         registry.create_link("a", "b", LinkType.MIRRORS, bidirectional=True)
-        forward = registry.get_related("a")
-        backward = registry.get_related("b")
-        assert any(r["target_id"] == "b" for r in forward)
-        assert any(r["target_id"] == "a" for r in backward)
+        forward = registry.get_links_from("a")
+        backward = registry.get_links_from("b")
+        assert any(r.target_id == "b" for r in forward)
+        assert any(r.target_id == "a" for r in backward)
