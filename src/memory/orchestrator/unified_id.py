@@ -310,6 +310,14 @@ def create_doc_id(path: str, project_id: str | None = None) -> UnifiedID:
     return UnifiedID.from_path(SourceServer.PDF_DOCS, path, project_id)
 
 
+def create_wiki_id(page_path: str) -> UnifiedID:
+    return UnifiedID.from_path(SourceServer.OBSIDIAN_VAULT, page_path)
+
+
+def create_graph_id(entity_id: str) -> UnifiedID:
+    return UnifiedID.from_original(SourceServer.LIGHTRAG, entity_id)
+
+
 # Global registry instance
 _global_registry = IDRegistry()
 
