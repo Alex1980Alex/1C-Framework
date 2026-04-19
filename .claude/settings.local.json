@@ -672,7 +672,11 @@
       "Bash(rm *)",
       "Bash(ls -la .obsidian/)",
       "Bash(ls -la docs/wiki/)",
-      "Bash(ls docs/architecture/)"
+      "Bash(ls docs/architecture/)",
+      "mcp__obsidian-mcp__obsidian_list_files_in_vault",
+      "Bash(tee /tmp/wiki-targets.txt)",
+      "mcp__obsidian-mcp__obsidian_simple_search",
+      "Bash(awk '/### Фаза 1/,/### Фаза 2/' \"docs/roadmap/260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md\")"
     ]
   },
   "enableAllProjectMcpServers": true,
