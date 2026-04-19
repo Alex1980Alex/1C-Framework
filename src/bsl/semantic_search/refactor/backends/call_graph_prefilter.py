@@ -43,14 +43,20 @@ class CallGraphPreFilter:
             if sym is not None:
                 return {Path(sym["module_path"])}
 
-        rows = self._store._conn.execute(
+        conn = self._store._conn
+        if conn is None:
+            return set()
+        rows = conn.execute(
             "SELECT DISTINCT module_path FROM symbols WHERE name = ?",
             (name,),
         ).fetchall()
         return {Path(r["module_path"]) for r in rows}
 
     def _is_known(self, name: str) -> bool:
-        row = self._store._conn.execute(
+        conn = self._store._conn
+        if conn is None:
+            return False
+        row = conn.execute(
             "SELECT 1 FROM symbols WHERE name = ? LIMIT 1",
             (name,),
         ).fetchone()
