@@ -226,7 +226,8 @@ class LinkRegistry:
                     CHECK (strength >= 0.0 AND strength <= 1.0),
                     CHECK (link_type IN (
                         'based_on', 'supports', 'contradicts',
-                        'extends', 'derives_from', 'session_context'
+                        'extends', 'derives_from', 'session_context',
+                        'promoted_to', 'superseded_by', 'mirrors', 'graph_node'
                     ))
                 )
             """)

@@ -23,7 +23,7 @@ OLD_TYPES = {"based_on", "supports", "contradicts", "extends", "derives_from", "
 NEW_TYPES = OLD_TYPES | {"promoted_to", "superseded_by", "mirrors", "graph_node"}
 
 
-def get_current_version(db_path: str) -> int:
+def get_current_version(db_path: Path) -> int:
     conn = sqlite3.connect(db_path)
     try:
         row = conn.execute("SELECT value FROM schema_info WHERE key = 'version'").fetchone()
@@ -34,7 +34,7 @@ def get_current_version(db_path: str) -> int:
         conn.close()
 
 
-def count_links(db_path: str) -> int:
+def count_links(db_path: Path) -> int:
     conn = sqlite3.connect(db_path)
     try:
         row = conn.execute("SELECT COUNT(*) FROM entity_links").fetchone()
@@ -43,7 +43,7 @@ def count_links(db_path: str) -> int:
         conn.close()
 
 
-def count_new_type_links(db_path: str) -> dict[str, int]:
+def count_new_type_links(db_path: Path) -> dict[str, int]:
     conn = sqlite3.connect(db_path)
     try:
         counts = {}
@@ -59,14 +59,14 @@ def count_new_type_links(db_path: str) -> dict[str, int]:
         conn.close()
 
 
-def dry_run(db_path: str):
+def dry_run(db_path: Path):
     if not db_path.exists():
         print(f"SKIP: {db_path} does not exist")
         return
 
-    version = get_current_version(str(db_path))
-    total = count_links(str(db_path))
-    new_type_links = count_new_type_links(str(db_path))
+    version = get_current_version(db_path)
+    total = count_links(db_path)
+    new_type_links = count_new_type_links(db_path)
 
     print(f"Database: {db_path}")
     print(f"Current schema version: {version}")
@@ -88,12 +88,12 @@ def dry_run(db_path: str):
     print("Run with --apply to execute.")
 
 
-def apply_migration(db_path: str):
+def apply_migration(db_path: Path):
     if not db_path.exists():
         print(f"ERROR: {db_path} does not exist")
         sys.exit(1)
 
-    version = get_current_version(str(db_path))
+    version = get_current_version(db_path)
     if version >= 2:
         print(f"Already at version {version}. Nothing to do.")
         return
@@ -105,14 +105,14 @@ def apply_migration(db_path: str):
     sql_path = MIGRATIONS_DIR / "001_extend_link_types.sql"
     sql = sql_path.read_text(encoding="utf-8")
 
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(db_path)
     try:
         conn.executescript(sql)
-        print(f"Migration applied. New version: {get_current_version(str(db_path))}")
+        print(f"Migration applied. New version: {get_current_version(db_path)}")
     except Exception as e:
         conn.close()
         print(f"ERROR: Migration failed: {e}")
-        print(f"Restoring from backup...")
+        print("Restoring from backup...")
         shutil.copy2(backup_path, db_path)
         print("Restored.")
         sys.exit(1)
@@ -120,12 +120,12 @@ def apply_migration(db_path: str):
         conn.close()
 
 
-def rollback(db_path: str):
+def rollback(db_path: Path):
     if not db_path.exists():
         print(f"ERROR: {db_path} does not exist")
         sys.exit(1)
 
-    version = get_current_version(str(db_path))
+    version = get_current_version(db_path)
     if version < 2:
         print(f"Already at version {version}. Nothing to rollback.")
         return
@@ -134,7 +134,7 @@ def rollback(db_path: str):
     shutil.copy2(db_path, backup_path)
     print(f"Backup: {backup_path}")
 
-    new_type_links = count_new_type_links(str(db_path))
+    new_type_links = count_new_type_links(db_path)
     has_new = any(c > 0 for c in new_type_links.values())
     if has_new:
         print("WARNING: Links using new types will be DELETED:")
@@ -145,14 +145,14 @@ def rollback(db_path: str):
     sql_path = MIGRATIONS_DIR / "001_rollback.sql"
     sql = sql_path.read_text(encoding="utf-8")
 
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(db_path)
     try:
         conn.executescript(sql)
-        print(f"Rollback applied. Version: {get_current_version(str(db_path))}")
+        print(f"Rollback applied. Version: {get_current_version(db_path)}")
     except Exception as e:
         conn.close()
         print(f"ERROR: Rollback failed: {e}")
-        print(f"Restoring from backup...")
+        print("Restoring from backup...")
         shutil.copy2(backup_path, db_path)
         print("Restored.")
         sys.exit(1)
