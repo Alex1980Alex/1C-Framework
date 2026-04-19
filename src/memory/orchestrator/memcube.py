@@ -29,6 +29,7 @@ class ContentType(str, Enum):
     SKILL = "skill"             # Confirmed workflow, practice
     CODE = "code"               # Code snippet, function, pattern
     OBSERVATION = "observation"  # General observation, note
+    WIKI = "wiki"               # Wiki page content (frontmatter + markdown)
 
 
 @dataclass
