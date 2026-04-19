@@ -75,7 +75,7 @@ class _BSLLanguageServer(LanguageServer):
             raise BackendError(
                 f"BSL LS jar not found: {jar}", code="jar_missing"
             )
-        launch = ProcessLaunchInfo(cmd=f'java -jar "{jar}" --lsp', cwd=root)
+        launch = ProcessLaunchInfo(cmd=["java", "-jar", str(jar), "--lsp"], cwd=root)
         super().__init__(config, logger, root, launch, language_id="bsl")
 
     @asynccontextmanager
