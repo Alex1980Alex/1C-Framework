@@ -90,10 +90,10 @@ def main() -> None:
         benchmark = BenchmarkRunner(REPO_ROOT, tasks_path, output_dir)
         results = benchmark.run(backends=backends, run_id=run_id)
 
-        applied = sum(1 for r in results if r.applied)
+        success = sum(1 for r in results if r.edits_match_expected)
         total = len(results)
-        pct = applied / total * 100 if total else 0
-        print(f"\nResults: {applied}/{total} applied ({pct:.0f}%)")
+        pct = success / total * 100 if total else 0
+        print(f"\nResults: {success}/{total} match expected ({pct:.0f}%)")
         print(f"Report: {output_dir / f'{run_id}_report.md'}")
         print(f"CSV: {output_dir / f'{run_id}_report.csv'}")
 
