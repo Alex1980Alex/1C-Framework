@@ -230,12 +230,11 @@
       "command": "uvx",
       "args": ["mcp-obsidian"],
       "env": {
-        "OBSIDIAN_API_KEY": "${OBSIDIAN_API_KEY}",
+        "OBSIDIAN_API_KEY": "ce43f3ec7b3abd209c3f532b701d9c66901b01f7e43c85933dc37a469a645f28",
         "OBSIDIAN_HOST": "127.0.0.1",
         "OBSIDIAN_PORT": "27124"
       },
-      "timeout": 30000,
-      "disabled": true
+      "timeout": 30000
     }
   }
 }
