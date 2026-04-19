@@ -203,7 +203,7 @@ The framework extends Claude Code CLI with a **[[triad-architecture|Hooks + Skil
 
 All hooks and skills live in `.claude/` within the project directory.
 
-### Ralph Wiggum Autonomous Loop
+### [[ralph-wiggum|Ralph Wiggum Autonomous Loop]]
 
 Prevents premature task completion:
 - **Activator** detects complex tasks, sets iteration limits (8-15)
