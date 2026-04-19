@@ -161,6 +161,8 @@ SKIP_PATTERNS = [
     "_write_test",
     "_gen_test",
     "_gen_eval",
+    # Throwaway diagnostics / scratch (gitignored working dir)
+    "tmp/",
     # VA BDD test artifacts (features, run state — test infra, not product code)
     "features/",
     ".run-state.json",
