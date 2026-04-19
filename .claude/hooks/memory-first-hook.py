@@ -55,8 +55,8 @@ COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
 MAX_RESULTS = 5
 
-LAYER_WEIGHTS = {"sqlite": 0.35, "qdrant": 0.40, "md": 0.25}
-SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md"}
+LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
+SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
 
 # Qdrant semantic search collections (768d nomic-embed-text)
 SEMANTIC_COLLECTIONS = [
