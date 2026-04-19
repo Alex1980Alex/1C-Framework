@@ -273,10 +273,10 @@ class MemoryCube:
         body = parts[2].strip()
 
         # Parse structured sections from body
-        sections = {"what": None, "why": None, "where": None, "learned": None}
+        sections = {"what": None, "why": None, "where": None, "learned": None, "content": None}
         current_section = None
         section_lines: dict[str, list[str]] = {k: [] for k in sections}
-        content_lines = []
+        fallback_lines = []
 
         for line in body.split("\n"):
             if line.startswith("## "):
@@ -285,18 +285,18 @@ class MemoryCube:
                 if section_name in sections:
                     current_section = section_name
                 else:
-                    content_lines.append(line)
+                    fallback_lines.append(line)
             elif current_section is not None:
                 section_lines[current_section].append(line)
             else:
-                content_lines.append(line)
+                fallback_lines.append(line)
 
         for key, lines in section_lines.items():
             text = "\n".join(lines).strip()
             if text:
                 sections[key] = text
 
-        content = "\n".join(content_lines).strip()
+        content = sections.get("content") or "\n".join(fallback_lines).strip()
 
         cube = cls(
             cube_id=frontmatter.get("unified_id", "").split(":")[-1] or str(uuid4()),
