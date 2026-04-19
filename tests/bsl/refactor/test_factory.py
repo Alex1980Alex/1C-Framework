@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from src.bsl.semantic_search.refactor.backends.ast_grep_backend import (
     AstGrepBackend,
     AstGrepMatch,
