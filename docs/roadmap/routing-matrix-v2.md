@@ -60,7 +60,30 @@
 - **Form XML routing**: когда ast-grep не находит XML-side refs на handler, нужно ли эскалировать в multilspy или падать с «не удалось найти»? Сейчас — fallback на multilspy.
 - **Confidence калибровка**: значения из `MultilspyBackend._CONFIDENCE` — эмпирические, не измеренные. R4.2 (Confidence calibration) измерит реальный success rate на benchmark-датасете.
 
+## Global tuning — ast-grep call-graph pre-filter (Option A, 2026-04-19)
+
+`routing_matrix.yaml` теперь поддерживает блок `global.ast_grep` с тремя ключами:
+
+```yaml
+global:
+  ast_grep:
+    use_call_graph_prefilter: true        # default ON
+    call_graph_db: cache/bsl_call_graph.db
+    graph_stale_threshold_days: 7         # warn-only, не блокирует
+```
+
+**Эффект:** `AstGrepBackend` (и primary, и fallback) перед построением `WorkspaceEdit` спрашивает у `CallGraphPreFilter`, в каких модулях ожидаются правки (defining module + transitive callers через `CallGraphStore.callers_of`). Файлы вне этого множества отбрасываются. Если символ неизвестен графу → возвращается `None` и фильтр выключается на этот вызов (graceful fallback).
+
+**Rollback:** `use_call_graph_prefilter: false` в YAML, либо env `BSL_REFACTOR_NO_PREFILTER=1` для одного запуска.
+
+**Telemetry:** `RenameTelemetryEvent` (schema v2) добавляет `prefilter_used` и `prefilter_dropped`. `VerifyResult.prefilter_dropped` — то же значение для consumer-side агрегации.
+
+**Wiring:** через `src/bsl/semantic_search/refactor/backends/factory.py::build_ast_grep_backend()`. Используется `scripts/run_benchmark.py` и должен использоваться любым новым call-site (не конструировать `AstGrepBackend(...)` напрямую с прибитым прохождением prefilter).
+
+**Замеры (full-1, 20 strict tasks):** prefilter ON 4/20 (20%) vs OFF 3/20 (15%), +5 п.п. Acceptance gate ≥35% не достигнут — дальнейший анализ см. [option-a-recon.md](option-a-recon.md).
+
 ## История изменений
 
+- **v2.1 (2026-04-19):** добавлен блок `global.ast_grep` (Option A — call-graph pre-filter). Schema bump telemetry v1→v2.
 - **v2 (2026-04-17, R1.6 DoD):** публикация начальной матрицы. 7 SymbolKind, confidence 0.30–0.95. Классификатор — heuristic.
 - **v1 (до R1.6):** неформальная конвенция в комментариях `MultilspyBackend._CONFIDENCE`, без документа и без классификатора.
