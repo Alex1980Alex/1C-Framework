@@ -228,9 +228,12 @@ def test_telemetry_event_includes_version_field(tmp_path):
     orch.rename(uri, 0, 10, "Новая", dry_run=True, content=content)
 
     events = _read_events(log_file)
-    assert events[0]["version"] == 1
+    assert events[0]["version"] == 2
     # old_name extracted from content at the cursor
     assert events[0]["old_name"] == "Старая"
+    # New v2 fields default to no-prefilter when none was wired
+    assert events[0]["prefilter_used"] is False
+    assert events[0]["prefilter_dropped"] == 0
     # matrix_confidence from RoutingMatrix (0.95 for export proc)
     # classifier_confidence = 1.0 (content-based, kind != UNKNOWN)
     assert events[0]["matrix_confidence"] == pytest.approx(0.95)
