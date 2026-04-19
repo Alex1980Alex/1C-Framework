@@ -117,7 +117,8 @@
       "command": "D:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
       "args": ["start-mcp-server", "--context", "ide-assistant"],
       "cwd": "D:\\1С-Framework\\tools\\serena",
-      "timeout": 180000
+      "timeout": 180000,
+      "disabled": true
     },
     "task-master-ai": {
       "command": "npx",

@@ -225,8 +225,6 @@
       "mcp__auto-documenter__generate_documentation",
       "mcp__auto-documenter__autoreview",
       "Bash(pip list:*)",
-      "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/python.exe\":*)",
-      "Bash(\"D:/1С-Framework/tools/serena/.venv/Scripts/serena.exe\":*)",
       "Bash(ollama list:*)",
       "Bash(ollama show:*)",
       "Bash(ollama search:*)",
@@ -662,7 +660,10 @@
       "Bash(\"C:\\\\Users\\\\AlexT\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -m pip download tree-sitter-bsl==0.1.6 --no-deps --dest /tmp/tsbsl_wheel)",
       "Bash(gh pr *)",
       "Bash(ast-grep --version)",
-      "Bash(ast-grep --lang-help)"
+      "Bash(ast-grep --lang-help)",
+      "Bash(ast-grep scan *)",
+      "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy//**)",
+      "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy/language_servers//**)"
     ]
   },
   "enableAllProjectMcpServers": true,

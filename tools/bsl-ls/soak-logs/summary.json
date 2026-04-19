@@ -1,0 +1,25 @@
+{
+  "file_count": 2027,
+  "python_version": "3.13.1",
+  "dod_max_open_secs": 60.0,
+  "dod_max_rss_mb": 4096,
+  "rss_before_start_mb": 51.8,
+  "start_ms": 4739.4,
+  "rss_after_start_mb": 52.4,
+  "open_secs": 12.93,
+  "open_workspace": {
+    "opened": 2027,
+    "skipped_outside_workspace": 0,
+    "skipped_duplicate": 0,
+    "skipped_missing": 0,
+    "elapsed_ms": 12503.5,
+    "files_per_sec": 162.1
+  },
+  "rss_after_open_mb": 201.1,
+  "tracemalloc_current_mb": 140.0,
+  "tracemalloc_peak_mb": 143.9,
+  "dod_time_ok": true,
+  "dod_oom_ok": true,
+  "dod_opened_all_files": true,
+  "dod_pass": true
+}
