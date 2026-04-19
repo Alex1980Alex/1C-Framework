@@ -1349,7 +1349,8 @@ class MemoryOrchestrator:
                 await asyncio.to_thread(_append)
 
             elif target == "wiki":
-                from .memcube import ContentClassification, MemoryCube
+                from .memcube import ContentType as CType
+                from .memcube import MemoryCube
 
                 slug = (metadata or {}).get("slug")
                 if not slug:
@@ -1359,13 +1360,12 @@ class MemoryOrchestrator:
                 cube = MemoryCube(
                     cube_id=entity_id,
                     content=content,
-                    content_type=ContentClassification(
-                        content_type="wiki",
-                        confidence=0.8,
-                        signals=["routed:wiki"],
-                    ),
+                    content_type=CType.WIKI,
                     source=SourceServer.OBSIDIAN_VAULT,
                     memory_type=MemoryType.WIKI,
+                    confidence=(metadata or {}).get("confidence", 0.7),
+                    importance=(metadata or {}).get("importance", 0.5),
+                    tags=(metadata or {}).get("tags", []),
                 )
                 wiki_md = cube.to_wiki_page()
 
