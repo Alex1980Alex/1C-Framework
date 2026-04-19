@@ -1,7 +1,7 @@
 ---
 status: active
 tags: [architecture, bsl, 1c, integration]
-related: [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[core-framework-separation]]
+related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[core-framework-separation]]"]
 ---
 
 # BSL Integration Architecture

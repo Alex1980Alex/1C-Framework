@@ -1,7 +1,7 @@
 ---
 status: active
 tags: [wiki, index, map]
-related: [[overview]], [[triad-architecture]], [[PATTERNS]]
+related: ["[[overview]]", "[[triad-architecture]]", "[[PATTERNS]]"]
 ---
 
 # Framework Wiki Map

@@ -1,7 +1,7 @@
 ---
 status: active
 tags: [architecture, triad, hooks, skills, mcp]
-related: [[overview]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]]
+related: ["[[overview]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[bsl-integration]]", "[[core-framework-separation]]"]
 ---
 
 # Hooks + Skills + MCP Triad Architecture

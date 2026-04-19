@@ -1,0 +1,17 @@
+---
+status: active
+tags: [pattern, architecture]
+related: ["[[PATTERNS]]"]
+created: 2026-04-20
+---
+
+# 1.1 Provider Pattern
+
+**Где используется:** `vector_store/`, `graph_store/`, `embeddings/`, `loaders/` (4 домена)
+**Ключевые классы:** `BaseVectorStore`, `BaseGraphStore`, `BaseEmbeddingEngine`, `BaseLoader`
+**Как работает:** Каждый домен изолирован: абстрактный интерфейс в `base.py` и конкретные реализации в `providers/`. Фабричные функции скрывают детали инстанцирования от клиента.
+**Пример:**
+```python
+store = get_vector_store(settings)      # → QdrantVectorStore / ChromaVectorStore
+engine = get_embedding_engine(settings) # → LocalEmbeddingEngine / JinaEmbeddingEngine
+```

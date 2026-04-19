@@ -1,7 +1,7 @@
 ---
 status: active
 tags: [architecture, integration, structure]
-related: [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]]
+related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[bsl-integration]]"]
 ---
 
 # Claude Code Integration Structure

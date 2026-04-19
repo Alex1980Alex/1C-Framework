@@ -1,7 +1,7 @@
 ---
 status: active
 tags: [architecture, overview]
-related: [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]]
+related: ["[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[bsl-integration]]", "[[core-framework-separation]]"]
 ---
 
 # Architecture Overview
