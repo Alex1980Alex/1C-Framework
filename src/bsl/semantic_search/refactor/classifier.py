@@ -148,9 +148,19 @@ class RoutingMatrix:
         if not isinstance(raw_denylist, list):
             raise ValueError(f"'denylist' must be a list in {path}")
         cls._DENYLIST = frozenset(str(n) for n in raw_denylist if n)
+
+        global_block = data.get("global") or {}
+        ast_block = global_block.get("ast_grep") or {}
+        merged = dict(_DEFAULT_AST_GREP_GLOBAL)
+        for key, value in ast_block.items():
+            if key in merged:
+                merged[key] = value
+        cls._AST_GREP_GLOBAL = merged
+
         log.info(
-            "Loaded %d routes and %d denylist entries from %s",
-            len(new_routes), len(cls._DENYLIST), path,
+            "Loaded %d routes, %d denylist entries, ast-grep prefilter=%s from %s",
+            len(new_routes), len(cls._DENYLIST),
+            cls._AST_GREP_GLOBAL["use_call_graph_prefilter"], path,
         )
 
     @classmethod
@@ -158,6 +168,7 @@ class RoutingMatrix:
         """Reset routes to bundled defaults (useful in tests)."""
         cls._ROUTES = dict(_DEFAULT_ROUTES)
         cls._DENYLIST = frozenset()
+        cls._AST_GREP_GLOBAL = dict(_DEFAULT_AST_GREP_GLOBAL)
 
 
 class HeuristicClassifier:
