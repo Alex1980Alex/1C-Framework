@@ -299,10 +299,8 @@ class MemoryCube:
             cube_id=frontmatter.get("unified_id", "").split(":")[-1] or str(uuid4()),
             content=content,
             content_type=ContentType(frontmatter.get("content_type", "wiki")),
-            memory_type=MemoryType(frontmatter.get("source", "memory-ai").replace("memory-ai", "episodic"))
-            if "memory_type" not in frontmatter
-            else MemoryType(frontmatter["memory_type"]),
-            source=SourceServer(frontmatter.get("source", "memory-ai")),
+            memory_type=MemoryType(frontmatter["memory_type"]) if "memory_type" in frontmatter else MemoryType.EPISODIC,
+            source=SourceServer(frontmatter["source"]) if "source" in frontmatter else SourceServer.MEMORY_AI,
             title=frontmatter.get("title"),
             confidence=frontmatter.get("confidence", 0.7),
             importance=frontmatter.get("importance", 0.5),
