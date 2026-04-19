@@ -669,7 +669,10 @@
       "Bash(tee data/baseline_memory_pre_hermes.log)",
       "Bash(tee data/baseline_auth_pre_hermes.log)",
       "Bash(cp *)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Bash(ls -la .obsidian/)",
+      "Bash(ls -la docs/wiki/)",
+      "Bash(ls docs/architecture/)"
     ]
   },
   "enableAllProjectMcpServers": true,
