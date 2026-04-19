@@ -414,6 +414,45 @@ def search_md(query_tokens: set, limit: int = 10) -> list:
 
 
 # ---------------------------------------------------------------------------
+# Layer 4 — Wiki drafts search
+# ---------------------------------------------------------------------------
+WIKI_DRAFTS_DIR = PROJECT_ROOT / "docs" / "wiki" / "drafts"
+
+
+def search_wiki(query_tokens: set, limit: int = 10) -> list:
+    """Search wiki draft pages by keyword overlap."""
+    if not WIKI_DRAFTS_DIR.is_dir():
+        return []
+    start = time.monotonic()
+    results = []
+    try:
+        for md_file in WIKI_DRAFTS_DIR.glob("*.md"):
+            if time.monotonic() - start > WIKI_TIMEOUT:
+                break
+            text = md_file.read_text(encoding="utf-8", errors="replace")
+            file_tokens = set(tokenize(text))
+            overlap = query_tokens & file_tokens
+            if not overlap:
+                continue
+            score = len(overlap) / max(len(query_tokens), 1)
+            if score < SCORE_THRESHOLD:
+                continue
+            title = md_file.stem.replace("-", " ").title()
+            snippet = text[:200].replace("\n", " ").strip()
+            results.append({
+                "source": "wiki",
+                "id": str(md_file),
+                "content": f"{title}: {snippet}"[:200],
+                "category": "wiki-draft",
+                "score": round(score, 4),
+            })
+        results.sort(key=lambda x: -x["score"])
+        return results[:limit]
+    except Exception:
+        return results[:limit]
+
+
+# ---------------------------------------------------------------------------
 # Reciprocal Rank Fusion merge
 # ---------------------------------------------------------------------------
 def rrf_merge(layers: dict, weights: dict, k: int = 60) -> list:
