@@ -1,4 +1,4 @@
-# Benchmark Report - option-a-on
+# Benchmark Report - option-a-off
 
 **Tasks:** 20 | **Results:** 20
 
@@ -6,7 +6,7 @@
 
 | Backend | Success | Rollback | p50 ms | p95 ms | p99 ms |
 |---------|---------|----------|--------|--------|--------|
-| AstGrepBackend | 20.0% | 0.0% | 1135 | 1595 | 1935 |
+| AstGrepBackend | 15.0% | 0.0% | 1123 | 1429 | 1472 |
 
 ## Per-Category Success Rate
 
@@ -14,9 +14,9 @@
 |----------|--------|
 | CAT-1-local-variable | 25.0% |
 | CAT-2-module-local-proc | 0.0% |
-| CAT-3-cross-file-export | 0.0% |
+| CAT-3-cross-file-export | 25.0% |
 | CAT-4-form-handler | 0.0% |
-| CAT-5-edge-case | 75.0% |
+| CAT-5-edge-case | 25.0% |
 
 ## Failure Taxonomy
 
@@ -29,7 +29,6 @@
 - T07
 - T08
 - T09
-- T10
 - T11
 - T12
 - T13
@@ -37,3 +36,5 @@
 - T15
 - T16
 - T18
+- T19
+- T20

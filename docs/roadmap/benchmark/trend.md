@@ -16,3 +16,5 @@
 | full-1e | 2026-04-19 | HEAD | multilspy,ast-grep | 37/40 | 40 | T04 fix + success=`edits_match_expected`; CLI still shows old `applied` metric (37/40) |
 | full-1f | 2026-04-19 | HEAD | multilspy,ast-grep | 37/40 | 40 | URI normalization fix (URL-decode Cyrillic, strip `file:///` before wt_prefix); reports now use strict metric correctly |
 | full-1g | 2026-04-19 | HEAD | multilspy,ast-grep | **14/40** | 40 | **final, strict metric** — multilspy **55%** (11/20) vs ast-grep **15%** (3/20). Multilspy CAT-1/2 at 100%, ast-grep under-performs due to text-based over-matching (false-positive edits in other files). CAT-3/4 low numbers reflect tasks.json `expected_files` ground-truth incompleteness for cross-file scenarios, not backend bug |
+| option-a-on | 2026-04-19 | HEAD | ast-grep | 4/20 | 20 | ast-grep only |
+| option-a-off | 2026-04-19 | HEAD | ast-grep | 3/20 | 20 | ast-grep only |
