@@ -30,6 +30,8 @@ class MemoryType(Enum):
     SEMANTIC = "semantic"
     LEARNING = "learning"
     DOCUMENTATION = "docs"
+    WIKI = "wiki"
+    GRAPH = "graph"
 
     @classmethod
     def from_string(cls, value: str) -> "MemoryType":
