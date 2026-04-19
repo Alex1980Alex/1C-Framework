@@ -139,6 +139,12 @@ EXPLICIT_KEYWORDS: dict[str, list[str]] = {
         "confirmed", "best practice confirmed", "практика",
         "workflow", "рабочий процесс", "алгоритм работы",
     ],
+    "wiki": [
+        "wiki", "статья", "article", "документация",
+        "promote", "продвинуть", "опубликовать", "publish",
+        "obsidian", "заметка", "note", "драфт", "draft",
+        "карточка", "card", "справка", "reference",
+    ],
 }
 
 CATEGORY_TARGETS: dict[str, str] = {
