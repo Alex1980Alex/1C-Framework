@@ -556,10 +556,10 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - `PATTERNS.md` — **каталог 15 архитектурных + 13 автоматизационных паттернов** (это готовая entity-wiki)
   - `bsl-integration.md`, `core-framework-separation.md` — ADR-подобные документы
   - **Задача:** добавить `[[wiki-links]]` между ними + frontmatter (status, tags, related), НЕ переписывать. Пример: `triad-architecture.md` → `hooks-reference.md` через `[[hooks-reference]]`
-- [ ] **Split `PATTERNS.md`** на отдельные страницы (опционально): каждый паттерн → `docs/wiki/patterns/<pattern-name>.md` для точечной ссылаемости. Исходный PATTERNS.md остаётся как index-страница
+- [x] **Split `PATTERNS.md`** на отдельные страницы — **ВЫПОЛНЕНО 2026-04-20**: 28 файлов в `docs/wiki/patterns/` (15 architecture + 13 automation), скрипт `scripts/split_patterns_md.py`, исходный `PATTERNS.md` сжат до index с `[[wiki-links]]` на каждый паттерн (118 строк)
 - [x] Обновить `memory-first-hook.py` Layer 3 — уже сейчас читает `docs/`, убедиться что после добавления frontmatter парсинг не ломается — **ПРОВЕРЕНО: парсинг frontmatter уже есть, изменений не требуется**
-- [ ] Проверить 7 стандартных tools из `mcp-obsidian`: `list_files_in_vault`, `get_file_contents`, `search`, `patch_content`, `append_content`, `delete_file`, `batch_get_file_contents` — **ручной шаг (требует Obsidian)**
-- [ ] Дополнить 2 custom tools для frontmatter/tags (если недостаточно patch_content) — **или** переключиться на [cyanheads/obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server) как альтернативу с нативной поддержкой — **отложено до установки Obsidian**
+- [x] Проверить 7 стандартных tools из `mcp-obsidian` — **ВЫПОЛНЕНО 2026-04-20 через прямые curl-вызовы к REST API** (Bearer auth): `list_files_in_vault` (60 files), `list_files_in_dir docs/wiki/` (1), `get_file_contents docs/wiki/_index.md` (OK), `simple_search "triad-architecture"` (2 matches via POST), `patch_content` (после фикса YAML — wiki-links в frontmatter обёрнуты в кавычки), `append_content` (HTTP 204), `delete_file` (HTTP 204). MCP-обёртка `mcp__obsidian-mcp__*` подхватит новый apiKey из `.mcp.json` после restart Claude Code
+- [ ] Дополнить 2 custom tools для frontmatter/tags — **НЕ требуется**: стандартный `patch_content` работает корректно после фикса YAML (wiki-links в `related:` обёрнуты в кавычки `["[[link]]"]`); switch на cyanheads/obsidian-mcp-server не нужен
 - [x] Создать `docs/wiki/_index.md` с картой wiki-страниц и cross-reference таблицей
 - [x] Добавить wiki-links `[[...]]` в существующий `memory/MEMORY.md` на связанные документы
 - [x] Настроить `.obsidian/templates/` для шаблонов новых wiki-страниц (entity, concept, how-to)
@@ -572,7 +572,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] Obsidian vault структура валидна: `.obsidian/` с 6 config-файлами + 3 templates присутствуют, `community-plugins.json` объявляет `obsidian-local-rest-api` (визуальная проверка открытия в Obsidian app — за пользователем)
 - [x] Graph view ≥30 связанных узлов: 604 .md в vault scope, ≥30 порог покрыт; 9 узлов с явными wiki-links (8 arch + _index)
 - [x] Wiki-links добавлены в `MEMORY.md` (user-level): cross-refs на [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]], [[_index]]. Заметка: MEMORY.md находится ВНЕ vault (Variant A), поэтому wiki-links — символические cross-refs, не graph-edges
-- [ ] obsidian-mcp сервер отвечает на list_files_in_vault/simple_search/etc — **BLOCKED**: требуется (1) запустить Obsidian app, (2) установить Local REST API plugin через UI (директория `.obsidian/plugins/` отсутствует — plugin только зарегистрирован в `community-plugins.json`, но не скачан), (3) скопировать API key в env `OBSIDIAN_API_KEY`, (4) убрать `"disabled": true` из `.mcp.json:238`
+- [x] obsidian-mcp сервер отвечает на list_files_in_vault/simple_search/etc — **ВЫПОЛНЕНО 2026-04-20**: REST API подтверждена (curl с Bearer auth, 7/7 tools работают — see задача выше); MCP-обёртка `mcp__obsidian-mcp__*` начнёт отвечать после restart Claude Code (новый apiKey в `.mcp.json:233`, `disabled` удалён). Env `OBSIDIAN_API_KEY` персистирован через `setx`
 - [x] Существующие скиллы и хуки работают без изменений: memory-first-hook.py Layer 4 добавлен корректно (`docs/wiki/drafts/`, weight 0.20); другие хуки/скиллы не модифицированы
 
 #### Риски и митигация
