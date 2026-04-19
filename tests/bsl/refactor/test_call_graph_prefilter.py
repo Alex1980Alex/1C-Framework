@@ -31,9 +31,10 @@ def test_unknown_symbol_returns_none(prefilter):
     assert prefilter.allowed_files("absent") is None
 
 
-def test_known_no_callers_returns_empty_set(prefilter):
+def test_known_no_callers_returns_defining_module_only(prefilter):
     _insert(prefilter, [("m::f", "f", "func", "m", 1, 1, 0, None, None)], [])
-    assert prefilter.allowed_files("f") == set()
+    # Symbol known, 0 callers → only defining module returned
+    assert prefilter.allowed_files("f") == {Path("m")}
 
 
 def test_one_caller_returns_caller_and_defining(prefilter):
