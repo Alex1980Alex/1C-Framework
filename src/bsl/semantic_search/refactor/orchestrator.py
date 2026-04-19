@@ -243,6 +243,9 @@ class RefactorOrchestrator:
         kind: SymbolKind,
         new_name: str,
         decision: RouteDecision,
+        *,
+        old_name: str | None = None,
+        denied: bool = False,
     ) -> ManualFallbackInstruction:
         approach_map: dict[SymbolKind, str] = {
             SymbolKind.FORM_HANDLER: "Grep+Edit or EDT GUI refactor F2",
@@ -258,14 +261,32 @@ class RefactorOrchestrator:
                 "Verify with Grep after manual rename",
             ],
         }
+        approach = approach_map.get(kind, "Grep+Edit")
+        warnings = list(warnings_map.get(kind, []))
+        if denied:
+            warnings.insert(
+                0,
+                f"Name {old_name!r} is in the over-match denylist "
+                "(too common for ast-grep). Use EDT GUI F2 or scope-aware Edit.",
+            )
+            rationale = (
+                f"ast-grep skipped: {old_name!r} appears in many unrelated "
+                f"files (over-match risk). No scope-aware backend available "
+                f"for {kind.value}."
+            )
+        else:
+            rationale = (
+                f"Primary={decision.primary}, fallback={decision.fallback} "
+                f"both failed for {kind.value}"
+            )
         return ManualFallbackInstruction(
             uri=uri,
             symbol_kind=kind,
-            old_name="<unknown>",
+            old_name=old_name or "<unknown>",
             new_name=new_name,
-            suggested_approach=approach_map.get(kind, "Grep+Edit"),
-            warnings=warnings_map.get(kind, []),
-            rationale=f"Primary={decision.primary}, fallback={decision.fallback} both failed for {kind.value}",
+            suggested_approach=approach,
+            warnings=warnings,
+            rationale=rationale,
         )
 
     @staticmethod
