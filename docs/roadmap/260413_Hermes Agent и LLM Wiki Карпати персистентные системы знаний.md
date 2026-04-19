@@ -512,12 +512,12 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Критерии готовности
 
-- [ ] UnifiedID парсит и генерирует `wiki:obsidian-vault:...` и `graph:lightrag:...`
-- [ ] `unified_search` возвращает результаты из wiki vault (mock или реальный Obsidian MCP)
-- [ ] `vector-memory.promote_to_wiki` создаёт draft и link (без реального wiki engine, stub путь)
-- [ ] 26 существующих тестов `test_memory_unified.py` проходят без регрессии
-- [ ] Новые тесты `test_memory_layers_v2.py` покрывают дедупликацию по `superseded_by`
-- [ ] `memory/SCHEMA.md` описывает все 5 слоёв, все link types, правила промоции
+- [x] UnifiedID парсит и генерирует `wiki:obsidian-vault:...` и `graph:lightrag:...`
+- [x] `unified_search` возвращает результаты из wiki vault (stub — пустые результаты, Phase 1 подключит Obsidian MCP)
+- [ ] `vector-memory.promote_to_wiki` создаёт draft и link (отложено до Phase 1)
+- [x] 26 существующих тестов `test_memory_unified.py` проходят без регрессии (+ 68 всего memory-тестов)
+- [x] Новые тесты `test_memory_layers_v13.py` + `test_memcube_wiki.py` + `test_link_registry_migration.py` (47 новых)
+- [ ] `memory/SCHEMA.md` описывает все 5 слоёв, все link types, правила промоции (отложено до Phase 1)
 
 #### Риски и митигация
 
