@@ -2,18 +2,19 @@
 """
 Hook: memory-first-hook (P5.2 Federated Recall)
 Event: UserPromptSubmit
-Purpose: Auto-inject relevant memory context from 3 layers (SQLite + Qdrant + .md)
+Purpose: Auto-inject relevant memory context from 4 layers (SQLite + Qdrant + .md + wiki)
          into Claude's system message before processing user prompt.
 Timeout: 2s (total budget 1.5s for searches)
 
-3-layer federated search with RRF merge:
-  - Layer 1: SQLite important_messages (weight 0.35, 200ms)
-  - Layer 2: Qdrant SEMANTIC search (weight 0.40, 800ms, 3 collections)
+4-layer federated search with RRF merge:
+  - Layer 1: SQLite important_messages (weight 0.30, 200ms)
+  - Layer 2: Qdrant SEMANTIC search (weight 0.35, 800ms, 3 collections)
     - skill_library (75 skills), experience_embeddings (61 exp), conversation_memory (372 msgs)
     - Embedding: Ollama nomic-embed-text (768d)
     - Fallback: token overlap on learned_patterns if Ollama unavailable
     - Disable: MEMORY_HOOK_NO_SEMANTIC=1
-  - Layer 3: .md memory files (weight 0.25, 500ms)
+  - Layer 3: .md memory files (weight 0.15, 500ms)
+  - Layer 4: Wiki drafts search (weight 0.20, 200ms, docs/wiki/drafts/)
 
 Exit codes:
   0 = always allow (advisory, non-blocking)
