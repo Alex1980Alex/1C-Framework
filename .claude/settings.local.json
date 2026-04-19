@@ -664,7 +664,8 @@
       "Bash(ast-grep scan *)",
       "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy//**)",
       "Read(//d/1С-Framework/tools/multilspy-fork/src/multilspy/language_servers//**)",
-      "Bash(awk -F',' 'NR>1 {print $1, $9, $18}')"
+      "Bash(awk -F',' 'NR>1 {print $1, $9, $18}')",
+      "Bash(BSL_REFACTOR_NO_PREFILTER=1 python scripts/run_benchmark.py --backends ast-grep --run-id option-a-off --append-trend)"
     ]
   },
   "enableAllProjectMcpServers": true,
