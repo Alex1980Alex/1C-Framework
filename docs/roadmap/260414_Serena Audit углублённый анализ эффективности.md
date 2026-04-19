@@ -2532,7 +2532,7 @@ python coverage_check.py
 
 ## Roadmap: Option A — Pre-filter ast-grep по call graph
 
-**Статус:** PROPOSED (2026-04-19), дополняет v4.6 denylist-митигацию.
+**Статус:** IMPLEMENTED (2026-04-19) — все фазы A.0–A.7 завершены. Acceptance gate ≥35% strict НЕ достигнут (наблюдаемо: 15% → 20%, +5 пп). Компонент включён по умолчанию, telemetry schema v2. Полный отчёт: [option-a-recon.md](option-a-recon.md). Wiring через `src/bsl/semantic_search/refactor/backends/factory.py::build_ast_grep_backend()`. Дополняет v4.6 denylist-митигацию.
 **Цель:** поднять strict-метрику `AstGrepBackend` с 15% в сторону multilspy (55%) за счёт scope-aware pre-filter.
 **Scope:** строго additive — не трогаем routing matrix, denylist, `MultilspyBackend`. Только `AstGrepBackend` + tangential verification.
 
