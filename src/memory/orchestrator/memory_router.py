@@ -288,6 +288,7 @@ CONTENT_TYPE_TARGETS: dict[ContentType, str] = {
     ContentType.RULE: "vector-memory",
     ContentType.SKILL: "skill-learning",
     ContentType.CODE: "vector-memory",
+    ContentType.WIKI: "wiki",
     ContentType.OBSERVATION: "memory-ai",
 }
 
