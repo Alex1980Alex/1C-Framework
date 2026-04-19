@@ -54,9 +54,15 @@ class AstGrepBackend:
         "unknown": 0.30,
     }
 
-    def __init__(self, runner: AstGrepRunner, workspace_root: Path) -> None:
+    def __init__(
+        self,
+        runner: AstGrepRunner,
+        workspace_root: Path,
+        prefilter: CallGraphPreFilter | None = None,
+    ) -> None:
         self._runner = runner
         self._workspace_root = workspace_root.resolve()
+        self._prefilter = prefilter
 
     def can_handle(self, uri: str) -> bool:
         """True for .bsl and .os file URIs."""
