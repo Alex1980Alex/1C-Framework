@@ -30,10 +30,13 @@ def _build_multilspy_backend(repo_root: Path):
     from src.bsl.semantic_search.refactor.backends.real_bsl_client import create_bsl_client
     from src.bsl.semantic_search.refactor.backends.multilspy_backend import MultilspyBackend
 
-    bsl_files = list((repo_root / "src" / "bsl").rglob("*.bsl"))
+    # BSL LS expects workspace root to be the 1C Configuration dir
+    # (Configuration.xml present). src/bsl/ holds our test configuration.
+    bsl_root = repo_root / "src" / "bsl"
+    bsl_files = list(bsl_root.rglob("*.bsl"))
     print(f"[multilspy] preloading {len(bsl_files)} .bsl files...")
     client = create_bsl_client(
-        workspace_root=repo_root,
+        workspace_root=bsl_root,
         preload=bsl_files,
         populate_wait_secs=2.0,
         start_timeout=120.0,
