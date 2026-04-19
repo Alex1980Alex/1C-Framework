@@ -1356,6 +1356,7 @@ class MemoryOrchestrator:
                 if not slug:
                     slug = content[:40].lower().replace(" ", "-")
                     slug = "".join(c if c.isalnum() or c == "-" else "" for c in slug)
+                    slug = slug or entity_id[:16]
 
                 cube = MemoryCube(
                     cube_id=entity_id,
