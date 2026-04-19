@@ -85,6 +85,9 @@ def main() -> None:
                 cg_db = REPO_ROOT / "cache" / "bsl_call_graph.db"
                 if cg_db.exists() and not os.environ.get("BSL_REFACTOR_NO_PREFILTER"):
                     from src.bsl.call_graph.store import CallGraphStore
+                    from src.bsl.semantic_search.refactor.backends.call_graph_prefilter import (
+                        CallGraphPreFilter,
+                    )
 
                     prefilter = CallGraphPreFilter(CallGraphStore(str(cg_db)))
                 backends["ast-grep"] = AstGrepBackend(
