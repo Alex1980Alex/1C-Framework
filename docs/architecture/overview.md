@@ -192,7 +192,7 @@ Environment variables: `EMBEDDING__MODEL=intfloat/multilingual-e5-large`, `VECTO
 
 ## Claude Code Integration
 
-The framework extends Claude Code CLI with a **Hooks + Skills + MCP Triad**:
+The framework extends Claude Code CLI with a **[[triad-architecture|Hooks + Skills + MCP Triad]]**:
 
 ### Structure (`.claude/`)
 

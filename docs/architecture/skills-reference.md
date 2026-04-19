@@ -343,9 +343,9 @@ Config-driven маршрутизация промптов к скиллам. К�
 
 ## См. также
 
-- [Triad Architecture](triad-architecture.md)
-- [Hooks Reference](hooks-reference.md)
-- [Ralph Wiggum](ralph-wiggum.md)
+- [[triad-architecture]]
+- [[hooks-reference]]
+- [[ralph-wiggum]]
 
 
 ## Version History

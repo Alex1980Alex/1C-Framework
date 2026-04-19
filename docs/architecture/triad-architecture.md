@@ -190,7 +190,7 @@ MCP — это tools. Hooks — это events. Skills — это knowledge. Тр
 
 ## См. также
 
-- [Core/Framework Separation](core-framework-separation.md)
-- [Hooks Reference](hooks-reference.md)
-- [Skills Reference](skills-reference.md)
-- [Ralph Wiggum](ralph-wiggum.md)
+- [[core-framework-separation]]
+- [[hooks-reference]]
+- [[skills-reference]]
+- [[ralph-wiggum]]

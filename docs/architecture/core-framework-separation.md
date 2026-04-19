@@ -108,6 +108,6 @@ Skip: `docs/architecture/`, `cache/`, `__pycache__`, `_index.json`.
 ## См. также
 
 - **ADR-006** — `.claude/skills/architecture-research/adr/006-core-framework-separation.md`
-- [Triad Architecture](triad-architecture.md) — Hooks + Skills + MCP
-- [Hooks Reference](hooks-reference.md) — все 12 hooks
-- [Skills Reference](skills-reference.md) — все 9 skills
+- [[triad-architecture]] — Hooks + Skills + MCP
+- [[hooks-reference]] — все 12 hooks
+- [[skills-reference]] — все 9 skills

@@ -319,6 +319,6 @@ if __name__ == "__main__":
 
 ## См. также
 
-- [Triad Architecture](triad-architecture.md)
-- [Skills Reference](skills-reference.md)
-- [Ralph Wiggum](ralph-wiggum.md)
+- [[triad-architecture]]
+- [[skills-reference]]
+- [[ralph-wiggum]]

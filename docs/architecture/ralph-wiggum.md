@@ -402,6 +402,6 @@ User: "Создай новый hook для валидации коммитов"
 
 ## See Also
 
-- [Hooks Reference](hooks-reference.md) — complete hook specifications
-- [Triad Architecture](triad-architecture.md) — how Ralph fits into Hooks+Skills+MCP
-- [Core/Framework Separation](core-framework-separation.md) — where Ralph hooks live
+- [[hooks-reference]] — complete hook specifications
+- [[triad-architecture]] — how Ralph fits into Hooks+Skills+MCP
+- [[core-framework-separation]] — where Ralph hooks live
