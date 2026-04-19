@@ -4,8 +4,8 @@ description: >
   5-фазная методология анализа задачи 1С:Предприятие.
   Требования -> Объекты -> Алгоритм -> План -> Верификация.
   v4.0: SDD-интеграция (OpenSpec delta-specs, approval gate, brownfield validation).
-version: 4.0.0
-updated: 2026-04-02
+version: 4.1.0
+updated: 2026-04-19
 tags: [1c, analysis, bsl, configuration, methodology, semantic-search, autoresearch, three-agent]
 ultrathink: true
 commands:
