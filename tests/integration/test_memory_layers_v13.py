@@ -149,5 +149,5 @@ class TestRouterWikiTarget:
     @pytest.mark.asyncio
     async def test_router_classifies_wiki_content(self):
         router = MemoryRouter()
-        decision = await router.route("сохранить в wiki статью про архитектуру")
+        decision = await router.route("promote to wiki статью про архитектуру")
         assert "wiki" in decision.targets
