@@ -161,6 +161,12 @@ INTENT_PATTERNS: dict[str, str] = {
     "создать паттерн": "vector-memory",
     "сохранить навык": "skill-learning",
     "подтвердить практику": "skill-learning",
+    "сохранить в wiki": "wiki",
+    "promote to wiki": "wiki",
+    "создать статью": "wiki",
+    "опубликовать в wiki": "wiki",
+    "создать заметку": "wiki",
+    "wiki draft": "wiki",
 }
 
 # Content type detection patterns
