@@ -84,6 +84,10 @@ class AstGrepBackend:
         self, uri: str, line: int, character: int, new_name: str
     ) -> WorkspaceEdit:
         """Extract identifier at (line, character), run ast-grep, build WorkspaceEdit."""
+        # Reset per-call telemetry counters early so callers reading the attrs
+        # after a raised BackendError do not see values leaked from a prior call.
+        self.last_prefilter_dropped = 0
+        self.last_prefilter_used = False
         path = self._uri_to_path(uri)
         if not path.exists():
             raise BackendError(f"file not found: {path}", code="file_not_found")
