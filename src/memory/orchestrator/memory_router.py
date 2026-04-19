@@ -146,6 +146,7 @@ CATEGORY_TARGETS: dict[str, str] = {
     "facts": "memory-ai",
     "code": "vector-memory",
     "skills": "skill-learning",
+    "wiki": "wiki",
 }
 
 INTENT_PATTERNS: dict[str, str] = {
