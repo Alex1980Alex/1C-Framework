@@ -80,20 +80,18 @@ def main() -> None:
                     binary=_ast_grep_binary(),
                     config_path=sgconfig,
                 )
-                # Wire call-graph prefilter if DB exists and not disabled
-                prefilter = None
-                cg_db = REPO_ROOT / "cache" / "bsl_call_graph.db"
-                if cg_db.exists() and not os.environ.get("BSL_REFACTOR_NO_PREFILTER"):
-                    from src.bsl.call_graph.store import CallGraphStore
-                    from src.bsl.semantic_search.refactor.backends.call_graph_prefilter import (
-                        CallGraphPreFilter,
-                    )
+                from src.bsl.semantic_search.refactor.backends.factory import (
+                    build_ast_grep_backend,
+                )
+                from src.bsl.semantic_search.refactor.classifier import (
+                    RoutingMatrix,
+                )
 
-                    prefilter = CallGraphPreFilter(CallGraphStore(str(cg_db)))
-                backends["ast-grep"] = AstGrepBackend(
+                RoutingMatrix.load()
+                backends["ast-grep"] = build_ast_grep_backend(
                     runner=runner_impl,
                     workspace_root=REPO_ROOT / "src" / "bsl",
-                    prefilter=prefilter,
+                    project_root=REPO_ROOT,
                 )
             elif name == "multilspy":
                 backend, client = _build_multilspy_backend(REPO_ROOT)
