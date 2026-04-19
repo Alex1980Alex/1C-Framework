@@ -87,6 +87,7 @@ description: "Используй этот скилл для понимания �
 | `learning-loop` | Цикл обучения: SEARCH → FETCH → EXECUTE → CREATE skill |
 | `code-verify` | Верификация кода: 3 уровня, 4 режима (knowledge/behavior/bugfix/quality) |
 | `tenacity-retry` | Retry с tenacity: декораторы, backoff, jitter, async |
+| `obsidian-vault` | Obsidian vault навигация: wiki-links, templates, MCP obsidian-mcp |
 
 #### Операционные фреймворка (17)
 
