@@ -50,6 +50,8 @@ class SourceServer(Enum):
     SKILL_LEARNING = "skill-learning"
     PDF_DOCS = "pdf-docs"
     ORCHESTRATOR = "orchestrator"
+    OBSIDIAN_VAULT = "obsidian-vault"
+    LIGHTRAG = "lightrag"
 
     @classmethod
     def from_string(cls, value: str) -> "SourceServer":
@@ -67,6 +69,8 @@ class SourceServer(Enum):
             SourceServer.SKILL_LEARNING: MemoryType.LEARNING,
             SourceServer.PDF_DOCS: MemoryType.DOCUMENTATION,
             SourceServer.ORCHESTRATOR: MemoryType.EPISODIC,
+            SourceServer.OBSIDIAN_VAULT: MemoryType.WIKI,
+            SourceServer.LIGHTRAG: MemoryType.GRAPH,
         }
         return mapping[self]
 
