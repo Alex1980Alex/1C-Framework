@@ -63,6 +63,8 @@ class AstGrepBackend:
         self._runner = runner
         self._workspace_root = workspace_root.resolve()
         self._prefilter = prefilter
+        self.last_prefilter_dropped: int = 0
+        self.last_prefilter_used: bool = False
 
     def can_handle(self, uri: str) -> bool:
         """True for .bsl and .os file URIs."""
