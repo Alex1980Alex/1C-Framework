@@ -212,16 +212,20 @@ class ReportBuilder:
                 backend_stats[b] = {"total": 0, "applied": 0, "rolled_back": 0, "durations": []}
             bs = backend_stats[b]
             bs["total"] += 1
-            if r.applied:
+            # Success = edits match expected (handles edge cases: expected_files=[]
+            # + no edits returned = correct refusal). `applied` = produced any
+            # edit, which is NOT the same as "did the right thing".
+            success = r.edits_match_expected
+            if success:
                 bs["applied"] += 1
             if r.rolled_back:
                 bs["rolled_back"] += 1
             bs["durations"].append(r.duration_ms_plan)
 
             cat = task_cat_map.get(r.task_id, "uncategorized")
-            per_category.setdefault(cat, {}).setdefault(b, []).append(r.applied)
+            per_category.setdefault(cat, {}).setdefault(b, []).append(success)
 
-            if not r.applied or r.error_code is not None:
+            if not success or r.error_code is not None:
                 failure_taxonomy.setdefault(b, []).append(r.task_id)
 
         per_backend: dict[str, dict[str, Any]] = {}
