@@ -253,7 +253,7 @@ class MemoryCube:
         if self.learned:
             lines.append(f"## Learned\n\n{self.learned}\n")
         if self.content:
-            lines.append(self.content)
+            lines.append(f"## Content\n\n{self.content}")
 
         return "\n".join(lines)
 
