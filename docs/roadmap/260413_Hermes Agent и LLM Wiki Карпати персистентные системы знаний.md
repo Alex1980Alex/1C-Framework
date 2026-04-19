@@ -485,6 +485,31 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [ ] Интеграционный тест `tests/integration/test_memory_layers_v13.py`: полный цикл (session → episodic → pattern → wiki → index) на синтетических данных
 - [ ] **НЕ ЛОМАТЬ** 26 существующих тестов `test_memory_unified.py` — все должны проходить без изменений
 
+#### Промежуточные итоги (2026-04-19)
+
+**Статус:** Phase 0 COMPLETE ✅ — все 7 основных задач реализованы, 115 тестов проходят, 0 регрессий.
+
+| # | Задача | Файлы | Статус |
+|---|--------|-------|--------|
+| 0.1 | UnifiedID wiki/graph типы | `unified_id.py` | ✅ MemoryType.WIKI/GRAPH, SourceServer.OBSIDIAN_VAULT/LIGHTRAG, create_wiki_id(), create_graph_id() |
+| 0.2 | LinkRegistry 4 новых типа + миграция | `link_registry.py`, `migrations/001_extend_link_types.sql`, `scripts/migrate_link_registry.py` | ✅ 10 link types (CHECK constraint), migration v1→v2 с dry-run/rollback |
+| 0.3 | MemoryCube wiki сериализация | `memcube.py` | ✅ ContentType.WIKI, to_wiki_page() (YAML frontmatter + ## What/Why/Where/Learned/Content), from_wiki_page() round-trip |
+| 0.4 | Search adapters (stubs) | `adapters/wiki_adapter.py`, `adapters/graph_adapter.py` | ✅ BaseSearchAdapter stubs, зарегистрированы в UnifiedSearchEngine |
+| 0.5 | Router wiki target | `memory_router.py`, `memory_orchestrator.py` | ✅ Wiki keywords/intents, VALID_TARGETS, CONTENT_TYPE_TARGETS, _save_to_target("wiki") → docs/wiki/drafts/ |
+| 0.6 | memory-first-hook Layer 4 | `.claude/hooks/memory-first-hook.py` | ✅ search_wiki() по docs/wiki/drafts/, RRF: L1=0.30 L2=0.35 L3=0.15 L4=0.20 |
+| 0.7 | Интеграционные тесты | `tests/integration/test_memcube_wiki.py` (10), `test_link_registry_migration.py` (13), `test_memory_layers_v13.py` (24) | ✅ 47 новых тестов, 68 существующих — все pass |
+
+**Code-verify:** quality-review PASS. Найдены и исправлены 2 бага: (1) ContentType.WIKI отсутствовал в CONTENT_TYPE_TARGETS → KeyError, (2) пустой slug для non-Latin контента → fallback на entity_id.
+
+**Не реализовано (вне scope Phase 0):**
+- `docs/wiki/SCHEMA.md` — отложен до Phase 1
+- `vector-memory.promote_to_wiki` MCP tool — отложен до Phase 1
+- `docs/wiki/log.md` — отложен до Phase 1
+- Wiki embeddings в Qdrant (`wiki_pages_v1`) — отложен до Phase 1 (Layer 4 пока token-overlap)
+- Скилл `memory-unified/SKILL.md` обновление — отложено
+
+**Бэкапы:** `data/link_registry.db.backup-pre-hermes`, `data/link_registry.db.sql.backup-pre-hermes`, `data/baseline_memory_pre_hermes.log`
+
 #### Критерии готовности
 
 - [ ] UnifiedID парсит и генерирует `wiki:obsidian-vault:...` и `graph:lightrag:...`
