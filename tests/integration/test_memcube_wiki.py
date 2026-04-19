@@ -64,7 +64,7 @@ class TestToWikiPage:
         assert "Test content for wiki page" in page
 
     def test_minimal_cube(self):
-        cube = MemoryCube(content_type=ContentType.WIKI)
+        cube = MemoryCube(content_type=ContentType.WIKI, memory_type=MemoryType.WIKI, content="Hello")
         page = cube.to_wiki_page()
         assert page.startswith("---\n")
         assert "## Content" in page
