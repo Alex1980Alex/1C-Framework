@@ -186,6 +186,90 @@ def test_plan_rename_runner_generic_exception_wrapped(workspace: Path) -> None:
     assert exc.value.code == "runner_error"
 
 
+class _AllowFilesPrefilter:
+    """Stub prefilter that whitelists a fixed set of resolved paths."""
+
+    def __init__(self, allow: set[Path] | None) -> None:
+        self._allow = allow
+
+    def allowed_files(self, old_name, module_hint=None):  # noqa: ARG002
+        return self._allow
+
+
+def test_prefilter_drops_matches_outside_allowlist(workspace: Path) -> None:
+    file_a = workspace / "a.bsl"
+    _write(file_a, "Процедура F() Экспорт\nКонецПроцедуры\n")
+    file_b = workspace / "b.bsl"
+    _write(file_b, "F();\n")
+    file_c = workspace / "c.bsl"
+    _write(file_c, "F();\n")
+
+    matches = [
+        AstGrepMatch(file=file_a, start_line=0, start_character=10, end_line=0, end_character=11),
+        AstGrepMatch(file=file_b, start_line=0, start_character=0, end_line=0, end_character=1),
+        AstGrepMatch(file=file_c, start_line=0, start_character=0, end_line=0, end_character=1),
+    ]
+    runner = _FakeRunner(matches=matches)
+    prefilter = _AllowFilesPrefilter({file_a.resolve(), file_b.resolve()})
+    backend = AstGrepBackend(runner, workspace, prefilter=prefilter)
+
+    result = backend.plan_rename(file_a.resolve().as_uri(), 0, 10, "G")
+
+    assert backend.last_prefilter_used is True
+    assert backend.last_prefilter_dropped == 1
+    edited_uris = {fe.uri for fe in result.file_edits}
+    assert file_c.resolve().as_uri() not in edited_uris
+    assert file_a.resolve().as_uri() in edited_uris
+    assert file_b.resolve().as_uri() in edited_uris
+
+
+def test_prefilter_unknown_symbol_no_drop(workspace: Path) -> None:
+    file_a = workspace / "a.bsl"
+    _write(file_a, "Процедура F() Экспорт\nКонецПроцедуры\n")
+    file_b = workspace / "b.bsl"
+    _write(file_b, "F();\n")
+
+    matches = [
+        AstGrepMatch(file=file_a, start_line=0, start_character=10, end_line=0, end_character=11),
+        AstGrepMatch(file=file_b, start_line=0, start_character=0, end_line=0, end_character=1),
+    ]
+    backend = AstGrepBackend(
+        _FakeRunner(matches=matches),
+        workspace,
+        prefilter=_AllowFilesPrefilter(None),  # unknown symbol → fallback
+    )
+    result = backend.plan_rename(file_a.resolve().as_uri(), 0, 10, "G")
+
+    assert backend.last_prefilter_used is False
+    assert backend.last_prefilter_dropped == 0
+    assert len(result.file_edits) == 2
+
+
+def test_prefilter_counters_reset_per_call(workspace: Path) -> None:
+    file_a = workspace / "a.bsl"
+    _write(file_a, "Процедура F() Экспорт\nКонецПроцедуры\n")
+    file_b = workspace / "b.bsl"
+    _write(file_b, "F();\n")
+
+    runner = _FakeRunner(matches=[
+        AstGrepMatch(file=file_a, start_line=0, start_character=10, end_line=0, end_character=11),
+        AstGrepMatch(file=file_b, start_line=0, start_character=0, end_line=0, end_character=1),
+    ])
+    backend = AstGrepBackend(
+        runner, workspace, prefilter=_AllowFilesPrefilter({file_a.resolve()})
+    )
+    backend.plan_rename(file_a.resolve().as_uri(), 0, 10, "G")
+    assert backend.last_prefilter_dropped == 1
+
+    # Second call: switch to no-filter prefilter (returns None)
+    backend2 = AstGrepBackend(
+        runner, workspace, prefilter=_AllowFilesPrefilter(None)
+    )
+    backend2.plan_rename(file_a.resolve().as_uri(), 0, 10, "H")
+    assert backend2.last_prefilter_used is False
+    assert backend2.last_prefilter_dropped == 0
+
+
 def test_plan_rename_runner_backend_error_propagates(workspace: Path) -> None:
     file_a = workspace / "a.bsl"
     _write(file_a, "Процедура X()\n")
