@@ -522,9 +522,10 @@ class MemoryFirstHook(BaseHook):
         sqlite_results = search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
         qdrant_results = search_qdrant(query_tokens, limit=10, prompt=prompt) if time.monotonic() < deadline else []
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
+        wiki_results = search_wiki(query_tokens, limit=10) if time.monotonic() < deadline else []
 
         merged = rrf_merge(
-            {"sqlite": sqlite_results, "qdrant": qdrant_results, "md": md_results},
+            {"sqlite": sqlite_results, "qdrant": qdrant_results, "md": md_results, "wiki": wiki_results},
             LAYER_WEIGHTS,
         )[:MAX_RESULTS]
 
