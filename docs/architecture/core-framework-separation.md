@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, integration, structure]
+related: [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]]
+---
+
 # Claude Code Integration Structure
 
 > Status: Single-level (all in `.claude/`) | Date: 2026-02-14

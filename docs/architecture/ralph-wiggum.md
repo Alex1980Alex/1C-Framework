@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, ralph-wiggum, self-correction, autonomous]
+related: [[overview]], [[triad-architecture]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]]
+---
+
 # Ralph Wiggum — Autonomous Loop System
 
 ## Overview

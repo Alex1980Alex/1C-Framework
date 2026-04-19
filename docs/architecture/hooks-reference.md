@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, hooks, reference]
+related: [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]]
+---
+
 # Hooks Reference
 
 ## Обзор

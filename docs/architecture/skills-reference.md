@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, skills, reference]
+related: [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]]
+---
+
 # Skills Reference
 
 ## Обзор

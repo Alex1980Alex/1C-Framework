@@ -300,11 +300,11 @@ src/
 
 | Document | Description |
 |----------|-------------|
-| [Integration Structure](core-framework-separation.md) | All 12 hooks + 9 skills in `.claude/` |
-| [Triad Architecture](triad-architecture.md) | Hooks + Skills + MCP: when, how, and with what |
-| [Hooks Reference](hooks-reference.md) | All 12 hooks: events, matchers, logic, signals |
-| [Skills Reference](skills-reference.md) | All 9 skills: triggers, workflows, cache |
-| [Ralph Wiggum](ralph-wiggum.md) | Autonomous loop system + self-correcting LLM retries |
+| [[core-framework-separation]] | All 12 hooks + 9 skills in `.claude/` |
+| [[triad-architecture]] | Hooks + Skills + MCP: when, how, and with what |
+| [[hooks-reference]] | All 12 hooks: events, matchers, logic, signals |
+| [[skills-reference]] | All 9 skills: triggers, workflows, cache |
+| [[ralph-wiggum]] | Autonomous loop system + self-correcting LLM retries |
 
 ## See Also
 

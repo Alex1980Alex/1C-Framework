@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, patterns, automation]
+related: [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[bsl-integration]], [[core-framework-separation]]
+---
+
 # Каталог паттернов фреймворка
 
 > Полный каталог архитектурных паттернов и паттернов автоматизации PDF Vector & Graph Framework.
