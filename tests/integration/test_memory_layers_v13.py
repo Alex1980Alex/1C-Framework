@@ -11,8 +11,6 @@ Phase 0 coverage:
 - 0.5: Router wiki target
 """
 
-import asyncio
-
 import pytest
 
 from src.memory.orchestrator.adapters.graph_adapter import GraphSearchAdapter
@@ -29,7 +27,6 @@ from src.memory.orchestrator.memory_router import (
 from src.memory.orchestrator.unified_id import (
     MemoryType,
     SourceServer,
-    UnifiedID,
     create_graph_id,
     create_wiki_id,
 )
