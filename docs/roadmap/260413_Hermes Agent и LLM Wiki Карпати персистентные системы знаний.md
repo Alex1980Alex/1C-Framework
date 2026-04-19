@@ -445,7 +445,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - Обновить валидацию `parse_unified_id()` + тесты на legacy IDs (backward compat)
 - [ ] Расширить `src/memory/orchestrator/link_registry.py` (**требует миграцию БД, не просто enum**):
   - Добавить в `LinkType` enum: `PROMOTED_TO`, `SUPERSEDED_BY`, `MIRRORS`, `GRAPH_NODE` + их `description` (файл [link_registry.py:22-43](../../src/memory/orchestrator/link_registry.py#L22))
-  - **Миграция SQLite:** создать `migrations/001_extend_link_types.sql` с `ALTER TABLE links DROP CONSTRAINT ...; ALTER TABLE links ADD CHECK (link_type IN (<10 types>));` (текущий CHECK constraint в [link_registry.py:219-222](../../src/memory/orchestrator/link_registry.py#L219))
+  - **Миграция SQLite:** создать `migrations/001_extend_link_types.sql` (путь относительно корня проекта — `D:\1С-Framework\migrations\`, там же читает `scripts/migrate_link_registry.py`) с `ALTER TABLE links DROP CONSTRAINT ...; ALTER TABLE links ADD CHECK (link_type IN (<10 types>));` (текущий CHECK constraint в [link_registry.py:219-222](../../src/memory/orchestrator/link_registry.py#L219))
   - Написать `scripts/migrate_link_registry.py` с dry-run режимом и rollback
   - Unit-тесты для 4 новых связей + тест миграции на снапшоте БД
 - [ ] **Расширить MemoryCube (v1.3.3)** — `src/memory/orchestrator/memcube.py` уже имеет унифицированный контейнер с `to_ai_memory_row()`, `to_vector_memory_payload()`, `to_skill_learning_record()`. Добавить:
@@ -487,7 +487,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Промежуточные итоги (2026-04-19)
 
-**Статус:** Phase 0 COMPLETE ✅ — все 7 основных задач реализованы, 115 тестов проходят, 0 регрессий.
+**Статус:** Phase 0 COMPLETE ✅ — все 7 основных задач реализованы, верифицировано 2026-04-20: 47 новых Phase 0 тестов + 227 существующих в `tests/integration/test_memory_*.py` = 274 pass, 0 регрессий.
 
 | # | Задача | Файлы | Статус |
 |---|--------|-------|--------|
@@ -497,7 +497,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | 0.4 | Search adapters (stubs) | `adapters/wiki_adapter.py`, `adapters/graph_adapter.py` | ✅ BaseSearchAdapter stubs, зарегистрированы в UnifiedSearchEngine |
 | 0.5 | Router wiki target | `memory_router.py`, `memory_orchestrator.py` | ✅ Wiki keywords/intents, VALID_TARGETS, CONTENT_TYPE_TARGETS, _save_to_target("wiki") → docs/wiki/drafts/ |
 | 0.6 | memory-first-hook Layer 4 | `.claude/hooks/memory-first-hook.py` | ✅ search_wiki() по docs/wiki/drafts/, RRF: L1=0.30 L2=0.35 L3=0.15 L4=0.20 |
-| 0.7 | Интеграционные тесты | `tests/integration/test_memcube_wiki.py` (10), `test_link_registry_migration.py` (13), `test_memory_layers_v13.py` (24) | ✅ 47 новых тестов, 68 существующих — все pass |
+| 0.7 | Интеграционные тесты | `tests/integration/test_memcube_wiki.py` (10), `test_link_registry_migration.py` (13), `test_memory_layers_v13.py` (24) | ✅ 47 новых тестов + 227 существующих в memory integration suite (`test_memory_unified`/`_router`/`_orchestrator`/`_p2_services`/`_p3_deferred`/`_p3_realtime`/`_p5_session_save`) — все pass |
 
 **Code-verify:** quality-review PASS. Найдены и исправлены 2 бага: (1) ContentType.WIKI отсутствовал в CONTENT_TYPE_TARGETS → KeyError, (2) пустой slug для non-Latin контента → fallback на entity_id.
 
@@ -515,7 +515,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] UnifiedID парсит и генерирует `wiki:obsidian-vault:...` и `graph:lightrag:...`
 - [x] `unified_search` возвращает результаты из wiki vault (stub — пустые результаты, Phase 1 подключит Obsidian MCP)
 - [ ] `vector-memory.promote_to_wiki` создаёт draft и link (отложено до Phase 1)
-- [x] 26 существующих тестов `test_memory_unified.py` проходят без регрессии (+ 68 всего memory-тестов)
+- [x] 26 существующих тестов `test_memory_unified.py` проходят без регрессии (+ 227 всего в memory integration suite pass после Phase 0)
 - [x] Новые тесты `test_memory_layers_v13.py` + `test_memcube_wiki.py` + `test_link_registry_migration.py` (47 новых)
 - [ ] `memory/SCHEMA.md` описывает все 5 слоёв, все link types, правила промоции (отложено до Phase 1)
 
