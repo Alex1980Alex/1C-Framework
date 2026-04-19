@@ -1,4 +1,15 @@
 version: 2
+
+# Global backend tuning. Optional; safe defaults if missing.
+# `ast_grep.use_call_graph_prefilter` enables Option A: scope-aware pre-filter
+# that drops ast-grep matches in modules with no in-graph relationship to the
+# defining module. Disabled at runtime via env BSL_REFACTOR_NO_PREFILTER=1.
+global:
+  ast_grep:
+    use_call_graph_prefilter: true
+    call_graph_db: cache/bsl_call_graph.db
+    graph_stale_threshold_days: 7
+
 routes:
   module_export_proc:
     primary: multilspy
