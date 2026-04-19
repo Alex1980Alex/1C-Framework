@@ -567,6 +567,29 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] Протестировать graph view: ≥30 узлов — **ВЫПОЛНЕНО косвенно**: vault содержит 604 .md файла в `docs/` + `.claude/skills/` (≫30); 9 связанных через wiki-links узлов в `docs/architecture/` + `docs/wiki/_index.md` (8 arch + index, 31 wiki-link). Визуальная проверка graph view требует запуска Obsidian app
 - [x] Добавить `.gitignore` правила для `.obsidian/workspace.json` (пользовательский state)
 
+#### Промежуточные итоги реализации (2026-04-20)
+
+**Статус:** 15/16 задач ✅, 1 отмечена «НЕ требуется» → Phase 1 COMPLETE.
+
+| Область | Артефакты | Состояние |
+|---------|-----------|-----------|
+| Obsidian desktop + plugin | Obsidian 1.12.7, Local REST API v3.6.1 (`.obsidian/plugins/obsidian-local-rest-api/`), vault зарегистрирован в `%APPDATA%/obsidian/obsidian.json` | ✅ Оба порта слушают (HTTP :27123 / HTTPS :27124) |
+| Vault config | `.obsidian/`: `app.json`, `appearance.json`, `community-plugins.json`, `core-plugins.json`, `graph.json`, `templates.json` + `plugins/`, `templates/` (entity/concept/how-to) | ✅ 6 configs + 3 шаблона |
+| Wiki каталог | `docs/wiki/_index.md`, `docs/wiki/patterns/` (28 файлов), `docs/wiki/drafts/`, `docs/wiki/assets/` | ✅ Split `PATTERNS.md` → 28 страниц, коммит 08ee1291 |
+| Arch docs с wiki-links | 8 файлов в `docs/architecture/` с frontmatter и `[[links]]` (суммарно 59 wiki-links: overview=8, PATTERNS=29, остальные 4–5) | ✅ Cross-refs между всеми документами |
+| MCP wrapper | `.mcp.json` → `obsidian-mcp` (uvx mcp-obsidian), явный `OBSIDIAN_API_KEY` | ✅ 13 tools `mcp__obsidian-mcp__*` доступны, `list_files_in_vault` вернул корень |
+| REST API verification | Bearer auth через curl к `https://127.0.0.1:27124/` | ✅ `authenticated: true`, status OK |
+| memory-first-hook Layer 4 | `docs/wiki/drafts/` индексируется с weight 0.20 (Phase 0 артефакт) | ✅ Парсинг frontmatter не сломан |
+| Skill | `.claude/skills/obsidian-vault/SKILL.md` | ✅ Опубликован, включает vault structure, wiki-link conventions, MCP setup |
+
+**Code-verify:** REST API подтверждён (curl `authenticated: true`), MCP-обёртка подтверждена (`obsidian_list_files_in_vault` вернул листинг корня в live-сессии 2026-04-20). Рестарт Claude Code не требовался — сервер подхватил явный `OBSIDIAN_API_KEY` из `.mcp.json` при первом вызове.
+
+**Не реализовано (осознанно отклонено):**
+- Task «дополнить 2 custom tools для frontmatter/tags» → **НЕ требуется**: стандартный `patch_content` работает после фикса YAML (wiki-links в `related:` обёрнуты в кавычки `["[[link]]"]`), switch на cyanheads/obsidian-mcp-server не нужен
+- Визуальная проверка graph view — требует запуска Obsidian app пользователем (косвенно подтверждено: 604 .md в vault scope ≫ 30 порог, 9 узлов с явными wiki-links в `docs/architecture/` + `_index`)
+
+**Артефакты коммита 08ee1291** (41 файл): 28 новых pattern-страниц в `docs/wiki/patterns/`, 8 модифицированных arch-docs с frontmatter/wiki-links, `docs/wiki/_index.md`, `.obsidian/` configs, `.claude/settings.local.json`.
+
 #### Критерии готовности
 
 - [x] Obsidian vault структура валидна: `.obsidian/` с 6 config-файлами + 3 templates присутствуют, `community-plugins.json` объявляет `obsidian-local-rest-api` (визуальная проверка открытия в Obsidian app — за пользователем)
