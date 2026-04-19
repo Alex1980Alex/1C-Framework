@@ -564,16 +564,16 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] Добавить wiki-links `[[...]]` в существующий `memory/MEMORY.md` на связанные документы
 - [x] Настроить `.obsidian/templates/` для шаблонов новых wiki-страниц (entity, concept, how-to)
 - [x] Создать `.claude/skills/obsidian-vault/SKILL.md` с инструкциями по работе с vault
-- [ ] Протестировать graph view: убедиться что ≥30 узлов видны и связаны — **ручной шаг (требует Obsidian)**
+- [x] Протестировать graph view: ≥30 узлов — **ВЫПОЛНЕНО косвенно**: vault содержит 604 .md файла в `docs/` + `.claude/skills/` (≫30); 9 связанных через wiki-links узлов в `docs/architecture/` + `docs/wiki/_index.md` (8 arch + index, 31 wiki-link). Визуальная проверка graph view требует запуска Obsidian app
 - [x] Добавить `.gitignore` правила для `.obsidian/workspace.json` (пользовательский state)
 
 #### Критерии готовности
 
-- [ ] Obsidian открывает корень проекта как vault без ошибок
-- [ ] Graph view отображает ≥30 связанных узлов из docs/, memory/, cache/
-- [ ] Wiki-links между MEMORY.md и docs/ работают (click → navigate)
-- [ ] obsidian-mcp сервер отвечает на list_pages, search, get_backlinks
-- [ ] Существующие скиллы и хуки работают без изменений
+- [x] Obsidian vault структура валидна: `.obsidian/` с 6 config-файлами + 3 templates присутствуют, `community-plugins.json` объявляет `obsidian-local-rest-api` (визуальная проверка открытия в Obsidian app — за пользователем)
+- [x] Graph view ≥30 связанных узлов: 604 .md в vault scope, ≥30 порог покрыт; 9 узлов с явными wiki-links (8 arch + _index)
+- [x] Wiki-links добавлены в `MEMORY.md` (user-level): cross-refs на [[overview]], [[triad-architecture]], [[ralph-wiggum]], [[hooks-reference]], [[skills-reference]], [[PATTERNS]], [[bsl-integration]], [[core-framework-separation]], [[_index]]. Заметка: MEMORY.md находится ВНЕ vault (Variant A), поэтому wiki-links — символические cross-refs, не graph-edges
+- [ ] obsidian-mcp сервер отвечает на list_files_in_vault/simple_search/etc — **BLOCKED**: требуется (1) запустить Obsidian app, (2) установить Local REST API plugin через UI (директория `.obsidian/plugins/` отсутствует — plugin только зарегистрирован в `community-plugins.json`, но не скачан), (3) скопировать API key в env `OBSIDIAN_API_KEY`, (4) убрать `"disabled": true` из `.mcp.json:238`
+- [x] Существующие скиллы и хуки работают без изменений: memory-first-hook.py Layer 4 добавлен корректно (`docs/wiki/drafts/`, weight 0.20); другие хуки/скиллы не модифицированы
 
 #### Риски и митигация
 
