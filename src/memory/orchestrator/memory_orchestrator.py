@@ -1348,6 +1348,36 @@ class MemoryOrchestrator:
 
                 await asyncio.to_thread(_append)
 
+            elif target == "wiki":
+                from .memcube import ContentClassification, MemoryCube
+
+                slug = (metadata or {}).get("slug")
+                if not slug:
+                    slug = content[:40].lower().replace(" ", "-")
+                    slug = "".join(c if c.isalnum() or c == "-" else "" for c in slug)
+
+                cube = MemoryCube(
+                    cube_id=entity_id,
+                    content=content,
+                    content_type=ContentClassification(
+                        content_type="wiki",
+                        confidence=0.8,
+                        signals=["routed:wiki"],
+                    ),
+                    source=SourceServer.OBSIDIAN_VAULT,
+                    memory_type=MemoryType.WIKI,
+                )
+                wiki_md = cube.to_wiki_page()
+
+                drafts_dir = _PROJECT_ROOT / "docs" / "wiki" / "drafts"
+                draft_path = drafts_dir / f"{slug}.md"
+
+                def _write_draft():
+                    drafts_dir.mkdir(parents=True, exist_ok=True)
+                    draft_path.write_text(wiki_md, encoding="utf-8")
+
+                await asyncio.to_thread(_write_draft)
+
             else:
                 logger.warning(f"Unknown target: {target}")
                 return None
