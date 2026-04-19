@@ -54,6 +54,8 @@ from ..vector_memory.services.forgetgate_service import (
     ForgetGateService,
     ForgetStrategy,
 )
+from .adapters.graph_adapter import GraphSearchAdapter
+from .adapters.wiki_adapter import WikiSearchAdapter
 from .link_registry import LinkRegistry, LinkType
 from .memory_router import (
     MemoryRouter,
@@ -66,8 +68,6 @@ from .tools.research import ResearchTool
 from .tools.surprise import SurpriseTool
 from .tools.warmup import WarmupTool
 from .unified_id import MemoryType, SourceServer, UnifiedID
-from .adapters.graph_adapter import GraphSearchAdapter
-from .adapters.wiki_adapter import WikiSearchAdapter
 from .unified_search import (
     BaseSearchAdapter,
     SearchResultItem,
