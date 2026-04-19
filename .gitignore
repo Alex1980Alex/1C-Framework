@@ -79,6 +79,14 @@ tools/*/build/
 infra/*/build/
 *.log
 
+# Obsidian (machine-specific)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/plugins/
+.obsidian/trash.json
+.obsidian/community-plugins.json
+.obsidian hotkeys.json
+
 test_all_phases_results.json
 cache/
 .scannerwork/

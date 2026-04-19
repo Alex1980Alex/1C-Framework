@@ -1,0 +1,5 @@
+---
+name: wiki-drafts
+description: Wiki draft pages (auto-indexed by memory-first-hook Layer 4)
+type: folder
+---
