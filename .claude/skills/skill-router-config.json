@@ -1895,6 +1895,40 @@
         "memory-unified"
       ],
       "optional": []
+    },
+    "obsidian-vault": {
+      "keywords": [
+        "obsidian",
+        "vault",
+        "wiki",
+        "wiki-link",
+        "wiki page",
+        "graph view",
+        "obsidian vault",
+        "вики",
+        "хранилище знаний"
+      ],
+      "skills": [
+        "obsidian-vault"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "obsidian": 5,
+        "vault": 4,
+        "wiki": 4,
+        "wiki-link": 5,
+        "graph view": 3,
+        "вики": 4
+      },
+      "utterances": [
+        "open the vault",
+        "add a wiki page",
+        "create wiki-link",
+        "открыть хранилище",
+        "создать вики-страницу",
+        "как устроен vault",
+        "how to use obsidian vault"
+      ]
     }
   },
   "min_score_gap": 2,
