@@ -67,11 +67,19 @@ _DEFAULT_ROUTES: dict[SymbolKind, RouteDecision] = {
 }
 
 
+_DEFAULT_AST_GREP_GLOBAL: dict = {
+    "use_call_graph_prefilter": False,
+    "call_graph_db": "cache/bsl_call_graph.db",
+    "graph_stale_threshold_days": 7,
+}
+
+
 class RoutingMatrix:
     """Routing Matrix v2 — maps SymbolKind to backend selection."""
 
     _ROUTES: dict[SymbolKind, RouteDecision] = dict(_DEFAULT_ROUTES)
     _DENYLIST: frozenset[str] = frozenset()
+    _AST_GREP_GLOBAL: dict = dict(_DEFAULT_AST_GREP_GLOBAL)
 
     @classmethod
     def route_for(cls, kind: SymbolKind) -> RouteDecision:
@@ -87,6 +95,11 @@ class RoutingMatrix:
     def is_denied(cls, name: str | None) -> bool:
         """True if name is in the over-match denylist (ast-grep should skip it)."""
         return bool(name) and name in cls._DENYLIST
+
+    @classmethod
+    def ast_grep_global(cls) -> dict:
+        """Return the global ast-grep tuning block (copy)."""
+        return dict(cls._AST_GREP_GLOBAL)
 
     @classmethod
     def load(cls, path: Path | None = None) -> None:
