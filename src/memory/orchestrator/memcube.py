@@ -221,6 +221,7 @@ class MemoryCube:
 
         frontmatter = {
             "unified_id": f"{self.memory_type.value}:{self.source.value}:{self.cube_id}",
+            "memory_type": self.memory_type.value,
             "content_type": self.content_type.value,
             "source": self.source.value,
             "created_at": self.created_at.isoformat(),
