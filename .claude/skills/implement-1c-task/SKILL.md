@@ -87,8 +87,8 @@ Skill для реализации задачи по конфигурации 1С
 | Инструмент | Когда использовать |
 |---|---|
 | `bsl-semantic-search` | Этап 1: поиск похожего кода в конфигурации |
+| `bsl-semantic-search` (refactor) | Этап 3: `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after/before_method` — **только для refactoring-задач** (см. условный этап 3R ниже) |
 | `bsl-platform-context` | Этап 3: API платформы 1С (методы, свойства, типы) |
-| `Serena` | Этап 1: символьный анализ кода (если EDT-MCP недоступен) — **НЕ работает на BSL**, см. [аудит](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) |
 | `Grep/Glob` | Этап 1: поиск файлов и паттернов на диске |
 
 ---
