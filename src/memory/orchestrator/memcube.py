@@ -275,22 +275,26 @@ class MemoryCube:
         # Parse structured sections from body
         sections = {"what": None, "why": None, "where": None, "learned": None}
         current_section = None
+        section_lines: dict[str, list[str]] = {k: [] for k in sections}
         content_lines = []
 
         for line in body.split("\n"):
             if line.startswith("## "):
                 section_name = line[3:].strip().lower()
+                current_section = None
                 if section_name in sections:
                     current_section = section_name
                 else:
-                    current_section = None
                     content_lines.append(line)
-            elif current_section and line.strip():
-                sections[current_section] = (sections[current_section] or "") + line + "\n"
-            elif current_section and not line.strip():
-                pass  # skip blank lines between section content
+            elif current_section is not None:
+                section_lines[current_section].append(line)
             else:
                 content_lines.append(line)
+
+        for key, lines in section_lines.items():
+            text = "\n".join(lines).strip()
+            if text:
+                sections[key] = text
 
         content = "\n".join(content_lines).strip()
 
