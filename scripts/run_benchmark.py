@@ -109,7 +109,7 @@ def main() -> None:
                 notes = "ast-grep only"
             row = (
                 f"| {run_id} | {today} | HEAD | {backends_str} "
-                f"| {applied}/{total} | {total} | {notes} |\n"
+                f"| {success}/{total} | {total} | {notes} |\n"
             )
             with open(trend_path, "a", encoding="utf-8") as f:
                 f.write(row)
