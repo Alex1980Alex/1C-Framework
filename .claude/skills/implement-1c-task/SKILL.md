@@ -529,6 +529,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 - [ ] Все SQL-запросы проверены на живых данных (execute_query)
 - [ ] bsl_analyze: 0 ошибок (предупреждения допустимы)
 - [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной
+- [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
 - [ ] Отклонения от ANALYSIS-REPORT зафиксированы
 - [ ] Git commit выполнен
