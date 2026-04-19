@@ -212,7 +212,7 @@ CATEGORY_KEYWORDS: dict[str, list[str]] = {
 }
 
 # Valid target subsystems
-VALID_TARGETS: set[str] = {"memory-ai", "vector-memory", "skill-learning"}
+VALID_TARGETS: set[str] = {"memory-ai", "vector-memory", "skill-learning", "wiki"}
 
 
 # =============================================================================
