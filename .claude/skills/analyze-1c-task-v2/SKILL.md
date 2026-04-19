@@ -39,6 +39,11 @@ Skill для комплексного анализа задачи по конф�
 - Brownfield validation: после реализации → `brownfield-validate` (Gap+Design+Impl)
 - Approval gate: `approval-gate.py` блокирует реализацию без одобрения спецификации
 
+**Улучшения v4.1 (2026-04-19, bsl-semantic-search refactor integration):**
+- Фаза 2 расширена вопросом `[REFACTOR]`: определение, является ли точка модификации рефакторингом существующего символа (rename/replace body/safe delete)
+- Для `[REFACTOR]` точек в плане ОБЯЗАТЕЛЬНО: тип символа (local_variable/parameter/module_local_proc/module_export_proc/form_handler), ожидаемый backend (ast-grep/multilspy/manual), confidence из routing matrix
+- Новый маркер `[REFACTOR]` дополняет `[ADDED]`/`[MODIFIED]` (может сочетаться: `[MODIFIED] [REFACTOR]` — существующий объект, операция — переименование/замена тела)
+
 ## ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА АНАЛИЗА
 
 ### Правило 1: Ориентироваться на существующий код конфигурации
