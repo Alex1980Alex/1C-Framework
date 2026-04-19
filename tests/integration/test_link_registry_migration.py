@@ -104,9 +104,8 @@ class TestNewTypeOperations:
 
     def test_mirrors_bidirectional(self, tmp_db):
         registry, _ = tmp_db
-        link_id = registry.create_link("a", "b", LinkType.MIRRORS, bidirectional=True)
-        assert link_id is not None
+        result = registry.create_link("a", "b", LinkType.MIRRORS, bidirectional=True)
+        assert result is not None
         forward = registry.get_links_from("a")
         assert any(r.target_id == "b" for r in forward)
-        link = registry.get_link(link_id)
-        assert link.bidirectional is True
+        assert forward[0].bidirectional is True
