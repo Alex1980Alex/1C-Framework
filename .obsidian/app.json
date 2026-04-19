@@ -1,0 +1,13 @@
+{
+  "legacyEditor": false,
+  "readableLineLength": true,
+  "defaultViewMode": "preview",
+  "showLineNumber": true,
+  "spellcheck": true,
+  "strictLineBreaks": true,
+  "attachmentFolderPath": "docs/wiki/assets",
+  "newFileLocation": "current",
+  "promptDelete": true,
+  "showUnsupportedFiles": false,
+  "alwaysUpdateLinks": true
+}
