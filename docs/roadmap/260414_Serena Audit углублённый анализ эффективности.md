@@ -2274,7 +2274,7 @@ ERR rate: **0.9% → 0.0%**. Отчёт: [tree-sitter-coverage.md](../../tools/b
 | **R4.2** | ✅ DONE | `ManualFallbackInstruction` + 3-tier fallback + MCP `bsl_rename_symbol` surface | 4 |
 | **R4.3** | ✅ DONE | [refactor-fallback-chain.md](./refactor-fallback-chain.md) | — |
 | **R4.4** | ✅ DONE | [aggregate_refactor_telemetry.py](../../scripts/aggregate_refactor_telemetry.py) + synthetic dataset | 3 |
-| **R4.5** | ⏸ DEFERRED | — (ждёт R5 benchmark или ≥50 реальных событий) | — |
+| **R4.5** | ✅ VERIFIED (2026-04-19) | aggregator на pilot-B (20 событий, 4 per CAT) → все `proposed_confidence = 0.95`, совпадает с уже-применённой R5.5 calibration. Дельт нет; [summary](../../data/refactor-telemetry-summary.md) + [proposed.yaml](../../data/refactor-telemetry-proposed.yaml) | — |
 | **R4.6** | ⏸ DEFERRED | — (ждёт Phase 10 dashboard) | — |
 | **R5.1** | ✅ DONE | [tasks.json](../../docs/roadmap/benchmark/tasks.json) (20 задач, 5×4), [build_benchmark_tasks.py](../../scripts/build_benchmark_tasks.py), [test_benchmark_tasks_schema.py](../../tests/bsl/refactor/test_benchmark_tasks_schema.py) | 7 |
 | **R5.2** | ✅ DONE | [runner.py](../../docs/roadmap/benchmark/runner.py) (WorktreeManager, TaskExecutor, ReportBuilder, BenchmarkRunner), [run_benchmark.py](../../scripts/run_benchmark.py) (CLI), [test_benchmark_runner.py](../../tests/bsl/refactor/test_benchmark_runner.py) | 6 |
