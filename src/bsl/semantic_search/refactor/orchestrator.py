@@ -335,6 +335,8 @@ class RefactorOrchestrator:
             classifier_confidence=ctx.get("classifier_confidence", 0.0),
             matrix_confidence=ctx.get("matrix_confidence", 0.0),
             token_matched=None if dry_run else (result is not None and result.ok),
+            prefilter_used=ctx.get("prefilter_used", False),
+            prefilter_dropped=ctx.get("prefilter_dropped", 0),
         )
 
 
