@@ -417,15 +417,15 @@ def test_denylist_blocks_ast_grep_primary_form_handler(tmp_path: Path) -> None:
         runner = _FakeRunner(
             matches=[
                 AstGrepMatch(
-                    file=file_a, start_line=0, start_character=21,
-                    end_line=0, end_character=30,
+                    file=file_a, start_line=0, start_character=22,
+                    end_line=0, end_character=31,
                 )
             ]
         )
         orch, _ = _make_orchestrator(tmp_path, lsp, runner)
 
         content = file_a.read_text(encoding="utf-8")
-        result = orch.rename(uri, 0, 21, "Парам", dry_run=True, content=content)
+        result = orch.rename(uri, 0, 22, "Парам", dry_run=True, content=content)
 
         assert result.reason == "manual_required"
         assert result.manual_instruction is not None
