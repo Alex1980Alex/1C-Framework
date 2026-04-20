@@ -74,7 +74,7 @@ async def _get_graph_store():
 
 
 async def cmd_export_all(args: argparse.Namespace) -> int:
-    from src.pdf_framework.indexing.wiki_exporter import WikiExporter, WikiExportConfig
+    from src.pdf_framework.indexing.wiki_exporter import WikiExportConfig, WikiExporter
 
     store = await _get_graph_store()
     config = WikiExportConfig(
@@ -100,7 +100,7 @@ async def cmd_export_all(args: argparse.Namespace) -> int:
 
 
 async def cmd_export_entity(args: argparse.Namespace) -> int:
-    from src.pdf_framework.indexing.wiki_exporter import WikiExporter, WikiExportConfig
+    from src.pdf_framework.indexing.wiki_exporter import WikiExportConfig, WikiExporter
 
     store = await _get_graph_store()
     config = WikiExportConfig(
