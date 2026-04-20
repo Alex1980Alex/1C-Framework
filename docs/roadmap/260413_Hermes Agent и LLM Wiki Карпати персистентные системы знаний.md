@@ -713,24 +713,29 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] Интеграционный тест: 10 синтетических паттернов → 10 drafts без дубликатов (`test_wiki_promoter.py`, 15 tests PASS)
 - [x] Smoke-тест: 47 существующих Phase 0 тестов проходят без регрессии
 
-#### Промежуточные итоги (2026-04-20)
+#### Промежуточные итоги (2026-04-20, обновлено после аудита)
 
 **Статус:** Phase 3 COMPLETE ✅ — 9/10 задач выполнено, 1 TODO (incremental graph integration — зависит от Phase 4).
 
 | # | Задача | Файлы | Статус |
 |---|--------|-------|--------|
-| 3.1 | kb-lint + markdownlint-cli2 | `pyproject.toml`, `package.json` | ✅ pip+npm installed |
+| 3.1 | kb-lint + markdownlint-cli2 | `pyproject.toml` (dev extras), `package.json` | ✅ `kb-lint>=0.1` в `[project.optional-dependencies].dev`, `markdownlint-cli2^0.22.0` в npm devDependencies |
 | 3.2 | Lint config | `.kb-lint.toml`, `.markdownlint.jsonc` | ✅ |
-| 3.3 | wiki_promoter.py | `src/memory/librarian/wiki_promoter.py` (120 LoC) | ✅ Qdrant scroll→dedup→draft→log→event |
-| 3.4 | docs-change-tracker wiki validation | `.claude/hooks/docs-change-tracker.py` (+30 LoC) | ✅ [[wiki-link]] target checking |
-| 3.5 | docs-change-enforcer draft reminder | `.claude/hooks/docs-change-enforcer.py` (+10 LoC) | ✅ stderr reminder on Stop |
-| 3.6 | EventBus wiki events | wiki_promoter._publish_event() | ✅ wiki.draft.created |
-| 3.7 | Promotion logging | wiki_promoter._append_log() → docs/wiki/log.md | ✅ Auto-trim 500 lines |
-| 3.8 | Integration tests | `tests/integration/test_wiki_promoter.py` (15 tests) | ✅ All PASS |
-| 3.9 | Pre-commit hook | `.pre-commit-config.yaml` | ✅ markdownlint-cli2 + kb-lint для `docs/wiki/*.md` |
-| 3.10 | Incremental graph integration | N/A | ❌ TODO (Phase 4 dependency) |
+| 3.3 | wiki_promoter.py | `src/memory/librarian/wiki_promoter.py` (145 LoC) | ✅ Qdrant scroll→dedup→draft→log→event; vector читается из `point.vector` (Qdrant `with_vectors=True` API) через `_extract_vector()` с fallback на legacy payload |
+| 3.4 | docs-change-tracker wiki validation | `.claude/hooks/docs-change-tracker.py` (+30 LoC) | ✅ `_validate_wiki()` парсит `[[wiki-link]]` и проверяет существование target в `docs/wiki/` и `docs/wiki/drafts/` |
+| 3.5 | docs-change-enforcer draft reminder | `.claude/hooks/docs-change-enforcer.py` (+10 LoC) | ✅ stderr reminder при Stop с именами первых 5 drafts + счётчиком |
+| 3.6 | EventBus wiki events | `wiki_promoter._publish_event()` | ✅ `wiki.draft.created` публикуется с `{slug, source_id}` |
+| 3.7 | Promotion logging | `wiki_promoter._append_log()` → `docs/wiki/log.md` | ✅ Insert перед `## Format Template`, auto-trim до 500 строк |
+| 3.8 | Integration tests | `tests/integration/test_wiki_promoter.py` (15 tests) | ✅ 15 PASS; fixture приведена к реальному Qdrant API (vector на `point.vector`, не в payload); `test_no_vectors_skips_dedup` усилен `query_points.assert_not_called()` |
+| 3.9 | Pre-commit hook | `.pre-commit-config.yaml` | ✅ `markdownlint-cli2` v0.22.0 + local `kb-lint --ci`, оба scoped через `files: ^docs/wiki/.*\.md$` |
+| 3.10 | Incremental graph integration | `src/pdf_framework/graph_store/incremental.py` | ❌ TODO — заблокировано Phase 4 (wiki_exporter подпишется на `IncrementalGraphUpdater.update()`) |
 
-**Tests:** 15 new + 47 existing = 62 pass, 0 regressions.
+**Tests:** 15 wiki_promoter + 88 memory/phase-0 (`test_memcube_wiki`, `test_link_registry_migration`, `test_memory_unified`, `test_memory_layers_v13`) = **103 PASS, 0 regressions**.
+
+**Post-audit fixes (коммит `088462ab`):**
+- **Bug (production):** `_dedup_check` читал `payload["vector"]`, который при `scroll(with_vectors=True)` остаётся пустым → dedup был no-op, допускал дубли drafts. Fix: новый `_extract_vector(point, payload)` берёт `point.vector` с fallback на legacy payload (совместимость со старыми фикстурами); сигнатура `_dedup_check(embedding, source_id)` стала явной.
+- **Dev-env:** `kb-lint` был установлен ad-hoc в venv → добавлен в `[dev]` extras для воспроизводимой установки.
+- **Pre-commit:** gate `kb-lint` + `markdownlint-cli2` подключён, scoped только к `docs/wiki/*.md` (не замедляет общие коммиты).
 
 #### Критерии готовности
 
