@@ -259,6 +259,85 @@ def cmd_baseline(args: argparse.Namespace) -> None:
     print(f"[BASELINE] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}")
 
 
+def cmd_index_wiki(args: argparse.Namespace) -> None:
+    import re
+    import uuid
+
+    from qdrant_client.models import PointStruct, VectorParams
+
+    wiki_dir = Path(args.wiki_dir)
+    if not wiki_dir.exists():
+        print(f"[INDEX-WIKI] Directory not found: {wiki_dir}")
+        sys.exit(1)
+
+    md_files = sorted(wiki_dir.glob("*.md"))
+    print(f"[INDEX-WIKI] Found {len(md_files)} wiki pages in {wiki_dir}")
+
+    model = _get_model()
+    client = QdrantClient("localhost", port=6333)
+
+    existing = [c.name for c in client.get_collections().collections]
+    if WIKI_COLLECTION in existing:
+        print(f"[INDEX-WIKI] Deleting existing {WIKI_COLLECTION}...")
+        client.delete_collection(WIKI_COLLECTION)
+
+    client.create_collection(
+        WIKI_COLLECTION,
+        vectors_config=VectorParams(size=1024, distance="Cosine"),
+    )
+    print(f"[INDEX-WIKI] Created {WIKI_COLLECTION} (cosine, 1024-dim)")
+
+    batch_size = 100
+    total_indexed = 0
+
+    for i in range(0, len(md_files), batch_size):
+        batch_files = md_files[i : i + batch_size]
+        texts = []
+        payloads = []
+
+        for fp in batch_files:
+            content = fp.read_text(encoding="utf-8")
+            content = re.sub(r"^---\n.*?\n---\n", "", content, flags=re.DOTALL)
+            content = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", content)
+            content = re.sub(r"\[\[([^\]]+)\]\]", r"\1", content)
+            content = content.strip()
+
+            if not content:
+                continue
+
+            entity_type = ""
+            for line in fp.read_text(encoding="utf-8").split("\n"):
+                if line.startswith("entity_type:"):
+                    entity_type = line.split(":", 1)[1].strip().strip('"')
+                    break
+
+            texts.append(content)
+            payloads.append({
+                "name": fp.stem,
+                "entity_type": entity_type,
+                "text": content[:2000],
+                "file_path": str(fp),
+            })
+
+        if not texts:
+            continue
+
+        vecs = list(model.embed(texts))
+        points = []
+        for j, (vec, payload) in enumerate(zip(vecs, payloads)):
+            points.append(PointStruct(
+                id=uuid.uuid5(uuid.NAMESPACE_URL, payload["name"]),
+                vector=vec.tolist(),
+                payload=payload,
+            ))
+
+        client.upsert(WIKI_COLLECTION, points)
+        total_indexed += len(points)
+        print(f"[INDEX-WIKI] Indexed {total_indexed}/{len(md_files)}...")
+
+    print(f"[INDEX-WIKI] Done: {total_indexed} pages indexed into {WIKI_COLLECTION}")
+
+
 def cmd_export_wiki(args: argparse.Namespace) -> None:
     import asyncio
 
