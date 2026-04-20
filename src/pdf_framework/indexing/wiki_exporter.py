@@ -173,7 +173,7 @@ class WikiExporter:
         logger.info("[WIKI-EXPORT] %s", result.summary())
         return result
 
-    async def export_entity(self, entity_id: str) -> Optional[Path]:
+    async def export_entity(self, entity_id: str) -> Path | None:
         """Export single entity to wiki page."""
         entity = await self._graph_store.get_entity(entity_id)
         if entity is None:
@@ -307,7 +307,7 @@ class ForwardSyncService:
         self._graph_store = graph_store
         self._exporter = exporter
 
-    async def sync_entity(self, entity_id: str) -> Optional[Path]:
+    async def sync_entity(self, entity_id: str) -> Path | None:
         """Sync single entity: read graph → build page → export."""
         entity = await self._graph_store.get_entity(entity_id)
         if entity is None:
