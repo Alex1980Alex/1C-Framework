@@ -774,34 +774,32 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Задачи
 
-- [ ] **Аудит Phase 38:** запустить существующий pipeline на 3 тестовых PDF, измерить качество entity extraction, зафиксировать baseline
-- [ ] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md` с frontmatter (unified_id, source_pdf, confidence, created_at)
-- [ ] Создать `src/pdf_framework/indexing/wiki_exporter.py`:
+- [ ] **Аудит Phase 38:** запустить существующий pipeline на 3 тестовых PDF, измерить качество entity extraction, зафиксировать baseline _(требует реального прогона на PDF — отдельная работа)_
+- [x] Определить схему wiki-страницы: `docs/wiki/templates/entity.md`, `concept.md`, `procedure.md` с frontmatter (unified_id, source_pdf, confidence, created_at)
+- [x] Создать `src/pdf_framework/indexing/wiki_exporter.py` (692 LoC):
   - Читает existing `GraphStore` (NetworkX или Neo4j)
   - Для каждого entity node → генерирует `docs/wiki/entities/<entity-id>.md` через **`MemoryCube.to_wiki_page()`** (Фаза 0)
   - Для каждого relation → добавляет `[[wiki-link]]` между entity pages
   - Использует existing `summarizer.py` для community summaries
   - Идемпотентность: повторный запуск = upsert, не дубликаты
-- [ ] **Индексация wiki через существующий `src/memory/orchestrator/search/hybrid_search.py`** (v1.3.3 находка):
-  - `BM25Index` с BSL-aware tokenization уже готов в orchestrator/search/
-  - `HybridSearchService` делает RRF fusion BM25 + dense — используем для wiki_pages_v1
-  - Вместо создания отдельного index для wiki — добавить wiki-коллекцию в существующий HybridSearchService
-  - Экономия: ~500 LoC (не пишем свой BM25 для wiki)
-- [ ] Создать `scripts/export_graph_to_wiki.py` CLI: `python -m scripts.export_graph_to_wiki --since <timestamp> --output docs/wiki/entities/`
-- [ ] **Incremental sync (ключевое, использует Phase 6.5):**
-  - Подписаться на события `IncrementalGraphUpdater.update()`
-  - При изменении графа → `wiki_exporter` реэкспортирует только affected entities (не весь граф)
-  - Логирование в `docs/wiki/log.md` количества обновлённых страниц
-- [ ] **Reverse sync (wiki → graph):**
-  - При Write в `docs/wiki/entities/<id>.md` → parse frontmatter + body → обновить entity в graph_store
-  - Использовать existing `change_detector.py` для вычисления дельты
-  - Граф становится derived view на wiki (L3 = canonical, L4 = index)
-- [ ] Обновить существующий `src/pdf_framework/search/strategies/graphrag_light.py`:
-  - Добавить payload field `wiki_page_path` в entity embeddings
-  - В результатах поиска возвращать ссылку на wiki-страницу (L3), не только entity_id
-- [ ] Eval-регрессия: existing GraphRAG eval suite должен показывать **те же метрики** или лучше (не хуже) после wiki export
-- [ ] Добавить `.claude/skills/wiki-pipeline/SKILL.md` с инструкциями запуска и троублшутинга
-- [ ] **НЕ ТРОГАТЬ** существующий pipeline индексации PDF — wiki export работает как sidecar, не заменяет основной путь
+- [x] **Индексация wiki через существующий `src/memory/orchestrator/search/hybrid_search.py`** (v1.3.3 находка):
+  - `WikiSearchIndexer` делегирует `hybrid_search.index_document()` (без отдельного BM25)
+  - Используется существующий `HybridSearchService` (BM25+dense RRF)
+  - Wiki-коллекция добавлена в существующий сервис через `source=wiki` metadata filter
+- [x] Создать `scripts/export_graph_to_wiki.py` CLI (218 LoC): `export-all`, `export-entity`, `sync-incremental`, `index-search`, `verify`
+- [x] **Incremental sync (ключевое, использует Phase 6.5):**
+  - `IncrementalWikiSync` подписан на события `IncrementalGraphUpdater.update()`
+  - Реэкспортирует только affected entities + dead letter queue
+  - Логирование в `docs/wiki/log.md`
+- [x] **Reverse sync (wiki → graph):**
+  - `ReverseSyncService` (watchdog) ловит Write в `docs/wiki/entities/<id>.md`
+  - Parse frontmatter + body → обновление entity в graph_store
+  - Граф = derived view на wiki (L3 = canonical, L4 = index)
+- [x] Обновить существующий `src/pdf_framework/search/strategies/graphrag_light.py`:
+  - `LightRAGStrategy` возвращает `wiki_page_paths` в `SearchResponse.metadata` ([graphrag_light.py:219](../../src/pdf_framework/search/strategies/graphrag_light.py#L219))
+- [ ] Eval-регрессия: existing GraphRAG eval suite должен показывать **те же метрики** или лучше (не хуже) после wiki export _(требует реального прогона eval suite)_
+- [x] Добавить `.claude/skills/wiki-pipeline/SKILL.md` с инструкциями запуска и троублшутинга
+- [x] **НЕ ТРОГАТЬ** существующий pipeline индексации PDF — wiki export работает как sidecar (подтверждено — `src/pdf_framework/indexing/*` PDF pipeline не изменён)
 
 #### Критерии готовности
 

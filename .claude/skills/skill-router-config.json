@@ -1929,6 +1929,52 @@
         "как устроен vault",
         "how to use obsidian vault"
       ]
+    },
+    "wiki-pipeline": {
+      "keywords": [
+        "wiki exporter",
+        "wiki_exporter",
+        "export graph",
+        "export_graph_to_wiki",
+        "wiki pipeline",
+        "incremental wiki",
+        "reverse sync",
+        "docs/wiki/entities",
+        "WikiExporter",
+        "IncrementalWikiSync",
+        "ReverseSyncService",
+        "WikiSearchIndexer",
+        "экспорт графа в wiki",
+        "wiki-страницы из графа"
+      ],
+      "skills": [
+        "wiki-pipeline"
+      ],
+      "optional": [
+        "obsidian-vault",
+        "graph-operations"
+      ],
+      "weighted_keywords": {
+        "wiki exporter": 5,
+        "wiki_exporter": 5,
+        "export graph": 4,
+        "export_graph_to_wiki": 5,
+        "wiki pipeline": 5,
+        "incremental wiki": 5,
+        "reverse sync": 4,
+        "WikiExporter": 5,
+        "docs/wiki/entities": 4,
+        "экспорт графа в wiki": 5
+      },
+      "utterances": [
+        "export graph entities to wiki pages",
+        "run wiki exporter on the knowledge graph",
+        "sync wiki pages back to graph store",
+        "index wiki pages in hybrid search",
+        "экспортировать граф в wiki-страницы",
+        "запустить wiki pipeline",
+        "обратная синхронизация wiki в граф"
+      ]
     }
   },
   "min_score_gap": 2,
