@@ -608,7 +608,9 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
-### Фаза 2: DSPy Deepening + Wiki Schema (переработано v1.3)
+### Фаза 2: DSPy Deepening + Wiki Schema (переработано v1.3) — ✅ COMPLETE (2026-04-20)
+
+**Статус:** 8/9 задач выполнено, 6 legacy задач v1.2 отменены/заменены. Остаётся 1 TODO — формальный eval-benchmark (вынесен в Phase 2.1).
 
 **Цель:** Формализовать промпты агентов через **существующий** DSPy (skill `prompt-engineering`) вместо создания MPF helper. Создать схему wiki и хронологию в `docs/wiki/` (не в user-level `memory/`).
 
