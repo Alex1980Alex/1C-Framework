@@ -157,6 +157,8 @@ out.append("\t<format><font>2</font><horizontalAlignment>Left</horizontalAlignme
 out.append("\t<format><font>3</font><horizontalAlignment>Center</horizontalAlignment><verticalAlignment>Center</verticalAlignment><fillType>Text</fillType></format>")
 # 6: Default
 out.append("\t<format><verticalAlignment>Top</verticalAlignment><backColor>style:FieldBackColor</backColor></format>")
+# 7: Organization value — bold Arial 10, left, Parameter fill (row 0 col 0)
+out.append("\t<format><font>1</font><horizontalAlignment>Left</horizontalAlignment><verticalAlignment>Top</verticalAlignment><fillType>Parameter</fillType></format>")
 
 out.append("</document>")
 out.append("")
