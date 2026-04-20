@@ -90,7 +90,9 @@ def ndcg_at_k(results: list[dict], relevant: set[str], k: int = TOP_K) -> float:
             dcg += 1.0 / math.log2(i + 2)
     ideal_hits = min(len(relevant), k)
     idcg = sum(1.0 / math.log2(i + 2) for i in range(ideal_hits))
-    return dcg / idcg if idcg > 0 else 0.0
+    if idcg <= 0:
+        return 0.0
+    return min(dcg / idcg, 1.0)
 
 
 def compute_latency_metrics(latencies: list[float]) -> dict[str, float]:
