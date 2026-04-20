@@ -65,6 +65,16 @@ repos:
         files: ^docs/wiki/.*\.md$
         pass_filenames: false
 
+  # hermes-eval-smoke — Phase 2.1 DSPy migration regression gate
+  - repo: local
+    hooks:
+      - id: hermes-eval-smoke
+        name: Hermes Eval Smoke
+        entry: python scripts/eval_hermes_phase2.py --smoke
+        language: system
+        files: ^src/pdf_framework/(agents/rag/nodes|prompts/signatures)\.py$
+        pass_filenames: false
+
 # CI configuration
 ci:
   autofix_commit_msg: |
