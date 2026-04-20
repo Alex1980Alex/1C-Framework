@@ -938,6 +938,132 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - Phase 4 audit + eval regression — требуют реального прогона pipeline на 3 тестовых PDF с `wiki_pages_v1`
 - Phase 3 incremental graph integration — разблокируется после первого Phase 4 production-прогона
 
+### Детальная дорожная карта открытых TODO
+
+#### TODO-1: Phase 2.1 — RAGAS Eval-Benchmark для DSPy migrated agents
+
+**Цель:** формальное доказательство отсутствия регрессии после миграции `grader.py`, `rewriter.py`, `hallucination_checker.py` на DSPy signatures (Phase 2). Метрики до/после, rollback-план при regression >5%.
+
+**Предусловия выполнены:**
+- `dspy-ai==3.1.3` установлен в `.venv` (2026-04-20)
+- Signatures готовы: `src/pdf_framework/prompts/signatures.py`
+- Fallback chain активен: `cheap_llm → DSPy → LangChain`
+
+**Трудоёмкость:** ~2 дня. **LoC:** ~350 (eval-набор + скрипт + отчёт).
+
+**Задачи:**
+
+| # | Задача | Файл | Acceptance |
+|---|--------|------|-----------|
+| 2.1.1 | Сформировать eval-набор 50 запросов: 20 grounded, 15 partial, 15 hallucination-prone (разные домены — PDF, 1С, общее) | `data/eval/hermes/phase2_eval_set.jsonl` | Human-labelled golden: `{query, context, expected_grade, grounded: bool}` |
+| 2.1.2 | Реализовать RAGAS-метрики для 3 агентов: grader (Precision@3-level), rewriter (BLEU + semantic similarity), hallucination (F1 по `grounded: bool`) | `scripts/eval_hermes_phase2.py` | CLI: `--baseline langchain`, `--candidate dspy`, `--report path.md` |
+| 2.1.3 | Baseline прогон: force `fallback=langchain` → метрики в `data/eval/hermes/baseline.json` | `data/eval/hermes/baseline.json` | 50 запросов × 3 агента = 150 replies, latency p50/p95 записаны |
+| 2.1.4 | Candidate прогон: force `fallback=dspy` → метрики в `data/eval/hermes/candidate.json` | `data/eval/hermes/candidate.json` | Те же 150 replies, сопоставимые метрики |
+| 2.1.5 | Сравнительный отчёт: delta по каждой метрике, confidence interval (bootstrap n=1000) | `data/eval/hermes/report.md` | Таблица + графики, вердикт PASS / ROLLBACK |
+| 2.1.6 | Rollback-план: если regression >5% на любой ключевой метрике — вернуть `fallback` по умолчанию на `langchain`, зафиксировать как ADR | `docs/architecture/ADR-008-dspy-migration-verdict.md` | ADR-008 записан с данными эксперимента |
+| 2.1.7 | CI-gate: добавить `eval_hermes_phase2.py --smoke` в `.pre-commit-config.yaml` (10 запросов, <30s) | `.pre-commit-config.yaml` | pre-commit не пропускает если smoke-eval < baseline-5% |
+
+**Критерии готовности:**
+- [ ] Baseline + candidate метрики зафиксированы
+- [ ] `data/eval/hermes/report.md` готов с вердиктом
+- [ ] ADR-008 с решением merge/rollback
+- [ ] Smoke-gate в pre-commit
+
+**Риски:**
+- Malformed DSPy outputs на edge-case запросах → fallback уже покрывает (LangChain ветвь), но нужен replay в eval
+- Cost eval ~$2-5 (150 LLM calls × 2 прогона); используем cheap_llm для baseline, где возможно
+
+---
+
+#### TODO-2: Phase 4 — Audit + Eval Regression на реальных PDF
+
+**Цель:** валидировать end-to-end pipeline `PDF → graph → wiki` на 3 тестовых документах; собрать baseline метрик качества entity extraction; доказать ≥10% retrieval improvement vs GraphRAG baseline; наполнить коллекцию `wiki_pages_v1`.
+
+**Предусловия:**
+- `src/pdf_framework/indexing/wiki_exporter.py` (692 LoC) готов и покрыт unit-тестами (17 pass)
+- `scripts/export_graph_to_wiki.py` CLI (218 LoC, 5 subcmd) готов
+- `LightRAGStrategy.wiki_page_paths` в `SearchResponse.metadata` имплементирован
+- Qdrant коллекция `wiki_pages_v1` создана, но **пустая**
+
+**Трудоёмкость:** ~3-4 дня. **LoC:** ~200 (eval-скрипт + baseline) + 0 prod-кода.
+
+**Задачи:**
+
+| # | Задача | Файл / артефакт | Acceptance |
+|---|--------|-----------------|-----------|
+| 4.12 | Отобрать 3 тестовых PDF (разные домены: 1С документация, ML-paper, общий техдок) | `data/eval/hermes/pdfs/` | 3 PDF, 20-80 страниц каждый, лицензия OK |
+| 4.13 | Запустить baseline GraphRAG pipeline (без wiki export) на 3 PDF → зафиксировать: entity count, relation count, retrieval precision/recall @10 на 30 тестовых запросах | `data/eval/hermes/graphrag_baseline.json` | Метрики сохранены, Qdrant snapshot `bsl_code_v2` + graph store backup |
+| 4.14 | Запустить `scripts/export_graph_to_wiki.py export --pdf-id <id> --output docs/wiki/entities/` для каждого PDF | `docs/wiki/entities/` | ≥3 wiki/PDF, schema validation ≥95% (kb-lint pass) |
+| 4.15 | Индексация wiki страниц в `wiki_pages_v1` через `WikiSearchIndexer` | Qdrant `wiki_pages_v1` | `collection.info.points_count > 0`, embeddings генерируются |
+| 4.16 | Запустить retrieval eval с wiki-augmented pipeline на тех же 30 запросах | `data/eval/hermes/wiki_augmented.json` | precision/recall/NDCG@10 |
+| 4.17 | Сравнение baseline vs wiki-augmented: delta precision ≥10%, retrieval latency overhead <20% | `data/eval/hermes/phase4_report.md` | Отчёт + вердикт |
+| 4.18 | Human-eval 10 случайно выбранных wiki-страниц: accuracy entity extraction ≥80% | `data/eval/hermes/human_eval.md` | 8/10 страниц корректны |
+| 4.19 | Завершить acceptance criteria в `openspec/changes/hermes-llm-wiki/specs/wiki-export-pipeline/spec.md` | spec.md | 5 критериев с `[x]` и ссылками на eval-отчёты |
+
+**Acceptance criteria (из tasks.md Phase 4, разблокируются здесь):**
+- [ ] ≥3 wiki pages per PDF (задача 4.14)
+- [ ] Schema validation ≥95% (задача 4.14 kb-lint)
+- [ ] Precision ≥80% (задача 4.18)
+- [ ] `wiki_pages_v1` коллекция populated (задача 4.15)
+- [ ] Retrieval improvement ≥10% vs GraphRAG baseline (задача 4.17)
+
+**Риски:**
+- LightRAG entity extraction качество зависит от PDF. Митигация: 3 разных домена
+- Regression >-10% → fallback на nano-graphrag (go/no-go задача 4.11 в tasks.md Phase 4)
+- Cost: LLM calls на extraction + eval ~$10-20. Митигация: cheap_llm для 80% шагов
+
+---
+
+#### TODO-3: Phase 3.10 — Incremental Graph Integration с Phase 6.5
+
+**Цель:** подписать `WikiExporter` на события `IncrementalGraphUpdater` из Phase 6.5, чтобы при изменении PDF переэкспортировались **только** affected entities (80-95% CPU экономия из Phase 6.5).
+
+**Предусловия:**
+- Phase 6.5 `src/pdf_framework/graph_store/incremental.py` (293 LoC) готов
+- Phase 4 `IncrementalWikiSync` класс реализован ([wiki_exporter.py:388-481](../../src/pdf_framework/indexing/wiki_exporter.py#L388))
+- TODO-2 Phase 4 baseline прошёл (подтверждает что pipeline работает end-to-end)
+
+**Трудоёмкость:** ~1-2 дня. **LoC:** ~150 (event wiring + DLQ обработка + тесты).
+
+**Задачи:**
+
+| # | Задача | Файл | Acceptance |
+|---|--------|------|-----------|
+| 3.10.1 | Добавить метод `IncrementalGraphUpdater.on_update(callback)` (pub-sub) | `src/pdf_framework/graph_store/incremental.py` | Callback получает `GraphUpdateEvent(added, modified, deleted)` |
+| 3.10.2 | В `memory_orchestrator.__init__` подписать `IncrementalWikiSync.handle_graph_event` на `IncrementalGraphUpdater.on_update` | `src/memory/orchestrator/memory_orchestrator.py` | Wiring через EventBus (не прямой callback — тестируемо) |
+| 3.10.3 | DLQ поведение: если `handle_graph_event` падает — писать в `data/wiki_sync_dlq.jsonl`, ретраи с backoff 1s/5s/30s | `src/pdf_framework/indexing/wiki_exporter.py` | Существующий DLQ в IncrementalWikiSync расширен retry-политикой |
+| 3.10.4 | Integration test: изменить 1 entity в graph → убедиться что переэкспортируется только 1 wiki-страница (не все) | `tests/integration/test_incremental_wiki_sync.py` | Измеряется через `WikiExporter.export_count` счётчик |
+| 3.10.5 | Metrics: `wiki_sync_events_total`, `wiki_sync_failures_total`, `wiki_sync_dlq_size` в `src/shared/metrics.py` | `src/shared/metrics.py` | Prometheus-совместимые (counter/gauge) |
+| 3.10.6 | Обновить spec `openspec/changes/hermes-llm-wiki/specs/wiki-librarian/spec.md` с incremental requirements | spec.md | REQ для event subscription добавлен |
+
+**Acceptance criteria:**
+- [ ] Изменение 1 PDF страницы → переэкспорт ≤3 wiki-страниц (affected only)
+- [ ] DLQ обрабатывается, retries успешны после transient failures
+- [ ] CPU overhead <5% от базового incremental graph update
+- [ ] 0 регрессий в `tests/integration/test_memory_*.py` (274 существующих тестов)
+
+**Риски:**
+- Event storm при массовом переиндексе PDF (100+ entities) → rate limit на EventBus (max 50 events/sec)
+- Ordering guarantees: graph update должен commit'нуться ДО wiki sync event → используем transactional outbox pattern
+
+---
+
+#### Общий график TODO-1/2/3
+
+```
+Week 1: TODO-1 (Phase 2.1 eval) ────── 2 дня ────┐
+Week 1: TODO-2 (Phase 4 audit+eval) ── 3-4 дня ─┤ можно параллельно
+Week 2: TODO-3 (Phase 3.10 integration) ─ 1-2 дня ┘ требует TODO-2 baseline
+
+Итого: ~1.5 недели параллельной работы
+```
+
+**Порядок запуска:**
+1. TODO-1 и TODO-2 — параллельно (независимы)
+2. TODO-3 — после того как TODO-2 зафиксирует Phase 4 baseline (нужна рабочая wiki_pages_v1 коллекция для integration test)
+
+---
+
 ### Рекомендация: Фаза 6 > Фаза 5
 
 | Критерий | Фаза 5 (Sandbox) | Фаза 6 (OAuth 2.1 Generalization) |
