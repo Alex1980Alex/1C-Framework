@@ -217,7 +217,7 @@ def run_eval(
 # ── Subcommands ────────────────────────────────────────────────────────────────
 
 
-def cmd_smoke(args: argparse.Namespace) -> None:
+def cmd_smoke(_args: argparse.Namespace) -> None:
     print("[SMOKE] Starting...")
     t0 = time.perf_counter()
     client = QdrantClient("localhost", port=6333)
