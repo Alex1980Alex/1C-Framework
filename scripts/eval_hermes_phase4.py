@@ -152,6 +152,8 @@ def _search_with_wiki(
         name = r["name"].lower().strip()
         name = "".join(c if c.isalnum() or c in "- " else "" for c in name)
         name = name.replace(" ", "-").strip("-")
+        # Naive uniform boost — proved harmful in eval (-15.7% precision).
+        # Next iteration: content-based RRF fusion instead.
         if name in wiki_pages:
             r["score"] += 0.1
             boosted.append(r)
