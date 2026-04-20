@@ -12,6 +12,7 @@ Purpose: When source code files change, remind Claude to update
 Timeout: 5s
 """
 
+import re
 import sys
 import os
 import subprocess
@@ -461,6 +462,9 @@ class DocsChangeTracker(BaseHook):
                 matches.append((doc_files, skill_names, hints))
 
         if not matches:
+            # Check if this is a wiki file → validate wiki-links
+            if "docs/wiki/" in path_norm and path_norm.endswith(".md"):
+                return self._validate_wiki(file_path)
             return None
 
         return self._remind(file_path, matches)
@@ -578,6 +582,37 @@ class DocsChangeTracker(BaseHook):
 
             if all_updated:
                 complete_task(task["content"], created_by=HOOK_ID)
+
+    def _validate_wiki(self, file_path: str) -> HookOutput | None:
+        """Validate wiki-links and frontmatter in docs/wiki/*.md files."""
+        try:
+            content = Path(file_path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            return None
+
+        issues = []
+
+        # Parse [[wiki-links]] and check targets exist
+        wiki_links = re.findall(r'\[\[([^\]]+)\]\]', content)
+        project_root = Path(os.environ.get("CLAUDE_PROJECT_DIR", "."))
+        for link in wiki_links:
+            target = link.split("|")[0].strip().split("#")[0].strip()
+            if not target:
+                continue
+            # Check in docs/wiki/ and docs/architecture/
+            candidates = [
+                project_root / "docs" / "wiki" / f"{target}.md",
+                project_root / "docs" / "wiki" / "drafts" / f"{target}.md",
+                project_root / "docs" / "architecture" / f"{target}.md",
+            ]
+            if not any(c.exists() for c in candidates):
+                issues.append(f"Broken [[{link}]] — target '{target}.md' not found")
+
+        if not issues:
+            return None
+
+        msg = "[WIKI-VALIDATOR] Issues found:\n" + "\n".join(f"  - {i}" for i in issues)
+        return HookOutput().system_message(msg)
 
     def _remind(self, changed_file, matches):
         """Create task and return systemMessage with all affected docs+skills."""

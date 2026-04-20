@@ -1,0 +1,10 @@
+{
+  // markdownlint-cli2 configuration
+  // https://github.com/DavidAnson/markdownlint
+  "default": true,
+  "MD013": { "line_length": 120 },
+  "MD033": false,  // Allow inline HTML (wiki-link syntax)
+  "MD041": false,  // Allow files starting with YAML frontmatter
+  "MD036": false,  // Allow emphasis used as heading (status markers)
+  "extends": null
+}

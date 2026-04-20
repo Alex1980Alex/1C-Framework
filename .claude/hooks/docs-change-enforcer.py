@@ -422,6 +422,19 @@ def main():
         stale += find_stale_infra(session_files)
         stale += find_unmapped_changes(session_files)
 
+        # Wiki drafts reminder: if new drafts exist, add a note
+        wiki_drafts_dir = PROJECT_ROOT / "docs" / "wiki" / "drafts"
+        wiki_drafts = list(wiki_drafts_dir.glob("*.md")) if wiki_drafts_dir.is_dir() else []
+        if wiki_drafts:
+            draft_names = ", ".join(d.stem for d in wiki_drafts[:5])
+            if len(wiki_drafts) > 5:
+                draft_names += f" (+{len(wiki_drafts) - 5})"
+            # Append as info message (not blocking, just a reminder)
+            print(
+                f"[WIKI-DRAFTS] {len(wiki_drafts)} draft(s) pending review: {draft_names}",
+                file=sys.stderr,
+            )
+
         # If docs were updated since last block, reset cooldown so hook can guard again
         if not stale and COOLDOWN_FILE.exists():
             try:
