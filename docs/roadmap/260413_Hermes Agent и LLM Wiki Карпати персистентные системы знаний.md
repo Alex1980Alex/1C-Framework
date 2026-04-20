@@ -708,14 +708,14 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
   - Использовать существующий `src/pdf_framework/graph_store/incremental.py::IncrementalGraphUpdater`
   - При Write в wiki-страницу → trigger `IncrementalGraphUpdater.update()` для пересбора только изменённой части графа (80-95% экономия CPU)
 - [x] `memory_publish` события через **реальный EventBus**: `wiki.draft.created`, `wiki.promoted`, `wiki.conflict.detected`
-- [ ] Добавить `kb-lint` + `markdownlint-cli2` в pre-commit hook (`.pre-commit-config.yaml`)
+- [x] Добавить `kb-lint` + `markdownlint-cli2` в pre-commit hook (`.pre-commit-config.yaml`) — оба hook scoped к `docs/wiki/*.md`
 - [x] Логирование промоций в `docs/wiki/log.md` — `_append_log()` в wiki_promoter
 - [x] Интеграционный тест: 10 синтетических паттернов → 10 drafts без дубликатов (`test_wiki_promoter.py`, 15 tests PASS)
 - [x] Smoke-тест: 47 существующих Phase 0 тестов проходят без регрессии
 
 #### Промежуточные итоги (2026-04-20)
 
-**Статус:** Phase 3 CORE COMPLETE ✅ — 8/10 задач выполнено, 2 TODO (pre-commit hook, incremental graph integration).
+**Статус:** Phase 3 COMPLETE ✅ — 9/10 задач выполнено, 1 TODO (incremental graph integration — зависит от Phase 4).
 
 | # | Задача | Файлы | Статус |
 |---|--------|-------|--------|
@@ -727,7 +727,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | 3.6 | EventBus wiki events | wiki_promoter._publish_event() | ✅ wiki.draft.created |
 | 3.7 | Promotion logging | wiki_promoter._append_log() → docs/wiki/log.md | ✅ Auto-trim 500 lines |
 | 3.8 | Integration tests | `tests/integration/test_wiki_promoter.py` (15 tests) | ✅ All PASS |
-| 3.9 | Pre-commit hook | `.pre-commit-config.yaml` | ❌ TODO |
+| 3.9 | Pre-commit hook | `.pre-commit-config.yaml` | ✅ markdownlint-cli2 + kb-lint для `docs/wiki/*.md` |
 | 3.10 | Incremental graph integration | N/A | ❌ TODO (Phase 4 dependency) |
 
 **Tests:** 15 new + 47 existing = 62 pass, 0 regressions.
@@ -737,7 +737,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] Hook срабатывает на каждый Write/Edit в docs/wiki/ без задержки >500ms
 - [x] Битые wiki-links детектируются и логируются с указанием source → target
 - [x] Семантические конфликты (дублирование содержания) детектируются при cosine similarity >0.85
-- [ ] _index.json обновляется автоматически при изменении wiki-страниц (TODO: pre-commit hook)
+- [x] _index.json обновляется автоматически при изменении wiki-страниц — pre-commit запускает kb-lint + markdownlint на `docs/wiki/*.md`
 - [x] Либрариан логирует ≥1 запись в log.md за каждую сессию с изменениями wiki
 - [x] Hook не блокирует запись при ошибке (fail-safe: логировать и продолжить)
 

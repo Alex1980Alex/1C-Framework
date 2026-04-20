@@ -12,10 +12,13 @@ from src.memory.orchestrator.memcube import ContentType, MemoryCube
 
 
 def _make_point(idx: int, name: str, confidence: float, usage_count: int):
-    """Create a mock Qdrant point with vector in payload."""
+    """Create a mock Qdrant point matching ``scroll(with_vectors=True)``.
+
+    Vector lives on ``point.vector`` — not in payload — as returned by Qdrant.
+    """
     point = MagicMock()
     point.id = f"point-{idx}"
-    vec = [0.1 * idx] * 8
+    point.vector = [0.1 * (idx + 1)] * 8
     point.payload = {
         "name": name,
         "content": f"Content for {name}",
@@ -23,10 +26,7 @@ def _make_point(idx: int, name: str, confidence: float, usage_count: int):
         "usage_count": usage_count,
         "tags": ["test"],
         "description": f"Description of {name}",
-        "vector": vec,
-        "id": f"point-{idx}",
     }
-    point.vector = vec
     return point
 
 
@@ -129,14 +129,13 @@ class TestWikiPromoterScan:
     async def test_no_vectors_skips_dedup(self, promoter, mock_client):
         """Pattern without vector embedding skips dedup (no crash)."""
         point = _make_point(1, "no vector", 0.9, 10)
-        point.payload.pop("vector", None)  # no vector key
-        # vector is on point.vector attribute, payload doesn't have it
         point.vector = None
         mock_client.scroll.return_value = ([point], None)
 
         created = await promoter.scan_and_promote()
         # Should still create since _dedup_check returns None for no vector
         assert len(created) == 1
+        mock_client.query_points.assert_not_called()
 
 
 # ===== Slugify =====

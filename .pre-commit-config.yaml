@@ -47,6 +47,24 @@ repos:
         args: [--ignore-missing-imports, --warn-return-any]
         exclude: ^(tests/|docs/|scripts/)
 
+  # markdownlint-cli2 — Phase 3 Auto-Librarian wiki format check
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.22.0
+    hooks:
+      - id: markdownlint-cli2
+        name: Markdown Lint (wiki)
+        files: ^docs/wiki/.*\.md$
+
+  # kb-lint — Phase 3 Auto-Librarian wiki KB validation
+  - repo: local
+    hooks:
+      - id: kb-lint
+        name: KB Lint (wiki)
+        entry: kb-lint --ci
+        language: system
+        files: ^docs/wiki/.*\.md$
+        pass_filenames: false
+
 # CI configuration
 ci:
   autofix_commit_msg: |

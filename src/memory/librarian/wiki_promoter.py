@@ -57,15 +57,30 @@ class WikiPromoter:
         created: list[str] = []
         for point in candidates:
             payload = point.payload or {}
-            existing = await self._dedup_check(payload)
+            vector = self._extract_vector(point, payload)
+            existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
                 slug = await self._create_draft(payload)
                 await self._publish_event("wiki.draft.created", {"slug": slug, "source_id": str(point.id)})
                 created.append(slug)
         return created
 
-    async def _dedup_check(self, candidate_payload: dict) -> str | None:
-        embedding = candidate_payload.get("vector")
+    @staticmethod
+    def _extract_vector(point, payload: dict) -> list[float] | None:
+        """Qdrant returns the vector in ``point.vector`` when ``with_vectors=True``.
+
+        Named-vector collections return a dict; fall back to ``payload['vector']``
+        to stay compatible with older fixtures.
+        """
+        vector = getattr(point, "vector", None)
+        if isinstance(vector, dict):
+            vector = next(iter(vector.values()), None)
+        if vector:
+            return list(vector)
+        legacy = payload.get("vector")
+        return list(legacy) if legacy else None
+
+    async def _dedup_check(self, embedding: list[float] | None, source_id: str) -> str | None:
         if not embedding:
             return None
         results = self.client.query_points(
@@ -74,9 +89,8 @@ class WikiPromoter:
             limit=5,
             with_payload=True,
         )
-        source_id = candidate_payload.get("id")
         for scored in results.points:
-            if str(scored.id) == str(source_id):
+            if str(scored.id) == source_id:
                 continue
             if scored.score >= self.similarity_threshold:
                 payload = scored.payload or {}
