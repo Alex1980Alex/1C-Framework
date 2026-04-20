@@ -255,6 +255,43 @@ def save_to_sqlite(ctx):
     return True
 
 
+def save_to_wiki_log(ctx):
+    """Append brief session summary to docs/wiki/log.md."""
+    if not WIKI_LOG.exists():
+        return False
+
+    try:
+        today = date.today().isoformat()
+        summary = format_summary(ctx)
+        skills_str = ", ".join(ctx["skills"][:5]) if ctx["skills"] else "none"
+        files_count = len(ctx["files_changed"])
+
+        entry = (
+            f"\n## {today} — Session Summary\n\n"
+            f"**Event:** Auto-saved session\n\n"
+            f"- Skills: {skills_str}\n"
+            f"- Files changed: {files_count}\n"
+            f"- Summary: {summary}\n\n"
+        )
+
+        with open(WIKI_LOG, "a", encoding="utf-8") as f:
+            f.write(entry)
+
+        # Trim if over max lines
+        try:
+            lines = WIKI_LOG.read_text(encoding="utf-8").splitlines(keepends=True)
+            if len(lines) > WIKI_LOG_MAX_LINES:
+                # Keep frontmatter + first section + tail
+                kept = lines[:30] + lines[-(WIKI_LOG_MAX_LINES - 30):]
+                WIKI_LOG.write_text("".join(kept), encoding="utf-8")
+        except Exception:
+            pass
+
+        return True
+    except Exception:
+        return False
+
+
 class SessionMemorySave(BaseHook):
 
     def execute(self, inp: HookInput) -> HookOutput | None:
