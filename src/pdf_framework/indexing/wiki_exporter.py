@@ -118,7 +118,7 @@ class WikiPageChange:
     page_path: Path
     change_type: str  # "created" | "modified" | "deleted"
     frontmatter: dict[str, Any]
-    content_diff: Optional[str] = None
+    content_diff: str | None = None
     added_links: list[str] = field(default_factory=list)
     removed_links: list[str] = field(default_factory=list)
 
