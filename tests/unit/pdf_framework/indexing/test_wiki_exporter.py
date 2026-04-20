@@ -26,8 +26,10 @@ def _run(coro):
 
 
 @pytest.fixture
-def graph_store():
-    store = NetworkXGraphStore()
+def graph_store(tmp_path):
+    from src.pdf_framework.config import GraphStoreSettings
+    settings = GraphStoreSettings(persist_dir=str(tmp_path / "graph"))
+    store = NetworkXGraphStore(settings)
     _run(store.initialize())
     return store
 
