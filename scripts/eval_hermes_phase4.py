@@ -29,7 +29,6 @@ from qdrant_client import QdrantClient
 
 GRAPH_COLLECTION = "graph_embeddings"
 PDF_COLLECTION = "pdf_documents"
-VECTOR_DIM = 1024
 TOP_K = 10
 
 
