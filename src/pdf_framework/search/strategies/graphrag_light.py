@@ -216,6 +216,7 @@ class LightRAGStrategy:
                 "relation_hits": len(relation_hits),
                 "chunk_ids_found": len(chunk_scores),
                 "entity_names": list(entity_names)[:10],
+                "wiki_page_paths": wiki_paths,
             },
         )
 
