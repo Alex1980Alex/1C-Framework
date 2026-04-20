@@ -116,6 +116,19 @@ class LightRAGStrategy:
                 f"[score={hit_score:.3f}]"
             )
 
+        # Enrich entity hits with wiki page paths (Phase 4)
+        wiki_paths: dict[str, str] = {}
+        if self._wiki_dir.exists():
+            for hit in entity_hits:
+                name = hit.get("name", "")
+                if name:
+                    import re
+                    fname = re.sub(r"[^\w\s-]", "", name.lower())
+                    fname = re.sub(r"[\s_]+", "-", fname)[:80].rstrip("-")
+                    wp = self._wiki_dir / f"{fname}.md"
+                    if wp.exists():
+                        wiki_paths[hit.get("graph_id", name)] = str(wp)
+
         for hit in relation_hits:
             src_chunk = hit.get("source_chunk_id", "")
             hit_score = hit.get("score", 0.0)
