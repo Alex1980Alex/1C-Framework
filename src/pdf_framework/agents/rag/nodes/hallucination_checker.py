@@ -90,6 +90,28 @@ async def check_hallucination(
             logger.warning("[HALLUCINATION] Cheap LLM failed, falling back to Claude: %s", e)
         # Fall through to Claude
 
+    # DSPy path — typed HallucinationCheckSignature with grounded: bool
+    if is_dspy_available():
+        try:
+            dspy_result = await async_predict(
+                HallucinationCheckSignature, answer=answer, context=context,
+            )
+            grounded = dspy_result.get("grounded")
+            reasoning = dspy_result.get("reasoning", "")
+            if isinstance(grounded, bool):
+                is_hallucinated = not grounded
+                if is_hallucinated:
+                    logger.warning("[HALLUCINATION] Detected (dspy): %s", reasoning[:200])
+                else:
+                    logger.info("[HALLUCINATION] Grounded (dspy)")
+                return {
+                    "is_hallucinated": is_hallucinated,
+                    "hallucination_reason": reasoning[:300],
+                }
+            logger.warning("[HALLUCINATION] DSPy grounded not bool: %s, falling back", grounded)
+        except Exception as e:
+            logger.warning("[HALLUCINATION] DSPy failed, falling back: %s", e)
+
     messages = [
         SystemMessage(content=check_prompt["system"]),
         HumanMessage(content=check_prompt["user"]),
