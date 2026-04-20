@@ -134,6 +134,11 @@ def _search(client: QdrantClient, query_vec: list[float], k: int = TOP_K) -> lis
     ]
 
 
+def _normalize_name(name: str) -> str:
+    n = name.lower().strip()
+    return n.replace("-", " ").replace("  ", " ")
+
+
 def _search_with_rrf(
     client: QdrantClient,
     query_vec: list[float],
@@ -147,24 +152,33 @@ def _search_with_rrf(
     wiki_results = [
         {"name": p.payload.get("name", ""), "score": p.score, "entity_type": p.payload.get("entity_type", "")}
         for p in wiki_resp.points
+        if p.payload and p.payload.get("name")
     ]
 
     scores: dict[str, float] = {}
     result_map: dict[str, dict] = {}
+    norm_to_canonical: dict[str, str] = {}
 
     for rank, r in enumerate(graph_results):
         name = r["name"]
-        scores[name] = scores.get(name, 0.0) + graph_weight / (RRF_K + rank + 1)
-        result_map[name] = r
+        norm = _normalize_name(name)
+        scores[norm] = scores.get(norm, 0.0) + graph_weight / (RRF_K + rank + 1)
+        result_map[norm] = r
+        norm_to_canonical[norm] = name
 
     for rank, r in enumerate(wiki_results):
         name = r["name"]
-        scores[name] = scores.get(name, 0.0) + wiki_weight / (RRF_K + rank + 1)
-        if name not in result_map:
-            result_map[name] = r
+        norm = _normalize_name(name)
+        scores[norm] = scores.get(norm, 0.0) + wiki_weight / (RRF_K + rank + 1)
+        if norm not in result_map:
+            result_map[norm] = r
+            norm_to_canonical[norm] = name
 
-    sorted_names = sorted(scores, key=lambda x: scores[x], reverse=True)[:k]
-    return [{"name": n, **result_map[n], "rrf_score": scores[n]} for n in sorted_names]
+    sorted_norms = sorted(scores, key=lambda x: scores[x], reverse=True)[:k]
+    return [
+        {"name": norm_to_canonical[n], **result_map[n], "rrf_score": scores[n]}
+        for n in sorted_norms
+    ]
 
 
 def run_eval(
