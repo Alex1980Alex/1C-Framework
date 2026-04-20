@@ -304,6 +304,7 @@ class SessionMemorySave(BaseHook):
             return None
 
         save_to_sqlite(ctx)
+        save_to_wiki_log(ctx)
 
         # Non-blocking: always allow stop
         return None
