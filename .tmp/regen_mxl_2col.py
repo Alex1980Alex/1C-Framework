@@ -89,8 +89,9 @@ out.append("\t</columns>")
 #   6: Default
 
 # Rows:
-# Row 0: Организация (param, col 0, label style) | "Ярлык пробы" (text, col 1, title style)
-out.extend(row(0, [cell_param(None, 3, "Организация"), cell_text(None, 5, "Ярлык пробы")]))
+# Row 0: Организация (param, col 0, bold Parameter) | "Ярлык пробы" (text, col 1, title style)
+# Fmt 7 = Organization value (bold Parameter left)
+out.extend(row(0, [cell_param(None, 7, "Организация"), cell_text(None, 5, "Ярлык пробы")]))
 # Row 1: "Дата отбора" | ДатаОтбора
 out.extend(row(1, [cell_text(None, 3, "Дата отбора"), cell_param(None, 4, "ДатаОтбора")]))
 # Row 2: "Накладная №" | НакладнаяНомер
