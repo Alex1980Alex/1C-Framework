@@ -12,6 +12,7 @@ Two-level retrieval:
 
 import logging
 import time
+from pathlib import Path
 from typing import Any
 
 from src.pdf_framework.config import LightRAGSettings
