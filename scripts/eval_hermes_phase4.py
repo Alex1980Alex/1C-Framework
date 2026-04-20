@@ -485,9 +485,11 @@ def main() -> None:
     p_wiki = sub.add_parser("export-wiki", help="Export graph entities to wiki pages")
     p_wiki.add_argument("--output", default="docs/wiki/entities")
 
-    p_weval = sub.add_parser("wiki-eval", help="Run wiki-augmented eval")
+    p_idx = sub.add_parser("index-wiki", help="Index wiki pages into Qdrant wiki_pages_v1")
+    p_idx.add_argument("--wiki-dir", default="docs/wiki/entities")
+
+    p_weval = sub.add_parser("wiki-eval", help="Run wiki-augmented eval via RRF fusion")
     p_weval.add_argument("--queries", required=True)
-    p_weval.add_argument("--wiki-dir", required=True)
     p_weval.add_argument("--output", required=True)
 
     p_rep = sub.add_parser("report", help="Generate comparison report")
