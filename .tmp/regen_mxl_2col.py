@@ -118,8 +118,8 @@ out.append("\t<vgRows>10</vgRows>")
 
 # Named areas (all cover both columns — <beginColumn>-1</beginColumn> = all columns)
 areas = [
-    ("Шапка", 0, 0),
-    ("Основное", 1, 6),
+    ("Шапка", 0, 1),
+    ("Основное", 2, 6),
     ("Подвал", 7, 9),
 ]
 for name, br, er in areas:
