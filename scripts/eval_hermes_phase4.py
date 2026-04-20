@@ -260,7 +260,7 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
     import re
     import uuid
 
-    from qdrant_client.models import PointStruct, VectorParams
+    from qdrant_client.models import Distance, PointStruct, VectorParams
 
     wiki_dir = Path(args.wiki_dir)
     if not wiki_dir.exists():
