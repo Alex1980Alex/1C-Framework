@@ -31,6 +31,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 SESSION_STATE_FILE = PROJECT_ROOT / ".claude" / "data" / "session-skills.json"
 HOOK_TODOS_FILE = PROJECT_ROOT / ".claude" / "cache" / "hook-todos.json"
+WIKI_LOG = PROJECT_ROOT / "docs" / "wiki" / "log.md"
+WIKI_LOG_MAX_LINES = 500
 
 # Minimum thresholds — skip trivial sessions
 MIN_FILES = 2
