@@ -38,12 +38,14 @@ class LightRAGStrategy:
         graph_store: Any,
         entity_embeddings: Any,
         settings: LightRAGSettings | None = None,
+        wiki_entities_dir: Path | None = None,
     ):
         self._embedding_engine = embedding_engine
         self._vector_store = vector_store
         self._graph_store = graph_store
         self._entity_embeddings = entity_embeddings
         self._settings = settings or LightRAGSettings()
+        self._wiki_dir = wiki_entities_dir or Path("docs/wiki/entities")
 
     async def search(
         self,
