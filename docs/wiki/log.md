@@ -41,3 +41,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 **Status:** [Current state or next step]
 ```
+
+## 2026-04-21 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: evaluation-benchmark, learn:pytest-framework, learning-loop, code-verify, task-protocol
+- Files changed: 2
+- Summary: Session 2026-04-21. Skills: evaluation-benchmark, learn:pytest-framework, learning-loop, code-verify, task-protocol, z-ai-delegation, 1c-doc-research, learn:fastapi-framework. Changed 2 files in .pre-commit-config.yaml, mcp-server.log. Commit: chore: auto-save tasks.md, 260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md, spec.md +1 more. Commit: chore: auto-commit 2 file(s) changed. Commit: docs(hermes): sync tasks.md Phase 0-4 status + fix link_registry.db path
+
