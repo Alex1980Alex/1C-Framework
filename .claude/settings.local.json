@@ -679,7 +679,8 @@
       "Bash(awk '/### Фаза 1/,/### Фаза 2/' \"docs/roadmap/260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md\")",
       "Bash(where.exe obsidian *)",
       "Bash(setx OBSIDIAN_API_KEY \"ce43f3ec7b3abd209c3f532b701d9c66901b01f7e43c85933dc37a469a645f28\")",
-      "Bash(awk '/### Фаза 1/,/### Фаза 2/' \"D:/1С-Framework/docs/roadmap/260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md\")"
+      "Bash(awk '/### Фаза 1/,/### Фаза 2/' \"D:/1С-Framework/docs/roadmap/260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md\")",
+      "Read(//d/WorkSpace/УправлениеТранспортомНаПЛК/УправлениеТранспортомНаПЛК/src/DataProcessors/гкс_ПриемкаТранспорта/Forms/ОсновнаяФорма/**)"
     ]
   },
   "enableAllProjectMcpServers": true,
