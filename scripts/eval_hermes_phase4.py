@@ -134,38 +134,35 @@ def _search(client: QdrantClient, query_vec: list[float], k: int = TOP_K) -> lis
     ]
 
 
-def _search_with_wiki(
+def _search_with_rrf(
     client: QdrantClient,
     query_vec: list[float],
-    wiki_dir: Path,
     k: int = TOP_K,
 ) -> list[dict]:
-    results = _search(client, query_vec, k=k * 2)
+    graph_results = _search(client, query_vec, k=k * 2)
 
-    if not wiki_dir.exists():
-        return results[:k]
+    wiki_resp = client.query_points(WIKI_COLLECTION, query=query_vec, limit=k * 2, with_payload=True)
+    wiki_results = [
+        {"name": p.payload.get("name", ""), "score": p.score, "entity_type": p.payload.get("entity_type", "")}
+        for p in wiki_resp.points
+    ]
 
-    wiki_pages = set()
-    for wp in wiki_dir.glob("*.md"):
-        wiki_pages.add(wp.stem)
+    scores: dict[str, float] = {}
+    result_map: dict[str, dict] = {}
 
-    boosted = []
-    normal = []
-    for r in results:
-        name = r["name"].lower().strip()
-        name = "".join(c if c.isalnum() or c in "- " else "" for c in name)
-        name = name.replace(" ", "-").strip("-")
-        # Naive uniform boost — proved harmful in eval (-15.7% precision).
-        # Next iteration: content-based RRF fusion instead.
-        if name in wiki_pages:
-            r["score"] += 0.1
-            boosted.append(r)
-        else:
-            normal.append(r)
+    for rank, r in enumerate(graph_results):
+        name = r["name"]
+        scores[name] = scores.get(name, 0.0) + 1.0 / (RRF_K + rank + 1)
+        result_map[name] = r
 
-    merged = boosted + normal
-    merged.sort(key=lambda x: x["score"], reverse=True)
-    return merged[:k]
+    for rank, r in enumerate(wiki_results):
+        name = r["name"]
+        scores[name] = scores.get(name, 0.0) + 1.0 / (RRF_K + rank + 1)
+        if name not in result_map:
+            result_map[name] = r
+
+    sorted_names = sorted(scores, key=lambda x: scores[x], reverse=True)[:k]
+    return [{"name": n, **result_map[n], "rrf_score": scores[n]} for n in sorted_names]
 
 
 def run_eval(
