@@ -929,6 +929,52 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
+## Следующая фаза (2026-04-20)
+
+**Статус Фаз 0–4:** CORE COMPLETE (см. [tasks.md](../../openspec/changes/hermes-llm-wiki/tasks.md) сводную таблицу).
+
+**Открытые TODO не блокирующие новые фазы:**
+- Phase 2.1 eval-benchmark (RAGAS) — теперь возможен после установки `dspy-ai==3.1.3` (2026-04-20)
+- Phase 4 audit + eval regression — требуют реального прогона pipeline на 3 тестовых PDF с `wiki_pages_v1`
+- Phase 3 incremental graph integration — разблокируется после первого Phase 4 production-прогона
+
+### Рекомендация: Фаза 6 > Фаза 5
+
+| Критерий | Фаза 5 (Sandbox) | Фаза 6 (OAuth 2.1 Generalization) |
+|----------|------------------|-----------------------------------|
+| Приоритет по roadmap | P3 | **P2** |
+| Существующая база | LangSmith sandbox (транзитивная) | `src/bsl/mcp_server/auth/oauth2.py` (350 LoC, Phase 12.3) |
+| Новый код | ~200 LoC (backend wrapper) | ~400 LoC (extraction + generic Service) |
+| Блокирует другие фазы | Нет | Нет |
+| Риск регрессии | Низкий (новый модуль) | Средний (288 существующих тестов не должны сломаться) |
+| Ценность сейчас | Nice-to-have для research-скиллов | Разблокирует OAuth для `pdf-vector-graph` MCP server |
+
+**Выбор:** Фаза 6 (OAuth 2.1 Generalization) — P2 приоритет, выше business value (reusable auth infrastructure), параллельно можно разогнать Phase 2.1 eval с установленным DSPy.
+
+**План Фазы 6 (ориентировочно ~3-4 дня):**
+1. Аудит `src/bsl/mcp_server/auth/oauth2.py` → `docs/wiki/auth/oauth2-service.md`
+2. Экстракция `OAuth2Service` → `src/shared/mcp_oauth/service.py`
+3. `OAuth2Store` с pluggable backends (in-memory, SQLite, Redis)
+4. Backward-compat wrapper в `src/bsl/mcp_server/auth/oauth2.py`
+5. Подключение к `pdf-vector-graph` MCP server (feature flag `MCP_OAUTH_ENABLED`)
+6. Тесты: ≥10 новых + 288 существующих без регрессии
+7. Security review через `memory_audit_log`
+
+**Альтернативно (параллельно):**
+- Phase 2.1 eval-benchmark теперь разблокирован (`dspy-ai==3.1.3` установлен 2026-04-20) — можно запустить RAGAS сравнение grader/rewriter/hallucination до/после DSPy
+- Phase 5 Sandbox можно начать в параллель (P3, не блокирует Фазу 6)
+
+### Запуск
+
+```bash
+/opsx:apply hermes-llm-wiki
+# → skill openspec-apply-change активируется
+# → читает tasks.md, видит Фазы 0-4 как [x]
+# → предлагает первую невыполненную задачу Фазы 6 (аудит oauth2.py)
+```
+
+---
+
 ## Открытые вопросы
 
 1. **Obsidian free vs Obsidian Sync.** Использовать бесплатный локальный Obsidian с git-sync, или приобрести Obsidian Sync для multi-device? Git-sync добавляет friction, Sync стоит $96/год. Решение влияет на workflow обновления wiki.
@@ -1006,24 +1052,30 @@ cd D:/1С-Framework
 
 **Если хоть один красный ДО старта Фазы 0** — сначала чинить существующие проблемы, потом `/opsx:apply`. Это pre-existing issues, не связанные с Hermes.
 
-### 3. Backup SQLite orchestrator.db (критично для Ф0 задачи 0.2)
+### 3. Backup SQLite link_registry.db (критично для Ф0 задачи 0.2)
+
+**⚠️ Уточнение (2026-04-20):** фактический путь к БД LinkRegistry — `data/link_registry.db`, НЕ `data/orchestrator.db`. Подтверждено:
+- [`src/memory/orchestrator/link_registry.py:198`](../../src/memory/orchestrator/link_registry.py#L198): `db_path = str(data_dir / "link_registry.db")`
+- [`src/memory/orchestrator/memory_orchestrator.py:355`](../../src/memory/orchestrator/memory_orchestrator.py#L355): `db_path = str(data_dir / "link_registry.db")`
+
+Ранние ревизии роадмапа упоминали `orchestrator.db` — это legacy-название, файла с таким именем нет.
 
 Задача **0.2 LinkRegistry SQL migration** — единственный breaking change во всей Фазе 0. Расширяет `CHECK (link_type IN (...))` constraint через CREATE NEW + COPY DATA + DROP OLD паттерн (SQLite не поддерживает `ALTER TABLE DROP CONSTRAINT`).
 
 Перед запуском migration — backup:
 
 ```bash
-# Найти актуальный путь к БД
-find D:/1С-Framework -name "orchestrator*.db" -not -path "*/.venv/*" 2>&1
+# Найти актуальный путь к БД (должен вывести data/link_registry.db)
+find D:/1С-Framework/data -name "link_registry*.db" -not -path "*/.venv/*" 2>&1
 
 # Физический backup
-cp data/orchestrator.db data/orchestrator.db.backup-pre-hermes
+cp data/link_registry.db data/link_registry.db.backup-pre-hermes
 
 # Логический backup (SQL dump) — на случай если binary повреждён
 .venv/Scripts/python.exe -c "
 import sqlite3
-src = sqlite3.connect('data/orchestrator.db')
-with open('data/orchestrator.db.sql.backup-pre-hermes', 'w', encoding='utf-8') as f:
+src = sqlite3.connect('data/link_registry.db')
+with open('data/link_registry.db.sql.backup-pre-hermes', 'w', encoding='utf-8') as f:
     f.write('\n'.join(src.iterdump()))
 src.close()
 print('Backup OK')
@@ -1033,7 +1085,7 @@ print('Backup OK')
 Rollback procedure:
 ```bash
 # Если migration сломала БД
-cp data/orchestrator.db.backup-pre-hermes data/orchestrator.db
+cp data/link_registry.db.backup-pre-hermes data/link_registry.db
 
 # Или через скрипт миграции (будет создан в задаче 0.2)
 .venv/Scripts/python.exe scripts/migrate_link_registry.py --rollback
@@ -1091,7 +1143,7 @@ hermes-llm-wiki: status=approved, profile=python-framework
 1. Открыть Claude Code в D:/1С-Framework
 2. Sanity check 4.1 + 4.2 (2 минуты)
 3. Baseline regression tests (шаг 2, 5-10 минут)
-4. Backup orchestrator.db (шаг 3, 1 минута)
+4. Backup link_registry.db (шаг 3, 1 минута)
 5. /opsx:apply hermes-llm-wiki
    → skill openspec-apply-change активируется
    → читает tasks.md Фаза 0

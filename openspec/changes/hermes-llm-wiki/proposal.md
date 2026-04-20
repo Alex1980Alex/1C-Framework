@@ -68,7 +68,7 @@ L0: Raw sources (conversations, PDFs, git history)
 - OpenSpec 1C workflow (`gkstcplk-*` changes) — не затрагивается, отдельный profile
 
 ### Breaking changes
-- **SQLite schema** `memory_orchestrator.db` — требует миграцию (ALTER TABLE links), есть rollback скрипт
+- **SQLite schema** `data/link_registry.db` — требует миграцию (ALTER TABLE links), есть rollback скрипт
 - **LinkType enum** — добавление значений, старые literals продолжают работать
 
 ## Связанные документы

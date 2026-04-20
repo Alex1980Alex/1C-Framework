@@ -110,7 +110,7 @@ CHECK (link_type IN (
 
 **SQLite не поддерживает `ALTER TABLE DROP CONSTRAINT`** — требуется CREATE NEW + COPY DATA + DROP OLD + RENAME паттерн (см. `migrations/001_extend_link_types.sql`).
 
-**Given** существующая база `orchestrator.db` с 6 link types
+**Given** существующая база `data/link_registry.db` с 6 link types
 **When** запущен `python scripts/migrate_link_registry.py --apply`
 **Then** CHECK constraint обновлён, existing links сохранены, новые 4 типа доступны
 
