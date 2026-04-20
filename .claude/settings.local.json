@@ -682,7 +682,10 @@
       "Bash(awk '/### Фаза 1/,/### Фаза 2/' \"D:/1С-Framework/docs/roadmap/260413_Hermes Agent и LLM Wiki Карпати персистентные системы знаний.md\")",
       "Read(//d/WorkSpace/УправлениеТранспортомНаПЛК/УправлениеТранспортомНаПЛК/src/DataProcessors/гкс_ПриемкаТранспорта/Forms/ОсновнаяФорма/**)",
       "Bash(ps -W)",
-      "Bash(MSYS_NO_PATHCONV=1 python -m pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q)"
+      "Bash(MSYS_NO_PATHCONV=1 python -m pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q)",
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(\".venv/Scripts/python.exe\" -m pip install dspy-ai)",
+      "Bash(PYTHONPATH=src \".venv/Scripts/python.exe\" -c \"from pdf_framework.prompts.signatures import GraderSignature, HallucinationCheckSignature, RewriterSignature; print\\('signatures OK'\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,
