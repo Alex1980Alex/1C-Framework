@@ -15,6 +15,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.agents.rag.state import RAGState
 from src.pdf_framework.config import SelfRAGSettings
+from src.pdf_framework.prompts import RewriterSignature, async_chain_of_thought, is_dspy_available
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
