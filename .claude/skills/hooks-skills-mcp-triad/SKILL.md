@@ -88,6 +88,7 @@ description: "Используй этот скилл для понимания �
 | `code-verify` | Верификация кода: 3 уровня, 4 режима (knowledge/behavior/bugfix/quality) |
 | `tenacity-retry` | Retry с tenacity: декораторы, backoff, jitter, async |
 | `obsidian-vault` | Obsidian vault навигация: wiki-links, templates, MCP obsidian-mcp |
+| `wiki-pipeline` | PDF → Structured Wiki Pages: WikiExporter, IncrementalWikiSync, ReverseSync (Hermes Phase 4) |
 
 #### Операционные фреймворка (17)
 
