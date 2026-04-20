@@ -9,7 +9,7 @@ These refined signatures add 3-level grading and typed hallucination checking.
 
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ if _DSPY_AVAILABLE:
             desc="An improved query designed to retrieve more relevant results"
         )
 
-    async def async_predict(signature_class: type, **kwargs: Any) -> Dict[str, Any]:
+    async def async_predict(signature_class: type, **kwargs: Any) -> dict[str, Any]:
         """Run dspy.Predict asynchronously via thread pool."""
         if not _DSPY_AVAILABLE:
             raise ImportError("dspy-ai is required but not installed")
@@ -65,7 +65,7 @@ if _DSPY_AVAILABLE:
 
     async def async_chain_of_thought(
         signature_class: type, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run dspy.ChainOfThought asynchronously via thread pool."""
         if not _DSPY_AVAILABLE:
             raise ImportError("dspy-ai is required but not installed")
@@ -85,10 +85,10 @@ else:
     class RewriterSignature:  # type: ignore[no-redef]
         pass
 
-    async def async_predict(signature_class: type, **kwargs: Any) -> Dict[str, Any]:
+    async def async_predict(signature_class: type, **kwargs: Any) -> dict[str, Any]:
         raise ImportError("dspy-ai is required but not installed")
 
     async def async_chain_of_thought(
         signature_class: type, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         raise ImportError("dspy-ai is required but not installed")
