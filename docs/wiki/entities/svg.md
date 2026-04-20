@@ -19,6 +19,7 @@ title: SVG
 unified_id: semantic:memory-ai:381474c7-d3fe-4e41-a7c3-33031a987af1
 updated_at: '2026-04-21T01:05:02.949777'
 version: 1
+status: active
 ---
 
 ## What

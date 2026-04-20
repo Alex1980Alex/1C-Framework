@@ -19,6 +19,7 @@ title: glyphWidth
 unified_id: semantic:memory-ai:08b5308d-108e-4777-9dee-b4bf7659c483
 updated_at: '2026-04-21T01:05:01.575504'
 version: 1
+status: active
 ---
 
 ## What

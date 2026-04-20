@@ -19,6 +19,7 @@ title: ItemsInWarehouses
 unified_id: semantic:memory-ai:71bb9ab7-1d1c-42ab-898a-484f88994a9e
 updated_at: '2026-04-21T01:05:02.231440'
 version: 1
+status: active
 ---
 
 ## What

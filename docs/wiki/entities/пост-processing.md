@@ -19,6 +19,7 @@ title: Пост processing
 unified_id: semantic:memory-ai:dab0c707-8c3b-4e49-8925-d11d13322716
 updated_at: '2026-04-21T01:05:03.452755'
 version: 1
+status: active
 ---
 
 ## What

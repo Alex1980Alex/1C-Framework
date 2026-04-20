@@ -19,6 +19,7 @@ title: Web-сервисы
 unified_id: semantic:memory-ai:2afb2b2a-a2f1-47b7-9402-06a2c73c9c8f
 updated_at: '2026-04-21T01:05:01.879100'
 version: 1
+status: active
 ---
 
 ## What

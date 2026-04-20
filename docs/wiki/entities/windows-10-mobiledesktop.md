@@ -19,6 +19,7 @@ title: Windows 10 (Mobile/Desktop)
 unified_id: semantic:memory-ai:b7cbc169-5652-4219-919b-2d3fb0352f1f
 updated_at: '2026-04-21T01:05:00.830869'
 version: 1
+status: active
 ---
 
 ## What

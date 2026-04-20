@@ -19,6 +19,7 @@ title: ДемонстрацияРаботыWS
 unified_id: semantic:memory-ai:9255c903-7f15-4fff-b12c-45aafb7cd0dd
 updated_at: '2026-04-21T01:05:03.534492'
 version: 1
+status: active
 ---
 
 ## What

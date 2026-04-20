@@ -19,6 +19,7 @@ title: Импорт схемы XML в глобальную фабрику XDTO
 unified_id: semantic:memory-ai:40a466cc-9ec6-4f61-838c-0a6ce9c2cbb5
 updated_at: '2026-04-21T01:05:01.913921'
 version: 1
+status: active
 ---
 
 ## What

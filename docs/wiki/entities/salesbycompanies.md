@@ -19,6 +19,7 @@ title: SalesByCompanies
 unified_id: semantic:memory-ai:501ae888-66b0-421d-9c60-c29866e4f699
 updated_at: '2026-04-21T01:05:01.985500'
 version: 1
+status: active
 ---
 
 ## What

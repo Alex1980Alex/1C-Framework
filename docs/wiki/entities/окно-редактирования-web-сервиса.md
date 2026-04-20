@@ -19,6 +19,7 @@ title: окно редактирования Web-сервиса
 unified_id: semantic:memory-ai:50c0662d-2fa9-4671-a68c-520ddd790a72
 updated_at: '2026-04-21T01:05:02.971977'
 version: 1
+status: active
 ---
 
 ## What

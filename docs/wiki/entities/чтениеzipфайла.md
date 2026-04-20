@@ -19,6 +19,7 @@ title: ЧтениеZipФайла
 unified_id: semantic:memory-ai:e268cd31-139c-4bf7-a686-90b6b4796735
 updated_at: '2026-04-21T01:05:03.596135'
 version: 1
+status: active
 ---
 
 ## What

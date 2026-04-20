@@ -19,6 +19,7 @@ title: XML-схема
 unified_id: semantic:memory-ai:02e7c553-9607-4e89-a2da-d2b0d05e3676
 updated_at: '2026-04-21T01:05:03.180981'
 version: 1
+status: active
 ---
 
 ## What

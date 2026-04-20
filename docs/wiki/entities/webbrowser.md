@@ -19,6 +19,7 @@ title: WebBrowser
 unified_id: semantic:memory-ai:518d6657-6c7d-4bd6-8ced-f3939a38646d
 updated_at: '2026-04-21T01:05:02.416670'
 version: 1
+status: active
 ---
 
 ## What

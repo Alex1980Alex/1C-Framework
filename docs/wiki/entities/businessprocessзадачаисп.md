@@ -19,6 +19,7 @@ title: BusinessProcess.ЗадачаИсп
 unified_id: semantic:memory-ai:1bb6e052-7900-445a-af2d-df929d75814f
 updated_at: '2026-04-21T01:05:01.872021'
 version: 1
+status: active
 ---
 
 ## What

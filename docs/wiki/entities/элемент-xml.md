@@ -19,6 +19,7 @@ title: элемент XML
 unified_id: semantic:memory-ai:8d40992c-c205-410a-8db5-4639822ff768
 updated_at: '2026-04-21T01:05:01.004470'
 version: 1
+status: active
 ---
 
 ## What

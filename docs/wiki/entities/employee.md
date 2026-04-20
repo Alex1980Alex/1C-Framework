@@ -19,6 +19,7 @@ title: Employee
 unified_id: semantic:memory-ai:58516714-35d0-4c32-91f1-03828b33a4b1
 updated_at: '2026-04-21T01:05:02.392032'
 version: 1
+status: active
 ---
 
 ## What

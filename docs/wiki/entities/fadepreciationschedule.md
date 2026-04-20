@@ -19,6 +19,7 @@ title: FADepreciationSchedule
 unified_id: semantic:memory-ai:3f7467d6-d346-44d3-b22a-e8a575563c27
 updated_at: '2026-04-21T01:05:01.320603'
 version: 1
+status: active
 ---
 
 ## What

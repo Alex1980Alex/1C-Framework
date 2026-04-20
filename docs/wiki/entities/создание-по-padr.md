@@ -19,6 +19,7 @@ title: Создание по padr
 unified_id: semantic:memory-ai:fff6d57f-fcb3-4c80-b2af-9666a9341b65
 updated_at: '2026-04-21T01:05:01.975113'
 version: 1
+status: active
 ---
 
 ## What

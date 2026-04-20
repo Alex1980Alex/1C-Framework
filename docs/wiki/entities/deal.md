@@ -19,6 +19,7 @@ title: Deal
 unified_id: semantic:memory-ai:bb83feaa-8294-4343-bc58-8720d0937457
 updated_at: '2026-04-21T01:05:01.255037'
 version: 1
+status: active
 ---
 
 ## What

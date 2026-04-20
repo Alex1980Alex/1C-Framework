@@ -19,6 +19,7 @@ title: cfu
 unified_id: semantic:memory-ai:19d810f1-d0f2-451c-afc2-037c4f2be569
 updated_at: '2026-04-21T01:05:02.213180'
 version: 1
+status: active
 ---
 
 ## What

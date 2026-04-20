@@ -19,6 +19,7 @@ title: MobileApplicationSharedSettings
 unified_id: semantic:memory-ai:ac876cd9-67ae-46e3-984c-8ca9d2c44ae3
 updated_at: '2026-04-21T01:05:04.356636'
 version: 1
+status: active
 ---
 
 ## What

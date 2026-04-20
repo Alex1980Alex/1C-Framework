@@ -19,6 +19,7 @@ title: BSL
 unified_id: semantic:memory-ai:b7356877-0698-40cd-9e5f-117df1329d23
 updated_at: '2026-04-21T01:05:00.883994'
 version: 1
+status: active
 ---
 
 ## What

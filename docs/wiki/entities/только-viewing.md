@@ -19,6 +19,7 @@ title: Только Viewing
 unified_id: semantic:memory-ai:e2f557ea-1871-4e13-a581-f1f42046e8c0
 updated_at: '2026-04-21T01:05:03.222394'
 version: 1
+status: active
 ---
 
 ## What

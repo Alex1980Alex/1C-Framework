@@ -19,6 +19,7 @@ title: ОС Windows
 unified_id: semantic:memory-ai:e6b1fe6d-fe84-417c-8060-bf25e59986c2
 updated_at: '2026-04-21T01:05:03.259064'
 version: 1
+status: active
 ---
 
 ## What

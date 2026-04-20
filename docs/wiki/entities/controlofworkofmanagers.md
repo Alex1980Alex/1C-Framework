@@ -19,6 +19,7 @@ title: ControlOfWorkOfManagers
 unified_id: semantic:memory-ai:cb646dd4-1fbf-4cf4-b101-42eef2b4fcc8
 updated_at: '2026-04-21T01:05:04.196117'
 version: 1
+status: active
 ---
 
 ## What

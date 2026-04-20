@@ -20,6 +20,7 @@ title: https://platform.demo.1c.ru/wsdemo/ws/products.1cws?wsdl
 unified_id: semantic:memory-ai:f7dcf664-e1b5-409c-bb04-bdeac3506b24
 updated_at: '2026-04-21T01:05:02.770439'
 version: 1
+status: active
 ---
 
 ## What

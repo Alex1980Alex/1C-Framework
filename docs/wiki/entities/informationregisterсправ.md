@@ -19,6 +19,7 @@ title: InformationRegister.Справ
 unified_id: semantic:memory-ai:9f410a57-98e9-49cc-b46e-0f62612119e5
 updated_at: '2026-04-21T01:05:02.896562'
 version: 1
+status: active
 ---
 
 ## What

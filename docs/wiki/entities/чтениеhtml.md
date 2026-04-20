@@ -19,6 +19,7 @@ title: ЧтениеHTML
 unified_id: semantic:memory-ai:2b517416-0eb9-44d2-9113-bc48cc12c5f4
 updated_at: '2026-04-21T01:05:03.053770'
 version: 1
+status: active
 ---
 
 ## What

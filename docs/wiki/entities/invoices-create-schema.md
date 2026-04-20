@@ -19,6 +19,7 @@ title: invoices_create_schema
 unified_id: semantic:memory-ai:2ec22ea5-92c8-4a22-bb09-6c6b870f7d45
 updated_at: '2026-04-21T01:05:01.438405'
 version: 1
+status: active
 ---
 
 ## What

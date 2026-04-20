@@ -19,6 +19,7 @@ title: Экспорт XML-схемы пакета XDTO
 unified_id: semantic:memory-ai:3b3d6f7c-a6a2-4957-bac4-4a9b336b2201
 updated_at: '2026-04-21T01:05:04.035859'
 version: 1
+status: active
 ---
 
 ## What

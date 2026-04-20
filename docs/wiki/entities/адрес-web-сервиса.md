@@ -19,6 +19,7 @@ title: Адрес Web-сервиса
 unified_id: semantic:memory-ai:3597a716-4068-4247-b230-2f13337f2883
 updated_at: '2026-04-21T01:05:02.967845'
 version: 1
+status: active
 ---
 
 ## What

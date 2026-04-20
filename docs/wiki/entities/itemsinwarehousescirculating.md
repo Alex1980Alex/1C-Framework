@@ -19,6 +19,7 @@ title: ItemsInWarehousesCirculating
 unified_id: semantic:memory-ai:2335c98d-d4c2-43fa-a86a-a15be7fb938a
 updated_at: '2026-04-21T01:05:03.805424'
 version: 1
+status: active
 ---
 
 ## What

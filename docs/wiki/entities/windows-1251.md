@@ -19,6 +19,7 @@ title: Windows 1251
 unified_id: semantic:memory-ai:624ef7a2-84da-47c8-8f02-80e5564d7703
 updated_at: '2026-04-21T01:05:02.296649'
 version: 1
+status: active
 ---
 
 ## What

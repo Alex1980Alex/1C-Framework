@@ -19,6 +19,7 @@ title: ExchangeData_1C_3_0.xml
 unified_id: semantic:memory-ai:6cbdbc51-f813-430a-a577-1a6edce29b12
 updated_at: '2026-04-21T01:05:03.123491'
 version: 1
+status: active
 ---
 
 ## What

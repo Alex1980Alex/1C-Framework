@@ -20,6 +20,7 @@ title: AccumulationRegister.ПартииТоваровНаСкладах
 unified_id: semantic:memory-ai:58636855-1db3-469b-8fdd-6459af8f0771
 updated_at: '2026-04-21T01:05:03.022747'
 version: 1
+status: active
 ---
 
 ## What

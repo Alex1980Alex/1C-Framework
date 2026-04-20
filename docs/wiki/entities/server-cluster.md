@@ -20,6 +20,7 @@ title: Server Cluster
 unified_id: semantic:memory-ai:11218c04-ff89-41a3-88e8-785df89f57cc
 updated_at: '2026-04-21T01:05:02.904476'
 version: 1
+status: active
 ---
 
 ## What

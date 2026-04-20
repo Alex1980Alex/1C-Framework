@@ -19,6 +19,7 @@ title: ПФ_MXL_АктВыполненныхРабот_3
 unified_id: semantic:memory-ai:15b8fce9-4879-416a-aecd-e94be2ca3c0b
 updated_at: '2026-04-21T01:05:02.601522'
 version: 1
+status: active
 ---
 
 ## What

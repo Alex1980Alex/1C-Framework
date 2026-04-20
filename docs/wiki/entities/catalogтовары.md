@@ -19,6 +19,7 @@ title: Catalog.Товары
 unified_id: semantic:memory-ai:bc1f5576-16c8-4a65-bdc2-11d9d788338d
 updated_at: '2026-04-21T01:05:01.456020'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: SalesByDocuments
 unified_id: semantic:memory-ai:dd07a2d9-8e1c-4d93-baef-0135fafd21d8
 updated_at: '2026-04-21T01:05:01.083662'
 version: 1
+status: active
 ---
 
 ## What

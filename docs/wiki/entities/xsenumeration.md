@@ -19,6 +19,7 @@ title: xs:enumeration
 unified_id: semantic:memory-ai:da3cc99f-9258-4ab3-a920-cb431f32019d
 updated_at: '2026-04-21T01:05:04.057051'
 version: 1
+status: active
 ---
 
 ## What

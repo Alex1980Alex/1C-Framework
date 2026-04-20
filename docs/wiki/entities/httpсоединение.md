@@ -19,6 +19,7 @@ title: HTTPСоединение
 unified_id: semantic:memory-ai:72a6fa1b-8dfd-40b3-bceb-fed55f5f3f39
 updated_at: '2026-04-21T01:05:04.194182'
 version: 1
+status: active
 ---
 
 ## What

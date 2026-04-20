@@ -19,6 +19,7 @@ title: LTR-интерфейс
 unified_id: semantic:memory-ai:f1d73ddf-f622-4538-a4da-f68c6f306091
 updated_at: '2026-04-21T01:05:02.028885'
 version: 1
+status: active
 ---
 
 ## What

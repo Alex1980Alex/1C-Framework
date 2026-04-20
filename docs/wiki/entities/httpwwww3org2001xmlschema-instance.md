@@ -19,6 +19,7 @@ title: http://www.w3.org/2001/XMLSchema-instance
 unified_id: semantic:memory-ai:bd7c1f69-f67c-4a6d-8990-cd063c1922d0
 updated_at: '2026-04-21T01:05:02.456265'
 version: 1
+status: active
 ---
 
 ## What

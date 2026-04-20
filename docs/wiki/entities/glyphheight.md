@@ -19,6 +19,7 @@ title: glyphHeight
 unified_id: semantic:memory-ai:fd4cea94-b18f-46fb-a081-98ca05e5058e
 updated_at: '2026-04-21T01:05:03.415824'
 version: 1
+status: active
 ---
 
 ## What

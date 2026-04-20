@@ -19,6 +19,7 @@ title: Использовать spd.n-свойства
 unified_id: semantic:memory-ai:8735e0ad-3732-411b-8b75-219e50a9fa4a
 updated_at: '2026-04-21T01:05:01.305795'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: IBAN
 unified_id: semantic:memory-ai:1f56c6c5-a935-48f1-871e-10f497bf1210
 updated_at: '2026-04-21T01:05:02.135618'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: InformationRegister.Верс
 unified_id: semantic:memory-ai:8c810ae2-949f-4440-94f0-14a4e5bdda4e
 updated_at: '2026-04-21T01:05:01.281184'
 version: 1
+status: active
 ---
 
 ## What

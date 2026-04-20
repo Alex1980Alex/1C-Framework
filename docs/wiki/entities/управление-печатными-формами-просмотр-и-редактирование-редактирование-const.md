@@ -20,6 +20,7 @@ title: Управление печатными формами (Просмотр 
 unified_id: semantic:memory-ai:c7f3e111-b584-4609-994a-e7ec489338d4
 updated_at: '2026-04-21T01:05:00.879334'
 version: 1
+status: active
 ---
 
 ## What

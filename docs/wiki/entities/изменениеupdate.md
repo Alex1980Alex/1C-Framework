@@ -19,6 +19,7 @@ title: ИЗМЕНЕНИЕ/UPDATE
 unified_id: semantic:memory-ai:fecf0bbc-0bf9-4376-a463-874ec8910c64
 updated_at: '2026-04-21T01:05:01.628804'
 version: 1
+status: active
 ---
 
 ## What

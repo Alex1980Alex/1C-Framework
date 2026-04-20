@@ -19,6 +19,7 @@ title: screenDensity
 unified_id: semantic:memory-ai:b5727d9c-2377-4569-88de-8edbd9c2a3c4
 updated_at: '2026-04-21T01:05:01.552931'
 version: 1
+status: active
 ---
 
 ## What

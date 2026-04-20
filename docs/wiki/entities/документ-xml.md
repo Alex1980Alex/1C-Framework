@@ -19,6 +19,7 @@ title: документ XML
 unified_id: semantic:memory-ai:935f0dff-d188-4d66-b45a-f4ed6c694f82
 updated_at: '2026-04-21T01:05:01.894705'
 version: 1
+status: active
 ---
 
 ## What

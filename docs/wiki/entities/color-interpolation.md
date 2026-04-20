@@ -19,6 +19,7 @@ title: color-interpolation
 unified_id: semantic:memory-ai:81a0d926-76fc-4cc2-bbe1-8f506e9a9106
 updated_at: '2026-04-21T01:05:04.047987'
 version: 1
+status: active
 ---
 
 ## What

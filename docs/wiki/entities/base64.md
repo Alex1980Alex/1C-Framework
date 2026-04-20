@@ -19,6 +19,7 @@ title: Base64
 unified_id: semantic:memory-ai:6b7e6815-0759-4451-941e-9ffc2c7554ff
 updated_at: '2026-04-21T01:05:01.162151'
 version: 1
+status: active
 ---
 
 ## What

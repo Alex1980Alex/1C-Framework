@@ -19,6 +19,7 @@ title: Для iOS
 unified_id: semantic:memory-ai:8cf1ab4b-3691-4f74-abe6-4f2136a33e54
 updated_at: '2026-04-21T01:05:02.790987'
 version: 1
+status: active
 ---
 
 ## What

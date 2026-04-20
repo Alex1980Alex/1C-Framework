@@ -19,6 +19,7 @@ title: PostgreSQL
 unified_id: semantic:memory-ai:51a0beaf-6ba2-4d4c-9c87-f2a75e548116
 updated_at: '2026-04-21T01:05:04.148169'
 version: 1
+status: active
 ---
 
 ## What

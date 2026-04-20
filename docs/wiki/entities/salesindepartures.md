@@ -19,6 +19,7 @@ title: SalesInDepartures
 unified_id: semantic:memory-ai:a772a170-2506-4e1e-be4c-8442e57ca3a7
 updated_at: '2026-04-21T01:05:00.806002'
 version: 1
+status: active
 ---
 
 ## What

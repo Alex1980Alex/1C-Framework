@@ -19,6 +19,7 @@ title: tns:PictureInterfaceVariant
 unified_id: semantic:memory-ai:c1007b80-3cc2-4a26-b8f9-297a54dc2678
 updated_at: '2026-04-21T01:05:01.080634'
 version: 1
+status: active
 ---
 
 ## What

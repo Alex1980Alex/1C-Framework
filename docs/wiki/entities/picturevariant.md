@@ -19,6 +19,7 @@ title: PictureVariant
 unified_id: semantic:memory-ai:bde57952-0967-4d8c-b78e-6065c55a2e1c
 updated_at: '2026-04-21T01:05:03.553627'
 version: 1
+status: active
 ---
 
 ## What

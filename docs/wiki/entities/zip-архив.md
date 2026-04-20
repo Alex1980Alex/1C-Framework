@@ -19,6 +19,7 @@ title: zip-архив
 unified_id: semantic:memory-ai:4a05e0ea-a503-4070-b82d-83498cf01939
 updated_at: '2026-04-21T01:05:00.783203'
 version: 1
+status: active
 ---
 
 ## What

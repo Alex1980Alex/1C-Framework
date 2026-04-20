@@ -19,6 +19,7 @@ title: zip-формат
 unified_id: semantic:memory-ai:cdf9cf2d-b4cb-476f-983b-13c3a19c20fb
 updated_at: '2026-04-21T01:05:02.852390'
 version: 1
+status: active
 ---
 
 ## What

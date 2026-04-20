@@ -19,6 +19,7 @@ title: ПреобразованиеXSL
 unified_id: semantic:memory-ai:5f2a5456-a6e4-4465-82fa-674117ff51f9
 updated_at: '2026-04-21T01:05:02.606363'
 version: 1
+status: active
 ---
 
 ## What

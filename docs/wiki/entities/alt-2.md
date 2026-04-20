@@ -19,6 +19,7 @@ title: Alt + 2
 unified_id: semantic:memory-ai:fb5eed66-4813-4318-a14c-734c13d356d5
 updated_at: '2026-04-21T01:05:02.827727'
 version: 1
+status: active
 ---
 
 ## What

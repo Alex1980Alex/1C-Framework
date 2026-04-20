@@ -19,6 +19,7 @@ title: AccountingRegister.Хозрасчетный
 unified_id: semantic:memory-ai:310f2de8-bac9-4d35-881e-29b7a0fbed97
 updated_at: '2026-04-21T01:05:02.031816'
 version: 1
+status: active
 ---
 
 ## What

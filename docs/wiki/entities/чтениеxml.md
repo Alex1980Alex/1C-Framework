@@ -19,6 +19,7 @@ title: ЧтениеXML
 unified_id: semantic:memory-ai:b5ff37ca-c535-443d-b0a1-30a65204c7cf
 updated_at: '2026-04-21T01:05:02.255662'
 version: 1
+status: active
 ---
 
 ## What

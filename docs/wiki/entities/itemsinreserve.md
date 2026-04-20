@@ -19,6 +19,7 @@ title: ItemsInReserve
 unified_id: semantic:memory-ai:62282ca8-d17a-45b5-96d0-9d04f6484f01
 updated_at: '2026-04-21T01:05:02.918185'
 version: 1
+status: active
 ---
 
 ## What

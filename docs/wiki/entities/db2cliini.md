@@ -19,6 +19,7 @@ title: db2cli.ini
 unified_id: semantic:memory-ai:80045151-4231-4fe4-ab85-2ee936d5cd07
 updated_at: '2026-04-21T01:05:02.175750'
 version: 1
+status: active
 ---
 
 ## What

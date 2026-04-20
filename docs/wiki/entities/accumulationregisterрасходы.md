@@ -19,6 +19,7 @@ title: AccumulationRegister.Расходы
 unified_id: semantic:memory-ai:40f955ee-2d6f-41a8-8477-93baad4b0a92
 updated_at: '2026-04-21T01:05:02.538577'
 version: 1
+status: active
 ---
 
 ## What

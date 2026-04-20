@@ -19,6 +19,7 @@ title: Proxy server
 unified_id: semantic:memory-ai:99e3e389-d14f-4cd7-a07f-77b4761fc5d2
 updated_at: '2026-04-21T01:05:01.644148'
 version: 1
+status: active
 ---
 
 ## What

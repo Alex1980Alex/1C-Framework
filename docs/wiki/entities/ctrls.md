@@ -19,6 +19,7 @@ title: Ctrl+S
 unified_id: semantic:memory-ai:8048edf8-5671-4d2a-b175-6d83c7e52c32
 updated_at: '2026-04-21T01:05:04.202324'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: Mozilla Firefox
 unified_id: semantic:memory-ai:b15010e7-b392-4be0-a495-95a65df12bb6
 updated_at: '2026-04-21T01:05:02.962717'
 version: 1
+status: active
 ---
 
 ## What

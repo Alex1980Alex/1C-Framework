@@ -19,6 +19,7 @@ title: ЗаписьFastInfoset
 unified_id: semantic:memory-ai:14c5f3b9-ba4d-4de8-9739-55e3e42deb77
 updated_at: '2026-04-21T01:05:03.559603'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: xs:PictureDirectionVariant
 unified_id: semantic:memory-ai:fa99223d-90ba-4023-95a8-ee7ad0f24492
 updated_at: '2026-04-21T01:05:03.092307'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: JPEG
 unified_id: semantic:memory-ai:f7fc553a-21ef-422e-a0f3-6f1d14d79e9d
 updated_at: '2026-04-21T01:05:03.560598'
 version: 1
+status: active
 ---
 
 ## What

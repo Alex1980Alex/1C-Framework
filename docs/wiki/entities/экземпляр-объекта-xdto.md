@@ -19,6 +19,7 @@ title: экземпляр объекта XDTO
 unified_id: semantic:memory-ai:fb4df593-0523-414a-8247-17797c93aa7c
 updated_at: '2026-04-21T01:05:02.042560'
 version: 1
+status: active
 ---
 
 ## What

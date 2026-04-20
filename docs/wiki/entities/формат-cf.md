@@ -19,6 +19,7 @@ title: формат_cf
 unified_id: semantic:memory-ai:4592ecae-a082-40b9-81ff-955945404bdf
 updated_at: '2026-04-21T01:05:02.110386'
 version: 1
+status: active
 ---
 
 ## What

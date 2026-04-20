@@ -19,6 +19,7 @@ title: Зависимости пакета XDTO
 unified_id: semantic:memory-ai:4ac3802e-5d0b-41dd-beab-1a9ca2f8eb79
 updated_at: '2026-04-21T01:05:02.559912'
 version: 1
+status: active
 ---
 
 ## What

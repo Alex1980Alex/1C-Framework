@@ -19,6 +19,7 @@ title: xs:boolean
 unified_id: semantic:memory-ai:bbc2fc7b-ab13-4d19-a78b-9241ea3ffa8d
 updated_at: '2026-04-21T01:05:03.816243'
 version: 1
+status: active
 ---
 
 ## What

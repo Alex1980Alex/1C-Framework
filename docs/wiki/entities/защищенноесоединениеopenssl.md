@@ -19,6 +19,7 @@ title: ЗащищенноеСоединениеOpenSSL
 unified_id: semantic:memory-ai:bb5b6e59-db6d-4a9c-bad2-7691ca83b02a
 updated_at: '2026-04-21T01:05:02.103392'
 version: 1
+status: active
 ---
 
 ## What

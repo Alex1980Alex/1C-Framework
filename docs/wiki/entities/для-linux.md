@@ -19,6 +19,7 @@ title: Для Linux
 unified_id: semantic:memory-ai:1aaef10d-71db-4c14-8b22-33c8e16ee9ee
 updated_at: '2026-04-21T01:05:02.939607'
 version: 1
+status: active
 ---
 
 ## What

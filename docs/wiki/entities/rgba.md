@@ -20,6 +20,7 @@ title: RGBA
 unified_id: semantic:memory-ai:6618db8e-0a4c-435e-a60a-371088647ca9
 updated_at: '2026-04-21T01:05:04.461733'
 version: 1
+status: active
 ---
 
 ## What

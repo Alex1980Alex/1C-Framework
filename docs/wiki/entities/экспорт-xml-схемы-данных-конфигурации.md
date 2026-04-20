@@ -20,6 +20,7 @@ title: Экспорт XML-схемы данных конфигурации
 unified_id: semantic:memory-ai:a5eaeb77-d743-498d-9023-f766db51f88d
 updated_at: '2026-04-21T01:05:01.337496'
 version: 1
+status: active
 ---
 
 ## What

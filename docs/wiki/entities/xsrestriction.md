@@ -19,6 +19,7 @@ title: xs:restriction
 unified_id: semantic:memory-ai:cdcd18bd-7414-4d43-8eb5-8e28214755b2
 updated_at: '2026-04-21T01:05:01.432765'
 version: 1
+status: active
 ---
 
 ## What

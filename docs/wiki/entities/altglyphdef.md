@@ -19,6 +19,7 @@ title: altGlyphDef
 unified_id: semantic:memory-ai:d0c7a885-b5a5-4853-80a7-9c14f23f517b
 updated_at: '2026-04-21T01:05:01.624884'
 version: 1
+status: active
 ---
 
 ## What

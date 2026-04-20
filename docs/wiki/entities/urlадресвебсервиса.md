@@ -20,6 +20,7 @@ title: URLАдресВебСервиса
 unified_id: semantic:memory-ai:823f8f13-2ed3-4e5e-a05f-4d9fbf6acbb9
 updated_at: '2026-04-21T01:05:01.682001'
 version: 1
+status: active
 ---
 
 ## What

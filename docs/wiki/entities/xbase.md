@@ -19,6 +19,7 @@ title: xBase
 unified_id: semantic:memory-ai:b44cfd23-19eb-4876-95c6-d2c6bac3dc19
 updated_at: '2026-04-21T01:05:02.815043'
 version: 1
+status: active
 ---
 
 ## What

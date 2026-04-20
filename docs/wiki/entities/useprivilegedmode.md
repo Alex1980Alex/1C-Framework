@@ -19,6 +19,7 @@ title: UsePrivilegedMode
 unified_id: semantic:memory-ai:c166f31e-7996-4b82-9ebd-9e3209125ede
 updated_at: '2026-04-21T01:05:04.425439'
 version: 1
+status: active
 ---
 
 ## What

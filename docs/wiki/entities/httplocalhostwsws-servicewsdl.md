@@ -19,6 +19,7 @@ title: http://localhost/ws/ws-service?wsdl
 unified_id: semantic:memory-ai:9ba28ee3-cf6b-412c-8868-01f22aebeb17
 updated_at: '2026-04-21T01:05:03.173605'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: taxiMobile
 unified_id: semantic:memory-ai:d36361b6-98d1-49fd-9405-1e5d3115a2a2
 updated_at: '2026-04-21T01:05:04.017261'
 version: 1
+status: active
 ---
 
 ## What

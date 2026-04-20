@@ -20,6 +20,7 @@ title: taxiCompact
 unified_id: semantic:memory-ai:356cfa0f-9e65-41fd-a928-7f1aa949f3f6
 updated_at: '2026-04-21T01:05:03.866230'
 version: 1
+status: active
 ---
 
 ## What

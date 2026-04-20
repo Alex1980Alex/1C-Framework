@@ -19,6 +19,7 @@ title: SQL-запрос
 unified_id: semantic:memory-ai:35736176-7756-490d-b342-6d8ded0b50c3
 updated_at: '2026-04-21T01:05:01.978161'
 version: 1
+status: active
 ---
 
 ## What

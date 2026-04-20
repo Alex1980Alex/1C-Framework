@@ -19,6 +19,7 @@ title: ОС Android
 unified_id: semantic:memory-ai:08dc3369-cbe1-4dd6-9fb8-9bba5e1f767f
 updated_at: '2026-04-21T01:05:02.269570'
 version: 1
+status: active
 ---
 
 ## What

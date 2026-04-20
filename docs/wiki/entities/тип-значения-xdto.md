@@ -19,6 +19,7 @@ title: тип значения XDTO
 unified_id: semantic:memory-ai:d82d4d09-3357-493b-af14-d04976161209
 updated_at: '2026-04-21T01:05:02.040532'
 version: 1
+status: active
 ---
 
 ## What

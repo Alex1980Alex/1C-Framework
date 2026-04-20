@@ -19,6 +19,7 @@ title: 1C:Enterprise
 unified_id: semantic:memory-ai:26f36ede-d669-41b6-90be-e2c5f39369ca
 updated_at: '2026-04-21T01:05:03.913068'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: ValuationOfGoods
 unified_id: semantic:memory-ai:a2b75180-b874-48bd-a3d9-2ffacdbe935f
 updated_at: '2026-04-21T01:05:01.677064'
 version: 1
+status: active
 ---
 
 ## What

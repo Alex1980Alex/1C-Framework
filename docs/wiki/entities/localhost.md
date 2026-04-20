@@ -19,6 +19,7 @@ title: localhost
 unified_id: semantic:memory-ai:8eb98ba7-38e6-4a24-8e41-08821774cece
 updated_at: '2026-04-21T01:05:04.274536'
 version: 1
+status: active
 ---
 
 ## What

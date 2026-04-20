@@ -19,6 +19,7 @@ title: RTL-интерфейс
 unified_id: semantic:memory-ai:27352a46-2bab-4046-a24b-4dfedc9ae8d9
 updated_at: '2026-04-21T01:05:01.869929'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: ФабрикаXDTO
 unified_id: semantic:memory-ai:f56fc760-b720-498c-884b-b12a26993f8c
 updated_at: '2026-04-21T01:05:03.679333'
 version: 1
+status: active
 ---
 
 ## What

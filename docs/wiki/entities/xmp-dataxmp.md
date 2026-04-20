@@ -19,6 +19,7 @@ title: XMP DataXMP
 unified_id: semantic:memory-ai:e2629732-f643-42ec-a869-a1aba9792442
 updated_at: '2026-04-21T01:05:02.850613'
 version: 1
+status: active
 ---
 
 ## What

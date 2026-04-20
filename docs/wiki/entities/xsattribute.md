@@ -19,6 +19,7 @@ title: xs:attribute
 unified_id: semantic:memory-ai:47d4a3b9-7872-4c03-be74-649908e4e70c
 updated_at: '2026-04-21T01:05:04.458551'
 version: 1
+status: active
 ---
 
 ## What

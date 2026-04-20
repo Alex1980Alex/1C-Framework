@@ -19,6 +19,7 @@ title: EMF
 unified_id: semantic:memory-ai:c6c33570-d217-451a-bb5c-9583f186e825
 updated_at: '2026-04-21T01:05:01.611337'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: manifest . xml
 unified_id: semantic:memory-ai:60a5d7e9-6ac7-4dec-8437-9c5546b1eee2
 updated_at: '2026-04-21T01:05:00.828758'
 version: 1
+status: active
 ---
 
 ## What

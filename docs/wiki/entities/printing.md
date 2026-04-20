@@ -19,6 +19,7 @@ title: printing
 unified_id: semantic:memory-ai:3d25acb8-d102-457a-814d-ba0187c3217d
 updated_at: '2026-04-21T01:05:02.048177'
 version: 1
+status: active
 ---
 
 ## What

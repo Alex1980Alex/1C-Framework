@@ -20,6 +20,7 @@ title: URI пространства имен
 unified_id: semantic:memory-ai:89d16c76-6caa-436a-b674-461c6e820283
 updated_at: '2026-04-21T01:05:01.840925'
 version: 1
+status: active
 ---
 
 ## What

@@ -20,6 +20,7 @@ title: C:\Program Files (x86)\1cv8\8.3.18.1289\bin\1cv8c.exe
 unified_id: semantic:memory-ai:58d39849-527c-4337-b632-bda80deac96e
 updated_at: '2026-04-21T01:05:01.903001'
 version: 1
+status: active
 ---
 
 ## What

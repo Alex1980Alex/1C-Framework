@@ -19,6 +19,7 @@ title: РАБОТАЕТ НА 1С (POWERED BY 1C)
 unified_id: semantic:memory-ai:ea40efce-c99f-492a-845c-6c1353b10923
 updated_at: '2026-04-21T01:05:04.188304'
 version: 1
+status: active
 ---
 
 ## What

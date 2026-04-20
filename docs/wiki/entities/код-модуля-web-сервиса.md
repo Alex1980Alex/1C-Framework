@@ -19,6 +19,7 @@ title: Код модуля Web-сервиса
 unified_id: semantic:memory-ai:ba2577b6-c2e5-48b9-a3ed-27bacf91afd4
 updated_at: '2026-04-21T01:05:00.835285'
 version: 1
+status: active
 ---
 
 ## What

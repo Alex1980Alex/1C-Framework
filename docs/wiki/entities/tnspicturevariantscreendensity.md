@@ -19,6 +19,7 @@ title: tns:PictureVariantScreenDensity
 unified_id: semantic:memory-ai:5206e556-0b37-49b7-bd52-3792fdf6c042
 updated_at: '2026-04-21T01:05:03.086471'
 version: 1
+status: active
 ---
 
 ## What

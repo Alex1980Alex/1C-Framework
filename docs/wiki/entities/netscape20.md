@@ -19,6 +19,7 @@ title: NETSCAPE2.0
 unified_id: semantic:memory-ai:081d8ca0-385a-4fb9-9046-a7d59c2bec45
 updated_at: '2026-04-21T01:05:01.706694'
 version: 1
+status: active
 ---
 
 ## What

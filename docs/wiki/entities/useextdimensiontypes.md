@@ -19,6 +19,7 @@ title: UseExtDimensionTypes
 unified_id: semantic:memory-ai:c906cbbc-0062-4b48-ad12-47fd6b5bd98f
 updated_at: '2026-04-21T01:05:03.575111'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: IBM DB2
 unified_id: semantic:memory-ai:c0f10b9c-82ca-4d9d-82e2-86e3afc4c9e8
 updated_at: '2026-04-21T01:05:03.795429'
 version: 1
+status: active
 ---
 
 ## What

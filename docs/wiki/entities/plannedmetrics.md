@@ -19,6 +19,7 @@ title: PlannedMetrics
 unified_id: semantic:memory-ai:1a28d078-40a9-4de8-a6ce-57a15e7ae407
 updated_at: '2026-04-21T01:05:02.370991'
 version: 1
+status: active
 ---
 
 ## What

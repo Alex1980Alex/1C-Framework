@@ -19,6 +19,7 @@ title: www.example.org
 unified_id: semantic:memory-ai:f8d3a282-e739-4394-a40d-fd3d3637936b
 updated_at: '2026-04-21T01:05:03.926975'
 version: 1
+status: active
 ---
 
 ## What

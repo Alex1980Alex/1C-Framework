@@ -19,6 +19,7 @@ title: файл .xsd
 unified_id: semantic:memory-ai:a3b3f574-a769-43ea-ad51-9dae72bd7536
 updated_at: '2026-04-21T01:05:00.855206'
 version: 1
+status: active
 ---
 
 ## What

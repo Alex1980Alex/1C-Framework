@@ -19,6 +19,7 @@ title: API
 unified_id: semantic:memory-ai:4340d9d0-1c77-4106-b50d-f51bd3b6c927
 updated_at: '2026-04-21T01:05:00.966134'
 version: 1
+status: active
 ---
 
 ## What

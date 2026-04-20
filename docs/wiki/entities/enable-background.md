@@ -19,6 +19,7 @@ title: enable-background
 unified_id: semantic:memory-ai:fae7f6d3-78ce-454d-9e06-853ac1036dc7
 updated_at: '2026-04-21T01:05:02.455206'
 version: 1
+status: active
 ---
 
 ## What

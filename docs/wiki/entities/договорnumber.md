@@ -19,6 +19,7 @@ title: ДоговорNumber
 unified_id: semantic:memory-ai:6fb9541c-1959-4ce1-8ef9-5eb31759ee80
 updated_at: '2026-04-21T01:05:03.845715'
 version: 1
+status: active
 ---
 
 ## What

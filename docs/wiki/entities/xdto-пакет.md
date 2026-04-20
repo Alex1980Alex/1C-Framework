@@ -19,6 +19,7 @@ title: XDTO-пакет
 unified_id: semantic:memory-ai:e53db765-9649-46e2-b7f9-ee914ab800a8
 updated_at: '2026-04-21T01:05:04.455576'
 version: 1
+status: active
 ---
 
 ## What

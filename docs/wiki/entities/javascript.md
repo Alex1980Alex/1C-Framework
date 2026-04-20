@@ -19,6 +19,7 @@ title: JavaScript
 unified_id: semantic:memory-ai:47d366c5-97f7-4c8a-a5dc-5e85bad69b2e
 updated_at: '2026-04-21T01:05:03.598207'
 version: 1
+status: active
 ---
 
 ## What

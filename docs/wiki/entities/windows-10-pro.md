@@ -19,6 +19,7 @@ title: Windows 10 Pro
 unified_id: semantic:memory-ai:252f96d7-af92-4a00-9224-2dd1fdd725a7
 updated_at: '2026-04-21T01:05:03.246674'
 version: 1
+status: active
 ---
 
 ## What

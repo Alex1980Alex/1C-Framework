@@ -19,6 +19,7 @@ title: Web-расширение
 unified_id: semantic:memory-ai:508b1b94-ae43-444f-a3a3-5e7c88e91730
 updated_at: '2026-04-21T01:05:02.740932'
 version: 1
+status: active
 ---
 
 ## What

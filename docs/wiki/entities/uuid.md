@@ -19,6 +19,7 @@ title: UUID
 unified_id: semantic:memory-ai:ee0bad58-17c6-4a6d-93e7-777daab6bac1
 updated_at: '2026-04-21T01:05:02.191956'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: ОболочкаHTMLДокумента
 unified_id: semantic:memory-ai:6c2c0b17-8932-4ba7-9f24-586ccdac70d9
 updated_at: '2026-04-21T01:05:03.271445'
 version: 1
+status: active
 ---
 
 ## What

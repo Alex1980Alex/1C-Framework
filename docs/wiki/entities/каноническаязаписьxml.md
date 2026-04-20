@@ -19,6 +19,7 @@ title: КаноническаяЗаписьXML
 unified_id: semantic:memory-ai:70c77bd8-8e9c-4234-96c6-75cf387452d7
 updated_at: '2026-04-21T01:05:01.354305'
 version: 1
+status: active
 ---
 
 ## What

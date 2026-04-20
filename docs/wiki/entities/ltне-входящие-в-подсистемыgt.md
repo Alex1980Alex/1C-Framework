@@ -19,6 +19,7 @@ title: '&lt;Не входящие в подсистемы&gt;'
 unified_id: semantic:memory-ai:8d8aa564-a4ec-473f-839a-f8ae380cb2ac
 updated_at: '2026-04-21T01:05:03.085432'
 version: 1
+status: active
 ---
 
 ## What

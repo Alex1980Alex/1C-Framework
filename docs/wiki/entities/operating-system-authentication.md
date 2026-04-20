@@ -20,6 +20,7 @@ title: Operating system authentication
 unified_id: semantic:memory-ai:24388e5a-3d7d-431f-9ccc-19bcec1f2766
 updated_at: '2026-04-21T01:05:03.718760'
 version: 1
+status: active
 ---
 
 ## What

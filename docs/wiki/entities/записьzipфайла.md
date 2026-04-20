@@ -19,6 +19,7 @@ title: ЗаписьZipФайла
 unified_id: semantic:memory-ai:60b6eee5-02dc-4c94-8ed4-844afe93a086
 updated_at: '2026-04-21T01:05:04.313307'
 version: 1
+status: active
 ---
 
 ## What

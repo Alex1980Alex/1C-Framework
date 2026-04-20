@@ -19,6 +19,7 @@ title: ВызватьHTTPМетод
 unified_id: semantic:memory-ai:f250d41c-e340-448e-8a41-0b0420f46f8c
 updated_at: '2026-04-21T01:05:01.672203'
 version: 1
+status: active
 ---
 
 ## What

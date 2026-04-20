@@ -19,6 +19,7 @@ title: ПФ_MXL
 unified_id: semantic:memory-ai:5798cb28-ccf7-42f7-ae83-9267d13efc42
 updated_at: '2026-04-21T01:05:04.267058'
 version: 1
+status: active
 ---
 
 ## What

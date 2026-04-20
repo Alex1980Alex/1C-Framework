@@ -19,6 +19,7 @@ title: Google Chrome
 unified_id: semantic:memory-ai:758aa2ba-ebb9-4783-86a2-1a9fa8d3657c
 updated_at: '2026-04-21T01:05:04.158353'
 version: 1
+status: active
 ---
 
 ## What

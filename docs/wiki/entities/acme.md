@@ -19,6 +19,7 @@ title: ACME
 unified_id: semantic:memory-ai:d17f5ab6-6635-4b6b-bd2b-320697c8adb8
 updated_at: '2026-04-21T01:05:00.946294'
 version: 1
+status: active
 ---
 
 ## What

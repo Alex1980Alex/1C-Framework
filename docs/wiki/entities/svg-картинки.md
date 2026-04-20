@@ -19,6 +19,7 @@ title: SVG-картинки
 unified_id: semantic:memory-ai:e837a066-ea57-49ac-a3f5-78572a752333
 updated_at: '2026-04-21T01:05:04.367611'
 version: 1
+status: active
 ---
 
 ## What

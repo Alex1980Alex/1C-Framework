@@ -19,6 +19,7 @@ title: УДАЛЕНИЕ/DELETE
 unified_id: semantic:memory-ai:2fcc17cc-2fd2-4c7f-9e3b-0ddc64a51f79
 updated_at: '2026-04-21T01:05:00.905646'
 version: 1
+status: active
 ---
 
 ## What

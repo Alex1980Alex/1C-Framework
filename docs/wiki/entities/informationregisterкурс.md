@@ -19,6 +19,7 @@ title: InformationRegister.Курс
 unified_id: semantic:memory-ai:95ba3031-5aa6-435d-a7ba-d57745b4e666
 updated_at: '2026-04-21T01:05:04.091493'
 version: 1
+status: active
 ---
 
 ## What

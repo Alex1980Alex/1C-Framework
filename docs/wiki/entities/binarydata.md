@@ -19,6 +19,7 @@ title: BinaryData
 unified_id: semantic:memory-ai:aa7f9f63-8d9e-44d4-a772-050bfef59b8f
 updated_at: '2026-04-21T01:05:01.088997'
 version: 1
+status: active
 ---
 
 ## What

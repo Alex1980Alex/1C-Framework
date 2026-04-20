@@ -19,6 +19,7 @@ title: КодISO
 unified_id: semantic:memory-ai:e88daf20-a3a1-4a74-b2f6-d15ff891677a
 updated_at: '2026-04-21T01:05:04.252331'
 version: 1
+status: active
 ---
 
 ## What

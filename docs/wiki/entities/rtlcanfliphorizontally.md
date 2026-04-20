@@ -19,6 +19,7 @@ title: rtlCanFlipHorizontally
 unified_id: semantic:memory-ai:f625fba5-29b9-42da-9962-2ebe4e3f7290
 updated_at: '2026-04-21T01:05:01.965021'
 version: 1
+status: active
 ---
 
 ## What

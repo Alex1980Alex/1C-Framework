@@ -19,6 +19,7 @@ title: InformationRegister.Регионы
 unified_id: semantic:memory-ai:b9ca484f-46a4-4628-be43-ae3874484e63
 updated_at: '2026-04-21T01:05:02.323255'
 version: 1
+status: active
 ---
 
 ## What

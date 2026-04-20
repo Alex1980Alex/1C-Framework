@@ -19,6 +19,7 @@ title: CalculationRegister.ОсновныеНачисления
 unified_id: semantic:memory-ai:913bfc99-9487-4c08-aea1-315fff1d05f6
 updated_at: '2026-04-21T01:05:01.259004'
 version: 1
+status: active
 ---
 
 ## What

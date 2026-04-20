@@ -19,6 +19,7 @@ title: www.1c.ru
 unified_id: semantic:memory-ai:0321d48d-f934-4906-b3cd-1d17bd18a374
 updated_at: '2026-04-21T01:05:03.952020'
 version: 1
+status: active
 ---
 
 ## What

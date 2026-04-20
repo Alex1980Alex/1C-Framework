@@ -19,6 +19,7 @@ title: ПолучитьCOMОбъект
 unified_id: semantic:memory-ai:20b62a58-255f-467f-959e-6eb7cc5fccd0
 updated_at: '2026-04-21T01:05:01.911009'
 version: 1
+status: active
 ---
 
 ## What

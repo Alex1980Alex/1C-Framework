@@ -19,6 +19,7 @@ title: ARMv7
 unified_id: semantic:memory-ai:59762d03-385d-4c34-93d5-e07a07a02022
 updated_at: '2026-04-21T01:05:02.311176'
 version: 1
+status: active
 ---
 
 ## What

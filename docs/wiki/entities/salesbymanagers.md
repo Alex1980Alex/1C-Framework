@@ -19,6 +19,7 @@ title: SalesByManagers
 unified_id: semantic:memory-ai:32056fac-6896-4bbe-8967-497710273977
 updated_at: '2026-04-21T01:05:01.865414'
 version: 1
+status: active
 ---
 
 ## What

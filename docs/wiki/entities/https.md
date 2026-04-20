@@ -19,6 +19,7 @@ title: HTTPS
 unified_id: semantic:memory-ai:567aadfc-5573-4474-b39d-ca94f6e7573d
 updated_at: '2026-04-21T01:05:02.025926'
 version: 1
+status: active
 ---
 
 ## What

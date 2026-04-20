@@ -19,6 +19,7 @@ title: ЧтениеFastInfoset
 unified_id: semantic:memory-ai:92ad6364-9e16-418d-9cd1-7a6d253aa407
 updated_at: '2026-04-21T01:05:01.075126'
 version: 1
+status: active
 ---
 
 ## What

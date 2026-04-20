@@ -19,6 +19,7 @@ title: http://v8.1c.ru/8.1/data/enterprise/current-config
 unified_id: semantic:memory-ai:44b4cbd5-13fe-42cf-89ab-293ed88d0267
 updated_at: '2026-04-21T01:05:01.294891'
 version: 1
+status: active
 ---
 
 ## What

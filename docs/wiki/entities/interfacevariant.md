@@ -19,6 +19,7 @@ title: interfaceVariant
 unified_id: semantic:memory-ai:f2297187-c121-4df1-8869-e439c2db135a
 updated_at: '2026-04-21T01:05:02.905474'
 version: 1
+status: active
 ---
 
 ## What

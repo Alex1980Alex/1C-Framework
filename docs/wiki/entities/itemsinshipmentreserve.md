@@ -19,6 +19,7 @@ title: ItemsInShipmentReserve
 unified_id: semantic:memory-ai:4780e2d2-46e0-4d17-be89-80a7b5ebf102
 updated_at: '2026-04-21T01:05:03.408574'
 version: 1
+status: active
 ---
 
 ## What

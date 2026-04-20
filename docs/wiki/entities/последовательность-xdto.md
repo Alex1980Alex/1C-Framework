@@ -19,6 +19,7 @@ title: последовательность XDTO
 unified_id: semantic:memory-ai:6166f91d-26d5-4f5f-b272-2886fe57dc74
 updated_at: '2026-04-21T01:05:02.027877'
 version: 1
+status: active
 ---
 
 ## What

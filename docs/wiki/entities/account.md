@@ -19,6 +19,7 @@ title: Account
 unified_id: semantic:memory-ai:24ad2a89-b292-4942-ab08-390db97869fb
 updated_at: '2026-04-21T01:05:03.430931'
 version: 1
+status: active
 ---
 
 ## What

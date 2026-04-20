@@ -19,6 +19,7 @@ title: /EnableCheckExtensionsAndAddInsSyncCalls
 unified_id: semantic:memory-ai:d6d9082b-1b65-48f8-8d87-3e536126accc
 updated_at: '2026-04-21T01:05:01.921414'
 version: 1
+status: active
 ---
 
 ## What

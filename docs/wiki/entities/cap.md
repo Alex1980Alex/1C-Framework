@@ -19,6 +19,7 @@ title: CAP
 unified_id: semantic:memory-ai:f8a67211-3983-4683-9421-8160747afd25
 updated_at: '2026-04-21T01:05:02.007898'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: FTPСоединение
 unified_id: semantic:memory-ai:79542c94-48e0-4b3e-97d5-b9041ac4974d
 updated_at: '2026-04-21T01:05:04.357592'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: DemoWS
 unified_id: semantic:memory-ai:3bebb355-1ed8-42e9-a274-a36ba87e2519
 updated_at: '2026-04-21T01:05:02.111316'
 version: 1
+status: active
 ---
 
 ## What

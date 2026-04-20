@@ -19,6 +19,7 @@ title: ReportOfSales
 unified_id: semantic:memory-ai:7859a132-5890-4223-b3c9-8e385dff1b2d
 updated_at: '2026-04-21T01:05:02.155458'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: ОрганGramma
 unified_id: semantic:memory-ai:60f217da-5257-4483-bfe8-d255e425f750
 updated_at: '2026-04-21T01:05:03.037082'
 version: 1
+status: active
 ---
 
 ## What

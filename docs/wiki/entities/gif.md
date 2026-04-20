@@ -19,6 +19,7 @@ title: GIF
 unified_id: semantic:memory-ai:25e859c9-0496-4b33-a440-47baf6fb3f1a
 updated_at: '2026-04-21T01:05:01.982019'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: Desktop
 unified_id: semantic:memory-ai:0f187ce1-ac54-4137-9f91-e9c576c82f74
 updated_at: '2026-04-21T01:05:04.021869'
 version: 1
+status: active
 ---
 
 ## What

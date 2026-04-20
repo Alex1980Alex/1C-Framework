@@ -19,6 +19,7 @@ title: Department
 unified_id: semantic:memory-ai:6bfb4e95-4cb2-4392-897e-30a9a7f196db
 updated_at: '2026-04-21T01:05:02.749198'
 version: 1
+status: active
 ---
 
 ## What

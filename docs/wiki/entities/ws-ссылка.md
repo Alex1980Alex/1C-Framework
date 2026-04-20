@@ -20,6 +20,7 @@ title: WS-ссылка
 unified_id: semantic:memory-ai:eccdc595-6b5c-4272-8b6c-49bed5df7f9d
 updated_at: '2026-04-21T01:05:03.796840'
 version: 1
+status: active
 ---
 
 ## What

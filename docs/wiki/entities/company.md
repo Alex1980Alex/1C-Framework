@@ -19,6 +19,7 @@ title: Company
 unified_id: semantic:memory-ai:897a9a43-e730-4318-b0ba-a9240f4a2ecd
 updated_at: '2026-04-21T01:05:01.967703'
 version: 1
+status: active
 ---
 
 ## What

@@ -20,6 +20,7 @@ title: Универсальный обмен данными XML
 unified_id: semantic:memory-ai:874e55b2-17ba-41ce-beec-f8ecf65a3118
 updated_at: '2026-04-21T01:05:03.357573'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: Для Windows
 unified_id: semantic:memory-ai:2868bd69-e5b8-4b46-9ed7-4ef27162f60a
 updated_at: '2026-04-21T01:05:01.791946'
 version: 1
+status: active
 ---
 
 ## What

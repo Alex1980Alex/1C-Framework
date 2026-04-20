@@ -19,6 +19,7 @@ title: AnalysisOfSalesChannels
 unified_id: semantic:memory-ai:34d4046c-aaa6-4a37-8087-16d9b259b3a3
 updated_at: '2026-04-21T01:05:03.195605'
 version: 1
+status: active
 ---
 
 ## What

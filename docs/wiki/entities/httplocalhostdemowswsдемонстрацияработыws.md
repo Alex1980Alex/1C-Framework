@@ -19,6 +19,7 @@ title: http://localhost/DemoWS/ws/ДемонстрацияРаботыWS
 unified_id: semantic:memory-ai:a616df0a-bcfb-47bf-8846-5ffaea7612ee
 updated_at: '2026-04-21T01:05:01.152122'
 version: 1
+status: active
 ---
 
 ## What

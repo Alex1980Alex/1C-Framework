@@ -19,6 +19,7 @@ title: ESC
 unified_id: semantic:memory-ai:eef93630-06ce-4629-9048-7cd357e78a65
 updated_at: '2026-04-21T01:05:02.078930'
 version: 1
+status: active
 ---
 
 ## What

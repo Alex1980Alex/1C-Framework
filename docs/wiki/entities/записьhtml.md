@@ -19,6 +19,7 @@ title: ЗаписьHTML
 unified_id: semantic:memory-ai:f4888f6a-da55-4126-94fe-72ec7c347eaa
 updated_at: '2026-04-21T01:05:03.340703'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: version8_2_OrdinaryApp
 unified_id: semantic:memory-ai:418a8f04-6d4a-425b-9f5c-4f228ebe4097
 updated_at: '2026-04-21T01:05:03.879464'
 version: 1
+status: active
 ---
 
 ## What

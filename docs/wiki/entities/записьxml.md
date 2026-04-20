@@ -19,6 +19,7 @@ title: ЗаписьXML
 unified_id: semantic:memory-ai:33f12589-2a7a-45e4-9f3a-0da2a225b993
 updated_at: '2026-04-21T01:05:02.748168'
 version: 1
+status: active
 ---
 
 ## What

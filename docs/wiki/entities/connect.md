@@ -19,6 +19,7 @@ title: Connect
 unified_id: semantic:memory-ai:2b19d573-ded8-49a9-a9c4-73fd456466eb
 updated_at: '2026-04-21T01:05:03.444257'
 version: 1
+status: active
 ---
 
 ## What

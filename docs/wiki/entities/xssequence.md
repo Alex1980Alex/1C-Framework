@@ -19,6 +19,7 @@ title: xs:sequence
 unified_id: semantic:memory-ai:8989bfab-c9e8-4c28-92ae-adca9efb64a4
 updated_at: '2026-04-21T01:05:04.405336'
 version: 1
+status: active
 ---
 
 ## What

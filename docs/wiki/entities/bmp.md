@@ -19,6 +19,7 @@ title: BMP
 unified_id: semantic:memory-ai:398da395-01b1-4011-a13e-7f5ddde78b60
 updated_at: '2026-04-21T01:05:03.730692'
 version: 1
+status: active
 ---
 
 ## What

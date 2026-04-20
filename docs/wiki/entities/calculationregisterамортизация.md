@@ -19,6 +19,7 @@ title: CalculationRegister.Амортизация
 unified_id: semantic:memory-ai:a447f9b3-6182-42d1-9920-d65ea89ef1cd
 updated_at: '2026-04-21T01:05:02.870198'
 version: 1
+status: active
 ---
 
 ## What

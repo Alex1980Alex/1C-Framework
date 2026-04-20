@@ -19,6 +19,7 @@ title: Импорт XMLLсхемы
 unified_id: semantic:memory-ai:1584dc56-dabc-4840-978d-b233e2476517
 updated_at: '2026-04-21T01:05:02.131038'
 version: 1
+status: active
 ---
 
 ## What

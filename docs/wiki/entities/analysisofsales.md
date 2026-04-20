@@ -19,6 +19,7 @@ title: AnalysisOfSales
 unified_id: semantic:memory-ai:661e8fb5-ebd7-4aa4-b571-493bdc26ef24
 updated_at: '2026-04-21T01:05:02.501016'
 version: 1
+status: active
 ---
 
 ## What

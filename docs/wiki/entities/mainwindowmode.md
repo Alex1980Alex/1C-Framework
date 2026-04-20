@@ -19,6 +19,7 @@ title: MainWindowMode
 unified_id: semantic:memory-ai:18dd75bc-2a8b-406e-a749-e4c2a4f4cd94
 updated_at: '2026-04-21T01:05:02.757517'
 version: 1
+status: active
 ---
 
 ## What

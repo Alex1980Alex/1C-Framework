@@ -19,6 +19,7 @@ title: schemaLocation
 unified_id: semantic:memory-ai:ca2841ed-2358-44b0-919a-e2211e3d69a8
 updated_at: '2026-04-21T01:05:04.416634'
 version: 1
+status: active
 ---
 
 ## What

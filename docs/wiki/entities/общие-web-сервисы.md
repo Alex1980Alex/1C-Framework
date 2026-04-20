@@ -19,6 +19,7 @@ title: Общие ‑ Web -сервисы
 unified_id: semantic:memory-ai:df43675f-e249-47c3-bdf6-84b380697cd4
 updated_at: '2026-04-21T01:05:00.876340'
 version: 1
+status: active
 ---
 
 ## What

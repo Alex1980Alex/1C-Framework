@@ -19,6 +19,7 @@ title: xs:complexType
 unified_id: semantic:memory-ai:7f0867ca-5bff-482d-87d6-e0cf5b6ec4f3
 updated_at: '2026-04-21T01:05:02.406050'
 version: 1
+status: active
 ---
 
 ## What

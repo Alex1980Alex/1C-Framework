@@ -19,6 +19,7 @@ title: Microsoft SQL Server
 unified_id: semantic:memory-ai:245df79c-1471-4c28-ae3e-be81c12ff380
 updated_at: '2026-04-21T01:05:01.051428'
 version: 1
+status: active
 ---
 
 ## What

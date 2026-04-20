@@ -19,6 +19,7 @@ title: xs:simpleType
 unified_id: semantic:memory-ai:3efdb855-8fe3-4674-98fc-33bd063e9c61
 updated_at: '2026-04-21T01:05:01.701159'
 version: 1
+status: active
 ---
 
 ## What

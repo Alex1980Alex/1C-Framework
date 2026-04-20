@@ -19,6 +19,7 @@ title: окно просмотра WS-ссылки
 unified_id: semantic:memory-ai:5c21894b-0f51-4c97-ad45-e5b578d45b7a
 updated_at: '2026-04-21T01:05:03.573052'
 version: 1
+status: active
 ---
 
 ## What

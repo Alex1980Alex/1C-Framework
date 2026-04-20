@@ -19,6 +19,7 @@ title: ManagerModule
 unified_id: semantic:memory-ai:f7eecfbc-6f9b-417a-9ceb-d3b25f8583ed
 updated_at: '2026-04-21T01:05:03.703294'
 version: 1
+status: active
 ---
 
 ## What

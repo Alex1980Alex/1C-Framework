@@ -19,6 +19,7 @@ title: SQL-база данных
 unified_id: semantic:memory-ai:f5d922eb-f841-47c3-ac4c-b1b1c1f3dbd7
 updated_at: '2026-04-21T01:05:01.557802'
 version: 1
+status: active
 ---
 
 ## What

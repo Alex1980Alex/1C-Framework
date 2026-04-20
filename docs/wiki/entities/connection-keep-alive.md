@@ -19,6 +19,7 @@ title: 'Connection: Keep-Alive'
 unified_id: semantic:memory-ai:aa7b08d9-4bb1-4f20-931f-4b93fefd2ae4
 updated_at: '2026-04-21T01:05:02.237557'
 version: 1
+status: active
 ---
 
 ## What

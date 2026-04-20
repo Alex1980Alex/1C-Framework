@@ -19,6 +19,7 @@ title: LoyaltyCard
 unified_id: semantic:memory-ai:0f368e9d-d85f-4b78-b6b5-74ae3889e555
 updated_at: '2026-04-21T01:05:02.012382'
 version: 1
+status: active
 ---
 
 ## What

@@ -19,6 +19,7 @@ title: xs:string
 unified_id: semantic:memory-ai:10e9e4aa-fbb4-424e-b8d5-e52fd60f7db4
 updated_at: '2026-04-21T01:05:04.101447'
 version: 1
+status: active
 ---
 
 ## What

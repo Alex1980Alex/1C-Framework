@@ -19,6 +19,7 @@ title: MobilePublicKey
 unified_id: semantic:memory-ai:564ba4fb-f02c-470b-83dc-59eb64468874
 updated_at: '2026-04-21T01:05:01.420350'
 version: 1
+status: active
 ---
 
 ## What

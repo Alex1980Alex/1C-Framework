@@ -20,6 +20,7 @@ title: Event Loop
 unified_id: semantic:memory-ai:4106835f-7157-4b20-9b39-cb2837e134f2
 updated_at: '2026-04-21T01:05:00.776009'
 version: 1
+status: active
 ---
 
 ## What

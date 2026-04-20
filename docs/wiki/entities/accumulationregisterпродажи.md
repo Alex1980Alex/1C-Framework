@@ -19,6 +19,7 @@ title: AccumulationRegister.Продажи
 unified_id: semantic:memory-ai:c38478cd-34ba-4e2d-963e-8ce329809eb1
 updated_at: '2026-04-21T01:05:03.156304'
 version: 1
+status: active
 ---
 
 ## What

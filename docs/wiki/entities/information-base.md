@@ -19,6 +19,7 @@ title: Information Base
 unified_id: semantic:memory-ai:ad0e92c2-2751-4b11-9c34-ff52b3d66a7f
 updated_at: '2026-04-21T01:05:04.209357'
 version: 1
+status: active
 ---
 
 ## What

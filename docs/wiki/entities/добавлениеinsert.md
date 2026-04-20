@@ -19,6 +19,7 @@ title: ДОБАВЛЕНИЕ/INSERT
 unified_id: semantic:memory-ai:a90fd903-c31d-473c-8733-787b6afe97d5
 updated_at: '2026-04-21T01:05:01.906010'
 version: 1
+status: active
 ---
 
 ## What

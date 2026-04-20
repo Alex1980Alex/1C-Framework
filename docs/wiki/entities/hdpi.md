@@ -20,6 +20,7 @@ title: hdpi
 unified_id: semantic:memory-ai:d4a3b794-9d03-4246-a61b-2cd2d8e34e76
 updated_at: '2026-04-21T01:05:03.177987'
 version: 1
+status: active
 ---
 
 ## What

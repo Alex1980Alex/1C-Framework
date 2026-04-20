@@ -19,6 +19,7 @@ title: окно редактирования пакета XDTO
 unified_id: semantic:memory-ai:e8f207d4-f237-4aef-8b77-2648ae604040
 updated_at: '2026-04-21T01:05:03.335526'
 version: 1
+status: active
 ---
 
 ## What

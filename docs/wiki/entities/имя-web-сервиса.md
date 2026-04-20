@@ -19,6 +19,7 @@ title: Имя Web-сервиса
 unified_id: semantic:memory-ai:e76abcc6-a355-42bc-bc46-e8c73dce3fae
 updated_at: '2026-04-21T01:05:00.849224'
 version: 1
+status: active
 ---
 
 ## What

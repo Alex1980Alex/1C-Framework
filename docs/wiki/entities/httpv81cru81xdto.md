@@ -19,6 +19,7 @@ title: http://v8.1c.ru/8.1/xdto
 unified_id: semantic:memory-ai:5651a485-cc7c-4156-a065-f9f8eba25a7c
 updated_at: '2026-04-21T01:05:01.255993'
 version: 1
+status: active
 ---
 
 ## What

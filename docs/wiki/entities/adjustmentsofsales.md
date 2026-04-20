@@ -19,6 +19,7 @@ title: AdjustmentsOfSales
 unified_id: semantic:memory-ai:e6da8c0f-22ca-4b06-a3d8-2f908b4aa5ad
 updated_at: '2026-04-21T01:05:00.878370'
 version: 1
+status: active
 ---
 
 ## What

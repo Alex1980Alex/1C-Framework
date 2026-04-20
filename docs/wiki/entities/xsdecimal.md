@@ -19,6 +19,7 @@ title: xs:decimal
 unified_id: semantic:memory-ai:db41225b-02ee-4d8c-8d8b-552dfc9e92e1
 updated_at: '2026-04-21T01:05:04.179457'
 version: 1
+status: active
 ---
 
 ## What
