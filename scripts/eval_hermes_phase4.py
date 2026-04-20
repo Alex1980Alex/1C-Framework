@@ -502,6 +502,7 @@ def main() -> None:
         "smoke": cmd_smoke,
         "baseline": cmd_baseline,
         "export-wiki": cmd_export_wiki,
+        "index-wiki": cmd_index_wiki,
         "wiki-eval": cmd_wiki_eval,
         "report": cmd_report,
     }
