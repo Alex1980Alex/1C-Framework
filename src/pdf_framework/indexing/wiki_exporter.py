@@ -504,8 +504,8 @@ class ReverseSyncService:
     async def start_watching(self) -> None:
         """Start watchdog observer on wiki_dir."""
         try:
-            from watchdog.observers import Observer
             from watchdog.events import FileSystemEventHandler
+            from watchdog.observers import Observer
 
             service = self
 
