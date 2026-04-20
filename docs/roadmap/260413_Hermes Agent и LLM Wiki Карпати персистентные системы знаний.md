@@ -1001,11 +1001,11 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | 4.19 | Завершить acceptance criteria в `openspec/changes/hermes-llm-wiki/specs/wiki-export-pipeline/spec.md` | spec.md | 5 критериев с `[x]` и ссылками на eval-отчёты |
 
 **Acceptance criteria (из tasks.md Phase 4, разблокируются здесь):**
-- [ ] ≥3 wiki pages per PDF (задача 4.14)
-- [ ] Schema validation ≥95% (задача 4.14 kb-lint)
-- [ ] Precision ≥80% (задача 4.18)
-- [ ] `wiki_pages_v1` коллекция populated (задача 4.15)
-- [ ] Retrieval improvement ≥10% vs GraphRAG baseline (задача 4.17)
+- [x] ≥3 wiki pages per PDF (задача 4.14) — **6335 wiki pages exported** from 1C PDF (3166 named entities), eval: `data/eval/hermes/phase4_report.md`
+- [ ] Schema validation ≥95% (задача 4.14 kb-lint) — deferred (kb-lint needs run)
+- [ ] Precision ≥80% (задача 4.18) — template created: `data/eval/hermes/human_eval.md`, pending manual review
+- [ ] `wiki_pages_v1` коллекция populated (задача 4.15) — wiki pages on disk (3073 .md files), Qdrant indexing deferred
+- [ ] Retrieval improvement ≥10% vs GraphRAG baseline (задача 4.17) — **REGRESSION: -15.7%** with naive score boost. Root cause: uniform +0.1 boost reorders without improving relevance. Fix: use wiki content in embedding/search + RRF fusion instead
 
 **Риски:**
 - LightRAG entity extraction качество зависит от PDF. Митигация: 3 разных домена
