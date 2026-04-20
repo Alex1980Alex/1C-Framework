@@ -153,7 +153,6 @@ async def cmd_verify(args: argparse.Namespace) -> int:
     from src.pdf_framework.indexing.wiki_exporter import WikiExporter
 
     store = await _get_graph_store()
-    exporter = WikiExporter(store)
     graph = getattr(store, "_graph", None)
 
     if graph is None:
