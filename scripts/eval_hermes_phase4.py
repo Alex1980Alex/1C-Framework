@@ -29,8 +29,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from qdrant_client import QdrantClient
 
 GRAPH_COLLECTION = "graph_embeddings"
+WIKI_COLLECTION = "wiki_pages_v1"
 PDF_COLLECTION = "pdf_documents"
 TOP_K = 10
+RRF_K = 60
 
 
 # ── Embedding ──────────────────────────────────────────────────────────────────
