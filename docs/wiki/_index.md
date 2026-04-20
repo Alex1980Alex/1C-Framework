@@ -20,6 +20,8 @@ Navigation index for the PDF Vector & Graph Framework knowledge base.
 | [[PATTERNS]] | 15 arch + 13 automation patterns | [[overview]], [[bsl-integration]] |
 | [[bsl-integration]] | BSL/1C development integration | [[PATTERNS]], [[overview]] |
 | [[core-framework-separation]] | Integration structure (hooks + skills layout) | [[triad-architecture]] |
+| [[SCHEMA]] | Wiki naming rules, frontmatter, promotion lifecycle | [[_index]], [[log]] |
+| [[log]] | Chronology of promotions and session summaries | [[_index]], [[SCHEMA]] |
 
 ## Wiki Pages
 
