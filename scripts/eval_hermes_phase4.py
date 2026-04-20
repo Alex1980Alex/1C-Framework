@@ -323,7 +323,7 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
         points = []
         for j, (vec, payload) in enumerate(zip(vecs, payloads)):
             points.append(PointStruct(
-                id=uuid.uuid5(uuid.NAMESPACE_URL, payload["name"]),
+                id=str(uuid.uuid5(uuid.NAMESPACE_URL, payload["name"])),
                 vector=vec.tolist(),
                 payload=payload,
             ))
