@@ -378,9 +378,8 @@ def cmd_export_wiki(args: argparse.Namespace) -> None:
 def cmd_wiki_eval(args: argparse.Namespace) -> None:
     queries = _load_queries(args.queries)
     client = QdrantClient("localhost", port=6333)
-    wiki_dir = Path(args.wiki_dir)
-    print(f"[WIKI-EVAL] Running on {len(queries)} queries with wiki_dir={wiki_dir}...")
-    results = run_eval(queries, client, wiki_dir=wiki_dir)
+    print(f"[WIKI-EVAL] Running on {len(queries)} queries with RRF fusion...")
+    results = run_eval(queries, client, use_rrf=True)
     _save_json(results, args.output)
     m = results["metrics"]
     print(f"[WIKI-EVAL] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}")
