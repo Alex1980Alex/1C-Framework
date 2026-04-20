@@ -1,11 +1,12 @@
 """Hermes Phase 4 Eval: GraphRAG Baseline vs Wiki-Augmented Retrieval.
 
 Compares baseline retrieval (Qdrant vector search on graph_embeddings)
-against wiki-augmented retrieval on real PDF data.
+against wiki-augmented retrieval (RRF fusion with wiki_pages_v1).
 
 Usage:
     python scripts/eval_hermes_phase4.py smoke
     python scripts/eval_hermes_phase4.py baseline --queries data/eval/hermes/phase4_queries.jsonl --output data/eval/hermes/graphrag_baseline.json
+    python scripts/eval_hermes_phase4.py index-wiki --wiki-dir docs/wiki/entities/
     python scripts/eval_hermes_phase4.py wiki-eval --queries data/eval/hermes/phase4_queries.jsonl --wiki-dir docs/wiki/entities/ --output data/eval/hermes/wiki_augmented.json
     python scripts/eval_hermes_phase4.py export-wiki --output docs/wiki/entities/
     python scripts/eval_hermes_phase4.py report --baseline data/eval/hermes/graphrag_baseline.json --augmented data/eval/hermes/wiki_augmented.json --output data/eval/hermes/phase4_report.md
