@@ -168,7 +168,7 @@ def _search_with_rrf(
 def run_eval(
     queries: list[dict],
     client: QdrantClient,
-    wiki_dir: Path | None = None,
+    use_rrf: bool = False,
     k: int = TOP_K,
 ) -> dict[str, Any]:
     per_query = []
@@ -178,8 +178,8 @@ def run_eval(
         relevant = set(q.get("relevant_entity_names", []))
         t0 = time.perf_counter()
         vec = embed_query(q["query"])
-        if wiki_dir:
-            results = _search_with_wiki(client, vec, wiki_dir, k=k)
+        if use_rrf:
+            results = _search_with_rrf(client, vec, k=k)
         else:
             results = _search(client, vec, k=k)
         latency = time.perf_counter() - t0
