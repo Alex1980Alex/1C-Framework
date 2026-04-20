@@ -685,7 +685,8 @@
       "Bash(MSYS_NO_PATHCONV=1 python -m pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q)",
       "Bash(.venv/Scripts/python.exe *)",
       "Bash(\".venv/Scripts/python.exe\" -m pip install dspy-ai)",
-      "Bash(PYTHONPATH=src \".venv/Scripts/python.exe\" -c \"from pdf_framework.prompts.signatures import GraderSignature, HallucinationCheckSignature, RewriterSignature; print\\('signatures OK'\\)\")"
+      "Bash(PYTHONPATH=src \".venv/Scripts/python.exe\" -c \"from pdf_framework.prompts.signatures import GraderSignature, HallucinationCheckSignature, RewriterSignature; print\\('signatures OK'\\)\")",
+      "Bash(shuf -n 10)"
     ]
   },
   "enableAllProjectMcpServers": true,
