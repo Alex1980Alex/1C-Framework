@@ -140,7 +140,8 @@ Examples:
 
 ### Hooks (P5)
 
-- `session-memory-save.py` (Stop) — auto-saves session context to SQLite on session end
+- `session-memory-save.py` (Stop) — auto-saves session context to SQLite + wiki log on session end
   - Extracts: git diff, activated skills, commits, completed tasks
   - Writes to `data/memory_ai.db` (category: `session_summary`)
+  - Also appends brief summary to `docs/wiki/log.md` (Hermes Phase 2)
   - Dedup by session_id or date, auto-importance (0.5-0.95), auto-tags
