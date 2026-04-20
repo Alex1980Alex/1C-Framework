@@ -1,8 +1,7 @@
 """Hermes Phase 2.1 — Eval Benchmark for DSPy Migrated RAG Agents.
 
 Compares baseline (LangChain-only) vs candidate (DSPy) backends on:
-- Grader: precision, recall, F1 (3-class), accuracy (binary)
-- Rewriter: semantic similarity (LLM-as-Judge)
+- Grader: precision, recall, F1, accuracy (binary)
 - Hallucination: F1 binary, accuracy on grounded:bool
 - All: latency p50/p95
 
@@ -42,12 +41,16 @@ from src.pdf_framework.schemas.documents import (
 # Backend forcing via monkeypatch
 # ---------------------------------------------------------------------------
 
-# Target modules for patching
 _GRADER_MOD = "src.pdf_framework.agents.rag.nodes.grader"
 _REWRITER_MOD = "src.pdf_framework.agents.rag.nodes.rewriter"
 _HALL_MOD = "src.pdf_framework.agents.rag.nodes.hallucination_checker"
 _PROMPTS_MOD = "src.pdf_framework.prompts"
 _ADAPTER_MOD = "src.shared.llm_rotation.adapter"
+
+_METRIC_MODULES = (_GRADER_MOD, _REWRITER_MOD, _HALL_MOD)
+
+# JSON keys that hold raw result lists (not metrics)
+_RESULT_KEYS = {"grader_results", "hall_results"}
 
 
 class BackendConfig:
@@ -63,10 +66,10 @@ BASELINE = BackendConfig(cheap_llm=False, dspy=False, label="langchain")
 CANDIDATE = BackendConfig(cheap_llm=False, dspy=True, label="dspy")
 
 
-def backend_override(backend: BackendConfig):
-    """Context manager forcing specific backend via monkeypatch."""
+def _build_backend_patches(backend: BackendConfig) -> list:
+    """Build monkeypatch objects forcing a specific backend."""
     patches = []
-    for mod in (_GRADER_MOD, _REWRITER_MOD, _HALL_MOD):
+    for mod in _METRIC_MODULES:
         patches.append(
             patch(f"{_ADAPTER_MOD}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
         )
@@ -79,7 +82,7 @@ def backend_override(backend: BackendConfig):
         patches.append(
             patch(f"{mod}.is_dspy_available", return_value=backend.dspy)
         )
-    return ExitStack()  # Caller enters patches manually
+    return patches
 
 
 # ---------------------------------------------------------------------------
@@ -98,15 +101,6 @@ def make_grader_state(query: str, context: str) -> RAGState:
         question=query,
         original_question=query,
         search_response=response,
-    )
-
-
-def make_rewriter_state(query: str) -> RAGState:
-    return RAGState(
-        question=query,
-        original_question=query,
-        retry_count=0,
-        graded_documents=[{"is_relevant": False, "content_preview": "irrelevant doc"}],
     )
 
 
@@ -131,26 +125,33 @@ def precision_recall_f1(tp: int, fp: int, fn: int) -> dict[str, float]:
 
 
 def compute_grader_metrics(results: list[dict]) -> dict[str, float]:
-    """Binary accuracy + 3-class P/R/F1 (relevant vs partial vs irrelevant)."""
-    correct = sum(1 for r in results if r["predicted_relevant"] == r["expected_relevant"])
-    accuracy = correct / len(results) if results else 0.0
+    """Binary accuracy + P/R/F1 on relevant detection."""
+    clean = [r for r in results if "error" not in r]
+    if not clean:
+        return {"accuracy": 0.0, "binary_precision": 0.0, "binary_recall": 0.0, "binary_f1": 0.0}
 
-    tp = sum(1 for r in results if r["predicted_relevant"] and r["expected_relevant"])
-    fp = sum(1 for r in results if r["predicted_relevant"] and not r["expected_relevant"])
-    fn = sum(1 for r in results if not r["predicted_relevant"] and r["expected_relevant"])
+    correct = sum(1 for r in clean if r["predicted_relevant"] == r["expected_relevant"])
+    accuracy = correct / len(clean)
+
+    tp = sum(1 for r in clean if r["predicted_relevant"] and r["expected_relevant"])
+    fp = sum(1 for r in clean if r["predicted_relevant"] and not r["expected_relevant"])
+    fn = sum(1 for r in clean if not r["predicted_relevant"] and r["expected_relevant"])
     binary = precision_recall_f1(tp, fp, fn)
     return {"accuracy": accuracy, **{f"binary_{k}": v for k, v in binary.items()}}
 
 
 def compute_hallucination_metrics(results: list[dict]) -> dict[str, float]:
     """F1 and accuracy on grounded (not hallucinated) detection."""
-    correct = sum(1 for r in results if r["predicted_grounded"] == r["expected_grounded"])
-    accuracy = correct / len(results) if results else 0.0
+    clean = [r for r in results if "error" not in r]
+    if not clean:
+        return {"accuracy": 0.0, "grounded_precision": 0.0, "grounded_recall": 0.0, "grounded_f1": 0.0}
 
-    # Grounded = positive class
-    tp = sum(1 for r in results if r["predicted_grounded"] and r["expected_grounded"])
-    fp = sum(1 for r in results if r["predicted_grounded"] and not r["expected_grounded"])
-    fn = sum(1 for r in results if not r["predicted_grounded"] and r["expected_grounded"])
+    correct = sum(1 for r in clean if r["predicted_grounded"] == r["expected_grounded"])
+    accuracy = correct / len(clean)
+
+    tp = sum(1 for r in clean if r["predicted_grounded"] and r["expected_grounded"])
+    fp = sum(1 for r in clean if r["predicted_grounded"] and not r["expected_grounded"])
+    fn = sum(1 for r in clean if not r["predicted_grounded"] and r["expected_grounded"])
     binary = precision_recall_f1(tp, fp, fn)
     return {"accuracy": accuracy, **{f"grounded_{k}": v for k, v in binary.items()}}
 
@@ -160,9 +161,10 @@ def compute_latency_metrics(latencies: list[float]) -> dict[str, float]:
         return {"p50": 0.0, "p95": 0.0, "mean": 0.0}
     sorted_l = sorted(latencies)
     n = len(sorted_l)
+    p95_idx = min(int(n * 0.95), n - 1)
     return {
         "p50": sorted_l[int(n * 0.5)],
-        "p95": sorted_l[int(n * 0.95)],
+        "p95": sorted_l[p95_idx],
         "mean": statistics.mean(sorted_l),
     }
 
@@ -197,23 +199,8 @@ async def run_grader_eval(
     results = []
     latencies = []
 
-    patches_list = []
-    for mod in (_GRADER_MOD, _REWRITER_MOD, _HALL_MOD):
-        patches_list.append(
-            patch(f"{_ADAPTER_MOD}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
-        )
-        patches_list.append(
-            patch(f"{mod}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
-        )
-        patches_list.append(
-            patch(f"{_PROMPTS_MOD}.is_dspy_available", return_value=backend.dspy)
-        )
-        patches_list.append(
-            patch(f"{mod}.is_dspy_available", return_value=backend.dspy)
-        )
-
     with ExitStack() as stack:
-        for p in patches_list:
+        for p in _build_backend_patches(backend):
             stack.enter_context(p)
 
         for entry in entries:
@@ -254,23 +241,8 @@ async def run_hallucination_eval(
     results = []
     latencies = []
 
-    patches_list = []
-    for mod in (_GRADER_MOD, _REWRITER_MOD, _HALL_MOD):
-        patches_list.append(
-            patch(f"{_ADAPTER_MOD}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
-        )
-        patches_list.append(
-            patch(f"{mod}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
-        )
-        patches_list.append(
-            patch(f"{_PROMPTS_MOD}.is_dspy_available", return_value=backend.dspy)
-        )
-        patches_list.append(
-            patch(f"{mod}.is_dspy_available", return_value=backend.dspy)
-        )
-
     with ExitStack() as stack:
-        for p in patches_list:
+        for p in _build_backend_patches(backend):
             stack.enter_context(p)
 
         for entry in entries:
@@ -389,7 +361,8 @@ def generate_report(baseline_path: str, candidate_path: str, report_path: str) -
 
         b = baseline[component]
         c = candidate[component]
-        all_keys = set(b.keys()) - {"latency", "accuracy_ci", "results"}
+        skip_keys = {"latency", "accuracy_ci"} | _RESULT_KEYS
+        all_keys = set(b.keys()) - skip_keys
         for lat_key in b.get("latency", {}):
             all_keys.add(f"latency.{lat_key}")
 
@@ -402,12 +375,12 @@ def generate_report(baseline_path: str, candidate_path: str, report_path: str) -
                 bv = b.get(key, 0)
                 cv = c.get(key, 0)
 
-            if isinstance(bv, (int, float)) and isinstance(cv, (int, float)):
-                delta = cv - bv
-                delta_str = f"{delta:+.4f}"
-                ci_info = c.get("accuracy_ci", {})
-                ci_str = f"[{ci_info.get('lo', 0):.3f}, {ci_info.get('hi', 0):.3f}]" if key == "accuracy" else "—"
-                lines.append(f"| {key} | {bv:.4f} | {cv:.4f} | {delta_str} | {ci_str} |")
+            if not isinstance(bv, (int, float)) or not isinstance(cv, (int, float)):
+                continue
+            delta = cv - bv
+            ci_info = c.get("accuracy_ci", {})
+            ci_str = f"[{ci_info.get('lo', 0):.3f}, {ci_info.get('hi', 0):.3f}]" if key == "accuracy" else "—"
+            lines.append(f"| {key} | {bv:.4f} | {cv:.4f} | {delta:+.4f} | {ci_str} |")
         lines.append("")
 
     # Verdict
