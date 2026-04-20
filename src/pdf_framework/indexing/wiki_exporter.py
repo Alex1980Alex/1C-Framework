@@ -23,14 +23,14 @@ import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
-from src.pdf_framework.graph_store.base import BaseGraphStore
-from src.pdf_framework.schemas.entities import Entity, Relation, SubGraph
-from src.memory.orchestrator.memcube import MemoryCube, ContentType
+from src.memory.orchestrator.memcube import ContentType, MemoryCube
 from src.memory.orchestrator.unified_id import MemoryType, SourceServer
+from src.pdf_framework.graph_store.base import BaseGraphStore
+from src.pdf_framework.schemas.entities import Entity, Relation
 
 logger = logging.getLogger(__name__)
 
