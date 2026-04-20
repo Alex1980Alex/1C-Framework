@@ -138,6 +138,8 @@ def _search_with_rrf(
     client: QdrantClient,
     query_vec: list[float],
     k: int = TOP_K,
+    graph_weight: float = 3.0,
+    wiki_weight: float = 1.0,
 ) -> list[dict]:
     graph_results = _search(client, query_vec, k=k * 2)
 
@@ -152,12 +154,12 @@ def _search_with_rrf(
 
     for rank, r in enumerate(graph_results):
         name = r["name"]
-        scores[name] = scores.get(name, 0.0) + 1.0 / (RRF_K + rank + 1)
+        scores[name] = scores.get(name, 0.0) + graph_weight / (RRF_K + rank + 1)
         result_map[name] = r
 
     for rank, r in enumerate(wiki_results):
         name = r["name"]
-        scores[name] = scores.get(name, 0.0) + 1.0 / (RRF_K + rank + 1)
+        scores[name] = scores.get(name, 0.0) + wiki_weight / (RRF_K + rank + 1)
         if name not in result_map:
             result_map[name] = r
 
