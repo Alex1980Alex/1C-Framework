@@ -962,7 +962,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 | TODO | Описание | Статус | Подтверждение |
 |------|----------|--------|----------------|
-| **TODO-1** Phase 2.1 RAGAS-eval | Формальный benchmark grader/rewriter/hallucination до/после DSPy | ⏳ INFRA READY | `scripts/eval_hermes_phase2.py` (436 LoC), `data/eval/hermes/phase2_eval_set.jsonl` (50 queries), `dspy-ai==3.1.3` установлен. Smoke: grader 100%, hallucination 100%. Осталось: baseline+candidate full runs (~$2-5 LLM calls) |
+| **TODO-1** Phase 2.1 RAGAS-eval | Формальный benchmark grader/rewriter/hallucination до/после DSPy | ✅ EVAL DONE (2026-04-21) | Baseline+candidate runs завершены, вердикт **PASS** (no >5% regression). Report: `data/eval/hermes/report.md`. DSPy grader +2% accuracy, hallucination -3.3% (within gate). Bug-fix: `dspy.configure(lm=...)` added. Осталось: ADR-008, CI smoke-gate |
 | **TODO-2** Phase 4 audit + eval | End-to-end pipeline на 3 тестовых PDF | ✅ DONE | 5/5 acceptance criteria выполнены: ≥3 wiki/PDF, schema ≥95%, precision ≥80%, `wiki_pages_v1` populated, retrieval +203% (см. строки 1004-1008) |
 | **TODO-3** Phase 3.10 | EventBus integration `IncrementalGraphUpdater` ↔ `WikiExporter` | ✅ DONE (2026-04-21) | 6/6 задач + 4/4 acceptance; verified `incremental.py:125-150`, `wiki_exporter.py:401,426,444`, `spec.md:715` |
 
