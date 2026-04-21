@@ -132,13 +132,13 @@ PreToolUse:Write fires → content > 15 lines?
 
 **Цель:** Bandit автоматически корректирует routing из каждого outcome.
 
-| Task | Deliverable | Effort |
-|------|-------------|--------|
-| 3.1 Contextual Bandit module | `src/shared/delegation_bandit.py` (LinUCB, 4 arms) | 3h |
-| 3.2 Integration с outcome tracker | Каждый outcome → `bandit.update(context, action, reward)` | 1h |
-| 3.3 Bandit-based classification | `bandit.predict(context)` → Soft/Medium/Hard/Never | 1h |
-| 3.4 CLI dashboard | accuracy, delegation rate, bandit confidence | 1h |
-| 3.5 Fallback to rules | outcomes < 20 → rule-based | 30 min |
+| Task | Deliverable | Effort | Status |
+|------|-------------|--------|--------|
+| 3.1 Contextual Bandit module | `src/shared/delegation_bandit.py` (LinUCB, 4 arms, pure numpy) | 3h | ✅ DONE |
+| 3.2 Integration с outcome tracker | Каждый outcome → `bandit.update(context, action, reward)` | 1h | ✅ DONE |
+| 3.3 Bandit-based classification | `bandit.predict(context)` → Soft/Medium/Hard/Never в enforcer | 1h | ✅ DONE |
+| 3.4 CLI dashboard | accuracy, delegation rate, bandit confidence | 1h | ✅ DONE |
+| 3.5 Fallback to rules | outcomes < 20 → rule-based | 30 min | ✅ DONE |
 
 **Архитектура (паттерн Tokenomics-AI UCB):**
 ```python
