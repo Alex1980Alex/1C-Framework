@@ -155,6 +155,8 @@ SKIP_PATTERNS = [
     "src/projects/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
+    # Shared utilities (generic modules like mcp_oauth — not PDF framework core)
+    "src/shared/",
     # Claude Code commands (slash commands, not product code)
     ".claude/commands/",
     # Temporary helper scripts (prefixed with underscore, auto-deleted)
