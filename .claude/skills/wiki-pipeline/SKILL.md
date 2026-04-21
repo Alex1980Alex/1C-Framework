@@ -13,7 +13,7 @@ description: PDF → Structured Wiki Pages pipeline (Hermes Phase 4). Экспо
 |-------|------|------------|
 | `WikiExporter` | [src/pdf_framework/indexing/wiki_exporter.py:131](../../../src/pdf_framework/indexing/wiki_exporter.py#L131) | Graph entity → markdown через `MemoryCube.to_wiki_page()` |
 | `ForwardSyncService` | [wiki_exporter.py:299](../../../src/pdf_framework/indexing/wiki_exporter.py#L299) | Catch-up sync по timestamp (`sync_since`) |
-| `IncrementalWikiSync` | [wiki_exporter.py:392](../../../src/pdf_framework/indexing/wiki_exporter.py#L392) | Event-driven sync (подписка на `IncrementalGraphUpdater`) + dead letter queue |
+| `IncrementalWikiSync` | [wiki_exporter.py:392](../../../src/pdf_framework/indexing/wiki_exporter.py#L392) | Event-driven sync (подписка на `graph.*` через EventBus) + DLQ + metrics |
 | `ReverseSyncService` | [wiki_exporter.py:487](../../../src/pdf_framework/indexing/wiki_exporter.py#L487) | Watchdog: Write в `docs/wiki/entities/*.md` → parse frontmatter → update graph |
 | `WikiSearchIndexer` | [wiki_exporter.py:643](../../../src/pdf_framework/indexing/wiki_exporter.py#L643) | Индексация wiki-страниц через `HybridSearchService` (BM25+dense RRF) |
 
