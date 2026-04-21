@@ -63,16 +63,19 @@ PDF → [existing Phase 38 LightRAG pipeline] → entity embeddings в Qdrant
                                     │
                     ┌───────────────┴───────────────┐
                     ▼                               ▼
-            WikiExporter.export()         IncrementalGraphUpdater events
+            WikiExporter.export()         IncrementalGraphUpdater.update()
                     │                               │
                     ▼                               ▼
-         docs/wiki/entities/<id>.md    IncrementalWikiSync.on_event()
-                    │                               │
-                    ▼                               ▼
-          WikiSearchIndexer.index_page() → HybridSearchService (BM25+dense)
-                    │
-                    ▼
-          LightRAGStrategy возвращает wiki_page_paths
+         docs/wiki/entities/<id>.md    EventBus.publish("graph.*")
+                                                    │
+                                                    ▼
+                                        IncrementalWikiSync._listen_loop()
+                                                    │
+                                                    ▼
+                                         handle_event() → ForwardSync
+                                                    │
+                                                    ▼
+                                         WikiSearchIndexer.index_page()
 ```
 
 Reverse sync (L3 = canonical):
