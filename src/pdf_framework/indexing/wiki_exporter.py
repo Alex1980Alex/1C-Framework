@@ -448,7 +448,7 @@ class IncrementalWikiSync:
         while self._running:
             try:
                 event = await asyncio.wait_for(self._subscription.queue.get(), timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception:
                 if not self._running:
