@@ -90,8 +90,6 @@ class TestEventBusIntegration:
         entity = Entity(id="e1", name="Existing", entity_type="CONCEPT", confidence=0.8)
         await graph_store.add_entity(entity)
 
-        published_events = []
-
         sub = await event_bus.subscribe("graph.*")
 
         updater = IncrementalGraphUpdater(graph_store, event_bus=event_bus)
