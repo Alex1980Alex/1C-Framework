@@ -166,6 +166,9 @@ SKIP_PATTERNS = [
     # VA BDD test artifacts (features, run state — test infra, not product code)
     "features/",
     ".run-state.json",
+    # Obsidian vault artifacts (Hermes Phase 1 — vault config/canvases, not product code)
+    ".obsidian/",
+    ".canvas",
 ]
 
 
