@@ -949,9 +949,9 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ### Что осталось
 
-1. **TODO-1 (Phase 2.1 RAGAS-eval)** — единственный открытый TODO, не блокирует другие фазы. Трудоёмкость ~2 дня. Цель — формально доказать отсутствие регрессии после DSPy-миграции; rollback при regression >5%
-2. **Phase 6 (OAuth 2.1 Generalization)** — рекомендована как следующая (P2, выше business-value, инфраструктура готова на 70%). Трудоёмкость ~3-4 дня
-3. **Phase 5 (Sandbox)** — P3, не блокирует ничего. Можно запустить параллельно Phase 6
+1. **TODO-1 (Phase 2.1 RAGAS-eval)** — инфраструктура готова (`eval_hermes_phase2.py` 436 LoC, 50 queries JSONL, `dspy-ai==3.1.3`). Осталось: запустить baseline (`--baseline langchain`) + candidate (`--candidate dspy`) на full 50 queries (~$2-5 LLM calls), сгенерировать `report.md`, создать ADR-008. Трудоёмкость ~0.5 дня
+2. **Phase 6 remaining** — security review через `memory_audit_log`, docs/wiki/auth/ страницы, feature flag для pdf-vector-graph MCP интеграция. Core extraction завершена
+3. **Phase 5 (Sandbox)** — P3, не блокирует ничего. Можно запустить параллельно
 
 ### Рекомендация по следующему шагу
 
