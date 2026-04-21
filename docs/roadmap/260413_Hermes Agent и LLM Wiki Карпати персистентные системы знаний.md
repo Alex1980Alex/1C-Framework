@@ -986,10 +986,10 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 Завершённые задачи:
 - **Phase 6 (OAuth Generalization)** — ✅ CORE COMPLETE (2026-04-21). `src/shared/mcp_oauth/` (models+store+service), 16 тестов, backward-compat сохранена
-- **TODO-1 (RAGAS-eval infrastructure)** — ✅ INFRA READY. `eval_hermes_phase2.py` (436 LoC), 50 queries, smoke tests pass. Осталось: full baseline+candidate runs
+- **TODO-1 (RAGAS-eval)** — ✅ EVAL DONE (2026-04-21). Baseline+candidate runs завершены, вердикт **PASS**. DSPy grader +2% accuracy, hallucination -3.3% (within gate). Report: `data/eval/hermes/report.md`
 
 Следующие шаги:
-- **TODO-1 full runs:** `--baseline langchain` → `--candidate dspy` → `--report` (~0.5 дня, ~$2-5 LLM calls)
+- **TODO-1 remaining:** ADR-008 с формальным вердиктом PASS, CI smoke-gate в pre-commit
 - **Phase 6 remaining:** security review, docs/wiki/auth/, feature flag wiring
 - **Phase 5 (Sandbox):** P3, можно начинать если есть спрос на изолированное исполнение
 
