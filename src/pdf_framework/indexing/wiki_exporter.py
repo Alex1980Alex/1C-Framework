@@ -32,6 +32,12 @@ from src.memory.orchestrator.unified_id import MemoryType, SourceServer
 from src.pdf_framework.graph_store.base import BaseGraphStore
 from src.pdf_framework.schemas.entities import Entity, Relation
 
+try:
+    from src.memory.infrastructure.metrics import get_metrics_collector
+    _metrics = get_metrics_collector()
+except ImportError:
+    _metrics = None
+
 logger = logging.getLogger(__name__)
 
 # --- Config & Result dataclasses ---
