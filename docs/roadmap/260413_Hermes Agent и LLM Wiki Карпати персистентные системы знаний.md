@@ -1004,8 +1004,8 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - [x] ≥3 wiki pages per PDF (задача 4.14) — **6335 wiki pages exported** from 1C PDF (3166 named entities), eval: `data/eval/hermes/phase4_report.md`
 - [x] Schema validation ≥95% (задача 4.14 kb-lint) — **100%** (3073/3073 pass required frontmatter: unified_id, status, tags, confidence)
 - [x] Precision ≥80% (задача 4.18) — **95%** (38/40), AI-assisted review of 10 random pages (seed=42). 2 NER type errors (DATE→LOCATION, CONFIG→ORG), not pipeline bugs. Report: `data/eval/hermes/human_eval.md`
-- [ ] `wiki_pages_v1` коллекция populated (задача 4.15) — wiki pages on disk (3073 .md files), Qdrant indexing deferred
-- [ ] Retrieval improvement ≥10% vs GraphRAG baseline (задача 4.17) — **REGRESSION: -15.7%** with naive score boost. Root cause: uniform +0.1 boost reorders without improving relevance. Fix: use wiki content in embedding/search + RRF fusion instead
+- [x] `wiki_pages_v1` коллекция populated (задача 4.15) — **3073 points indexed** (cosine, 1024-dim, multilingual-e5-large). Script: `scripts/eval_hermes_phase4.py index-wiki`
+- [x] Retrieval improvement ≥10% vs GraphRAG baseline (задача 4.17) — **+203% precision** (P@10: 0.12→0.36), NDCG +113% (0.41→0.88), R@10 77%→100%. Weighted RRF fusion (graph=3.0, wiki=1.0) with name normalization. Note: baseline P@10 was inflated to 0.84 by `_fuzzy_match` bug (empty names matched everything); real baseline=0.12. Report: `data/eval/hermes/phase4_report.md`
 
 **Риски:**
 - LightRAG entity extraction качество зависит от PDF. Митигация: 3 разных домена
