@@ -1,133 +1,150 @@
-"""BSL MCP Server OAuth2 — backward-compat wrapper around shared module.
+"""OAuth2 хранилище и сервис для авторизации.
 
-Preserves the original login/password API while delegating to
-src.shared.mcp_oauth (generic OAuth2Service).
+Note: Generic version extracted to src.shared.mcp_oauth (Phase 6).
+This module preserves the original BSL-specific login/password API.
+New MCP servers should use src.shared.mcp_oauth instead.
 """
 
+import asyncio
+import base64
+import hashlib
 import logging
-
-from src.shared.mcp_oauth.models import (
-    AccessTokenData as _AccessTokenData,
-    AuthCodeData as _AuthCodeData,
-    RefreshTokenData as _RefreshTokenData,
-)
-from src.shared.mcp_oauth.service import OAuth2Service as _OAuth2Service
-from src.shared.mcp_oauth.store import InMemoryBackend, OAuth2Store
+import secrets
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-# Re-export dataclasses with original field names for backward compat.
-# Old code used login/password directly; new generic uses client_id/user_data.
 
-
+@dataclass
 class AuthCodeData:
-    """Backward-compat authorization code data (login/password fields)."""
+    """Данные authorization code."""
 
-    def __init__(self, login: str, password: str, redirect_uri: str,
-                 code_challenge: str, exp) -> None:
-        self.login = login
-        self.password = password
-        self.redirect_uri = redirect_uri
-        self.code_challenge = code_challenge
-        self.exp = exp
+    login: str
+    password: str
+    redirect_uri: str
+    code_challenge: str
+    exp: datetime
 
 
+@dataclass
 class AccessTokenData:
-    """Backward-compat access token data (login/password fields)."""
+    """Данные access token."""
 
-    def __init__(self, login: str, password: str, exp) -> None:
-        self.login = login
-        self.password = password
-        self.exp = exp
+    login: str
+    password: str
+    exp: datetime
 
 
+@dataclass
 class RefreshTokenData:
-    """Backward-compat refresh token data (login/password fields)."""
+    """Данные refresh token."""
 
-    def __init__(self, login: str, password: str, exp, rotation_counter: int = 0) -> None:
-        self.login = login
-        self.password = password
-        self.exp = exp
-        self.rotation_counter = rotation_counter
-
-
-class _BSLBackend(InMemoryBackend):
-    """In-memory backend that stores login/password in user_data for BSL compat."""
-
-    pass
+    login: str
+    password: str
+    exp: datetime
+    rotation_counter: int = 0
 
 
 class OAuth2Store:
-    """In-memory OAuth2 store — backward-compat wrapper."""
+    """In-memory хранилище для OAuth2 токенов и кодов."""
 
-    def __init__(self) -> None:
-        self._store = OAuth2Store(_BSLBackend())
-        # Sync dicts for code that accesses store.auth_codes etc. directly
+    def __init__(self):
         self.auth_codes: dict[str, AuthCodeData] = {}
         self.access_tokens: dict[str, AccessTokenData] = {}
         self.refresh_tokens: dict[str, RefreshTokenData] = {}
-        self._cleanup_task = None
+        self._cleanup_task: asyncio.Task | None = None
 
-    async def start_cleanup_task(self, interval: int = 60) -> None:
-        await self._store.start_cleanup(interval)
-        self._cleanup_task = self._store._cleanup_task
+    async def start_cleanup_task(self, interval: int = 60):
+        self._cleanup_task = asyncio.create_task(self._cleanup_loop(interval))
+        logger.debug(f"Запущена задача очистки OAuth2 токенов (интервал: {interval}s)")
 
-    async def stop_cleanup_task(self) -> None:
-        await self._store.stop_cleanup()
+    async def stop_cleanup_task(self):
+        if self._cleanup_task:
+            self._cleanup_task.cancel()
+            try:
+                await self._cleanup_task
+            except asyncio.CancelledError:
+                pass
+            logger.debug("Задача очистки OAuth2 токенов остановлена")
 
-    def save_auth_code(self, code: str, data: AuthCodeData) -> None:
+    async def _cleanup_loop(self, interval: int):
+        while True:
+            try:
+                await asyncio.sleep(interval)
+                self._cleanup_expired()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Ошибка при очистке токенов: {e}")
+
+    def _cleanup_expired(self):
+        now = datetime.now()
+        expired_codes = [code for code, data in self.auth_codes.items() if data.exp < now]
+        for code in expired_codes:
+            del self.auth_codes[code]
+        expired_access = [token for token, data in self.access_tokens.items() if data.exp < now]
+        for token in expired_access:
+            del self.access_tokens[token]
+        expired_refresh = [token for token, data in self.refresh_tokens.items() if data.exp < now]
+        for token in expired_refresh:
+            del self.refresh_tokens[token]
+        if expired_codes or expired_access or expired_refresh:
+            logger.debug(
+                f"Очищено токенов: codes={len(expired_codes)}, access={len(expired_access)}, refresh={len(expired_refresh)}"
+            )
+
+    def save_auth_code(self, code: str, data: AuthCodeData):
         self.auth_codes[code] = data
 
     def get_auth_code(self, code: str) -> AuthCodeData | None:
         data = self.auth_codes.pop(code, None)
-        if data and data.exp < __import__("datetime").datetime.now():
+        if data and data.exp < datetime.now():
             return None
         return data
 
-    def save_access_token(self, token: str, data: AccessTokenData) -> None:
+    def save_access_token(self, token: str, data: AccessTokenData):
         self.access_tokens[token] = data
 
     def get_access_token(self, token: str) -> AccessTokenData | None:
         data = self.access_tokens.get(token)
-        if data and data.exp < __import__("datetime").datetime.now():
+        if data and data.exp < datetime.now():
             del self.access_tokens[token]
             return None
         return data
 
-    def save_refresh_token(self, token: str, data: RefreshTokenData) -> None:
+    def save_refresh_token(self, token: str, data: RefreshTokenData):
         self.refresh_tokens[token] = data
 
     def get_refresh_token(self, token: str) -> RefreshTokenData | None:
         data = self.refresh_tokens.pop(token, None)
-        if data and data.exp < __import__("datetime").datetime.now():
+        if data and data.exp < datetime.now():
             return None
         return data
 
 
 class OAuth2Service:
-    """OAuth2 service — backward-compat wrapper using login/password API."""
+    """Сервис OAuth2 для авторизации (BSL-specific, login/password)."""
 
     def __init__(self, store: OAuth2Store, code_ttl: int = 120,
-                 access_ttl: int = 3600, refresh_ttl: int = 1209600) -> None:
+                 access_ttl: int = 3600, refresh_ttl: int = 1209600):
         self.store = store
         self.code_ttl = code_ttl
         self.access_ttl = access_ttl
         self.refresh_ttl = refresh_ttl
 
     def generate_prm_document(self, public_url: str) -> dict:
-        url = public_url.rstrip("/")
+        public_url = public_url.rstrip("/")
         return {
-            "resource": url,
-            "authorization_servers": [url],
-            "authorization_endpoint": f"{url}/authorize",
-            "token_endpoint": f"{url}/token",
+            "resource": public_url,
+            "authorization_servers": [public_url],
+            "authorization_endpoint": f"{public_url}/authorize",
+            "token_endpoint": f"{public_url}/token",
             "code_challenge_methods_supported": ["S256"],
         }
 
     def generate_authorization_code(self, login: str, password: str,
                                     redirect_uri: str, code_challenge: str) -> str:
-        import secrets
-        from datetime import datetime, timedelta
         code = secrets.token_urlsafe(32)
         exp = datetime.now() + timedelta(seconds=self.code_ttl)
         self.store.save_auth_code(code, AuthCodeData(
@@ -138,21 +155,21 @@ class OAuth2Service:
 
     @staticmethod
     def validate_pkce(code_verifier: str, code_challenge: str) -> bool:
-        import base64, hashlib
-        digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
-        computed = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
-        return computed == code_challenge
+        verifier_hash = hashlib.sha256(code_verifier.encode("ascii")).digest()
+        computed_challenge = base64.urlsafe_b64encode(verifier_hash).decode("ascii").rstrip("=")
+        return computed_challenge == code_challenge
 
     def exchange_code_for_tokens(self, code: str, redirect_uri: str,
                                  code_verifier: str) -> tuple[str, str, int, str] | None:
-        import secrets
-        from datetime import datetime, timedelta
         code_data = self.store.get_auth_code(code)
         if not code_data:
+            logger.warning("Недействительный или истёкший authorization code")
             return None
         if code_data.redirect_uri != redirect_uri:
+            logger.warning(f"Несовпадение redirect_uri")
             return None
         if not self.validate_pkce(code_verifier, code_data.code_challenge):
+            logger.warning("PKCE валидация не прошла")
             return None
 
         access_token = secrets.token_urlsafe(32)
@@ -166,30 +183,32 @@ class OAuth2Service:
             login=code_data.login, password=code_data.password,
             exp=now + timedelta(seconds=self.refresh_ttl), rotation_counter=0,
         ))
+        logger.debug(f"Выданы токены для пользователя {code_data.login}")
         return (access_token, "Bearer", self.access_ttl, refresh_token)
 
     def refresh_tokens(self, refresh_token: str) -> tuple[str, str, int, str] | None:
-        import secrets
-        from datetime import datetime, timedelta
-        data = self.store.get_refresh_token(refresh_token)
-        if not data:
+        refresh_data = self.store.get_refresh_token(refresh_token)
+        if not refresh_data:
+            logger.warning("Недействительный или истёкший refresh token")
             return None
-        new_access = secrets.token_urlsafe(32)
-        new_refresh = secrets.token_urlsafe(32)
+
+        new_access_token = secrets.token_urlsafe(32)
+        new_refresh_token = secrets.token_urlsafe(32)
         now = datetime.now()
-        self.store.save_access_token(new_access, AccessTokenData(
-            login=data.login, password=data.password,
+        self.store.save_access_token(new_access_token, AccessTokenData(
+            login=refresh_data.login, password=refresh_data.password,
             exp=now + timedelta(seconds=self.access_ttl),
         ))
-        self.store.save_refresh_token(new_refresh, RefreshTokenData(
-            login=data.login, password=data.password,
+        self.store.save_refresh_token(new_refresh_token, RefreshTokenData(
+            login=refresh_data.login, password=refresh_data.password,
             exp=now + timedelta(seconds=self.refresh_ttl),
-            rotation_counter=data.rotation_counter + 1,
+            rotation_counter=refresh_data.rotation_counter + 1,
         ))
-        return (new_access, "Bearer", self.access_ttl, new_refresh)
+        logger.debug(f"Обновлены токены для {refresh_data.login} (rotation #{refresh_data.rotation_counter + 1})")
+        return (new_access_token, "Bearer", self.access_ttl, new_refresh_token)
 
     def validate_access_token(self, token: str) -> tuple[str, str] | None:
-        data = self.store.get_access_token(token)
-        if not data:
+        token_data = self.store.get_access_token(token)
+        if not token_data:
             return None
-        return (data.login, data.password)
+        return (token_data.login, token_data.password)
