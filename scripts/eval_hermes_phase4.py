@@ -141,7 +141,8 @@ def _search(client: QdrantClient, query_vec: list[float], k: int = TOP_K) -> lis
 
 def _normalize_name(name: str) -> str:
     n = name.lower().strip()
-    return n.replace("-", " ").replace("  ", " ")
+    n = n.replace("-", " ")
+    return " ".join(n.split())
 
 
 def _search_with_rrf(
