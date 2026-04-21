@@ -52,7 +52,7 @@ class LinUCBModel:
         self.b = [np.zeros(d, dtype=np.float64) for _ in range(N_ARMS)]
         self.n_updates = [0] * N_ARMS
 
-    def predict(self, x: np.ndarray) -> Tuple[int, np.ndarray]:
+    def predict(self, x: np.ndarray) -> tuple[int, np.ndarray]:
         """Return (best_arm_idx, all_ucb_scores)."""
         scores = np.zeros(N_ARMS, dtype=np.float64)
         for a in range(N_ARMS):
@@ -80,7 +80,7 @@ class DelegationBandit:
         if not OUTCOMES_FILE.exists():
             return 0
         try:
-            with open(OUTCOMES_FILE, "r", encoding="utf-8") as f:
+            with open(OUTCOMES_FILE, encoding="utf-8") as f:
                 return sum(1 for _ in f)
         except Exception:
             return 0
@@ -94,7 +94,7 @@ class DelegationBandit:
             return "HYBRID"
         return "AUTONOMOUS"
 
-    def predict(self, context: Dict[str, Any]) -> Tuple[str, float]:
+    def predict(self, context: dict[str, object]) -> tuple[str, float]:
         """Predict delegation level. Returns (action, confidence)."""
         mode = self.mode
         rule_action = _rule_based_classify(context)
@@ -122,7 +122,7 @@ class DelegationBandit:
             return rule_action, 0.3
         return bandit_action, confidence
 
-    def update(self, context: Dict[str, Any], action: str, reward: float):
+    def update(self, context: dict[str, object], action: str, reward: float):
         """Update model with observed outcome."""
         if action not in ACTION_INDEX:
             return
@@ -166,7 +166,7 @@ class DelegationBandit:
         self._save_state()
         return trained
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, object]:
         return {
             "mode": self.mode,
             "total_outcomes": self._count_outcomes(),
@@ -202,7 +202,7 @@ class DelegationBandit:
             logger.warning("Failed to load bandit state: %s", e)
 
 
-def _rule_based_classify(context: Dict[str, Any]) -> str:
+def _rule_based_classify(context: dict[str, object]) -> str:
     """Fallback rule-based classification (mirrors z-ai-delegation-enforcer)."""
     domain = context.get("domain", "other")
     content_type = context.get("content_type", "other")
