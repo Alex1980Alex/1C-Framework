@@ -8,6 +8,7 @@ Version: 0.7.0 - Phase 6.5: Incremental Updates
 
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import networkx as nx
 
@@ -15,6 +16,9 @@ from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.graph_store.community import CommunityDetector
 from src.pdf_framework.graph_store.summarizer import CommunitySummarizer
 from src.pdf_framework.schemas.entities import Entity, Relation
+
+if TYPE_CHECKING:
+    from src.memory.infrastructure.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
 
