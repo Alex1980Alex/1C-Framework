@@ -60,8 +60,12 @@ def embed_query(text: str) -> list[float]:
 
 def _fuzzy_match(name: str, relevant: set[str]) -> bool:
     n = name.lower().strip()
+    if not n:
+        return False
     for r in relevant:
         rl = r.lower().strip()
+        if not rl:
+            continue
         if n == rl or n in rl or rl in n:
             return True
     return False
