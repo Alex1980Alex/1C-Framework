@@ -17,6 +17,17 @@ from src.pdf_framework.indexing.wiki_exporter import (
 from src.pdf_framework.schemas.entities import Entity
 
 
+def _make_updater(graph_store, event_bus=None):
+    """Create IncrementalGraphUpdater without graspologic dependency."""
+    from unittest.mock import MagicMock
+    return IncrementalGraphUpdater(
+        graph_store=graph_store,
+        community_detector=MagicMock(),
+        community_summarizer=MagicMock(),
+        event_bus=event_bus,
+    )
+
+
 @pytest.fixture
 def event_bus():
     bus = EventBus()
