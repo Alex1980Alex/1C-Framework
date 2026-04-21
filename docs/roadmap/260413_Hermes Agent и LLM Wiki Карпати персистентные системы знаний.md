@@ -939,8 +939,8 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ### Аккумулированные артефакты (Phase 0-4 + 3.10)
 
-- **Код:** ~2200 LoC новой реализации в `src/memory/orchestrator/`, `src/memory/librarian/`, `src/pdf_framework/prompts/`, `src/pdf_framework/indexing/`, `src/pdf_framework/graph_store/incremental.py`
-- **Тесты:** ~340 unit/integration (47 Phase 0 + 88 memory existing + 15 wiki_promoter + 22 wiki_exporter+sync + ≥150 prior pass-through), 0 регрессий
+- **Код:** ~2450 LoC новой реализации в `src/memory/orchestrator/`, `src/memory/librarian/`, `src/pdf_framework/prompts/`, `src/pdf_framework/indexing/`, `src/pdf_framework/graph_store/incremental.py`, `src/shared/mcp_oauth/`
+- **Тесты:** ~356 unit/integration (47 Phase 0 + 88 memory existing + 15 wiki_promoter + 22 wiki_exporter+sync + 16 mcp_oauth + ≥150 prior pass-through), 0 регрессий
 - **Документация:** `docs/wiki/SCHEMA.md`, `docs/wiki/log.md`, 28 pattern-страниц, 3 wiki-template (entity/concept/procedure), spec `wiki-export-pipeline/spec.md` (711 строк), 6 OpenSpec изменений в `openspec/changes/hermes-llm-wiki/`
 - **Skills:** `obsidian-vault`, `wiki-pipeline` (новые), `memory-unified` (расширен)
 - **Hooks:** `memory-first-hook` Layer 4, `docs-change-tracker` wiki-валидация, `docs-change-enforcer` draft reminder, `session-memory-save` log.md
