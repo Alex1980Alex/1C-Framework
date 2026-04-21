@@ -955,11 +955,14 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ### Рекомендация по следующему шагу
 
-Параллельный запуск:
-- **Основной поток:** Phase 6 (OAuth Generalization) — P2, разблокирует OAuth для `pdf-vector-graph` MCP server
-- **Фоновый поток:** TODO-1 (RAGAS-eval) — закрывает последний долг Phase 2, дёшево (~$2-5 LLM calls)
+Завершённые задачи:
+- **Phase 6 (OAuth Generalization)** — ✅ CORE COMPLETE (2026-04-21). `src/shared/mcp_oauth/` (models+store+service), 16 тестов, backward-compat сохранена
+- **TODO-1 (RAGAS-eval infrastructure)** — ✅ INFRA READY. `eval_hermes_phase2.py` (436 LoC), 50 queries, smoke tests pass. Осталось: full baseline+candidate runs
 
-Phase 5 можно начинать только если есть активный спрос на изолированное исполнение research-скриптов; иначе оставить deferred.
+Следующие шаги:
+- **TODO-1 full runs:** `--baseline langchain` → `--candidate dspy` → `--report` (~0.5 дня, ~$2-5 LLM calls)
+- **Phase 6 remaining:** security review, docs/wiki/auth/, feature flag wiring
+- **Phase 5 (Sandbox):** P3, можно начинать если есть спрос на изолированное исполнение
 
 ---
 
