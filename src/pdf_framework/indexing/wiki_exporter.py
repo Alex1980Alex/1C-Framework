@@ -450,7 +450,8 @@ class IncrementalWikiSync:
                     attempt + 1, self._max_retries, entity_id, exc,
                 )
                 if attempt < self._max_retries - 1:
-                    await asyncio.sleep(self._retry_delay_s * (attempt + 1))
+                    delay = self._BACKOFF_DELAYS[min(attempt, len(self._BACKOFF_DELAYS) - 1)]
+                    await asyncio.sleep(delay)
 
         logger.error("[INC-SYNC] Failed after %d retries: %s", self._max_retries, entity_id)
         await self._write_failed_event(entity_id, "retry_exhausted")
