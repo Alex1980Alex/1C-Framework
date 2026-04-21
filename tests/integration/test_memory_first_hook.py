@@ -181,7 +181,7 @@ class TestFormatFederatedContext:
         ]
         output = mod.format_federated_context(merged)
         lines = output.strip().split("\n")
-        data_lines = [l for l in lines if re.match(r"^\d+\.", l.strip())]
+        data_lines = [line for line in lines if re.match(r"^\d+\.", line.strip())]
         assert len(data_lines) >= 1
         assert re.match(r"^\d+\. \[\w+\|\d\.\d+\]", data_lines[0].strip())
 
