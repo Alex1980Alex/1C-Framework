@@ -141,6 +141,19 @@ class DelegationOutcomeTracker(BaseHook):
         except Exception:
             pass
 
+        # Online learning: update bandit model
+        try:
+            import importlib.util
+            bandit_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "shared" / "delegation_bandit.py")
+            spec = importlib.util.spec_from_file_location("delegation_bandit", bandit_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            bandit = mod.DelegationBandit()
+            reward = 1.0 if delegated else 0.5
+            bandit.update(outcome["context_features"], classification, reward)
+        except Exception:
+            pass
+
         return None
 
 
