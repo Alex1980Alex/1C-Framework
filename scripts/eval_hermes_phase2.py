@@ -305,7 +305,6 @@ async def run_eval(
 
     # Configure DSPy LM for candidate runs
     if backend.dspy:
-        import os
         import dspy
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
@@ -313,7 +312,7 @@ async def run_eval(
         else:
             lm = dspy.LM(model="anthropic/claude-sonnet-4-5-20250929", api_key=api_key, max_tokens=256)
             dspy.configure(lm=lm)
-            print(f"[DSPY] Configured with anthropic/claude-sonnet-4-5-20250929")
+            print("[DSPY] Configured with anthropic/claude-sonnet-4-5-20250929")
 
     # Grader eval — all entries
     print(f"[GRADER] Running on {len(entries)} entries (backend={backend.label})...")
