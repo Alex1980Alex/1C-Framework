@@ -33,6 +33,7 @@ WIKI_COLLECTION = "wiki_pages_v1"
 PDF_COLLECTION = "pdf_documents"
 TOP_K = 10
 RRF_K = 60
+EMBEDDING_DIM = 1024
 
 
 # ── Embedding ──────────────────────────────────────────────────────────────────
