@@ -25,9 +25,10 @@ def event_bus():
 
 @pytest.fixture
 def graph_store():
+    import tempfile
+
     from src.pdf_framework.config import GraphStoreSettings
     from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
-    import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         settings = GraphStoreSettings(persist_dir=tmp)
         store = NetworkXGraphStore(settings)
