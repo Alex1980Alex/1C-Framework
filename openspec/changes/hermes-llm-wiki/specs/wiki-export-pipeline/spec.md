@@ -709,3 +709,58 @@ tests/regression/
 **Coverage target:** `wiki_exporter.py` ≥85%, CLI ≥80%, regression tests обязательны для merge.
 
 **Go/no-go decision (из roadmap v1.3.4 Фазы 4):** если wiki export приводит к precision drop >5% или incremental sync не обеспечивает 80% savings → fallback на `nano-graphrag` inline (~1100 LoC).
+
+---
+
+## Incremental Requirements (Phase 3.10)
+
+### EventBus Integration
+
+`IncrementalGraphUpdater` publishes events to `EventBus` after each `update()` call:
+
+| Event Type | Trigger | Payload |
+|------------|---------|---------|
+| `graph.entity_created` | New entity added | `{entity_id, entity_name, entity_type}` |
+| `graph.entity_updated` | Entity merged | `{entity_id, entity_name, entity_type}` |
+| `graph.relation_added` | New relation added | `{source_id, target_id, affected_entity_ids}` |
+
+Source: `src/pdf_framework/graph_store/incremental.py:IncrementalGraphUpdater._publish_update_events()`
+
+### IncrementalWikiSync Subscription
+
+`IncrementalWikiSync` subscribes to `graph.*` pattern via EventBus on `start()`:
+
+- Subscribes in `start()`, unsubscribes in `stop()`
+- Background `_listen_loop()` task reads events from subscription queue
+- Converts EventBus `Event` → `GraphChangeEvent` → calls `handle_event()`
+- Event bus: `src/memory/infrastructure/event_bus.py`
+
+### Retry Backoff Policy
+
+Exponential backoff with delays `[1s, 5s, 30s]`:
+
+```python
+_BACKOFF_DELAYS = [1.0, 5.0, 30.0]
+```
+
+Max retries: 3 (configurable). After exhaustion, event goes to DLQ.
+
+### Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `wiki_sync_events_total` | counter | Total events processed |
+| `wiki_sync_failures_total` | counter | Events that exhausted retries |
+| `wiki_sync_dlq_size` | gauge | Current dead letter queue size |
+
+Source: `src/memory/infrastructure/metrics.py:MetricsCollector`
+
+### Tests
+
+Integration tests in `tests/unit/pdf_framework/indexing/test_incremental_wiki_sync.py`:
+
+- `test_single_entity_update_triggers_single_reexport` — 1 entity update → 1 wiki page
+- `test_merged_entity_publishes_updated_event` — merge → `graph.entity_updated`
+- `test_no_event_bus_means_no_publishing` — graceful no-op without bus
+- `test_backoff_delays_exponential` — verify `[1.0, 5.0, 30.0]`
+- `test_metrics_incremented_on_event` — counters update correctly
