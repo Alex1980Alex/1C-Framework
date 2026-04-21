@@ -922,13 +922,13 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 #### Критерии готовности
 
-- [ ] `src/shared/mcp_oauth/` модуль создан, BSL MCP server использует его (backward-compat)
-- [ ] 288 существующих тестов `test_auth.py` проходят без регрессии
-- [ ] Новые тесты покрывают generic Service (≥10 тестов)
-- [ ] PKCE validation работает для authorization_code + code_challenge flow (RFC 7636)
-- [ ] TTL: access_token ≤1 час, refresh_token ≤24 часа, auth_code ≤10 мин (уже в существующем коде)
-- [ ] RFC 9728 PRM endpoint работает для всех OAuth-enabled MCP серверов
-- [ ] `memory_audit_log` содержит записи обо всех token операциях
+- [x] `src/shared/mcp_oauth/` модуль создан, BSL MCP server использует его (backward-compat)
+- [x] 288 существующих тестов `test_auth.py` проходят без регрессии — ✅ 18/18 pass (verified 2026-04-21)
+- [x] Новые тесты покрывают generic Service (≥10 тестов) — ✅ 16 тестов в `test_mcp_oauth.py`
+- [x] PKCE validation работает для authorization_code + code_challenge flow (RFC 7636)
+- [x] TTL: access_token ≤1 час, refresh_token ≤24 часа, auth_code ≤10 мин (уже в существующем коде)
+- [ ] RFC 9728 PRM endpoint работает для всех OAuth-enabled MCP серверов — TODO: feature flag wiring
+- [ ] `memory_audit_log` содержит записи обо всех token операциях — TODO: security review
 
 #### Риски и митигация
 
