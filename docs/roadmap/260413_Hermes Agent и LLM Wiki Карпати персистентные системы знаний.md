@@ -927,7 +927,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | **3.10** Incremental Graph→Wiki | P1 | ✅ COMPLETE | 2026-04-21 | 6/6 задач; EventBus wiring (`graph.entity_*`/`graph.relation_added`), DLQ backoff `[1,5,30]s`, 5 новых тестов (22/22 pass) |
 | **4** PDF → Structured Wiki Pages | P2 | ✅ CORE COMPLETE | 2026-04-20 | 9/11 задач + acceptance: 6335 wiki/3166 entities, schema 100%, precision 95% (38/40), `wiki_pages_v1` 3073 points, retrieval +203% precision @10 |
 | **5** Sandbox для агентов | P3 | ❌ NOT STARTED | — | 0/8 задач; LangSmith sandbox в `.venv` транзитивно, E2B SDK не установлен |
-| **6** OAuth 2.1 Generalization | P2 | ❌ NOT STARTED | — | 0/9 задач; база Phase 12.3 (350 LoC `bsl/mcp_server/auth/oauth2.py`) готова к экстракции |
+| **6** OAuth 2.1 Generalization | P2 | ✅ CORE COMPLETE | 2026-04-21 | `src/shared/mcp_oauth/` (models+store+service, ~250 LoC), 16 новых тестов, 34/34 pass, 0 регрессий |
 
 ### Статус открытых TODO
 
