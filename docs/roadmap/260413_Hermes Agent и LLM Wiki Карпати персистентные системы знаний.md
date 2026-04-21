@@ -1012,7 +1012,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
-## Следующая фаза (2026-04-20)
+## Следующая фаза (2026-04-21)
 
 **Статус Фаз 0–4:** CORE COMPLETE (см. [tasks.md](../../openspec/changes/hermes-llm-wiki/tasks.md) сводную таблицу).
 
