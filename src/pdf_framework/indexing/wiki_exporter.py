@@ -430,6 +430,9 @@ class IncrementalWikiSync:
         if not self._running:
             return
 
+        if _metrics:
+            _metrics.counter("wiki_sync_events_total")
+
         if not self._should_sync(event):
             return
 
