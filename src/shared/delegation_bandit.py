@@ -29,7 +29,7 @@ STATE_FILE = _STATE_DIR / "delegation-bandit.pkl"
 OUTCOMES_FILE = _STATE_DIR / "delegation-outcomes.jsonl"
 
 
-def _extract_features(ctx: Dict[str, Any]) -> np.ndarray:
+def _extract_features(ctx: dict[str, object]) -> np.ndarray:
     """Convert context dict to 6-dim feature vector."""
     ext = ctx.get("file_extension", "")
     return np.array([
