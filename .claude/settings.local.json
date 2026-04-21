@@ -686,8 +686,7 @@
       "Bash(.venv/Scripts/python.exe *)",
       "Bash(\".venv/Scripts/python.exe\" -m pip install dspy-ai)",
       "Bash(PYTHONPATH=src \".venv/Scripts/python.exe\" -c \"from pdf_framework.prompts.signatures import GraderSignature, HallucinationCheckSignature, RewriterSignature; print\\('signatures OK'\\)\")",
-      "Bash(shuf -n 10)",
-      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/1cv8/8.3.27.1859/bin/1cv8.exe\" DESIGNER /S \"KOMPUTER\\\\TestDB\" /N \"a.terletskiy@sodru.com\" /P \"Alex80Alex\" /LoadConfigFromFiles \"D:\\\\1С-Framework\\\\src\\\\projects\\\\configuration\\\\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\\\\src\" /CheckConfig -ConfigLogIntegrity /Out \"D:\\\\tmp\\\\gkstcplk-2407-logs\\\\check.log\" /DisableStartupDialogs /DisableStartupMessages)"
+      "Bash(shuf -n 10)"
     ]
   },
   "enableAllProjectMcpServers": true,
