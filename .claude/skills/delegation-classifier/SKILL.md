@@ -6,8 +6,8 @@ description: >
   обучение на опыте. Триггеры: 'классифицировать задачу', 'delegation classifier',
   'что делегировать', 'оценка делегирования', 'delegation outcome', 'delegation feedback'.
   НЕ для самого процесса делегирования — используй z-ai-delegation.
-version: 1.0.0
-updated: 2026-03-20
+version: 1.1.0
+updated: 2026-04-21
 tags: [delegation, classification, learning, token-economy, feedback-loop]
 ---
 
