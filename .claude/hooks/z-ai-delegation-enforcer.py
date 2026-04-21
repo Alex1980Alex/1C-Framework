@@ -149,6 +149,19 @@ class ZAIDelegationEnforcer(BaseHook):
                 "Full protocol: Skill('z-ai-delegation')"
             )
 
+        # Bandit-based routing (when model is confident)
+        if bandit_level and bandit_level != "Never":
+            bandit_msg = f"[Z.AI DELEGATION: {bandit_level.upper()}] Bandit model suggests delegation level {bandit_level}.\n"
+            if bandit_level == "Hard":
+                bandit_msg += "Protocol: Z.AI generates draft -> Opus THOROUGH review (mandatory).\n"
+            elif bandit_level == "Medium":
+                bandit_msg += "Protocol: Z.AI generates draft -> Opus review (mandatory).\n"
+            else:
+                bandit_msg += "Protocol: Z.AI generates draft -> format check.\n"
+            bandit_msg += "Use: mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
+            bandit_msg += "Full protocol: Skill('z-ai-delegation')"
+            return HookOutput().system_message(bandit_msg)
+
         # Hard signals (single task)
         if hard_score >= 1:
             return HookOutput().system_message(
