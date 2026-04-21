@@ -491,6 +491,9 @@ class IncrementalWikiSync:
         async with self._exporter._lock:
             with open(self._failed_events_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        if _metrics:
+            dlq_count = sum(1 for _ in open(self._failed_events_path, encoding="utf-8"))
+            _metrics.gauge("wiki_sync_dlq_size", dlq_count)
 
 
 # =========================================================================
