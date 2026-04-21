@@ -126,6 +126,36 @@ class IncrementalGraphUpdater:
 
         return result
 
+    async def _publish_update_events(self, result: UpdateResult) -> None:
+        """Publish graph change events to EventBus if configured."""
+        if self._event_bus is None:
+            return
+
+        for entity in result.new_entities:
+            await self._event_bus.publish(
+                "graph.entity_created",
+                {"entity_id": entity.id, "entity_name": entity.name, "entity_type": entity.entity_type},
+                source="IncrementalGraphUpdater",
+            )
+
+        for entity in result.merged_entities:
+            await self._event_bus.publish(
+                "graph.entity_updated",
+                {"entity_id": entity.id, "entity_name": entity.name, "entity_type": entity.entity_type},
+                source="IncrementalGraphUpdater",
+            )
+
+        for relation in result.new_relations:
+            await self._event_bus.publish(
+                "graph.relation_added",
+                {
+                    "source_id": relation.source_entity_id,
+                    "target_id": relation.target_entity_id,
+                    "affected_entity_ids": [relation.source_entity_id, relation.target_entity_id],
+                },
+                source="IncrementalGraphUpdater",
+            )
+
     async def _merge_entity(self, new_entity: Entity) -> Entity | None:
         """
         Merge new entity with existing one if found.
