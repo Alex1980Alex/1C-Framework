@@ -324,6 +324,7 @@ class IncrementalGraphUpdater:
 def get_incremental_updater(
     graph_store,
     settings: GraphRAGSettings | None = None,
+    event_bus: EventBus | None = None,
 ) -> IncrementalGraphUpdater:
     """Factory: create an IncrementalGraphUpdater for the given graph store."""
-    return IncrementalGraphUpdater(graph_store=graph_store, settings=settings)
+    return IncrementalGraphUpdater(graph_store=graph_store, settings=settings, event_bus=event_bus)
