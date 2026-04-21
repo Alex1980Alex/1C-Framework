@@ -86,6 +86,34 @@ _MIN_PROMPT_LEN = 20
 
 class ZAIDelegationEnforcer(BaseHook):
 
+    def _bandit_level(self, prompt_lower: str) -> str | None:
+        """Get delegation level from bandit model (AUTONOMOUS mode only)."""
+        try:
+            import importlib.util
+            from pathlib import Path
+            bandit_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "shared" / "delegation_bandit.py")
+            spec = importlib.util.spec_from_file_location("delegation_bandit", bandit_path)
+            if not spec or not spec.loader:
+                return None
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            bandit = mod.DelegationBandit()
+            if bandit.mode != "AUTONOMOUS":
+                return None
+            ctx = {
+                "content_type": "docs" if any(kw in prompt_lower for kw in ("документ", "readme", "дорожн", "plan")) else "code",
+                "has_code": any(kw in prompt_lower for kw in ("def ", "class ", "import ", "код", "функци", "модул")),
+                "has_architecture": any(kw in prompt_lower for kw in ("архитектур", "pattern", "design")),
+                "domain": "other",
+                "estimated_lines": 50,
+            }
+            action, confidence = bandit.predict(ctx)
+            if confidence > 0.3:
+                return action
+        except Exception:
+            pass
+        return None
+
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt.strip()
         if not prompt or len(prompt) < _MIN_PROMPT_LEN:
@@ -97,6 +125,9 @@ class ZAIDelegationEnforcer(BaseHook):
         never_score = sum(1 for s in _NEVER_SIGNALS if s in prompt_lower)
         if never_score >= 1:
             return None
+
+        # Check bandit model first (AUTONOMOUS mode)
+        bandit_level = self._bandit_level(prompt_lower)
 
         # Orchestrator mode: 3+ files or batch signals
         orchestrator_score = sum(1 for s in _ORCHESTRATOR_SIGNALS if s in prompt_lower)
