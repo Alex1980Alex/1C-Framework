@@ -4,9 +4,9 @@ Extracted from src/bsl/mcp_server/auth/oauth2.py (Phase 12.3).
 Reusable across all MCP servers: BSL, pdf-vector-graph, etc.
 """
 
-from .models import AuthCodeData, AccessTokenData, RefreshTokenData
-from .store import OAuth2Store
+from .models import AccessTokenData, AuthCodeData, RefreshTokenData
 from .service import OAuth2Service
+from .store import OAuth2Store
 
 __all__ = [
     "AuthCodeData",
