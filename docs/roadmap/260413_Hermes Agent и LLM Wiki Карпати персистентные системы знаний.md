@@ -1029,12 +1029,12 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 | # | Задача | Файл | Acceptance |
 |---|--------|------|-----------|
-| 3.10.1 | Добавить метод `IncrementalGraphUpdater.on_update(callback)` (pub-sub) | `src/pdf_framework/graph_store/incremental.py` | Callback получает `GraphUpdateEvent(added, modified, deleted)` |
-| 3.10.2 | В `memory_orchestrator.__init__` подписать `IncrementalWikiSync.handle_graph_event` на `IncrementalGraphUpdater.on_update` | `src/memory/orchestrator/memory_orchestrator.py` | Wiring через EventBus (не прямой callback — тестируемо) |
-| 3.10.3 | DLQ поведение: если `handle_graph_event` падает — писать в `data/wiki_sync_dlq.jsonl`, ретраи с backoff 1s/5s/30s | `src/pdf_framework/indexing/wiki_exporter.py` | Существующий DLQ в IncrementalWikiSync расширен retry-политикой |
-| 3.10.4 | Integration test: изменить 1 entity в graph → убедиться что переэкспортируется только 1 wiki-страница (не все) | `tests/integration/test_incremental_wiki_sync.py` | Измеряется через `WikiExporter.export_count` счётчик |
-| 3.10.5 | Metrics: `wiki_sync_events_total`, `wiki_sync_failures_total`, `wiki_sync_dlq_size` в `src/shared/metrics.py` | `src/shared/metrics.py` | Prometheus-совместимые (counter/gauge) |
-| 3.10.6 | Обновить spec `openspec/changes/hermes-llm-wiki/specs/wiki-librarian/spec.md` с incremental requirements | spec.md | REQ для event subscription добавлен |
+| 3.10.1 | Добавить EventBus publishing в `IncrementalGraphUpdater` (graph.entity_created/updated, graph.relation_added) | `src/pdf_framework/graph_store/incremental.py` | `_publish_update_events()` вызывается после `update()`, publisht только если event_bus задан |
+| 3.10.2 | Подписать `IncrementalWikiSync` на `graph.*` через EventBus, background `_listen_loop` | `src/pdf_framework/indexing/wiki_exporter.py` | `_listen_loop` читает subscription queue, конвертирует Event → GraphChangeEvent |
+| 3.10.3 | DLQ retry backoff `[1s, 5s, 30s]` (вместо линейного) | `src/pdf_framework/indexing/wiki_exporter.py` | `_BACKOFF_DELAYS = [1.0, 5.0, 30.0]` |
+| 3.10.4 | Integration test: 1 entity → 1 wiki page re-export | `tests/unit/pdf_framework/indexing/test_incremental_wiki_sync.py` | 5 тестов, все PASS, 0 регрессий |
+| 3.10.5 | Metrics: `wiki_sync_events_total`, `wiki_sync_failures_total`, `wiki_sync_dlq_size` | `src/pdf_framework/indexing/wiki_exporter.py` | MetricsCollector counter/gauge, fallback import |
+| 3.10.6 | Обновить spec с incremental requirements | `openspec/changes/hermes-llm-wiki/specs/wiki-export-pipeline/spec.md` | Секция "Incremental Requirements (Phase 3.10)" добавлена |
 
 **Acceptance criteria:**
 - [x] Изменение 1 PDF страницы → переэкспорт ≤3 wiki-страниц (affected only) — verified by test_single_entity_update_triggers_single_reexport
