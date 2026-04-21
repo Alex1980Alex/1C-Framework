@@ -1150,29 +1150,22 @@ Week 2: TODO-3 (Phase 3.10 integration) ─ 1-2 дня ┘ требует TODO-2
 
 ### Рекомендация: TODO-1 full runs > Phase 5
 
-| Критерий | Фаза 5 (Sandbox) | Фаза 6 (OAuth 2.1 Generalization) |
-|----------|------------------|-----------------------------------|
-| Приоритет по roadmap | P3 | **P2** |
-| Существующая база | LangSmith sandbox (транзитивная) | `src/bsl/mcp_server/auth/oauth2.py` (350 LoC, Phase 12.3) |
-| Новый код | ~200 LoC (backend wrapper) | ~400 LoC (extraction + generic Service) |
-| Блокирует другие фазы | Нет | Нет |
-| Риск регрессии | Низкий (новый модуль) | Средний (288 существующих тестов не должны сломаться) |
-| Ценность сейчас | Nice-to-have для research-скиллов | Разблокирует OAuth для `pdf-vector-graph` MCP server |
+| Критерий | TODO-1 (RAGAS eval) | Фаза 5 (Sandbox) |
+|----------|---------------------|------------------|
+| Приоритет | P1 (долг Phase 2) | P3 |
+| Трудоёмкость | ~0.5 дня (runs only) | ~3-4 дня |
+| Инфраструктура | ✅ Готова (eval script + 50 queries + dspy) | LangSmith sandbox (транзитивная) |
+| Стоимость | ~$2-5 LLM calls | E2B API key + setup |
+| Ценность | Формальное доказательство DSPy migration safety | Nice-to-have для research-скиллов |
 
-**Выбор:** Фаза 6 (OAuth 2.1 Generalization) — P2 приоритет, выше business value (reusable auth infrastructure), параллельно можно разогнать Phase 2.1 eval с установленным DSPy.
+**Выбор:** TODO-1 (RAGAS eval full runs) — закрывает последний долг Phase 2, дёшево и быстро. Phase 5 отложен до появления спроса на sandbox.
 
-**План Фазы 6 (ориентировочно ~3-4 дня):**
-1. Аудит `src/bsl/mcp_server/auth/oauth2.py` → `docs/wiki/auth/oauth2-service.md`
-2. Экстракция `OAuth2Service` → `src/shared/mcp_oauth/service.py`
-3. `OAuth2Store` с pluggable backends (in-memory, SQLite, Redis)
-4. Backward-compat wrapper в `src/bsl/mcp_server/auth/oauth2.py`
-5. Подключение к `pdf-vector-graph` MCP server (feature flag `MCP_OAUTH_ENABLED`)
-6. Тесты: ≥10 новых + 288 существующих без регрессии
-7. Security review через `memory_audit_log`
-
-**Альтернативно (параллельно):**
-- Phase 2.1 eval-benchmark теперь разблокирован (`dspy-ai==3.1.3` установлен 2026-04-20) — можно запустить RAGAS сравнение grader/rewriter/hallucination до/после DSPy
-- Phase 5 Sandbox можно начать в параллель (P3, не блокирует Фазу 6)
+**План TODO-1:**
+1. `python scripts/eval_hermes_phase2.py --baseline langchain` (~75 LLM calls)
+2. `python scripts/eval_hermes_phase2.py --candidate dspy` (~75 LLM calls)
+3. `python scripts/eval_hermes_phase2.py --report` → `data/eval/hermes/report.md`
+4. Создать ADR-008 с вердиктом PASS/ROLLBACK
+5. Опционально: smoke-gate в `.pre-commit-config.yaml`
 
 ### Запуск
 
