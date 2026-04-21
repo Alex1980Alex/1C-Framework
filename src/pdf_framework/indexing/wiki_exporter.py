@@ -392,6 +392,8 @@ class ForwardSyncService:
 class IncrementalWikiSync:
     """Subscribes to IncrementalGraphUpdater events for incremental wiki sync."""
 
+    _BACKOFF_DELAYS = [1.0, 5.0, 30.0]
+
     def __init__(
         self,
         forward_sync: ForwardSyncService,
