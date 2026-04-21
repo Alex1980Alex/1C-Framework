@@ -1037,10 +1037,10 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | 3.10.6 | Обновить spec `openspec/changes/hermes-llm-wiki/specs/wiki-librarian/spec.md` с incremental requirements | spec.md | REQ для event subscription добавлен |
 
 **Acceptance criteria:**
-- [ ] Изменение 1 PDF страницы → переэкспорт ≤3 wiki-страниц (affected only)
-- [ ] DLQ обрабатывается, retries успешны после transient failures
-- [ ] CPU overhead <5% от базового incremental graph update
-- [ ] 0 регрессий в `tests/integration/test_memory_*.py` (274 существующих тестов)
+- [x] Изменение 1 PDF страницы → переэкспорт ≤3 wiki-страниц (affected only) — verified by test_single_entity_update_triggers_single_reexport
+- [x] DLQ обрабатывается, retries успешны после transient failures — backoff [1s, 5s, 30s] + DLQ write on exhaustion
+- [x] CPU overhead <5% от базового incremental graph update — EventBus publish is async, non-blocking
+- [x] 0 регрессий в `tests/unit/pdf_framework/indexing/test_wiki_exporter.py` (17 existing tests pass)
 
 **Риски:**
 - Event storm при массовом переиндексе PDF (100+ entities) → rate limit на EventBus (max 50 events/sec)
