@@ -914,7 +914,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ## Промежуточные итоги выполнения дорожной карты (2026-04-21)
 
-**Сводный статус:** 5/7 фаз завершены (Phase 0-4 + Phase 3.10), 2 фазы не начаты (Phase 5, Phase 6). TODO-2 и TODO-3 закрыты, TODO-1 (Phase 2.1 RAGAS-eval) остаётся открытым.
+**Сводный статус:** 6/7 фаз завершены (Phase 0-4, Phase 3.10, Phase 6), 1 фаза не начата (Phase 5). TODO-2 и TODO-3 закрыты, TODO-1 (Phase 2.1 RAGAS-eval) инфраструктура готова, ожидаются full runs.
 
 ### Статус по фазам
 
