@@ -20,10 +20,17 @@ from src.pdf_framework.schemas.entities import Entity
 def _make_updater(graph_store, event_bus=None):
     """Create IncrementalGraphUpdater without graspologic dependency."""
     from unittest.mock import MagicMock
+
+    from src.pdf_framework.config import GraphRAGSettings
+    settings = GraphRAGSettings(
+        incremental_updates_enabled=False,
+        community_detection_enabled=False,
+    )
     return IncrementalGraphUpdater(
         graph_store=graph_store,
         community_detector=MagicMock(),
         community_summarizer=MagicMock(),
+        settings=settings,
         event_bus=event_bus,
     )
 
