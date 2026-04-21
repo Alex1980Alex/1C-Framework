@@ -128,7 +128,9 @@ PreToolUse:Write fires → content > 15 lines?
 ### Iteration 3: Online Learning — ПЕРЕРАБОТАНА
 
 **Было:** batch analysis скриптом + ручные recommendations.
-**Стало:** Contextual Bandit (online learning) на библиотеке `contextualbandits`.
+**Стало:** Contextual Bandit (online learning) — pure numpy LinUCB (contextualbandits не собирается на Windows).
+
+**Статус:** ✅ DONE (2026-04-21). 544 outcomes обучены, AUTONOMOUS режим. Online update в outcome-tracker, AUTONOMOUS routing в enforcer. CLI dashboard.
 
 **Цель:** Bandit автоматически корректирует routing из каждого outcome.
 
