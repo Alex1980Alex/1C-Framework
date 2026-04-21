@@ -1,8 +1,8 @@
 # ROADMAP: Миграция Unified Memory System
 
-**Дата:** 2026-04-03 (обновлено 2026-04-04 — P4 DONE, P5 PLANNED)
+**Дата:** 2026-04-03 (обновлено 2026-04-21 — P5 DONE: hook federated recall + CLI scripts + 33 tests)
 **Проект:** Перенос компонентов Unified Memory из `D:\1C-Enterprise_Framework` в `D:\1С-Framework\src\memory\`
-**Статус:** P0-P4 ЗАВЕРШЕНО, P5 TODO — Session Memory Bridge (auto-save + federated recall)
+**Статус:** P0-P5 ЗАВЕРШЕНО — Session Memory Bridge (auto-save + 4-layer federated recall)
 
 ---
 
