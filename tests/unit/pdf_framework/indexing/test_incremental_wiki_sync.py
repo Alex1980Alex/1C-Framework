@@ -68,7 +68,7 @@ class TestEventBusIntegration:
         inc_sync = IncrementalWikiSync(forward_sync, exporter, event_bus=event_bus)
         await inc_sync.start()
 
-        updater = IncrementalGraphUpdater(graph_store, event_bus=event_bus)
+        updater = _make_updater(graph_store, event_bus=event_bus)
 
         entity = Entity(
             id="test-e1",
@@ -103,7 +103,7 @@ class TestEventBusIntegration:
 
         sub = await event_bus.subscribe("graph.*")
 
-        updater = IncrementalGraphUpdater(graph_store, event_bus=event_bus)
+        updater = _make_updater(graph_store, event_bus=event_bus)
 
         duplicate = Entity(id="e1-dup", name="Existing", entity_type="CONCEPT", confidence=0.9)
         result = await updater.update([duplicate], [])
@@ -151,7 +151,7 @@ class TestEventBusIntegration:
         inc_sync = IncrementalWikiSync(forward_sync, exporter, event_bus=event_bus)
         await inc_sync.start()
 
-        updater = IncrementalGraphUpdater(graph_store, event_bus=event_bus)
+        updater = _make_updater(graph_store, event_bus=event_bus)
 
         entity = Entity(id="metrics-e1", name="MetricsEntity", entity_type="CONCEPT", confidence=0.9)
         await updater.update([entity], [])
