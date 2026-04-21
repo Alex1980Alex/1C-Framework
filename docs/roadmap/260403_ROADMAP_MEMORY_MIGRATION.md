@@ -762,31 +762,37 @@ results = client.query_points(
 | Formatting | 100ms | Truncate |
 | Reserve | 300ms | — |
 
-**Чеклист P5.2:**
+**Чеклист P5.2:** ✅ DONE (2026-04-21)
 
-- [ ] Обновить `memory-first-hook.py`
-  - [ ] Layer 1: SQLite FTS query (direct connect, no MCP)
-  - [ ] Layer 2: Qdrant query (HTTP, optional — skip если timeout/unavailable)
-  - [ ] Layer 3: .md files (current implementation, as fallback)
-  - [ ] RRF merge с source weights (0.4/0.35/0.25)
-  - [ ] Source attribution в systemMessage: `[SQLite]`, `[Qdrant]`, `[.md]`
-  - [ ] Per-layer timeout (200/800/500ms)
-  - [ ] Graceful degradation: каждый layer независим
-- [ ] Embedding для Qdrant query:
-  - [ ] Вариант A: pre-computed embedding cache (SQLite таблица query→vector)
-  - [ ] Вариант B: lightweight local model (sentence-transformers, ~100ms)
-  - [ ] Вариант C: skip Qdrant если нет embedding — только SQLite + .md
-- [ ] Обновить формат systemMessage:
-  - [ ] Source attribution: откуда каждый результат
-  - [ ] Confidence: нормализованный score
-  - [ ] Recency: когда записано
-- [ ] Тесты (12+):
-  - [ ] SQLite FTS query (с данными, пустая БД, corrupted)
-  - [ ] Qdrant query (доступен, timeout, unavailable)
-  - [ ] .md fallback (как сейчас)
-  - [ ] RRF merge (все 3 источника, 2 из 3, 1 из 3)
-  - [ ] Timeout enforcement
-  - [ ] End-to-end integration
+- [x] Обновить `memory-first-hook.py` — 4-layer (wiki добавлен поверх плана)
+  - [x] Layer 1: SQLite direct connect (no MCP), top-200 by importance + token overlap + tag boost
+  - [x] Layer 2: Qdrant semantic через Ollama nomic-embed-text (768d), 3 коллекции (skill_library, experience_embeddings, conversation_memory), fallback на token overlap на `learned_patterns`
+  - [x] Layer 3: .md files (existing implementation, weighted overlap)
+  - [x] Layer 4 (поверх плана): Wiki drafts — `docs/wiki/drafts/*.md`
+  - [x] RRF merge с source weights: `{sqlite: 0.30, qdrant: 0.35, md: 0.15, wiki: 0.20}` (перераспределены из-за 4-го слоя)
+  - [x] Source attribution: `[SQLite|0.xxx]`, `[Qdrant|...]`, `[.md|...]`, `[Wiki|...]`
+  - [x] Per-layer timeout: 200/3500/500/200ms (Qdrant расширен под Ollama embed)
+  - [x] Graceful degradation: каждый layer в try/except, возвращает `[]` при ошибке
+  - [x] Env toggle: `MEMORY_HOOK_NO_SEMANTIC=1` отключает Layer 2
+  - [x] Cooldown 30s, dedup по sha1 content hash
+- [x] Embedding для Qdrant query:
+  - [x] Вариант B реализован: Ollama `nomic-embed-text` (768d, локальная модель)
+  - [x] Вариант C как fallback: token overlap на `learned_patterns` если Ollama недоступен
+- [x] Формат systemMessage:
+  - [x] Source attribution (через `SOURCE_LABELS`)
+  - [x] Confidence (`fused_score`)
+  - [ ] Recency: не реализовано (minor)
+- [x] Тесты **19/19 PASS** (`tests/integration/test_memory_first_hook.py`):
+  - [x] TestShouldSkip (4) — короткий/slash/single-word/normal
+  - [x] TestStemToken (3) — русский/английский/короткий
+  - [x] TestTokenize (1) — смесь ru+en
+  - [x] TestParseFrontmatter (2) — valid/plain
+  - [x] TestSearchSqlite (3) — match/no-match/missing-db
+  - [x] TestSearchMd (1) — body match
+  - [x] TestSearchQdrantDisabled (1) — env toggle
+  - [x] TestRrfMerge (1) — sort+dedup по content hash
+  - [x] TestFormatFederatedContext (2) — формат/regex строк
+  - [x] TestHookIntegrationSubprocess (1) — end-to-end stdin→stdout→exit 0
 
 #### P5.3: Deferred Qdrant Indexing (Background) — 4-6ч
 
@@ -803,39 +809,57 @@ UserPromptSubmit hook (memory-first-hook.py):
   4. Обновить flag: indexed_in_qdrant=1
 ```
 
-**Чеклист P5.3:**
+**Чеклист P5.3:** ✅ DONE (2026-04-21)
 
-- [ ] Добавить колонку `indexed_in_qdrant INTEGER DEFAULT 0` в SQLite
-- [ ] Background indexer в memory-first-hook (threading, non-blocking)
-  - [ ] Batch: до 10 записей за раз
-  - [ ] Embedding через E5 local model или Qdrant FastEmbed
-  - [ ] Upsert в `learned_patterns` коллекцию
-  - [ ] Update flag после успешного upsert
-- [ ] Тесты (4+)
+> Отличие от плана: реализовано как CLI-скрипт [scripts/deferred_qdrant_indexing.py](../../scripts/deferred_qdrant_indexing.py) вместо background task внутри хука — проще, надёжнее, запускается по расписанию/вручную. Функционально эквивалентно.
+
+- [x] Колонка `indexed_in_qdrant INTEGER DEFAULT 0` (`ensure_schema`, ALTER TABLE)
+- [x] CLI indexer `scripts/deferred_qdrant_indexing.py` с аргументами `--batch`, `--max-batches`, `--dry-run`, `-v`
+  - [x] Batch: до 10 записей за раз (configurable)
+  - [x] Embedding через `intfloat/multilingual-e5-large` (1024d) с `passage:` prefix
+  - [x] Upsert в `learned_patterns` с детерминированным `uuid5(NAMESPACE_URL, f"session:{id}")`
+  - [x] Mark `indexed_in_qdrant=1` после успешного upsert
+- [x] Тесты **6/6 PASS** (`tests/integration/test_deferred_qdrant_indexing.py`):
+  - [x] ensure_schema добавляет колонку
+  - [x] ensure_schema идемпотентен
+  - [x] fetch_unindexed возвращает все изначально, по importance DESC
+  - [x] mark_indexed флагом и fetch пропускает помеченные
+  - [x] embed_texts вызывает model.encode с `passage:` префиксом и нужными kwargs
+  - [x] upsert_to_qdrant строит PointStruct с правильным payload и детерминированным uuid5
 
 #### P5.4: Migration Script (.md → DB) — 4-6ч
 
 Одноразовый скрипт: импорт существующих `memory/*.md` файлов в SQLite + Qdrant.
 
-**Чеклист P5.4:**
+**Чеклист P5.4:** ✅ DONE (2026-04-21)
 
-- [ ] Скрипт `scripts/migrate_memory_md_to_db.py`
-  - [ ] Парсинг frontmatter (name, description, type)
-  - [ ] Import в SQLite (category=type, importance по type: feedback→0.8, user→0.7, project→0.6)
-  - [ ] Embedding + Qdrant upsert
-  - [ ] Dry-run mode
-  - [ ] Idempotent (skip already imported, by content hash)
-- [ ] Тесты (4+)
+> Отличие от плана: Qdrant upsert НЕ включён в этот скрипт — делегирован на `deferred_qdrant_indexing.py` (P5.3). Pipeline: `migrate_memory_md_to_db.py` → SQLite → `deferred_qdrant_indexing.py` → Qdrant. Разделение ответственностей.
+
+- [x] Скрипт [scripts/migrate_memory_md_to_db.py](../../scripts/migrate_memory_md_to_db.py)
+  - [x] Парсинг frontmatter (name, description, type)
+  - [x] Import в SQLite (category=fm_type, importance по type: feedback→0.8, user→0.7, project→0.6, reference→0.5, default→0.55)
+  - [x] Auto-tags (тип + части имени файла + body keywords: bsl/1c, qdrant, hook→hooks, skill→skills, memory), cap 10
+  - [x] Dry-run mode
+  - [x] Идемпотентность по SHA-256 content hash (metadata JSON → `already_migrated(conn, chash)`)
+  - [ ] Embedding + Qdrant upsert — **намеренно не реализовано**, вместо этого следующий шаг `python scripts/deferred_qdrant_indexing.py`
+- [x] Тесты **8/8 PASS** (`tests/integration/test_migrate_memory_md_to_db.py`):
+  - [x] parse_frontmatter: valid / plain text
+  - [x] compute_importance: по типу + case-insensitive + default
+  - [x] content_hash: стабилен / разный для разных / игнорирует whitespace
+  - [x] extract_tags: type + filename parts + body keywords
+  - [x] extract_tags: cap 10
+  - [x] insert_row dry-run: не пишет в БД
+  - [x] insert_row + already_migrated: запись + детект по hash
 
 #### Суммарная оценка P5
 
-| Подфаза | Часы | Тесты | Обязательность |
-|---------|------|-------|----------------|
-| P5.1 Session Context Extractor | 10-14 | 10+ | **Обязательно** |
-| P5.2 Federated Recall | 12-16 | 12+ | **Обязательно** |
-| P5.3 Deferred Qdrant Indexing | 4-6 | 4+ | Рекомендуемо |
-| P5.4 Migration .md → DB | 4-6 | 4+ | Опционально |
-| **Итого P5** | **30-42** | **30+** | — |
+| Подфаза | Часы | Тесты (план / факт) | Статус |
+|---------|------|---------------------|--------|
+| P5.1 Session Context Extractor | 10-14 | 10+ / **28 PASS** | ✅ DONE |
+| P5.2 Federated Recall | 12-16 | 12+ / **19 PASS** | ✅ DONE |
+| P5.3 Deferred Qdrant Indexing | 4-6 | 4+ / **6 PASS** | ✅ DONE |
+| P5.4 Migration .md → DB | 4-6 | 4+ / **8 PASS** | ✅ DONE |
+| **Итого P5** | **30-42** | **30+ / 61 PASS** | ✅ DONE |
 
 #### Риски P5
 
@@ -854,11 +878,11 @@ UserPromptSubmit hook (memory-first-hook.py):
 ```
 P0 (Orchestrator Core)          ✅ DONE
  ├── P0.5 (Memory-First Hook)   ✅ DONE (local .md + Russian stemming)
- │    └── P5 (Session Memory Bridge)  ⬜ TODO (auto-save + federated recall)
- │         ├── P5.1 Session Context Extractor (Stop hook → SQLite/JSONL)
- │         ├── P5.2 Federated Recall (SQLite + Qdrant + .md → RRF merge)
- │         ├── P5.3 Deferred Qdrant Indexing (background embed + upsert)
- │         └── P5.4 Migration .md → DB (one-time script)
+ │    └── P5 (Session Memory Bridge)  ✅ DONE (auto-save + 4-layer federated recall)
+ │         ├── P5.1 Session Context Extractor — Stop hook → SQLite (28 tests)
+ │         ├── P5.2 Federated Recall — 4-layer (SQLite + Qdrant/Ollama + .md + wiki) RRF (19 tests)
+ │         ├── P5.3 Deferred Qdrant Indexing — CLI scripts/deferred_qdrant_indexing.py (6 tests)
+ │         └── P5.4 Migration .md → DB — scripts/migrate_memory_md_to_db.py (8 tests)
  ├── P1 (Infrastructure + Propagation)  ✅ DONE
  │    └── P2 (Search + Services)  ✅ DONE (70 tests, 138 total)
  │         ├── P3 (Realtime + Adapters)  ✅ DONE (61 tests, 199 total)
