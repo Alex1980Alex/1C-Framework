@@ -1014,12 +1014,13 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ## Следующая фаза (2026-04-21)
 
-**Статус Фаз 0–4:** CORE COMPLETE (см. [tasks.md](../../openspec/changes/hermes-llm-wiki/tasks.md) сводную таблицу).
+**Статус Фаз 0–4, 6:** CORE COMPLETE (см. [tasks.md](../../openspec/changes/hermes-llm-wiki/tasks.md) сводную таблицу).
 
-**Открытые TODO не блокирующие новые фазы:**
-- Phase 2.1 eval-benchmark (RAGAS) — теперь возможен после установки `dspy-ai==3.1.3` (2026-04-20)
-- Phase 4 audit + eval regression — требуют реального прогона pipeline на 3 тестовых PDF с `wiki_pages_v1`
-- Phase 3 incremental graph integration — разблокируется после первого Phase 4 production-прогона
+**Завершённые фазы:** 0 (Memory Alignment), 1 (Obsidian Vault), 2 (DSPy Deepening), 3 (Auto-Librarian), 3.10 (Incremental Graph→Wiki), 4 (PDF→Wiki), 6 (OAuth Generalization).
+
+**Открытые TODO (не блокирующие):**
+- Phase 2.1 eval-benchmark (RAGAS) — инфраструктура готова, осталось baseline+candidate full runs
+- Phase 6 remaining — security review, docs, feature flag wiring
 
 ### Детальная дорожная карта открытых TODO
 
