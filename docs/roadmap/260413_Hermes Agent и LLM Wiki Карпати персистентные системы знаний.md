@@ -1032,8 +1032,11 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 - `dspy-ai==3.1.3` установлен в `.venv` (2026-04-20)
 - Signatures готовы: `src/pdf_framework/prompts/signatures.py`
 - Fallback chain активен: `cheap_llm → DSPy → LangChain`
+- **Eval infrastructure:** `scripts/eval_hermes_phase2.py` (436 LoC) — monkeypatch backend forcing, bootstrap CI, PASS/ROLLBACK verdict
+- **Eval dataset:** `data/eval/hermes/phase2_eval_set.jsonl` (50 queries: 20 grounded, 15 partial, 15 hallucination-prone)
+- **Smoke tests:** grader 100%, hallucination 100% (verified 2026-04-21)
 
-**Трудоёмкость:** ~2 дня. **LoC:** ~350 (eval-набор + скрипт + отчёт).
+**Трудоёмкость:** ~0.5 дня (только full runs + report). **LoC:** ~0 нового кода.
 
 **Задачи:**
 
