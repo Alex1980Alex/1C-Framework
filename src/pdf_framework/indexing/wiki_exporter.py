@@ -463,6 +463,8 @@ class IncrementalWikiSync:
                     await asyncio.sleep(delay)
 
         logger.error("[INC-SYNC] Failed after %d retries: %s", self._max_retries, entity_id)
+        if _metrics:
+            _metrics.counter("wiki_sync_failures_total")
         await self._write_failed_event(entity_id, "retry_exhausted")
 
     async def _delete_wiki_page(self, entity_id: str) -> None:
