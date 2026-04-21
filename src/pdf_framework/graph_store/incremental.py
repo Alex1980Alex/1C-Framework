@@ -122,6 +122,8 @@ class IncrementalGraphUpdater:
             f"{len(result.affected_communities)} communities affected"
         )
 
+        await self._publish_update_events(result)
+
         return result
 
     async def _merge_entity(self, new_entity: Entity) -> Entity | None:
