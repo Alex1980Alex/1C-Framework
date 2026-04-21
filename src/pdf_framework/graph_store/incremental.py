@@ -45,6 +45,7 @@ class IncrementalGraphUpdater:
         community_detector: CommunityDetector | None = None,
         community_summarizer: CommunitySummarizer | None = None,
         settings: GraphRAGSettings | None = None,
+        event_bus: EventBus | None = None,
     ):
         """
         Initialize incremental updater.
@@ -54,11 +55,13 @@ class IncrementalGraphUpdater:
             community_detector: For community detection
             community_summarizer: For regenerating summaries
             settings: GraphRAG configuration
+            event_bus: Optional EventBus for publishing graph change events
         """
         self._graph_store = graph_store
         self._detector = community_detector or CommunityDetector(settings)
         self._summarizer = community_summarizer or CommunitySummarizer(settings=settings)
         self._settings = settings or GraphRAGSettings()
+        self._event_bus = event_bus
 
     async def update(
         self,
