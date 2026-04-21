@@ -978,7 +978,7 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ### Что осталось
 
-1. **TODO-1 (Phase 2.1 RAGAS-eval)** — инфраструктура готова (`eval_hermes_phase2.py` 436 LoC, 50 queries JSONL, `dspy-ai==3.1.3`). Осталось: запустить baseline (`--baseline langchain`) + candidate (`--candidate dspy`) на full 50 queries (~$2-5 LLM calls), сгенерировать `report.md`, создать ADR-008. Трудоёмкость ~0.5 дня
+1. **TODO-1 (Phase 2.1 RAGAS-eval)** — ✅ EVAL DONE (2026-04-21). Baseline (LangChain) + candidate (DSPy) runs завершены на 50 queries. Вердикт **PASS** — grader accuracy 92%→94% (+2%), hallucination 100%→96.7% (-3.3%, within 5% gate). Bug-fix: добавлена `dspy.configure(lm=...)` для корректной работы DSPy. Report: `data/eval/hermes/report.md`. Осталось: ADR-008, CI smoke-gate
 2. **Phase 6 remaining** — security review через `memory_audit_log`, docs/wiki/auth/ страницы, feature flag для pdf-vector-graph MCP интеграция. Core extraction завершена
 3. **Phase 5 (Sandbox)** — P3, не блокирует ничего. Можно запустить параллельно
 
