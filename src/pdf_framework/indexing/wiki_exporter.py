@@ -407,23 +407,61 @@ class IncrementalWikiSync:
         max_retries: int = 3,
         retry_delay_s: float = 1.0,
         failed_events_path: Path | None = None,
+        event_bus: Any | None = None,
     ) -> None:
         self._forward_sync = forward_sync
         self._exporter = exporter
         self._max_retries = max_retries
         self._retry_delay_s = retry_delay_s
         self._failed_events_path = failed_events_path or Path("docs/wiki/_failed_events.jsonl")
+        self._event_bus = event_bus
+        self._subscription: Any | None = None
+        self._listen_task: asyncio.Task | None = None
         self._running = False
 
     async def start(self) -> None:
         """Start listening for graph events."""
         self._running = True
+        if self._event_bus:
+            self._subscription = await self._event_bus.subscribe("graph.*")
+            self._listen_task = asyncio.create_task(self._listen_loop())
+            logger.info("[INC-SYNC] Subscribed to graph.* events via EventBus")
         logger.info("[INC-SYNC] Started incremental wiki sync")
 
     async def stop(self) -> None:
         """Stop listening."""
         self._running = False
+        if self._listen_task:
+            self._listen_task.cancel()
+            try:
+                await self._listen_task
+            except asyncio.CancelledError:
+                pass
+            self._listen_task = None
+        self._subscription = None
         logger.info("[INC-SYNC] Stopped incremental wiki sync")
+
+    async def _listen_loop(self) -> None:
+        """Background task: read events from EventBus subscription."""
+        if not self._subscription:
+            return
+        while self._running:
+            try:
+                event = await asyncio.wait_for(self._subscription.queue.get(), timeout=5.0)
+            except asyncio.TimeoutError:
+                continue
+            except Exception:
+                if not self._running:
+                    break
+                raise
+            graph_event = GraphChangeEvent(
+                event_type=GraphEventType(event.event_type.split(".", 1)[-1]),
+                entity_id=event.data.get("entity_id", ""),
+                timestamp=event.timestamp,
+                affected_entity_ids=event.data.get("affected_entity_ids", []),
+                metadata=event.data,
+            )
+            await self.handle_event(graph_event)
 
     async def handle_event(self, event: GraphChangeEvent) -> None:
         """Handle a graph change event."""
