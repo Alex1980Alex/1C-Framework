@@ -912,6 +912,57 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 
 ---
 
+## Промежуточные итоги выполнения дорожной карты (2026-04-21)
+
+**Сводный статус:** 5/7 фаз завершены (Phase 0-4 + Phase 3.10), 2 фазы не начаты (Phase 5, Phase 6). TODO-2 и TODO-3 закрыты, TODO-1 (Phase 2.1 RAGAS-eval) остаётся открытым.
+
+### Статус по фазам
+
+| Фаза | Приоритет | Статус | Дата | Артефакт верификации |
+|------|-----------|--------|------|----------------------|
+| **0** Memory Layer Alignment | P0 | ✅ COMPLETE | 2026-04-19 | 47 новых + 227 существующих тестов pass; UnifiedID/LinkRegistry/MemoryCube/Router расширены |
+| **1** Obsidian Vault Integration | P0 | ✅ COMPLETE | 2026-04-20 | 15/16 задач (1 отклонена); REST API live, 28 patterns split, 8 arch-docs с wiki-links |
+| **2** DSPy Deepening + Wiki Schema | P1 | ✅ COMPLETE | 2026-04-20 | 8/9 задач; 3 RAG-узла мигрированы на DSPy Signatures; eval-benchmark вынесен в Phase 2.1 |
+| **3** Auto-Librarian | P1 | ✅ COMPLETE | 2026-04-20 | 9/10 задач (Phase 3.10 закрыта 2026-04-21); wiki_promoter (145 LoC), 15 тестов pass |
+| **3.10** Incremental Graph→Wiki | P1 | ✅ COMPLETE | 2026-04-21 | 6/6 задач; EventBus wiring (`graph.entity_*`/`graph.relation_added`), DLQ backoff `[1,5,30]s`, 5 новых тестов (22/22 pass) |
+| **4** PDF → Structured Wiki Pages | P2 | ✅ CORE COMPLETE | 2026-04-20 | 9/11 задач + acceptance: 6335 wiki/3166 entities, schema 100%, precision 95% (38/40), `wiki_pages_v1` 3073 points, retrieval +203% precision @10 |
+| **5** Sandbox для агентов | P3 | ❌ NOT STARTED | — | 0/8 задач; LangSmith sandbox в `.venv` транзитивно, E2B SDK не установлен |
+| **6** OAuth 2.1 Generalization | P2 | ❌ NOT STARTED | — | 0/9 задач; база Phase 12.3 (350 LoC `bsl/mcp_server/auth/oauth2.py`) готова к экстракции |
+
+### Статус открытых TODO
+
+| TODO | Описание | Статус | Подтверждение |
+|------|----------|--------|----------------|
+| **TODO-1** Phase 2.1 RAGAS-eval | Формальный benchmark grader/rewriter/hallucination до/после DSPy | ❌ OPEN | `data/eval/hermes/baseline.json`, `candidate.json`, `report.md` отсутствуют; ADR-008 не создан |
+| **TODO-2** Phase 4 audit + eval | End-to-end pipeline на 3 тестовых PDF | ✅ DONE | 5/5 acceptance criteria выполнены: ≥3 wiki/PDF, schema ≥95%, precision ≥80%, `wiki_pages_v1` populated, retrieval +203% (см. строки 1004-1008) |
+| **TODO-3** Phase 3.10 | EventBus integration `IncrementalGraphUpdater` ↔ `WikiExporter` | ✅ DONE (2026-04-21) | 6/6 задач + 4/4 acceptance; verified `incremental.py:125-150`, `wiki_exporter.py:401,426,444`, `spec.md:715` |
+
+### Аккумулированные артефакты (Phase 0-4 + 3.10)
+
+- **Код:** ~2200 LoC новой реализации в `src/memory/orchestrator/`, `src/memory/librarian/`, `src/pdf_framework/prompts/`, `src/pdf_framework/indexing/`, `src/pdf_framework/graph_store/incremental.py`
+- **Тесты:** ~340 unit/integration (47 Phase 0 + 88 memory existing + 15 wiki_promoter + 22 wiki_exporter+sync + ≥150 prior pass-through), 0 регрессий
+- **Документация:** `docs/wiki/SCHEMA.md`, `docs/wiki/log.md`, 28 pattern-страниц, 3 wiki-template (entity/concept/procedure), spec `wiki-export-pipeline/spec.md` (711 строк), 6 OpenSpec изменений в `openspec/changes/hermes-llm-wiki/`
+- **Skills:** `obsidian-vault`, `wiki-pipeline` (новые), `memory-unified` (расширен)
+- **Hooks:** `memory-first-hook` Layer 4, `docs-change-tracker` wiki-валидация, `docs-change-enforcer` draft reminder, `session-memory-save` log.md
+- **Migrations:** SQLite link_registry v1→v2 (10 типов связей)
+- **Бэкапы:** `data/link_registry.db.backup-pre-hermes`, `data/baseline_memory_pre_hermes.log`
+
+### Что осталось
+
+1. **TODO-1 (Phase 2.1 RAGAS-eval)** — единственный открытый TODO, не блокирует другие фазы. Трудоёмкость ~2 дня. Цель — формально доказать отсутствие регрессии после DSPy-миграции; rollback при regression >5%
+2. **Phase 6 (OAuth 2.1 Generalization)** — рекомендована как следующая (P2, выше business-value, инфраструктура готова на 70%). Трудоёмкость ~3-4 дня
+3. **Phase 5 (Sandbox)** — P3, не блокирует ничего. Можно запустить параллельно Phase 6
+
+### Рекомендация по следующему шагу
+
+Параллельный запуск:
+- **Основной поток:** Phase 6 (OAuth Generalization) — P2, разблокирует OAuth для `pdf-vector-graph` MCP server
+- **Фоновый поток:** TODO-1 (RAGAS-eval) — закрывает последний долг Phase 2, дёшево (~$2-5 LLM calls)
+
+Phase 5 можно начинать только если есть активный спрос на изолированное исполнение research-скриптов; иначе оставить deferred.
+
+---
+
 ## Метрики успеха
 
 | Метрика | Базовое значение | Целевое значение | Метод измерения |
