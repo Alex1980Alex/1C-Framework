@@ -127,7 +127,7 @@ class TestEventBusIntegration:
     @pytest.mark.asyncio
     async def test_no_event_bus_means_no_publishing(self, graph_store):
         """Without EventBus, update() should work but publish nothing."""
-        updater = IncrementalGraphUpdater(graph_store, event_bus=None)
+        updater = _make_updater(graph_store, event_bus=None)
 
         entity = Entity(id="e2", name="NoBus", entity_type="CONCEPT", confidence=0.8)
         result = await updater.update([entity], [])
