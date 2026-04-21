@@ -166,7 +166,7 @@ class OAuth2Service:
             logger.warning("Недействительный или истёкший authorization code")
             return None
         if code_data.redirect_uri != redirect_uri:
-            logger.warning(f"Несовпадение redirect_uri")
+            logger.warning("Несовпадение redirect_uri")
             return None
         if not self.validate_pkce(code_verifier, code_data.code_challenge):
             logger.warning("PKCE валидация не прошла")
