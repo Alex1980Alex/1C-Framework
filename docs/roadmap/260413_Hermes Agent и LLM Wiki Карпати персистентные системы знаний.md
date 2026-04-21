@@ -1051,8 +1051,8 @@ results = unified_search(query, layers=["wiki", "l4_patterns", "l4_experience", 
 | 2.1.7 | CI-gate: smoke-eval в pre-commit | `.pre-commit-config.yaml` | <30s gate | ❌ TODO |
 
 **Критерии готовности:**
-- [ ] Baseline + candidate метрики зафиксированы
-- [ ] `data/eval/hermes/report.md` готов с вердиктом
+- [x] Baseline + candidate метрики зафиксированы (langchain.json + dspy.json)
+- [x] `data/eval/hermes/report.md` готов с вердиктом **PASS**
 - [ ] ADR-008 с решением merge/rollback
 - [ ] Smoke-gate в pre-commit
 
