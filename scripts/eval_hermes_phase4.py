@@ -299,7 +299,7 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
 
     client.create_collection(
         WIKI_COLLECTION,
-        vectors_config=VectorParams(size=1024, distance=Distance.COSINE),
+        vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE),
     )
     print(f"[INDEX-WIKI] Created {WIKI_COLLECTION} (cosine, 1024-dim)")
 
