@@ -303,6 +303,18 @@ async def run_eval(
     llm = ChatAnthropic(model="claude-sonnet-4-5-20250929", temperature=0.0, max_tokens=256)
     settings = SelfRAGSettings()
 
+    # Configure DSPy LM for candidate runs
+    if backend.dspy:
+        import os
+        import dspy
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            print("[WARN] ANTHROPIC_API_KEY not set, DSPy will use fallback chain")
+        else:
+            lm = dspy.LM(model="anthropic/claude-sonnet-4-5-20250929", api_key=api_key, max_tokens=256)
+            dspy.configure(lm=lm)
+            print(f"[DSPY] Configured with anthropic/claude-sonnet-4-5-20250929")
+
     # Grader eval — all entries
     print(f"[GRADER] Running on {len(entries)} entries (backend={backend.label})...")
     grader_results, grader_latencies = await run_grader_eval(entries, llm, settings, backend)
