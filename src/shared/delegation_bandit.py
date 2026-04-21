@@ -74,14 +74,19 @@ class DelegationBandit:
         self.state_path = Path(state_path) if state_path else STATE_FILE
         self.model = LinUCBModel()
         self.total_updates = 0
+        self._cached_outcome_count = -1  # -1 = not yet counted
         self._load_state()
 
     def _count_outcomes(self) -> int:
+        if self._cached_outcome_count >= 0:
+            return self._cached_outcome_count
         if not OUTCOMES_FILE.exists():
+            self._cached_outcome_count = 0
             return 0
         try:
             with open(OUTCOMES_FILE, encoding="utf-8") as f:
-                return sum(1 for _ in f)
+                self._cached_outcome_count = sum(1 for _ in f)
+                return self._cached_outcome_count
         except Exception:
             return 0
 
