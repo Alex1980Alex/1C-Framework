@@ -146,13 +146,13 @@ def _search_with_rrf(
     graph_weight: float = 3.0,
     wiki_weight: float = 1.0,
 ) -> list[dict]:
-    graph_results = _search(client, query_vec, k=k * 2)
+    graph_results = [r for r in _search(client, query_vec, k=k * 3) if r["name"].strip()]
 
     wiki_resp = client.query_points(WIKI_COLLECTION, query=query_vec, limit=k * 2, with_payload=True)
     wiki_results = [
         {"name": p.payload.get("name", ""), "score": p.score, "entity_type": p.payload.get("entity_type", "")}
         for p in wiki_resp.points
-        if p.payload and p.payload.get("name")
+        if p.payload and p.payload.get("name", "").strip()
     ]
 
     scores: dict[str, float] = {}
@@ -160,19 +160,17 @@ def _search_with_rrf(
     norm_to_canonical: dict[str, str] = {}
 
     for rank, r in enumerate(graph_results):
-        name = r["name"]
-        norm = _normalize_name(name)
+        norm = _normalize_name(r["name"])
         scores[norm] = scores.get(norm, 0.0) + graph_weight / (RRF_K + rank + 1)
         result_map[norm] = r
-        norm_to_canonical[norm] = name
+        norm_to_canonical[norm] = r["name"]
 
     for rank, r in enumerate(wiki_results):
-        name = r["name"]
-        norm = _normalize_name(name)
+        norm = _normalize_name(r["name"])
         scores[norm] = scores.get(norm, 0.0) + wiki_weight / (RRF_K + rank + 1)
         if norm not in result_map:
             result_map[norm] = r
-            norm_to_canonical[norm] = name
+            norm_to_canonical[norm] = r["name"]
 
     sorted_norms = sorted(scores, key=lambda x: scores[x], reverse=True)[:k]
     return [
