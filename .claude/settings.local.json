@@ -692,7 +692,8 @@
       "mcp__1c-mcp-crud-daily__get_metadata",
       "mcp__1c-mcp-crud-daily__get_metadata_structure",
       "mcp__1c-mcp-crud-daily__list_metadata_objects",
-      "mcp__bsl-code-search__search_symbols"
+      "mcp__bsl-code-search__search_symbols",
+      "Bash(awk 'NR>=978 && NR<=984' \"src/projects/configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников/src/DataProcessors/гкс_АРМКомпозитныеПробы/Forms/Форма/Ext/Form.xml\")"
     ]
   },
   "enableAllProjectMcpServers": true,
