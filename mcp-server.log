@@ -255,3 +255,15 @@
 2026-04-23 00:40:49.684 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Successfully started bean 'reactorResourceFactory'
 2026-04-23 00:40:49.685 [main] DEBUG o.s.c.s.DefaultLifecycleProcessor - Starting beans in phase 1073741823
 2026-04-23 00:40:49.717 [main] INFO  r.a.context.McpServerApplicationKt - Started McpServerApplicationKt in 3.357 seconds (process running for 4.58)
+00:41:04.010 INFO  - Starting MainKt v0.5.1 using Java 17.0.13 with PID 8968 (D:\1С-Framework\tools\mcp-jars\mcp-yaxunit-runner-0.5.1.jar started by AlexT in D:\1С-Framework)
+00:41:04.013 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
+00:41:04.014 INFO  - The following 2 profiles are active: "mcp", "testdb"
+00:41:06.346 INFO  - Enable tools capabilities, notification: true
+00:41:06.489 INFO  - Registered tools: 8
+00:41:06.489 INFO  - Enable resources capabilities, notification: true
+00:41:06.490 INFO  - Enable prompts capabilities, notification: true
+00:41:06.491 INFO  - Enable completions capabilities
+00:41:06.806 INFO  - Client initialize request - Protocol: 2025-11-25, Capabilities: ClientCapabilities[experimental=null, roots=RootCapabilities[listChanged=null], sampling=null], Info: Implementation[name=claude-code, version=2.1.117]
+00:41:06.813 WARN  - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
+00:41:06.921 INFO  - Started MainKt in 3.798 seconds (process running for 4.833)
+00:41:06.942 INFO  - EDT формат не выбран, автозапуск пропущен
