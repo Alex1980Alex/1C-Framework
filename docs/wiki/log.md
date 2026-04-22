@@ -59,3 +59,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 2
 - Summary: Session 2026-04-22. Skills: wiki-pipeline, evaluation-benchmark, delegation-classifier, create-hook, code-verify. Changed 2 files in docs/framework documentation, mcp-server.log. Commit: chore: auto-commit 1 file(s) changed. Commit: chore: auto-save SKILL.md. Commit: chore: auto-save SKILL.md
 
+
+## 2026-04-23 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, git-commit-message, code-verify
+- Files changed: 2
+- Summary: Session 2026-04-23. Skills: bsl-development, 1c-doc-research, git-commit-message, code-verify. Changed 2 files in mcp-server.log, src/projects. Commit: chore: auto-commit 4 file(s) changed. Commit: chore: update submodule ref (GKSTCPLK-composite-promezh — fix alias-конфликт в ВТ_ЕдиничныеПробы). Commit: chore: auto-commit 1 file(s) changed
+
