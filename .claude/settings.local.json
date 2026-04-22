@@ -691,7 +691,8 @@
       "mcp__1c-mcp-crud-daily__search_code",
       "mcp__1c-mcp-crud-daily__get_metadata",
       "mcp__1c-mcp-crud-daily__get_metadata_structure",
-      "mcp__1c-mcp-crud-daily__list_metadata_objects"
+      "mcp__1c-mcp-crud-daily__list_metadata_objects",
+      "mcp__bsl-code-search__search_symbols"
     ]
   },
   "enableAllProjectMcpServers": true,
