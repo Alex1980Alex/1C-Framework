@@ -45,6 +45,14 @@
       "created": "2026-04-14",
       "last_verified": "2026-04-14",
       "sources": ["infostart.ru/public/194523", "infostart.ru/1c/tools/195955", "infostart.ru/1c/tools/190384", "forum.infostart.ru/forum9/topic232303", "forum.infostart.ru/forum15/topic163957"]
+    },
+    "interactive-delete-rights": {
+      "title": "Права интерактивного удаления в 1С (InteractiveDelete*, иерархия, связь с БСП «Удаление помеченных»)",
+      "file": "interactive-delete-rights.md",
+      "keywords": ["интерактивное удаление", "InteractiveDelete", "InteractiveDeleteMarked", "InteractiveSetDeletionMark", "InteractiveClearDeletionMark", "УдалениеПомеченныхОбъектов", "ПолныеПрава", "setForNewObjects", "ПравоДоступа", "ссылочная целостность", "стандарт ИТС", "роль администратора", "GKSTCPLK-2360", "Rights.xml"],
+      "created": "2026-04-22",
+      "last_verified": "2026-04-22",
+      "sources": ["its.1c.ru/v8std/700/i8100689.htm", "its.1c.ru/v8std/700/i8100488.htm", "its.1c.ru/metod8dev/i8102472.htm", "its.1c.ru/v839doc/TI000001241", "forum.infostart.ru/forum9/topic258038", "forum.infostart.ru/forum9/topic40458", "1s-up.ru/udalenie-v-1s"]
     }
   }
 }
