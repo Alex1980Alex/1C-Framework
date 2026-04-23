@@ -186,6 +186,24 @@
       "github_repos_count": 22
     },
     {
+      "file": "production-rag-patterns-2026.md",
+      "title": "Production RAG / LangGraph / Claude Code / MCP — Best Practices 2026",
+      "keywords": [
+        "qdrant-1.16", "tiered-multitenancy", "matryoshka", "mrl",
+        "contextual-retrieval", "anthropic-chunking", "dbsf", "rrf",
+        "langgraph-send", "map-reduce", "swarm-pattern", "deferred-execution",
+        "deepagents", "gateguard", "inline-frontmatter-hooks",
+        "mcp-elicitation", "mcp-sampling", "mcp-registry", "mcp-inspector",
+        "mlflow-scorers", "deepeval-pytest", "braintrust", "phoenix-evals",
+        "gepa", "adalflow", "promptwizard", "mirascope", "weave",
+        "openllmetry", "otel-baggage", "langfuse-self-hosted",
+        "jina-v4", "voyage-3-large", "best-practices-2026"
+      ],
+      "last_verified": "2026-04-23",
+      "sources_count": 42,
+      "github_repos_count": 12
+    },
+    {
       "file": "framework-gaps-analysis-2026-04.md",
       "title": "Framework Gaps Analysis — слабые места PDF Framework (April 2026)",
       "keywords": [
