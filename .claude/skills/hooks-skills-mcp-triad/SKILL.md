@@ -63,6 +63,12 @@ description: "Используй этот скилл для понимания �
 | `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `src/projects/`, `src/bsl/`, `openspec/`. При добавлении нового типа инфра-файла его путь/имя нужно добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
 
+#### SessionStart (1)
+
+| Hook | Назначение |
+|------|-----------|
+| `ensure-docker-qdrant.py` | Проверка Docker engine + контейнера `pdf-rag-qdrant` при старте сессии; фоновый авто-старт Docker Desktop и `docker compose up -d qdrant` при необходимости. Не блокирует сессию (SessionStart advisory); graceful degradation на Linux/Mac/отсутствие Docker. Timeout 10s. |
+
 ### Skills (66 шт.) — КАК / ЧТО
 
 #### Доменные (5)
