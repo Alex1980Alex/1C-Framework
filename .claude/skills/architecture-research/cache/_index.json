@@ -184,6 +184,19 @@
       "last_verified": "2026-04-13",
       "sources_count": 22,
       "github_repos_count": 22
+    },
+    {
+      "file": "framework-gaps-analysis-2026-04.md",
+      "title": "Framework Gaps Analysis — слабые места PDF Framework (April 2026)",
+      "keywords": [
+        "gaps", "tech-debt", "todo", "production-readiness", "observability",
+        "testing", "jwt", "multi-tenant", "dual-write", "raptor", "reranking",
+        "dspy-adr-008", "smoke-gate", "rate-limiting", "sync-in-async",
+        "phase-67", "memory-p5", "delegation-iter-4-5", "serena-audit-phases-8-10"
+      ],
+      "last_verified": "2026-04-23",
+      "sources_count": 5,
+      "github_repos_count": 0
     }
   ]
 }
