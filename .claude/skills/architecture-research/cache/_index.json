@@ -3,6 +3,20 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "claude-code-effectiveness-infrastructure-2026.md",
+      "title": "Claude Code Effectiveness Infrastructure — best practices 2026",
+      "keywords": [
+        "claude-code", "hooks", "observability", "semantic-router",
+        "aurelio-labs", "tensorzero", "llm-gateway", "mcp-registry",
+        "glama", "smithery", "sqlite", "disler", "async-hooks",
+        "cost-tracking", "qdrant", "intent-classification", "routing",
+        "optimization-loop", "opinionated-gateway"
+      ],
+      "last_verified": "2026-04-23",
+      "sources_count": 10,
+      "github_repos_count": 8
+    },
+    {
       "file": "userpromptsubmit-hook-output-formats.md",
       "title": "UserPromptSubmit Hook Output Formats — stdout vs systemMessage",
       "keywords": [
