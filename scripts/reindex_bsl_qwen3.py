@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-BSL Reindex — Phase 60
+BSL Reindex — Phase 60 + Phase 8.8 (Qwen3-Embedding-8B via sentence-transformers)
 
-Parse BSL files → chunk by symbols → embed → store in Qdrant bsl_code_v3.
+Parse BSL files → chunk by symbols → embed → store in Qdrant.
 
 Embedder options:
-  e5     — intfloat/multilingual-e5-large (1024d, fast, default)
-  qwen3  — qwen3-embedding via Ollama (4096d, slow, needs GPU)
+  e5        — intfloat/multilingual-e5-large (1024d, CPU OK, default)
+  qwen3     — Qwen3-Embedding via Ollama (4096d, slow)
+  qwen3-st  — Qwen/Qwen3-Embedding-8B via sentence-transformers (4096d, GPU bf16 b=32; Phase 8.4b)
 
 Usage:
     python scripts/reindex_bsl_qwen3.py --project path/to/1c/project
-    python scripts/reindex_bsl_qwen3.py --project path --embedder qwen3 --batch-size 20
+    python scripts/reindex_bsl_qwen3.py --project path --embedder qwen3-st \
+        --collection bsl_code_v4 --batch-size 32 --recreate
 """
 
 import argparse
@@ -72,8 +74,9 @@ def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool
             print(f"Created collection: {name} (dims={dims}, cosine)")
 
 
-def point_id(chunk_id: str) -> str:
-    return str(uuid.uuid5(UUID_NAMESPACE, f"bsl-v3-{chunk_id}"))
+def point_id(collection: str, chunk_id: str) -> str:
+    # Namespace by collection so v3 and v4 produce distinct UUIDs for the same chunk_id.
+    return str(uuid.uuid5(UUID_NAMESPACE, f"{collection}-{chunk_id}"))
 
 
 def chunk_payload(chunk: BSLChunk) -> dict[str, Any]:
@@ -119,15 +122,70 @@ class E5Embedder:
         pass
 
 
-def make_embedder(name: str) -> E5Embedder:
+class Qwen3STEmbedder:
+    """Qwen3-Embedding-8B via sentence-transformers (4096d native, GPU).
+
+    Phase 8.4b decision: bf16 + batch=32 is the throughput plateau on RTX 3090
+    Ampere without flash-attn 2 (~18.15 ch/s, VRAM 16.4 GB).
+    """
+
+    MODEL_ID = "Qwen/Qwen3-Embedding-8B"
+
+    def __init__(self, dtype: str = "bfloat16", batch_size: int = 32) -> None:
+        import torch
+        from sentence_transformers import SentenceTransformer
+
+        if not torch.cuda.is_available():
+            raise RuntimeError(
+                "qwen3-st requires CUDA. Run Phase 8.2 to install cu128 wheels first."
+            )
+
+        torch_dtype = {"float16": torch.float16, "bfloat16": torch.bfloat16}.get(dtype)
+        if torch_dtype is None:
+            raise ValueError(f"dtype must be 'float16' or 'bfloat16', got {dtype!r}")
+
+        self.model = SentenceTransformer(
+            self.MODEL_ID,
+            device="cuda",
+            model_kwargs={"torch_dtype": torch_dtype},
+        )
+        self.dims = 4096
+        self.batch_size = batch_size
+        # Note: Qwen3-Embedding supports task instructions ("Instruct: ...\nQuery: ...")
+        # for retrieval queries. Passages encode raw. We keep raw for both here; see
+        # Phase 9 quality tuning for instruction prompts.
+
+    def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
+        # Truncation: Qwen3 native context is 32K but BSL chunks rarely exceed 8K chars.
+        truncated = [t[:32000] for t in texts]
+        embeddings = self.model.encode(
+            truncated,
+            batch_size=self.batch_size,
+            show_progress_bar=False,
+            convert_to_numpy=True,
+        )
+        return [emb.tolist() for emb in embeddings]
+
+    def close(self) -> None:
+        import gc
+
+        import torch
+
+        del self.model
+        gc.collect()
+        torch.cuda.empty_cache()
+
+
+def make_embedder(name: str, batch_size: int = 32) -> Any:
     """Create embedder by name."""
     if name == "e5":
         return E5Embedder()
-    elif name == "qwen3":
+    if name == "qwen3":
         from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
         return Qwen3EmbeddingService()  # type: ignore[return-value]
-    else:
-        raise ValueError(f"Unknown embedder: {name}. Use 'e5' or 'qwen3'")
+    if name == "qwen3-st":
+        return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size)
+    raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', or 'qwen3-st'")
 
 
 def flush_batch(
@@ -161,7 +219,7 @@ def flush_batch(
 
         points.append(
             models.PointStruct(
-                id=point_id(chunk.chunk_id),
+                id=point_id(collection, chunk.chunk_id),
                 vector=vector_data,
                 payload=chunk_payload(chunk),
             )
@@ -175,7 +233,12 @@ def flush_batch(
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
     ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
-    ap.add_argument("--embedder", choices=["e5", "qwen3"], default="e5", help="Embedding model (default: e5)")
+    ap.add_argument(
+        "--embedder",
+        choices=["e5", "qwen3", "qwen3-st"],
+        default="e5",
+        help="Embedding model (default: e5; Phase 8.8 uses qwen3-st)",
+    )
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument("--collection", default="bsl_code_v3")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
@@ -192,9 +255,9 @@ def main() -> None:
     t0 = time.time()
     parser = BSLASTParser()
     chunker = BSLChunker()
-    embedder = make_embedder(args.embedder)
+    embedder = make_embedder(args.embedder, batch_size=args.batch_size)
     vector_dims = embedder.dims
-    print(f"Embedder: {args.embedder} ({vector_dims}d)")
+    print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size})")
 
     # Phase 63: Context enrichment
     enricher = None
