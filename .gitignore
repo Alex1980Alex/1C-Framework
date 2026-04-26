@@ -3,6 +3,9 @@
 .venv/
 venv/
 
+# Local scratch / backup directory (path migration backups, ad-hoc artefacts)
+.tmp/
+
 # Python
 __pycache__/
 *.py[cod]
