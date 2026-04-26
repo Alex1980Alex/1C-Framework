@@ -171,7 +171,9 @@ class Qwen3STEmbedder:
 
         import torch
 
-        del self.model
+        if getattr(self, "model", None) is None:
+            return
+        self.model = None
         gc.collect()
         torch.cuda.empty_cache()
 
@@ -250,6 +252,15 @@ def main() -> None:
     project = args.project.resolve()
     if not project.is_dir():
         print(f"ERROR: {project} is not a directory")
+        sys.exit(1)
+
+    if args.dual_vector and args.embedder == "qwen3-st":
+        # Qwen3-ST runs on GPU at ~18 ch/s. Embedding the (often empty)
+        # module_path field as a second pass doubles wall-clock cost and
+        # produces a near-degenerate vector for empty strings. Refuse the
+        # combination — Phase 8.8 explicitly chose single-vector for v4.
+        print("ERROR: --dual-vector is incompatible with --embedder qwen3-st")
+        print("       (Phase 8.8 uses single-vector 4096d for bsl_code_v4)")
         sys.exit(1)
 
     t0 = time.time()

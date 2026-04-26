@@ -175,23 +175,31 @@ def get_dim(name):
 
 
 def freeze_to_legacy(src):
-    """Scroll-copy points from src to src + '_e5_legacy', preserving E5 vectors."""
+    """Scroll-copy points from src to src + '_e5_legacy', mirroring source schema.
+
+    Idempotency: if legacy already exists, refuse on point_count mismatch
+    (partial copy from a crashed run), accept on exact match.
+    """
     legacy = src + "_e5_legacy"
     existing = existing_collections()
+
+    src_info = client.get_collection(collection_name=src)
+    src_count = src_info.points_count
+    src_vectors_cfg = src_info.config.params.vectors  # VectorParams or dict
+
     if legacy in existing:
-        print("  legacy '%s' already exists - skipping copy" % legacy)
-        return
+        legacy_count = client.get_collection(collection_name=legacy).points_count
+        if legacy_count == src_count:
+            print("  legacy '%s' already complete (%d points) - skipping" % (legacy, legacy_count))
+            return
+        raise RuntimeError(
+            "Legacy '%s' exists with %d points but source has %d. "
+            "Likely partial copy from a crashed run. Resolve manually "
+            "(delete '%s' and re-run, or repair)." % (legacy, legacy_count, src_count, legacy)
+        )
 
-    src_dim = get_dim(src)
-    if src_dim is None:
-        print("  source '%s' missing - nothing to freeze" % src)
-        return
-
-    print("  creating archive '%s' (dim=%d)..." % (legacy, src_dim))
-    client.create_collection(
-        collection_name=legacy,
-        vectors_config=models.VectorParams(size=src_dim, distance=models.Distance.COSINE),
-    )
+    print("  creating archive '%s' (mirroring source schema)..." % legacy)
+    client.create_collection(collection_name=legacy, vectors_config=src_vectors_cfg)
 
     offset = None
     copied = 0
@@ -205,16 +213,20 @@ def freeze_to_legacy(src):
         )
         if not points:
             break
-        upserts = []
-        for p in points:
-            vec = p.vector
-            if isinstance(vec, dict):
-                vec = next(iter(vec.values()))
-            upserts.append(models.PointStruct(id=p.id, vector=vec, payload=p.payload))
+        # Preserve named-vector dict shape when present (do NOT collapse to first vector).
+        upserts = [
+            models.PointStruct(id=p.id, vector=p.vector, payload=p.payload)
+            for p in points
+        ]
         client.upsert(collection_name=legacy, points=upserts)
         copied += len(upserts)
         if offset is None:
             break
+
+    # Sanity: archive count should match source (ignoring concurrent writes — none expected here).
+    final = client.get_collection(collection_name=legacy).points_count
+    if final != src_count:
+        print("  WARN: archived %d but source has %d - investigate" % (final, src_count))
     print("  archived %d points -> %s" % (copied, legacy))
 
 
@@ -287,10 +299,13 @@ if (-not $SkipReindex) {
         if (-not $candidates) {
             throw 'No BSL project directories found. Pass -BslProjectPath explicitly.'
         }
-        Write-Host 'Available BSL projects:' -ForegroundColor Yellow
-        $candidates | ForEach-Object { Write-Host "  - $($_.FullName)" }
+        if ($candidates.Count -gt 1) {
+            Write-Host 'Multiple BSL projects found:' -ForegroundColor Yellow
+            $candidates | ForEach-Object { Write-Host "  - $($_.FullName)" }
+            throw 'Ambiguous: pass -BslProjectPath explicitly (refusing to pick automatically).'
+        }
         $BslProjectPath = $candidates[0].FullName
-        Write-Host "Defaulting to: $BslProjectPath" -ForegroundColor DarkGray
+        Write-Host "Using single BSL project: $BslProjectPath" -ForegroundColor DarkGray
     }
 
     if (-not (Test-Path $BslProjectPath)) {
