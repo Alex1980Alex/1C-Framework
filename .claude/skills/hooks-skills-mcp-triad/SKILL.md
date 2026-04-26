@@ -48,7 +48,7 @@ description: "Используй этот скилл для понимания �
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
-| `code-verify-reminder.py` | Write\|Edit, Skill, Task | Mandatory task на code-verify; dual-registered (PreToolUse:Write\|Edit + PostToolUse:Write\|Edit\|Skill\|Task). PostToolUse:Task закрывает задачу при `[CODE-VERIFY-PASS]` от субагента (v2.3.0) |
+| `code-verify-reminder.py` | Write\|Edit, Skill, Task, Stop | Mandatory task на code-verify; tri-registered (PreToolUse:Write\|Edit + PostToolUse:Write\|Edit\|Skill\|Task + Stop). PostToolUse:Task закрывает задачу при `[CODE-VERIFY-PASS]`; Stop fallback (v2.4.0) — читает `transcript_path` JSONL и закрывает по rfind-сравнению PASS/FAIL маркеров (workaround #6305 regression на Windows, см. claude-code-hooks-bugs SKILL 2026-04-26) |
 | `posttooluse-quality-feedback.py` | Write\|Edit | ruff check *.py → hookSpecificOutput feedback (Phase 2.1) |
 | `posttooluse-delegation-tracker.py` | mcp__llm-rotation__llm_complete | Z.AI delegation outcomes → delegation-outcomes.jsonl (Phase 1.4) |
 | `posttooluse-web-cache.py` | WebSearch\|WebFetch | Кеширование результатов веб-поиска 24h TTL |
