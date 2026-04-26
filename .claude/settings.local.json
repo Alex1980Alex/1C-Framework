@@ -736,7 +736,8 @@
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m pip install 'pdf-vector-graph-framework[qdrant]' --quiet)",
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -c \"import qdrant_client; print\\('qdrant_client', qdrant_client.__version__\\)\")",
       "Bash(C:/1С-Framework/.venv/Scripts/python.exe *)",
-      "Bash(MSYS_NO_PATHCONV=1 cmd.exe /c 'wmic path win32_VideoController get name,DriverVersion,AdapterRAM')"
+      "Bash(MSYS_NO_PATHCONV=1 cmd.exe /c 'wmic path win32_VideoController get name,DriverVersion,AdapterRAM')",
+      "Bash([ -f \".claude/hooks/$f\" ])"
     ]
   },
   "enableAllProjectMcpServers": true,
