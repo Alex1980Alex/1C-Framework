@@ -102,6 +102,10 @@ Timeout вычисляется: `max(15, min(base + files * per_file, 120))`.
 
 Дополнительно: `git-commit-enforcer.py` (Stop) блокирует если есть незакоммиченные изменения в watched paths (src/, docs/, tests/, .claude/skills/, .claude/hooks/).
 
+### Bulk-removal guard (v2.17, 2026-04-26)
+
+`perform_sync_commit()` отказывается коммитить, если staged-diff `.claude/settings.json` показывает net удаление ≥ 30 строк (added vs removed по `git diff --cached --numstat`). Профилактика регрессий типа коммита `910a3a1f` (2026-03-20), где автокоммит молча снёс 127 строк PostToolUse-секции. При срабатывании в логе: `GUARD: settings.json shrinks by N net lines — auto-commit blocked`.
+
 ---
 
 ## Отслеживаемые файлы

@@ -95,14 +95,15 @@ description: "Трёхуровневая архитектура хуков Claud
 | [todo-sync.py](.claude/hooks/todo-sync.py) | 3s | Синхронизация hook-todos → TodoWrite |
 | [auto-git-save-prompt.py](.claude/hooks/auto-git-save-prompt.py) | 15s | Автокоммит при каждом промпте (workaround) |
 
-### Уровень 2 — PostToolUse (не работает из-за #6305)
+### Уровень 2 — PostToolUse (рабочее на Windows v2.1.87+, см. claude-code-hooks-bugs)
 
 | Хук | Matcher | Timeout | Назначение |
 |-----|---------|---------|-----------|
-| [auto-git-save.py](.claude/hooks/auto-git-save.py) | Write\|Edit | 30s | Sync commit |
+| [auto-git-save.py](.claude/hooks/auto-git-save.py) | Write\|Edit | 30s | Sync commit + bulk-removal guard для settings.json (v2.17) |
 | [docs-change-tracker.py](.claude/hooks/docs-change-tracker.py) | Write\|Edit | 5s | Напоминание обновить доки |
 | [knowledge-cache-reminder.py](.claude/hooks/knowledge-cache-reminder.py) | WebSearch\|WebFetch | 5s | Напоминание кешировать знания |
 | [skill-usage-metrics.py](.claude/hooks/skill-usage-metrics.py) | Skill | 3s | Метрики + accuracy (prompt_id корреляция) |
+| [code-verify-reminder.py](.claude/hooks/code-verify-reminder.py) | Write\|Edit, Skill, Task | 3s | Mandatory task на code-verify; PostToolUse:Task закрывает задачу при PASS-маркере (v2.3.0) |
 | [factory-enforcer.py](.claude/hooks/factory-enforcer.py) | Write | 5s | Проверка артефактов триады |
 | [bulk-action-guard.py](.claude/hooks/bulk-action-guard.py) | Bash | 3s | Защита от массовых операций |
 | [auto-git-save.py](.claude/hooks/auto-git-save.py) | Bash | 30s | Sync commit после Bash |
@@ -113,6 +114,7 @@ description: "Трёхуровневая архитектура хуков Claud
 |-----|---------|---------|-----------|
 | [root-clutter-guard.py](.claude/hooks/root-clutter-guard.py) | Write | 3s | Блокировка записи в корень |
 | [search-optimizer.py](.claude/hooks/search-optimizer.py) | Bash | 3s | Оптимизация поисковых запросов |
+| [code-verify-reminder.py](.claude/hooks/code-verify-reminder.py) | Write\|Edit | 3s | Workaround #6305: создаёт задачу до записи файла (dual-registered с PostToolUse) |
 
 ### Уровень 3 — Stop
 

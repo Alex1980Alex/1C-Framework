@@ -48,7 +48,7 @@ description: "Используй этот скилл для понимания �
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
-| `code-verify-reminder.py` | Write\|Edit | Advisory напоминание запустить code-verify (15 мин cooldown) |
+| `code-verify-reminder.py` | Write\|Edit, Skill, Task | Mandatory task на code-verify; dual-registered (PreToolUse:Write\|Edit + PostToolUse:Write\|Edit\|Skill\|Task). PostToolUse:Task закрывает задачу при `[CODE-VERIFY-PASS]` от субагента (v2.3.0) |
 | `posttooluse-quality-feedback.py` | Write\|Edit | ruff check *.py → hookSpecificOutput feedback (Phase 2.1) |
 | `posttooluse-delegation-tracker.py` | mcp__llm-rotation__llm_complete | Z.AI delegation outcomes → delegation-outcomes.jsonl (Phase 1.4) |
 | `posttooluse-web-cache.py` | WebSearch\|WebFetch | Кеширование результатов веб-поиска 24h TTL |
