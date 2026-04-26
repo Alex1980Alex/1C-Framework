@@ -78,7 +78,7 @@ VECTOR_STORE__QDRANT_BM25_B=0.75
 ## Docker
 
 ```bash
-docker run -p 6333:6333 -p 6334:6334 -v qdrant_data:/qdrant/storage qdrant/qdrant:v1.12.0
+docker run -p 6333:6333 -p 6334:6334 -v qdrant_data:/qdrant/storage qdrant/qdrant:v1.17.1
 ```
 
 ## Файлы

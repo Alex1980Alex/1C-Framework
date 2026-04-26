@@ -89,7 +89,7 @@ Prometheus: `search_requests_total`, `search_latency_seconds`, `index_chunks_tot
 | Сервис | Image | Port | Назначение |
 |--------|-------|------|-----------|
 | `api` | python:3.11-slim | 8000 | FastAPI + Gradio UI |
-| `qdrant` | qdrant:v1.12.0 | 6333, 6334 | Vector store (API + gRPC) |
+| `qdrant` | qdrant:v1.17.1 | 6333, 6334 | Vector store (API + gRPC) |
 | `db` | pgvector:pg16 | 5432 | PostgreSQL + pgvector |
 | `redis` | redis:7-alpine | 6379 | Cache + rate limiting |
 | `nginx` | nginx:alpine | 80, 443 | Reverse proxy |
