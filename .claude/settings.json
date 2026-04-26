@@ -36,7 +36,7 @@
       "Bash(git rebase *)",
       "Bash(git tag *)",
       "Bash(python *)",
-      "Bash(\"D:/1С-Framework/.venv/Scripts/python.exe\"*)",
+      "Bash(\"C:/1С-Framework/.venv/Scripts/python.exe\"*)",
       "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\"*)",
       "Bash(pip *)",
       "Bash(node *)",
@@ -75,57 +75,57 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/memory-first-hook.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-first-hook.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/session-context-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/session-context-enforcer.py",
             "timeout": 2
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/skill-router.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-router.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/skill-eval-enforcer-shell.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-eval-enforcer-shell.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/ralph_activator.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/ralph_activator.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/decision-to-triad.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/decision-to-triad.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/document-persistence.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/document-persistence.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/todo-sync.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/todo-sync.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/auto-git-save-prompt.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/auto-git-save-prompt.py",
             "timeout": 15
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/z-ai-delegation-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/z-ai-delegation-enforcer.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/skill-quality-monitor.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-quality-monitor.py",
             "timeout": 2
           }
         ]
@@ -137,7 +137,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/bsl-tool-router.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/bsl-tool-router.py",
             "timeout": 3
           }
         ]
@@ -147,22 +147,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-protocol-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/task-protocol-enforcer.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/code-review-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/code-review-enforcer.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/code-verify-reminder.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/code-verify-reminder.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/docs-change-tracker.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/docs-change-tracker.py",
             "timeout": 5
           }
         ]
@@ -172,7 +172,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/code-skill-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/code-skill-enforcer.py",
             "timeout": 3
           }
         ]
@@ -182,22 +182,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/root-clutter-guard.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/root-clutter-guard.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/z-ai-write-guard.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/z-ai-write-guard.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/factory-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/factory-enforcer.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/delegation-outcome-tracker.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/delegation-outcome-tracker.py",
             "timeout": 3
           }
         ]
@@ -207,12 +207,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/search-optimizer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/search-optimizer.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/bulk-action-guard.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/bulk-action-guard.py",
             "timeout": 3
           }
         ]
@@ -222,17 +222,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/approval-gate.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/approval-gate.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-protocol-observer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/task-protocol-observer.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/skill-usage-metrics.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-usage-metrics.py",
             "timeout": 3
           }
         ]
@@ -242,7 +242,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-protocol-observer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/task-protocol-observer.py",
             "timeout": 3
           }
         ]
@@ -252,7 +252,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-protocol-observer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/task-protocol-observer.py",
             "timeout": 3
           }
         ]
@@ -264,7 +264,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-skill-metrics.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-skill-metrics.py",
             "timeout": 3
           }
         ]
@@ -274,12 +274,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-web-cache.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-web-cache.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/knowledge-cache-reminder.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/knowledge-cache-reminder.py",
             "timeout": 5
           }
         ]
@@ -289,17 +289,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-docs-tracker.py",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-quality-feedback.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-quality-feedback.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-auto-git-save.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-auto-git-save.py",
             "timeout": 10
           }
         ]
@@ -309,7 +309,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-delegation-tracker.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-delegation-tracker.py",
             "timeout": 3
           }
         ]
@@ -319,7 +319,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/posttooluse-bash-errors.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-bash-errors.py",
             "timeout": 3
           }
         ]
@@ -331,42 +331,42 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/ralph_wiggum_stop.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/ralph_wiggum_stop.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/git-commit-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/git-commit-enforcer.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/docs-change-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/docs-change-enforcer.py",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/task-enforcer.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/task-enforcer.py",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/memory-sync.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-sync.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/session-memory-save.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/session-memory-save.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/auto-git-save.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/auto-git-save.py",
             "timeout": 30
           },
           {
             "type": "command",
-            "command": "D:/1С-Framework/.venv/Scripts/python.exe D:/1С-Framework/.claude/hooks/delegation-outcome-stop.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/delegation-outcome-stop.py",
             "timeout": 3
           }
         ]

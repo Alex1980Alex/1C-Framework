@@ -25,7 +25,7 @@ DOCKER_DESKTOP_CANDIDATES = [
 ]
 # Собран в рантайме чтобы не матчить enforcer-regex для конфиг-файлов
 COMPOSE_FILE = os.path.join(
-    r"D:\1С-Framework\docker", f"docker-compose{os.extsep}yml"
+    r"C:\1С-Framework\docker", f"docker-compose{os.extsep}yml"
 )
 QDRANT_CONTAINER = "pdf-rag-qdrant"
 

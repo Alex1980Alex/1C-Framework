@@ -57,7 +57,7 @@ def _is_exempt(file_path: str) -> bool:
     normalized = file_path.replace("\\", "/")
 
     # Strip project root prefix if present
-    for prefix in ("D:/1С-Framework/", "D:\\1С-Framework\\"):
+    for prefix in ("C:/1С-Framework/", "D:\\1С-Framework\\"):
         if normalized.startswith(prefix.replace("\\", "/")):
             normalized = normalized[len(prefix):]
             break

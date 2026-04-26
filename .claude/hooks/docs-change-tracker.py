@@ -627,7 +627,7 @@ class DocsChangeTracker(BaseHook):
         basename = os.path.basename(changed_file)
         rel_path = changed_file.replace("\\", "/")
         # Try to make path relative
-        for prefix in ["d:/1С-Framework/", "D:/1С-Framework/"]:
+        for prefix in ["C:/1С-Framework/", "C:/1С-Framework/"]:
             if rel_path.lower().startswith(prefix.lower()):
                 rel_path = rel_path[len(prefix):]
                 break
