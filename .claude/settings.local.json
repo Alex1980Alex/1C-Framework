@@ -737,7 +737,12 @@
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -c \"import qdrant_client; print\\('qdrant_client', qdrant_client.__version__\\)\")",
       "Bash(C:/1С-Framework/.venv/Scripts/python.exe *)",
       "Bash(MSYS_NO_PATHCONV=1 cmd.exe /c 'wmic path win32_VideoController get name,DriverVersion,AdapterRAM')",
-      "Bash([ -f \".claude/hooks/$f\" ])"
+      "Bash([ -f \".claude/hooks/$f\" ])",
+      "Bash(nvidia-smi *)",
+      "PowerShell(Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Name -in 'C','D','E' } | Select-Object Name, @{N='UsedGB';E={[math]::Round\\($_.Used/1GB,1\\)}}, @{N='FreeGB';E={[math]::Round\\($_.Free/1GB,1\\)}})",
+      "PowerShell(Get-Process python -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, @{N='WorkingSetMB';E={[math]::Round\\($_.WorkingSet64/1MB,0\\)}}, StartTime)",
+      "PowerShell($drives = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Name -in 'C','D','E' }; foreach \\($d in $drives\\) { \"$\\($d.Name\\): used $\\([math]::Round\\($d.Used/1GB,1\\)\\)GB, free $\\([math]::Round\\($d.Free/1GB,1\\)\\)GB\" })",
+      "PowerShell($p = Get-Process python -ErrorAction SilentlyContinue; if \\($p\\) { $p | Select-Object Id, ProcessName, @{N='WorkingSetMB';E={[math]::Round\\($_.WorkingSet64/1MB,0\\)}} | Format-Table | Out-String } else { 'no python processes' })"
     ]
   },
   "enableAllProjectMcpServers": true,

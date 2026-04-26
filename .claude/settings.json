@@ -37,7 +37,6 @@
       "Bash(git tag *)",
       "Bash(python *)",
       "Bash(\"C:/1С-Framework/.venv/Scripts/python.exe\"*)",
-      "Bash(\"D:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\python.exe\"*)",
       "Bash(pip *)",
       "Bash(node *)",
       "Bash(npm *)",
@@ -402,7 +401,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe D:\\1С-Framework\\.claude\\hooks\\ensure-docker-qdrant.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/ensure-docker-qdrant.py",
             "timeout": 10,
             "statusMessage": "ensure-docker-qdrant"
           }
