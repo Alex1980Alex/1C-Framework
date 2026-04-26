@@ -1,0 +1,290 @@
+# Phase 8 — Qwen3-Embedding-8B + GPU + переиндексация
+
+**Дата:** 2026-04-26
+**Статус:** Планирование (черновик)
+**Приоритет:** Высокий
+**Связано:** Phase 5–7 миграции
+
+## 1. Контекст
+
+После Phase 5–7: `pdf-rag-qdrant` 1.17.1 + 11 коллекций (57 528 точек) восстановлены,
+embedder `intfloat/multilingual-e5-large` (1024d, CPU torch). RTX 3090 24 ГБ простаивает.
+
+Зачем менять: Qwen3-Embedding-8B (MTEB Multilingual 70.58, MTEB-Code 80.68) превосходит
+E5 на 6 пунктов; native 32K context для длинных BSL-модулей; MRL truncation 1024–4096d.
+Ссылка на анализ моделей: cache `embedding-models-2026-russian-bsl.md`.
+
+## 2. Цель + Acceptance Criteria
+
+Pipeline: документы → Qwen3-8B (GPU FP16) → Qdrant (4096d native | 1024 MRL) → search ≤200мс.
+
+Acceptance:
+- [ ] `torch.cuda.is_available() == True`
+- [ ] Qwen3 грузится через sentence-transformers, FP16, GPU; VRAM ~16 ГБ
+- [ ] Throughput ≥ 30 chunks/sec, batch=8, seq=512
+- [ ] Все 11 коллекций пересозданы, points_count совпадает (±dedup)
+- [ ] «регистр сведений 1С» → top-3 на pdf_documents, score ≥ 0.85
+- [ ] «обработка проведения» → top-3 на bsl_code_v4, score ≥ 0.80
+- [ ] E2E latency ≤ 500мс cold, ≤ 200мс warm
+- [ ] `.env`/docs/skills синхронизированы; старые snapshots сохранены для отката
+
+## 3. Архитектура
+
+```
+Indexing: BSL/PDF/MD → chunker → enrich → Qwen3 embed (GPU) → Qdrant
+Query:    text → Qwen3 embed (GPU) → Qdrant top-50 → reranker → top-K → MCP / REST
+```
+
+Решения: Qdrant остаётся (named vectors, snapshots, hybrid); FP16 на GPU; `bsl_code_v4` —
+4096d native; остальные — 1024d MRL-truncated; reranker не трогаем; `.env` прозрачно
+через `EMBEDDING__MODEL`. Vector DB не меняем на ChromaDB/FAISS — у Qdrant больше
+production-фич (snapshot recovery, sparse+dense, REST+gRPC).
+
+## 4. Phase 8.0 — Pre-flight (5 мин)
+
+- [ ] **8.0.1** `git status` пустой, все enforcers exit=0
+- [ ] **8.0.2** Qdrant healthy; 11 коллекций; smoke search OK
+- [ ] **8.0.3** `nvidia-smi` показывает RTX 3090
+- [ ] **8.0.4** Свободно ≥ 50 ГБ диска (Qwen3 ~16 ГБ + reindex ~10 ГБ + buffer)
+- [ ] **8.0.5** Опц.: `huggingface-cli login` (HF_TOKEN ускорит download)
+
+## 5. Phase 8.1 — Удаление CPU torch (2 мин)
+
+- [ ] **8.1.1** `tasklist | grep python` — нет активных Python-процессов
+- [ ] **8.1.2** `pip uninstall -y torch torchvision`
+- [ ] **8.1.3** Опц.: удалить HF cache E5 (2.2 ГБ):
+      `rm -rf ~/.cache/huggingface/hub/models--intfloat--multilingual-e5-large`
+- [ ] **8.1.4** `pip list | grep -i torch` — пусто
+
+Подвох: `transformers[torch]` и `sentence-transformers` тянут CPU torch обратно.
+Решение: ставить cu128 wheel ДО любого `pip install -e .` reresolve.
+
+## 6. Phase 8.2 — PyTorch CUDA 12.8 (5–15 мин)
+
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+```
+
+- [ ] **8.2.1** `torch.cuda.is_available()` → True
+- [ ] **8.2.2** `torch.version.cuda` начинается с "12"
+- [ ] **8.2.3** `get_device_name(0)` == "NVIDIA GeForce RTX 3090"
+- [ ] **8.2.4** FP16 smoke: `torch.zeros((1,1024), dtype=torch.float16, device='cuda')`
+- [ ] **8.2.5** `pip check` — никаких сломанных deps
+
+Driver 596.21 поддерживает до CUDA 13.2 — cu128 совместим. Fallback: cu124.
+
+## 7. Phase 8.3 — Загрузка Qwen3-Embedding-8B (15–60 мин)
+
+```bash
+huggingface-cli download Qwen/Qwen3-Embedding-8B
+```
+
+- [ ] **8.3.1** Скачать ~16 ГБ FP16 weights + tokenizer + config
+- [ ] **8.3.2** Verify `1_Pooling/config.json` есть — без него ST использует mean pooling
+      вместо last-token (HF discussion #1). Если нет — `--force-redownload`
+- [ ] **8.3.3** Smoke: `SentenceTransformer("Qwen/Qwen3-Embedding-8B", device="cuda",
+      model_kwargs={"torch_dtype":"float16"})`; `.encode(["тест"])` → shape (1, 4096)
+- [ ] **8.3.4** `nvidia-smi` показывает ~16 ГБ занято
+
+Требуется `transformers ≥ 4.51` (без него `KeyError: 'qwen3'`); у нас 5.6.2 — OK.
+
+## 8. Phase 8.4 — Inference benchmark (10 мин)
+
+Скрипт `scripts/bench_qwen3_embedding.py`:
+- 1000 случайных BSL-чанков из bsl_code_v4 (через scroll API Qdrant)
+- batch=8, seq=512 → throughput chunks/sec
+- batch=4, seq=2048 → long-context throughput
+- batch=2, seq=8192 → stress, VRAM peak
+
+- [ ] **8.4.1** Замерить chunks/sec на 3 режимах
+- [ ] **8.4.2** Зафиксировать VRAM peak + GPU util (`nvidia-smi --loop=1`)
+- [ ] **8.4.3** Acceptance: ≥ 30 chunks/sec при batch=8, seq=512
+
+## 9. Phase 8.5 — Аудит исходных данных (30–60 мин)
+
+| Collection | Points | Source | Where |
+|---|---:|---|---|
+| `bsl_code_v4` | 22 604 | BSL код | `src/projects/configuration/<name>/` |
+| `bsl_code_v3` | 22 588 | BSL legacy | **отказаться** (drop, дубликат v4) |
+| `graph_embeddings` | 6 694 | KG nodes | `data/graph/` или Neo4j dumps |
+| `wiki_pages_v1` | 3 073 | Hermes wiki | `docs/wiki/entities/` |
+| `pdf_documents` | 1 012 | 1С PDF | `docs/source-pdf/` или `data/raw_pdfs/` (?) |
+
+| `bsl_metadata` | 1 000 | BSL metadata | `data/bsl_metadata.db` или re-extract |
+| `conversation_memory` | 372 | Past conversations | `data/conversations.db` (✓ есть) |
+| `skill_library` | 75 | `.claude/skills/*/SKILL.md` | `scripts/index-skills-to-qdrant.py` |
+| `experience_embeddings` | 61 | Experience entries | `data/experience.db` (?) |
+| `learned_patterns` | 44 | Learned patterns | `data/learned_patterns.db` (?) |
+| `visual_grounding` | 5 | Visual grounding | минимально, можно отложить или skip |
+
+- [ ] **8.5.1** Найти source folder/db для каждой коллекции
+- [ ] **8.5.2** Source отсутствует → пометить «остаётся E5-snapshot» или drop
+- [ ] **8.5.3** Проверить scripts: `reindex_bsl_qwen3.py`, `index-skills-to-qdrant.py`
+- [ ] **8.5.4** Документировать gaps в этом roadmap
+
+## 10. Phase 8.6 — Backup текущего состояния (5–15 мин)
+
+- [ ] **8.6.1** Создать snapshots всех 11 коллекций на текущем E5-state:
+      ```bash
+      for col in $(curl -s http://localhost:6333/collections | jq -r '.result.collections[].name'); do
+        curl -s -X POST "http://localhost:6333/collections/$col/snapshots"
+      done
+      ```
+- [ ] **8.6.2** Скопировать snapshots в `E:/Transfer folder/qdrant/1c-pre-qwen3/`
+- [ ] **8.6.3** Создать manifest backup (даты, размеры, points_count)
+
+## 11. Phase 8.7 — Пересоздание коллекций (5 мин)
+
+Решение по dim per collection:
+- `bsl_code_v4` — **4096 native** (топовая, проверим без MRL)
+- `bsl_code_v3` — **drop** (дубликат v4)
+- Остальные 9 — **1024 (MRL-truncated)** — экономия storage 4×, качество ~95%
+
+- [ ] **8.7.1** `DELETE /collections/<name>` для всех 11 (snapshots уже есть из 8.6)
+- [ ] **8.7.2** Создать заново с новой size (4096 или 1024), distance=Cosine
+- [ ] **8.7.3** **НЕ** создавать `bsl_code_v3`
+- [ ] **8.7.4** Если используется hybrid — добавить sparse-vector конфигурацию
+
+## 12. Phase 8.8 — Переиндексация (от лёгких к тяжёлым)
+
+Стратегия — идти от маленьких к большим, чтобы рано выявить регрессии. Время суммарно
+30–90 мин на GPU, зависит от source data parsing.
+
+### 12.1. visual_grounding (5)
+- [ ] **8.8.1** Найти source. Если нет — пропустить (5 точек не критично).
+
+### 12.2. learned_patterns (44) / experience_embeddings (61)
+- [ ] **8.8.2** Source: `data/learned_patterns.*`, `data/experience.*`
+- [ ] **8.8.3** Reindex; verify points_count
+
+### 12.3. skill_library (75) / conversation_memory (372)
+- [ ] **8.8.4** Skills: `python scripts/index-skills-to-qdrant.py` — verify ≥ 75 points
+- [ ] **8.8.5** Conversations: source `data/conversations.db` — verify ≥ 372 points
+
+### 12.4. bsl_metadata (1000) / pdf_documents (1012)
+- [ ] **8.8.6** BSL metadata: re-extract из BSL parser, или из `data/bsl_metadata.*`
+- [ ] **8.8.7** PDF documents: re-chunk + index через PDF loader, source — `docs/source-pdf/`
+
+### 12.5. wiki_pages_v1 (3073) / graph_embeddings (6694)
+- [ ] **8.8.8** Wiki: reindex через `wiki-pipeline` skill, source — `docs/wiki/`
+- [ ] **8.8.9** Graph: reindex KG nodes из Neo4j или `data/graph/` dumps
+
+### 12.6. bsl_code_v4 (22 604) — самая большая
+- [ ] **8.8.10** Source: `src/projects/configuration/<name>/`
+- [ ] **8.8.11** Адаптировать `scripts/reindex_bsl_qwen3.py` под Qwen3-Embedding-8B
+      (сменить model id, dtype=fp16, device=cuda)
+- [ ] **8.8.12** Запустить с `nvidia-smi --loop=1` в отдельном окне для мониторинга
+- [ ] **8.8.13** Verify ≥ 22 600 points (с учётом dedup)
+
+Подвох: длинные BSL модули (>5K токенов) могут OOM на FP16+batch=8. Адаптивно снижать
+batch size при превышении 20 ГБ VRAM, либо использовать MRL truncation 1024d.
+
+## 13. Phase 8.9 — Smoke + Quality benchmark (30 мин)
+
+### Functional smoke
+- [ ] **8.9.1** «регистр сведений 1С» → top-3 на pdf_documents, score ≥ 0.85
+- [ ] **8.9.2** «обработка проведения документа» → top-3 на bsl_code_v4, score ≥ 0.80
+- [ ] **8.9.3** Latency ≤ 200 мс end-to-end (warm cache)
+- [ ] **8.9.4** `python -m src.cli.main ask "Как создать справочник в 1С?"` → ответ
+
+### Quality A/B (опц.)
+- [ ] **8.9.5** Запустить eval на golden set
+- [ ] **8.9.6** Сравнить precision@5, recall@10, NDCG@10 — Qwen3 vs E5
+- [ ] **8.9.7** Документировать в `docs/architecture/embedding-comparison-2026-04.md`
+
+## 14. Phase 8.10 — Sync конфигов и документации (30 мин)
+
+`.env`:
+```
+EMBEDDING__PROVIDER=local
+EMBEDDING__MODEL=Qwen/Qwen3-Embedding-8B
+EMBEDDING__DIMENSIONS=1024  # или 4096 — зависит от коллекции
+EMBEDDING__DEVICE=cuda
+EMBEDDING__DTYPE=float16
+```
+
+- [ ] **8.10.1** `.env` обновить
+- [ ] **8.10.2** Skills: `embedding-models`, `qdrant-operations`, `framework-config`,
+      `bsl-development`/`pdf-knowledge` — обновить
+- [ ] **8.10.3** `docs/framework documentation/...` раздел RAG/embeddings
+- [ ] **8.10.4** `pyproject.toml` — `transformers>=4.51`, `accelerate` (опц.)
+- [ ] **8.10.5** ADR в `architecture-research/adr/`: «Выбор embedding-модели 2026»
+
+## 15. Phase 8.11 — Cleanup (10 мин)
+
+- [ ] **8.11.1** Удалить старые `*.snapshot` E5-файлы из `qdrant_snapshots` volume
+      (через 1 неделю после успешной верификации)
+- [ ] **8.11.2** Удалить HF cache E5-large (опц., 2.2 ГБ)
+- [ ] **8.11.3** Drop коллекцию `bsl_code_v3` (если ещё не сделано в 8.7)
+- [ ] **8.11.4** Финальный коммит «Phase 8 complete»
+
+## 16. Risks & Mitigations
+
+| Риск | P×I | Митигация |
+|---|---|---|
+| Qwen3 не грузится через ST (Pooling missing) | M×H | `--force-redownload`; fallback wrapper с last-token pooling |
+| OOM на bsl_code_v4 (длинные чанки) | L×M | Снизить batch; MRL-truncate до 1024d |
+| Throughput < 30 chunks/sec | L×L | Включить flash-attn 2; `pip install flash-attn` |
+| Source-данные коллекции отсутствуют | H×M | Документировать gap; оставить E5-snapshot или drop |
+| pip install cu128 ломает deps | L×H | `pip freeze > /tmp/before.txt` до установки; rollback `pip install -r before.txt` |
+| Reindex bsl_code_v4 > 2 ч | M×L | Запустить overnight, разовое |
+| Качество хуже E5 на каких-то query | L×M | A/B benchmark; fallback gemma2 или возврат E5 из snapshot |
+
+## 17. Rollback plan
+
+Если Phase 8 проваливается:
+
+1. **Pip:** `pip install -r /tmp/before.txt` (snapshot до cu128)
+2. **Snapshots:** все 11 коллекций восстановить из бэкапа (Phase 8.6):
+   ```
+   PUT /collections/<name>/snapshots/recover
+   {"location":"file:///qdrant/snapshots/<name>/<file>","priority":"snapshot"}
+   ```
+3. **`.env`:** revert через `git checkout HEAD -- .env`
+4. **Docker:** Qdrant 1.17.1 совместим с E5-snapshots — оставляем
+
+## 18. Time estimate
+
+| Phase | Время | Кумул. |
+|---|---|---|
+| 8.0 Pre-flight | 5 мин | 5 |
+| 8.1 Uninstall CPU torch | 2 мин | 7 |
+| 8.2 Install cu128 | 5–15 мин | 22 |
+| 8.3 Download Qwen3 | 15–60 мин | 1ч 22м |
+| 8.4 Inference benchmark | 10 мин | 1ч 32м |
+| 8.5 Source audit | 30–60 мин | 2ч 32м |
+| 8.6 Backup snapshots | 5–15 мин | 2ч 47м |
+| 8.7 Recreate collections | 5 мин | 2ч 52м |
+| 8.8 Reindex (worst case bsl_code_v4) | 30–90 мин | 4ч 22м |
+| 8.9 Smoke + benchmark | 30 мин | 4ч 52м |
+| 8.10 Docs sync | 30 мин | 5ч 22м |
+| 8.11 Cleanup | 10 мин | **5ч 32м** |
+
+## 19. Связь с предыдущими фазами
+
+| Phase | Что сделано | Коммит |
+|---|---|---|
+| 5. Paths | D:→C: settings + 3 хука | `d1aa4fa1` |
+| 5.1 Tail | session log + perms | `ce8401f1` |
+| 5.2 Gitlinks | detach broken, .tmp/ ignore, revert hook | `9169c0a3` |
+| 5.3 Subprojects | gitignore detached subprojects | `0d22db22` |
+| 6. Qdrant | bump v1.12→v1.17.1, recover 11 коллекций | `120f5131` |
+| 6.1 Healthcheck | distroless без curl | `2f7401dc` |
+| 6.2 Docs | qdrant version refs | `3d9c2502` `5edd3be8` |
+| 7. Smoke v1 | aiosqlite + qdrant-client + e2e search OK | (deps) |
+| 7.1 MCP migration | `.mcp.json` D:→C: | `bf887153` |
+
+## 20. Источники
+
+- Cache: [embedding-models-2026-russian-bsl.md](../../.claude/skills/tech-research/cache/embedding-models-2026-russian-bsl.md)
+- Qwen3-Embedding-8B HF: https://huggingface.co/Qwen/Qwen3-Embedding-8B
+- Qwen3 Embedding paper: https://arxiv.org/abs/2506.05176
+- MTEB Leaderboard: https://huggingface.co/spaces/mteb/leaderboard
+- LongEmbed paper: https://arxiv.org/abs/2404.12096
+- PyTorch CUDA wheels: https://pytorch.org/get-started/locally/
+- Migration doc: `E:/Transfer folder/260425_Перенос фреймворка на другой ПК.md`
+
+---
+
+После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
+LLM-rotation expansion (новые провайдеры после Z.AI лимита).
