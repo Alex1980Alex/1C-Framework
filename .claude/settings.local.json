@@ -711,7 +711,16 @@
       "PowerShell($ErrorActionPreference='Continue'; robocopy \"C:\\\\Transfer folder\\\\user-claude\" \"C:\\\\Users\\\\Tech. Boutique\\\\.claude\" /E /XD projects /NFL /NDL /NJH /NJS /NP /MT:8 /R:1 /W:1 | Select-Object -Last 3; Write-Output \"userclaude=$LASTEXITCODE\")",
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -c \"import langchain, langgraph, fastapi, chromadb, sentence_transformers, mcp; print\\('all critical imports OK'\\)\")",
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' 'C:/1С-Framework/.claude/hooks/git-commit-enforcer.py')",
-      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' 'C:/1С-Framework/.claude/hooks/task-enforcer.py')"
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' 'C:/1С-Framework/.claude/hooks/task-enforcer.py')",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec pdf-rag-qdrant sh -c 'ls -la /qdrant/storage; echo ---; ls -la /qdrant/storage/collections 2>/dev/null || echo no collections dir')",
+      "Read(//e/Transfer folder/**)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec pdf-rag-qdrant find /qdrant -maxdepth 4 -name '*.snapshot')",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec pdf-rag-qdrant tar -tf '/qdrant/snapshots/_format_probe/_format_probe-4165940475519587-2026-04-26-02-54-32.snapshot')",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test ls -la /qdrant/snapshots-import/)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test mkdir -p /qdrant/snapshots-import)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test mkdir -p /qdrant/snapshots/learned_patterns)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test mv /qdrant/snapshots-import/learned_patterns.snapshot /qdrant/snapshots/learned_patterns/learned_patterns.snapshot)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test ls -la /qdrant/snapshots/learned_patterns/)"
     ]
   },
   "enableAllProjectMcpServers": true,
