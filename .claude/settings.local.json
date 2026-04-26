@@ -708,7 +708,8 @@
       "Bash(robocopy \"C:/Transfer folder/project/data\" \"C:/1С-Framework/data\" /E /NFL /NDL /NJH /NP /MT:8)",
       "PowerShell($ErrorActionPreference='Continue'; robocopy \"C:\\\\Transfer folder\\\\project\\\\data\" \"C:\\\\1С-Framework\\\\data\" /E /NFL /NDL /NJH /NJS /NP /MT:8 /R:1 /W:1 | Select-Object -Last 5; Write-Output \"ExitCode=$LASTEXITCODE\")",
       "PowerShell(robocopy *)",
-      "PowerShell($ErrorActionPreference='Continue'; robocopy \"C:\\\\Transfer folder\\\\user-claude\" \"C:\\\\Users\\\\Tech. Boutique\\\\.claude\" /E /XD projects /NFL /NDL /NJH /NJS /NP /MT:8 /R:1 /W:1 | Select-Object -Last 3; Write-Output \"userclaude=$LASTEXITCODE\")"
+      "PowerShell($ErrorActionPreference='Continue'; robocopy \"C:\\\\Transfer folder\\\\user-claude\" \"C:\\\\Users\\\\Tech. Boutique\\\\.claude\" /E /XD projects /NFL /NDL /NJH /NJS /NP /MT:8 /R:1 /W:1 | Select-Object -Last 3; Write-Output \"userclaude=$LASTEXITCODE\")",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -c \"import langchain, langgraph, fastapi, chromadb, sentence_transformers, mcp; print\\('all critical imports OK'\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,

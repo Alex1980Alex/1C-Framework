@@ -68,3 +68,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 2
 - Summary: Session 2026-04-23. Skills: bsl-development, 1c-doc-research, git-commit-message, code-verify. Changed 2 files in mcp-server.log, src/projects. Commit: chore: auto-commit 4 file(s) changed. Commit: chore: update submodule ref (GKSTCPLK-composite-promezh — fix alias-конфликт в ВТ_ЕдиничныеПробы). Commit: chore: auto-commit 1 file(s) changed
 
+
+## 2026-04-26 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: none
+- Files changed: 8
+- Summary: Session 2026-04-26. Changed 8 files in .claude/settings.local.json, .tmp/, 2, C, data/analyze-1c-research. Commit: chore: migrate hook paths from D:/1С-Framework to C:/1С-Framework
+
