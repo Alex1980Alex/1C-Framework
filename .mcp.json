@@ -2,23 +2,23 @@
   "mcpServers": {
     "bsl-code-search": {
       "command": "node",
-      "args": ["D:\\1С-Framework\\tools\\bsl-code-search\\index.js"],
-      "cwd": "D:\\1С-Framework",
+      "args": ["C:\\1С-Framework\\tools\\bsl-code-search\\index.js"],
+      "cwd": "C:\\1С-Framework",
       "env": {
         "BSL_SOURCE_DIR": "src/projects"
       },
       "timeout": 30000
     },
     "pdf-vector-graph": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.mcp_server.server"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {}
     },
     "auto-documenter": {
       "command": "node",
-      "args": ["D:\\1С-Framework\\tools\\auto-documenter\\mcp-start.js"],
-      "cwd": "D:\\1С-Framework\\tools\\auto-documenter",
+      "args": ["C:\\1С-Framework\\tools\\auto-documenter\\mcp-start.js"],
+      "cwd": "C:\\1С-Framework\\tools\\auto-documenter",
       "env": {
         "NODE_OPTIONS": "--max-old-space-size=4096",
         "DEEP_REASONING_API_KEY": "${DEEP_REASONING_API_KEY}",
@@ -28,9 +28,9 @@
       "timeout": 180000
     },
     "bsl-semantic-search": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.bsl.semantic_search.mcp"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8"
       },
@@ -38,8 +38,8 @@
     },
     "bsl-debugger": {
       "command": "node",
-      "args": ["D:\\1С-Framework\\tools\\bsl-debugger\\dist\\index.js"],
-      "cwd": "D:\\1С-Framework\\tools\\bsl-debugger",
+      "args": ["C:\\1С-Framework\\tools\\bsl-debugger\\dist\\index.js"],
+      "cwd": "C:\\1С-Framework\\tools\\bsl-debugger",
       "env": {
         "NODE_ENV": "production",
         "OSCRIPT_HOME": "C:\\Tools\\OneScript"
@@ -51,7 +51,7 @@
       "args": [
         "-Dfile.encoding=UTF-8",
         "-jar",
-        "D:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
+        "C:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
         "--platform-path",
         "C:\\Program Files\\1cv8\\8.3.27.1859",
         "--verbose"
@@ -62,18 +62,18 @@
       "timeout": 30000
     },
     "memory-ai": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.memory.ai_memory.server"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8"
       },
       "timeout": 60000
     },
     "vector-memory": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.memory.vector_memory.server"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "QDRANT_URL": "http://localhost:6333"
@@ -81,18 +81,18 @@
       "timeout": 60000
     },
     "skill-learning": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.memory.skill_learning.server"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8"
       },
       "timeout": 60000
     },
     "memory-orchestrator": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.memory.orchestrator.memory_orchestrator"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "QDRANT_URL": "http://localhost:6333"
@@ -100,9 +100,9 @@
       "timeout": 120000
     },
     "llm-rotation": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["-m", "src.shared.llm_rotation.mcp"],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "ZAI_API_KEY": "96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9",
@@ -114,20 +114,20 @@
       "timeout": 60000
     },
     "serena": {
-      "command": "D:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
+      "command": "C:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
       "args": ["start-mcp-server", "--context", "ide-assistant"],
-      "cwd": "D:\\1С-Framework\\tools\\serena",
+      "cwd": "C:\\1С-Framework\\tools\\serena",
       "timeout": 180000,
       "disabled": true
     },
     "task-master-ai": {
       "command": "npx",
       "args": ["-y", "--package=task-master-ai", "task-master-ai"],
-      "cwd": "D:\\1С-Framework\\infra\\task-master",
+      "cwd": "C:\\1С-Framework\\infra\\task-master",
       "env": {
         "ANTHROPIC_API_KEY": "${DEEP_REASONING_API_KEY}",
         "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
-        "TASKMASTER_PROJECT_ROOT": "D:/1С-Framework/infra/task-master"
+        "TASKMASTER_PROJECT_ROOT": "C:/1С-Framework/infra/task-master"
       },
       "timeout": 180000
     },
@@ -146,12 +146,12 @@
       "command": "java",
       "args": [
         "-Dfile.encoding=UTF-8",
-        "-Dspring.config.additional-location=file:D:/1С-Framework/tools/mcp-jars/",
+        "-Dspring.config.additional-location=file:C:/1С-Framework/tools/mcp-jars/",
         "-jar",
-        "D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar",
+        "C:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar",
         "--spring.profiles.active=mcp,testdb"
       ],
-      "cwd": "D:\\1С-Framework\\tools\\mcp-jars",
+      "cwd": "C:\\1С-Framework\\tools\\mcp-jars",
       "env": {
         "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
       },
@@ -202,9 +202,9 @@
       "timeout": 60000
     },
     "1c-debug": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["D:\\1С-Framework\\tools\\bsl-debug-server\\mcp_debug_server.py"],
-      "cwd": "D:\\1С-Framework\\tools\\bsl-debug-server",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\1С-Framework\\tools\\bsl-debug-server\\mcp_debug_server.py"],
+      "cwd": "C:\\1С-Framework\\tools\\bsl-debug-server",
       "env": {
         "PYTHONIOENCODING": "utf-8"
       },
@@ -213,16 +213,16 @@
     "openspec-mcp": {
       "command": "npx",
       "args": ["-y", "openspec-mcp@0.4.2", "."],
-      "cwd": "D:\\1С-Framework",
+      "cwd": "C:\\1С-Framework",
       "timeout": 60000
     },
     "lazy-mcp": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["-u", "D:\\1С-Framework\\infra\\lazy-mcp\\src\\server.py"],
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": ["-u", "C:\\1С-Framework\\infra\\lazy-mcp\\src\\server.py"],
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "PYTHONUNBUFFERED": "1",
-        "LAZY_MCP_CONFIG": "D:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
+        "LAZY_MCP_CONFIG": "C:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
       },
       "timeout": 60000
     },
