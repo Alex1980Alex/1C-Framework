@@ -721,7 +721,9 @@
       "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test mkdir -p /qdrant/snapshots/learned_patterns)",
       "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test mv /qdrant/snapshots-import/learned_patterns.snapshot /qdrant/snapshots/learned_patterns/learned_patterns.snapshot)",
       "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test ls -la /qdrant/snapshots/learned_patterns/)",
-      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/skill-router.py')"
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/skill-router.py')",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/git-commit-enforcer.py')",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/task-enforcer.py')"
     ]
   },
   "enableAllProjectMcpServers": true,
