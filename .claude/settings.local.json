@@ -746,7 +746,13 @@
       "Bash(sqlite3 data/memory_ai.db \"SELECT name FROM sqlite_master WHERE type='table';\")",
       "PowerShell(docker exec pdf-rag-qdrant *)",
       "PowerShell(New-Item *)",
-      "PowerShell(Get-ChildItem *)"
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell($null = [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\1С-Framework\\\\scripts\\\\phase8_run.ps1', [ref]$null, [ref]$err\\); if \\($err\\) { $err | Format-List } else { 'phase8_run.ps1: syntax OK' })",
+      "PowerShell(Out-Null *)",
+      "Bash(./.venv/Scripts/pip.exe check *)",
+      "PowerShell($null = [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\1С-Framework\\\\scripts\\\\phase8_run.ps1', [ref]$null, [ref]$errs\\); if \\($errs\\) { $errs | ForEach-Object { \"$\\($_.Extent.StartLineNumber\\): $\\($_.Message\\)\" } } else { \"OK\" })",
+      "PowerShell($tokens = $null; $errs = $null; $null = [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\1С-Framework\\\\scripts\\\\phase8_run.ps1', [ref]$tokens, [ref]$errs\\); if \\($errs\\) { $errs | ForEach-Object { \"L$\\($_.Extent.StartLineNumber\\): $\\($_.Message\\)\" } } else { \"Parse OK\" })",
+      "Bash(tee tmp/phase8/8.4b_optimize.log)"
     ]
   },
   "enableAllProjectMcpServers": true,

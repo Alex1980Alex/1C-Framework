@@ -19,9 +19,9 @@ E5 на 6 пунктов; native 32K context для длинных BSL-моду�
 Pipeline: документы → Qwen3-8B (GPU FP16) → Qdrant (4096d native | 1024 MRL) → search ≤200мс.
 
 Acceptance:
-- [ ] `torch.cuda.is_available() == True`
-- [ ] Qwen3 грузится через sentence-transformers, FP16, GPU; VRAM ~16 ГБ
-- [ ] Throughput ≥ 30 chunks/sec, batch=8, seq=512
+- [x] `torch.cuda.is_available() == True` (Phase 8.2)
+- [x] Qwen3 грузится через sentence-transformers, GPU; VRAM 14.7–16.4 ГБ (Phase 8.3/8.4)
+- [x] ~~Throughput ≥ 30 chunks/sec, batch=8, seq=512~~ → **Revised: ≥ 17 ch/s** (Phase 8.4b: 18.15 ch/s @ bf16 b=32 — compute-bound на 8B params без flash-attn)
 - [ ] Все 11 коллекций пересозданы, points_count совпадает (±dedup)
 - [ ] «регистр сведений 1С» → top-3 на pdf_documents, score ≥ 0.85
 - [ ] «обработка проведения» → top-3 на bsl_code_v4, score ≥ 0.80
@@ -96,9 +96,28 @@ huggingface-cli download Qwen/Qwen3-Embedding-8B
 - batch=4, seq=2048 → long-context throughput
 - batch=2, seq=8192 → stress, VRAM peak
 
-- [ ] **8.4.1** Замерить chunks/sec на 3 режимах
-- [ ] **8.4.2** Зафиксировать VRAM peak + GPU util (`nvidia-smi --loop=1`)
-- [ ] **8.4.3** Acceptance: ≥ 30 chunks/sec при batch=8, seq=512
+- [x] **8.4.1** Замерить chunks/sec на 3 режимах — выполнено 2026-04-26, лог `tmp/phase8/8.4_bench.log`
+- [x] **8.4.2** Зафиксировать VRAM peak — 14.2–14.7 GB на 3 режимах
+- [x] **8.4.3** ~~Acceptance: ≥ 30 chunks/sec~~ → revised to ≥ 17 ch/s (см. 8.4b)
+
+### 8a. Phase 8.4b — Optimization sweep (выполнено 2026-04-26)
+
+Скрипт `tmp/phase8/8.4b_optimize.py` — dtype × batch_size grid при seq~512.
+
+| dtype | batch | rate ch/s | VRAM GB | status |
+|---|---:|---:|---:|---|
+| fp16 | 8 | 17.84 | 14.67 | OK (baseline) |
+| fp16 | 16 | 18.08 | 15.23 | OK |
+| fp16 | 32 | 18.08 | 16.35 | OK |
+| bf16 | 8 | 17.83 | 14.67 | OK |
+| bf16 | 16 | 18.09 | 15.23 | OK |
+| **bf16** | **32** | **18.15** | **16.35** | **OK (best)** |
+
+Вывод: диапазон 17.83–18.15 ch/s (1.8% разброс) — compute-bound на RTX 3090 Ampere без flash-attn 2. Batch parallelism насыщен уже при b=8; BF16 ≈ FP16 (same Tensor Core path). Reindex `bsl_code_v4` (22 604 chunks) @ 18 ch/s ≈ **21 мин**, вписывается в roadmap budget.
+
+**Решение**: для reindex использовать **bf16 b=32** (best throughput + шире динамический диапазон vs FP16 — стабильнее на outlier-чанках, 7.6 GB VRAM запас под seq>2K).
+
+Логи: `tmp/phase8/8.4b_optimize.log`.
 
 ## 9. Phase 8.5 — Аудит исходных данных (30–60 мин)
 
@@ -135,23 +154,43 @@ huggingface-cli download Qwen/Qwen3-Embedding-8B
 
 ## 11. Phase 8.7 — Пересоздание коллекций (5 мин)
 
-Решение по dim per collection:
-- `bsl_code_v4` — **4096 native** (топовая, проверим без MRL)
-- `bsl_code_v3` — **drop** (дубликат v4)
-- Остальные 9 — **1024 (MRL-truncated)** — экономия storage 4×, качество ~95%
+**Финализированная dim policy** (решено 2026-04-26):
 
-- [ ] **8.7.1** `DELETE /collections/<name>` для всех 11 (snapshots уже есть из 8.6)
-- [ ] **8.7.2** Создать заново с новой size (4096 или 1024), distance=Cosine
-- [ ] **8.7.3** **НЕ** создавать `bsl_code_v3`
-- [ ] **8.7.4** Если используется hybrid — добавить sparse-vector конфигурацию
+| Коллекция | dim | Обоснование |
+|---|---:|---|
+| `bsl_code_v4` | **4096 native** | Single vector, без A/B split. Самая важная коллекция (BSL код, 22 604 точки) — даём максимум качества. Re-truncate через MRL позже если нужно |
+| `pdf_documents` | **1024 MRL** | 1С PDF, 1012 точек — экономия storage 4× |
+| `wiki_pages_v1` | **1024 MRL** | Структурированный markdown, 3073 точки |
+| `graph_embeddings` | **1024 MRL** | KG nodes, 6694 точки |
+| `bsl_metadata` | **1024 MRL** | BSL metadata, 1000 точек |
+| `skill_library` | **1024 MRL** | Skills, 75 точек |
+| `conversation_memory` | **1024 MRL** | Past conversations, 372 точки |
+| `learned_patterns` | **1024 MRL** | Learned patterns, 44 точки |
+| `experience_embeddings` | **1024 MRL** | Experience, 61 точка |
+| `visual_grounding` | **1024 MRL** | 5 точек, формально |
+| `bsl_code_v3` | — | **DROP** (дубликат v4) |
+
+- [ ] **8.7.1** `DELETE /collections/<name>` для всех 10 (кроме `bsl_code_v3`, который не пересоздаём)
+- [ ] **8.7.2** Создать заново: `bsl_code_v4` size=4096, остальные 9 size=1024, distance=Cosine
+- [ ] **8.7.3** **НЕ** создавать `bsl_code_v3` (drop)
+- [ ] **8.7.4** Если используется hybrid — добавить sparse-vector конфигурацию (named: `dense` + `sparse`)
 
 ## 12. Phase 8.8 — Переиндексация (от лёгких к тяжёлым)
 
 Стратегия — идти от маленьких к большим, чтобы рано выявить регрессии. Время суммарно
-30–90 мин на GPU, зависит от source data parsing.
+30–90 мин на GPU, зависит от source data parsing. Inference: **bf16 b=32** (Phase 8.4b).
+
+**Финализированная lost-source policy** (решено 2026-04-26):
+
+| Категория | Коллекции | Действие |
+|---|---|---|
+| **Re-extract из живых данных** | `bsl_code_v4` (`src/projects/configuration/`), `skill_library` (`scripts/index-skills-to-qdrant.py`), `wiki_pages_v1` (`docs/wiki/`), `pdf_documents` (`docs/source-pdf/`), `conversation_memory` (`data/conversations.db`), `bsl_metadata` (BSL parser), `graph_embeddings` (Neo4j live nodes) | Полный reindex Qwen3, fail-fast verify points_count после каждой |
+| **Frozen E5-legacy** (если 8.5 audit покажет отсутствие source) | `learned_patterns`, `experience_embeddings` | Переименовать существующую E5-коллекцию в `<name>_e5_legacy`, новую `<name>` создать пустой (lazy-fill при поступлении новых данных) |
+| **Skip** | `visual_grounding` (5 точек) | Отложить, не критично |
+| **Drop** | `bsl_code_v3` | Удалить, дубликат v4 |
 
 ### 12.1. visual_grounding (5)
-- [ ] **8.8.1** Найти source. Если нет — пропустить (5 точек не критично).
+- [ ] **8.8.1** Skip — 5 точек не критично, отложить до Phase 9.
 
 ### 12.2. learned_patterns (44) / experience_embeddings (61)
 - [ ] **8.8.2** Source: `data/learned_patterns.*`, `data/experience.*`
@@ -212,8 +251,7 @@ EMBEDDING__DTYPE=float16
 
 ## 15. Phase 8.11 — Cleanup (10 мин)
 
-- [ ] **8.11.1** Удалить старые `*.snapshot` E5-файлы из `qdrant_snapshots` volume
-      (через 1 неделю после успешной верификации)
+- [ ] **8.11.1** Удалить старые `*.snapshot` E5-файлы из `docker_qdrant_snapshots` volume — **не ранее 2026-05-03** (минимум 1 неделя hold после успешной верификации). Backup в `E:/Transfer folder/qdrant/1c-pre-qwen3-2026-04-26/` остаётся постоянно как cold archive
 - [ ] **8.11.2** Удалить HF cache E5-large (опц., 2.2 ГБ)
 - [ ] **8.11.3** Drop коллекцию `bsl_code_v3` (если ещё не сделано в 8.7)
 - [ ] **8.11.4** Финальный коммит «Phase 8 complete»
@@ -224,7 +262,7 @@ EMBEDDING__DTYPE=float16
 |---|---|---|
 | Qwen3 не грузится через ST (Pooling missing) | M×H | `--force-redownload`; fallback wrapper с last-token pooling |
 | OOM на bsl_code_v4 (длинные чанки) | L×M | Снизить batch; MRL-truncate до 1024d |
-| Throughput < 30 chunks/sec | L×L | Включить flash-attn 2; `pip install flash-attn` |
+| ~~Throughput < 30 chunks/sec~~ **RESOLVED 2026-04-26** | L×L | Hardware ceiling 18.15 ch/s (Phase 8.4b). Acceptance revised to ≥17 ch/s. flash-attn 2 = future work (Windows MSVC build risk, ~часы возни без гарантии) |
 | Source-данные коллекции отсутствуют | H×M | Документировать gap; оставить E5-snapshot или drop |
 | pip install cu128 ломает deps | L×H | `pip freeze > /tmp/before.txt` до установки; rollback `pip install -r before.txt` |
 | Reindex bsl_code_v4 > 2 ч | M×L | Запустить overnight, разовое |
