@@ -107,8 +107,32 @@
       "domain": "vector-db",
       "category": "pattern",
       "created": "2026-04-04",
-      "keywords": ["qdrant", "docker", "wsl2", "latency", "grpc", "localhost", "windows", "performance"],
+      "keywords": [
+        "qdrant",
+        "docker",
+        "wsl2",
+        "latency",
+        "grpc",
+        "localhost",
+        "windows",
+        "performance"
+      ],
       "summary": "WSL2 localhost NAT adds 5-15s per HTTP to Docker containers. Fix: gRPC (prefer_grpc=True, port 6334) reduces query from 10s to 7ms. Pre-warm on start() moves cold connect out of search path. Alt: WSL2 IP or native binary."
+    },
+    "claude-code-hooks-stdin-schema": {
+      "topic": "claude-code-hooks-stdin-schema",
+      "domain": "tools",
+      "category": "api",
+      "last_verified": "2026-04-26",
+      "keywords": [
+        "claude-code",
+        "hooks",
+        "stdin",
+        "PreToolUse",
+        "PostToolUse",
+        "tool_response",
+        "dual-registration"
+      ]
     }
   }
 }
