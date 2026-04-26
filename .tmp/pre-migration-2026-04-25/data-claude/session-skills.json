@@ -1,0 +1,49 @@
+{
+  "activated_skills": [
+    "bsl-development",
+    "1c-doc-research",
+    "git-commit-message",
+    "code-verify",
+    "hooks-skills-mcp-triad",
+    "audit-docs",
+    "architecture-research",
+    "deployment",
+    "create-hook",
+    "learn:docker-configuration",
+    "update-config"
+  ],
+  "recommended_skills": [
+    "1c-doc-research",
+    "bsl-development",
+    "analyze-1c-task-v2",
+    "implement-1c-task",
+    "code-verify",
+    "deployment",
+    "claude-code-settings",
+    "claude-code-cli-interactive",
+    "claude-code-terminal-ux",
+    "claude-code-vscode",
+    "langchain-multiagent",
+    "langchain-core"
+  ],
+  "pending_learn": {
+    "label": "Docker Configuration",
+    "domain": "devops",
+    "pattern": "Dockerfile|docker-compose\\.yml|FROM\\s+\\w+:",
+    "detected_at": "2026-04-23T18:39:26.067244"
+  },
+  "session_id": null,
+  "created_at": null,
+  "last_updated": "2026-04-23T18:58:04.408302",
+  "task_protocol": {
+    "phase": "classified",
+    "complexity": "complex",
+    "subtask_count": 0,
+    "decomposed_at": null,
+    "skill_checked_at": null
+  },
+  "current_prompt_id": "fc0d051c",
+  "router_fired_at": "2026-04-23T18:58:04.408243",
+  "llm_delegation_count": 4,
+  "llm_delegation_last": "2026-04-23T18:06:22.804424"
+}

@@ -45,6 +45,37 @@ WATCHED_PATHS = [
 CHANGE_STATUSES = {"M", "A", "D", "R", "C", "U", "T"}
 
 
+def get_gitlink_paths() -> set[str]:
+    """Return set of paths registered as gitlinks (mode 160000) in the index.
+
+    These are submodule-style entries (proper submodules + orphan gitlinks
+    without .gitmodules registration). Their internal status is the
+    sub-repo's responsibility, not the parent's — the enforcer should not
+    block Stop on their HEAD shifts.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "ls-files", "--stage"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
+            cwd=str(PROJECT_ROOT),
+        )
+        if result.returncode != 0:
+            return set()
+        gitlinks: set[str] = set()
+        for line in result.stdout.splitlines():
+            # Format: "<mode> <sha> <stage>\t<path>"
+            if line.startswith("160000 "):
+                tab_idx = line.find("\t")
+                if tab_idx > 0:
+                    gitlinks.add(line[tab_idx + 1 :].strip().strip('"'))
+        return gitlinks
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return set()
+
+
 def get_uncommitted_changes() -> list[str]:
     """Get list of uncommitted changes (modified/added/deleted, not untracked).
 
@@ -62,6 +93,7 @@ def get_uncommitted_changes() -> list[str]:
         if result.returncode != 0:
             return []
 
+        gitlinks = get_gitlink_paths()
         changes = []
         for line in result.stdout.strip().splitlines():
             if not line or len(line) < 4:
@@ -85,10 +117,16 @@ def get_uncommitted_changes() -> list[str]:
             if not has_change:
                 continue
 
+            # Normalize: git may use forward slashes
+            fp_normalized = filepath.replace("\\", "/")
+
+            # Skip gitlink entries (submodules + orphan gitlinks without
+            # .gitmodules). Their internal state is the sub-repo's concern.
+            if fp_normalized in gitlinks:
+                continue
+
             # Filter by watched paths (if configured)
             if WATCHED_PATHS:
-                # Normalize: git may use forward slashes
-                fp_normalized = filepath.replace("\\", "/")
                 if not any(fp_normalized.startswith(p) for p in WATCHED_PATHS):
                     continue
 
