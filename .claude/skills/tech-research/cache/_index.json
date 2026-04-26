@@ -10,8 +10,31 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-04-04",
+  "last_updated": "2026-04-25",
   "topics": {
+    "embedding-models-2026-russian-bsl": {
+      "file": "embedding-models-2026-russian-bsl.md",
+      "domain": "embeddings",
+      "category": "library",
+      "created": "2026-04-25",
+      "last_verified": "2026-04-25",
+      "keywords": [
+        "Qwen3-Embedding-8B",
+        "bge-multilingual-gemma2",
+        "MTEB",
+        "ruMTEB",
+        "Russian embeddings",
+        "long context retrieval",
+        "LongEmbed",
+        "RTX 3090",
+        "sentence-transformers",
+        "BSL embeddings",
+        "code retrieval",
+        "Matryoshka MRL",
+        "production RAG"
+      ],
+      "summary": "Сравнение SOTA dense embedders (Qwen3-Embedding-8B vs bge-multilingual-gemma2) для multilingual RAG (русский + BSL/1С + английский) на RTX 3090 24GB. Qwen3-Embedding-8B побеждает: #1 MTEB Multilingual 70.58, native 32K context (vs 8K у gemma2), MRL 32-4096d, MTEB-Code 80.68, Apache-2.0, 16GB FP16 (свободнее на 3090). gemma2-9B сильнее на MIRACL/PL/FR но 8K context критично для длинных BSL модулей. Известные баги: nan на macOS SDPA (#3498), KeyError qwen3 (transformers <4.51), vLLM 0.10.2 regression (#24827), gemma2 fine-tune OOM (#1338). Для русского — Giga-Embeddings ruMTEB 69.1 SOTA, но для multilingual+code Qwen3-Embedding-8B оптимален. Verified 2026-04-25 via MTEB leaderboard, HF model cards, GitHub issues."
+    },
     "project-gap-analysis": {
       "file": "project-gap-analysis.md",
       "domain": "rag",

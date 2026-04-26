@@ -723,7 +723,20 @@
       "Bash(MSYS_NO_PATHCONV=1 docker exec qdrant-restore-test ls -la /qdrant/snapshots/learned_patterns/)",
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/skill-router.py')",
       "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/git-commit-enforcer.py')",
-      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/task-enforcer.py')"
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' '.claude/hooks/task-enforcer.py')",
+      "Read(//c/Users/Tech. Boutique/.claude/projects/C--1--Framework/memory/**)",
+      "Read(//c/1С-Framework/**)",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m src.cli.main search \"регистр сведений 1С\" --strategy vector --top-k 3 -v)",
+      "Bash(tee '.tmp/smoke-search.log')",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m src.cli.main search \"регистр сведений 1С\" --strategy vector --top-k 3 --verbose)",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m src.cli.main search --help)",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m src.cli.main search \"регистр сведений 1С\" --strategy vector --top-k 3)",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m pip install aiosqlite --quiet)",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -c \"import aiosqlite; print\\('aiosqlite', aiosqlite.__version__\\)\")",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -m pip install 'pdf-vector-graph-framework[qdrant]' --quiet)",
+      "Bash('C:/1С-Framework/.venv/Scripts/python.exe' -c \"import qdrant_client; print\\('qdrant_client', qdrant_client.__version__\\)\")",
+      "Bash(C:/1С-Framework/.venv/Scripts/python.exe *)",
+      "Bash(MSYS_NO_PATHCONV=1 cmd.exe /c 'wmic path win32_VideoController get name,DriverVersion,AdapterRAM')"
     ]
   },
   "enableAllProjectMcpServers": true,
