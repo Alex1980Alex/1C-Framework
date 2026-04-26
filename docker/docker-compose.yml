@@ -156,7 +156,9 @@ services:
       - QDRANT__SERVICE__GRPC_PORT=6334
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      # Qdrant >= 1.17 ships distroless image without curl. Use bash
+      # /dev/tcp probe; the API binds on 6333 only when ready.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/6333"]
       interval: 30s
       timeout: 10s
       retries: 3
