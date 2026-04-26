@@ -62,10 +62,6 @@ class LLMRotationSettings(BaseSettings):
     ollama_url: str = "http://localhost:11434"
     ollama_cloud_url: str = "http://localhost:11434"
 
-    # Z.AI
-    zai_api_key: str = ""
-    zai_base_url: str = "https://api.z.ai/api/anthropic"
-
     model_config = {
         "env_prefix": "LLM_ROTATION_",
         "env_file": ".env",

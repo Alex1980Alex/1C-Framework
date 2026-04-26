@@ -22,7 +22,7 @@ load_dotenv()
 logger = logging.getLogger("zai-proxy")
 
 # Configuration
-ZAI_API_KEY = os.getenv("ZAI_API_KEY", os.getenv("LLM_ROTATION_ZAI_API_KEY", ""))
+ZAI_API_KEY = os.getenv("ZAI_API_KEY", "")
 ZAI_BASE_URL = os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/anthropic")
 ZAI_DEFAULT_MODEL = os.getenv("ZAI_DEFAULT_MODEL", "glm-5.1")
 
