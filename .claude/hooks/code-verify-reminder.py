@@ -2,21 +2,33 @@
 """
 Code Verify Reminder — mandatory task after code changes.
 
-Event: PostToolUse
-Matcher: Write|Edit (create task) + Skill (signal start) + Task (complete on PASS)
+Event: PreToolUse + PostToolUse (dual-registered, dispatched by tool_name)
+Matcher:
+  PreToolUse  Write|Edit       — workaround #6305 path: creates task pre-write
+  PostToolUse Write|Edit       — canonical path: creates task post-write (dedup)
+  PostToolUse Skill            — acknowledges that verification has started
+  PostToolUse Task             — completes task when subagent returns [CODE-VERIFY-PASS]
 Timeout: 3s
+
+Task completion REQUIRES PostToolUse Task — only event with tool_response.
+add_task() is dedup-protected: dual create on Pre + Post → single task.
 
 MANDATORY: creates task in hook-todos.json → task-enforcer blocks stop.
 Task completes ONLY when subagent returns [CODE-VERIFY-PASS] marker.
 
 Cycle:
-  Edit .py → add_task() → task-enforcer blocks stop → Claude runs code-verify
-  → Skill(code-verify) fires → systemMessage "верификация запущена" (task stays pending)
-  → Task(субагент) returns [CODE-VERIFY-PASS] → complete_task_by_hook() → stop allowed
-  → Task(субагент) returns [CODE-VERIFY-FAIL] → task stays pending → fix and retry
+  Edit .py → add_task() → task-enforcer blocks stop → user runs code-verify
+  → code-verify activated → systemMessage "верификация запущена" (task stays pending)
+  → subagent returns [CODE-VERIFY-PASS] → complete_task_by_hook() → stop allowed
+  → subagent returns [CODE-VERIFY-FAIL] → task stays pending → fix and retry
+
+History:
+  2026-03-20  Regression in commit 910a3a1f (auto-save) removed PostToolUse registrations.
+              Hook left only on PreToolUse Write|Edit (created tasks but never closed them).
+  2026-04-26  Restored 3 PostToolUse registrations + documented dual-registration pattern.
 
 Author: Claude Code
-Version: 2.2.0
+Version: 2.3.0
 Created: 2026-02-25
 """
 

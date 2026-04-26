@@ -219,6 +219,48 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             log.warning("step2: TIMEOUT git add batch")
             return {"success": False, "error": "git add timeout"}
 
+        # Step 2.5: GUARD — block auto-commit when .claude/settings.json shrinks
+        # substantially. Prevents regressions like commit 910a3a1f (2026-03-20)
+        # where auto-save silently dropped 127 lines from PostToolUse section.
+        # Threshold: 30 net removed lines (added vs removed via git diff --numstat).
+        settings_path = ".claude/settings.json"
+        shrink_threshold = 30
+        if any(settings_path in f.replace(os.sep, "/") for f in modified_files):
+            try:
+                diff = subprocess.run(
+                    ["git", "diff", "--cached", "--numstat", "--", settings_path],
+                    timeout=3, capture_output=True, text=True, encoding="utf-8",
+                    cwd=str(PROJECT_ROOT),
+                )
+                for line in diff.stdout.splitlines():
+                    parts = line.split("\t")
+                    if len(parts) < 2:
+                        continue
+                    try:
+                        added, removed = int(parts[0]), int(parts[1])
+                    except ValueError:
+                        continue
+                    net_removed = removed - added
+                    if net_removed >= shrink_threshold:
+                        log.warning(
+                            f"GUARD: settings.json shrinks by {net_removed} net lines "
+                            f"(added={added} removed={removed}) — auto-commit blocked"
+                        )
+                        subprocess.run(
+                            ["git", "reset", "HEAD", "--", settings_path],
+                            timeout=3, capture_output=True, cwd=str(PROJECT_ROOT),
+                        )
+                        return {
+                            "success": False,
+                            "error": (
+                                f"GUARD: settings.json bulk-removal blocked "
+                                f"({net_removed} net lines removed, threshold={shrink_threshold}). "
+                                f"Review changes manually before committing."
+                            ),
+                        }
+            except (subprocess.TimeoutExpired, OSError) as guard_err:
+                log.debug(f"settings guard check skipped: {guard_err}")
+
         # Step 3: Commit
         count = len(modified_files)
         commit_msg = f"chore: auto-save {count} file(s)"
