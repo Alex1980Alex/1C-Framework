@@ -136,21 +136,41 @@ huggingface-cli download Qwen/Qwen3-Embedding-8B
 | `learned_patterns` | 44 | Learned patterns | `data/learned_patterns.db` (?) |
 | `visual_grounding` | 5 | Visual grounding | минимально, можно отложить или skip |
 
-- [ ] **8.5.1** Найти source folder/db для каждой коллекции
-- [ ] **8.5.2** Source отсутствует → пометить «остаётся E5-snapshot» или drop
-- [ ] **8.5.3** Проверить scripts: `reindex_bsl_qwen3.py`, `index-skills-to-qdrant.py`
-- [ ] **8.5.4** Документировать gaps в этом roadmap
+- [x] **8.5.1** Найти source folder/db для каждой коллекции — выполнено 2026-04-26
+- [x] **8.5.2** Source отсутствует → пометить «остаётся E5-snapshot» или drop — см. таблицу ниже
+- [x] **8.5.3** Проверить scripts: `reindex_bsl_qwen3.py` ✅, `index-skills-to-qdrant.py` ✅
+- [x] **8.5.4** Документировать gaps в этом roadmap — см. ниже
+
+### 9.1. Audit results (executed 2026-04-26)
+
+Qdrant healthy, 11 коллекций live (`curl /collections` OK).
+
+| Collection | Source найден | Путь | Действие |
+|---|---|---|---|
+| `bsl_code_v4` | ✅ | `src/projects/configuration/` (2 проекта: GKSTCPLK-2182, GKSTCPLK-2368) | Re-extract via `scripts/reindex_bsl_qwen3.py` (адаптировать под ST+Qwen3, 8.8.11) |
+| `bsl_code_v3` | — | — | **DROP** (8.7.3) |
+| `graph_embeddings` | ✅ | `data/graph_db/graph.json` (4.1 МБ) | Re-extract из JSON dump |
+| `wiki_pages_v1` | ✅ | `docs/wiki/entities/` (markdown) | Re-extract через `wiki-pipeline` skill |
+| `pdf_documents` | ✅ | `data/pdfs/` (1 PDF: «Глава 5. Объекты конфигурации __ 1С_Предприятие 8.3.27. Документация.pdf») — даёт 1012 chunks | Re-chunk + index через PDF loader |
+| `bsl_metadata` | ⚠️ Нет `bsl_metadata.db` | Re-extract из BSL parser (`src/bsl/parser/`) | Re-extract |
+| `conversation_memory` | ✅ | `data/conversations.db` (77 КБ) | Re-extract |
+| `skill_library` | ✅ | `.claude/skills/` (84 директории; ≥ 75 SKILL.md), `scripts/index-skills-to-qdrant.py` | Re-extract через скрипт |
+| `experience_embeddings` | ⚠️ только `cache/experience-bank/schema.json` + `scripts/hooks/learning/experience-embedder.py` — нет source DB | **Frozen E5-legacy** (rename → `experience_embeddings_e5_legacy`, новая пустая 1024d для lazy-fill) |
+| `learned_patterns` | ⚠️ `src/memory/skill_learning/merge_patterns.py` — код есть, исходных данных вне Qdrant нет | **Frozen E5-legacy** (rename → `learned_patterns_e5_legacy`, новая пустая 1024d) |
+| `visual_grounding` | — | — | **Skip** (5 точек, отложить до Phase 9) |
+
+**Ключевые gaps:**
+- `bsl_metadata` source DB отсутствует → требуется заново прогнать BSL parser metadata extraction. Потенциальный риск замедления Phase 8.8.6.
+- `experience_embeddings` / `learned_patterns` исходные данные жили только в Qdrant + on-the-fly через hook embedder. Per roadmap policy: `_e5_legacy` rename + lazy-fill.
+- `pdf_documents`: 1 PDF на 1012 чанков — выглядит правдоподобно (большая глава доки 1С), но надо verify после reindex.
+
+**Скрипт `reindex_bsl_qwen3.py` (head):** использует `bsl_code_v3` и Ollama-backed qwen3 — нужна адаптация под `bsl_code_v4` + `sentence-transformers` GPU bf16 b=32 (Phase 8.4b decision).
 
 ## 10. Phase 8.6 — Backup текущего состояния (5–15 мин)
 
-- [ ] **8.6.1** Создать snapshots всех 11 коллекций на текущем E5-state:
-      ```bash
-      for col in $(curl -s http://localhost:6333/collections | jq -r '.result.collections[].name'); do
-        curl -s -X POST "http://localhost:6333/collections/$col/snapshots"
-      done
-      ```
-- [ ] **8.6.2** Скопировать snapshots в `E:/Transfer folder/qdrant/1c-pre-qwen3/`
-- [ ] **8.6.3** Создать manifest backup (даты, размеры, points_count)
+- [x] **8.6.1** Snapshots всех 11 коллекций созданы — выполнено 2026-04-26 (см. CLAUDE.md ссылку)
+- [x] **8.6.2** Snapshots скопированы в `E:/Transfer folder/qdrant/1c-pre-qwen3-2026-04-26/` (11 поддиректорий: bsl_code_v3/v4, bsl_metadata, conversation_memory, experience_embeddings, graph_embeddings, learned_patterns, pdf_documents, skill_library, visual_grounding, wiki_pages_v1)
+- [x] **8.6.3** Manifest: `docs/roadmap/260426_PHASE_8_PRE_QWEN3_BACKUP_MANIFEST.json` (3.5 КБ)
 
 ## 11. Phase 8.7 — Пересоздание коллекций (5 мин)
 
