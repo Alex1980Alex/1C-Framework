@@ -86,3 +86,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 2
 - Summary: Session 2026-04-27. Skills: z-ai-delegation, code-verify, qdrant-operations, embedding-models, learn:1c-metadata-objects, indexing-pipeline. Changed 2 files in .claude/settings.local.json, tmp/phase8
 
+
+## 2026-04-28 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: z-ai-delegation, code-verify, qdrant-operations, embedding-models, learn:1c-metadata-objects
+- Files changed: 3
+- Summary: Session 2026-04-28. Skills: z-ai-delegation, code-verify, qdrant-operations, embedding-models, learn:1c-metadata-objects, indexing-pipeline, tech-research, tenacity-retry. Changed 3 files in .claude/settings.local.json, scripts/reindex_bsl_qwen3.py, tmp/phase8. Commit: feat(phase8.10): length-bucketed dynamic batching for Qwen3-ST. Commit: chore(wiki): auto-log session summary 2026-04-27
+
