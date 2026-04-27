@@ -461,6 +461,172 @@ EMBEDDING__DTYPE=float16
 - [Late Chunking paper, arXiv:2409.04701](https://arxiv.org/abs/2409.04701) + [reference impl](https://github.com/jina-ai/late-chunking)
 - [sentence-transformers PR #1717](https://github.com/UKPLab/sentence-transformers/pull/1717) — `embeddings.to("cpu")` OOM workaround
 
+## 22. Phase 8.13 — Fine-tuning Qwen3-Embedding-8B на BSL (planned, post-baseline)
+
+**Дата добавления:** 2026-04-28
+**Статус:** Conditional — выполнять только после Phase 8.12 baseline + decision gate (см. 22.5)
+**Зависит от:** Phase 8.12.8 quality regression results (golden set retrieval@10)
+
+### 22.1. Контекст и триггер
+
+Phase 8.12 даёт baseline: Qwen3-Embedding-8B + FA2 (A1+C6) + sliding window split (A2) + query-instruction (C7). Открытый вопрос — достаточно ли этого для **BSL-specific** retrieval.
+
+Qwen3-Embedding training set [включает CodeSearchNet](https://github.com/QwenLM/Qwen3-Embedding) (Python/Java/JS/PHP/Ruby/Go), но **BSL/1С там нет**. Русские идентификаторы (`Соответствие.Вставить`, `КонецПроцедуры`, `ВыполнитьПроведение`) — out-of-distribution для модели. MTEB 70.58 — на mainstream, не на BSL.
+
+→ Если baseline покажет gap, fine-tuning через LoRA — единственный способ улучшить retrieval **без смены модели**.
+
+### 22.2. Техническая возможность на RTX 3090 24GB
+
+| Подход | VRAM peak | Качество vs full FT | Время на 3090 (10K-50K пар) |
+|---|---:|---:|---:|
+| **LoRA** (rank=16, batch=8, gradient checkpointing) | ~20-22 GB | 90-95% | ~1.5-3h |
+| **QLoRA** (4-bit, batch=16-32) | ~10-12 GB | 80-90% | ~1-2h |
+| **Full fine-tune** | ~80 GB+ | 100% | ❌ не влезет |
+
+**Стек**: `sentence-transformers >= 2.7` + `peft >= 0.10` + `torch cu128`. Нативная поддержка LoRA для contrastive losses (`MultipleNegativesRankingLoss`, `TripletLoss`) [через PEFT integration в ST](https://sbert.net/docs/sentence_transformer/training_overview.html). Безопасные параметры: 1-3 epochs, lr=1e-4 to 2e-4, rank=16, alpha=32, dropout=0.1.
+
+### 22.3. Блокер — отсутствие labeled data для BSL
+
+Embedding fine-tuning требует **(query, positive, negative)** triplets или **(anchor, positive)** pairs. У нас:
+
+- ✅ 35 548 BSL chunks (из Phase 8.12 reindex)
+- ❌ Нет реальных user queries
+- ❌ Нет разметки «этот чанк релевантен/нерелевантен запросу»
+- ❌ Нет click-логов (production traffic ещё не накоплен)
+
+**Без labeled data fine-tuning невозможен.** Нужны синтетические данные.
+
+### 22.4. Способы получения training data без ручной разметки
+
+| Подход | Как работает | Effort | Ожидаемое качество | Источник |
+|---|---|---|---|---|
+| **GPL** (Generative Pseudo Labeling) | LLM генерирует synthetic queries → cross-encoder ранжирует → hard negative mining → contrastive train | 1 неделя | Industry SOTA для domain adaptation | [arXiv:2112.07577](https://arxiv.org/abs/2112.07577), [R-GPL extension arXiv:2501.14434](https://arxiv.org/abs/2501.14434) |
+| **SimCSE-style self-supervised** | Без queries: dropout-augmented chunks как positive pairs | 2-3 дня | +3-5% recall (medium) | [Sentence-Transformers domain adaptation](https://sbert.net/examples/sentence_transformer/domain_adaptation/README.html) |
+| **Hybrid GPL + iterative HN mining** | GPL + перемайнинг hard negatives после каждой эпохи на улучшающемся student | 1-2 недели | Best in class (+10-15% возможно) | [arXiv:2505.18366](https://arxiv.org/abs/2505.18366) Hard Negative Mining for Domain-Specific Retrieval |
+| **User click logs** | Production: query → клик пользователя = positive | 3-6 месяцев | Honest signal, но медленно | — |
+
+**Рекомендация**: начать с **GPL** (industry standard, готовые reference implementations).
+
+### 22.5. Decision gate (когда вообще делать fine-tune)
+
+Запускать Phase 8.13 **только после** Phase 8.12.8 baseline:
+
+| Baseline `retrieval@10` на BSL golden set | Действие |
+|---|---|
+| **≥ 80%** | 🛑 NOT recommended — diminishing returns. Лучше: cross-encoder reranker (Phase 9), prompt tuning, hybrid sparse+dense |
+| **60-79%** | ✅ GO — LoRA через GPL pipeline. Ожидаемо +5-10% recall |
+| **< 60%** | 🚨 Major: либо смена базовой модели, либо full fine-tune через H100 rental, либо hybrid с code-specific embedder |
+
+**Pre-requisite**: golden set 50-100 BSL queries с ручной разметкой релевантных чанков (∼2-4 дня работы). Без него fine-tuning неоценим — это **обязательная инвестиция**, окупается даже если решим не fine-tune'ить (нужен для quality regression в любом будущем improvement).
+
+### 22.6. GPL pipeline detailed (если decision gate = GO)
+
+```
+                                  ┌──────────────────────────┐
+                                  │  35K BSL chunks (Phase 8.12 │
+                                  │  output, sliding-windowed)  │
+                                  └──────────────┬───────────────┘
+                                                 │
+                  ┌──────────────────────────────┼──────────────────────────────┐
+                  │                              │                              │
+                  ▼                              ▼                              ▼
+   ┌─────────────────────────┐   ┌─────────────────────────┐   ┌─────────────────────────┐
+   │ Step A: Synthetic query │   │ Step B: Hard negative   │   │ Step C: Pseudo-label    │
+   │ generation              │   │ mining                  │   │ scoring                 │
+   │                         │   │                         │   │                         │
+   │ For each chunk c:       │   │ For each (q, c+):       │   │ For each (q, c+, c-):   │
+   │  q = LLM_prompt(        │   │  c-_candidates =        │   │  pos_score =            │
+   │    "Generate a 1С/BSL   │   │    Qwen3.search(q,      │   │    cross_encoder(q, c+) │
+   │     search query for    │   │            top-k=50)    │   │  neg_score =            │
+   │     this code: {c}"     │   │  c- = filter            │   │    cross_encoder(q, c-) │
+   │  )                      │   │   (high similarity, ≠   │   │  margin = pos - neg     │
+   │ via Claude / Qwen3-32B  │   │    c+ semantically)     │   │ Keep if margin > 0.2    │
+   │ через llm-rotation      │   │                         │   │                         │
+   └─────────────────────────┘   └─────────────────────────┘   └─────────────────────────┘
+                  │                              │                              │
+                  └──────────────────────────────┼──────────────────────────────┘
+                                                 ▼
+                              ┌──────────────────────────────┐
+                              │ ~10K-50K filtered triplets   │
+                              │ (q, c+, c-)                  │
+                              └──────────────┬───────────────┘
+                                             │
+                                             ▼
+                              ┌──────────────────────────────┐
+                              │ Step D: LoRA training         │
+                              │ sentence-transformers + PEFT │
+                              │ MNRLoss или TripletLoss      │
+                              │ rank=16, lr=1e-4, 2 epochs   │
+                              │ ~1.5h на RTX 3090            │
+                              └──────────────┬───────────────┘
+                                             │
+                                             ▼
+                              ┌──────────────────────────────┐
+                              │ Step E: Eval on golden set    │
+                              │ retrieval@10 vs baseline      │
+                              │ Deploy if Δ ≥ +3%             │
+                              └──────────────────────────────┘
+```
+
+**Cross-encoder для labeling (step C)**: пока нет Qwen3-Reranker — `BAAI/bge-reranker-v2-m3` (multilingual, 568M params, поддерживает русский). После Phase 9 — заменить на Qwen3-Reranker когда доступен.
+
+**LLM для synthetic query gen (step A)**: через `llm-rotation` (Claude / Z.AI / OpenAI). Промпт-template нужно отдельно итерировать — на BSL спецификации (например, `"Сгенерируй короткий запрос на русском, который пользователь 1С мог бы задать чтобы найти эту функцию: {chunk}"`).
+
+### 22.7. Tasks
+
+- [ ] **8.13.1** **PRE-REQUISITE**: Golden set BSL queries — 50-100 пар (query, list_of_relevant_chunk_ids), ручная разметка из реальных запросов разработчиков 1С (опросить команду, собрать историчные тикеты GKSTCPLK). Сохранить в [`tests/golden_sets/bsl_retrieval_v1.jsonl`](../../tests/golden_sets/) (формат: `{"query": "...", "relevant_chunk_ids": [...]}`)
+- [ ] **8.13.2** Baseline measure: retrieval@10 / @20 / NDCG@10 на golden set после Phase 8.12 (Qwen3 + A1 + C6 + C7 + A2)
+- [ ] **8.13.3** **Decision gate**: проверить таблицу 22.5
+  - Если baseline ≥ 80% → закрыть Phase 8.13, сосредоточиться на Phase 9 (reranker)
+  - Если baseline < 60% → отдельный анализ (model swap vs full FT), не GPL
+  - Если 60-79% → продолжить 8.13.4-8.13.9
+- [ ] **8.13.4** **Cheap try first** (до GPL): добавить custom BSL query instruction в `Qwen3STEmbedder.embed_batch(is_query=True)` — `"Instruct: Найди процедуру или функцию в коде 1С/BSL, которая отвечает на запрос.\nQuery: "`. Перезамерить retrieval@10. Если +5% и попадаем в ≥80% — stop, fine-tune не нужен
+- [ ] **8.13.5** GPL Step A — synthetic query generation: 5K-20K (synthetic_query, real_chunk) пар через `llm-rotation` (Claude или Qwen3-32B). Промпт-template итерировать на 100 sample-чанках, отбирать вручную лучшие 5-10 запросов на чанк. Сохранить в [`data/finetune/bsl_gpl_queries.jsonl`](../../data/finetune/)
+- [ ] **8.13.6** GPL Step B+C — hard negative mining + cross-encoder labeling. Использовать `BAAI/bge-reranker-v2-m3` (multilingual) для оценки margin. Filter по margin > 0.2. Сохранить triplets в `data/finetune/bsl_gpl_triplets.jsonl`
+- [ ] **8.13.7** GPL Step D — LoRA training: `sentence-transformers` + `peft`, `MultipleNegativesRankingLoss`, rank=16 alpha=32 dropout=0.1, lr=1e-4, 2 epochs, batch=8 (gradient checkpointing). Adapter сохранить в `data/finetune/qwen3-emb-bsl-lora-v1/`
+- [ ] **8.13.8** Eval: A/B (Qwen3 baseline vs Qwen3+LoRA) на golden set. Метрики: recall@1/5/10, NDCG@10, MRR. Deploy решение: если ΔRecall@10 ≥ +3% и нет регрессии на mainstream queries (multilingual smoke test) — apply LoRA
+- [ ] **8.13.9** ADR + документация: `docs/architecture/adr/2026-XX-bsl-embedding-finetune.md` (decision, alternatives considered, results); обновить `embedding-models` skill; обновить `EMBEDDING__MODEL_ADAPTER` env var в `.env`/skills
+
+### 22.8. Альтернатива fine-tuning'у — instruction engineering (Phase 8.13.4)
+
+**Самый дешёвый путь** (30 минут vs 1-2 недели на GPL):
+
+Qwen3-Embedding — **instruction-aware**. Кастомные task-инструкции для query side могут дать 3-7% улучшения retrieval **без train**. Применить **до** GPL pipeline в 8.13.4 как baseline-extension. Если попадаем в ≥80% после 8.13.4, fine-tuning отменяется.
+
+```python
+# В Qwen3STEmbedder.embed_batch для is_query=True:
+INSTRUCT_BSL = (
+    "Instruct: Найди процедуру, функцию или общий модуль в конфигурации 1С/BSL, "
+    "который наиболее релевантен запросу разработчика. Запрос может быть на русском, "
+    "включать имена объектов метаданных (справочники, документы, регистры) и термины 1С.\n"
+    "Query: "
+)
+prefixed_queries = [INSTRUCT_BSL + q for q in queries]
+```
+
+[Источник, Qwen3 model card](https://huggingface.co/Qwen/Qwen3-Embedding-8B): «Using instructions for queries can improve retrieval performance by 1-5%».
+
+### 22.9. Risks & Mitigations
+
+| Риск | P×I | Митигация |
+|---|---|---|
+| Catastrophic forgetting (LoRA degraded mainstream queries) | M×H | Регрессионный smoke test на 100 mainstream queries (русский + английский) до deploy |
+| Synthetic queries не похожи на реальные | H×M | Manual review первых 50 пар, итерации промпта; включить разные стили (короткий, длинный, code-snippet, описательный) |
+| Cross-encoder неправильно ранжирует | M×M | Sample-check 200 (q, c+, c-) trip из mining'а вручную; если accuracy < 80% — сменить reranker |
+| Golden set слишком мал → eval noise | M×H | Min 50 queries; bootstrap CI на метриках; повторять trial при ΔRecall в шуме (<2%) |
+| LoRA adapter не совместим с TEI (если перешли на A3) | L×M | Тестировать adapter в sentence-transformers; для TEI — конвертировать через [HF custom handler](https://github.com/huggingface/text-embeddings-inference/issues/?q=lora) или пересобирать веса (LoRA merge) |
+| Время на golden set creation > 1 неделя | M×L | Аутсорсить на разработчиков 1С (сбор реальных запросов через GitHub issues / Slack-канал) |
+
+### 22.10. Источники
+
+- [GPL paper (Generative Pseudo Labeling)](https://arxiv.org/abs/2112.07577) — Wang et al., 2021, NAACL 2022
+- [R-GPL: Iterative HN remining](https://arxiv.org/html/2501.14434v1) — domain adaptation enhancement
+- [Hard Negative Mining for Domain-Specific Retrieval](https://arxiv.org/abs/2505.18366) — enterprise systems perspective
+- [Effective Hard Negative Mining for Code Search, ACM TOSEM 2024](https://dl.acm.org/doi/10.1145/3695994) — code-specific HN strategies
+- [Sentence-Transformers Domain Adaptation guide](https://sbert.net/examples/sentence_transformer/domain_adaptation/README.html) — official SBERT docs
+- [PEFT library](https://huggingface.co/docs/peft) — LoRA / QLoRA reference
+- [Qwen3-Embedding training pipeline](https://github.com/QwenLM/Qwen3-Embedding) — synthetic data + supervised pairs structure (для inspiration)
+
 ---
 
 После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
