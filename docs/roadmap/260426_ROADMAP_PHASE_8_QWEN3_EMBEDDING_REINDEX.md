@@ -342,6 +342,97 @@ EMBEDDING__DTYPE=float16
 - PyTorch CUDA wheels: https://pytorch.org/get-started/locally/
 - Migration doc: `E:/Transfer folder/260425_Перенос фреймворка на другой ПК.md`
 
+## 21. Phase 8.12 — Throughput optimization & XXL chunk handling (planned)
+
+**Дата добавления:** 2026-04-28 (post-mortem первого `bsl_code_v4` reindex'а)
+
+### 21.1. Триггер — OOM на ~25% прогресса
+
+Запуск `reindex_bsl_qwen3.py` для проекта `GKSTCPLK-2368` (2049 BSL files, 35 548 chunks по аудиту chunker'а) упал в CUDA OOM после 13 успешных flushes (≈ 6656 chunks обработано) на буфере с `max_tok=12596`, `b1=2`. Симптом и сами логи — `[scripts/reindex_bsl_qwen3.py](../../scripts/reindex_bsl_qwen3.py)` пытался выделить 18.91 GiB при 24 GiB total → fail.
+
+Корневые причины (post-mortem):
+
+1. **Bucketing работает, но `b1=1` всё равно OOM-ит на ~12k токенов.** Qwen3-Embedding-8B в bf16 ≈ 16 GB весов; attention-активации на 12 596 токенов batch=1 ≈ 18-20 GB на одну только QK^T матрицу без flash-attn.
+2. **Token cap отсутствует.** В `Qwen3STEmbedder.embed_batch` ([scripts/reindex_bsl_qwen3.py:248](../../scripts/reindex_bsl_qwen3.py#L248)) обрезание идёт по символам (`t[:32000]`), не по токенам. Для русского кода 32 000 символов → 12-16k токенов.
+3. **`batch.clear()` не выполняется после OOM.** `try/except Exception` в главном цикле ([scripts/reindex_bsl_qwen3.py:467-470](../../scripts/reindex_bsl_qwen3.py#L467-L470)) ловит OOM из `flush_batch`, но `batch.clear()` стоит ПОСЛЕ `flush_batch` ([scripts/reindex_bsl_qwen3.py:460](../../scripts/reindex_bsl_qwen3.py#L460)) — управление до него не доходит. Буфер растёт (`flush=512 → 513 → 514 → ...`), бесконечный цикл OOM.
+4. **Нет `torch.cuda.empty_cache()` между попытками** → фрагментация копится.
+
+### 21.2. Диагностика — XXL chunk distribution
+
+Полный аудит chunker output: [`tmp/phase8/xxl_chunks_audit.json`](../../tmp/phase8/xxl_chunks_audit.json) (31 чанк ≥ 20 000 символов, что соответствует ≈ 7 000+ токенов на кириллице).
+
+| # | Размер (chars) | Tokens (est.) | Тип | Имя | Источник |
+|---|---:|---:|---|---|---|
+| 1 | 97 084 | ~30 000 | symbol | `Словарь_en_ru` | `CommonModules/ОбменДаннымиТрансляцияФорматаПовтИсп` |
+| 2 | 97 007 | ~30 000 | symbol | `Словарь_ru_en` | то же |
+| 3 | 70 448 | ~25 000 | **module_summary** | `УправлениеДоступомСлужебный` | `CommonModules/УправлениеДоступомСлужебный` (3.1 MB) |
+| 4 | 37 514 | ~13 000 | symbol | `ПраваПользователей` | `Reports/АнализПравДоступа` |
+| 5 | 37 336 | ~13 000 | **module_summary** | `ОбменДаннымиСервер` | `CommonModules/ОбменДаннымиСервер` |
+| 10 | 27 765 | ~12 600 | symbol | **`УстановитьУсловноеОформление`** ← триггер OOM 28.04 | `CommonForms/ФормаНастроекОтчета` |
+
+Семантические паттерны проблемных чанков:
+
+- **Translation dictionaries** — хардкод-таблицы перевода `_en_ru`/`_ru_en` (две функции с тысячами `Соответствие.Вставить("X","Y")`). Embed как один вектор семантики не даёт.
+- **Synthetic `module_summary`** — агрегаты сигнатур модуля (chunker эмитит их с `lines: 0`). На крупных модулях достигают 70k chars. Самое низкое семантическое значение в индексе.
+- **Query-text constants** — `ТекстЗапросаПроверкиАдресов` (26 900), `ТекстЗапросаДоступныхВариантовОтчетов` (25 878). Многострочные SQL как одна функция-возвращалка.
+- **Conditional formatting setup** — сотни вызовов `КомпоновщикНастроек.УсловноеОформление.Элементы.Добавить()` подряд.
+- **XML/XDTO conversion** — крупные процедуры обмена данными (`ВыгрузитьПоПравилу`, `ПрочитатьОбъект`, `ЗаполнитьОбъектПоОбъектуXDTO`).
+
+### 21.3. P0 correctness fixes (независимо от оптимизации)
+
+| # | Где | Что |
+|---|---|---|
+| C1 | `Qwen3STEmbedder.embed_batch` | Token-level cap (4096): обрезать `input_ids` после `tokenizer(...)`, не символы. Защита от XXL по существу |
+| C2 | `flush_batch` | Обернуть `embed_batch` в `try/except torch.cuda.OutOfMemoryError`: `torch.cuda.empty_cache()`, лог имени проблемного чанка, продолжить без него |
+| C3 | `main()` главный цикл | `batch.clear()` в `finally` или под `except`, чтобы OOM не копил буфер |
+| C4 | `Qwen3STEmbedder.__init__` | `os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF","expandable_segments:True")` против фрагментации |
+| C5 | `Qwen3STEmbedder` | `model.max_seq_length = 4096` — sentence-transformers сама будет резать |
+
+Это **корректность**, а не ускорение — без них любая оптимизация всё равно упадёт на следующем выбросе.
+
+### 21.4. Acceleration vectors (без потери качества — та же модель, та же глубина)
+
+| # | Вектор | Прирост | Трудозатраты | Сторона эффекта |
+|---|---|---|---|---|
+| **A1** | **FlashAttention 2** | ×1.5–2 | 5 мин (`pip install flash-attn --no-build-isolation` + 1 строка `attn_implementation="flash_attention_2"` в `model_kwargs`) | Сильнее всего на длинных чанках — attention из O(n²) → ~линейный |
+| **A2** | **Re-chunk длинных символов** (sliding window split) | ×2–3 (исчезает XXL bucket); качество слегка ↑ | ~30 LOC в [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) (split любого symbol > 2K токенов на window=1024 overlap=128) | Длинная процедура индексируется несколькими векторами — лучшая локальность retrieval |
+| **A3** | **text-embeddings-inference (TEI)** Rust backend | ×3–5 | 1–2 часа (Docker запуск + новый embedder-класс на HTTP, ~50 LOC) | Continuous batching + FA2 + tokio. Ответы идентичны ST до bf16 numerical noise |
+| **A4** | Producer/consumer + b48 в S-bucket + skip <20 токенов (`КонецПроцедуры` и пустые) | ×1.2 суммарно | 30 мин | Перекрытие CPU токенизации и GPU forward; 24GB VRAM позволяет b48 на S-чанках |
+
+**Установка FA2 на Windows**: требуется CUDA toolkit 12.x + MSVC 2022 build tools; колесо собирается ~5-10 мин. Готовых wheels для Python 3.11 + CUDA 12.8 + Windows нет на PyPI (по состоянию 2026-04) — собирать самим. Альтернатива: TEI Docker (A3) уже идёт с FA2 внутри, обходит Windows-build боль целиком.
+
+### 21.5. Рекомендованная последовательность
+
+| Приоритет | Действие | Время | Прирост | Когда применять |
+|---|---|---|---|---|
+| 🟥 P0 | C1-C5 fixes (correctness) | 30 мин | устраняет OOM и зомби-loop | **до** любой оптимизации |
+| 🥇 A1 | FlashAttention 2 | 5 мин (если build пройдёт) | ×1.5–2 | Сразу после P0; fallback на A3 если FA2 не собрался |
+| 🥈 A2 | Re-chunk длинных символов | 30 мин | убирает XXL-ямы (200→300 на 26 s/file) | Параллельно или после A1; одновременно улучшает качество retrieval |
+| 🥉 A3 | TEI backend | 1–2 ч | ×3–5 (включая FA2) | Когда нужен следующий крупный reindex (новые проекты или Phase 9 reranker pipeline) |
+| ⚪ A4 | Pipeline опт. | 30 мин | ×1.2 | После A1+A2, если ещё не достаточно |
+
+### 21.6. Tasks
+
+- [ ] **8.12.1** Применить P0 fixes C1-C5 в [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py); добавить unit-test на OOM recovery (mock `embed_batch` raises `OutOfMemoryError`, ожидаем `batch.clear()` + продолжение)
+- [ ] **8.12.2** Решить судьбу `module_summary` чанков > N токенов: дроп vs short-summary regen (тяжёлый труд парсера для редкого сценария — скорее дроп)
+- [ ] **8.12.3** Переиндексировать `bsl_code_v4` с P0 fixes (baseline throughput, без A1/A2)
+- [ ] **8.12.4** A1 — собрать `flash-attn` под Windows + интегрировать; перезамерить throughput на 1000 BSL-чанков
+- [ ] **8.12.5** A2 — sliding-window split в [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) с тестом, что `Словарь_en_ru` теперь даёт ≥ 30 чанков (а не 1)
+- [ ] **8.12.6** A3 — TEI Docker compose service в `docker-compose.yml`, новый `Qwen3TEIEmbedder` class в `reindex_bsl_qwen3.py` (HTTP клиент к `http://localhost:8080/embed`), отдельный смок-тест
+- [ ] **8.12.7** A4 — producer/consumer pattern (CPU tokenize в ThreadPool пока GPU считает), b48 для S-bucket, фильтр chunks с `len(content.strip()) < 20`
+- [ ] **8.12.8** Quality regression: сравнить retrieval@10 на golden-set до/после A2 (split может разбить семантику; ожидаем equal-or-better)
+
+### 21.7. Решение для текущего запуска (28.04)
+
+Текущий процесс висит в OOM-loop без прогресса (см. 21.1, проблема C3 не даёт буферу очиститься). **Прерывать и перезапускать с P0 fixes** — продолжать бессмысленно, успешно проиндексировано всего ~25%.
+
+После P0 fixes — повторный запуск в текущей конфигурации (bf16, b32, length-bucketing) без A1/A2 даст baseline. Только потом — оптимизация по 21.5.
+
+### 21.8. Артефакты диагностики
+
+- [`tmp/phase8/xxl_chunks_audit.json`](../../tmp/phase8/xxl_chunks_audit.json) — 31 XXL chunk полным дампом (file_idx, global_chunk_idx, content_len, lines, name, chunk_type, module_type, rel_path)
+- Лог OOM: console output run'а 28.04 (зафиксирован в этом roadmap, 21.1)
+
 ---
 
 После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
