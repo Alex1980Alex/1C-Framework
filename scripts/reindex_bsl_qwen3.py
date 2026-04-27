@@ -9,10 +9,16 @@ Embedder options:
   qwen3     — Qwen3-Embedding via Ollama (4096d, slow)
   qwen3-st  — Qwen/Qwen3-Embedding-8B via sentence-transformers (4096d, GPU bf16 b=32; Phase 8.4b)
 
+Phase 8.10: qwen3-st uses length-bucketed dynamic batching to handle the
+long-tail chunk distribution measured on real BSL data (p50=332, p99=3588,
+max=16854 tokens). Without bucketing, padding to the longest chunk in a
+random batch dominates wall-clock; bucketing isolates long chunks into
+smaller batches and restores throughput on short chunks.
+
 Usage:
     python scripts/reindex_bsl_qwen3.py --project path/to/1c/project
     python scripts/reindex_bsl_qwen3.py --project path --embedder qwen3-st \
-        --collection bsl_code_v4 --batch-size 32 --recreate
+        --collection bsl_code_v4 --batch-size 32 --buffer-size 512 --recreate
 """
 
 import argparse
@@ -125,13 +131,43 @@ class E5Embedder:
 class Qwen3STEmbedder:
     """Qwen3-Embedding-8B via sentence-transformers (4096d native, GPU).
 
-    Phase 8.4b decision: bf16 + batch=32 is the throughput plateau on RTX 3090
-    Ampere without flash-attn 2 (~18.15 ch/s, VRAM 16.4 GB).
+    Phase 8.4b: bf16 + batch=32 is the throughput plateau on RTX 3090 for
+    short chunks (~200 tokens, ~18 ch/s).
+
+    Phase 8.10 (length-bucketed batching): Real BSL data has a long-tail
+    length distribution (p50=332, p99=3588, max=16854 tokens). Mixing a
+    single long chunk with short ones in a fixed batch=32 forces padding
+    to the longest, blowing wall-clock 5–25× and risking OOM. Solution:
+    bucket chunks by token count and pick batch_size per bucket. The
+    `batch_size` ctor arg sets the SHORT-chunk batch (S bucket); other
+    buckets scale down per BUCKETS table.
+
+    Bucket table (token_len_max → batch_size), tuned for RTX 3090 (24 GB):
+        ≤512    → 32   (S, 69% of chunks)
+        ≤1024   → 16   (M, 19.5%)
+        ≤2048   → 8    (L, 7.9%)
+        ≤4096   → 4    (XL, 2.6%)
+        4097+   → 1    (XXL, 0.7% — includes outliers up to 16854 tokens)
     """
 
     MODEL_ID = "Qwen/Qwen3-Embedding-8B"
 
-    def __init__(self, dtype: str = "bfloat16", batch_size: int = 32) -> None:
+    # (token_upper_bound or None for "unbounded", batch_size). Order matters
+    # — first match wins, so list shortest→longest.
+    DEFAULT_BUCKETS: tuple[tuple[int | None, int], ...] = (
+        (512, 32),
+        (1024, 16),
+        (2048, 8),
+        (4096, 4),
+        (None, 1),
+    )
+
+    def __init__(
+        self,
+        dtype: str = "bfloat16",
+        batch_size: int = 32,
+        buckets: tuple[tuple[int | None, int], ...] | None = None,
+    ) -> None:
         import torch
         from sentence_transformers import SentenceTransformer
 
@@ -151,20 +187,78 @@ class Qwen3STEmbedder:
         )
         self.dims = 4096
         self.batch_size = batch_size
+
+        # Use caller-provided buckets if given. Otherwise treat batch_size as
+        # a per-bucket ceiling: each bucket gets min(default_for_bucket,
+        # batch_size). Rationale — a caller passing --batch-size 8 wants a
+        # safety cap; without min(), long-chunk buckets keep their default
+        # 16/8/4 which can OOM under tight VRAM. The defaults assume a 32-card
+        # ceiling; any tighter cap should propagate down the bucket chain.
+        if buckets is not None:
+            self.buckets = buckets
+        else:
+            self.buckets = tuple(
+                (upper, min(default_bs, batch_size))
+                for upper, default_bs in self.DEFAULT_BUCKETS
+            )
         # Note: Qwen3-Embedding supports task instructions ("Instruct: ...\nQuery: ...")
         # for retrieval queries. Passages encode raw. We keep raw for both here; see
         # Phase 9 quality tuning for instruction prompts.
 
+    def _bucket_batch(self, token_len: int) -> int:
+        for upper, bs in self.buckets:
+            if upper is None or token_len <= upper:
+                return bs
+        return 1
+
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
         # Truncation: Qwen3 native context is 32K but BSL chunks rarely exceed 8K chars.
         truncated = [t[:32000] for t in texts]
-        embeddings = self.model.encode(
-            truncated,
-            batch_size=self.batch_size,
-            show_progress_bar=False,
-            convert_to_numpy=True,
-        )
-        return [emb.tolist() for emb in embeddings]
+
+        # Cheap length pass via the model's own tokenizer (CPU-side, no fwd).
+        tokenizer = self.model.tokenizer
+        token_lens = [
+            len(tokenizer(t, add_special_tokens=True, return_tensors=None)["input_ids"])
+            for t in truncated
+        ]
+
+        # Group indices by per-bucket batch_size. ST's encode() sorts internally
+        # by length, so within a bucket padding stays bounded by the bucket's
+        # token ceiling.
+        groups: dict[int, list[int]] = {}
+        for idx, tl in enumerate(token_lens):
+            bs = self._bucket_batch(tl)
+            groups.setdefault(bs, []).append(idx)
+
+        # Telemetry: emit bucket distribution per flush. Validates the
+        # predicted weighted-throughput model against actual data and flags
+        # XXL-bucket presence (potential VRAM pressure on 24 GB cards).
+        if groups and len(truncated) >= 32:
+            tally = " ".join(
+                f"b{bs}={len(idxs)}"
+                for bs, idxs in sorted(groups.items(), reverse=True)
+            )
+            max_len = max(token_lens) if token_lens else 0
+            print(f"  [bucket] flush={len(truncated)} {tally} max_tok={max_len}")
+
+        results: list[list[float] | None] = [None] * len(truncated)
+        for bs, indices in groups.items():
+            group_texts = [truncated[i] for i in indices]
+            embeddings = self.model.encode(
+                group_texts,
+                batch_size=bs,
+                show_progress_bar=False,
+                convert_to_numpy=True,
+            )
+            for orig_idx, emb in zip(indices, embeddings):
+                results[orig_idx] = emb.tolist()
+
+        # All slots filled — _bucket_batch always returns a batch_size for
+        # any token_len, so every index from 0..len-1 lands in some group.
+        # Filtering None silently would shrink the result and break the
+        # 1-to-1 correspondence flush_batch relies on; assert instead.
+        assert all(r is not None for r in results), "bucket grouping missed an index"
+        return results  # type: ignore[return-value]
 
     def close(self) -> None:
         import gc
@@ -242,6 +336,14 @@ def main() -> None:
         help="Embedding model (default: e5; Phase 8.8 uses qwen3-st)",
     )
     ap.add_argument("--batch-size", type=int, default=50)
+    ap.add_argument(
+        "--buffer-size",
+        type=int,
+        default=0,
+        help="Chunks to accumulate before flush (0=auto: 512 for qwen3-st, "
+             "else --batch-size). Larger buffers give the qwen3-st length "
+             "bucketer a fuller pool, increasing throughput.",
+    )
     ap.add_argument("--collection", default="bsl_code_v3")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
@@ -268,7 +370,16 @@ def main() -> None:
     chunker = BSLChunker()
     embedder = make_embedder(args.embedder, batch_size=args.batch_size)
     vector_dims = embedder.dims
-    print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size})")
+
+    # Auto-pick buffer for length bucketing: qwen3-st benefits from a fuller
+    # pool (each bucket gets a meaningful sample); other embedders flush at
+    # batch_size like before.
+    buffer_size = args.buffer_size
+    if buffer_size <= 0:
+        buffer_size = 512 if args.embedder == "qwen3-st" else args.batch_size
+
+    print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size}, "
+          f"flush every {buffer_size} chunks)")
 
     # Phase 63: Context enrichment
     enricher = None
@@ -311,7 +422,7 @@ def main() -> None:
 
             for chunk in chunks:
                 batch.append(chunk)
-                if len(batch) >= args.batch_size:
+                if len(batch) >= buffer_size:
                     n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
                     total_chunks += n
                     batch.clear()

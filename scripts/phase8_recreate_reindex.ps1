@@ -36,7 +36,8 @@ param(
     [switch]$SkipReindex,
     [switch]$SkipSmoke,
     [string]$BslProjectPath = "",
-    [int]$BatchSize = 32
+    [int]$BatchSize = 32,
+    [int]$BufferSize = 512
 )
 
 $ErrorActionPreference = 'Stop'
@@ -313,8 +314,11 @@ if (-not $SkipReindex) {
     }
 
     Write-Warning "Reindex bsl_code_v4 from: $BslProjectPath"
-    Write-Warning '  Embedder: qwen3-st  | dtype: bfloat16  | batch=32  | dims=4096'
-    Write-Warning '  Expected: ~21 min for 22.6K chunks at 18.15 ch/s (Phase 8.4b benchmark)'
+    Write-Warning ('  Embedder: qwen3-st  | dtype: bfloat16  | batch=' + $BatchSize + '  | buffer=' + $BufferSize + '  | dims=4096')
+    Write-Warning '  Phase 8.10 length-bucketed batching enabled.'
+    Write-Warning '  Expected: ~40-50 min for ~35.5K real chunks (p50=332 tok, p99=3588).'
+    Write-Warning '    (8.4b benchmark 18.15 ch/s was synthetic 200-tok chunks; weighted'
+    Write-Warning '     prediction with bucketing is ~14 ch/s on the real long-tail.)'
     Confirm-Step 'Start reindex?'
 
     $reindexLog = Join-Path $LogDir '8.8_bsl_code_v4.log'
@@ -323,6 +327,7 @@ if (-not $SkipReindex) {
         --embedder qwen3-st `
         --collection bsl_code_v4 `
         --batch-size $BatchSize `
+        --buffer-size $BufferSize `
         | Tee-Utf8 -FilePath $reindexLog
     Assert-ExitOk 'Phase 8.8 reindex'
     Write-Host 'Reindex complete.' -ForegroundColor Green
