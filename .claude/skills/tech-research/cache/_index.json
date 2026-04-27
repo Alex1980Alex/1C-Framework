@@ -10,8 +10,33 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-04-25",
+  "last_updated": "2026-04-28",
   "topics": {
+    "qwen3-embedding-deployment-fa2-tei": {
+      "file": "qwen3-embedding-deployment-fa2-tei.md",
+      "domain": "embeddings",
+      "category": "deployment",
+      "created": "2026-04-28",
+      "last_verified": "2026-04-28",
+      "keywords": [
+        "Qwen3-Embedding-8B",
+        "flash-attention 2",
+        "padding_side left",
+        "text-embeddings-inference",
+        "TEI Docker",
+        "late chunking",
+        "sliding window",
+        "code embeddings",
+        "OOM recovery",
+        "sentence-transformers",
+        "RTX 3090 Ampere",
+        "dynamic batching",
+        "producer consumer",
+        "BSL embeddings",
+        "Phase 8.12"
+      ],
+      "summary": "Production deployment Qwen3-Embedding-8B (FA2 + TEI + chunking + OOM). Critical: tokenizer_kwargs={'padding_side':'left'} обязателен при FA2 (correctness, не оптимизация — без него битые embeddings на коротких текстах в батче). TEI image для Ampere — '1.7.2', не 'turing-1.5' (последний — для sm_75). TEI issue #675: ORT FP16 не работает для Qwen3, fallback FP32 или Candle backend. Late chunking (Jina paper arXiv:2409.04701) — альтернатива sliding window, +12-14 пт similarity, но требует full-document forward pass. Sliding window для code: industry consensus window=1024 overlap=256 (25%), не 12.5%. Producer/consumer избыточен при наличии TEI (token-based dynamic batching внутри). OOM recovery: embeddings.to('cpu') + empty_cache + try/finally batch.clear. Verified 2026-04-28 via HF model card, TEI README+issues, Jina blog/paper, sentence-transformers PR #1717."
+    },
     "embedding-models-2026-russian-bsl": {
       "file": "embedding-models-2026-russian-bsl.md",
       "domain": "embeddings",

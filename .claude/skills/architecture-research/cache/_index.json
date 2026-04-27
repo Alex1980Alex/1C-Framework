@@ -3,6 +3,21 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "embedding-deployment-fa2-tei-chunking.md",
+      "title": "Embedding Deployment Architecture — FA2, TEI, Chunking decisions (Phase 8.12)",
+      "keywords": [
+        "qwen3-embedding-8b", "flash-attention-2", "padding-side-left",
+        "text-embeddings-inference", "tei", "late-chunking", "sliding-window",
+        "length-bucketing", "continuous-batching", "producer-consumer",
+        "oom-recovery", "rtx-3090", "ampere", "bsl-chunker", "ast-chunking",
+        "phase-8-12", "correctness-fix", "deployment-architecture"
+      ],
+      "last_verified": "2026-04-28",
+      "sources_count": 8,
+      "github_repos_count": 4,
+      "cross_ref": "tech-research/cache/qwen3-embedding-deployment-fa2-tei.md"
+    },
+    {
       "file": "claude-code-effectiveness-infrastructure-2026.md",
       "title": "Claude Code Effectiveness Infrastructure — best practices 2026",
       "keywords": [
