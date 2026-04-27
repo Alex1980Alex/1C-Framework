@@ -387,40 +387,54 @@ EMBEDDING__DTYPE=float16
 | C3 | `main()` главный цикл | `batch.clear()` в `finally` или под `except`, чтобы OOM не копил буфер |
 | C4 | `Qwen3STEmbedder.__init__` | `os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF","expandable_segments:True")` против фрагментации |
 | C5 | `Qwen3STEmbedder` | `model.max_seq_length = 4096` — sentence-transformers сама будет резать |
+| **C6** | `Qwen3STEmbedder.__init__` (если используем FA2) | **`tokenizer_kwargs={"padding_side":"left"}`** при `attn_implementation="flash_attention_2"`. Без этого FA2 + last-token pooling читает финальный токен с padding-позиции на коротких чанках в смешанных батчах → **битые embeddings** (correctness-bug, не optimization). Источник: [HF model card Qwen3-Embedding-8B](https://huggingface.co/Qwen/Qwen3-Embedding-8B) |
+| **C7** | `Qwen3STEmbedder.embed_batch` (query path) | Использовать **`prompt_name="query"`** для query-side encode (не для passages) — Qwen3 поддерживает task-инструкции, +1-5% retrieval recall. Источник: HF model card |
 
-Это **корректность**, а не ускорение — без них любая оптимизация всё равно упадёт на следующем выбросе.
+Это **корректность**, а не ускорение — без них любая оптимизация всё равно упадёт на следующем выбросе или будет давать систематически неверные эмбеддинги.
+
+> **Полный technical reference**: [`.claude/skills/tech-research/cache/qwen3-embedding-deployment-fa2-tei.md`](../../.claude/skills/tech-research/cache/qwen3-embedding-deployment-fa2-tei.md) (gitignored, локальный)
 
 ### 21.4. Acceleration vectors (без потери качества — та же модель, та же глубина)
 
 | # | Вектор | Прирост | Трудозатраты | Сторона эффекта |
 |---|---|---|---|---|
-| **A1** | **FlashAttention 2** | ×1.5–2 | 5 мин (`pip install flash-attn --no-build-isolation` + 1 строка `attn_implementation="flash_attention_2"` в `model_kwargs`) | Сильнее всего на длинных чанках — attention из O(n²) → ~линейный |
-| **A2** | **Re-chunk длинных символов** (sliding window split) | ×2–3 (исчезает XXL bucket); качество слегка ↑ | ~30 LOC в [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) (split любого symbol > 2K токенов на window=1024 overlap=128) | Длинная процедура индексируется несколькими векторами — лучшая локальность retrieval |
-| **A3** | **text-embeddings-inference (TEI)** Rust backend | ×3–5 | 1–2 часа (Docker запуск + новый embedder-класс на HTTP, ~50 LOC) | Continuous batching + FA2 + tokio. Ответы идентичны ST до bf16 numerical noise |
-| **A4** | Producer/consumer + b48 в S-bucket + skip <20 токенов (`КонецПроцедуры` и пустые) | ×1.2 суммарно | 30 мин | Перекрытие CPU токенизации и GPU forward; 24GB VRAM позволяет b48 на S-чанках |
+| **A1** | **FlashAttention 2** + `padding_side="left"` (C6) | ×1.5–2 | 5 мин (`pip install flash-attn --no-build-isolation` + `model_kwargs={"attn_implementation":"flash_attention_2"}` + `tokenizer_kwargs={"padding_side":"left"}` — оба обязательны) | Сильнее всего на длинных чанках — attention из O(n²) → ~линейный |
+| **A2** | **Re-chunk длинных символов** (sliding window split) | ×2–3 (исчезает XXL bucket); качество слегка ↑ | ~30 LOC в [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) (split любого symbol > 2K токенов; **window=1024 overlap=256 (25%)** — индустриальный default по AST-RAG/Coding-PTMs; не 128, как было в первой редакции) | Длинная процедура индексируется несколькими векторами — лучшая локальность retrieval |
+| **A2-alt** | **Late Chunking** (Jina, [arXiv:2409.04701](https://arxiv.org/abs/2409.04701)) | +12-14 пт similarity vs naive chunking (бенчмарки Jina) | ~30 LOC модификации pooling-step в `Qwen3STEmbedder` (нативно sentence-transformers не поддерживает) | Сохраняет document-level context в каждом чанке; требует full-document forward (для XXL `Словарь_*` не поможет — нужен split) |
+| **A3** | **text-embeddings-inference (TEI)** Rust backend | ×3–5 | 1–2 часа (Docker запуск + новый embedder-класс на HTTP, ~50 LOC) | Continuous batching + token-based dynamic batching + FA2 встроен. Ответы идентичны ST до bf16 numerical noise |
+| **A4** | Producer/consumer + b48 в S-bucket + skip <20 токенов (`КонецПроцедуры` и пустые) | ×1.05–1.1 суммарно (на 8B модели CPU и так idle 80%) | 30 мин | Перекрытие CPU токенизации и GPU forward. **Избыточен при A3** — TEI делает то же на стороне Rust runtime |
 
-**Установка FA2 на Windows**: требуется CUDA toolkit 12.x + MSVC 2022 build tools; колесо собирается ~5-10 мин. Готовых wheels для Python 3.11 + CUDA 12.8 + Windows нет на PyPI (по состоянию 2026-04) — собирать самим. Альтернатива: TEI Docker (A3) уже идёт с FA2 внутри, обходит Windows-build боль целиком.
+**Установка FA2 на Windows**: требуется CUDA toolkit 12.x + MSVC 2022 build tools; колесо собирается ~5-10 мин. Готовых wheels для Python 3.11 + CUDA 12.8 + Windows нет на PyPI (по состоянию 2026-04) — собирать самим. Альтернатива: TEI (A3) уже идёт с FA2 внутри, обходит Windows-build боль целиком.
+
+**TEI image tag для Ampere (RTX 3090)**: использовать `ghcr.io/huggingface/text-embeddings-inference:1.7.2` (Ampere base). Образ `turing-1.5` — для GPU Turing sm_75 (T4, RTX 2080), на Ampere использует медленный код-путь.
+
+**TEI ⚠️ известный bug для Qwen3-Embedding-8B**: [issue #675](https://github.com/huggingface/text-embeddings-inference/issues/675) — `Could not start ORT backend: DType float16 is not supported`. ONNX-файлы отсутствуют в HF репо. Workaround'ы (в порядке предпочтения):
+1. **Candle backend** (Rust-native, default в новых TEI) — может поддерживать BF16 для Qwen3
+2. **FP32 fallback** — медленнее ~2× vs FP16, но на 24GB 3090 хватит
+3. **Manual ONNX export** через HF Space `sentence-transformers/backend-export`
 
 ### 21.5. Рекомендованная последовательность
 
 | Приоритет | Действие | Время | Прирост | Когда применять |
 |---|---|---|---|---|
-| 🟥 P0 | C1-C5 fixes (correctness) | 30 мин | устраняет OOM и зомби-loop | **до** любой оптимизации |
-| 🥇 A1 | FlashAttention 2 | 5 мин (если build пройдёт) | ×1.5–2 | Сразу после P0; fallback на A3 если FA2 не собрался |
-| 🥈 A2 | Re-chunk длинных символов | 30 мин | убирает XXL-ямы (200→300 на 26 s/file) | Параллельно или после A1; одновременно улучшает качество retrieval |
-| 🥉 A3 | TEI backend | 1–2 ч | ×3–5 (включая FA2) | Когда нужен следующий крупный reindex (новые проекты или Phase 9 reranker pipeline) |
-| ⚪ A4 | Pipeline опт. | 30 мин | ×1.2 | После A1+A2, если ещё не достаточно |
+| 🟥 P0 | **C1-C7 fixes (correctness)** | 30 мин | устраняет OOM, зомби-loop **и битые embeddings от FA2-без-padding_side** | **до** любой оптимизации |
+| 🥇 A1 | FlashAttention 2 + C6 (`padding_side="left"`) | 5 мин (если build пройдёт) | ×1.5–2 | Сразу после P0; fallback на A3 если FA2 не собрался под Windows |
+| 🥈 A2 | Re-chunk длинных символов (window=1024 overlap=256) | 30 мин | убирает XXL-ямы (200→300 на 26 s/file) | Параллельно или после A1; одновременно улучшает качество retrieval |
+| 🥉 A3 | TEI backend (image `1.7.2`, Candle/FP32 для Qwen3) | 1–2 ч | ×3–5 (включая FA2 + token-based dynamic batching) | Когда нужен следующий крупный reindex (новые проекты или Phase 9 reranker pipeline). **Если внедряется — Phase 8.10 length-bucketing и A4 устаревают** |
+| 🔬 A2-alt | Late Chunking (опц., A/B vs A2) | 30 мин | +12-14 пт similarity по бенчмаркам Jina | После A2 baseline; в 8.12.9 как regression-сравнение |
+| ⚪ A4 | Pipeline опт. | 30 мин | ×1.05–1.1 | **Только если A3 не внедряется**; иначе drop |
 
 ### 21.6. Tasks
 
-- [ ] **8.12.1** Применить P0 fixes C1-C5 в [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py); добавить unit-test на OOM recovery (mock `embed_batch` raises `OutOfMemoryError`, ожидаем `batch.clear()` + продолжение)
+- [ ] **8.12.1** Применить P0 fixes **C1-C7** в [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py); добавить unit-test на OOM recovery (mock `embed_batch` raises `OutOfMemoryError`, ожидаем `batch.clear()` + продолжение). C6 — отдельный test: encode батч с короткими и длинными текстами через FA2, проверить что similarity между ними не нулевая (regression на padding_side bug)
 - [ ] **8.12.2** Решить судьбу `module_summary` чанков > N токенов: дроп vs short-summary regen (тяжёлый труд парсера для редкого сценария — скорее дроп)
 - [ ] **8.12.3** Переиндексировать `bsl_code_v4` с P0 fixes (baseline throughput, без A1/A2)
-- [ ] **8.12.4** A1 — собрать `flash-attn` под Windows + интегрировать; перезамерить throughput на 1000 BSL-чанков
-- [ ] **8.12.5** A2 — sliding-window split в [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) с тестом, что `Словарь_en_ru` теперь даёт ≥ 30 чанков (а не 1)
-- [ ] **8.12.6** A3 — TEI Docker compose service в `docker-compose.yml`, новый `Qwen3TEIEmbedder` class в `reindex_bsl_qwen3.py` (HTTP клиент к `http://localhost:8080/embed`), отдельный смок-тест
-- [ ] **8.12.7** A4 — producer/consumer pattern (CPU tokenize в ThreadPool пока GPU считает), b48 для S-bucket, фильтр chunks с `len(content.strip()) < 20`
-- [ ] **8.12.8** Quality regression: сравнить retrieval@10 на golden-set до/после A2 (split может разбить семантику; ожидаем equal-or-better)
+- [ ] **8.12.4** A1 — собрать `flash-attn` под Windows + интегрировать с **обязательным C6** (`tokenizer_kwargs={"padding_side":"left"}`); перезамерить throughput на 1000 BSL-чанков
+- [ ] **8.12.5** A2 — sliding-window split в [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) с **window=1024 overlap=256**; тест что `Словарь_en_ru` теперь даёт ≥ 30 чанков (а не 1)
+- [ ] **8.12.6** A3 — TEI compose service в `docker-compose.yml` (image `ghcr.io/huggingface/text-embeddings-inference:1.7.2` для Ampere, **не `turing-1.5`**), новый `Qwen3TEIEmbedder` class в `reindex_bsl_qwen3.py` (HTTP клиент к `http://localhost:8080/embed`), смок-тест с fallback FP32 при ORT FP16-bug ([issue #675](https://github.com/huggingface/text-embeddings-inference/issues/675))
+- [ ] **8.12.7** A4 (опц., **drop при A3**) — producer/consumer pattern, b48 для S-bucket, фильтр chunks с `len(content.strip()) < 20`
+- [ ] **8.12.8** Quality regression: retrieval@10 на golden-set, **3 точки сравнения** — (a) E5 baseline (Phase 7), (b) Qwen3 + sliding window A2, (c) Qwen3 + Late Chunking A2-alt. Включить query-side с/без `prompt_name="query"` (C7 +1-5%). Ожидаем (b) ≥ (a) и (c) ≥ (b)
+- [ ] **8.12.9** A2-alt — реализовать late chunking pooling-hook в `Qwen3STEmbedder` (~30 LOC, см. [reference impl jina-ai/late-chunking](https://github.com/jina-ai/late-chunking)); включить в 8.12.8 как третью точку сравнения
 
 ### 21.7. Решение для текущего запуска (28.04)
 
@@ -432,6 +446,20 @@ EMBEDDING__DTYPE=float16
 
 - [`tmp/phase8/xxl_chunks_audit.json`](../../tmp/phase8/xxl_chunks_audit.json) — 31 XXL chunk полным дампом (file_idx, global_chunk_idx, content_len, lines, name, chunk_type, module_type, rel_path)
 - Лог OOM: console output run'а 28.04 (зафиксирован в этом roadmap, 21.1)
+
+### 21.9. Best-practices research (2026-04-28)
+
+Сравнение плана 21.3-21.6 с best practices из официальной документации, GitHub и paper'ов привело к находкам, перенесённым в этот раздел: C6 (`padding_side="left"`) и C7 (query prompts) добавлены в P0; image tag TEI исправлен с `turing-1.5` на `1.7.2`; задокументирован bug TEI #675 для Qwen3+ORT+FP16; A2 overlap поднят с 12.5% до 25%; добавлен A2-alt (Late Chunking) и task 8.12.9.
+
+Полные knowledge-cache topics (gitignored, локальные):
+- [`tech-research/cache/qwen3-embedding-deployment-fa2-tei.md`](../../.claude/skills/tech-research/cache/qwen3-embedding-deployment-fa2-tei.md) — 7-категорийный технический reference (FA2 setup, TEI deployment, chunking strategies, OOM recovery), 13 источников
+- [`architecture-research/cache/embedding-deployment-fa2-tei-chunking.md`](../../.claude/skills/architecture-research/cache/embedding-deployment-fa2-tei-chunking.md) — архитектурный обзор: 4 deployment-развилки + 5 correctness gates + связь с проектом
+
+Ключевые источники (полный список в кешах):
+- [Qwen3-Embedding-8B HF model card](https://huggingface.co/Qwen/Qwen3-Embedding-8B) — official FA2 setup, padding_side, prompt_name="query"
+- [text-embeddings-inference](https://github.com/huggingface/text-embeddings-inference) — TEI README; [issue #675](https://github.com/huggingface/text-embeddings-inference/issues/675) — Qwen3 ORT FP16 bug
+- [Late Chunking paper, arXiv:2409.04701](https://arxiv.org/abs/2409.04701) + [reference impl](https://github.com/jina-ai/late-chunking)
+- [sentence-transformers PR #1717](https://github.com/UKPLab/sentence-transformers/pull/1717) — `embeddings.to("cpu")` OOM workaround
 
 ---
 
