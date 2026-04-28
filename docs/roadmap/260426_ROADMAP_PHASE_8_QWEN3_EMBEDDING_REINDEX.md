@@ -342,9 +342,27 @@ EMBEDDING__DTYPE=float16
 - PyTorch CUDA wheels: https://pytorch.org/get-started/locally/
 - Migration doc: `E:/Transfer folder/260425_Перенос фреймворка на другой ПК.md`
 
-## 21. Phase 8.12 — Throughput optimization & XXL chunk handling (planned)
+## 21. Phase 8.12 — Throughput optimization & XXL chunk handling (in progress)
 
 **Дата добавления:** 2026-04-28 (post-mortem первого `bsl_code_v4` reindex'а)
+
+**Прогресс на 2026-04-28 (вторая половина дня):**
+
+| Task | Статус | Файлы |
+|------|--------|-------|
+| 8.12.1 P0 C1-C7 fixes | DONE | [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py), [`tests/test_reindex_qwen3_oom.py`](../../tests/test_reindex_qwen3_oom.py) (9/9) |
+| 8.12.2 module_summary drop policy | DONE | [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) |
+| 8.12.3 Baseline reindex `bsl_code_v4` | PENDING (требует GPU/Docker, MCP-серверы остановить) |
+| 8.12.4 A1 FlashAttention 2 build | PENDING (Windows: CUDA toolkit + MSVC; альтернатива через A3) |
+| 8.12.5 A2 sliding-window split | DONE | [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py), [`tests/test_bsl_chunker_split.py`](../../tests/test_bsl_chunker_split.py) (10/10) |
+| 8.12.6 A3 TEI Docker backend | PENDING (compose service + новый `Qwen3TEIEmbedder` HTTP-class) |
+| 8.12.7 A4 producer/consumer | PENDING (опц., **drop при A3**) |
+| 8.12.8 Quality regression A/B | PENDING (golden-set retrieval@10, 3 точки сравнения) |
+| 8.12.9 A2-alt Late Chunking pooling-hook | DONE (code-level) | [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py), [`tests/test_late_chunking.py`](../../tests/test_late_chunking.py) (18/18) |
+
+Закрыто **5/9** задач (P0 + chunker A2 + A2-alt). Открытые требуют runtime (GPU + Docker) — за пределами обычной сессии Claude Code (нужно остановить MCP-серверы). Логические блоки: (a) baseline measurement (8.12.3), (b) FA2 path (8.12.4 ИЛИ 8.12.6 — взаимозаменяемы), (c) quality A/B (8.12.8 — потребляет 8.12.9 артефакт).
+
+Связанные коммиты: `99546be2` (P0 C1-C7), `1a939901` (A2 + module_summary drop), `b4d3b1bb` (A2-alt Late Chunking).
 
 ### 21.1. Триггер — OOM на ~25% прогресса
 
@@ -436,11 +454,18 @@ EMBEDDING__DTYPE=float16
 - [ ] **8.12.8** Quality regression: retrieval@10 на golden-set, **3 точки сравнения** — (a) E5 baseline (Phase 7), (b) Qwen3 + sliding window A2, (c) Qwen3 + Late Chunking A2-alt. Включить query-side с/без `prompt_name="query"` (C7 +1-5%). Ожидаем (b) ≥ (a) и (c) ≥ (b)
 - [x] **8.12.9** A2-alt — late chunking pooling-hook в `Qwen3STEmbedder` (~30 LOC, см. [reference impl jina-ai/late-chunking](https://github.com/jina-ai/late-chunking)) — **DONE 2026-04-28** (code-level; runtime A/B in 8.12.8). В [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py): (1) метод `Qwen3STEmbedder.embed_late_chunked(parent_text, chunk_char_spans)` — один forward через `self.model[0]` (минуя ST pooling), `tokenizer(..., return_offsets_mapping=True)` для char→token mapping, mean-pool token embeddings внутри каждого спана, L2-normalize; passages-only (queries shift offsets через `prompt_name`); (2) helper `_char_span_to_token_span(offsets, char_start, char_end)` пропускает special tokens `(0,0)` и предполагает монотонные смещения (early break); (3) orchestrator `_embed_chunks_late(embedder, chunks)` группирует по `module_path`, строит `parent_text` через `_LATE_CHUNK_SEP="\n\n"`, считает spans по running cursor; для chunks обрезанных за `max_seq_length` — fallback на `embed_batch`; (4) CLI `--pooling-mode {standard,late-chunking}` (default standard, late-chunking требует `--embedder qwen3-st` и несовместим с `--dual-vector`). Тесты: [`tests/test_late_chunking.py`](../../tests/test_late_chunking.py) — 18 pure-python кейсов (offset-mapping edge cases + orchestrator grouping/spans/fallback/order-preservation); 18/18 passing без GPU. Runtime валидация (A/B retrieval@10 vs стандартного пулинга) — в 8.12.8 на golden-set
 
-### 21.7. Решение для текущего запуска (28.04)
+### 21.7. Решение для текущего запуска (28.04) — закрыто
 
-Текущий процесс висит в OOM-loop без прогресса (см. 21.1, проблема C3 не даёт буферу очиститься). **Прерывать и перезапускать с P0 fixes** — продолжать бессмысленно, успешно проиндексировано всего ~25%.
+**Исходный план (28.04 утро):** прервать висящий OOM-loop, применить P0 fixes, перезапустить. Успешно проиндексировано на момент сбоя — ~25% (≈ 6656 chunks из 35 548).
 
-После P0 fixes — повторный запуск в текущей конфигурации (bf16, b32, length-bucketing) без A1/A2 даст baseline. Только потом — оптимизация по 21.5.
+**Что сделано (28.04 вторая половина дня):**
+
+1. **P0 fixes применены** (8.12.1) — токен-cap, OOM swallow, `batch.clear()` в `finally`, `expandable_segments`, `padding_side="left"` (gated на FA2), `prompt_name="query"` (feature-detect).
+2. **A2 sliding-window split применён** (8.12.5) — XXL-чанки (97k chars `Словарь_*`) теперь дают ≥30 split-кусков по ~3000 chars, ни один не уходит в model.forward целиком.
+3. **module_summary drop** (8.12.2) — пороговые 70k+ chars summary-чанки больше не индексируются.
+4. **A2-alt Late Chunking pooling-hook реализован** (8.12.9) — готов к A/B-сравнению в 8.12.8.
+
+**Следующий шаг — 8.12.3 baseline reindex** (требует остановки активной Claude Code сессии и MCP-серверов). После baseline → 8.12.8 A/B (E5 vs Qwen3+A2 vs Qwen3+A2-alt).
 
 ### 21.8. Артефакты диагностики
 
