@@ -123,6 +123,36 @@ def point_id(collection: str, chunk_id: str) -> str:
     return str(uuid.uuid5(UUID_NAMESPACE, f"{collection}-{chunk_id}"))
 
 
+def _char_span_to_token_span(
+    offset_mapping: list[tuple[int, int]],
+    char_start: int,
+    char_end: int,
+) -> tuple[int, int] | None:
+    """Phase 8.12.9 helper — map a [char_start, char_end) span in source text
+    to a [tok_start, tok_end) range in a tokenizer's offset_mapping.
+
+    Skips special tokens (offset (0,0) — CLS/SEP/PAD). Assumes monotonic
+    offsets, breaks early once tokens pass the span. Returns None when the
+    span has no overlap with any real token (typical: the span fell entirely
+    past the model's truncation cap, or zero-width input).
+    """
+    tok_start: int | None = None
+    tok_end: int | None = None
+    for i, (s, e) in enumerate(offset_mapping):
+        if s == 0 and e == 0:
+            continue
+        if e <= char_start:
+            continue
+        if s >= char_end:
+            break
+        if tok_start is None:
+            tok_start = i
+        tok_end = i + 1
+    if tok_start is None or tok_end is None:
+        return None
+    return tok_start, tok_end
+
+
 def chunk_payload(chunk: BSLChunk) -> dict[str, Any]:
     m = chunk.metadata
     calls = m.get("calls", [])
@@ -344,6 +374,65 @@ class Qwen3STEmbedder:
         assert all(r is not None for r in results), "bucket grouping missed an index"
         return results  # type: ignore[return-value]
 
+    def embed_late_chunked(
+        self,
+        parent_text: str,
+        chunk_char_spans: list[tuple[int, int]],
+    ) -> list[list[float] | None]:
+        """Phase 8.12.9 (A2-alt) — Late Chunking pooling.
+
+        ONE forward pass over `parent_text` → mean-pool the contextualized
+        token embeddings within each chunk's [char_start, char_end) span →
+        L2-normalize. Each chunk vector retains document-level context
+        (Jina, arXiv:2409.04701).
+
+        Returns one vector per `chunk_char_spans` entry; `None` when the
+        span maps to no real tokens (truncated past `self.max_seq_length`
+        or zero-width). Caller falls back to `embed_batch` for `None` slots.
+
+        Passages only — query-side prompt-prepending shifts char offsets,
+        so route queries through `embed_batch(..., is_query=True)`.
+
+        Reference impl: github.com/jina-ai/late-chunking.
+        """
+        import torch
+
+        tokenizer = self.model.tokenizer
+        if not getattr(tokenizer, "is_fast", False):
+            raise RuntimeError(
+                "embed_late_chunked requires a fast tokenizer "
+                "(needs return_offsets_mapping). Got slow tokenizer."
+            )
+        enc = tokenizer(
+            parent_text,
+            return_tensors="pt",
+            return_offsets_mapping=True,
+            truncation=True,
+            max_length=self.max_seq_length,
+            add_special_tokens=True,
+        )
+        offsets = [tuple(p) for p in enc.pop("offset_mapping")[0].tolist()]
+        device = next(self.model[0].auto_model.parameters()).device
+        features = {k: v.to(device) for k, v in enc.items()}
+
+        # Skip ST's pooling head; run only the transformer to get raw
+        # contextualized hidden states.
+        with torch.inference_mode():
+            features = self.model[0](features)
+        token_embeddings = features["token_embeddings"][0]
+
+        out: list[list[float] | None] = []
+        for char_start, char_end in chunk_char_spans:
+            span = _char_span_to_token_span(offsets, char_start, char_end)
+            if span is None:
+                out.append(None)
+                continue
+            tok_start, tok_end = span
+            pooled = token_embeddings[tok_start:tok_end].mean(dim=0)
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=0)
+            out.append(pooled.float().cpu().tolist())
+        return out
+
     def close(self) -> None:
         import gc
 
@@ -368,6 +457,66 @@ def make_embedder(name: str, batch_size: int = 32, enable_fa2: bool = False) -> 
     raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', or 'qwen3-st'")
 
 
+_LATE_CHUNK_SEP = "\n\n"
+
+
+def _embed_chunks_late(embedder: Any, chunks: list[BSLChunk]) -> list[list[float]]:
+    """Phase 8.12.9 (A2-alt) — Late Chunking orchestrator.
+
+    Group chunks by `module_path`, build one parent text per group with a
+    fixed separator, run `embed_late_chunked` once per group, then fall
+    back to `embed_batch` for any spans that landed past truncation.
+
+    Single pass per module: assumes A2 already capped per-symbol body to
+    ~1024 tokens, so a typical BSL module (5–15 symbols) fits in 4096-token
+    forward. Modules that overflow get the fallback path for tail chunks —
+    they lose Late Chunking benefit but retain correctness.
+    """
+    groups: dict[str, list[int]] = {}
+    for idx, c in enumerate(chunks):
+        groups.setdefault(c.metadata.get("module_path", ""), []).append(idx)
+
+    out: list[list[float] | None] = [None] * len(chunks)
+    for indices in groups.values():
+        spans: list[tuple[int, int]] = []
+        parts: list[str] = []
+        cursor = 0
+        for j, idx in enumerate(indices):
+            if j > 0:
+                parts.append(_LATE_CHUNK_SEP)
+                cursor += len(_LATE_CHUNK_SEP)
+            body = chunks[idx].content
+            parts.append(body)
+            spans.append((cursor, cursor + len(body)))
+            cursor += len(body)
+        parent_text = "".join(parts)
+
+        vectors = embedder.embed_late_chunked(parent_text, spans)
+
+        fallback_local = [j for j, v in enumerate(vectors) if v is None]
+        if fallback_local:
+            # 8.12.8 observability: warn when ≥ half of a module's chunks
+            # missed Late Chunking (overflowed max_seq_length) — they fall
+            # back to standard pooling and lose document context.
+            if len(fallback_local) * 2 >= len(indices):
+                first_path = chunks[indices[0]].metadata.get("module_path", "?")
+                print(
+                    f"  [late-chunking] fallback {len(fallback_local)}/{len(indices)} "
+                    f"chunks (parent {len(parent_text)} chars) — "
+                    f"module_path={first_path}"
+                )
+            fb_texts = [chunks[indices[j]].content for j in fallback_local]
+            fb_vecs = embedder.embed_batch(fb_texts, is_query=False)
+            for j, fv in zip(fallback_local, fb_vecs):
+                vectors[j] = fv
+
+        for j, idx in enumerate(indices):
+            out[idx] = vectors[j]
+
+    assert all(v is not None for v in out), "late-chunking missed an index"
+    return out  # type: ignore[return-value]
+
+
 def _is_cuda_oom(exc: BaseException) -> bool:
     """Detect CUDA OOM across torch versions.
 
@@ -386,6 +535,7 @@ def flush_batch(
     collection: str,
     chunks: list[BSLChunk],
     dual_vector: bool = False,
+    pooling_mode: str = "standard",
 ) -> int:
     """Embed and upsert a batch. Returns count of successfully upserted points.
 
@@ -393,10 +543,18 @@ def flush_batch(
     cache, logs the likely culprit (largest chunk by content length), and
     returns 0 so the caller can clear its buffer and continue. Without this,
     a single XXL chunk would crash the entire reindex.
+
+    Phase 8.12.9 A2-alt: when `pooling_mode == "late-chunking"`, route
+    passage embedding through `_embed_chunks_late` (full-document forward
+    + per-chunk mean-pool). Module-path embeddings stay on `embed_batch`
+    because they're standalone strings without a parent context.
     """
     texts = [c.content for c in chunks]
     try:
-        vectors = embedder.embed_batch(texts, is_query=False)
+        if pooling_mode == "late-chunking":
+            vectors = _embed_chunks_late(embedder, chunks)
+        else:
+            vectors = embedder.embed_batch(texts, is_query=False)
 
         # Generate module_path embeddings if dual-vector mode
         mp_vectors = None
@@ -478,6 +636,18 @@ def main() -> None:
              "Requires `pip install flash-attn` and CUDA 12.x toolkit + MSVC on Windows. "
              "Auto-applies left-padding (Phase 8.12 C6) - required for FA2 + last-token pooling.",
     )
+    ap.add_argument(
+        "--pooling-mode",
+        choices=["standard", "late-chunking"],
+        default="standard",
+        help="qwen3-st only. 'standard' (default): each chunk embedded "
+             "independently. 'late-chunking' (Phase 8.12.9 A2-alt, "
+             "arXiv:2409.04701): one forward pass per module, then mean-pool "
+             "the contextualized hidden states per chunk's char span. Each "
+             "chunk vector retains document-level context. Tail chunks past "
+             "the model's max_seq_length truncation fall back to standard "
+             "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
+    )
     args = ap.parse_args()
 
     project = args.project.resolve()
@@ -500,6 +670,18 @@ def main() -> None:
     if args.enable_fa2 and args.embedder != "qwen3-st":
         print(f"ERROR: --enable-fa2 requires --embedder qwen3-st (got {args.embedder!r})")
         sys.exit(1)
+    if args.pooling_mode == "late-chunking" and args.embedder != "qwen3-st":
+        print(
+            f"ERROR: --pooling-mode late-chunking requires --embedder qwen3-st "
+            f"(got {args.embedder!r}). Phase 8.12.9 hook lives on Qwen3STEmbedder."
+        )
+        sys.exit(1)
+    if args.pooling_mode == "late-chunking" and args.dual_vector:
+        # Late chunking pools transformer hidden states per chunk. Re-running it
+        # for the standalone `module_path` strings is meaningless (no parent
+        # context) and the current orchestrator only handles the content side.
+        print("ERROR: --pooling-mode late-chunking is incompatible with --dual-vector")
+        sys.exit(1)
     embedder = make_embedder(args.embedder, batch_size=args.batch_size, enable_fa2=args.enable_fa2)
     vector_dims = embedder.dims
 
@@ -512,6 +694,8 @@ def main() -> None:
 
     print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size}, "
           f"flush every {buffer_size} chunks)")
+    if args.pooling_mode != "standard":
+        print(f"Pooling mode: {args.pooling_mode} (Phase 8.12.9 A2-alt)")
 
     # Phase 63: Context enrichment
     enricher = None
@@ -560,7 +744,7 @@ def main() -> None:
                     # the previous batch around to grow unbounded — the
                     # zombie-loop bug that ate ~75% of the 28.04 reindex.
                     try:
-                        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
+                        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode)
                         total_chunks += n
                     finally:
                         batch.clear()
@@ -581,7 +765,7 @@ def main() -> None:
 
     # Flush remaining
     if batch:
-        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
+        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode)
         total_chunks += n
 
     elapsed = time.time() - t0
