@@ -445,7 +445,165 @@ class Qwen3STEmbedder:
         torch.cuda.empty_cache()
 
 
-def make_embedder(name: str, batch_size: int = 32, enable_fa2: bool = False) -> Any:
+class Qwen3TEIEmbedder:
+    """Qwen3-Embedding-8B via text-embeddings-inference HTTP backend (Phase 8.12.6 A3).
+
+    TEI is a Rust-native embedding runtime: continuous batching + token-based
+    dynamic batching + FlashAttention 2 are built into the server, so the
+    Python-side bucketing/OOM-recovery machinery in `Qwen3STEmbedder` is
+    unnecessary here — the server fans the request across its internal queue.
+    Expected ×3-5 vs sentence-transformers per roadmap §21.4.
+
+    Endpoint: POST `/embed` (TEI-native, lighter than the `/v1/embeddings`
+    OpenAI-compatible variant). Server-side `truncate=true` honors
+    `--max-input-length` from compose, matching `Qwen3STEmbedder.max_seq_length`
+    (Phase 8.12 C5) so the same forward-pass token cap applies on either backend.
+
+    Query-side instruction (Phase 8.12 C7): Qwen3-Embedding ships a "query"
+    prompt in `config_sentence_transformers.json`. TEI may or may not honor
+    sentence-transformers prompt config across versions, so we prepend the
+    canonical instruction client-side. The string is reproduced verbatim from
+    the Qwen3-Embedding-8B HF model card (`prompts.query`); changing it would
+    desync queries from passages indexed via `Qwen3STEmbedder` (which loads
+    the same prompt via the model's own config).
+
+    Late chunking (8.12.9 A2-alt): NOT supported. TEI returns pooled vectors
+    only — no token-level hidden states, so the per-span mean-pool path can't
+    run here. Use `--embedder qwen3-st --pooling-mode late-chunking` for that
+    A/B arm. The CLI guard at main() enforces this — guard-message also lists
+    `qwen3-tei` so users know it's intentional.
+    """
+
+    DEFAULT_BASE_URL = "http://localhost:8080"
+
+    # Qwen3-Embedding-8B query-side instruction. Source: HF model card,
+    # `config_sentence_transformers.json` -> prompts.query. Must match exactly
+    # what `Qwen3STEmbedder` prepends via `prompt_name="query"` so queries
+    # land in the same instruction-conditioned subspace as the passages
+    # indexed by either backend.
+    QUERY_INSTRUCTION = (
+        "Instruct: Given a web search query, retrieve relevant passages "
+        "that answer the query\nQuery: "
+    )
+
+    def __init__(
+        self,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout: float = 120.0,
+        max_chars: int = 32000,
+        verify_health: bool = True,
+    ) -> None:
+        import httpx
+
+        self.base_url = base_url.rstrip("/")
+        # Single Client reused across calls so HTTP/keep-alive + connection
+        # pool amortize across batches. TEI runs on localhost so the timeout
+        # mainly guards against deadlocks during cold model load.
+        self._client = httpx.Client(timeout=timeout, base_url=self.base_url)
+        self.dims = 4096
+        # max_chars is a defensive client-side cap. Server-side `truncate=true`
+        # is the source of truth (token-aware), but a 16 MB request body still
+        # costs network/parse time even if server discards the tail. 32k chars
+        # ≈ 12-16k tokens worst case (Cyrillic) — still gives the server room
+        # to truncate to MAX_INPUT_LENGTH=4096 without our help.
+        self.max_chars = max_chars
+
+        if verify_health:
+            self._verify_health()
+
+    def _verify_health(self) -> None:
+        """Smoke-check that TEI is up and serving the expected model.
+
+        Fails fast if the user forgot to start the `tei` profile, or if the
+        compose override pinned a different MODEL_ID. Late discovery via a
+        500 from `/embed` mid-reindex would lose the buffered batch.
+        """
+        import httpx
+
+        try:
+            r = self._client.get("/health")
+            r.raise_for_status()
+        except (httpx.HTTPError, OSError) as e:
+            raise RuntimeError(
+                f"TEI not reachable at {self.base_url}/health. Start it with: "
+                f"`docker compose -f docker/docker-compose.yml "
+                f"-f docker/docker-compose.gpu.yml --profile tei up -d tei`. "
+                f"Underlying error: {e}"
+            ) from e
+
+        # Best-effort model-id check. /info is a TEI extension; some image
+        # variants may omit it — treat absence as soft-pass rather than fail.
+        try:
+            info = self._client.get("/info").json()
+            model_id = info.get("model_id")
+            if model_id and "Qwen3-Embedding" not in model_id:
+                print(
+                    f"  [TEI] WARNING: server is serving model_id={model_id!r}, "
+                    f"expected Qwen/Qwen3-Embedding-8B. Vectors will not match "
+                    f"those indexed by qwen3-st."
+                )
+        except Exception:  # noqa: BLE001 — /info is optional
+            pass
+
+    def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
+        if not texts:
+            return []
+        prefix = self.QUERY_INSTRUCTION if is_query else ""
+        inputs = [prefix + t[: self.max_chars] for t in texts]
+        resp = self._client.post(
+            "/embed",
+            json={
+                "inputs": inputs,
+                # `normalize=true` matches sentence-transformers default for
+                # Qwen3 (cosine retrieval) — required for parity with vectors
+                # indexed by `Qwen3STEmbedder`.
+                "normalize": True,
+                # Server enforces MAX_INPUT_LENGTH from compose; without
+                # truncate=true a single XXL chunk would 422-fail the batch.
+                "truncate": True,
+                "truncation_direction": "Right",
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        # TEI native /embed returns list[list[float]] directly. Older
+        # versions may have wrapped it in {"embeddings": [...]} — guard for
+        # both shapes so the contract survives a TEI minor bump.
+        if isinstance(data, dict) and "embeddings" in data:
+            data = data["embeddings"]
+        if not isinstance(data, list) or len(data) != len(texts):
+            raise RuntimeError(
+                f"TEI /embed returned {len(data) if isinstance(data, list) else 'non-list'} "
+                f"vectors for {len(texts)} inputs (shape mismatch)"
+            )
+        return data
+
+    def embed_late_chunked(
+        self,
+        parent_text: str,  # noqa: ARG002
+        chunk_char_spans: list[tuple[int, int]],  # noqa: ARG002
+    ) -> list[list[float] | None]:
+        # TEI exposes pooled vectors only; token-level hidden states required
+        # for Late Chunking are not in the API surface. Caller (CLI) already
+        # guards against this combo — surface a clear error if reached anyway.
+        raise NotImplementedError(
+            "Late Chunking (Phase 8.12.9) is not supported on TEI backend — "
+            "the server returns pooled vectors only. Use --embedder qwen3-st."
+        )
+
+    def close(self) -> None:
+        client = getattr(self, "_client", None)
+        if client is not None:
+            client.close()
+            self._client = None  # type: ignore[assignment]
+
+
+def make_embedder(
+    name: str,
+    batch_size: int = 32,
+    enable_fa2: bool = False,
+    tei_base_url: str = Qwen3TEIEmbedder.DEFAULT_BASE_URL,
+) -> Any:
     """Create embedder by name."""
     if name == "e5":
         return E5Embedder()
@@ -454,7 +612,9 @@ def make_embedder(name: str, batch_size: int = 32, enable_fa2: bool = False) -> 
         return Qwen3EmbeddingService()  # type: ignore[return-value]
     if name == "qwen3-st":
         return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size, enable_fa2=enable_fa2)
-    raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', or 'qwen3-st'")
+    if name == "qwen3-tei":
+        return Qwen3TEIEmbedder(base_url=tei_base_url)
+    raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', 'qwen3-st', or 'qwen3-tei'")
 
 
 _LATE_CHUNK_SEP = "\n\n"
@@ -611,9 +771,17 @@ def main() -> None:
     ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
     ap.add_argument(
         "--embedder",
-        choices=["e5", "qwen3", "qwen3-st"],
+        choices=["e5", "qwen3", "qwen3-st", "qwen3-tei"],
         default="e5",
-        help="Embedding model (default: e5; Phase 8.8 uses qwen3-st)",
+        help="Embedding model (default: e5; Phase 8.8 uses qwen3-st, Phase "
+             "8.12.6 adds qwen3-tei HTTP backend via text-embeddings-inference "
+             "Docker — see docker/docker-compose.gpu.yml `tei` profile)",
+    )
+    ap.add_argument(
+        "--tei-url",
+        default=Qwen3TEIEmbedder.DEFAULT_BASE_URL,
+        help="qwen3-tei only: base URL of the TEI HTTP server (default: "
+             f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
     )
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument(
@@ -655,12 +823,13 @@ def main() -> None:
         print(f"ERROR: {project} is not a directory")
         sys.exit(1)
 
-    if args.dual_vector and args.embedder == "qwen3-st":
-        # Qwen3-ST runs on GPU at ~18 ch/s. Embedding the (often empty)
-        # module_path field as a second pass doubles wall-clock cost and
-        # produces a near-degenerate vector for empty strings. Refuse the
-        # combination — Phase 8.8 explicitly chose single-vector for v4.
-        print("ERROR: --dual-vector is incompatible with --embedder qwen3-st")
+    if args.dual_vector and args.embedder in ("qwen3-st", "qwen3-tei"):
+        # Qwen3 runs on GPU at ~18 ch/s (ST) or via TEI server-side batching.
+        # Embedding the (often empty) module_path field as a second pass
+        # doubles wall-clock cost and produces a near-degenerate vector for
+        # empty strings. Refuse the combination — Phase 8.8 explicitly chose
+        # single-vector for v4; same constraint applies to TEI backend.
+        print(f"ERROR: --dual-vector is incompatible with --embedder {args.embedder}")
         print("       (Phase 8.8 uses single-vector 4096d for bsl_code_v4)")
         sys.exit(1)
 
@@ -668,12 +837,20 @@ def main() -> None:
     parser = BSLASTParser()
     chunker = BSLChunker()
     if args.enable_fa2 and args.embedder != "qwen3-st":
-        print(f"ERROR: --enable-fa2 requires --embedder qwen3-st (got {args.embedder!r})")
+        # FA2 is a sentence-transformers model_kwarg. TEI bakes FA2 into the
+        # Rust runtime, so the flag is meaningless on qwen3-tei.
+        print(
+            f"ERROR: --enable-fa2 requires --embedder qwen3-st (got {args.embedder!r}). "
+            f"For qwen3-tei, FlashAttention 2 is built into the TEI runtime."
+        )
         sys.exit(1)
     if args.pooling_mode == "late-chunking" and args.embedder != "qwen3-st":
+        # TEI returns pooled vectors only — no token-level hidden states.
+        # The hook lives on Qwen3STEmbedder.embed_late_chunked.
         print(
             f"ERROR: --pooling-mode late-chunking requires --embedder qwen3-st "
-            f"(got {args.embedder!r}). Phase 8.12.9 hook lives on Qwen3STEmbedder."
+            f"(got {args.embedder!r}). Phase 8.12.9 hook lives on "
+            f"Qwen3STEmbedder; qwen3-tei exposes pooled vectors only."
         )
         sys.exit(1)
     if args.pooling_mode == "late-chunking" and args.dual_vector:
@@ -682,15 +859,24 @@ def main() -> None:
         # context) and the current orchestrator only handles the content side.
         print("ERROR: --pooling-mode late-chunking is incompatible with --dual-vector")
         sys.exit(1)
-    embedder = make_embedder(args.embedder, batch_size=args.batch_size, enable_fa2=args.enable_fa2)
+    embedder = make_embedder(
+        args.embedder,
+        batch_size=args.batch_size,
+        enable_fa2=args.enable_fa2,
+        tei_base_url=args.tei_url,
+    )
     vector_dims = embedder.dims
 
     # Auto-pick buffer for length bucketing: qwen3-st benefits from a fuller
-    # pool (each bucket gets a meaningful sample); other embedders flush at
-    # batch_size like before.
+    # pool (each bucket gets a meaningful sample); qwen3-tei benefits from a
+    # large pool too (TEI's continuous batching merges across requests). Other
+    # embedders flush at batch_size like before.
     buffer_size = args.buffer_size
     if buffer_size <= 0:
-        buffer_size = 512 if args.embedder == "qwen3-st" else args.batch_size
+        if args.embedder in ("qwen3-st", "qwen3-tei"):
+            buffer_size = 512
+        else:
+            buffer_size = args.batch_size
 
     print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size}, "
           f"flush every {buffer_size} chunks)")
