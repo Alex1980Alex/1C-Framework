@@ -22,11 +22,18 @@ Usage:
 """
 
 import argparse
+import logging
+import os
 import sys
 import time
 import uuid
 from pathlib import Path
 from typing import Any
+
+# Phase 8.12 C4: enable expandable_segments to fight VRAM fragmentation
+# from mixed-length BSL chunks (p99/max can be 50× p50). Must precede
+# `import torch` to take effect (CUDA caching allocator reads it once).
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -35,12 +42,43 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from qdrant_client.http.exceptions import UnexpectedResponse
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 from src.bsl.parser import BSLASTParser, BSLChunker, BSLContextEnricher
 from src.bsl.parser.bsl_chunker import BSLChunk
 
 SKIP_PATTERNS = ["node_modules", "bin/", "build/"]
 UUID_NAMESPACE = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+# Cap each Qdrant upsert payload. 4096-dim float32 vectors × 64 points ≈ 1 MB —
+# well under proxy/keepalive limits and survives WinError 10053 mid-stream resets.
+# Embedding bucket pool (--buffer-size) stays large for throughput; only the
+# network call is sub-batched.
+UPSERT_SUB_BATCH = 64
+
+_upsert_log = logging.getLogger("reindex_bsl_qwen3.upsert")
+if not _upsert_log.handlers:
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    _upsert_log.addHandler(_h)
+    _upsert_log.setLevel(logging.WARNING)
+
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential_jitter(initial=1.0, max=30.0, jitter=2.0),
+    retry=retry_if_exception_type((OSError, ConnectionError, TimeoutError, UnexpectedResponse)),
+    before_sleep=before_sleep_log(_upsert_log, logging.WARNING),
+    reraise=True,
+)
+def _upsert_with_retry(client: QdrantClient, collection: str, points: list) -> None:
+    client.upsert(collection_name=collection, points=points)
 
 
 def should_skip(path: Path) -> bool:
@@ -167,7 +205,14 @@ class Qwen3STEmbedder:
         dtype: str = "bfloat16",
         batch_size: int = 32,
         buckets: tuple[tuple[int | None, int], ...] | None = None,
+        enable_fa2: bool = False,
+        max_seq_length: int = 4096,
     ) -> None:
+        # Phase 8.12 C4 (defense-in-depth — also set at module top in case
+        # this class is imported and instantiated from a context that
+        # imported torch before our module).
+        os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
         import torch
         from sentence_transformers import SentenceTransformer
 
@@ -180,13 +225,43 @@ class Qwen3STEmbedder:
         if torch_dtype is None:
             raise ValueError(f"dtype must be 'float16' or 'bfloat16', got {dtype!r}")
 
+        model_kwargs: dict[str, Any] = {"torch_dtype": torch_dtype}
+        tokenizer_kwargs: dict[str, Any] = {}
+        if enable_fa2:
+            # Phase 8.12 A1: FA2 — O(n²) attention → ~linear, ×1.5–2 on long chunks.
+            model_kwargs["attn_implementation"] = "flash_attention_2"
+            # Phase 8.12 C6 (CORRECTNESS, not optimization): FA2 + last-token
+            # pooling reads the final position from each row in the batch. With
+            # default right-padding, short rows in a mixed batch end with [PAD]
+            # — embedding becomes garbage. Left-padding keeps the actual final
+            # token at the rightmost position. Required when FA2 is enabled.
+            # Source: Qwen3-Embedding-8B HF model card.
+            tokenizer_kwargs["padding_side"] = "left"
+
         self.model = SentenceTransformer(
             self.MODEL_ID,
             device="cuda",
-            model_kwargs={"torch_dtype": torch_dtype},
+            model_kwargs=model_kwargs,
+            tokenizer_kwargs=tokenizer_kwargs or None,
         )
         self.dims = 4096
         self.batch_size = batch_size
+        self.enable_fa2 = enable_fa2
+        self.max_seq_length = max_seq_length
+
+        # Phase 8.12 C5: cap forward-pass token length at the model level. ST's
+        # encode() truncates with this limit, so XXL chunks (97k chars / ~30k
+        # tokens for translation dictionaries) no longer blow VRAM budget.
+        # The bucketer below also tokenizes with the same max_length so its
+        # per-chunk token count matches what the model actually sees.
+        self.model.max_seq_length = max_seq_length
+
+        # Phase 8.12 C7: Qwen3-Embedding ships a "query" prompt in
+        # config_sentence_transformers.json (task instruction prepended for
+        # retrieval queries — +1-5% recall per HF model card). Feature-detect
+        # so the embedder degrades gracefully if the model ever drops it.
+        prompts = getattr(self.model, "prompts", None) or {}
+        self._has_query_prompt = "query" in prompts
 
         # Use caller-provided buckets if given. Otherwise treat batch_size as
         # a per-bucket ceiling: each bucket gets min(default_for_bucket,
@@ -201,9 +276,6 @@ class Qwen3STEmbedder:
                 (upper, min(default_bs, batch_size))
                 for upper, default_bs in self.DEFAULT_BUCKETS
             )
-        # Note: Qwen3-Embedding supports task instructions ("Instruct: ...\nQuery: ...")
-        # for retrieval queries. Passages encode raw. We keep raw for both here; see
-        # Phase 9 quality tuning for instruction prompts.
 
     def _bucket_batch(self, token_len: int) -> int:
         for upper, bs in self.buckets:
@@ -212,14 +284,22 @@ class Qwen3STEmbedder:
         return 1
 
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
-        # Truncation: Qwen3 native context is 32K but BSL chunks rarely exceed 8K chars.
-        truncated = [t[:32000] for t in texts]
-
-        # Cheap length pass via the model's own tokenizer (CPU-side, no fwd).
+        # Phase 8.12 C1+C5: token-level cap via tokenizer(truncation=True,
+        # max_length=self.max_seq_length). The previous char-level slice
+        # (t[:32000]) was wrong for Cyrillic — 32k chars ≈ 12-16k tokens, well
+        # past safe VRAM for an 8B model on 24GB. ST's encode() will also
+        # apply max_seq_length internally; bucketing with the same cap keeps
+        # token_lens aligned with what the forward pass sees.
         tokenizer = self.model.tokenizer
         token_lens = [
-            len(tokenizer(t, add_special_tokens=True, return_tensors=None)["input_ids"])
-            for t in truncated
+            len(tokenizer(
+                t,
+                add_special_tokens=True,
+                truncation=True,
+                max_length=self.max_seq_length,
+                return_tensors=None,
+            )["input_ids"])
+            for t in texts
         ]
 
         # Group indices by per-bucket batch_size. ST's encode() sorts internally
@@ -233,23 +313,27 @@ class Qwen3STEmbedder:
         # Telemetry: emit bucket distribution per flush. Validates the
         # predicted weighted-throughput model against actual data and flags
         # XXL-bucket presence (potential VRAM pressure on 24 GB cards).
-        if groups and len(truncated) >= 32:
+        if groups and len(texts) >= 32:
             tally = " ".join(
                 f"b{bs}={len(idxs)}"
                 for bs, idxs in sorted(groups.items(), reverse=True)
             )
             max_len = max(token_lens) if token_lens else 0
-            print(f"  [bucket] flush={len(truncated)} {tally} max_tok={max_len}")
+            print(f"  [bucket] flush={len(texts)} {tally} max_tok={max_len}")
 
-        results: list[list[float] | None] = [None] * len(truncated)
+        results: list[list[float] | None] = [None] * len(texts)
         for bs, indices in groups.items():
-            group_texts = [truncated[i] for i in indices]
-            embeddings = self.model.encode(
-                group_texts,
-                batch_size=bs,
-                show_progress_bar=False,
-                convert_to_numpy=True,
-            )
+            group_texts = [texts[i] for i in indices]
+            encode_kwargs: dict[str, Any] = {
+                "batch_size": bs,
+                "show_progress_bar": False,
+                "convert_to_numpy": True,
+            }
+            # Phase 8.12 C7: prepend Qwen3 retrieval-query instruction for
+            # query-side encoding. Asymmetric retrieval — passages encode raw.
+            if is_query and self._has_query_prompt:
+                encode_kwargs["prompt_name"] = "query"
+            embeddings = self.model.encode(group_texts, **encode_kwargs)
             for orig_idx, emb in zip(indices, embeddings):
                 results[orig_idx] = emb.tolist()
 
@@ -272,7 +356,7 @@ class Qwen3STEmbedder:
         torch.cuda.empty_cache()
 
 
-def make_embedder(name: str, batch_size: int = 32) -> Any:
+def make_embedder(name: str, batch_size: int = 32, enable_fa2: bool = False) -> Any:
     """Create embedder by name."""
     if name == "e5":
         return E5Embedder()
@@ -280,8 +364,20 @@ def make_embedder(name: str, batch_size: int = 32) -> Any:
         from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
         return Qwen3EmbeddingService()  # type: ignore[return-value]
     if name == "qwen3-st":
-        return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size)
+        return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size, enable_fa2=enable_fa2)
     raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', or 'qwen3-st'")
+
+
+def _is_cuda_oom(exc: BaseException) -> bool:
+    """Detect CUDA OOM across torch versions.
+
+    Newer torch raises `torch.cuda.OutOfMemoryError`, older raises plain
+    `RuntimeError("CUDA out of memory. ...")`. Match by type name and message
+    so we don't have to import torch at module top.
+    """
+    msg = str(exc).lower()
+    name = type(exc).__name__
+    return name == "OutOfMemoryError" or "out of memory" in msg or "cuda oom" in msg
 
 
 def flush_batch(
@@ -291,15 +387,41 @@ def flush_batch(
     chunks: list[BSLChunk],
     dual_vector: bool = False,
 ) -> int:
-    """Embed and upsert a batch. Returns count of successfully upserted points."""
-    texts = [c.content for c in chunks]
-    vectors = embedder.embed_batch(texts, is_query=False)
+    """Embed and upsert a batch. Returns count of successfully upserted points.
 
-    # Generate module_path embeddings if dual-vector mode
-    mp_vectors = None
-    if dual_vector:
-        mp_texts = [c.metadata.get("module_path", "") or "" for c in chunks]
-        mp_vectors = embedder.embed_batch(mp_texts, is_query=False)
+    Phase 8.12 C2: catches CUDA OOM from `embedder.embed_batch`, drops the
+    cache, logs the likely culprit (largest chunk by content length), and
+    returns 0 so the caller can clear its buffer and continue. Without this,
+    a single XXL chunk would crash the entire reindex.
+    """
+    texts = [c.content for c in chunks]
+    try:
+        vectors = embedder.embed_batch(texts, is_query=False)
+
+        # Generate module_path embeddings if dual-vector mode
+        mp_vectors = None
+        if dual_vector:
+            mp_texts = [c.metadata.get("module_path", "") or "" for c in chunks]
+            mp_vectors = embedder.embed_batch(mp_texts, is_query=False)
+    except Exception as e:  # noqa: BLE001 — we re-raise non-OOM
+        if not _is_cuda_oom(e):
+            raise
+        try:
+            import torch
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+        if chunks:
+            largest = max(chunks, key=lambda c: len(c.content))
+            name = largest.metadata.get("name", "?")
+            print(
+                f"  [OOM] flush_batch: dropped batch of {len(chunks)} chunks; "
+                f"largest='{name}' ({len(largest.content)} chars). "
+                f"Continuing past OOM."
+            )
+        else:
+            print("  [OOM] flush_batch: dropped empty batch (should not happen).")
+        return 0
 
     points = []
     for i, (chunk, vec) in enumerate(zip(chunks, vectors)):
@@ -321,8 +443,8 @@ def flush_batch(
             )
         )
 
-    if points:
-        client.upsert(collection_name=collection, points=points)
+    for start in range(0, len(points), UPSERT_SUB_BATCH):
+        _upsert_with_retry(client, collection, points[start:start + UPSERT_SUB_BATCH])
     return len(points)
 
 
@@ -349,6 +471,13 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
     ap.add_argument("--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)")
+    ap.add_argument(
+        "--enable-fa2",
+        action="store_true",
+        help="qwen3-st only: enable FlashAttention 2 (1.5-2x on long chunks). "
+             "Requires `pip install flash-attn` and CUDA 12.x toolkit + MSVC on Windows. "
+             "Auto-applies left-padding (Phase 8.12 C6) - required for FA2 + last-token pooling.",
+    )
     args = ap.parse_args()
 
     project = args.project.resolve()
@@ -368,7 +497,10 @@ def main() -> None:
     t0 = time.time()
     parser = BSLASTParser()
     chunker = BSLChunker()
-    embedder = make_embedder(args.embedder, batch_size=args.batch_size)
+    if args.enable_fa2 and args.embedder != "qwen3-st":
+        print(f"ERROR: --enable-fa2 requires --embedder qwen3-st (got {args.embedder!r})")
+        sys.exit(1)
+    embedder = make_embedder(args.embedder, batch_size=args.batch_size, enable_fa2=args.enable_fa2)
     vector_dims = embedder.dims
 
     # Auto-pick buffer for length bucketing: qwen3-st benefits from a fuller
@@ -399,7 +531,7 @@ def main() -> None:
             print(f"Context enrichment unavailable: {e}")
             enricher = None
 
-    qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
+    qdrant = QdrantClient(host="localhost", port=6333, timeout=120)
     create_collection(qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector)
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
@@ -423,9 +555,15 @@ def main() -> None:
             for chunk in chunks:
                 batch.append(chunk)
                 if len(batch) >= buffer_size:
-                    n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
-                    total_chunks += n
-                    batch.clear()
+                    # Phase 8.12 C3: clear the buffer in `finally` so a
+                    # mid-flush OOM (or any other exception) cannot leave
+                    # the previous batch around to grow unbounded — the
+                    # zombie-loop bug that ate ~75% of the 28.04 reindex.
+                    try:
+                        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
+                        total_chunks += n
+                    finally:
+                        batch.clear()
                     if args.limit and total_chunks >= args.limit:
                         break
 
