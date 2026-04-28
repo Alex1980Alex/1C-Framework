@@ -763,7 +763,8 @@
       "Bash(tee tmp/phase8/8.8_smoke_b8_l200.log)",
       "Bash(rm -rf \"/c/Users/Tech. Boutique/.local/share/claude\")",
       "Read(//c/Users/Tech. Boutique/.local/share//**)",
-      "Bash(tee tmp/phase8/8.10_distribution.log)"
+      "Bash(tee tmp/phase8/8.10_distribution.log)",
+      "Bash(PYTHONPATH=.claude/hooks .venv/Scripts/python *)"
     ]
   },
   "enableAllProjectMcpServers": true,

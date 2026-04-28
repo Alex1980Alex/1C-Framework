@@ -189,7 +189,8 @@ docker compose -f docker/docker-compose.gpu.yml up -d
 # TEI (Phase 8.12.6, opt-in) — Qwen3-Embedding-8B HTTP backend для reindex_bsl_qwen3.py
 docker compose -f docker/docker-compose.yml \
   -f docker/docker-compose.gpu.yml --profile tei up -d tei
-# image 1.7.2 (Ampere), MAX_INPUT_LENGTH=4096, DTYPE=bfloat16
+# image 1.7.2 (Ampere), MAX_INPUT_LENGTH=4096, DTYPE=float16
+# (TEI CLI принимает только float16/float32; bfloat16 невалиден)
 # fallback DTYPE=float32 при TEI ORT FP16-bug #675 (Qwen3+ONNX)
 # доступен через --embedder qwen3-tei в scripts/reindex_bsl_qwen3.py
 

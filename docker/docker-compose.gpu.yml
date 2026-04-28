@@ -60,13 +60,14 @@ services:
       # VRAM after baseline (8.12.3) measures. Conservative default targets
       # ~50% utilization, leaves headroom for KV-cache fragmentation.
       - MAX_BATCH_TOKENS=16384
-      # DTYPE: bf16 is native for Qwen3 weights and matches Qwen3STEmbedder
-      # bf16. Switch to float32 ONLY as workaround for TEI issue #675
-      # (https://github.com/huggingface/text-embeddings-inference/issues/675)
-      # — Qwen3 + ORT FP16 backend bug. TEI 1.7.x defaults to Candle backend,
-      # which should accept bf16 natively; if a future image regresses to ORT,
-      # set DTYPE=float32 (~2× slower but works on 24GB).
-      - DTYPE=bfloat16
+      # DTYPE: TEI 1.7.x CLI accepts ONLY `float16` or `float32` — `bfloat16` is
+      # rejected at startup (see https://github.com/huggingface/text-embeddings-inference
+      # `--dtype` enum). Qwen3-Embedding-8B weights are bf16 on disk; TEI converts
+      # to fp16 on load, which is lossless-enough for retrieval (cosine similarity
+      # tolerates the rounding) and fits comfortably in 24 GB VRAM. Switch to
+      # float32 ONLY as workaround for TEI issue #675 (Qwen3 + ORT FP16 backend
+      # bug) — ~2× slower but unambiguous numerics.
+      - DTYPE=float16
     restart: unless-stopped
     deploy:
       resources:
