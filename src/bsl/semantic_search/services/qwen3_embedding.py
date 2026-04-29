@@ -154,23 +154,48 @@ class Qwen3EmbeddingService:
             logger.error("Ollama batch error: %s", e)
             return [None] * len(texts)
 
+    def _tei_fallback(self) -> Qwen3TEIQueryService | None:
+        """Lazy-init TEI fallback when Ollama unreachable. None if TEI also down."""
+        if not hasattr(self, "_tei"):
+            self._tei = Qwen3TEIQueryService()
+        return self._tei
+
     def embed_query(self, text: str) -> list[float] | None:
-        """Embed a search query with query instruction prefix."""
+        """Embed query via Ollama; on connect failure fallback to TEI HTTP."""
         instructed = QUERY_INSTRUCTION + text
-        return self._embed_ollama(instructed)
+        result = self._embed_ollama(instructed)
+        if result is None:
+            tei = self._tei_fallback()
+            if tei is not None:
+                logger.info("Falling back to TEI for query embedding")
+                return tei.embed_query(text)  # tei applies QUERY_INSTRUCTION itself
+        return result
 
     def embed_document(self, text: str) -> list[float] | None:
-        """Embed a document/code chunk with document instruction prefix."""
+        """Embed passage via Ollama; on connect failure fallback to TEI HTTP."""
         instructed = DOCUMENT_INSTRUCTION + text
-        return self._embed_ollama(instructed)
+        result = self._embed_ollama(instructed)
+        if result is None:
+            tei = self._tei_fallback()
+            if tei is not None:
+                logger.info("Falling back to TEI for document embedding")
+                return tei.embed_document(text)
+        return result
 
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float] | None]:
-        """Batch embed texts with appropriate instruction prefix."""
+        """Batch embed via Ollama; on connect failure fallback to TEI HTTP."""
         if not texts:
             return []
         prefix = QUERY_INSTRUCTION if is_query else DOCUMENT_INSTRUCTION
         instructed = [prefix + t for t in texts]
-        return self._embed_ollama_batch(instructed)
+        results = self._embed_ollama_batch(instructed)
+        # If ALL results None — Ollama down → fallback to TEI
+        if results and all(r is None for r in results):
+            tei = self._tei_fallback()
+            if tei is not None:
+                logger.info("Falling back to TEI for batch embedding (%d texts)", len(texts))
+                return tei.embed_batch(texts, is_query=is_query)
+        return results
 
     def close(self) -> None:
         """Close HTTP client."""
@@ -182,6 +207,130 @@ class Qwen3EmbeddingService:
     @classmethod
     def reset(cls) -> None:
         """Reset singleton (for testing)."""
+        if cls._instance is not None:
+            cls._instance.close()
+        cls._instance = None
+        cls._initialized = False
+
+
+class Qwen3TEIQueryService:
+    """TEI-based Qwen3 query embedder (Phase 8.12.8 production switchover).
+
+    Uses HuggingFace text-embeddings-inference HTTP service (compose --profile tei)
+    instead of Ollama. Produces vectors compatible with bsl_code_v4_late since
+    the index was built via TEI/qwen3-st with identical safetensors model.
+    """
+
+    DEFAULT_BASE_URL = "http://localhost:8080"
+
+    _instance: ClassVar[Qwen3TEIQueryService | None] = None
+    _initialized: ClassVar[bool] = False
+
+    def __new__(cls, base_url: str = DEFAULT_BASE_URL) -> Qwen3TEIQueryService:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, base_url: str = DEFAULT_BASE_URL) -> None:
+        if Qwen3TEIQueryService._initialized:
+            return
+        self.base_url = base_url.rstrip("/")
+        self._client: httpx.Client | None = None
+        self._dims: int | None = None
+        Qwen3TEIQueryService._initialized = True
+        logger.info("Qwen3TEIQueryService initialized: base_url=%s", base_url)
+
+    def _get_client(self) -> httpx.Client:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.Client(timeout=120.0)
+        return self._client
+
+    @property
+    def dims(self) -> int:
+        return self._dims or EXPECTED_DIMS
+
+    def _truncate(self, text: str) -> str:
+        return text[:MAX_INPUT_CHARS] if len(text) > MAX_INPUT_CHARS else text
+
+    def _embed_tei(self, text: str) -> list[float] | None:
+        text = self._truncate(text)
+        try:
+            r = self._get_client().post(
+                f"{self.base_url}/embed",
+                json={"inputs": [text], "normalize": True,
+                      "truncate": True, "truncation_direction": "Right"},
+            )
+            r.raise_for_status()
+            data = r.json()
+            if isinstance(data, list) and data and isinstance(data[0], list):
+                vec = data[0]
+            elif isinstance(data, dict) and "embeddings" in data:
+                vec = data["embeddings"][0]
+            else:
+                logger.warning("Unexpected TEI response shape: %s", type(data).__name__)
+                return None
+            if self._dims is None:
+                self._dims = len(vec)
+                logger.info("TEI dims detected: %d", self._dims)
+            return vec
+        except httpx.HTTPStatusError as e:
+            logger.error("TEI HTTP error: %s", e.response.status_code)
+            return None
+        except (httpx.ConnectError, httpx.ReadTimeout):
+            logger.error("TEI not reachable at %s", self.base_url)
+            return None
+        except Exception as e:
+            logger.error("TEI embedding error: %s", e)
+            return None
+
+    def _embed_tei_batch(self, texts: list[str]) -> list[list[float] | None]:
+        texts = [self._truncate(t) for t in texts]
+        try:
+            r = self._get_client().post(
+                f"{self.base_url}/embed",
+                json={"inputs": texts, "normalize": True,
+                      "truncate": True, "truncation_direction": "Right"},
+            )
+            r.raise_for_status()
+            data = r.json()
+            if isinstance(data, dict) and "embeddings" in data:
+                data = data["embeddings"]
+            if not isinstance(data, list) or len(data) != len(texts):
+                logger.warning("TEI batch shape mismatch: %d expected", len(texts))
+                return [None] * len(texts)
+            if self._dims is None and data:
+                self._dims = len(data[0])
+            return [v if isinstance(v, list) else None for v in data]
+        except httpx.HTTPStatusError as e:
+            logger.error("TEI batch HTTP error: %s", e.response.status_code)
+            return [None] * len(texts)
+        except (httpx.ConnectError, httpx.ReadTimeout):
+            logger.error("TEI not reachable at %s", self.base_url)
+            return [None] * len(texts)
+        except Exception as e:
+            logger.error("TEI batch error: %s", e)
+            return [None] * len(texts)
+
+    def embed_query(self, text: str) -> list[float] | None:
+        return self._embed_tei(QUERY_INSTRUCTION + text)
+
+    def embed_document(self, text: str) -> list[float] | None:
+        return self._embed_tei(DOCUMENT_INSTRUCTION + text)
+
+    def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float] | None]:
+        if not texts:
+            return []
+        prefix = QUERY_INSTRUCTION if is_query else DOCUMENT_INSTRUCTION
+        return self._embed_tei_batch([prefix + t for t in texts])
+
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+            logger.info("Qwen3TEIQueryService HTTP client closed")
+
+    @classmethod
+    def reset(cls) -> None:
         if cls._instance is not None:
             cls._instance.close()
         cls._instance = None
