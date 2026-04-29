@@ -36,10 +36,15 @@ VECTOR_STORE__QDRANT_URL=http://localhost:6333
 
 | Переменная | Default | Описание |
 |------------|---------|----------|
-| `EMBEDDING__MODEL` | `intfloat/multilingual-e5-large` | Модель эмбеддингов |
-| `EMBEDDING__DIMENSIONS` | `1024` | Размерность (должна соответствовать модели) |
+| `EMBEDDING__MODEL` | `intfloat/multilingual-e5-large` | Модель: E5/Giga/Qwen3 (e.g. `Qwen/Qwen3-Embedding-8B` для BSL после Phase 8.12) |
+| `EMBEDDING__DIMENSIONS` | `1024` | 1024 (E5/MRL) или 4096 (Qwen3 native, `bsl_code_v4`) |
+| `EMBEDDING__DEVICE` | `auto` | `cuda` обязателен для Qwen3-8B (16+ GB VRAM на FP16) |
+| `EMBEDDING__DTYPE` | — | `float16` для Qwen3 на 24GB GPU; bf16 fallback на CPU |
+| `QWEN3_MODEL_DIR` | `D:/hf-manual/Qwen3-Embedding-8B` | Bind-mount path для TEI Docker (Phase 8.12.6); локальные веса 14.1 GiB обходят HF Hub |
+| `ZAI_API_KEY` | — | Z.AI API key (через `LLMRotationService` для генерации/синтетических golden-set queries в 8.12.8) |
 
-> E5 модели требуют prefix: `"query: "` для запросов, `"passage: "` для индексации (добавляется автоматически).
+> **E5 модели** требуют prefix: `"query: "` / `"passage: "` (auto).
+> **Qwen3-Embedding-8B** требует query instruction `"Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "` (через ST `prompt_name="query"`); для passages — без prefix. FA2 + `padding_side="left"` обязательно вместе на коротких чанках (8.12 C6).
 
 ### Vector Store
 

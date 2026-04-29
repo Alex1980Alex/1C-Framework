@@ -12,11 +12,18 @@ description: "Qdrant Operations — управление коллекциями 
 
 ## Архитектура коллекции
 
-Named vectors:
+**Стандартный layout (PDF/wiki/skills, named vectors):**
 - **dense**: cosine, 1024 dims (E5 multilingual)
 - **bm25**: sparse vector с IDF modifier (Qdrant native tokenizer, russian)
 
 Payload: `original_id`, `content`, `document_id`, `page_number`, `section`, `chunk_index`
+
+**BSL Phase 8.12 layout (single dense vector, no sparse):**
+- `bsl_code_v4` (4096d cosine, Qwen3 standard pooling) — primary BSL collection после Phase 8.12.3 baseline
+- `bsl_code_v4_late` (4096d cosine, Qwen3 Late Chunking 8.12.9) — A/B arm для quality regression 8.12.8
+- `bsl_code_v3` (1024d, E5 legacy) — старая E5 baseline, **drop в Phase 8.11.3**
+
+Payload BSL: `chunk_id`, `content`, `name`, `chunk_type`, `symbol_type`, `is_export`, `module_path`, `module_name`, `module_type`, `params`, `calls`, `signature`, `region`, `line_start`, `line_end`, `object_type`, `object_name`, `caller_count`
 
 ## ID Conversion
 
@@ -72,7 +79,9 @@ VECTOR_STORE__QDRANT_BM25_B=0.75
 | ID error (not UUID/int) | String ID не конвертирован | Использовать `_to_qdrant_id()` (UUID5) |
 | MMR vector error | Named vectors: `r.vector` → dict | Использовать `r.vector["dense"]` |
 | BM25 0 results | Sparse vectors не построены | `await store.rebuild_sparse_vectors()` |
-| query_points error | Missing `using="dense"` | Добавить `using="dense"` при named vectors |
+| query_points error | Missing `using="dense"` | Добавить `using="dense"` при named vectors. Для BSL Phase 8.12 коллекций (single-vector) — `using` НЕ нужен |
+| `client.search` AttributeError | qdrant-client ≥1.13 убрал `search()` | Использовать `client.query_points(query=vec, ...).points` |
+| TEI 413 Payload Too Large | Сервер enforce `MAX_CLIENT_BATCH_SIZE` (default 32) | Слайсить буфер на стороне клиента (см. `Qwen3TEIEmbedder.client_batch_size` в `scripts/reindex_bsl_qwen3.py`) |
 | Dimension mismatch | .env override E5 model | Проверить `EMBEDDING__MODEL` (1024d, не 384d) |
 
 ## Docker
