@@ -67,6 +67,41 @@ def fetch_chunk(client: QdrantClient, name: str, module_path: str,
     return str(p.id), payload.get("content", ""), payload.get("module_type", "")
 
 
+def load_qdrant_keys(client: QdrantClient, collection: str) -> set[tuple[str, str]]:
+    """Scroll once, build {(name, module_path)} set for prefilter."""
+    keys: set[tuple[str, str]] = set()
+    offset = None
+    while True:
+        records, next_offset = client.scroll(
+            collection_name=collection, limit=1024, offset=offset,
+            with_payload=True, with_vectors=False,
+        )
+        if not records:
+            break
+        for r in records:
+            p = r.payload or {}
+            keys.add((p.get("name", ""), p.get("module_path", "")))
+        offset = next_offset
+        if offset is None:
+            break
+    return keys
+
+
+def filter_clusters_to_qdrant(clusters: list[dict],
+                              keys: set[tuple[str, str]]) -> list[dict]:
+    """Keep only members whose (name, module_path) exists in qdrant collection."""
+    out = []
+    for c in clusters:
+        kept = []
+        for sid in c.get("members", []):
+            mp, name = parse_symbol_id(sid)
+            if (name, mp) in keys:
+                kept.append(sid)
+        if len(kept) >= 2:
+            out.append({**c, "members": kept, "size": len(kept)})
+    return out
+
+
 def select_clusters(clusters: list[dict], n: int) -> list[dict]:
     sorted_c = sorted(clusters, key=lambda x: x.get("size", 0), reverse=True)
     n_top = math.ceil(n * 0.7)
@@ -100,11 +135,16 @@ def main() -> None:
         print("No clusters loaded.")
         return
 
+    client = QdrantClient(host=config.QDRANT_HOST, port=config.QDRANT_PORT, timeout=30)
+    print(f"[gen] loading qdrant keys from {args.qdrant_collection}")
+    qdrant_keys = load_qdrant_keys(client, args.qdrant_collection)
+    print(f"[gen] qdrant has {len(qdrant_keys)} unique (name, module_path) pairs")
+    clusters = filter_clusters_to_qdrant(clusters, qdrant_keys)
+    print(f"[gen] {len(clusters)} clusters retained after qdrant prefilter (>=2 members)")
+
     n_clusters = math.ceil(args.total / args.anchors_per_cluster)
     selected = select_clusters(clusters, n_clusters)
     print(f"[gen] {len(selected)} clusters selected (target {args.total} queries)")
-
-    client = QdrantClient(host=config.QDRANT_HOST, port=config.QDRANT_PORT, timeout=30)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     generated = 0
     skipped_unmatched = 0

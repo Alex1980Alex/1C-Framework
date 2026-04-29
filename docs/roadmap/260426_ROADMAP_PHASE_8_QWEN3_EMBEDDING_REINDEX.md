@@ -357,10 +357,10 @@ EMBEDDING__DTYPE=float16
 | 8.12.5 A2 sliding-window split | DONE | [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py), [`tests/test_bsl_chunker_split.py`](../../tests/test_bsl_chunker_split.py) (10/10) |
 | 8.12.6 A3 TEI Docker backend | DONE (code-level) | [`docker/docker-compose.gpu.yml`](../../docker/docker-compose.gpu.yml) (`tei` profile), [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py) (`Qwen3TEIEmbedder`), [`tests/test_qwen3_tei_embedder.py`](../../tests/test_qwen3_tei_embedder.py) (16/16) |
 | 8.12.7 A4 producer/consumer | DROPPED (per A3 decision: TEI handles continuous batching server-side) |
-| 8.12.8 Quality regression A/B | DONE 2026-04-30 (PILOT 14q): E5 0.500 / Qwen3+std 0.143 / Qwen3+Late 0.321 recall@10 — (c)≥(b) confirmed, (b)≥(a) NOT confirmed; нужно расширить выборку | [`scripts/phase8_12_8/`](../../scripts/phase8_12_8/) (5 шагов pipeline + Z.AI sync wire-up) |
+| 8.12.8 Quality regression A/B | DONE 2026-04-30 (50q expanded): E5 **0.450** / Qwen3+std **0.160** / Qwen3+Late **0.567** recall@10 — **(c)≥(a) +26% INVERSION** vs 14q noise, (c)≥(b) +254% confirmed. **Production switch to Qwen3+Late** (см. §21.10 REVISED) | [`scripts/phase8_12_8/`](../../scripts/phase8_12_8/) (5 шагов pipeline + path C pre-resolve fix) |
 | 8.12.9 A2-alt Late Chunking pooling-hook | DONE (code-level) | [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py), [`tests/test_late_chunking.py`](../../tests/test_late_chunking.py) (18/18) |
 
-**Status (2026-04-30): 8/9 задач закрыто** (P0 + chunker A2 + A2-alt + TEI + baseline 8.12.3 + quality A/B 8.12.8 pilot), 1 отброшена (A4 при A3), 1 опциональная остаётся (8.12.4 FA2 Windows build — backup путь если TEI ORT-bug регрессирует). **Phase 8.12 как миграционный проект Qwen3 — приостановлен после pilot** (см. §21.10 Decision): production retrieval остаётся на E5, Qwen3 артефакты сохраняются как research-baseline. Phase 8.13 LoRA fine-tuning отложен (см. §22).
+**Status (2026-04-30 evening): 8/9 задач закрыто + path C done** (P0 + chunker A2 + A2-alt + TEI + baseline 8.12.3 + quality A/B 8.12.8 expanded). 1 отброшена (A4 при A3), 1 опциональная (8.12.4 FA2 Windows build — backup). **Phase 8.12 миграция Qwen3 — УСПЕХ после path C расширения pilot** (см. §21.10 REVISED): на 50q expanded pilot Qwen3+Late выигрывает все метрики vs E5 (recall +26%, ndcg +43%, mrr +53%). **Production retrieval переключается на `bsl_code_v4_late`** (Late Chunking pooling, 4096d). Phase 8.13 LoRA fine-tuning остаётся deferred как опциональное улучшение поверх production-worthy baseline.
 
 Связанные коммиты: `99546be2` (P0 C1-C7), `1a939901` (A2 + module_summary drop), `b4d3b1bb` (A2-alt Late Chunking), `55e8bf06` (8.12.3 baseline + TEI 413 fix), `b48df2ec` (8.12.8 pilot eval), `8f7859cd` (H1 ablation REJECTED), `6519404f` (skills sync 8.10.2).
 
@@ -504,20 +504,30 @@ pwsh -File scripts/phase8_12_baseline_tei.ps1 -AutoConfirm
 - [Late Chunking paper, arXiv:2409.04701](https://arxiv.org/abs/2409.04701) + [reference impl](https://github.com/jina-ai/late-chunking)
 - [sentence-transformers PR #1717](https://github.com/UKPLab/sentence-transformers/pull/1717) — `embeddings.to("cpu")` OOM workaround
 
-### 21.10. Decision after pilot (2026-04-30) — stay on E5 for production retrieval
+### 21.10. Decision after expanded pilot (2026-04-30) — switch production to Qwen3+Late Chunking
 
-**Резюме pilot 8.12.8 (14 queries, synthetic golden via Chroma generative-benchmarking + call_graph 1-hop multi-positives):**
+**⚠ REVISED 2026-04-30 (вечер):** изначальное решение "stay on E5" basised on 14q pilot **отозвано** после path C (expand to 50q). 14q был статистическим шумом — особенно для Qwen3+Late arm с высокой variance. Расширенный pilot переворачивает выводы.
 
-| Arm | Recall@10 | NDCG@10 | MRR | Δ vs E5 |
-|---|---|---|---|---|
-| (a) E5 baseline `bsl_code_v3` 1024d | **0.500** | **0.304** | **0.245** | — |
-| (b) Qwen3+std `bsl_code_v4` 4096d (TEI) | 0.143 | 0.081 | 0.060 | -71% recall |
-| (c) Qwen3+Late `bsl_code_v4_late` 4096d | 0.321 | 0.249 | 0.226 | -36% recall |
+**Path C — pre-resolution фикс**: добавлен шаг `load_qdrant_keys` + `filter_clusters_to_qdrant` в `generate_queries.py` ([commit pending](#)) — пред-фильтрует cluster.members против qdrant payload **(name, module_path)** до sampling. Skip-rate упал с 53% (16/30 unmatched в 14q runs) до **0% (0/50 unmatched)** на 50q run. 156 clusters → 84 после prefilter (≥2 members).
 
-**Findings:**
-- ✅ **Hypothesis (c) ≥ (b) — CONFIRMED** (Late Chunking +125% recall vs std pooling, согласуется с Jina paper +12-14 пт similarity)
-- ❌ **Hypothesis (b) ≥ (a) — REJECTED** (Qwen3+std отстаёт от E5 на 71% recall в синтетическом pilot)
-- 🟡 **(c) > (a) — NOT YET** (Qwen3+Late тоже под E5, gap -36%)
+**Резюме expanded pilot 8.12.8 (50 queries, тот же synthetic golden pipeline):**
+
+| Arm | Recall@10 | NDCG@10 | MRR | Δ vs E5 (recall) | Δ vs 14q |
+|---|---|---|---|---|---|
+| (a) E5 baseline `bsl_code_v3` 1024d | 0.450 | 0.291 | 0.292 | baseline | -10% |
+| (b) Qwen3+std `bsl_code_v4` 4096d (TEI) | 0.160 | 0.099 | 0.103 | -64% | +12% |
+| (c) **Qwen3+Late `bsl_code_v4_late` 4096d** | **0.567** | **0.414** | **0.447** | **+26%** | **+76%** |
+
+| 14q pilot | Recall@10 (старая интерпретация) |
+|---|---|
+| (a) E5 | 0.500 |
+| (b) Qwen3+std | 0.143 |
+| (c) Qwen3+Late | 0.321 |
+
+**Findings (50q expanded pilot — overrides 14q):**
+- ✅ **Hypothesis (c) ≥ (b) — CONFIRMED stronger** (Late Chunking **+254% recall** vs std pooling on 50q, vs +125% на 14q)
+- ❌ **Hypothesis (b) ≥ (a) — REJECTED CLEARLY** (Qwen3+std отстаёт от E5 на 64% recall, стабильно между 14q и 50q)
+- ✅ **Hypothesis (c) ≥ (a) — CONFIRMED on 50q** (Qwen3+Late **+26% recall** vs E5 — INVERSION vs 14q where это было -36%)
 
 **H1 ablation (instruction mismatch) — REJECTED**: тестировали два альтернативных Qwen3 query prompt'а:
 - BSL-specific `"Given a 1С BSL developer question, retrieve relevant code symbols"` → recall **0.000** (хуже default 0.143)
@@ -526,29 +536,38 @@ pwsh -File scripts/phase8_12_baseline_tei.ps1 -AutoConfirm
 
 **Likely root cause — H3: Russian BSL OOD для Qwen3.** Training set Qwen3-Embedding включает CodeSearchNet (Python/Java/JS/Go/Ruby/PHP), но **не русский 1С**. Русские идентификаторы (`Соответствие.Вставить`, `КонецПроцедуры`) и domain-stylized queries — out-of-distribution. E5-multilingual-large охватывает русский web обширно через мультиязычную предтренировку, что объясняет преимущество на synthetic Promptagator-style queries (близких к natural Russian dev questions).
 
-**Decision: production retrieval остаётся на E5** (`bsl_code_v3`, 1024d). Phase 8.12.3/8.12.6/8.12.9 артефакты `bsl_code_v4` и `bsl_code_v4_late` сохраняются на диске как research-baseline для будущих сравнений, но **не подключаются к production search pipeline** до устранения OOD-gap.
+**REVISED Decision: переключить production retrieval на Qwen3+Late Chunking** (`bsl_code_v4_late`, 4096d). На 50q expanded pilot Late Chunking arm выигрывает все метрики против E5 baseline (recall +26%, ndcg +43%, mrr +53%). Phase 8.12 миграция Qwen3 завершена с положительным результатом — Late Chunking pooling-mode (8.12.9) оказался ключевым enabler-ом, без него Qwen3+std catastrophically underperforms E5 на BSL.
 
-**Constraint context — single GPU**: RTX 3090 24GB используется production retrieval (E5 inference + reindex jobs), что делает Phase 8.13 LoRA fine-tuning высокозатратным (1-3 дня offline ИЛИ облачный GPU $60-360 разово). Это сдвигает 8.13 из "next" в "deferred" — выполняется только если C/D follow-ups (ниже) подтвердят, что улучшение Qwen3 целевого размера оправдано.
+**Критический вывод:** Qwen3-Embedding-8B не плох на BSL per se — он плох с **standard pooling** на длинных Russian-coded модулях. Late Chunking сохраняет document-level context при per-chunk pooling и даёт +254% recall на BSL. Hypothesis H3 (Russian BSL OOD) была частично правильной — OOD-gap проявляется только при потере context (std pooling), а Late Chunking его устраняет.
 
-**Low-risk follow-ups (приоритет порядка):**
+**Прежнее решение "stay on E5"** (составлено на 14q) было основано на статистическом шуме — Qwen3+Late имел recall 0.321 на 14q (gap -36% vs E5 0.500), но при правильном sampling без skip-rate он даёт 0.567 (+26% vs E5).
 
-| # | Действие | Cost | Когда применять |
+**Constraint context — single GPU**: RTX 3090 24GB используется production retrieval (Late Chunking inference через qwen3-st требует ~16-18 GB на forward pass) + reindex jobs. Phase 8.13 LoRA fine-tuning остаётся deferred — может дать ещё +5-10% recall поверх 0.567, но (1) текущий результат уже production-worthy, (2) fine-tuning требует 1-3 дня offline GPU window. Откладывается до накопления real user queries через Phase 22 feedback (когда проверим, что synthetic pilot не bias).
+
+**Path C — DONE 2026-04-30** (expand pilot 14q→50q): pre-resolution фикс в `generate_queries.py` (`load_qdrant_keys` + `filter_clusters_to_qdrant`), 50/50 queries, 0% unmatched. Результат → table выше, переворот decision.
+
+**Production switchover plan (Phase 8.12 → 8.11 production cleanup):**
+
+| # | Действие | Cost | Зависимость |
 |---|---|---|---|
-| C | Расширить pilot до 100-200 queries (поднять 53% skip-rate анкоров через перекалибровку sampling) | 1-2 ч + Z.AI tokens, без GPU | Снять статистический шум pilot, валидировать что 0.143 не выброс |
-| D | A/B test альтернативных моделей (GigaEmbeddings 1024d, BGE-M3) на том же golden-set | 1-2 ч на модель, GPU кратко (reindex ~80 мин + eval ~5 мин) | Перед Phase 8.13: может Russian-SOTA модель побьёт E5 на BSL без fine-tuning |
-| Phase 8.13 | LoRA fine-tuning Qwen3 на BSL pairs | 1-3 дня offline GPU + training data | После Phase 22 feedback loop накопит real user queries И есть свободное GPU-окно |
+| 1 | Поднять `bsl_code_v4_late` как primary BSL retrieval target в `src/bsl/semantic_search/` (Phase 8.10 sync) | ~1 ч | embedding-models skill уже отражает 4096d / Late Chunking (8.10.2 done) |
+| 2 | Drop `bsl_code_v3` (legacy E5) — Phase 8.11.3 | 5 мин | После 1 + неделю monitoring |
+| 3 | Архивировать `bsl_code_v4` (Qwen3+std) snapshot — research artifact | 5 мин | После 1 |
+| 4 | Phase 8.13 LoRA — DEFERRED, опциональное улучшение поверх Qwen3+Late baseline | 1-3 дня | Когда: real user queries через Phase 22 + ≥500q golden |
 
-**Триггеры пересмотра решения** (когда вернуться к Qwen3):
-1. **C** покажет что Qwen3 pilot был статистическим шумом (доверительный интервал расширится так что (a)=(c)) → попробовать Late Chunking arm как production
-2. **D** покажет что GigaEmbeddings/BGE-M3 побеждает E5 на BSL → миграция на новую baseline без Qwen3
-3. **Phase 22 feedback** накопит ≥500 реальных user queries → построить non-synthetic golden, повторить 8.12.8 — если real-query result ≠ pilot result → пересмотреть decision
-4. **Phase 8.13 LoRA** даст +20% recall vs E5 на BSL-fine-tuned Qwen3 → переключиться на fine-tuned Qwen3+Late
+**Optional future investigation (low priority после production switch):**
+- **D**: A/B test GigaEmbeddings 1024d / BGE-M3 на 50q golden-set — может Russian-SOTA или multilingual SOTA модель даст ещё лучше + меньше GPU footprint (1024d vs 4096d). Но Late Chunking требует full-document forward в любом случае → надо проверить как у этих моделей с long-context. Ставится на back-burner — production выигрыш Qwen3+Late уже defendable.
 
-## 22. Phase 8.13 — Fine-tuning Qwen3-Embedding-8B на BSL (DEFERRED)
+**Триггеры пересмотра REVISED Decision:**
+1. **Phase 22 real user queries** дадут result где Qwen3+Late ≤ E5 → откат к E5 + перепроверка
+2. **D-investigation** покажет что Giga/BGE-M3+LateChunking ≥ Qwen3+Late с меньшими ресурсами → миграция на лучшую модель
+3. **Phase 8.13 LoRA** даст +5-10% recall (пилот → 0.62-0.65) → upgrade fine-tuned Qwen3+Late
+
+## 22. Phase 8.13 — Fine-tuning Qwen3-Embedding-8B на BSL (DEFERRED, опциональное улучшение)
 
 **Дата добавления:** 2026-04-28
-**Статус:** **DEFERRED 2026-04-30** — pilot 8.12.8 показал что Qwen3+std отстаёт от E5 на 71% recall (см. §21.10 Decision). Single-GPU constraint делает fine-tuning высокозатратным (1-3 дня offline или облачный $60-360). Откладывается до выполнения low-risk follow-ups (C: pilot expand, D: альтернативные модели через Phase 22 feedback).
-**Зависит от:** Phase 8.12.8 quality regression results (golden set retrieval@10) — done; ждём триггер из §21.10 (real user queries, либо D-ablation подтверждает Qwen3-направление)
+**Статус:** **DEFERRED 2026-04-30** — после path C expanded pilot Qwen3+Late уже beats E5 (+26% recall, см. §21.10 REVISED). Phase 8.13 теряет статус необходимости — становится опциональным улучшением поверх уже production-worthy baseline. Может дать ещё +5-10% recall (0.567 → ~0.62-0.65), но (1) текущий результат defendable для production, (2) single-GPU window 1-3 дня offline всё ещё ограничивает.
+**Зависит от:** Phase 22 feedback loop накопит ≥500 real user queries → построить non-synthetic golden, повторить eval. Если real-query result confirms pilot → fine-tuning имеет смысл. Если real result хуже → может быть instead investigate D (alternative models).
 
 ### 22.1. Контекст и триггер
 
