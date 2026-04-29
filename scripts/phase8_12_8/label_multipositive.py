@@ -135,7 +135,7 @@ def main() -> None:
 
     conn.close()
     avg = total_positives / processed if processed else 0.0
-    print(f"Done: {processed} queries labeled, avg {avg:.2f} positives → {args.output}")
+    print(f"Done: {processed} queries labeled, avg {avg:.2f} positives -> {args.output}")
 
 
 if __name__ == "__main__":

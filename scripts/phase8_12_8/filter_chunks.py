@@ -26,8 +26,8 @@ from qdrant_client import QdrantClient
 
 
 def call_z_ai(prompt: str) -> str:
-    """Placeholder — caller wires in mcp__llm-rotation__llm_complete."""
-    return "yes"
+    from scripts.phase8_12_8._llm import llm_complete
+    return llm_complete(prompt, max_tokens=8, temperature=0.0)
 
 
 def scroll_chunks(client: QdrantClient, collection: str, batch: int = 256) -> Generator[Any, None, None]:

@@ -6,6 +6,7 @@ import json
 import math
 import random
 import sys
+import time
 from pathlib import Path
 
 from qdrant_client import QdrantClient
@@ -38,8 +39,8 @@ PROMPT_TEMPLATE = """Контекст: модуль 1С {module_name} (тип: {
 
 
 def call_z_ai(prompt: str) -> str:
-    """Placeholder — caller wires in mcp__llm-rotation__llm_complete."""
-    return "stub-query"
+    from scripts.phase8_12_8._llm import llm_complete
+    return llm_complete(prompt, max_tokens=80, temperature=0.4)
 
 
 def parse_symbol_id(sid: str) -> tuple[str, str]:
@@ -135,7 +136,13 @@ def main() -> None:
                     top_modules=", ".join(str(m) for m in (top_modules or [])[:3]) or "—",
                     symbol_name=name, symbol_body=content[:3000],
                 )
-                query = call_z_ai(prompt).strip()
+                # Z.AI rate limit 30 RPM → ~2.5s between calls (5s for safety margin).
+                time.sleep(5)
+                try:
+                    query = call_z_ai(prompt).strip()
+                except Exception as e:  # noqa: BLE001 — provider rotation can fail
+                    print(f"  [skip] LLM error for {sid}: {e}")
+                    continue
                 if not query:
                     continue
                 out.write(json.dumps({
@@ -148,7 +155,7 @@ def main() -> None:
                 if generated % 10 == 0:
                     print(f"[{generated}/{args.total}] last: {sid}")
 
-    print(f"Generated {generated} queries → {args.output} (skipped unmatched: {skipped_unmatched})")
+    print(f"Generated {generated} queries -> {args.output} (skipped unmatched: {skipped_unmatched})")
 
 
 if __name__ == "__main__":
