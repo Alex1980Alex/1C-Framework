@@ -104,3 +104,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 0
 - Summary: Session 2026-04-29. Skills: z-ai-delegation, code-verify, qdrant-operations, embedding-models, learn:1c-metadata-objects, indexing-pipeline, tech-research, tenacity-retry. Commit: fix(phase8.12): TEI DTYPE bfloat16→float16 (8.12.6). Commit: docs(phase8.12): document TEI backend in Docker doc + deployment skill. Commit: feat(phase8.12): A3 TEI Docker backend for Qwen3 reindex (8.12.6)
 
+
+## 2026-04-30 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: deployment, qdrant-operations, learn:1c-metadata-objects, learning-loop, task-protocol
+- Files changed: 0
+- Summary: Session 2026-04-30. Skills: deployment, qdrant-operations, learn:1c-metadata-objects, learning-loop, task-protocol, embedding-models, code-verify, evaluation-benchmark. Commit: docs(skills): sync embedding-models / qdrant-operations / framework-config with Phase 8.12 (roadmap 8.10.2). Commit: feat(phase8.12.8): wire Z.AI direct + small fixes from pilot smoke. Commit: feat(phase8.12.8): implement steps 2-4 (cluster + generate + label)
+
