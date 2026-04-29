@@ -3,6 +3,20 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "code-retrieval-golden-set-construction-2025.md",
+      "title": "Code Retrieval Golden Set Construction — Best Practices 2025",
+      "keywords": [
+        "code-retrieval", "golden-set", "synthetic-queries",
+        "generative-benchmarking", "chroma", "coir", "inpars",
+        "promptagator", "gpl", "cosqa", "llm-as-judge", "judgelm",
+        "kl-divergence", "negative-exemplar", "phase-8-12-8",
+        "evaluation", "recall", "ndcg", "beir"
+      ],
+      "last_verified": "2026-04-29",
+      "sources_count": 9,
+      "github_repos_count": 6
+    },
+    {
       "file": "embedding-deployment-fa2-tei-chunking.md",
       "title": "Embedding Deployment Architecture — FA2, TEI, Chunking decisions (Phase 8.12)",
       "keywords": [
