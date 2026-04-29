@@ -92,8 +92,22 @@ def ndcg_at_k(retrieved: List[str], graded: Dict[str, int], k: int = 10) -> floa
     return dcg / idcg if idcg > 0 else 0.0
 
 
+def _id_to_key(client: QdrantClient, collection: str,
+               ids: list[str]) -> dict[str, tuple[str, str]]:
+    """Resolve qdrant point ids -> (name, module_path) via retrieve."""
+    if not ids:
+        return {}
+    points = client.retrieve(collection_name=collection, ids=ids, with_payload=True)
+    out: dict[str, tuple[str, str]] = {}
+    for p in points:
+        payload = p.payload or {}
+        out[str(p.id)] = (payload.get("name", ""), payload.get("module_path", ""))
+    return out
+
+
 def eval_arm(name: str, collection: str, backend: EmbedBackend,
-             golden_path: Path, k: int = 10) -> Dict[str, Any]:
+             golden_path: Path, k: int = 10,
+             source_collection: str = "bsl_code_v4") -> Dict[str, Any]:
     client = QdrantClient(host=config.QDRANT_HOST, port=config.QDRANT_PORT, timeout=30)
     golden: List[Dict[str, Any]] = []
     with open(golden_path, "r", encoding="utf-8") as f:
@@ -102,21 +116,39 @@ def eval_arm(name: str, collection: str, backend: EmbedBackend,
             if line:
                 golden.append(json.loads(line))
 
+    # Resolve all golden chunk_ids -> (name, module_path) keys via source collection.
+    # Different arms (qwen3-late) have different qdrant point_ids for the same
+    # logical chunk (chunker re-emits with different ordering under Late Chunking),
+    # so id-based matching fails — match by stable (name, module_path) tuple.
+    all_ids: set[str] = set()
+    for item in golden:
+        all_ids.add(item["primary_positive"])
+        all_ids.update(item.get("secondary_positives", []))
+        all_ids.update(item.get("graded", {}).keys())
+    id_to_key = _id_to_key(client, source_collection, sorted(all_ids))
+
     sum_recall = sum_mrr = sum_ndcg = 0.0
     n = len(golden)
     for item in golden:
-        positives = set(item.get("secondary_positives", []))
-        positives.add(item["primary_positive"])
-        graded = {str(k_): int(v) for k_, v in item.get("graded", {}).items()}
+        pos_ids = {item["primary_positive"]} | set(item.get("secondary_positives", []))
+        positives_keys = {id_to_key[i] for i in pos_ids if i in id_to_key}
+        graded_keys: dict[tuple[str, str], int] = {}
+        for cid, grade in item.get("graded", {}).items():
+            key = id_to_key.get(cid)
+            if key is not None:
+                graded_keys[key] = int(grade)
 
         vec = backend.embed_query(item["query"])
         points = client.query_points(
-            collection_name=collection, query=vec, limit=k, with_payload=False,
+            collection_name=collection, query=vec, limit=k, with_payload=True,
         ).points
-        retrieved = [str(p.id) for p in points]
-        sum_recall += recall_at_k(retrieved, positives, k)
-        sum_mrr += mrr(retrieved, positives)
-        sum_ndcg += ndcg_at_k(retrieved, graded, k)
+        retrieved_keys = [
+            ((p.payload or {}).get("name", ""),
+             (p.payload or {}).get("module_path", "")) for p in points
+        ]
+        sum_recall += recall_at_k_keys(retrieved_keys, positives_keys, k)
+        sum_mrr += mrr_keys(retrieved_keys, positives_keys)
+        sum_ndcg += ndcg_at_k_keys(retrieved_keys, graded_keys, k)
 
     return {
         "arm": name, "collection": collection, "n_queries": n,
@@ -126,7 +158,27 @@ def eval_arm(name: str, collection: str, backend: EmbedBackend,
     }
 
 
-# Arm → (collection, backend factory). qwen3 was indexed via TEI;
+def recall_at_k_keys(retrieved: list, positives: set, k: int = 10) -> float:
+    if not positives:
+        return 0.0
+    return len(set(retrieved[:k]) & positives) / len(positives)
+
+
+def mrr_keys(retrieved: list, positives: set) -> float:
+    for rank, key in enumerate(retrieved):
+        if key in positives:
+            return 1.0 / (rank + 1)
+    return 0.0
+
+
+def ndcg_at_k_keys(retrieved: list, graded: dict, k: int = 10) -> float:
+    dcg = sum(graded.get(key, 0) / math.log2(i + 2) for i, key in enumerate(retrieved[:k]))
+    ideal = sorted(graded.values(), reverse=True)[:k]
+    idcg = sum(rel / math.log2(i + 2) for i, rel in enumerate(ideal))
+    return dcg / idcg if idcg > 0 else 0.0
+
+
+# Arm -> (collection, backend factory). qwen3 was indexed via TEI;
 # qwen3-late via qwen3-st (Late Chunking incompatible with TEI).
 ARMS = {
     "e5": (config.COLL_E5, lambda: E5Backend()),
@@ -147,7 +199,7 @@ def main() -> None:
         if arm in args.skip_arm:
             print(f"[skip] {arm}")
             continue
-        print(f"[eval] {arm} → {coll}")
+        print(f"[eval] {arm} -> {coll}")
         results.append(eval_arm(arm, coll, factory(), args.golden))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -161,7 +213,7 @@ def main() -> None:
         print(f"{r['arm']:<14}{r['collection']:<22}{r['n_queries']:<5}"
               f"{r['recall@10']:<12.4f}{r['ndcg@10']:<12.4f}{r['mrr']:<10.4f}")
     print("=" * 70)
-    print(f"Report → {args.output}")
+    print(f"Report -> {args.output}")
 
 
 if __name__ == "__main__":
