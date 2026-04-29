@@ -546,14 +546,19 @@ pwsh -File scripts/phase8_12_baseline_tei.ps1 -AutoConfirm
 
 **Path C — DONE 2026-04-30** (expand pilot 14q→50q): pre-resolution фикс в `generate_queries.py` (`load_qdrant_keys` + `filter_clusters_to_qdrant`), 50/50 queries, 0% unmatched. Результат → table выше, переворот decision.
 
-**Production switchover plan (Phase 8.12 → 8.11 production cleanup):**
+**Production switchover progress (Phase 8.12 → 8.11 production cleanup):**
 
-| # | Действие | Cost | Зависимость |
-|---|---|---|---|
-| 1 | Поднять `bsl_code_v4_late` как primary BSL retrieval target в `src/bsl/semantic_search/` (Phase 8.10 sync) | ~1 ч | embedding-models skill уже отражает 4096d / Late Chunking (8.10.2 done) |
-| 2 | Drop `bsl_code_v3` (legacy E5) — Phase 8.11.3 | 5 мин | После 1 + неделю monitoring |
-| 3 | Архивировать `bsl_code_v4` (Qwen3+std) snapshot — research artifact | 5 мин | После 1 |
-| 4 | Phase 8.13 LoRA — DEFERRED, опциональное улучшение поверх Qwen3+Late baseline | 1-3 дня | Когда: real user queries через Phase 22 + ≥500q golden |
+| # | Действие | Status | Cost | Зависимость |
+|---|---|---|---|---|
+| 1a | Default `collection_name` в `src/bsl/semantic_search/config.py` → `bsl_code_v4_late`, `embedding_dim` 768→4096, `embedding_model` `qwen3-embedding` | ✅ **DONE 2026-04-30** | 5 мин | — |
+| 1b | `QUERY_INSTRUCTION` в `qwen3_embedding.py` → default web-retrieval template (H1 ablation REJECTED BSL-specific). `DOCUMENT_INSTRUCTION` → пустая строка (Qwen3 convention для passages) | ✅ **DONE 2026-04-30** | 5 мин | После 1a |
+| 1c | Default `qdrant_collection` в `hybrid_search.py` → `bsl_code_v4_late` (was `bsl_code_v3`) | ✅ **DONE 2026-04-30** | 2 мин | После 1a |
+| 1d | **Backend wiring gap**: production `Qwen3EmbeddingService` ходит в Ollama `qwen3-embedding`, а локально установлен только TEI HTTP. Нужен либо `pull qwen3-embedding` через Ollama, либо TEI-вариант сервиса (новый класс `Qwen3TEIQueryService` или fallback в существующем) | ⏳ TODO | 30 мин | OPEN — выбрать backend strategy |
+| 2 | Drop `bsl_code_v3` (legacy E5) — Phase 8.11.3 | ⏳ DEFER | 5 мин | После 1d + неделю monitoring real user queries |
+| 3 | Архивировать `bsl_code_v4` (Qwen3+std) snapshot — research artifact | ⏳ DEFER | 5 мин | После 1d |
+| 4 | Phase 8.13 LoRA — DEFERRED, опциональное улучшение поверх Qwen3+Late baseline | ⏳ DEFER | 1-3 дня | Когда: real user queries через Phase 22 + ≥500q golden |
+
+**Smoke test 2026-04-30 (через TEI напрямую, в обход Ollama-сервиса):** 3 BSL-запроса (`"обработка проведения документа"`, `"регистр сведений 1С"`, `"проверка прав доступа"`) → top-3 results scores 0.45-0.53 на `bsl_code_v4_late` 4096d. Confirms коллекция и query-side prompt совместимы; gap только в backend wiring (Ollama vs TEI) для production-уровня сервиса.
 
 **Optional future investigation (low priority после production switch):**
 - **D**: A/B test GigaEmbeddings 1024d / BGE-M3 на 50q golden-set — может Russian-SOTA или multilingual SOTA модель даст ещё лучше + меньше GPU footprint (1024d vs 4096d). Но Late Chunking требует full-document forward в любом случае → надо проверить как у этих моделей с long-context. Ставится на back-burner — production выигрыш Qwen3+Late уже defendable.

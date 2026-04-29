@@ -113,12 +113,14 @@ mcp__bsl-debugger__get_variables()
 Использовать auto-documenter с профилем #7 (lazy-mcp)
 ```
 
-## Конфигурация
+## Конфигурация (Phase 8.12.8 production switchover, 2026-04-30)
 
 - **MCP профиль:** `.mcp/bsl.json`
-- **Embeddings:** nomic-embed-text (768d)
-- **Qdrant collection:** `bsl_code_v2`
-- **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — используется когда Qdrant недоступен
+- **Embeddings:** Qwen3-Embedding-8B (4096d, через Ollama `qwen3-embedding`)
+- **Qdrant collection:** `bsl_code_v4_late` (Qwen3 + Late Chunking pooling, +26% recall vs E5 baseline на 50q expanded pilot)
+- **Query instruction:** default web-retrieval template из HF model card (BSL-specific варианты дали -100%, см. roadmap §21.10 H1 ablation)
+- **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — когда Qdrant недоступен
+- **Legacy collections:** `bsl_code_v3` (E5 1024d, drop pending Phase 8.11.3), `bsl_code_v2` (nomic 768d, deprecated), `bsl_code_v4` (Qwen3+std 4096d, research-baseline only — std pooling даёт -64% recall vs Late)
 
 ## Зависимости
 

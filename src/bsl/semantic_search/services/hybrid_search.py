@@ -45,7 +45,7 @@ class BSLHybridPipeline:
         qdrant_client: Any | None = None,
         embedder: Any | None = None,
         call_graph: Any | None = None,
-        qdrant_collection: str = "bsl_code_v3",
+        qdrant_collection: str = "bsl_code_v4_late",
         rrf_k: int = 60,
         bm25_weight: float = 0.4,
         vector_weight: float = 0.6,
@@ -251,7 +251,7 @@ def create_pipeline(
     qdrant_client=None,
     embedder=None,
     call_graph=None,
-    collection: str = "bsl_code_v3",
+    collection: str = "bsl_code_v4_late",
     dual_vector: bool = False,
 ):
     """Factory: create BSLHybridPipeline or DualVectorPipeline based on collection type."""

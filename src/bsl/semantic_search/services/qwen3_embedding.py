@@ -21,9 +21,22 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# Instruction prefixes for Qwen3 instruct-style embeddings
-QUERY_INSTRUCTION = "Instruct: Find BSL code procedure or function\nQuery: "
-DOCUMENT_INSTRUCTION = "Instruct: BSL code module from 1C Enterprise\nDocument: "
+# Instruction prefixes for Qwen3 instruct-style embeddings.
+#
+# Phase 8.12.8 H1 ablation (2026-04-30) tested BSL-specific instructions
+# ("Find BSL code procedure" → 0.000 recall, "Given a code search query"
+# → 0.071) and confirmed Qwen3-Embedding-8B is calibrated only on the
+# default web-retrieval template from HF model card. Any deviation breaks
+# distribution alignment. bsl_code_v4_late (production) was eval'd with
+# this exact prompt → 0.567 recall (+26% vs E5).
+QUERY_INSTRUCTION = (
+    "Instruct: Given a web search query, retrieve relevant passages "
+    "that answer the query\nQuery: "
+)
+# Passages indexed WITHOUT instruction (Qwen3 convention). DOCUMENT_INSTRUCTION
+# is retained empty for re-indexing path compatibility — prepending nothing
+# matches the bsl_code_v4_late index format.
+DOCUMENT_INSTRUCTION = ""
 
 MAX_INPUT_CHARS = 8000
 EXPECTED_DIMS = 4096

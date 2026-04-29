@@ -30,12 +30,19 @@ class BSLSearchSettings(BaseSettings):
     qdrant_url: str | None = Field(
         default=None, description="Full Qdrant URL (overrides host/port)"
     )
-    collection_name: str = Field(default="bsl_code_v2", description="Qdrant collection name")
+    collection_name: str = Field(
+        default="bsl_code_v4_late",
+        description="Qdrant collection (Phase 8.12.8 production: Qwen3+Late Chunking 4096d, +26% recall vs E5 baseline)",
+    )
 
     # === Embeddings ===
-    embedding_model: str = Field(default="nomic-embed-text", description="Ollama embedding model")
+    embedding_model: str = Field(
+        default="qwen3-embedding",
+        description="Ollama embedding model (Qwen3-Embedding-8B 4096d)",
+    )
     embedding_dim: int = Field(
-        default=768, description="Embedding dimension (768 for nomic-embed-text)"
+        default=4096,
+        description="Embedding dimension (4096 native для Qwen3, must match collection)",
     )
     ollama_host: str = Field(default="http://localhost:11434", description="Ollama server URL")
 
