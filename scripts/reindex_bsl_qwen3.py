@@ -491,6 +491,7 @@ class Qwen3TEIEmbedder:
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 120.0,
         max_chars: int = 32000,
+        client_batch_size: int = 32,
         verify_health: bool = True,
     ) -> None:
         import httpx
@@ -507,6 +508,9 @@ class Qwen3TEIEmbedder:
         # ≈ 12-16k tokens worst case (Cyrillic) — still gives the server room
         # to truncate to MAX_INPUT_LENGTH=4096 without our help.
         self.max_chars = max_chars
+        # TEI MAX_CLIENT_BATCH_SIZE default = 32. Caller's flush buffer can be
+        # larger (512) for upsert efficiency, so slice client-side per request.
+        self.client_batch_size = max(1, int(client_batch_size))
 
         if verify_health:
             self._verify_health()
@@ -545,38 +549,31 @@ class Qwen3TEIEmbedder:
         except Exception:  # noqa: BLE001 — /info is optional
             pass
 
+    def _post_embed_sub(self, sub: list[str]) -> list[list[float]]:
+        resp = self._client.post("/embed", json={
+            "inputs": sub, "normalize": True,
+            "truncate": True, "truncation_direction": "Right",
+        })
+        resp.raise_for_status()
+        data = resp.json()
+        if isinstance(data, dict) and "embeddings" in data:
+            data = data["embeddings"]
+        if not isinstance(data, list) or len(data) != len(sub):
+            raise RuntimeError(f"TEI shape: {len(data) if isinstance(data, list) else '?'} vs {len(sub)}")
+        return data
+
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
         if not texts:
             return []
         prefix = self.QUERY_INSTRUCTION if is_query else ""
         inputs = [prefix + t[: self.max_chars] for t in texts]
-        resp = self._client.post(
-            "/embed",
-            json={
-                "inputs": inputs,
-                # `normalize=true` matches sentence-transformers default for
-                # Qwen3 (cosine retrieval) — required for parity with vectors
-                # indexed by `Qwen3STEmbedder`.
-                "normalize": True,
-                # Server enforces MAX_INPUT_LENGTH from compose; without
-                # truncate=true a single XXL chunk would 422-fail the batch.
-                "truncate": True,
-                "truncation_direction": "Right",
-            },
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        # TEI native /embed returns list[list[float]] directly. Older
-        # versions may have wrapped it in {"embeddings": [...]} — guard for
-        # both shapes so the contract survives a TEI minor bump.
-        if isinstance(data, dict) and "embeddings" in data:
-            data = data["embeddings"]
-        if not isinstance(data, list) or len(data) != len(texts):
-            raise RuntimeError(
-                f"TEI /embed returned {len(data) if isinstance(data, list) else 'non-list'} "
-                f"vectors for {len(texts)} inputs (shape mismatch)"
-            )
-        return data
+        out: list[list[float]] = []
+        bs = self.client_batch_size
+        for s in range(0, len(inputs), bs):
+            out.extend(self._post_embed_sub(inputs[s : s + bs]))
+        if len(out) != len(texts):
+            raise RuntimeError(f"TEI concat: {len(out)} vs {len(texts)}")
+        return out
 
     def embed_late_chunked(
         self,
@@ -613,7 +610,7 @@ def make_embedder(
     if name == "qwen3-st":
         return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size, enable_fa2=enable_fa2)
     if name == "qwen3-tei":
-        return Qwen3TEIEmbedder(base_url=tei_base_url)
+        return Qwen3TEIEmbedder(base_url=tei_base_url, client_batch_size=batch_size)
     raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', 'qwen3-st', or 'qwen3-tei'")
 
 

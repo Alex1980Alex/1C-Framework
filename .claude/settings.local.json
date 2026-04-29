@@ -783,7 +783,10 @@
       "PowerShell(winget install *)",
       "Bash(QWEN3_MODEL_DIR=\"D:/hf-manual/Qwen3-Embedding-8B\" docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml --profile tei config --services)",
       "Bash(QWEN3_MODEL_DIR=\"D:/hf-manual/Qwen3-Embedding-8B\" docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml --profile tei config)",
-      "Bash(awk '/^  tei:/,/^  [a-z]+:/')"
+      "Bash(awk '/^  tei:/,/^  [a-z]+:/')",
+      "Bash(awk 'NR==276' \"C:\\\\1С-Framework\\\\scripts\\\\phase8_12_baseline_tei.ps1\")",
+      "Bash(TEI_URL=http://localhost:8080 .venv/Scripts/python.exe tmp/phase8/8.12.3_smoke.py)",
+      "PowerShell(.\\\\scripts\\\\phase8_12_baseline_tei.ps1 -AutoConfirm -SkipTeiStart -SkipReindex 2>&1 | Out-String)"
     ]
   },
   "enableAllProjectMcpServers": true,

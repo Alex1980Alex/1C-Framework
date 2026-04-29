@@ -225,12 +225,22 @@ if (-not $BslProjectPath) {
         throw 'No BSL project directories found. Pass -BslProjectPath explicitly.'
     }
     if ($candidates.Count -gt 1) {
-        Write-Host 'Multiple BSL projects found:' -ForegroundColor Yellow
-        $candidates | ForEach-Object { Write-Host "  - $($_.FullName)" }
-        throw 'Ambiguous: pass -BslProjectPath explicitly (refusing to pick automatically).'
+        # Roadmap section 21.1 pins GKSTCPLK-2368 as the Phase 8.12.3 baseline target
+        # (2049 BSL files, 35 548 chunks). Prefer it when present; otherwise refuse.
+        $pinned = @($candidates | Where-Object { $_.Name -match 'GKSTCPLK-2368' })
+        if ($pinned.Count -eq 1) {
+            $BslProjectPath = $pinned[0].FullName
+            Write-Host 'Multiple BSL projects found; auto-selected roadmap-pinned GKSTCPLK-2368:' -ForegroundColor Yellow
+            Write-Host "  $BslProjectPath" -ForegroundColor DarkGray
+        } else {
+            Write-Host 'Multiple BSL projects found:' -ForegroundColor Yellow
+            $candidates | ForEach-Object { Write-Host "  - $($_.FullName)" }
+            throw 'Ambiguous: pass -BslProjectPath explicitly (refusing to pick automatically).'
+        }
+    } else {
+        $BslProjectPath = $candidates[0].FullName
+        Write-Host "Using single BSL project: $BslProjectPath" -ForegroundColor DarkGray
     }
-    $BslProjectPath = $candidates[0].FullName
-    Write-Host "Using single BSL project: $BslProjectPath" -ForegroundColor DarkGray
 }
 if (-not (Test-Path $BslProjectPath)) {
     throw "BSL project path not found: $BslProjectPath"
@@ -267,13 +277,14 @@ if (-not $SkipSmoke) {
     Banner '5' 'Smoke (points_count + functional search via TEI)'
 
     $queriesJson = Join-Path $LogDir '8.12.3_queries.json'
-    # Smoke queries: 2 Russian search strings encoded as JSON \u escapes to avoid
-    # source-level Cyrillic (matches the 8.9 pattern). Decoded at runtime by the
-    # Python smoke script reading this file as UTF-8 JSON.
+    # Smoke queries encoded as JSON \u escapes so the .ps1 source stays ASCII-only.
+    # Windows PowerShell 5.1 reads UTF-8-no-BOM source files under the system
+    # codepage (cp1251) and would otherwise mangle Cyrillic into mojibake,
+    # desyncing the parser. Python's json.load decodes the escapes at runtime.
     #   q1 = "obrabotka provedeniya dokumenta"  (document posting handler)
     #   q2 = "registr svedeniy 1S"              (information register 1C)
-    $jsonRaw = '["обработка проведения документа", "регистр сведений 1С"]'
-    $jsonRaw | Out-File -FilePath $queriesJson -Encoding utf8
+    $jsonRaw = '["\u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430 \u043f\u0440\u043e\u0432\u0435\u0434\u0435\u043d\u0438\u044f \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430", "\u0440\u0435\u0433\u0438\u0441\u0442\u0440 \u0441\u0432\u0435\u0434\u0435\u043d\u0438\u0439 1\u0421"]'
+    $jsonRaw | Out-File -FilePath $queriesJson -Encoding ascii
 
     $smokePy = Join-Path $LogDir '8.12.3_smoke.py'
     @'
@@ -323,7 +334,7 @@ for q in queries:
     t0 = time.time()
     qv = embed_via_tei(q)
     embed_ms = (time.time() - t0) * 1000
-    res = client.search(collection_name="bsl_code_v4", query_vector=qv, limit=3)
+    res = client.query_points(collection_name="bsl_code_v4", query=qv, limit=3, with_payload=True).points
     print("\nQuery: %r  (embed=%.1fms)" % (q, embed_ms))
     for r in res:
         name = r.payload.get("name", "?")
