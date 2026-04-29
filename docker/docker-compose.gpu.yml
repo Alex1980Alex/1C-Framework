@@ -46,13 +46,19 @@ services:
     ports:
       - "8080:80"
     volumes:
-      # Persist HF model download across restarts (~16 GB Qwen3-Embedding-8B
-      # in bf16 + tokenizer + config). First boot pulls from HF Hub; later
-      # restarts mount-mount the cached weights.
+      # HF cache fallback — kept for ONNX exports / sibling-model pulls.
       - tei_data:/data
+      # Phase 8.12.3: pre-downloaded Qwen3-Embedding-8B safetensors. Mounted
+      # read-only at a fixed path; MODEL_ID below points here so TEI skips
+      # the HF Hub network pull (~16 GB) on cold-start. Override the host
+      # path with QWEN3_MODEL_DIR env var if the model lives elsewhere.
+      - ${QWEN3_MODEL_DIR:-D:/hf-manual/Qwen3-Embedding-8B}:/models/Qwen3-Embedding-8B:ro
     environment:
-      # MODEL_ID: pinned to Qwen3-Embedding-8B per Phase 8 roadmap.
-      - MODEL_ID=Qwen/Qwen3-Embedding-8B
+      # MODEL_ID: local path (mounted above). TEI 1.7.x accepts absolute
+      # paths as `--model-id` and bypasses the HF Hub when given one.
+      # To switch back to HF pull, set MODEL_ID=Qwen/Qwen3-Embedding-8B and
+      # remove the bind-mount line.
+      - MODEL_ID=/models/Qwen3-Embedding-8B
       # MAX_INPUT_LENGTH=4096: matches Qwen3STEmbedder.max_seq_length (Phase 8.12 C5)
       # so retrieval queries get the same forward-pass token cap on either backend.
       - MAX_INPUT_LENGTH=4096

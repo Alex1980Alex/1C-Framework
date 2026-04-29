@@ -193,6 +193,12 @@ docker compose -f docker/docker-compose.yml \
 # (TEI CLI принимает только float16/float32; bfloat16 невалиден)
 # fallback DTYPE=float32 при TEI ORT FP16-bug #675 (Qwen3+ONNX)
 # доступен через --embedder qwen3-tei в scripts/reindex_bsl_qwen3.py
+#
+# Phase 8.12.3 (2026-04-29): локальная модель вместо HF Hub pull
+# Compose делает bind-mount ${QWEN3_MODEL_DIR:-D:/hf-manual/Qwen3-Embedding-8B}
+# в /models/Qwen3-Embedding-8B (read-only); MODEL_ID указывает туда же.
+# Override:  $env:QWEN3_MODEL_DIR = "<path>"  перед docker compose up
+# Runner всё-в-одном: scripts/phase8_12_baseline_tei.ps1 (pre-flight + up + reindex + smoke)
 
 # MCP Server
 python -m src.mcp_server.server

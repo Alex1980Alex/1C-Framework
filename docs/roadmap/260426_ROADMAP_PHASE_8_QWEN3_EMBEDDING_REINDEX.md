@@ -352,7 +352,7 @@ EMBEDDING__DTYPE=float16
 |------|--------|-------|
 | 8.12.1 P0 C1-C7 fixes | DONE | [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py), [`tests/test_reindex_qwen3_oom.py`](../../tests/test_reindex_qwen3_oom.py) (9/9) |
 | 8.12.2 module_summary drop policy | DONE | [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py) |
-| 8.12.3 Baseline reindex `bsl_code_v4` | PENDING (требует GPU/Docker, MCP-серверы остановить) |
+| 8.12.3 Baseline reindex `bsl_code_v4` | READY-TO-RUN (модель локально + runner готов; запуск вне сессии) | [`scripts/phase8_12_baseline_tei.ps1`](../../scripts/phase8_12_baseline_tei.ps1), [`docker/docker-compose.gpu.yml`](../../docker/docker-compose.gpu.yml) (Qwen3-Embedding-8B локально через `QWEN3_MODEL_DIR` bind-mount) |
 | 8.12.4 A1 FlashAttention 2 build | PENDING (Windows: CUDA toolkit + MSVC; альтернатива через A3) |
 | 8.12.5 A2 sliding-window split | DONE | [`src/bsl/parser/bsl_chunker.py`](../../src/bsl/parser/bsl_chunker.py), [`tests/test_bsl_chunker_split.py`](../../tests/test_bsl_chunker_split.py) (10/10) |
 | 8.12.6 A3 TEI Docker backend | DONE (code-level) | [`docker/docker-compose.gpu.yml`](../../docker/docker-compose.gpu.yml) (`tei` profile), [`scripts/reindex_bsl_qwen3.py`](../../scripts/reindex_bsl_qwen3.py) (`Qwen3TEIEmbedder`), [`tests/test_qwen3_tei_embedder.py`](../../tests/test_qwen3_tei_embedder.py) (16/16) |
@@ -467,7 +467,23 @@ EMBEDDING__DTYPE=float16
 5. **A3 TEI backend реализован** (8.12.6) — `tei` сервис в compose под opt-in профилем + `Qwen3TEIEmbedder` HTTP-клиент. CLI: `--embedder qwen3-tei`. 16/16 unit-тестов с мокнутым httpx. Runtime smoke-test (cold-load Qwen3-8B + первый POST к `/embed`) выполняется в 8.12.3 одновременно с baseline reindex.
 6. **A4 producer/consumer drop'нут** (8.12.7) — TEI делает continuous batching server-side, A4 был бы избыточен.
 
-**Следующий шаг — 8.12.3 baseline reindex** (требует остановки активной Claude Code сессии и MCP-серверов). Запуск через TEI: `docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml --profile tei up -d tei` → `python scripts/reindex_bsl_qwen3.py --embedder qwen3-tei --project ... --collection bsl_code_v4 --recreate`. После baseline → 8.12.8 A/B (E5 vs Qwen3+A2 vs Qwen3+A2-alt).
+**Следующий шаг — 8.12.3 baseline reindex** (требует остановки активной Claude Code сессии и MCP-серверов).
+
+**Готово к запуску (2026-04-29):**
+- Qwen3-Embedding-8B скачан локально: `D:/hf-manual/Qwen3-Embedding-8B/` — 4 шарда (~14.1 GiB), все 398 тензоров проверены через `safetensors.safe_open()`
+- TEI compose обновлён: bind-mount `${QWEN3_MODEL_DIR}:/models/Qwen3-Embedding-8B:ro` + `MODEL_ID=/models/Qwen3-Embedding-8B` → пропускает HF Hub pull (16 GB)
+- Runner: [`scripts/phase8_12_baseline_tei.ps1`](../../scripts/phase8_12_baseline_tei.ps1) — pre-flight (Docker/Qdrant/GPU/heavy-py-procs), TEI up + /health-poll + /info smoke, reindex c `--recreate`, post-smoke search
+
+**Запуск (вне Claude Code сессии):**
+```powershell
+# 1. Закрыть все окна Claude Code / IDE с MCP-серверами (освободить VRAM)
+# 2. Из C:/1С-Framework:
+pwsh -File scripts/phase8_12_baseline_tei.ps1 -AutoConfirm
+# Опц.: -BslProjectPath "src/projects/configuration/<name>" если несколько проектов
+# Опц.: -Qwen3ModelDir "D:/hf-manual/Qwen3-Embedding-8B" (default — этот путь)
+```
+
+**Артефакты после запуска:** `tmp/phase8/8.12.3_reindex_bsl_code_v4_tei.log`, `tmp/phase8/8.12.3_smoke.log`. После baseline → 8.12.8 A/B (E5 vs Qwen3+A2 vs Qwen3+A2-alt).
 
 ### 21.8. Артефакты диагностики
 
