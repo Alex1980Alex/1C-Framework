@@ -35,6 +35,11 @@ class E5Backend:
 
 
 class TEIBackend:
+    # Default Qwen3 instruction (HF model card). Phase 8.12.8 H1 ablation
+    # tried BSL-specific ("Given a 1С BSL developer question..." → 0.000
+    # recall) and code-specific ("Given a code search query..." → 0.071
+    # recall) — both worse than default 0.143. Qwen3 is calibrated to
+    # this exact template; deviation breaks distribution alignment.
     INSTRUCTION = (
         "Instruct: Given a web search query, retrieve relevant passages "
         "that answer the query\nQuery: "
