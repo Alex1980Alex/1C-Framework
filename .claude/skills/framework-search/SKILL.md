@@ -9,11 +9,11 @@ description: "Framework Self-Search — semantic поиск по самому ф
 
 Подсистема индексации **самого фреймворка** (`C:\1С-Framework`) в отдельную Qdrant-коллекцию `framework_code_v1` через Qwen3-Embedding-8B (TEI HTTP backend). Параллельная инфраструктура к BSL retrieval (`bsl_code_v4_late`), переиспользует тот же TEI Docker.
 
-**Источник:** Phase 8 §24 roadmap — `docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`
+**Источник:** Phase 8 §24/§25 roadmap — `docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`
 **Стадии:**
-- Stage 1 ✅ — manual indexer + chunkers (готово, commit `ae6ccebb`)
-- Stage 2 — MCP server `framework-search-mcp` с lazy mtime check (в работе)
-- Stage 3 — file watcher daemon `scripts/watch_framework.py` (в работе)
+- Stage 1 ✅ — manual indexer + chunkers (commit `ae6ccebb`)
+- Stage 2 ✅ — MCP server `framework-search-mcp` с lazy mtime check (4 tools, registered in `.mcp.json`)
+- Stage 3 ✅ — file watcher daemon `scripts/watch_framework.py` (polling, 5s default)
 
 ## Когда использовать
 
@@ -155,10 +155,55 @@ results = client.query_points(
 }
 ```
 
-## Stage 2/3 — TBD
+## Stage 2 — MCP Server (готово)
 
-- **Stage 2 (MCP server):** будет в `tools/framework-search-mcp/server.py`. Tools: `search_code`, `find_similar`, `index_status`, `reindex_changed`. Lazy mtime-check перед каждым `search_code` (throttle 30s) для real-time актуальности при отсутствии watcher'а.
-- **Stage 3 (file watcher):** `scripts/watch_framework.py` через watchdog. Real-time incremental update (~5-7 сек от save до доступности в поиске).
+Файл: `tools/framework-search-mcp/server.py`. Stdio MCP, зарегистрирован в `.mcp.json` как `framework-search`.
+
+**4 MCP tools:**
+
+| Tool | Описание |
+|------|----------|
+| `mcp__framework-search__search_code(query, k=5, language?, path_glob?)` | Semantic поиск по описанию |
+| `mcp__framework-search__find_similar(file_path, k=5)` | Похожий код по содержимому файла |
+| `mcp__framework-search__index_status()` | Статистика коллекции + sample distributions |
+| `mcp__framework-search__reindex_changed()` | Force lazy-check (без throttle) |
+
+**Lazy mtime check:** перед каждым `search_code` сервер сравнивает on-disk mtime файлов с `payload.mtime` в Qdrant. Stale + новые файлы реиндексируются на лету. Cap: 50 файлов за проход. Throttle: не чаще 1× в 30 сек (`LAZY_CHECK_MIN_INTERVAL_SEC`).
+
+**Запуск вручную (для отладки):**
+```bash
+python tools/framework-search-mcp/server.py --log-level DEBUG
+```
+
+## Stage 3 — File Watcher (готово)
+
+Файл: `scripts/watch_framework.py`. **Polling-based** (зачем не watchdog — см. docstring): ноль новых deps, кроссплатформенно, нет риска dropped-events на bulk-операциях git.
+
+**Параметры:**
+
+| Аргумент | Default | Назначение |
+|----------|---------|------------|
+| `--poll-interval` | `5.0` | Секунд между сканами |
+| `--debounce` | `2.0` | Пропускать файлы изменённые в последние N сек (ещё редактируются) |
+| `--max-files-per-batch` | `100` | Cap на reindex за итерацию (защита от bulk git checkout) |
+| `--quiet` | off | WARNING level only (для daemon-режима) |
+
+**Запуск:**
+
+```bash
+# Foreground (Ctrl+C to stop)
+python scripts/watch_framework.py
+
+# Реже (10 сек интервал)
+python scripts/watch_framework.py --poll-interval 10
+
+# Daemon-style на Windows: через Task Scheduler или nssm
+python scripts/watch_framework.py --quiet > watcher.log 2>&1 &
+```
+
+**Архитектура:** каждые 5 сек загружает snapshot `{relative_path: mtime}` из Qdrant payload (рефреш каждые 5 минут чтобы держать в памяти), сравнивает с on-disk mtime, формирует diff, дёргает `run_index(only_paths=changed)`. Идемпотентность через UUID5 chunk_id — повторный run просто перезаписывает.
+
+**Дополняет Stage 2 lazy-check:** если watcher работает — `search_code` всегда найдёт свежие данные без задержки. Если watcher упал — lazy-check вытянет stale файлы при ближайшем запросе.
 
 ## Связанные skills
 

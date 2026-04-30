@@ -68,6 +68,15 @@ SKIP_PATTERNS: list[str] = [
     "/docs/documentation/Claude Code Docs/",
     "/docs/documentation/Протокол контекста модели/",
     "/docs/documentation/Language Server Protocol/",
+    # Vendored third-party tools — not our framework code.
+    # NB: dirname pruning sees repo-relative POSIX paths WITHOUT leading slash,
+    # so top-level dir patterns must NOT start with `/` (otherwise `/tools/X/`
+    # won't match the actual probe value `tools/X/`).
+    "tools/serena/",                      # vendored Serena agent toolkit
+    "tools/multilspy-fork/",              # vendored microsoft/multilspy fork
+    "tools/sonar-scanner",                # vendored binary distribution
+    "tools/coverage41c/",                 # vendored Java coverage tool
+    "package-lock.json",                  # auto-generated, no semantic value
 ]
 
 # Max bytes per file (skip giant generated/binary-ish files).
