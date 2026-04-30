@@ -14,6 +14,7 @@
     "framework": [
       "search",
       "indexing",
+      "framework-search",
       "eval-benchmark",
       "graph",
       "agents",
@@ -487,6 +488,49 @@
         "подготовь файлы для семантического поиска"
       ]
     },
+    "framework-search": {
+      "keywords": [
+        "найди в фреймворке",
+        "find in framework",
+        "где в коде",
+        "where in code",
+        "self-search",
+        "framework search",
+        "index_framework",
+        "framework_code_v1",
+        "переиндексировать фреймворк",
+        "reindex framework",
+        "семантический поиск по фреймворку",
+        "поиск по коду",
+        "code search self",
+        "find similar code",
+        "найти похожий код",
+        "scripts/index_framework.py",
+        "watch_framework",
+        "framework-search-mcp"
+      ],
+      "skills": [
+        "framework-search"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "найди в фреймворке": 4,
+        "framework_code_v1": 5,
+        "index_framework": 4,
+        "self-search": 3,
+        "поиск по фреймворку": 3
+      },
+      "utterances": [
+        "найди в коде фреймворка где обрабатывается X",
+        "проиндексируй фреймворк для семантического поиска",
+        "какие skills делают что-то с embeddings",
+        "найди похожие реализации в кодовой базе",
+        "где определён hook X",
+        "find code in framework by description",
+        "index framework code into Qdrant",
+        "search the framework own codebase semantically"
+      ]
+    },
     "eval-benchmark": {
       "keywords": [
         "evaluation",
@@ -678,7 +722,11 @@
       "skills": [
         "framework-cli"
       ],
-      "optional": ["framework-api", "framework-quickstart", "framework-mcp-ui"],
+      "optional": [
+        "framework-api",
+        "framework-quickstart",
+        "framework-mcp-ui"
+      ],
       "weighted_keywords": {
         "CLI команд": 3,
         "cli команд": 3,
@@ -1991,7 +2039,7 @@
     "enabled": true,
     "fallback_trigger": 2,
     "strong": 0.75,
-    "moderate": 0.50,
+    "moderate": 0.5,
     "strong_bonus": 2,
     "moderate_bonus": 1,
     "timeout_ms": 500,
