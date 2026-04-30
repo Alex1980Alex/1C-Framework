@@ -1367,6 +1367,83 @@ memory-системы (4 коллекции + 2 hooks + индексатор) н
 
 ---
 
-После Phase 8 — кандидаты Phase 9: **memory system Qwen3 alignment** (см. §28.1 audit),
+После Phase 8 — кандидаты Phase 9: **memory system Qwen3 alignment** ✅ DONE (§31),
 cross-encoder Qwen3-Reranker, hybrid search tuning, LLM-rotation expansion.
 Framework code self-search (§24 → §25) ✅ реализован. Phase 8.13 LoRA — DEFERRED (§22).
+
+---
+
+## 31. Phase 9.1 — Memory system Qwen3 alignment (✅ DONE 2026-04-30)
+
+**Триггер:** §28.1 audit показал что memory hooks (`memory-first-hook.py`,
+`shared/semantic_search.py`) использовали Ollama nomic-embed-text 768d, а коллекции
+были на 1024d (E5) или пустые. Существующий **dim mismatch** = silent bug —
+hooks почти никогда не возвращали результаты из Qdrant (фолбэк на token overlap
+через learned_patterns).
+
+### 31.1. Что сделано
+
+**Mig_код:**
+
+- [x] **31.1.1** `shared/semantic_search.py` — `embed_query_ollama` → `embed_query_tei`
+  (4096d Qwen3 через TEI HTTP). Backward-compat alias `embed_query_ollama = embed_query_tei`
+  для старого hook-кода. Bug fix: `search_experiences_semantic` теперь корректно
+  бьёт в `experience_embeddings` (раньше — несуществующий `experience_bank`)
+- [x] **31.1.2** `memory-first-hook.py` — комментарии Ollama → TEI, timeouts уменьшены
+  (TEI быстрее: cold ~600 ms vs Ollama ~2 s). `embed_query_ollama` import → `embed_query_tei`.
+- [x] **31.1.3** `scripts/index-skills-to-qdrant.py` — `OLLAMA_URL` → `TEI_URL`,
+  `VECTOR_SIZE 768` → `4096`. Добавлен `SKILL_INDEX_RECREATE=1` env для drop+create
+
+**Коллекции (drop + recreate на 4096d):**
+
+- [x] **31.1.4** `skill_library` — 0 pts × 1024d → **80 pts × 4096d** (80 skills из 82
+  SKILL.md проиндексировано, 2 skipped из-за empty body)
+- [x] **31.1.5** `experience_embeddings` — 0 pts × 1024d → 0 pts × 4096d
+  (auto-populate через learning hooks)
+- [x] **31.1.6** `conversation_memory` — 0 pts × 1024d → 0 pts × 4096d
+  (auto-populate через chat API; ConversationMemory class сам по себе SQLite-based,
+  Qdrant collection отдельный — оставлен пустым к auto-fill)
+
+**Не нужно (audit):**
+
+- [x] **31.1.7** `ConversationMemory` class в `src/pdf_framework/agents/memory/conversation.py`
+  использует SQLite (data/conversations.db), не Qdrant. Не требует миграции.
+
+### 31.2. Smoke verification (top-1 results на skill_library)
+
+| Запрос | Top-1 | Score |
+|--------|-------|-------|
+| «хук блокирующий запись без активации skill» | `hook-enforcement-pattern` | 0.654 |
+| «embedding model selection Qwen3» | `embedding-models` | 0.631 |
+| «BSL 1С процедура» | `bsl-development` | 0.710 |
+| «найти семантический поиск» | `graph-operations` | 0.584 |
+
+До миграции: hooks **никогда** не возвращали результаты из Qdrant из-за
+dim mismatch (768 ≠ 1024).
+
+### 31.3. Финальная картина Qdrant (Phase 8 + 9.1)
+
+| Коллекция | Points | Dim | Embed |
+|-----------|--------|-----|-------|
+| `bsl_code_v4_late` | 24 455 | 4096 | Qwen3+Late (production BSL) |
+| `bsl_code_v4` | 24 455 | 4096 | Qwen3 std (research baseline) |
+| `framework_code_v1` | 21 266 | 4096 | Qwen3 (self-search §25) |
+| `pdf_documents` | 830 | 4096 | Qwen3 (§28.2.1) |
+| `wiki_pages_v1` | 3 073 | 4096 | Qwen3 (§28.2.2) |
+| `graph_embeddings` | 6 694 | 4096 | Qwen3 (§28.2.3) |
+| `learned_patterns` | 44 | 4096 | Qwen3 (§28.2.4) |
+| **`skill_library`** | **80** | **4096** | **Qwen3 (§31, NEW)** |
+| `experience_embeddings` | 0 | 4096 | Qwen3 ready, auto-populate (§31) |
+| `conversation_memory` | 0 | 4096 | Qwen3 ready, auto-populate (§31) |
+| `visual_grounding` | 5 | 768 | nomic legacy (defer) |
+
+**Всего на Qwen3 4096d: 80 893 points в 10 коллекциях** (было 80 793 в 7 после §30 — добавили skill_library).
+
+### 31.4. Что дальше
+
+Memory subsystem aligned. Следующие кандидаты Phase 9:
+- Cross-encoder Qwen3-Reranker (4-8 часов, +5-10% precision)
+- Hybrid sparse+dense (2-4 часа, +3-7% recall на keyword запросах)
+- Phase 8.13 LoRA fine-tuning (DEFERRED)
+- `visual_grounding` migration (DEFER)
+- E5 snapshots cleanup после 2026-05-03 (§29.8)

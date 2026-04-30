@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Batch index SKILL.md files into Qdrant skill_library collection."""
+"""Batch index SKILL.md files into Qdrant skill_library collection.
+
+Phase 9.1 (2026-04-30): migrated Ollama nomic 768d -> TEI Qwen3-Embedding-8B
+4096d to align with main retrieval stack. The skill_library collection had
+been empty (0 pts) — hook embeddings (768d) and collection schema (1024d)
+mismatched, so search never returned results. After this script: 4096d
+collection populated with all SKILL.md frontmatter.
+"""
 
 import glob
 import json
@@ -15,9 +22,10 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OLLAMA_URL = "http://localhost:11434/api/embeddings"
+TEI_URL = os.environ.get("TEI_URL", "http://localhost:8080") + "/embed"
 QDRANT_COLLECTION = "skill_library"
-VECTOR_SIZE = 768
+VECTOR_SIZE = 4096
+RECREATE_COLLECTION = os.environ.get("SKILL_INDEX_RECREATE", "0") == "1"
 
 
 def parse_frontmatter(content: str) -> dict:
@@ -50,11 +58,21 @@ def parse_frontmatter(content: str) -> dict:
 
 
 def embed_text(text: str) -> list[float] | None:
+    """Embed via TEI HTTP /embed (Qwen3-Embedding-8B, 4096d).
+
+    Indexer side does NOT prepend QUERY_INSTRUCTION — passages indexed without
+    prefix per Qwen3 convention (matches BSL/framework_search pipelines).
+    """
     if not text.strip():
         return None
-    payload = json.dumps({"model": "nomic-embed-text", "prompt": text[:8000]}).encode()
+    payload = json.dumps({
+        "inputs": [text[:8000]],
+        "normalize": True,
+        "truncate": True,
+        "truncation_direction": "Right",
+    }).encode()
     req = Request(
-        OLLAMA_URL,
+        TEI_URL,
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST",
@@ -62,7 +80,13 @@ def embed_text(text: str) -> list[float] | None:
     try:
         with urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read().decode())
-            return data.get("embedding")
+            if isinstance(data, list) and data and isinstance(data[0], list):
+                return data[0]
+            if isinstance(data, dict) and "embeddings" in data:
+                vecs = data["embeddings"]
+                if vecs and isinstance(vecs[0], list):
+                    return vecs[0]
+            return None
     except (URLError, OSError) as e:
         print(f"  Embedding error: {e}", file=sys.stderr)
         return None
@@ -70,14 +94,30 @@ def embed_text(text: str) -> list[float] | None:
 
 def ensure_collection(client: QdrantClient) -> None:
     collections = [c.name for c in client.get_collections().collections]
-    if QDRANT_COLLECTION not in collections:
+    exists = QDRANT_COLLECTION in collections
+
+    if exists and RECREATE_COLLECTION:
+        client.delete_collection(QDRANT_COLLECTION)
+        print(f"Dropped collection '{QDRANT_COLLECTION}' for recreation")
+        exists = False
+
+    if not exists:
         client.create_collection(
             collection_name=QDRANT_COLLECTION,
             vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
         )
-        print(f"Created collection '{QDRANT_COLLECTION}'")
+        print(f"Created collection '{QDRANT_COLLECTION}' ({VECTOR_SIZE}d)")
     else:
-        print(f"Collection '{QDRANT_COLLECTION}' already exists")
+        # Verify existing collection has matching dim — abort if mismatch.
+        info = client.get_collection(QDRANT_COLLECTION)
+        existing_dim = info.config.params.vectors.size
+        if existing_dim != VECTOR_SIZE:
+            print(
+                f"ERROR: '{QDRANT_COLLECTION}' has dim {existing_dim}, "
+                f"expected {VECTOR_SIZE}. Set SKILL_INDEX_RECREATE=1 to recreate."
+            )
+            sys.exit(2)
+        print(f"Collection '{QDRANT_COLLECTION}' already exists ({existing_dim}d)")
 
 
 def main():
