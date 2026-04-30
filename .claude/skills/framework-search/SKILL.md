@@ -1,0 +1,174 @@
+---
+name: framework-search
+description: "Framework Self-Search — semantic поиск по самому фреймворку (Python код, hooks, skills, docs). ИСПОЛЬЗУЙ когда нужно найти место в коде фреймворка по смысловому описанию, а не по точному имени. Триггеры: 'найди в фреймворке', 'где в коде делается X', 'какие skills делают Y', 'индексировать фреймворк', 'index_framework', 'framework_code_v1'. НЕ для BSL кода (→ bsl-development), НЕ для PDF документов (→ search-pipeline-debug)."
+---
+
+# Framework Self-Search — semantic поиск по коду фреймворка
+
+## Обзор
+
+Подсистема индексации **самого фреймворка** (`C:\1С-Framework`) в отдельную Qdrant-коллекцию `framework_code_v1` через Qwen3-Embedding-8B (TEI HTTP backend). Параллельная инфраструктура к BSL retrieval (`bsl_code_v4_late`), переиспользует тот же TEI Docker.
+
+**Источник:** Phase 8 §24 roadmap — `docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`
+**Стадии:**
+- Stage 1 ✅ — manual indexer + chunkers (готово, commit `ae6ccebb`)
+- Stage 2 — MCP server `framework-search-mcp` с lazy mtime check (в работе)
+- Stage 3 — file watcher daemon `scripts/watch_framework.py` (в работе)
+
+## Когда использовать
+
+- Поиск кода по смыслу: "fallback логика для embeddings" → найдёт `_tei_fallback()` в `qwen3_embedding.py`
+- Discovery hooks/skills по описанию: "хук блокирующий запись без активации скилла" → найдёт `code-skill-enforcer.py`
+- Refactoring impact analysis: где используется паттерн X
+- Onboarding / Q&A по фреймворку
+
+## НЕ для
+
+- **BSL код** (`src/bsl/`, `src/projects/configuration/`) → `bsl-development` skill + `bsl_code_v4_late` collection
+- **PDF документов** (`data/pdfs/`) → `search-pipeline-debug` + `pdf_documents` collection
+- **Точные lookup'ы по имени** (`grep "function_name"`) — там быстрее Grep/Glob
+
+## Команда индексации
+
+```bash
+# Первый раз / полный reindex (~15-20 мин на TEI)
+python scripts/index_framework.py --recreate
+
+# Dry-run: посмотреть chunk distribution без embed/upsert
+python scripts/index_framework.py --dry-run
+
+# Smoke test на 50 chunks (~10 секунд)
+python scripts/index_framework.py --limit 50 --recreate
+
+# Incremental: переиндексировать конкретные файлы
+python scripts/index_framework.py --paths src/foo.py docs/bar.md
+```
+
+## CLI аргументы
+
+| Аргумент | Default | Назначение |
+|----------|---------|------------|
+| `--collection` | `framework_code_v1` | Имя Qdrant коллекции |
+| `--qdrant-url` | `http://localhost:6333` | Qdrant endpoint |
+| `--tei-url` | `http://localhost:8080` | TEI HTTP endpoint (`pdf-rag-tei` контейнер) |
+| `--batch-size` | `16` | Chunks на TEI batch (sub-batched на 32 внутри) |
+| `--recreate` | off | Drop and create коллекции |
+| `--dry-run` | off | Только walk + chunk, без embed/upsert |
+| `--limit N` | 0 | Cap на N chunks (для тестов) |
+| `--paths …` | none | Restrict к конкретным файлам |
+| `--verbose` / `-v` | off | DEBUG logging |
+
+## Pre-flight check
+
+```bash
+# 1. TEI healthy
+docker ps | grep pdf-rag-tei
+
+# 2. Qdrant healthy
+curl -s http://localhost:6333/collections | python -m json.tool | head -5
+
+# 3. GPU свободен
+nvidia-smi --query-gpu=memory.used,memory.free --format=csv
+```
+
+## Архитектура (Stage 1)
+
+| Файл | Назначение |
+|------|------------|
+| `src/framework_search/chunker_base.py` | `Chunk` dataclass + UUID5 deterministic id (idempotent reindex) |
+| `src/framework_search/python_chunker.py` | AST-based: функции/классы/методы; sliding-window fallback на parse error |
+| `src/framework_search/markdown_chunker.py` | H1-H3 splits с heading-path; **code-fence aware** (` ``` ` блоки игнорируются для heading detection) |
+| `src/framework_search/text_chunker.py` | Generic для json/yaml/configs/text |
+| `src/framework_search/file_walker.py` | Glob+SKIP_PATTERNS+symlink escape protection (символлинки за пределы repo отбрасываются) |
+| `src/framework_search/embedder.py` | TEI HTTP client с tenacity retry (4 attempts, exponential jitter) и sub-batching на `MAX_CLIENT_BATCH_SIZE=32` |
+| `src/framework_search/indexer.py` | Pipeline orchestrator; **upsert-then-delete** ordering для idempotency без window потери данных |
+| `src/framework_search/config.py` | Defaults: scope (включая/исключая), TEI/Qdrant URLs, MAX_CHUNK_CHARS=8000 |
+| `scripts/index_framework.py` | CLI entry-point |
+
+## Scope (что индексируется)
+
+**Включено:** `src/`, `scripts/`, `.claude/hooks/`, `.claude/skills/`, `tools/`, `tests/`, `docs/{architecture,framework documentation,roadmap}/`, `.mcp/`, root configs (`CLAUDE.md`, `AGENTS.md`, `.mcp.json`, `pyproject.toml`)
+
+**Исключено** (`SKIP_PATTERNS` в `config.py`):
+- `__pycache__/`, `.venv/`, `node_modules/`, `.git/`, `dist/`, `build/`, кэши
+- `data/`, `cache/`, `tmp/`, `logs/`
+- `src/projects/configuration/` (BSL projects идут в `bsl_code_v4_late`)
+- `docs/documentation/{Lang Chain Docs,Claude Code Docs,Протокол контекста модели,Language Server Protocol}/` (импортированная сторонняя документация)
+- Файлы > 512 KB (защита от monstro-md)
+
+## Объёмы (snapshot 2026-04-30)
+
+- **31 519 chunks из 2 130 файлов**
+- Распределение: python 17 224 / markdown 13 419 / json 500 / typescript 266 / text 63 / javascript 47
+- Время dry-run (chunk only): ~14 сек
+- Время full reindex (embed+upsert): ~15-20 мин на RTX 3090 (TEI Docker)
+- Размер коллекции: ~500 MB (31k × 4096d × float32)
+
+## Поиск через Python API
+
+```python
+from qdrant_client import QdrantClient
+from src.framework_search.embedder import FrameworkTEIEmbedder
+
+client = QdrantClient(url="http://localhost:6333")
+with FrameworkTEIEmbedder() as e:
+    qv = e.embed_batch(["fallback логика для embedding"], is_query=True)[0]
+
+results = client.query_points(
+    collection_name="framework_code_v1",
+    query=qv, limit=5, with_payload=True,
+).points
+for r in results:
+    p = r.payload
+    print(f"{r.score:.3f} {p['language']} {p['relative_path']}:{p['line_start']}")
+```
+
+## Поиск с фильтрами
+
+```python
+from qdrant_client.http import models
+
+# Только Python функции
+flt = models.Filter(must=[
+    models.FieldCondition(key="language", match=models.MatchValue(value="python")),
+    models.FieldCondition(key="chunk_type", match=models.MatchValue(value="function")),
+])
+results = client.query_points(
+    collection_name="framework_code_v1",
+    query=qv, query_filter=flt, limit=10, with_payload=True,
+).points
+```
+
+## Payload schema
+
+```json
+{
+  "relative_path": "src/foo/bar.py",
+  "content": "def foo():\n    ...",
+  "language": "python | markdown | json | javascript | typescript | text",
+  "chunk_type": "function | class | module | section | config | text",
+  "symbol_name": "ClassName.method_name | None",
+  "line_start": 42,
+  "line_end": 55,
+  "mtime": 1714478400.0,
+  "sha1": "abc123...def"
+}
+```
+
+## Stage 2/3 — TBD
+
+- **Stage 2 (MCP server):** будет в `tools/framework-search-mcp/server.py`. Tools: `search_code`, `find_similar`, `index_status`, `reindex_changed`. Lazy mtime-check перед каждым `search_code` (throttle 30s) для real-time актуальности при отсутствии watcher'а.
+- **Stage 3 (file watcher):** `scripts/watch_framework.py` через watchdog. Real-time incremental update (~5-7 сек от save до доступности в поиске).
+
+## Связанные skills
+
+- `bsl-development` — параллельный pipeline для BSL кода (`bsl_code_v4_late`)
+- `embedding-models` — детали Qwen3+TEI backend
+- `qdrant-operations` — управление коллекциями
+- `deployment` — TEI Docker compose `--profile tei`
+
+## Файлы
+
+- Pipeline: [src/framework_search/](src/framework_search/)
+- CLI: [scripts/index_framework.py](scripts/index_framework.py)
+- Roadmap: [docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md §24](docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)
