@@ -880,7 +880,7 @@ Append (~60-90 мин) → в `bsl_code_v4_late` будет ~49k chunks, оба 
 | ROI без production-сигнала | **Низкий.** Нет жалоб "не могу найти код в фреймворке". |
 | ROI после первой жалобы / при росте контрибьюторов | **Высокий.** Полезность растёт с размером команды. |
 
-### 24.4. Рекомендация
+### 24.4. Рекомендация (исходная — обновлено §25)
 
 ⏸ **Не делать сейчас.** Грепы и Glob справляются для текущего workflow Single contributor + AI agent.
 
@@ -896,7 +896,174 @@ Append (~60-90 мин) → в `bsl_code_v4_late` будет ~49k chunks, оба 
 4. Phase 9.X.4: MCP-сервер `framework-code-search` с инструментами `search_code`, `find_similar`, `q_and_a`
 5. Phase 9.X.5: golden-set из 30-50 типичных вопросов о фреймворке для eval
 
+> **STATUS UPDATE (2026-04-30):** §24.4 рекомендация "не делать" override'нута пользователем —
+> Stage 1 реализован. Embedding model: **Qwen3-Embedding-8B 4096d через TEI** (а не E5 1024d
+> из заготовки) — переиспользует существующую инфраструктуру `pdf-rag-tei`. Текущий статус
+> и варианты продолжения см. §25 ниже.
+
+---
+
+## 25. Phase Framework-Search Stage 1 — DONE / резюме и варианты продолжения
+
+**Статус:** Stage 1 ✅ завершён, ждёт решения по продолжению.
+**Дата:** 2026-04-30.
+**Цель главы:** зафиксировать состояние при паузе так, чтобы при возврате к работе
+не нужно было поднимать контекст из чата.
+
+### 25.1. Что построено
+
+Подсистема `framework_search` для semantic-поиска по коду самого фреймворка
+(параллельно к BSL retrieval, не вместо).
+
+**Коммиты этой ветки (в порядке):**
+
+| SHA | Что |
+|-----|-----|
+| `7d104386` | docs: roadmap §23 (per-project BSL reindex operating procedure) + §24 (framework self-search proposal) |
+| `ae6ccebb` | feat: framework-search Stage 1 — manual indexer (10 файлов, 1077 строк) |
+| `9474dc18` | docs: SKILL.md `.claude/skills/framework-search/SKILL.md` |
+| `6c3dbb5b` | chore: регистрация в `skill-router-config.json` (domains.framework + bundle) |
+
+**Файлы реализации:**
+
+```
+src/framework_search/
+├── __init__.py
+├── chunker_base.py        # Chunk dataclass + UUID5 deterministic id
+├── config.py              # DEFAULT_INDEX_ROOTS, SKIP_PATTERNS, MAX_FILE_BYTES=512KB
+├── python_chunker.py      # AST-based: function/class/method; sliding-window fallback
+├── markdown_chunker.py    # H1-H3 splits; code-fence aware (```/~~~ блоки)
+├── text_chunker.py        # Generic для json/configs/text
+├── file_walker.py         # Glob+SKIP+symlink escape protection
+├── embedder.py            # TEI HTTP client + tenacity retry (4 attempts) + sub-batch=32
+└── indexer.py             # Pipeline orchestrator + upsert-then-delete idempotency
+
+scripts/index_framework.py # CLI с --recreate/--dry-run/--limit/--paths
+```
+
+**code-verify pipeline пройден:**
+- quality-review (subagent) → PARTIAL → 4 фикса применены (symlink escape, code-fence, retry, order)
+- behavior-preservation (post-fix) → PASS — все public API сохранены, regression tests passed
+
+**Skill discoverable:** триггеры "найди в фреймворке", "framework_code_v1",
+"index_framework" подхватятся router'ом в будущих сессиях.
+
+### 25.2. Текущее состояние индексации
+
+| Метрика | Значение |
+|---------|----------|
+| Qdrant collection | `framework_code_v1` |
+| Размерность | 4096d cosine (Qwen3-Embedding-8B через TEI) |
+| Точек в коллекции | **50** (smoke-test, не production) |
+| Полный объём при reindex | 31 519 chunks из 2 130 файлов |
+| Распределение | python 17 224 / markdown 13 419 / json 500 / typescript 266 / text 63 / javascript 47 |
+| Размер на full reindex | ~500 MB Qdrant volume |
+| Время full reindex | ~15-20 мин (TEI на RTX 3090) |
+
+### 25.3. Три варианта продолжения
+
+При возврате к задаче — выбрать один из:
+
+#### Вариант A — Полный reindex, потом Stage 2 + Stage 3
+
+```bash
+python scripts/index_framework.py --recreate
+```
+
+- Время: ~15-20 мин GPU (TEI продолжает обслуживать BSL retrieval параллельно)
+- Pre-flight: `docker ps | grep pdf-rag-tei` (healthy?), `nvidia-smi` (≥6 GB свободно?)
+- Pros: сразу production-ready индекс, MCP-сервер на Stage 2 будет работать на полных данных
+- Cons: ~20 мин занят GPU, без MCP-сервера индексом нечем пользоваться
+
+#### Вариант B — Сначала подкрутить scope
+
+Распределение из §25.2 показывает странности:
+- `tools/` 8 957 chunks — Node.js утилиты (BSL tools); там может быть generated/vendored код
+- `docs/framework documentation/` 2 761 chunks — внутренняя документация фреймворка, может содержать сторонние импорты
+- `tests/` 2 404 chunks — тестовые fixtures могут раздувать индекс
+
+```bash
+# Посмотреть детально что в tools/
+python scripts/index_framework.py --dry-run --paths tools/ 2>&1 | head -30
+
+# После решения — подправить SKIP_PATTERNS в src/framework_search/config.py
+# Например, добавить /tools/auto-documenter/node_modules/ если там есть
+```
+
+- Pros: меньше шума в индексе → лучше precision поиска, быстрее reindex
+- Cons: требует 30-60 минут анализа без code output, отложить полный reindex
+
+**Кандидаты на исключение (нужно проверить):**
+- `tools/auto-documenter/build/` — generated artifacts?
+- `tools/bsl-debugger/dist/` — Node compiled output?
+- `tools/*/test-fixtures/` — фейковые BSL модули для тестов?
+- `tests/data/` — большие test fixtures?
+
+#### Вариант C — Stage 2 на тестовых 50 chunks, потом full reindex из MCP
+
+Stage 2 = MCP-сервер `tools/framework-search-mcp/server.py` с инструментами:
+- `search_code(query, k=5, language?, path_glob?)`
+- `find_similar(file_path, k=5)`
+- `index_status()` — chunks count, last reindex timestamp
+- `reindex_changed()` — manual trigger
+- **Lazy mtime check:** перед каждым `search_code` сравнить mtime файлов с `payload.mtime` в Qdrant; если есть отстающие — реиндексировать ТОЛЬКО их (throttle: не чаще 1× в 30 сек)
+
+```
+tools/framework-search-mcp/
+├── server.py          # FastMCP (stdio)
+├── pyproject.toml
+└── README.md
+```
+
+Регистрация в `.mcp.json` + `.mcp/full.json`.
+
+- Pros: проверим MCP-pipeline на малом наборе быстрее (50 chunks vs 31k)
+- Cons: первые тесты МCP будут на синтетически малом индексе — некоторые edge cases (timeouts на больших batch'ах reindex_changed) не выявятся
+- Время: ~3 часа на Stage 2
+
+### 25.4. Stage 3 — file watcher (после A или B+C)
+
+```
+scripts/watch_framework.py     # watchdog.Observer + 5s debounce → indexer.run_index(only_paths=...)
+```
+
+- Real-time incremental update (~5-7 сек от save до доступности в поиске)
+- Запуск: `python scripts/watch_framework.py --daemon`
+- Health-check экспонируется через MCP `index_status()`
+- Время: ~2 часа
+
+### 25.5. Рекомендуемый порядок (own opinion)
+
+Если время не критично — **B → C → A → Stage 3** (~6-8 часов):
+1. **B** (30-60 мин): подкрутить scope, особенно `tools/` (выкинуть generated)
+2. **C** (3 часа): Stage 2 MCP server на текущем малом индексе — проверить контракт MCP, lazy mtime check
+3. **A** (15-20 мин): полный reindex из MCP `reindex_changed()` без `keep_ids` (full rebuild)
+4. **Stage 3** (2 часа): file watcher на крайний случай если MCP lazy-check недостаточен
+
+Если хочется минимально и быстро — **A → C** (~4 часа): полный reindex сейчас + MCP server. Stage 3 watcher и Stage B scope tuning отложить до жалоб на качество.
+
+### 25.6. Чем заняться при возврате
+
+Перед началом работы:
+
+```bash
+# 1. Состояние коллекции
+curl -s http://localhost:6333/collections/framework_code_v1 | python -m json.tool | grep -E "points_count|dimension"
+
+# 2. TEI healthy
+docker ps --filter "name=pdf-rag-tei"
+
+# 3. Свежесть кода (не сломалось ли что в feature branch'е)
+.venv/Scripts/python.exe -c "from src.framework_search.indexer import run_index; print('imports OK')"
+
+# 4. Smoke test без перезаписи
+python scripts/index_framework.py --limit 10 --dry-run
+```
+
+Если всё ок — переходи к выбранному варианту из §25.3.
+
 ---
 
 После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
-LLM-rotation expansion (новые провайдеры после Z.AI лимита), framework code self-search (§24).
+LLM-rotation expansion (новые провайдеры после Z.AI лимита), framework code self-search
+(§24 → Stage 1 done в §25, Stage 2/3 ждут возврата к задаче).
