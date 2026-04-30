@@ -98,3 +98,6 @@ test_all_phases_results.json
 cache/
 .scannerwork/
 logs/dump_cfg/
+
+# Z.AI backend switcher (contains API key)
+scripts/claude-backend/zai-config.json
