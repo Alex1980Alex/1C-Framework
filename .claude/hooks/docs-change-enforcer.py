@@ -87,6 +87,8 @@ CODE_TO_DOMAIN = [
     ("src/shared/llm_rotation/",           None,                    "llm-rotation"),
     ("src/shared/",                        "01_ОБЗОР",              "pdf-knowledge"),
     ("src/memory/",                        "01_ОБЗОР",              "pdf-knowledge"),
+    # Framework self-search (Phase 8 §25 / chapter 31)
+    ("src/framework_search/",              "31_QWEN3_RETRIEVAL_PRODUCTION", "framework-search"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
