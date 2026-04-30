@@ -113,3 +113,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 0
 - Summary: Session 2026-04-30. Skills: deployment, qdrant-operations, learn:1c-metadata-objects, learning-loop, task-protocol, embedding-models, code-verify, evaluation-benchmark. Commit: docs(skills): sync embedding-models / qdrant-operations / framework-config with Phase 8.12 (roadmap 8.10.2). Commit: feat(phase8.12.8): wire Z.AI direct + small fixes from pilot smoke. Commit: feat(phase8.12.8): implement steps 2-4 (cluster + generate + label)
 
+
+## 2026-05-01 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: deployment, qdrant-operations, learn:1c-metadata-objects, learning-loop, task-protocol
+- Files changed: 6
+- Summary: Session 2026-05-01. Skills: deployment, qdrant-operations, learn:1c-metadata-objects, learning-loop, task-protocol, embedding-models, code-verify, evaluation-benchmark. Changed 6 files in .claude/settings.local.json, claude/settings.local.json, docs/roadmap. Commit: docs(audit): chapter 01_ОБЗОР deep cross-check vs реальная имплементация. Commit: docs(roadmap): expand 260430 audit roadmap с максимальной декомпозицией. Commit: docs(roadmap): 260430 audit findings — doc/code gaps post Phase 8+9.1
+
