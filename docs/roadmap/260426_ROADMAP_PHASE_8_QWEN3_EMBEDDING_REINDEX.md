@@ -1441,9 +1441,110 @@ dim mismatch (768 ≠ 1024).
 
 ### 31.4. Что дальше
 
-Memory subsystem aligned. Следующие кандидаты Phase 9:
-- Cross-encoder Qwen3-Reranker (4-8 часов, +5-10% precision)
-- Hybrid sparse+dense (2-4 часа, +3-7% recall на keyword запросах)
-- Phase 8.13 LoRA fine-tuning (DEFERRED)
-- `visual_grounding` migration (DEFER)
-- E5 snapshots cleanup после 2026-05-03 (§29.8)
+Memory subsystem aligned. Следующие этапы — см. §32 (план Phase 9.2).
+
+---
+
+## 32. Phase 9.2+ — План следующих этапов retrieval quality
+
+**Статус:** ⏳ PLANNED 2026-04-30. Этот раздел — детальный план без implementation,
+для возврата к работе при наличии времени или production-сигнала.
+
+### 32.1. Snapshot закрытия Phase 8 + 9.1 (для контекста)
+
+**Финальная картина Qdrant — 100% Qwen3 alignment** (после drop visual_grounding §32.5):
+
+| Коллекция | Points | Эмбеддинг |
+|-----------|--------|-----------|
+| `bsl_code_v4_late` | 24 455 | Qwen3+Late (production BSL) |
+| `bsl_code_v4` | 24 455 | Qwen3 std |
+| `framework_code_v1` | 21 277 | Qwen3 std (auto-reindex on commit активен) |
+| `graph_embeddings` | 6 694 | Qwen3 std |
+| `wiki_pages_v1` | 3 073 | Qwen3 std |
+| `pdf_documents` | 830 | Qwen3 std |
+| `skill_library` | 80 | Qwen3 std (Phase 9.1) |
+| `learned_patterns` | 44 | Qwen3 std |
+| `experience_embeddings` | 0 | Qwen3 ready (auto-populate) |
+| `conversation_memory` | 0 | Qwen3 ready (auto-populate) |
+
+**10 коллекций, 80 908 points, все на Qwen3-Embedding-8B 4096d.**
+
+### 32.2. Phase 9.2 — Cross-encoder Reranker (next big win, ~4-8 часов)
+
+**Цель:** двухступенчатый retrieval — dense top-50 → cross-encoder top-10. Ожидаемый прирост: **+5-10% precision@10** поверх текущих recall 0.567.
+
+**Кандидаты модели:**
+
+| Модель | Размер | Multilingual | Score |
+|--------|--------|--------------|-------|
+| `BAAI/bge-reranker-v2-m3` | ~568 MB | ✅ (100+ langs) | Хорошо для start |
+| `Qwen/Qwen3-Reranker-8B` | ~16 GB | ✅ | SOTA, но GPU contention с TEI embedder |
+| `mixedbread-ai/mxbai-rerank-large-v1` | ~330 MB | English-only | Не подходит (русский BSL) |
+
+**Рекомендация:** start с `bge-reranker-v2-m3` — компактный, multilingual, не конкурирует за GPU с Qwen3 embedder. Если +5-10% не хватит — апгрейд на Qwen3-Reranker (отдельный GPU).
+
+**Архитектура:**
+
+```
+[query] → [Qwen3 embedder] → dense top-50 (Qdrant)
+                                  ↓
+                              [reranker]
+                                  ↓
+                              top-10 (sorted by cross-encoder score)
+                                  ↓
+                              [agent context]
+```
+
+**Подзадачи:**
+
+- [ ] **32.2.1** Добавить второй TEI service (rerank mode) в `docker/docker-compose.gpu.yml` под профилем `--profile rerank`. Image `ghcr.io/huggingface/text-embeddings-inference:1.7.2`, MODEL_ID=BAAI/bge-reranker-v2-m3, port 8081
+- [ ] **32.2.2** Класс `Reranker` (минимум): HTTP клиент к `/rerank` endpoint, метод `rerank(query, passages) -> [(idx, score), ...]`. Tenacity retry, sub-batching на MAX_CLIENT_BATCH_SIZE
+- [ ] **32.2.3** Wire-in в `src/bsl/semantic_search/` или `src/framework_search/` (выбрать один pipeline для proof-of-concept). Двухэтапный поиск: dense fetch_k=50 → rerank → top_k=10
+- [ ] **32.2.4** Eval на 50q golden-set (тот же из §21.10 BSL pilot). Метрики: precision@10, NDCG@10, MRR. Сравнить vs dense-only baseline 0.567
+- [ ] **32.2.5** Решение по deployment: enable for production retrieval if Δprecision ≥ +5%
+
+### 32.3. Phase 9.3 — Hybrid sparse+dense (~2-4 часа)
+
+**Цель:** добавить native Qdrant BM25 sparse vectors к ключевым коллекциям, fusion через RRF на стороне query. Ожидаемый прирост: **+3-7% recall** на keyword-heavy запросах (имена идентификаторов, числа, exact matches).
+
+**Подзадачи:**
+
+- [ ] **32.3.1** Recreate `framework_code_v1` с named vectors `dense + bm25` (proof-of-concept на меньшей коллекции)
+- [ ] **32.3.2** Update `src/framework_search/indexer.py` — добавить sparse vector generation параллельно с dense
+- [ ] **32.3.3** Update MCP server `tools/framework-search-mcp/server.py` — `search_code` использует `Prefetch(dense) + Prefetch(bm25) → FusionQuery(rrf)`
+- [ ] **32.3.4** Eval на синтетическом golden-set: keyword-heavy запросы (function names, exact strings)
+- [ ] **32.3.5** Если успех на framework_code_v1 → апгрейд `bsl_code_v4_late` (требует ~75 мин TEI reindex для пересоздания с named vectors)
+
+### 32.4. Phase 9.4 — Auto-populate empty memory collections (~2-4 часа)
+
+`experience_embeddings` и `conversation_memory` стоят 0 pts × 4096d, готовы к auto-populate. Нужны actual data sources/pipelines:
+
+- [ ] **32.4.1** `experience_embeddings`: интеграция с learning hooks (`scripts/hooks/learning/experience-embedder.py` существует). Wire через TEI 4096d. Триггер: PostToolUse на удачные операции
+- [ ] **32.4.2** `conversation_memory`: pipeline через `src/api/routes/chat.py` или Stop hook (session-memory-save.py). Каждое сообщение/turn → embed → upsert. Решение по design (per-message vs per-thread granularity)
+- [ ] **32.4.3** Eval: ретроспектива поиска по реальным данным после 1-2 недель эксплуатации
+
+### 32.5. Phase 9.5 — Cleanup remaining items (~30 мин)
+
+- [x] **32.5.1** Drop `visual_grounding` (5 pts × 768d nomic) — DONE 2026-04-30. Snapshot 2026-04-30-19-15-16 хранится в `docker_qdrant_snapshots` volume для rollback
+- [ ] **32.5.2** §29.8 — Drop старые `*.snapshot` E5-файлы из volume — **готово к выполнению после 2026-05-03** (1 неделя hold выдержана)
+- [ ] **32.5.3** §29.9 — Drop HF cache E5-large (~2.2 GB) — опционально
+
+### 32.6. Long-term (DEFERRED)
+
+- [ ] **32.6.1** §22 Phase 8.13 LoRA fine-tuning — ждать накопления реальных user queries (≥500q golden-set) через Phase 22 feedback loop. Может дать +5-10% recall (0.567 → 0.62-0.65). Cost: 1-3 дня offline GPU + ~$50-200 cloud GPU
+- [ ] **32.6.2** Path D — GigaEmbeddings 1024d alternative experiment (Russian SOTA ruMTEB 69.1) — отдельная коллекция `bsl_code_v5_giga_late`, A/B vs Qwen3+Late на 50q golden-set. Если выше — переход даёт 4× memory savings + 3× latency savings
+- [ ] **32.6.3** PDF Framework нативный TEI provider в `src/pdf_framework/embeddings/providers/tei.py` (сейчас одноразовый script `scripts/reindex_pdf_documents.py`)
+- [ ] **32.6.4** Phase 22 feedback loop integration — RAGAS eval, user feedback collection, iteration on instruction tuning
+
+### 32.7. Приоритизация
+
+**Immediate (если есть production-сигнал):**
+1. §32.2 Reranker (биggest measurable quality gain)
+2. §32.3 Hybrid sparse+dense (для keyword-heavy use cases)
+
+**Maintenance:**
+3. §32.5.2 Cleanup E5 snapshots после 2026-05-03
+
+**Long-term (когда появятся данные):**
+4. §32.4 Auto-populate memory
+5. §32.6 LoRA, Path D GigaEmbeddings, PDF TEI provider

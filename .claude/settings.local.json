@@ -792,7 +792,8 @@
       "PowerShell(ollama pull *)",
       "PowerShell(ollama list *)",
       "Bash(ollama ps *)",
-      "Bash([ -f \"$F\" ])"
+      "Bash([ -f \"$F\" ])",
+      "Bash(SKILL_INDEX_RECREATE=1 .venv/Scripts/python.exe scripts/index-skills-to-qdrant.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
