@@ -793,7 +793,10 @@
       "PowerShell(ollama list *)",
       "Bash(ollama ps *)",
       "Bash([ -f \"$F\" ])",
-      "Bash(SKILL_INDEX_RECREATE=1 .venv/Scripts/python.exe scripts/index-skills-to-qdrant.py)"
+      "Bash(SKILL_INDEX_RECREATE=1 .venv/Scripts/python.exe scripts/index-skills-to-qdrant.py)",
+      "Bash(awk '{print $NF}')",
+      "Bash(read file *)",
+      "Bash([ ! -f \"C:/1С-Framework/docs/framework documentation/$file\" ])"
     ]
   },
   "enableAllProjectMcpServers": true,
