@@ -1224,12 +1224,43 @@ Phase 8.13 (LoRA fine-tuning) остаётся DEFERRED как было.
 **Статус:** ⏳ PLANNED
 **Цель:** добить миграцию (закрыть 8.8.x для остальных 4 коллекций + audit пустых).
 
-### 28.1. Audit пустых коллекций (кто использует / надо ли)
+### 28.1. Audit пустых коллекций (выполнено 2026-04-30)
 
-- [ ] **28.1.1** `bsl_metadata` (0 pts) — используется ли каким-то MCP-инструментом? Источник: BSL parser metadata. **Решение:** drop или rebuild.
-- [ ] **28.1.2** `skill_library` (0 pts) — должна содержать 75 skills из `.claude/skills/`. Скрипт `scripts/index-skills-to-qdrant.py` существует. **Решение:** запустить скрипт.
-- [ ] **28.1.3** `conversation_memory` (0 pts) — должна содержать ~372 conv. Источник: `data/conversations.db` (если есть). **Решение:** rebuild или drop.
-- [ ] **28.1.4** `experience_embeddings` (0 pts) — 61 pts ожидалось. Источник: `data/experience.*`. **Решение:** rebuild или drop.
+**Главная находка:** memory-system коллекции (`skill_library`, `conversation_memory`,
+`experience_embeddings`, `learned_patterns`) используют **другую** embedding-модель чем
+основные retrieval-коллекции:
+
+- Hooks `memory-first-hook.py` и `shared/semantic_search.py` явно используют **Ollama
+  nomic-embed-text (768d)** через `OLLAMA_URL=http://localhost:11434/api/embeddings`
+- Скрипт `scripts/index-skills-to-qdrant.py` тоже на Ollama 768d
+- Реальные коллекции при этом 1024d (E5) — **существующий dim mismatch**, который
+  явно не работает корректно (хук вряд ли когда-то находил что-то)
+
+**Вывод:** memory-система требует отдельной фазы alignment, выходящей за scope
+Phase 8 (которая про основной retrieval). Это **Phase 9 кандидат**: переход всей
+memory-системы (4 коллекции + 2 hooks + индексатор) на Qwen3 4096d через TEI.
+
+#### Конкретные решения по 4 пустым коллекциям:
+
+- [x] **28.1.1** `bsl_metadata` (0 pts) — **DROPPED 2026-04-30**. Orphaned: ссылки в
+  коде (`scripts/docs-mcp/hybrid_search_engine.py`) — это helper-функция
+  `_extract_bsl_metadata` для парсинга, не использование Qdrant-коллекции.
+  `tmp/phase8/8.7_recreate.py` — legacy. Источника данных не обнаружено.
+- [ ] **28.1.2** `skill_library` (0 pts) — **DEFER to Phase 9 memory alignment**.
+  Активно используется `memory-first-hook.py` (Ollama 768d), требует rebuild
+  индексатора под Qwen3+TEI 4096d.
+- [ ] **28.1.3** `conversation_memory` (0 pts) — **DEFER to Phase 9**.
+  Источник: `data/conversations.db` (45 messages / 19 threads — small).
+  Auto-populates через `src/api/routes/chat.py`. Перевод на 4096d требует
+  изменения класса `ConversationMemory` в `src/api/dependencies/components.py`.
+- [ ] **28.1.4** `experience_embeddings` (0 pts) — **DEFER to Phase 9**.
+  Source `cache/experience-bank/` содержит только `schema.json` без data.
+  Auto-populates через learning hooks. Pipeline нужно alignment'ить.
+
+**Phase 9 candidate:** "Memory system Qwen3 alignment" — отдельная фаза, ~1-2 дня
+работы, требует изменения hooks (`memory-first-hook.py`,
+`shared/semantic_search.py`), индексатора (`index-skills-to-qdrant.py`), и класса
+`ConversationMemory`.
 
 ### 28.2. Reindex E5 → Qwen3 (4 коллекции с данными)
 
