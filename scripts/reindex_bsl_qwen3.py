@@ -763,9 +763,69 @@ def flush_batch(
     return len(points)
 
 
+def _detect_bsl_project(bsl_path: Path) -> Path | None:
+    """Walk up from a .bsl file path until we find `src/projects/configuration/<X>`.
+
+    Returns the path up to and including <X>, or None if not under a recognized
+    BSL project layout. Used by --paths mode to auto-derive --project for
+    context enrichment when only file paths are passed (e.g. from git hooks).
+    """
+    parts = bsl_path.resolve().parts
+    try:
+        idx = parts.index("configuration")
+    except ValueError:
+        return None
+    if idx == 0 or idx + 1 >= len(parts):
+        return None
+    if parts[idx - 1] != "projects":
+        return None
+    return Path(*parts[: idx + 2])
+
+
+def _delete_stale_for_paths(
+    client: QdrantClient,
+    collection: str,
+    file_paths: list[str],
+    upserted_ids_per_file: dict[str, set[str]],
+) -> int:
+    """Delete chunks whose module_path matches a reindexed file but whose
+    point_id is NOT among the upserted set (= stale chunks from removed
+    or renamed BSL symbols).
+
+    Per-file MatchValue filter (exact match) — keyword field semantics
+    expected on `module_path` payload key in Qdrant.
+    """
+    total_deleted = 0
+    for fp in file_paths:
+        keep = list(upserted_ids_per_file.get(fp, set()))
+        flt = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="module_path", match=models.MatchValue(value=fp),
+                ),
+            ],
+            must_not=[models.HasIdCondition(has_id=keep)] if keep else None,
+        )
+        try:
+            client.delete(
+                collection_name=collection,
+                points_selector=models.FilterSelector(filter=flt),
+                wait=True,
+            )
+            total_deleted += 1
+        except Exception as e:
+            print(f"[WARN] delete-stale {fp}: {e}")
+    return total_deleted
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
-    ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
+    ap.add_argument("--project", type=Path, default=None,
+                    help="Project root with BSL files (required unless --paths is given)")
+    ap.add_argument("--paths", nargs="*", default=None,
+                    help="Incremental mode: list of .bsl files to reindex (instead of "
+                         "walking --project). Auto-detects project root from path. "
+                         "Used by git post-commit hooks for per-file updates.")
     ap.add_argument(
         "--embedder",
         choices=["e5", "qwen3", "qwen3-st", "qwen3-tei"],
@@ -815,7 +875,46 @@ def main() -> None:
     )
     args = ap.parse_args()
 
-    project = args.project.resolve()
+    # Validate --project / --paths combination.
+    if not args.project and not args.paths:
+        print("ERROR: either --project or --paths must be provided")
+        sys.exit(1)
+    if args.paths and args.recreate:
+        # Incremental mode must NOT drop the collection — that would remove
+        # all other projects' chunks too. Refuse the combination explicitly.
+        print("ERROR: --recreate is incompatible with --paths (incremental mode)")
+        sys.exit(1)
+
+    if args.paths:
+        # --paths mode: auto-derive project root from first valid file.
+        path_objs = []
+        for p in args.paths:
+            pp = Path(p).resolve()
+            if pp.suffix.lower() == ".bsl" and pp.is_file() and not should_skip(pp):
+                path_objs.append(pp)
+        if not path_objs:
+            print("[--paths] no valid .bsl files after filtering; nothing to do")
+            sys.exit(0)
+        if args.project:
+            project = args.project.resolve()
+        else:
+            project = _detect_bsl_project(path_objs[0])
+            if project is None:
+                print(f"ERROR: cannot auto-detect project root from {path_objs[0]} "
+                      f"(expected layout: src/projects/configuration/<X>/...)")
+                sys.exit(1)
+            print(f"[--paths] auto-detected project: {project}")
+        # Sanity-check: all files must be under the same project root.
+        outside = [p for p in path_objs
+                   if project.resolve() not in p.parents and p != project.resolve()]
+        if outside:
+            print(f"ERROR: --paths spans multiple projects; outside {project}:")
+            for p in outside[:5]:
+                print(f"  - {p}")
+            sys.exit(1)
+    else:
+        project = args.project.resolve()
+
     if not project.is_dir():
         print(f"ERROR: {project} is not a directory")
         sys.exit(1)
@@ -903,8 +1002,20 @@ def main() -> None:
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
 
-    bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
-    print(f"Found {len(bsl_files)} BSL files")
+    if args.paths:
+        bsl_files = sorted(path_objs)
+        print(f"[--paths] processing {len(bsl_files)} file(s)")
+    else:
+        bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
+        print(f"Found {len(bsl_files)} BSL files")
+
+    # In --paths mode we track which point_ids we upsert per file, then delete
+    # any older chunks at those module_paths that we did NOT touch (stale: removed
+    # or renamed BSL symbols).
+    upserted_ids_per_file: dict[str, set[str]] = {}
+    paths_to_clean: list[str] = (
+        [str(p) for p in bsl_files] if args.paths else []
+    )
 
     total_symbols = 0
     total_chunks = 0
@@ -918,6 +1029,14 @@ def main() -> None:
             if enricher:
                 enricher.enrich(chunks)
             total_symbols += len(module.symbols)
+
+            # In --paths mode, pre-record point_ids for every chunk produced
+            # for this file so we can compute the keep-set for delete-stale.
+            if args.paths:
+                fp_str = str(fp)
+                ids = upserted_ids_per_file.setdefault(fp_str, set())
+                for ch in chunks:
+                    ids.add(point_id(args.collection, ch.chunk_id))
 
             for chunk in chunks:
                 batch.append(chunk)
@@ -950,6 +1069,15 @@ def main() -> None:
     if batch:
         n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode)
         total_chunks += n
+
+    # Delete stale chunks for files we just reindexed (--paths mode).
+    # Any chunk at the same module_path whose point_id we did NOT upsert
+    # is from a removed/renamed BSL symbol and must go.
+    if args.paths and paths_to_clean:
+        cleaned = _delete_stale_for_paths(
+            qdrant, args.collection, paths_to_clean, upserted_ids_per_file,
+        )
+        print(f"[--paths] delete-stale: {cleaned} files cleaned")
 
     elapsed = time.time() - t0
     print(f"\n{'='*50}")

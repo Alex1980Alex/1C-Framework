@@ -122,6 +122,32 @@ mcp__bsl-debugger__get_variables()
 - **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — когда Qdrant недоступен
 - **Legacy collections:** `bsl_code_v3` (E5 1024d, drop pending Phase 8.11.3), `bsl_code_v2` (nomic 768d, deprecated), `bsl_code_v4` (Qwen3+std 4096d, research-baseline only — std pooling даёт -64% recall vs Late)
 
+## Auto-reindex BSL при git commit (2026-04-30)
+
+При активном `git config core.hooksPath scripts/git_hooks` автоматически срабатывает incremental reindex `bsl_code_v4_late` для изменённых `.bsl` файлов в `src/projects/configuration/<X>/`.
+
+**Команда incremental BSL reindex (используется хуком, можно вызвать вручную):**
+
+```bash
+python scripts/reindex_bsl_qwen3.py \
+    --paths "<path-to-file1.bsl>" "<path-to-file2.bsl>" \
+    --embedder qwen3-tei \
+    --collection bsl_code_v4_late \
+    --batch-size 32
+```
+
+**Особенности `--paths` режима:**
+- Auto-detect project root из path (walk до `src/projects/configuration/<X>/`)
+- Все файлы должны быть в одном project root (иначе ERROR)
+- `--recreate` запрещён (нельзя дропнуть production-коллекцию для incremental)
+- Контекст-обогащение работает (если есть `cache/bsl_call_graph.db`)
+- **Delete-stale**: после upsert удаляет chunks с тем же `module_path` но другими `chunk_id` — ловит удалённые/переименованные функции в файле
+- Idempotent: повторный запуск на неизменном файле = same point_ids → overwrite, no-op
+
+**Backend caveat:** `qwen3-tei` (std pooling) вместо `qwen3-st` (Late Chunking) — избегает GPU contention с TEI Docker (две копии Qwen3-8B FP16 = 32 GB на 24 GB RTX 3090). Trade-off: incremental chunks приземляются с std pooling, остальная коллекция — Late. Quality drop ~5-10% на свежих символах. Рекомендуется periodic full reindex по §23 roadmap для re-alignment.
+
+**Лог:** `cache/bsl_reindex.log`
+
 ## Зависимости
 
 - Фаза 45: BSL Semantic Search + SonarQube

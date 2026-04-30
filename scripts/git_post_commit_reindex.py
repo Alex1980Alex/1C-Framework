@@ -30,8 +30,14 @@ from src.framework_search.config import EXT_TO_LANGUAGE, MAX_FILE_BYTES, REPO_RO
 from src.framework_search.file_walker import _matches_skip  # noqa: E402
 
 LOG_PATH = PROJECT_ROOT / "cache" / "framework_search_reindex.log"
+BSL_LOG_PATH = PROJECT_ROOT / "cache" / "bsl_reindex.log"
 PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "index_framework.py"
+BSL_INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "reindex_bsl_qwen3.py"
+BSL_CONFIG_PREFIX = "src/projects/configuration/"
+# BSL common modules can legitimately be 1-2 MB; use a higher cap than the
+# framework MAX_FILE_BYTES (512 KB tuned for Python/MD).
+BSL_MAX_FILE_BYTES = 4 * 1024 * 1024  # 4 MB
 
 
 def _changed_files(since_ref: str) -> list[str]:
@@ -51,47 +57,77 @@ def _changed_files(since_ref: str) -> list[str]:
     return [line.strip().replace("\\", "/") for line in out.splitlines() if line.strip()]
 
 
-def _filter_indexable(paths: list[str]) -> list[str]:
-    """Keep only paths that are indexable per framework_search rules."""
-    out: list[str] = []
+def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str, str]]]:
+    """Partition changed files into framework_search and BSL pipelines.
+
+    Returns:
+        (framework_paths, bsl_groups) where bsl_groups is a list of dicts
+        {"project": <abs path str>, "files": [<abs path str>, ...]} grouped
+        by 1С project root so each spawn handles a single project.
+
+    Framework: matches EXT_TO_LANGUAGE + passes SKIP_PATTERNS + size cap.
+    BSL: matches '.bsl' + lives under src/projects/configuration/<X>/.
+    """
+    framework: list[str] = []
+    bsl_by_project: dict[str, list[str]] = {}
+
     for rel in paths:
-        if _matches_skip(rel):
-            continue
-        ext = Path(rel).suffix.lower()
-        if ext not in EXT_TO_LANGUAGE:
-            continue
+        rel_low = rel.lower().replace("\\", "/")
         abs_path = REPO_ROOT / rel
         if not abs_path.exists() or not abs_path.is_file():
+            continue
+        ext = Path(rel).suffix.lower()
+
+        # BSL branch: .bsl under src/projects/configuration/<X>/
+        if ext == ".bsl" and rel_low.startswith(BSL_CONFIG_PREFIX):
+            project = _bsl_project_root(rel)
+            if project is not None:
+                try:
+                    if abs_path.stat().st_size > BSL_MAX_FILE_BYTES:
+                        continue
+                except OSError:
+                    continue
+                bsl_by_project.setdefault(str(project), []).append(str(abs_path))
+            continue
+
+        # Framework branch: standard extension + skip filter
+        if _matches_skip(rel):
+            continue
+        if ext not in EXT_TO_LANGUAGE:
             continue
         try:
             if abs_path.stat().st_size > MAX_FILE_BYTES:
                 continue
         except OSError:
             continue
-        out.append(rel)
-    return out
+        framework.append(rel)
+
+    bsl_groups = [{"project": p, "files": fs} for p, fs in bsl_by_project.items()]
+    return framework, bsl_groups
 
 
-def _spawn_detached(paths: list[str]) -> None:
-    """Launch index_framework.py in a detached background process.
+def _bsl_project_root(rel: str) -> Path | None:
+    """Walk down the path until we have src/projects/configuration/<X>, return abs."""
+    parts = Path(rel).parts
+    try:
+        idx = parts.index("configuration")
+    except ValueError:
+        return None
+    if idx == 0 or parts[idx - 1] != "projects" or idx + 1 >= len(parts):
+        return None
+    return (REPO_ROOT / Path(*parts[: idx + 2])).resolve()
+
+
+def _spawn_detached_cmd(cmd: list[str], log_path: Path, header: str) -> None:
+    """Launch a command in a detached background process.
 
     On Windows: creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
     so the child survives the parent's exit and the terminal isn't tied to it.
     On POSIX: start_new_session=True (setsid).
     """
-    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-    cmd: list[str] = [
-        str(PYTHON_EXE) if PYTHON_EXE.exists() else sys.executable,
-        str(INDEX_SCRIPT),
-        "--paths", *paths,
-    ]
-
-    log_fh = open(LOG_PATH, "ab", buffering=0)
-    log_fh.write(
-        f"\n=== {os.getpid()} -> reindex {len(paths)} files: {paths[:3]}{'...' if len(paths) > 3 else ''} ===\n"
-        .encode("utf-8", errors="ignore")
-    )
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_fh = open(log_path, "ab", buffering=0)
+    log_fh.write(f"\n=== {os.getpid()} -> {header} ===\n".encode("utf-8", errors="ignore"))
 
     if os.name == "nt":
         DETACHED_PROCESS = 0x00000008
@@ -108,6 +144,50 @@ def _spawn_detached(paths: list[str]) -> None:
             stdin=subprocess.DEVNULL, stdout=log_fh, stderr=log_fh,
             start_new_session=True, close_fds=True,
         )
+
+
+def _spawn_framework_reindex(paths: list[str]) -> None:
+    cmd = [
+        str(PYTHON_EXE) if PYTHON_EXE.exists() else sys.executable,
+        str(INDEX_SCRIPT),
+        "--paths", *paths,
+    ]
+    sample = paths[:3]
+    header = f"framework reindex {len(paths)} files: {sample}{'...' if len(paths) > 3 else ''}"
+    _spawn_detached_cmd(cmd, LOG_PATH, header)
+
+
+def _spawn_bsl_reindex(project: str, files: list[str]) -> None:
+    """Per-project BSL incremental reindex into bsl_code_v4_late.
+
+    Uses --embedder qwen3-tei (HTTP backend) instead of qwen3-st to avoid
+    GPU contention: TEI Docker already holds the only Qwen3-Embedding-8B
+    FP16 copy (16 GB) — running qwen3-st would try to load a second copy
+    and OOM on RTX 3090 24 GB.
+
+    Trade-off: TEI returns pooled vectors only (no Late Chunking support),
+    so incremental chunks land in bsl_code_v4_late with std pooling while
+    the rest of the collection is Late-pooled. Quality impact estimated
+    ~5-10% on those specific recently-edited symbols vs full Late re-pass.
+    Acceptable for hot-path UX; user can re-align via manual full reindex
+    when convenient (see roadmap §23 production command).
+    """
+    cmd = [
+        str(PYTHON_EXE) if PYTHON_EXE.exists() else sys.executable,
+        str(BSL_INDEX_SCRIPT),
+        "--project", project,
+        "--paths", *files,
+        "--embedder", "qwen3-tei",
+        "--collection", "bsl_code_v4_late",
+        "--batch-size", "32",
+    ]
+    sample = files[:3]
+    header = (
+        f"BSL reindex project={Path(project).name} "
+        f"{len(files)} files: {[Path(f).name for f in sample]}"
+        f"{'...' if len(files) > 3 else ''}"
+    )
+    _spawn_detached_cmd(cmd, BSL_LOG_PATH, header)
 
 
 def main() -> int:
@@ -144,11 +224,14 @@ def main() -> int:
             )
         return 0
 
-    indexable = _filter_indexable(changed)
-    if not indexable:
+    framework_paths, bsl_groups = _split_bsl_and_framework(changed)
+    if not framework_paths and not bsl_groups:
         return 0
 
-    _spawn_detached(indexable)
+    if framework_paths:
+        _spawn_framework_reindex(framework_paths)
+    for group in bsl_groups:
+        _spawn_bsl_reindex(group["project"], group["files"])
     return 0
 
 

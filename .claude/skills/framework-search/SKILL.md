@@ -230,6 +230,18 @@ git config core.hooksPath scripts/git_hooks
 
 **При checkout/branch-switch** reindex намеренно пропускается — diff может быть огромным; MCP lazy-check вытянет stale файлы при следующем `search_code`.
 
+**Split на 2 pipeline:**
+
+`git_post_commit_reindex.py` разделяет diff на две группы:
+- `.bsl` под `src/projects/configuration/<X>/` → **BSL pipeline** (`scripts/reindex_bsl_qwen3.py --paths --embedder qwen3-tei`) → коллекция `bsl_code_v4_late`. Cap файла: 4 MB. Группируются по project root (один spawn на проект).
+- Остальное (`.py .md .json .ts .js .toml .yaml .ini`) → **framework pipeline** (`scripts/index_framework.py --paths`) → коллекция `framework_code_v1`. Cap: 512 KB.
+
+Оба pipeline спавнятся detached, логи раздельные:
+- `cache/framework_search_reindex.log` — framework reindex
+- `cache/bsl_reindex.log` — BSL reindex
+
+**BSL caveat:** Auto-reindex использует `qwen3-tei` (std pooling) вместо `qwen3-st` (Late Chunking) чтобы избежать GPU contention с уже работающим TEI. Quality impact ~5-10% на свежеправленных символах (различные pooling режимы). Раз в неделю/месяц рекомендуется ручной полный reindex по §23 для re-alignment всей коллекции на Late Chunking pooling.
+
 **Отключить:**
 
 ```bash
