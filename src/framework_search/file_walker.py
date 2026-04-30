@@ -20,8 +20,23 @@ logger = logging.getLogger(__name__)
 
 
 def _matches_skip(posix_path: str) -> bool:
+    """Return True if the path matches any SKIP_PATTERNS rule.
+
+    Two match modes:
+      1. Substring (any position) — patterns like '/__pycache__/' that should
+         match nested dirs (e.g. 'src/foo/__pycache__/x').
+      2. Prefix without leading slash — for top-level skips like
+         '/src/projects/configuration/' to also catch 'src/projects/...'
+         since repo-relative POSIX paths don't have a leading slash.
+    """
     low = posix_path.lower()
-    return any(p.lower() in low for p in SKIP_PATTERNS)
+    for p in SKIP_PATTERNS:
+        pl = p.lower()
+        if pl in low:
+            return True
+        if pl.startswith("/") and low.startswith(pl[1:]):
+            return True
+    return False
 
 
 def iter_indexable_files(
