@@ -737,5 +737,166 @@ prefixed_queries = [INSTRUCT_BSL + q for q in queries]
 
 ---
 
+## 23. Operating Procedures — индексация BSL-проектов в production-коллекцию
+
+**Статус:** ✅ закреплено как стандартная процедура (после Phase 8.12.8 production switchover, 2026-04-30)
+**Применяется:** при добавлении нового 1С-проекта в `src/projects/configuration/` или при пересборке существующего после крупных изменений конфигурации.
+
+### 23.1. Production-команда (per-project BSL reindex)
+
+Каждый проект 1С индексируется в **общую** production-коллекцию `bsl_code_v4_late`
+(Qwen3-Embedding-8B + Late Chunking, 4096d, recall@10 = 0.567 на 50q golden-set).
+Без `--recreate` — append к существующей коллекции, чанки других проектов не затрагиваются.
+
+```bash
+python scripts/reindex_bsl_qwen3.py \
+  --project "src/projects/configuration/<имя_проекта>" \
+  --embedder qwen3-st \
+  --pooling-mode late-chunking \
+  --collection bsl_code_v4_late \
+  --batch-size 32 \
+  --buffer-size 512
+```
+
+**Расшифровка аргументов:**
+
+| Аргумент | Значение | Почему именно так |
+|----------|----------|-------------------|
+| `--project` | путь к корню проекта 1С | парсер ищет `*.bsl` рекурсивно от этой точки |
+| `--embedder qwen3-st` | sentence-transformers backend | единственный embedder, поддерживающий `--pooling-mode late-chunking`. TEI не подходит — pooled vectors only (caveat §21.10) |
+| `--pooling-mode late-chunking` | full-doc forward → per-chunk mean-pool | даёт +254% recall vs std pooling на BSL (Phase 8.12.9 A2-alt) |
+| `--collection bsl_code_v4_late` | production-коллекция | единая для всех проектов; легаси `bsl_code_v3` (E5) и `bsl_code_v4` (std pooling) — НЕ использовать |
+| `--batch-size 32` | размер batch для GPU forward | подобран под RTX 3090 24 GB FP16 + p99 chunk length 3588 токенов; больше → OOM на длинном хвосте (см. §21.1–21.2) |
+| `--buffer-size 512` | пул чанков перед length-bucketing | даёт длинному-bucketer достаточный pool для эффективной упаковки коротких/длинных вместе (§21.4) |
+
+**Время:** ~60-90 минут на проект ~25k символов на RTX 3090 (по аналогии с 260416_GKSTCPLK-2368: 24 455 chunks за ~75 мин).
+
+### 23.2. Pre-flight checks
+
+Перед запуском убедиться:
+
+```bash
+# 1. Qdrant доступен
+curl -s http://localhost:6333/collections/bsl_code_v4_late | python -c "import json,sys; d=json.load(sys.stdin); print('points:', d['result']['points_count'])"
+
+# 2. GPU свободен (TEI ~16 GB занимает; reindex_bsl_qwen3 + qwen3-st грузит ещё одну копию модели)
+nvidia-smi --query-gpu=memory.used,memory.free --format=csv
+# Если занято > 18 GB — остановить TEI: docker stop pdf-rag-tei
+
+# 3. Нет конкурирующих BSL MCP-серверов, держащих модель
+# (mcp servers могут держать GPU; в идеале закрыть Claude Code сессию или остановить bsl-semantic-search MCP)
+
+# 4. Проверить что путь существует и в нём есть .bsl файлы
+ls -la "src/projects/configuration/<имя_проекта>/" | head -5
+find "src/projects/configuration/<имя_проекта>/" -name "*.bsl" | wc -l
+```
+
+### 23.3. Post-reindex verification
+
+После завершения скрипта проверить что чанки действительно попали:
+
+```bash
+# Количество chunks нового проекта в коллекции
+curl -s -X POST "http://localhost:6333/collections/bsl_code_v4_late/points/count" \
+  -H "Content-Type: application/json" \
+  -d '{"filter":{"must":[{"key":"module_path","match":{"text":"<имя_проекта>"}}]},"exact":true}'
+
+# Smoke-search (через Ollama-fallback не работает — drift cosine 0.52, см. задачу 1e §21.10)
+# Поэтому smoke делать через bsl-semantic-search MCP или напрямую через TEI
+```
+
+### 23.4. Граф вызовов (опционально, для quality eval / call_graph features)
+
+Если этот проект будет участвовать в Phase 8.12.8 quality eval pipeline или
+требуется `bsl_call_graph` функциональность — пересобрать граф:
+
+```bash
+python scripts/build_call_graph.py --project "src/projects/configuration/<имя_проекта>" --clear
+# ~17 секунд на 33k символов / 79k вызовов
+# Артефакт: cache/bsl_call_graph.db (33630 symbols / 79709 calls на текущий снапшот)
+```
+
+⚠️ `--clear` пересобирает с нуля; если в БД есть предыдущий проект, его связи будут стёрты. Без `--clear` — append.
+
+### 23.5. Common pitfalls
+
+| Симптом | Причина | Решение |
+|---------|---------|---------|
+| `OOM` на 25-30% прогресса | XXL chunks (>4096 токенов) переполняют GPU | Включить sliding-window split в `BSLChunker` (Phase 8.12.5: window=1024 / overlap=256). Обычно уже включён по умолчанию. |
+| 0 chunks в коллекции после Run | Парсер не нашёл `.bsl` файлы | Проверить путь `--project`; убедиться что `.bsl` именно в этом дереве, а не в `bin/` / `node_modules/` (skip-patterns) |
+| Chunks от другого проекта пропали | Запустили с `--recreate` | НЕ использовать `--recreate` для production-коллекции. Только для тестовых коллекций. |
+| `413 Payload Too Large` | Использован `--embedder qwen3-tei` | Для `bsl_code_v4_late` использовать `qwen3-st`, TEI не поддерживает Late Chunking. Если всё-таки TEI — `client_batch_size=32` встроен с фикса 8.12.6 |
+| `AttributeError: 'QdrantClient' object has no attribute 'search'` | qdrant-client ≥1.13 deprecated `client.search()` | Уже фикснуто в `phase8_12_baseline_tei.ps1` через `client.query_points(query=, with_payload=True).points` — апдейтить остальные скрипты по аналогии |
+
+### 23.6. Пример: индексация второго существующего проекта (260304_GKSTCPLK-2182)
+
+На 2026-04-30 в `bsl_code_v4_late` лежит только 260416_GKSTCPLK-2368 (24 455 chunks).
+Проект 260304_GKSTCPLK-2182 проиндексирован только в SQLite FTS5 fallback
+(`cache/docs-mcp/hybrid_search.db`, 24 566 docs) — без semantic search.
+
+Если решено выровнять оба проекта на единый production-pipeline:
+
+```bash
+python scripts/reindex_bsl_qwen3.py \
+  --project "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС" \
+  --embedder qwen3-st \
+  --pooling-mode late-chunking \
+  --collection bsl_code_v4_late \
+  --batch-size 32 --buffer-size 512
+```
+
+Append (~60-90 мин) → в `bsl_code_v4_late` будет ~49k chunks, оба проекта на Qwen3+Late.
+
+---
+
+## 24. Future work — индексация фреймворка как code-search source (proposal, NOT scheduled)
+
+**Идея:** проиндексировать сам `C:\1С-Framework` (Python код, hooks, skills, scripts, configs) в отдельную Qdrant-коллекцию `framework_code_v1` для self-research пайплайна Claude Code.
+
+### 24.1. Какой эффект даст
+
+| Use case | Текущее решение | После индексации |
+|----------|-----------------|------------------|
+| "Где определён hook code-skill-enforcer?" | `Grep "code-skill-enforcer"` или `Glob ".claude/hooks/*.py"` | Semantic: "хук блокирующий запись без активации скилла" → найдёт даже если в коде имя другое |
+| "Какие skill'ы делают что-то с embeddings?" | Перебор `.claude/skills/*/SKILL.md` вручную | Semantic поиск по описанию → топ-N релевантных |
+| "Найди похожий паттерн в кодовой базе" | `Grep` по фрагменту | Vector similarity → находит **семантически близкие** реализации |
+| Onboarding нового контрибьютора | Чтение CLAUDE.md + грепы | Q&A по фреймворку через RAG |
+| Refactoring impact analysis | Вручную | "Найди все места, где используется fallback ollama→tei" |
+
+### 24.2. Подводные камни
+
+1. **Python ≠ BSL.** `reindex_bsl_qwen3.py` использует `BSLASTParser` через tree-sitter-bsl — для Python нужен другой parser/chunker (tree-sitter-python или AST через `ast` модуль). Это новый pipeline, не повторное использование скрипта.
+2. **Mixing domains.** Если положить Python + BSL в одну коллекцию — retrieval может деградировать (разные распределения embeddings). Разнести: `bsl_code_v4_late` и `framework_code_v1` отдельно.
+3. **Maintenance.** Каждое изменение в фреймворке требует переиндексации (или incremental update). Без watcher'а актуальность будет деградировать.
+4. **Diminishing returns vs Grep.** Для exact-name lookups (`grep "function_name"`) семантика не нужна. Польза — на **fuzzy/conceptual** запросах ("где fallback логика?"). Если запросы пользователя в основном exact — затраты не окупятся.
+5. **Cost.** ~150-300 MB Qdrant collection (зависит от размера фреймворка), ~30-60 мин разовая индексация на RTX 3090, ~5-10 мин incremental update.
+
+### 24.3. Объективная оценка
+
+| Критерий | Оценка |
+|----------|--------|
+| Уникальная польза vs существующих инструментов (Grep/Glob/Read) | **Средняя.** Перекрывается на 60-70% с Grep. Уникальные кейсы — fuzzy semantic поиск + Q&A. |
+| Сложность реализации | **Средняя.** Нужен Python-chunker + adaptation reindex_*.py для Python. Не one-liner. |
+| ROI без production-сигнала | **Низкий.** Нет жалоб "не могу найти код в фреймворке". |
+| ROI после первой жалобы / при росте контрибьюторов | **Высокий.** Полезность растёт с размером команды. |
+
+### 24.4. Рекомендация
+
+⏸ **Не делать сейчас.** Грепы и Glob справляются для текущего workflow Single contributor + AI agent.
+
+**Пересмотреть когда:**
+- Появится второй человек, активно правящий фреймворк
+- Накопятся ≥5 случаев "не могу найти место где это" за месяц
+- Запустится MCP-сервер для self-Q&A (тогда индекс — естественная зависимость)
+
+**Если делать — этапы (роадмап заготовка):**
+1. Phase 9.X.1: написать `scripts/index_python_code.py` (tree-sitter-python + sliding window 800/200 chars)
+2. Phase 9.X.2: создать коллекцию `framework_code_v1` (1024d через E5 — multilingual нужен для русских комментариев + английского кода)
+3. Phase 9.X.3: добавить incremental update через git diff hook (PostCommit)
+4. Phase 9.X.4: MCP-сервер `framework-code-search` с инструментами `search_code`, `find_similar`, `q_and_a`
+5. Phase 9.X.5: golden-set из 30-50 типичных вопросов о фреймворке для eval
+
+---
+
 После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
-LLM-rotation expansion (новые провайдеры после Z.AI лимита).
+LLM-rotation expansion (новые провайдеры после Z.AI лимита), framework code self-search (§24).
