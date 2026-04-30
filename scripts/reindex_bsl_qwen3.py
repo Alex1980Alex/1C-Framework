@@ -849,7 +849,9 @@ def main() -> None:
              "else --batch-size). Larger buffers give the qwen3-st length "
              "bucketer a fuller pool, increasing throughput.",
     )
-    ap.add_argument("--collection", default="bsl_code_v3")
+    ap.add_argument("--collection", default="bsl_code_v4_late",
+                    help="Default: bsl_code_v4_late (Qwen3+Late, production). "
+                         "Legacy bsl_code_v3 dropped 2026-04-30 (§27).")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")

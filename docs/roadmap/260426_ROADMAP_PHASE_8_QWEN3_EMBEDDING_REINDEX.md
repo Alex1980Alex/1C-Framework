@@ -1129,6 +1129,148 @@ python scripts/index_framework.py --limit 10 --dry-run
 
 ---
 
+## 26. Reality check (2026-04-30) — что реально сделано vs план
+
+**Триггер:** аудит после §25 закрытия. Изначальная цель Phase 8 — мигрировать **все 11 коллекций** Qdrant на Qwen3-Embedding-8B (4096d). Реально мигрировано **3 из 11** (BSL family + framework_code_v1). Этот раздел фиксирует реальное состояние перед добивкой остатка.
+
+### 26.1. Состояние всех коллекций (snapshot)
+
+```bash
+$ curl -s http://localhost:6333/collections | python -m json.tool
+```
+
+| Коллекция | Цель Phase 8 | Факт 2026-04-30 | Действие |
+|-----------|--------------|-----------------|----------|
+| `bsl_code_v4` | 4096d Qwen3 | 24 455 × **4096d** | ✅ §21.6 8.12.3 |
+| `bsl_code_v4_late` | 4096d Qwen3+Late | 24 455 × **4096d** | ✅ §21.10 8.12.10 |
+| `framework_code_v1` | (новая, §25) | 21 198 × **4096d** | ✅ §25 |
+| `pdf_documents` | 4096d | 1 012 × **1024d E5** | ❌ §28 P1 — reindex |
+| `wiki_pages_v1` | 4096d | 3 073 × **1024d E5** | ❌ §28 P1 — reindex |
+| `graph_embeddings` | 4096d | 6 694 × **1024d E5** | ❌ §28 P1 — reindex |
+| `learned_patterns` | 4096d | 44 × **1024d E5** | ❌ §28 P1 — reindex |
+| `bsl_metadata` | 4096d | **0 pts** × 1024d | ❓ §28 audit — drop or rebuild |
+| `skill_library` | 4096d | **0 pts** × 1024d | ❓ §28 audit — drop or rebuild |
+| `conversation_memory` | 4096d | **0 pts** × 1024d | ❓ §28 audit — drop or rebuild |
+| `experience_embeddings` | 4096d | **0 pts** × 1024d | ❓ §28 audit — drop or rebuild |
+| `visual_grounding` | 4096d | 5 × **768d nomic** | ⏸ defer — 5 точек, low ROI |
+| `bsl_code_v3` (legacy) | DROP | 22 665 × **1024d E5** | ❌ §27 P0 — drop |
+| `experience_embeddings_e5_legacy` | DROP | 61 × **768d** | ❌ §27 P0 — drop |
+| `learned_patterns_e5_legacy` | DROP | 44 × **1024d** | ❌ §27 P0 — drop |
+
+### 26.2. Аналитика гэпа
+
+**Закрыто (3 коллекции, 70 108 points):**
+- `bsl_code_v4` + `_late` — production BSL retrieval (закрытие 8.7+8.8 для самой большой коллекции)
+- `framework_code_v1` — bonus, не было в исходном плане Phase 8 (см. §24/§25)
+
+**Осталось (10 коллекций):**
+- 4 на E5 1024d (`pdf_documents`, `wiki_pages_v1`, `graph_embeddings`, `learned_patterns`) — **работают, но qualуступают Qwen3 на code-content**
+- 4 пустые (`bsl_metadata`, `skill_library`, `conversation_memory`, `experience_embeddings`) — нужен audit, не факт что нужны
+- 3 legacy для drop (`bsl_code_v3`, два `_e5_legacy`)
+- 1 опциональная (`visual_grounding` — 5 точек nomic)
+
+**Оптимизация скоупа:** из 10 оставшихся реально нужно реиндексировать максимум 4 (E5 → Qwen3), 3 дропнуть, 4 проверить на необходимость. Это **~3-4 часа** работы, не 11 коллекций × 1 час каждая.
+
+### 26.3. Что фактически было сделано из подразделов 8.7-8.11
+
+| Раздел | Subtask | Декларативный статус | Фактический |
+|--------|---------|---------------------|-------------|
+| 8.7.1 | DELETE 10 коллекций | `[ ]` | Частично — `bsl_code_v4*` пересозданы; остальные старые остались |
+| 8.7.2 | Создать заново 4096d/1024d | `[ ]` | Только bsl_code_v4 + _late + framework_code_v1 на 4096d |
+| 8.7.3 | НЕ создавать bsl_code_v3 | `[ ]` | bsl_code_v3 не пересоздан, но и не дропнут (legacy) |
+| 8.7.4 | Sparse vectors для hybrid | `[ ]` | Не сделано (одиночные dense vectors везде) |
+| 8.8.x | Reindex остальных коллекций | `[ ]` × 9 | Не сделано (см. §28) |
+| 8.9.x | Quality benchmarks | `[ ]` × 7 | Только BSL (8.12.8 pilot 50q) |
+| 8.10.1 | `.env` обновить (EMBEDDING__MODEL) | `[ ]` | Только в bsl-development skill |
+| 8.10.2 | Skills: embedding-models, qdrant-operations | `[ ]` | Частично (BSL-specific параметры обновлены) |
+| 8.10.3 | docs/framework documentation/ RAG раздел | `[ ]` | Не сделано |
+| 8.10.4 | pyproject.toml — transformers≥4.51 | `[ ]` | Не сделано (TEI Docker не требует local transformers update) |
+| 8.10.5 | ADR «Выбор embedding-модели 2026» | `[ ]` | ADR-008 для BSL specifically |
+| 8.11.1 | Drop E5 snapshots после 2026-05-03 | `[ ]` | По времени ещё рано (надо ждать 1 неделю hold) |
+| 8.11.2 | Drop HF cache E5-large | `[ ]` | Не сделано (опц. ~2.2 GB) |
+| 8.11.3 | Drop bsl_code_v3 | `[ ]` | **Не сделано — будет в §27** |
+| 8.11.4 | Финальный коммит | `[ ]` | Будет в §29 |
+
+### 26.4. Pending sections (что добавляется в roadmap)
+
+- **§27 — Phase 8.14 Cleanup legacy collections** (P0, 5 мин) — drop bsl_code_v3 + 2× e5_legacy
+- **§28 — Phase 8.15 Migrate remaining collections to Qwen3** (P1, 3-4 часа) — 4 reindex + 4 audit
+- **§29 — Phase 8.16 Sync configs + final commit** (P2, 1 час) — `.env`, skills, ADR, "Phase 8 complete"
+
+Phase 8.13 (LoRA fine-tuning) остаётся DEFERRED как было.
+
+---
+
+## 27. Phase 8.14 — Cleanup legacy collections (P0, in progress)
+
+**Статус:** 🔄 IN PROGRESS 2026-04-30
+**Цель:** убрать 3 устаревшие коллекции, освобождающие место и убирающие путаницу.
+
+**Условие безопасности:** backup существует в `E:/Transfer folder/qdrant/1c-pre-qwen3-2026-04-26/` (manifest `260426_PHASE_8_PRE_QWEN3_BACKUP_MANIFEST.json`). При необходимости откат восстанавливается из cold archive.
+
+### 27.1. Tasks
+
+- [ ] **27.1** Pre-flight: убедиться что backup физически существует
+- [ ] **27.2** DELETE `bsl_code_v3` (22 665 pts, 1024d E5) — заменён `bsl_code_v4_late`
+- [ ] **27.3** DELETE `experience_embeddings_e5_legacy` (61 pts, 768d) — explicit legacy name
+- [ ] **27.4** DELETE `learned_patterns_e5_legacy` (44 pts, 1024d) — explicit legacy name
+- [ ] **27.5** Verify: `client.get_collections()` показывает 12 коллекций (было 15)
+- [ ] **27.6** Грепнуть кодовую базу: остались ли упоминания `bsl_code_v3` в active code (не должно)
+
+---
+
+## 28. Phase 8.15 — Migrate remaining collections to Qwen3 (P1, planned)
+
+**Статус:** ⏳ PLANNED
+**Цель:** добить миграцию (закрыть 8.8.x для остальных 4 коллекций + audit пустых).
+
+### 28.1. Audit пустых коллекций (кто использует / надо ли)
+
+- [ ] **28.1.1** `bsl_metadata` (0 pts) — используется ли каким-то MCP-инструментом? Источник: BSL parser metadata. **Решение:** drop или rebuild.
+- [ ] **28.1.2** `skill_library` (0 pts) — должна содержать 75 skills из `.claude/skills/`. Скрипт `scripts/index-skills-to-qdrant.py` существует. **Решение:** запустить скрипт.
+- [ ] **28.1.3** `conversation_memory` (0 pts) — должна содержать ~372 conv. Источник: `data/conversations.db` (если есть). **Решение:** rebuild или drop.
+- [ ] **28.1.4** `experience_embeddings` (0 pts) — 61 pts ожидалось. Источник: `data/experience.*`. **Решение:** rebuild или drop.
+
+### 28.2. Reindex E5 → Qwen3 (4 коллекции с данными)
+
+- [ ] **28.2.1** `pdf_documents` (1012 pts E5 → Qwen3) — через `python -m src.cli.main index "<pdf>" --recreate-collection` или прямой reindex script. ~5-10 мин TEI.
+- [ ] **28.2.2** `wiki_pages_v1` (3073 pts) — через `wiki-pipeline` skill, source `docs/wiki/`. ~15-30 мин.
+- [ ] **28.2.3** `graph_embeddings` (6694 pts) — через KG nodes из Neo4j или `data/graph/`. ~30-60 мин.
+- [ ] **28.2.4** `learned_patterns` (44 pts) — через memory system. ~1 мин.
+
+### 28.3. Verification
+
+- [ ] **28.3.1** Все 4 reindexed коллекции показывают dims=4096
+- [ ] **28.3.2** `pdf_documents` smoke: «регистр сведений 1С» → top-3 score ≥ 0.65 (Qwen3 порог; для E5 был 0.85, но Qwen3 cosine иначе калиброван)
+- [ ] **28.3.3** Update sparse vectors (BM25) для коллекций где hybrid retrieval нужен
+
+### 28.4. `visual_grounding` (опционально)
+
+- [ ] **28.4.1** Решение: drop или migrate? 5 pts × 768d (nomic). Низкий ROI миграции.
+
+---
+
+## 29. Phase 8.16 — Sync configs + final commit (P2, planned)
+
+**Статус:** ⏳ PLANNED
+
+### 29.1. Tasks
+
+- [ ] **29.1** `.env.example` — обновить `EMBEDDING__MODEL`, `EMBEDDING__DIMENSIONS`, описание Qwen3+TEI default
+- [ ] **29.2** `embedding-models` skill — переписать default secition на Qwen3 (E5 → "legacy fallback")
+- [ ] **29.3** `qdrant-operations` skill — обновить snapshot про коллекции (15 → 12 после §27)
+- [ ] **29.4** `framework-config` skill — sync EMBEDDING__* defaults
+- [ ] **29.5** `docs/framework documentation/...` — раздел RAG/embeddings актуализировать
+- [ ] **29.6** ADR «Выбор embedding-модели 2026» — обобщающий поверх ADR-008 BSL-specific (если необходимо)
+- [ ] **29.7** Финальный коммит «Phase 8 complete»: roadmap mark all tasks done, MEMORY.md note
+
+### 29.2. После 2026-05-03 (отдельный коммит)
+
+- [ ] **29.8** Drop старые `*.snapshot` E5-файлы из `docker_qdrant_snapshots` volume (1 неделя hold выдержана)
+- [ ] **29.9** Drop HF cache E5-large (~2.2 GB) — опционально
+
+---
+
 После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
 LLM-rotation expansion (новые провайдеры после Z.AI лимита). Framework code self-search
-(§24 → §25) ✅ полностью реализован.
+(§24 → §25) ✅ полностью реализован. Phase 8.13 LoRA — DEFERRED (см. §22).

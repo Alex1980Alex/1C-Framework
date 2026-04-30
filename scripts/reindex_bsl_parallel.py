@@ -94,7 +94,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="BSL reindex with FastEmbed ONNX")
     ap.add_argument("--project", type=Path, required=True)
     ap.add_argument("--batch-size", type=int, default=64)
-    ap.add_argument("--collection", default="bsl_code_v3")
+    ap.add_argument("--collection", default="bsl_code_v4_late")  # legacy bsl_code_v3 dropped 2026-04-30 §27
     ap.add_argument("--recreate", action="store_true")
     ap.add_argument("--no-context", action="store_true")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks (0=all)")

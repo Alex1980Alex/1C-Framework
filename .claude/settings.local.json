@@ -791,7 +791,8 @@
       "PowerShell(ollama *)",
       "PowerShell(ollama pull *)",
       "PowerShell(ollama list *)",
-      "Bash(ollama ps *)"
+      "Bash(ollama ps *)",
+      "Bash([ -f \"$F\" ])"
     ]
   },
   "enableAllProjectMcpServers": true,
