@@ -40,6 +40,13 @@
 
 **Where to start:** §11.6 verification → §11.1 pre-flight → §11.2 order of execution → §2.1 (embedding defaults P0).
 
+**Sibling audit reports (детализация):**
+- 🔍 [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md) — глубокий cross-check главы 01 (~25 несоответствий)
+- 🔍 [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md) — главы 02-30 (9 проблемных, ~22 fix)
+- 🔍 [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — tests gaps (framework_search 0 coverage; Phase 9.1 dim regression тест)
+- 🔍 [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md) — `httpx`/`pyjwt` deps, pytest CI, security audit
+- Полный cross-reference и order of execution → **§13** в конце этого файла
+
 ---
 
 ## 1. Контекст и метод аудита
@@ -1332,3 +1339,51 @@ Day 7 (P4 maintenance, ~16 ч):
 - [ ] **12.4** Smoke tests P0-P4 все green
 - [ ] **12.5** Backup snapshots существуют (Qdrant volume + git tag для code rollback)
 - [ ] **12.6** Documentation chapter 31 + новые главы 33+ актуальны
+
+---
+
+## 13. Sibling audit reports — cross-reference
+
+Этот roadmap — **главный** (high-level priorities P0-P4). Детальные findings разнесены по 4 sibling документам в той же дате `260430_*`:
+
+| Файл | Scope | Severity | Effort |
+|------|-------|----------|--------|
+| **[`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md)** | Глубокий cross-check главы 01_ОБЗОР (3 файла) — ~25 несоответствий: stale numbers, E5 default, Qdrant version | 🔴🟠 mix | 3-4 ч |
+| **[`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md)** | Главы 02-30 (~24 главы) — найдено 9 проблемных (5 critical: 02.1 Qdrant version, 02.2 E5 default, 04.1 strategies, 28.4 bsl_code_v2, 29.6 visual_grounding) | 🔴🟠🟡 | ~2.5 ч |
+| **[`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md)** | `tests/` directory — 172 файлов, 2 578 функций. **Critical gap: framework_search/ — 0 coverage**, нет regression теста для Phase 9.1 dim mismatch | 🔴 P0 | ~20-25 ч |
+| **[`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md)** | `pyproject.toml` + CI/CD — `httpx`/`pyjwt` отсутствуют в base deps, нет pytest в CI, нет security audit | 🔴 P0 | ~5 ч |
+
+### 13.1 Связь с phases этого roadmap'а
+
+| P-фаза этого roadmap'а | Дополняется sibling'ом |
+|------------------------|------------------------|
+| §2 P0 (embedding defaults, JWT) | `260430_AUDIT_DEPS_AND_CI.md` D.1, D.2 — `httpx`+`pyjwt` deps |
+| §3 P1 (6 chapters refresh) | `260430_AUDIT_CHAPTER_01_OVERVIEW.md` (chapter 01 detail), `260430_AUDIT_CHAPTERS_02_30.md` (главы 02-30 detail) |
+| §4 P2 (IMPLEMENT 4 stubs) | `260430_AUDIT_TESTS_COVERAGE.md` T.1, T.3 — нужны тесты для новых имплементаций |
+| §5 P3 (5 new docs sections) | — (не пересекается) |
+| §6 P4 (config wire + 4 TODOs) | `260430_AUDIT_DEPS_AND_CI.md` D.3, D.6 — config + extras decisions |
+
+### 13.2 Total scope (all 5 documents combined)
+
+| Scope | Effort |
+|-------|--------|
+| Main roadmap (§2-§6 этого файла) | 56-84 ч |
+| Chapter 01 detailed audit | 3-4 ч |
+| Chapters 02-30 audit | 2.5 ч |
+| Tests gaps (framework_search etc.) | 20-25 ч |
+| Deps + CI (httpx/pyjwt + pytest job + security) | 5 ч |
+| **GRAND TOTAL** | **~87-120 ч** |
+
+**Realistic timeline (combined):** 2-3 недели full-time, 4-6 недель part-time.
+
+### 13.3 Order of execution (recommended)
+
+1. **D.1** (httpx in deps) — 5 min, разблокирует чистую установку
+2. **D.7** (pytest CI job) — 1-2 ч, разблокирует regression detection
+3. **§2 P0** (embedding defaults + JWT + chapter 31 §32 refs) — 6-9 ч
+4. **T.2** (Phase 9.1 dim regression) — 2 ч, минимальный effort с большим выигрышем
+5. **§3 P1 + sibling §2 (chapters audit fixes)** — 4-6 ч + 2.5 ч в batch
+6. **T.1** (framework_search tests) — 6-8 ч
+7. **§4 P2** (4 IMPLEMENT) — 21-32 ч (largest item)
+8. Параллельно: T.3 + T.4 + T.5 + D.5 + remaining sibling items
+9. §5 P3 + §6 P4 — finalization
