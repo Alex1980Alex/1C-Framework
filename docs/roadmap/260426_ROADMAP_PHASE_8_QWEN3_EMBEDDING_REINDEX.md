@@ -903,12 +903,11 @@ Append (~60-90 мин) → в `bsl_code_v4_late` будет ~49k chunks, оба 
 
 ---
 
-## 25. Phase Framework-Search Stage 1 — DONE / резюме и варианты продолжения
+## 25. Phase Framework-Search — ALL STAGES DONE
 
-**Статус:** Stage 1 ✅ завершён, ждёт решения по продолжению.
-**Дата:** 2026-04-30.
-**Цель главы:** зафиксировать состояние при паузе так, чтобы при возврате к работе
-не нужно было поднимать контекст из чата.
+**Статус:** ✅ Stage 1 + 2 + 3 + bug fix полностью реализованы.
+**Дата:** 2026-04-30 (за одну сессию: Stage 1 утром, Stage B+2+3 + bug fix вечером).
+**Цель главы:** полное резюме реализации с финальными числами для аудита.
 
 ### 25.1. Что построено
 
@@ -1062,8 +1061,74 @@ python scripts/index_framework.py --limit 10 --dry-run
 
 Если всё ок — переходи к выбранному варианту из §25.3.
 
+### 25.7. Финальное состояние (закрытие фазы) — 2026-04-30
+
+Все 3 stages реализованы за ту же сессию что и §25 был написан. План §25.5
+(B → C → A → Stage 3) выполнен в один вечер.
+
+**7 коммитов в порядке:**
+
+| SHA | Что |
+|-----|-----|
+| `7d104386` | docs: §23 operating procedures + §24 framework self-search proposal |
+| `ae6ccebb` | feat: Stage 1 — manual indexer (10 файлов, 1077 строк) |
+| `9474dc18` | docs: SKILL.md `.claude/skills/framework-search/` |
+| `6c3dbb5b` | chore: регистрация в `skill-router-config.json` |
+| `36061fd0` | docs: §25 — варианты A/B/C для возврата (исходный план паузы) |
+| `1db6e265` | feat: Stage B+2+3 — scope tuning + MCP server + watcher |
+| `d5c54e76` | fix: SKIP_PATTERNS leading-slash bug в `_matches_skip` |
+
+**Артефакты в проде:**
+
+| Артефакт | Расположение |
+|----------|--------------|
+| Pipeline | `src/framework_search/` (8 модулей) |
+| CLI | `scripts/index_framework.py` |
+| MCP server (Stage 2) | `tools/framework-search-mcp/server.py` (4 tools) |
+| Watcher (Stage 3) | `scripts/watch_framework.py` (polling, 5s) |
+| Skill | `.claude/skills/framework-search/SKILL.md` |
+| Registry | `.mcp.json` (запись `framework-search`) + `skill-router-config.json` (bundle `framework-search`) |
+| Qdrant | collection `framework_code_v1` |
+
+**Финальные числа индекса:**
+
+| Метрика | Значение |
+|---------|----------|
+| points_count | **21 164** (после bug-fix; до — 24 481, утечка 3317 chunks из BSL projects устранена) |
+| dimensions | 4096 cosine (Qwen3-Embedding-8B) |
+| files indexed | 1 794 |
+| files seen | 1 843 (49 пропущено по SKIP/size) |
+| Время full reindex | 20.4 мин на TEI |
+| Распределение | python 12 806 / markdown 7 903 / typescript 264 / json 151 / text 29 / javascript 11 |
+
+**Smoke-test (4 запроса) на финальном индексе — все top-1 релевантны:**
+
+| Запрос | Top-1 | Score |
+|--------|-------|-------|
+| "fallback логика для embedding когда основной backend упал" | `tenacity-retry/SKILL.md:57` | 0.690 |
+| "хук блокирующий Write без активации skill" | `30.3_Enforcers.md:64` | 0.740 |
+| "late chunking pooling mode для Qwen3" | `ADR-008-qwen3-late-chunking.md:27` | 0.703 |
+| "TEI HTTP client с retry и sub-batching" | `11.5_Стек_и_трейсинг.md:255` | 0.588 |
+
+**Что нужно для активации MCP в новой сессии:**
+
+1. **Перезапустить Claude Code** — MCP `framework-search` зарегистрирован в `.mcp.json` после старта текущей сессии, новые tools `mcp__framework-search__*` появятся только после ребута.
+2. **(Опционально) Запустить watcher как daemon** — Windows Task Scheduler или `nssm install framework-search-watcher`. Без watcher MCP lazy-check вытянет stale файлы при ближайшем `search_code` (throttle 30 сек).
+
+**Bug-trail (для подобных случаев в будущем):**
+
+- `SKIP_PATTERNS` substring-match имеет тонкость: паттерны вида `/x/y/`
+  не матчат top-level пути (без leading slash в repo-rel POSIX).
+  Фикс — двойная логика в `_matches_skip` ([file_walker.py:25-43](src/framework_search/file_walker.py#L25)):
+  ```python
+  if pl in low: return True
+  if pl.startswith("/") and low.startswith(pl[1:]): return True
+  ```
+- 3 317 chunks утечки удалены из Qdrant через `FilterSelector` без полного reindex'а
+  (FieldCondition по relative_path = `MatchText("src/projects/configuration/")`).
+
 ---
 
 После Phase 8 — кандидаты Phase 9: cross-encoder Qwen3-Reranker, hybrid search tuning,
-LLM-rotation expansion (новые провайдеры после Z.AI лимита), framework code self-search
-(§24 → Stage 1 done в §25, Stage 2/3 ждут возврата к задаче).
+LLM-rotation expansion (новые провайдеры после Z.AI лимита). Framework code self-search
+(§24 → §25) ✅ полностью реализован.
