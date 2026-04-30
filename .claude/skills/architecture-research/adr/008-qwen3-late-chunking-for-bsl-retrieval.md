@@ -42,7 +42,7 @@ Phase 8.12.8 запустил quality regression A/B на synthetic golden-set (
 
 - **Pooling:** Late Chunking (full-document forward → per-chunk mean-pool) [paper: jina-ai/late-chunking]
 - **Indexing backend:** Python sentence-transformers + scripts/reindex_bsl_qwen3.py с `--pooling-mode late-chunking` [own]
-- **Query backend:** TEI HTTP (production) или Ollama qwen3-embedding (γ-fallback) [exp: smoke validated]
+- **Query backend:** TEI HTTP (production, primary) [exp: smoke validated 2026-04-30]. **Ollama qwen3-embedding:8b НЕ рекомендуется** для текущего индекса — A/B drift показал cosine **0.52** между Ollama и TEI на одном запросе (vs ожидаемое >0.95 для quantization noise) — Ollama vector space фундаментально отличается, скорее всего из-за heavy GGUF quantization или иной pooling. γ-fallback `Qwen3EmbeddingService` сохранён, но Ollama path требует отдельной reindex `bsl_code_v4_late_ollama` для совместимости [exp: drift measurement 2026-04-30]
 - **Query instruction:** default HF model card template `"Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "` (НЕ кастомные BSL-specific) [exp: H1 ablation REJECTED]
 - **Passage instruction:** пустая (Qwen3 convention для passages) [docs: HF model card]
 - **Chunker:** sliding-window split window=1024 / overlap=256 (Phase 8.12.5) для XXL символов > 2K токенов [own]

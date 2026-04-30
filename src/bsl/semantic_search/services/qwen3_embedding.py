@@ -51,7 +51,7 @@ class Qwen3EmbeddingService:
     def __new__(
         cls,
         ollama_host: str = "http://localhost:11434",
-        model: str = "qwen3-embedding",
+        model: str = "qwen3-embedding:8b",
     ) -> Qwen3EmbeddingService:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -60,7 +60,7 @@ class Qwen3EmbeddingService:
     def __init__(
         self,
         ollama_host: str = "http://localhost:11434",
-        model: str = "qwen3-embedding",
+        model: str = "qwen3-embedding:8b",
     ) -> None:
         if Qwen3EmbeddingService._initialized:
             return
