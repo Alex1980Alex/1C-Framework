@@ -1,9 +1,71 @@
 # Phase 8 — Qwen3-Embedding-8B + GPU + переиндексация
 
-**Дата:** 2026-04-26
-**Статус:** Планирование (черновик)
+**Дата начала:** 2026-04-26
+**Дата закрытия:** 2026-04-30 (Phase 8 + 9.1)
+**Статус:** ✅ COMPLETE (Phase 8 + 9.1) / ⏳ NEXT (§32 Phase 9.2+)
 **Приоритет:** Высокий
-**Связано:** Phase 5–7 миграции
+**Связано:** Phase 5–7 миграции, Phase 22 feedback loop (long-term)
+
+---
+
+## 0. Status Dashboard (актуально на 2026-04-30 вечер)
+
+**Production retrieval работает.** Все 10 Qdrant-коллекций на единой модели Qwen3-Embedding-8B 4096d через TEI Docker (`pdf-rag-tei`). Memory subsystem aligned. Auto-reindex on git commit активен (framework + BSL).
+
+### Готово (✅)
+
+| Phase | Что | Section | Заметки |
+|-------|-----|---------|---------|
+| 8.0-8.6 | Pre-flight, torch CUDA 12.8, Qwen3 download, audit, backup | §4-§10 | Done 2026-04-26 |
+| 8.7 | Recreate коллекций (BSL family) | §11 | Done 2026-04-26 |
+| 8.8 | Reindex BSL (24 455 chunks) | §12 + §21.6 | Done 2026-04-29 |
+| 8.10 | Production switchover bsl_code_v4_late | §21.10 | recall@10 = 0.567 (+26% vs E5) |
+| 8.11 | Cleanup legacy collections | §27 | bsl_code_v3 + 2× e5_legacy dropped |
+| 8.12 | Throughput optimization (sliding window, TEI, Late Chunking) | §21 | 9 задач закрыто, 1 dropped |
+| 8.14 | Cleanup §27 P0 | §27 | 15 → 12 коллекций |
+| 8.15 | Migrate remaining (pdf, wiki, graph, learned_patterns) | §28 | 4 коллекции мигрированы |
+| 8.16 | Sync .env + skills | §29 | Qwen3 default |
+| Bonus | Framework self-search (Stages 1-3 + auto-reindex hook) | §24-§25 | Не было в исходном плане Phase 8 |
+| 9.1 | Memory system Qwen3 alignment (silent bug fix) | §31 | skill_library 80 pts, hooks fixed |
+| 9.5.1 | Drop visual_grounding (last 768d legacy) | §32.5.1 | 100% Qwen3 alignment |
+
+### Финальная картина Qdrant
+
+```
+10 collections × 4096d Qwen3-Embedding-8B = 80 908 points
+(8 with data + 2 ready for auto-populate)
+```
+
+### Что осталось (см. §32 plan)
+
+| Phase | Что | Effort | Когда делать |
+|-------|-----|--------|--------------|
+| 9.2 | Cross-encoder Reranker (BGE-reranker-v2-m3) | 4-8 ч | Когда retrieval недостаточен в top-5 |
+| 9.3 | Hybrid sparse+dense (BM25 native) | 2-4 ч | При keyword-heavy queries |
+| 9.4 | Auto-populate empty memory (experience+conversation) | 2-4 ч | Когда есть living data sources |
+| 9.5.2 | Drop старых E5 snapshots | 5 мин | После 2026-05-03 (1 неделя hold) |
+| 8.13 (DEFER) | LoRA fine-tuning Qwen3 на BSL | 1-3 дня + $$ | После 500q real user queries |
+
+### Оглавление
+
+| § | Раздел |
+|---|--------|
+| 1-3 | Контекст + Acceptance Criteria + Архитектура |
+| 4-10 | Phase 8.0-8.6 — pre-flight, torch, model, audit, backup |
+| 11-15 | Phase 8.7-8.11 — recreate/reindex/smoke/sync/cleanup |
+| 16-20 | Risks, rollback, time, dependencies, sources |
+| 21 | Phase 8.12 — Throughput optimization (Late Chunking, TEI, A/B) |
+| 22 | Phase 8.13 — LoRA fine-tuning (DEFERRED) |
+| 23 | Operating procedures — per-project BSL reindex |
+| 24-25 | Framework self-search (proposal + Stages 1-3) |
+| 26 | Reality check после Phase 8 closure |
+| 27-29 | Cleanup + migrate remaining + sync configs |
+| 30 | Phase 8 COMPLETE summary |
+| 31 | Phase 9.1 — Memory system alignment |
+| 32 | Phase 9.2+ — План reranker/hybrid/auto-populate |
+| 33 | Lessons learned (post-mortem) |
+
+---
 
 ## 1. Контекст
 
@@ -1548,3 +1610,158 @@ Memory subsystem aligned. Следующие этапы — см. §32 (план
 **Long-term (когда появятся данные):**
 4. §32.4 Auto-populate memory
 5. §32.6 LoRA, Path D GigaEmbeddings, PDF TEI provider
+
+### 32.8. Decision triggers — когда брать какой пункт
+
+| Сигнал из практики | Какой пункт §32 решает |
+|---------------------|------------------------|
+| «Поиск находит релевантное в top-30, но не в top-5» | §32.2 Reranker |
+| «Запрос с конкретным именем функции/числом теряется» | §32.3 Hybrid sparse+dense |
+| «memory hooks ничего не отдают через Qdrant» (контролировать на проде) | проверить что §31 актуален |
+| Накопилось ≥ 500 real user queries для eval | §32.6.1 LoRA |
+| `docker volume ls` показывает >20 GB на E5 snapshots | §32.5.2 cleanup |
+| Активность в `cache/experience-bank/` начала генерироваться | §32.4.1 auto-populate experience |
+| Запросы из `data/conversations.db` накопились ≥ 100 threads | §32.4.2 auto-populate conversation |
+| TEI Docker рестартится / out-of-memory на проде | §32.6.3 PDF TEI provider (разнесение нагрузки) |
+
+### 32.9. Концретные стартовые команды (для возврата к работе)
+
+#### §32.2.1 Reranker — Docker compose update
+
+```bash
+# В docker/docker-compose.gpu.yml добавить под profile rerank:
+#   tei-rerank:
+#     image: ghcr.io/huggingface/text-embeddings-inference:1.7.2
+#     command: --model-id BAAI/bge-reranker-v2-m3 --revision main
+#     environment:
+#       MAX_INPUT_LENGTH: 8192
+#     ports: ["8081:80"]
+#     deploy: { resources: { reservations: { devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }] } } }
+
+docker compose -f docker/docker-compose.yml \
+  -f docker/docker-compose.gpu.yml --profile rerank up -d tei-rerank
+curl -s http://localhost:8081/health
+```
+
+#### §32.3 Hybrid sparse — proof-of-concept на framework_code_v1
+
+```bash
+# 1. Prep: добавить sparse vector config в src/framework_search/indexer.py
+#    ensure_collection(client, dims, sparse=True) с
+#    sparse_vectors_config={"bm25": models.SparseVectorParams(modifier=models.Modifier.IDF)}
+# 2. Recreate с named vectors:
+python scripts/index_framework.py --recreate --collection framework_code_v1
+# 3. Update tools/framework-search-mcp/server.py search_code:
+#    Prefetch(query=qv, using="dense", limit=50) +
+#    Prefetch(query=models.Document(text=q, model="Qdrant/bm25"), using="bm25", limit=50)
+#    → FusionQuery(fusion=Fusion.RRF)
+```
+
+#### §32.5.2 Cleanup E5 snapshots (после 2026-05-03)
+
+```bash
+# Список E5 snapshots в volume
+docker exec pdf-rag-qdrant ls /qdrant/snapshots/ | grep -E "(e5|2026-04-26)"
+# Удалить (через Qdrant API чтобы не сломать active mounts):
+for c in pdf_documents wiki_pages_v1 graph_embeddings learned_patterns; do
+    curl -s -X DELETE "http://localhost:6333/collections/$c/snapshots/<имя_E5_снапшота>"
+done
+```
+
+#### §32.4 Auto-populate experience_embeddings
+
+```bash
+# Существующий experience-embedder hook:
+ls scripts/hooks/learning/experience-embedder.py
+# Должен быть подключен в settings.json как PostToolUse hook на удачные операции
+# Update embed-call с Ollama 768d на TEI 4096d (тот же паттерн что в §31)
+```
+
+---
+
+## 33. Lessons Learned (post-mortem 2026-04-30)
+
+Наблюдения из реальной реализации Phase 8 + 9.1, которые информируют будущие
+архитектурные решения. Каждое — конкретный факт, не умозрение.
+
+### 33.1. Декларативный план vs реальная имплементация
+
+**Phase 8 acceptance criterion §2 был «все 11 коллекций пересозданы», но фактически
+в первой итерации мигрирована только 1** (bsl_code_v4) из 11. Остальные 9
+обнаружились только при `curl /collections | python -m json.tool` через 4 дня.
+
+**Урок:** acceptance criterion со словом «все» нужен прогресс-чекер. В Phase 8.7-8.8 не было checkbox'а «scroll all collections, verify dim ≥ 4096». Добавить в шаблон Phase plans.
+
+### 33.2. Silent bugs из dim mismatch
+
+`memory-first-hook.py` вызывал Ollama nomic-embed-text **768d** для эмбеддинга
+запроса, но коллекции `skill_library`/`experience_embeddings`/`conversation_memory`
+были **1024d** (E5). Hook возвращал 0 результатов из Qdrant и фолбэчился на token
+overlap через `learned_patterns`.
+
+**Урок:** при создании retrieval-системы нужен **smoke test «collection dim == hook dim»** на CI или session-start hook. Будь у нас такой смок — silent bug закрылся бы за минуты, а не существовал бы месяцами.
+
+### 33.3. Path C inversion — pilot результаты обманчивы
+
+14q pilot Qwen3+Late vs E5 в Phase 8.12.8 показал что **E5 побеждает** (recall 0.500 vs 0.321). Decision была «остаться на E5». Path C — расширение pilot до 50q с pre-resolution фильтром — **инвертировало вывод**: Qwen3+Late выигрывает (+26% recall vs E5).
+
+**Урок:** малая выборка (n=14) с высоким skip-rate (53%) — статистически незначима для retrieval-метрик. Decision-gate надо ставить на n ≥ 30 + skip-rate < 20%. Document'ировать не только final-decision, но и confidence interval.
+
+### 33.4. GPU contention — single-GPU constraint реален
+
+RTX 3090 24 GB не вмещает две независимые копии Qwen3-Embedding-8B FP16 (16 GB +
+16 GB > 24 GB). Это значит:
+- Auto-reindex BSL incremental вынужденно использует `qwen3-tei` (std pooling) вместо `qwen3-st` (Late Chunking) — quality drift на свежеправленных символах
+- Phase 9.2 Reranker на Qwen3-Reranker-8B потребует второго GPU, BGE-reranker-v2-m3 (~568 MB) помещается рядом с Qwen3 на одном GPU
+- Phase 8.13 LoRA fine-tuning блокирует production retrieval на 1-3 дня offline window
+
+**Урок:** при выборе модели всегда учитывать GPU footprint в paire с другими live-процессами. Документировать «working set VRAM» в каждом ADR.
+
+### 33.5. «Future work» секции часто реализуются раньше плана
+
+§24 был proposal «Framework self-search NOT scheduled — defer until production-сигнала».
+В тот же вечер §24 → §25 → реализован полностью (Stages 1-3 + auto-reindex on commit).
+
+**Урок:** «defer»-метки не снимают возможности немедленной имплементации. Для будущих proposal'ов — добавлять «kill-switch criteria» (что должно случиться чтобы НЕ делать) кроме «when to do».
+
+### 33.6. Backup manifest без верификации физической доступности
+
+`260426_PHASE_8_PRE_QWEN3_BACKUP_MANIFEST.json` декларировал backup в
+`E:/Transfer folder/qdrant/1c-pre-qwen3-2026-04-26/`. На момент Phase 8.14 cleanup
+**папки не было** — backup существует только в Qdrant snapshot volume.
+
+**Урок:** при создании backup'а проверять `Test-Path` физического артефакта PRE-commit manifest'а. Manifest без verification = ложное чувство безопасности.
+
+### 33.7. Phantom hooks tasks выматывают context
+
+В сессии Phase 8 + 9.1 хуки `task-enforcer`, `code-verify-reminder`,
+`docs-change-tracker` срабатывали **8+ раз** на phantom (задачи уже сделаны,
+hook не знает что закрылись). Каждый round-trip: ~2-5 минут на разъяснение
+сделанного.
+
+**Урок:** task-tracker hooks должны делать **happy-path detection** (если последние N коммитов содержат feat/fix/docs матчинг паттерна — auto-close phantom). Иначе разработчик тратит 20% времени на closing phantom tasks вместо работы.
+
+### 33.8. `100%` migration — маркетинговая метрика
+
+«10 коллекций × 4096d Qwen3, 100% migration» звучит впечатляюще. Реально:
+- 8 коллекций с данными
+- 2 коллекции (`experience_embeddings`, `conversation_memory`) — пустые,
+  «ready for auto-populate», но pipelines не подключены
+- visual_grounding dropped — но если завтра нужен visual retrieval, его вернут
+
+**Урок:** в roadmap'ах различать «schema migration» и «data migration». 100% schema ≠ 100% data flow.
+
+### 33.9. Late Chunking + TEI несовместимость осталась актуальной
+
+8.12.6 проектировался с предположением «TEI обслуживает все embedder use-cases». На
+8.12.9 выяснилось — TEI отдаёт только pooled vectors, Late Chunking нужно
+делать через qwen3-st (sentence-transformers), не через TEI.
+
+**Урок:** для каждого embedder backend'а явно проверять каждый pooling-режим перед commit'ом архитектуры.
+
+### 33.10. Что работает хорошо — паттерны для повтора
+
+- **Idempotent UUID5 chunk_id** (`uuid5(NS, f"{path}:{line}:{sha1[:12]}")`) — re-run на неизменном файле = no-op upsert. Применяется в framework_search и BSL reindex.
+- **Detached subprocess для git hooks** — commit не блокируется, log в отдельный файл. Применяется в `git_post_commit_reindex.py`.
+- **Re-embed без regen** через `scripts/reembed_collection.py` — 9 767 точек wiki+graph за 2 минуты вместо часов rechunk'а.
+- **3-уровневое резервирование актуальности** (file watcher + MCP lazy-check + git post-commit) — graceful degradation если один уровень падает.
