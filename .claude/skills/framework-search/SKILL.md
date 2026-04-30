@@ -205,6 +205,54 @@ python scripts/watch_framework.py --quiet > watcher.log 2>&1 &
 
 **Дополняет Stage 2 lazy-check:** если watcher работает — `search_code` всегда найдёт свежие данные без задержки. Если watcher упал — lazy-check вытянет stale файлы при ближайшем запросе.
 
+## Auto-indexing on git commit (3rd backup layer)
+
+Активирована автоматическая инкрементальная индексация при `git commit` и `git merge`. Срабатывает в **detached background process** — коммит завершается мгновенно, reindex идёт параллельно.
+
+**Активация (один раз на клон репозитория):**
+
+```bash
+git config core.hooksPath scripts/git_hooks
+```
+
+Это перенаправляет git hooks из `.git/hooks/` (per-clone) в версионируемый `scripts/git_hooks/` (всем clone'ам).
+
+**Что происходит при коммите:**
+
+1. `scripts/git_hooks/post-commit` срабатывает → передаёт управление `git lfs post-commit` (сохраняет существующее поведение)
+2. Затем вызывает `scripts/git_post_commit_reindex.py --since-ref HEAD~1`
+3. Helper читает `git diff --name-only HEAD~1..HEAD`, фильтрует через `EXT_TO_LANGUAGE` + `SKIP_PATTERNS`
+4. Если изменений > 200 — skip (initial commit, bulk operations) → лог в `cache/framework_search_reindex.log`
+5. Иначе спавнит `index_framework.py --paths <changed>` **detached** (Windows: `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP`; POSIX: `setsid`)
+6. Лог индексации идёт в `cache/framework_search_reindex.log`, терминал юзера остаётся чистым
+
+**При merge** срабатывает `post-merge` со `--since-ref ORIG_HEAD` (диапазон merge'а).
+
+**При checkout/branch-switch** reindex намеренно пропускается — diff может быть огромным; MCP lazy-check вытянет stale файлы при следующем `search_code`.
+
+**Отключить:**
+
+```bash
+git config --unset core.hooksPath
+# Восстанавливает .git/hooks/ как источник (lfs hooks там же)
+```
+
+**Проверить лог:**
+
+```bash
+tail cache/framework_search_reindex.log
+```
+
+**Файлы:**
+
+| Файл | Назначение |
+|------|------------|
+| `scripts/git_hooks/post-commit` | shell wrapper: lfs + reindex trigger |
+| `scripts/git_hooks/post-merge` | shell wrapper: lfs + reindex trigger (ORIG_HEAD diff) |
+| `scripts/git_hooks/post-checkout` | lfs only (skip reindex) |
+| `scripts/git_hooks/pre-push` | lfs only |
+| `scripts/git_post_commit_reindex.py` | Python helper: filter + detached spawn |
+
 ## Связанные skills
 
 - `bsl-development` — параллельный pipeline для BSL кода (`bsl_code_v4_late`)
