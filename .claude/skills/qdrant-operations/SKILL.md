@@ -12,18 +12,33 @@ description: "Qdrant Operations — управление коллекциями 
 
 ## Архитектура коллекции
 
-**Стандартный layout (PDF/wiki/skills, named vectors):**
-- **dense**: cosine, 1024 dims (E5 multilingual)
-- **bm25**: sparse vector с IDF modifier (Qdrant native tokenizer, russian)
+**Phase 8 production layout (после switchover 2026-04-30, см. roadmap §26-§28):**
 
-Payload: `original_id`, `content`, `document_id`, `page_number`, `section`, `chunk_index`
+7 коллекций на **Qwen3-Embedding-8B 4096d cosine**, single dense vector (no sparse), через TEI Docker:
 
-**BSL Phase 8.12 layout (single dense vector, no sparse):**
-- `bsl_code_v4` (4096d cosine, Qwen3 standard pooling) — primary BSL collection после Phase 8.12.3 baseline
-- `bsl_code_v4_late` (4096d cosine, Qwen3 Late Chunking 8.12.9) — A/B arm для quality regression 8.12.8
-- `bsl_code_v3` (1024d, E5 legacy) — старая E5 baseline, **drop в Phase 8.11.3**
+| Коллекция | Points | Назначение |
+|-----------|--------|------------|
+| `bsl_code_v4_late` | 24 455 | **Production BSL retrieval** (Late Chunking pooling) |
+| `bsl_code_v4` | 24 455 | Research baseline (std pooling) |
+| `framework_code_v1` | 21 242 | Self-search фреймворка (см. §25) |
+| `pdf_documents` | 830 | PDF RAG (Глава 5 1С Документация) |
+| `wiki_pages_v1` | 3 073 | Wiki entities |
+| `graph_embeddings` | 6 694 | KG entities |
+| `learned_patterns` | 44 | Learning hooks |
 
-Payload BSL: `chunk_id`, `content`, `name`, `chunk_type`, `symbol_type`, `is_export`, `module_path`, `module_name`, `module_type`, `params`, `calls`, `signature`, `region`, `line_start`, `line_end`, `object_type`, `object_name`, `caller_count`
+**Не на Qwen3 (исключения):**
+- `visual_grounding` (5 pts × 768d nomic) — defer (low ROI миграция)
+- `skill_library`, `conversation_memory`, `experience_embeddings` (0 pts × 1024d) — Phase 9 candidate (memory hooks на Ollama nomic 768d, требуется alignment всей подсистемы)
+
+**Dropped 2026-04-30** (§27 cleanup): `bsl_code_v3` (E5 1024d legacy), `experience_embeddings_e5_legacy`, `learned_patterns_e5_legacy`.
+
+**Sparse BM25** в текущих 4096d-коллекциях НЕ используется (single-vector layout). Для hybrid retrieval нужен ручной BM25 SQLite (см. `cache/docs-mcp/hybrid_search.db` для FTS5 fallback).
+
+**Payload (универсальный для re-embed через `scripts/reembed_collection.py`):** обязательно содержит `text` (default) или `content` (для legacy коллекций) — текст для эмбеддинга.
+
+**Payload BSL** (`bsl_code_v4*`): `chunk_id`, `content`, `name`, `chunk_type`, `symbol_type`, `is_export`, `module_path`, `module_name`, `module_type`, `params`, `calls`, `signature`, `region`, `line_start`, `line_end`, `object_type`, `object_name`, `caller_count`
+
+**Payload framework_code_v1**: `relative_path`, `content`, `language`, `chunk_type`, `symbol_name`, `line_start`, `line_end`, `mtime`, `sha1`
 
 ## ID Conversion
 

@@ -32,19 +32,23 @@ VECTOR_STORE__QDRANT_URL=http://localhost:6333
 | `ANTHROPIC__BASE_URL` | `https://api.anthropic.com` | Base URL API (для proxy) |
 | `AGENT__TEMPERATURE` | `0.0` | Температура генерации |
 
-### Embedding
+### Embedding (Phase 8 production switchover, 2026-04-30)
 
 | Переменная | Default | Описание |
 |------------|---------|----------|
-| `EMBEDDING__MODEL` | `intfloat/multilingual-e5-large` | Модель: E5/Giga/Qwen3 (e.g. `Qwen/Qwen3-Embedding-8B` для BSL после Phase 8.12) |
-| `EMBEDDING__DIMENSIONS` | `1024` | 1024 (E5/MRL) или 4096 (Qwen3 native, `bsl_code_v4`) |
-| `EMBEDDING__DEVICE` | `auto` | `cuda` обязателен для Qwen3-8B (16+ GB VRAM на FP16) |
-| `EMBEDDING__DTYPE` | — | `float16` для Qwen3 на 24GB GPU; bf16 fallback на CPU |
-| `QWEN3_MODEL_DIR` | `D:/hf-manual/Qwen3-Embedding-8B` | Bind-mount path для TEI Docker (Phase 8.12.6); локальные веса 14.1 GiB обходят HF Hub |
-| `ZAI_API_KEY` | — | Z.AI API key (через `LLMRotationService` для генерации/синтетических golden-set queries в 8.12.8) |
+| `EMBEDDING__PROVIDER` | `tei` | **Production default**: TEI HTTP. Альтернативы: `local`/`jina`/`giga` |
+| `EMBEDDING__MODEL` | `Qwen/Qwen3-Embedding-8B` | **Production default**. Legacy E5 — `intfloat/multilingual-e5-large` |
+| `EMBEDDING__DIMENSIONS` | `4096` | **Production**: 4096 (Qwen3). Legacy: 1024 (E5/MRL) или 768 (nomic в memory hooks) |
+| `EMBEDDING__TEI_BASE_URL` | `http://localhost:8080` | TEI Docker (`pdf-rag-tei` контейнер) |
+| `EMBEDDING__BATCH_SIZE` | `16` | Размер batch на TEI request (sub-batched на 32 server-cap) |
+| `EMBEDDING__DEVICE` | `auto` | Для local backend: `cuda` для Qwen3-8B на 16+ GB VRAM |
+| `EMBEDDING__DTYPE` | — | Для local: `float16` на 24GB GPU; bf16 fallback на CPU |
+| `QWEN3_MODEL_DIR` | `D:/hf-manual/Qwen3-Embedding-8B` | Bind-mount path для TEI Docker (Phase 8.12.6); локальные веса 14.1 GiB |
+| `ZAI_API_KEY` | — | Z.AI API key (через `LLMRotationService`) |
 
-> **E5 модели** требуют prefix: `"query: "` / `"passage: "` (auto).
-> **Qwen3-Embedding-8B** требует query instruction `"Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "` (через ST `prompt_name="query"`); для passages — без prefix. FA2 + `padding_side="left"` обязательно вместе на коротких чанках (8.12 C6).
+> **Qwen3-Embedding-8B** (production default): query instruction `"Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "`; passages — без prefix. Через TEI HTTP (см. `src/framework_search/embedder.py` или `Qwen3TEIEmbedder` из `scripts/reindex_bsl_qwen3.py`).
+>
+> **E5 модели** (legacy, до Phase 8): prefix `"query: "` / `"passage: "` (auto).
 
 ### Vector Store
 

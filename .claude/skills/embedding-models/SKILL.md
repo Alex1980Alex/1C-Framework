@@ -14,9 +14,10 @@ description: "Embedding Models — выбор, настройка и отлад�
 
 | Модель | Dims | Качество | Скорость | Когда |
 |--------|------|----------|----------|-------|
-| `Qwen/Qwen3-Embedding-8B` | 4096 (MRL→1024) | SOTA code+text (MTEB-Code 80.68, Multilingual 70.58) | GPU req. | **BSL primary** (Phase 8.12), `bsl_code_v4`, native 32K context |
-| `intfloat/multilingual-e5-large` | 1024 | SOTA multilingual | Fast | E5 baseline (Phase 7), legacy `bsl_code_v3` |
-| `ai-sage/Giga-Embeddings-instruct` | 1024 | SOTA Russian (69.1 ruMTEB) | Fast | Russian-heavy |
+| **`Qwen/Qwen3-Embedding-8B`** | **4096** | SOTA code+text (MTEB-Code 80.68, Multilingual 70.58) | TEI Docker | **PRODUCTION DEFAULT** (Phase 8 switchover 2026-04-30). 7 коллекций × 80 793 pts: `bsl_code_v4`, `bsl_code_v4_late`, `framework_code_v1`, `pdf_documents`, `wiki_pages_v1`, `graph_embeddings`, `learned_patterns`. Native 32K context. Backend: `pdf-rag-tei` Docker (`docker compose --profile tei up`) |
+| `intfloat/multilingual-e5-large` | 1024 | SOTA multilingual | Fast | **Legacy** (до Phase 8). Может остаться fallback для специфичных кейсов |
+| `nomic-embed-text` (Ollama 768d) | 768 | OK | Fast (CPU) | **Misalignment**: используется memory-hooks (`memory-first-hook.py`, `shared/semantic_search.py`), но retrieval-коллекции на Qwen3 4096d. Phase 9 candidate — alignment всей memory-системы на TEI 4096d |
+| `ai-sage/Giga-Embeddings-instruct` | 1024 | SOTA Russian (69.1 ruMTEB) | Fast | Path D alternative (не выбрано) |
 | `BAAI/bge-m3` | 1024 | Good (100+ languages) | Fast | Fallback |
 | `jina-embeddings-v3` | 1024 | SOTA (Matryoshka) | API | Multilingual, task prompting (Phase 47) |
 | `vidore/colpali-v1.3` | multi-vector | SOTA visual | Slow (GPU) | Visual page retrieval (Phase 55) |
