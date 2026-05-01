@@ -45,6 +45,7 @@ class DocumentSummaryIndex:
         summarization_model: str = "claude-haiku-4-5-20251001",
         api_key: str = "",
         base_url: str = "",
+        embedding_engine: Any = None,
     ):
         """
         Initialize document summary index.
@@ -55,12 +56,15 @@ class DocumentSummaryIndex:
             summarization_model: LLM for summarization
             api_key: Anthropic API key
             base_url: Custom API endpoint (for Z.AI or other proxies)
+            embedding_engine: Embedding engine with embed_text(text) -> list[float].
+                If None, falls back to a deterministic hash-based placeholder.
         """
         self._collection_name = collection_name
         self._persist_dir = Path(persist_dir)
         self._summarization_model = summarization_model
         self._api_key = api_key
         self._base_url = base_url
+        self._embedding_engine = embedding_engine
 
         # Lazy initialization
         self._vector_store = None
