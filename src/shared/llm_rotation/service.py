@@ -157,6 +157,16 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         rate_limit_rpm=30,
     ),
     ProviderConfig(
+        name="anthropic-sonnet",
+        base_url="https://api.anthropic.com",
+        api_key_env="ANTHROPIC_API_KEY",
+        default_model="claude-sonnet-4-6",
+        models=["claude-sonnet-4-6", "claude-haiku-4-5", "claude-opus-4-7"],
+        format="anthropic",
+        priority=1,
+        rate_limit_rpm=50,
+    ),
+    ProviderConfig(
         name="zhipu",
         base_url="https://open.bigmodel.cn/api/paas/v4",
         api_key_env="ZHIPU_API_KEY",

@@ -18,6 +18,7 @@ logger = logging.getLogger("llm-rotation")
 # Cost per 1K tokens (input + output combined estimate)
 PRICE_PER_1K_TOKENS: dict[str, float] = {
     "zai-glm5": 0.002,
+    "anthropic-sonnet": 0.009,
     "zhipu": 0.001,
     "gemini": 0.0,
     "openrouter": 0.0,

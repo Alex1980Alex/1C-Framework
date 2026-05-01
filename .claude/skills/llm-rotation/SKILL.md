@@ -31,6 +31,7 @@ ZAIProxy (HTTP server, port 8000)
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
 | 0 | **zai-glm5** | **glm-5.1** | **anthropic** | Yes (ZAI_API_KEY) |
+| 1 | **anthropic-sonnet** | **claude-sonnet-4-6** | **anthropic** | Yes (ANTHROPIC_API_KEY) |
 | 1 | zhipu | glm-4-flash | openai | Yes |
 | 2 | gemini | gemini-2.5-flash | openai | Yes |
 | 3 | openrouter | google/gemma-3-27b-it:free | openai | Yes |
