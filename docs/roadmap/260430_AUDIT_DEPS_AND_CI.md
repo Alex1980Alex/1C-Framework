@@ -1,7 +1,7 @@
 # Audit: pyproject.toml + CI/CD vs реальность
 
 **Дата:** 2026-04-30 (вечер)
-**Статус:** ⏳ AUDIT REPORT
+**Статус:** ✅ DONE (2026-05-01) — D.1/D.2/D.4/D.5/D.7/D.8 выполнены; D.3 documented; D.6 P2 backlog
 **Scope:** `pyproject.toml`, `.github/workflows/`, `.pre-commit-config.yaml`, корневые repo-файлы (LICENSE, README, CONTRIBUTING, CHANGELOG)
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 (tools scope не покрыт)
