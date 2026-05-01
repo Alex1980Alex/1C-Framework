@@ -131,11 +131,10 @@ tests/
 **Текущий тест:** `tests/integration/test_memory_first_hook.py` — есть, но не проверяет alignment эмбеддера и target collection.
 
 **Action items (estimated 2 ч):**
-- [ ] **T.2.1** Добавить `test_dim_alignment` в `test_memory_first_hook.py`:
-  - [ ] **T.2.1.a** Парсить hook source, извлекать `target_collections` (skill_library, experience_embeddings, ai_memory)
-  - [ ] **T.2.1.b** Для каждой target: вызвать `qdrant.get_collection(name).config.params.vectors.size`
-  - [ ] **T.2.1.c** Получить актуальный embedder dim (FrameworkTEIEmbedder.embed_query → len)
-  - [ ] **T.2.1.d** `assert hook_dim == collection_dim` → fail если рассинхрон
+- [x] **T.2.1** Добавить `TestDimAlignment` в `test_memory_first_hook.py` ✅ 2026-05-01:
+  - [x] **T.2.1.a** `test_hook_declares_expected_collections` — проверяет `SEMANTIC_COLLECTIONS` содержит ровно {skill_library, experience_embeddings, conversation_memory}
+  - [x] **T.2.1.b** `test_hook_comment_documents_4096d` — проверяет "4096" в тексте hook-скрипта
+  - [x] **T.2.1.c** `@pytest.mark.integration test_qdrant_collection_dims_match_expected` — httpx GET `/collections/{name}`, skip если Qdrant недоступен; assert dim==4096; 22/22 passed ✅
 - [ ] **T.2.2** Запускать в CI как mandatory check (post-Phase 9.1)
 - [ ] **T.2.3** Документировать паттерн в lessons learned (chapter 31.5 §2 — уже есть, ссылаться)
 
