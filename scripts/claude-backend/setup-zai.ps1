@@ -6,8 +6,8 @@ param(
     [string]$ApiKey,
 
     [Parameter(Mandatory=$false)]
-    [ValidateSet("glm-5", "glm-4.7", "glm-4.7-air")]
-    [string]$Model = "glm-5"
+    [ValidateSet("glm-5.1", "glm-5-turbo", "glm-5", "glm-4.7", "glm-4.7-air")]
+    [string]$Model = "glm-5.1"
 )
 
 $ErrorActionPreference = "Stop"

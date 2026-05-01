@@ -30,8 +30,11 @@ class HookInput:
         self.tool_name = raw.get("tool_name", "")
         self.tool_input = raw.get("tool_input") or {}
         self.tool_result = raw.get("tool_response", raw.get("tool_result", ""))
-        # Stop
-        self.transcript = raw.get("transcript", "")
+        # Stop. Modern Claude Code sends `transcript_path` (snake_case);
+        # `transcript` is the legacy alias. Without this fallback, detected_event
+        # misclassifies modern Stop events as "Unknown" → Stop hooks never fire
+        # (verified 2026-05-01: code-verify-reminder._handle_stop missed PASS markers).
+        self.transcript = raw.get("transcript_path", raw.get("transcript", ""))
         self.reason = raw.get("reason", "")
         # Common
         self.session_id = raw.get("session_id", "")
