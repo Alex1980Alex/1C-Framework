@@ -98,10 +98,10 @@
 **Where to start:** §11.6 verification → §11.1 pre-flight → §11.2 order of execution → §2.1 (embedding defaults P0).
 
 **Sibling audit reports (детализация):**
-- 🔍 [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md) — глубокий cross-check главы 01 (~25 несоответствий)
-- 🔍 [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md) — главы 02-30 (9 проблемных, ~22 fix)
-- 🔍 [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — tests gaps (framework_search 0 coverage; Phase 9.1 dim regression тест)
-- 🔍 [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md) — `httpx`/`pyjwt` deps, pytest CI, security audit
+- ✅ [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md) — DONE 2026-05-01 (01.1 metrics, 01.2 arch, 01.3 tech stack + Qdrant v1.17.1, 01.4 triada counts)
+- ✅ [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md) — DONE 2026-05-01 (02.1/02.2/04.1/28.4/29.4/29.6 all fixed)
+- 🔄 [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — IN PROGRESS: T.1 ✅ DONE (framework_search 4 test files, 2026-05-01); T.2 dim regression pending; T.3-T.5 P1 backlog
+- ✅ [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md) — DONE 2026-05-01 (httpx+pyjwt base deps, chromadb comment, queue note in 02.1, security-audit CI job)
 - Полный cross-reference и order of execution → **§13** в конце этого файла
 
 ---
