@@ -289,7 +289,7 @@ Summary:"""
                 logger.warning("[SUMMARY_IDX] Embedding engine failed, using fallback: %s", e)
 
         # Deterministic hash-based fallback (384d) — only used when no engine is injected
-        import hashlib
+        logger.error("[SUMMARY_IDX] No embedding engine available; search results will be meaningless")
         target_dim = 384
         hash_val = hashlib.sha256(text.encode()).hexdigest()
         hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
