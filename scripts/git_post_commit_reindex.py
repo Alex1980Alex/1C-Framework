@@ -228,10 +228,14 @@ def main() -> int:
     if not framework_paths and not bsl_groups:
         return 0
 
-    if framework_paths:
-        _spawn_framework_reindex(framework_paths)
-    for group in bsl_groups:
-        _spawn_bsl_reindex(group["project"], group["files"])
+    try:
+        if framework_paths:
+            _spawn_framework_reindex(framework_paths)
+        for group in bsl_groups:
+            _spawn_bsl_reindex(group["project"], group["files"])
+    except Exception:
+        # Spawn failures (missing venv Python, Popen error) must not block git commits.
+        pass
     return 0
 
 
