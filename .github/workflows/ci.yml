@@ -184,6 +184,25 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  security-audit:
+    name: Security Audit (pip-audit)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies
+        run: pip-audit --strict -r <(pip install --dry-run -e ".[dev,qdrant,morphology]" 2>&1 | grep "Would install" | sed 's/.*Would install//' | tr ' ' '\n' | grep '==' | sed 's/-/==/1' || echo "")
+        continue-on-error: true  # advisory only; fix critical CVEs (CVSS >= 7.0) within 7 days
+
   skill-router-eval:
     name: Skill Router Evaluation
     runs-on: ubuntu-latest
