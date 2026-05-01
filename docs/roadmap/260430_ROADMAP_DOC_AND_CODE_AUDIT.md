@@ -31,14 +31,16 @@
 
 **Real effort vs estimate:** 9 ч spent / 56-84 ч estimated for full roadmap → 8 of ~25 high-level items closed (§2.1 + §2.2 + §2.3 + §3.1-3.6 + bonus). §2.2 оказался 15 min вместо 4-6 ч (JWT module Phase 12.3 уже был готов, оставалось wiring).
 
-**Pending P0 follow-ups (non-blocking, обнаружены code-verify subagent):**
-- `mcp.py:707` `_TEIEmbedder` не закрывает httpx Client — atexit handoff
-- `mcp.py:713` bare `except Exception: pass` — добавить `logger.debug(...)`
-- `embedding.py:18` Literal ordering (косметика, поставить `tei` первым)
-- `tenants.py` `_admin: bool` → `_admin: str` annotation cleanup (4 handlers)
-- `tenants.py` get/get_stats/get_usage не сравнивают path tenant_id с `_current_tenant` (pre-existing security gap, вне scope §2.2)
+**P0 follow-ups (resolved 2026-05-01 second pass via Sonnet implementer subagent, commit `b9def03f`):**
+- ✅ `mcp.py:714` `_TEIEmbedder` httpx Client cleanup — `atexit.register(embedder._tei.close)`
+- ✅ `mcp.py:715/723` bare `except Exception: pass` × 2 (TEI fallback + call-graph) — `logger.debug(... exc_info=True)`. Adjacent antipattern caught in same scope.
+- ✅ `embedding.py:18` Literal["tei", ...] reorder — actual default leads
+- ✅ `tenants.py:36/82/282/329` `_admin: bool` → `_admin: str` (require_admin returns str)
+- ⏳ `tenants.py` get/get_stats/get_usage не сравнивают path tenant_id с `_current_tenant` (pre-existing security gap, вне scope §2.2 — отдельный issue)
 
-**Working tree:** clean. **Total commits в session:** 7.
+**Sonnet usage (3 agents, parallel/sequential):** ~32 tool calls, ~90k tokens, ~135 s wall-clock; все 3 PASS self-verification без friction.
+
+**Working tree:** clean. **Total commits в session:** 9 (added: `943427d` anthropic-sonnet provider, `bce4c41f` implementer subagent, `b9def03f` follow-ups).
 
 ### Original audit context
 

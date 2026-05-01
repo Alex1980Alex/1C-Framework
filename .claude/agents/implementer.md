@@ -41,6 +41,13 @@ Multi-domain monorepo:
 4. **Sanity-check.** Быстрый `python -c "import <module>"` для синтаксиса, grep по renamed/удалённому, целевой unit тест если есть.
 5. **Отчёт Opus**: какие файлы изменены (с путями), что отложено и почему, что вызвало сомнение (edge cases, нерешённые TODO).
 
+## Эффективность
+
+- **Tool budget**: trivial 1-line edit (annotations, typo, Literal reorder) — целься в ≤5 tool calls. Не делай exhaustive grep если scope ясен из brief.
+- **replace_all=True**: для идентичных правок в N местах (одна и та же строка повторяется) предпочти один Edit с `replace_all=True` вместо N Edit'ов.
+- **Adjacent antipatterns**: если в пределах ±20 строк от target нашёл тот же антипаттерн — включи в scope (одна логика, один commit). Иной природы antipattern → отметь в отчёте, но не правь.
+- **Self-verify**: после правки сделай Level 1 grep + закончи отчёт маркером `[CODE-VERIFY-PASS]` или `[CODE-VERIFY-FAIL]`.
+
 ## Out of scope — отдай обратно Opus
 
 - Архитектурные решения (новые модули, изменение слоёв, выбор паттерна)
