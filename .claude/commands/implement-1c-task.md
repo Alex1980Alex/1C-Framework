@@ -13,7 +13,7 @@ $ARGUMENTS
 
 Skill определяет:
 - 8 последовательных этапов (Подготовка → Валидация запросов → BSL → Статанализ → Верификация → Тестирование → Документация → Git)
-- 3 основных MCP-сервера: **EDT-MCP**, **1c-mcp-toolkit**, **bsl-debug-server**
+- 3 основных MCP-сервера: **EDT-MCP**, **1c-mcp-crud**, **bsl-debug-server**
 - Вспомогательные: Serena, bsl-semantic-search, bsl-platform-context
 - Обязательные циклы проверки и правила
 
@@ -29,7 +29,7 @@ Skill определяет:
 - `validate_query` → проверить SQL ДО записи
 - `find_references` → найти вызовы изменённых методов
 
-#### 1c-mcp-toolkit — живые данные
+#### 1c-mcp-crud — живые данные
 - `get_metadata` → проверить имена полей, типы
 - `execute_query` → прогнать SQL на живой базе (ДО и ПОСЛЕ)
 - `execute_code` → подготовить/очистить тестовые данные
