@@ -1871,7 +1871,7 @@
         "execute_query",
         "get_metadata",
         "execute_code",
-        "1c-mcp-toolkit",
+        "1c-mcp-crud",
         "метаданные конфигурации",
         "структура базы",
         "журнал регистрации",
@@ -1889,12 +1889,12 @@
         "execute_query": 5,
         "get_metadata": 5,
         "execute_code 1с": 5,
-        "1c-mcp-toolkit": 5,
+        "1c-mcp-crud": 5,
         "get_event_log": 5,
         "get_object_by_link": 5,
         "find_references_to_object": 5,
         "get_access_rights": 5,
-        "mcp__1c-toolkit": 5,
+        "mcp__1c-mcp-crud": 5,
         "запрос к базе": 4,
         "данные из базы 1С": 4,
         "метаданные 1С": 4,
@@ -1917,7 +1917,7 @@
         "get metadata from 1C configuration"
       ],
       "skills": [
-        "1c-mcp-toolkit"
+        "1c-mcp-crud"
       ],
       "optional": []
     },

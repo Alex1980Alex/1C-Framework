@@ -11,7 +11,7 @@ argument_description: Имя проекта (например, 260119_GKSTCPLK-1
 > - Ты собираешься использовать Serena LSP-инструменты (`find_symbol`, `find_referencing_symbols`, `replace_symbol_body`) на **Python-коде фреймворка** — на BSL они не работают, там EDT-MCP.
 > - Ты хочешь прочитать или записать project-specific `memories` в `.serena/memories/`.
 >
-> **Когда НЕ нужна:** реализация задачи 1С через `/implement-1c-task` — там используются EDT-MCP + 1c-mcp-toolkit + bsl-debug-server, Serena не требуется.
+> **Когда НЕ нужна:** реализация задачи 1С через `/implement-1c-task` — там используются EDT-MCP + 1c-mcp-crud + bsl-debug-server, Serena не требуется.
 
 ## Аргумент
 
