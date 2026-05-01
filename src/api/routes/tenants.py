@@ -141,6 +141,7 @@ async def get_tenant(
 
     Users can only view their own tenant (unless admin).
     """
+    _assert_tenant_access(tenant_id, _current_tenant, _role)
     try:
         store_manager = get_tenant_store_manager(
             settings=components.settings.vector_store,
