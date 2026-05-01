@@ -132,9 +132,9 @@ llm-rotation = ["mistralai>=1.0", "openai>=1.0", "google-generativeai>=0.8", ...
 Из docs (`framework documentation/09_АДМИНИСТРИРОВАНИЕ` skill): «Тяжёлые задачи (индексация, граф, evaluation) выполняются асинхронно через ARQ + Redis.» — звучит как production essential.
 
 **Action:**
-- [ ] **D.3.1** Принять решение: оставить `[queue]` extra (текущий статус) или переместить `arq` + `redis` в base deps
-- [ ] **D.3.2** Если оставляем extra → добавить prominent note в `02_БЫСТРЫЙ_СТАРТ/02.1_Установка.md`: «Для async indexing нужен `pip install -e .[queue]`»
-- [ ] **D.3.3** Если перемещаем в base → удалить `[queue]` extra или сделать алиас на `[]`
+- [x] **D.3.1** Decision: оставить `[queue]` extra — async pipeline опциональный, core работает без Redis ✅ 2026-05-01
+- [x] **D.3.2** Note добавлен в `02.1_Установка.md` (раздел "Установка по группам") ✅
+- [x] **D.3.3** Extra остаётся; comment добавлен в pyproject.toml ✅
 
 ### 2.4 🟠 `chromadb` — apparent dead code, но НЕ dead
 
