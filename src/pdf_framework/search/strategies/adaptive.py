@@ -59,8 +59,11 @@ class AdaptiveSearchStrategy:
         self._classifier = QueryClassifier(
             api_key=api_key,
             base_url=base_url,
+            cache_enabled=self._settings.classifier_cache_enabled,
         )
         self._router = StrategyRouter(available_strategies=search_manager.available_strategies)
+        # Wire route_*_strategy config overrides into the router
+        self._apply_route_overrides()
 
         # Initialize decomposer if enabled
         self._decomposer = None
