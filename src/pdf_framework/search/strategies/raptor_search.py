@@ -156,14 +156,63 @@ class RAPTORSearchStrategy:
         filter: dict[str, Any] | None = None,
     ) -> SearchResponse:
         """
-        Top-down tree traversal search.
-
-        Start from top-level summaries, drill down to leaves as needed.
+        Top-down tree traversal: search highest summaries first, descend to leaves.
+        Falls back to collapsed mode if query_embedding is None.
         """
-        # TODO: Implement tree traversal in future iteration
-        # For now, fall back to collapsed mode
-        logger.warning("[RAPTOR] Tree traversal not yet implemented, using collapsed mode")
-        return await self._collapsed_tree_search(query, query_embedding, k, filter)
+        if query_embedding is None:
+            logger.warning("[RAPTOR] No query_embedding for traversal, using collapsed mode")
+            return await self._collapsed_tree_search(query, query_embedding, k, filter)
+
+        start = time.perf_counter()
+        trail: list[Any] = []
+        current_parent_ids: list[str] | None = None
+
+        for level in range(self._config.max_depth, -1, -1):
+            level_filter: dict[str, Any] = dict(filter) if filter else {}
+            level_filter["raptor_node"] = True
+            level_filter["raptor_level"] = level
+            if current_parent_ids is not None:
+                level_filter["parent_id_in"] = current_parent_ids
+
+            level_results = await self._vector_store.search(
+                query_embedding=query_embedding,
+                k=self._config.top_k_per_level,
+                filter=level_filter,
+            )
+
+            if not level_results:
+                continue  # no nodes at this level — skip without breaking descent
+
+            for r in level_results:
+                r.chunk.metadata["traversal_level"] = level
+            trail.extend(level_results)
+
+            # Parent IDs for next (lower) level
+            current_parent_ids = [
+                r.chunk.metadata.get("raptor_id") or r.chunk.metadata.get("id", "")
+                for r in level_results
+            ]
+            current_parent_ids = [pid for pid in current_parent_ids if pid]
+
+        if not trail:
+            logger.warning("[RAPTOR] Traversal found nothing, falling back to collapsed")
+            return await self._collapsed_tree_search(query, query_embedding, k, filter)
+
+        trail.sort(key=lambda r: r.score * self._level_weight(
+            r.chunk.metadata.get("traversal_level", 0)
+        ), reverse=True)
+        top_k = trail[:k]
+
+        elapsed = (time.perf_counter() - start) * 1000
+        logger.info("[RAPTOR] Traversal: %d results across levels (%.1f ms)", len(top_k), elapsed)
+
+        return SearchResponse(
+            query=query,
+            results=top_k,
+            search_type="raptor_traversal",
+            total_found=len(top_k),
+            elapsed_ms=elapsed,
+        )
 
     def _level_weight(self, level: int) -> float:
         """

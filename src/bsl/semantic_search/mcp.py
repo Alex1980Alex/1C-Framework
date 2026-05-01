@@ -221,11 +221,80 @@ async def bsl_similar(file_path: str, limit: int = 5) -> str:
     logger.info(f"bsl_similar: file='{file_path}', limit={limit}")
 
     try:
-        # TODO: Реализовать через vector search по существующему embedding
-        return f"""## Похожие модули для {file_path}
+        pipeline = _get_hybrid_pipeline()
+        qdrant = pipeline._qdrant
+        collection = pipeline._collection
 
-Функционал в разработке. Используйте bsl_search для семантического поиска.
-"""
+        if qdrant is None:
+            return (
+                f"## Похожие модули для {file_path}\n\n"
+                "Qdrant недоступен. Запустите: `docker start qdrant`"
+            )
+
+        # Locate vectors for the source module_path
+        try:
+            from qdrant_client.http import models as qm
+            scroll_filter = qm.Filter(
+                must=[qm.FieldCondition(key="module_path", match=qm.MatchValue(value=file_path))]
+            )
+        except Exception:
+            scroll_filter = {"must": [{"key": "module_path", "match": {"value": file_path}}]}
+
+        points, _ = qdrant.scroll(
+            collection_name=collection,
+            scroll_filter=scroll_filter,
+            limit=5,
+            with_vectors=True,
+            with_payload=False,
+        )
+
+        if not points:
+            return f"## Похожие модули для {file_path}\n\nФайл не найден в индексе. Запустите reindex."
+
+        # Extract query vector (handle named-vector dict or plain list)
+        vec = points[0].vector
+        if isinstance(vec, dict):
+            vec = list(vec.values())[0]
+
+        # Find k nearest neighbours, exclude source
+        response = qdrant.query_points(
+            collection_name=collection,
+            query=vec,
+            limit=limit + 5,
+            with_payload=True,
+        )
+        hits = response.points if hasattr(response, "points") else []
+
+        seen_paths: set[str] = {file_path}
+        results = []
+        for hit in hits:
+            p = hit.payload or {}
+            hit_path = p.get("module_path", "")
+            if hit_path in seen_paths:
+                continue
+            seen_paths.add(hit_path)
+            results.append({
+                "path": hit_path,
+                "name": p.get("name", ""),
+                "score": hit.score,
+                "symbol_type": p.get("symbol_type", ""),
+            })
+            if len(results) >= limit:
+                break
+
+        if not results:
+            return f"## Похожие модули для {file_path}\n\nПохожих модулей не найдено."
+
+        rows = "\n".join(
+            f"| {i+1} | `{r['path']}` | {r['name']} | {r['score']:.3f} | {r['symbol_type']} |"
+            for i, r in enumerate(results)
+        )
+        return (
+            f"## Похожие модули для {file_path}\n\n"
+            f"| # | Путь | Имя | Сходство | Тип |\n"
+            f"|---|-----|-----|----------|-----|\n"
+            f"{rows}\n"
+        )
 
     except Exception as e:
         logger.error(f"Ошибка в bsl_similar: {e}", exc_info=True)
