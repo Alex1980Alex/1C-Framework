@@ -62,11 +62,6 @@
       },
       "timeout": 60000
     },
-    "1c-mcp-toolkit": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "http://localhost:6003/mcp"],
-      "timeout": 180000
-    },
     "mcp-onec-test-runner": {
       "command": "java",
       "args": [
