@@ -111,10 +111,10 @@ tests/
   - [x] **T.1.4.a** H1/H2/H3 headings как boundary, heading path " > " join
   - [x] **T.1.4.b** Headings inside ``` / ~~~ fences NOT treated as boundary
   - [x] **T.1.4.c** Empty/no-headings edge cases, preamble chunk
-- [ ] **T.1.5** `test_embedder.py` (FrameworkTEIEmbedder) — отложено (требует httpx mock):
-  - [ ] **T.1.5.a** Mock httpx.Client → embed_batch возвращает 4096d векторы
-  - [ ] **T.1.5.b** is_query=True добавляет instruction prompt
-  - [ ] **T.1.5.c** Retry logic при httpx.TransportError (3 попытки)
+- [x] **T.1.5** `test_embedder.py` (FrameworkTEIEmbedder) ✅ 2026-05-01 (15 tests):
+  - [x] **T.1.5.a** Mock httpx.Client → embed_batch возвращает 4096d векторы; dims cached after first call
+  - [x] **T.1.5.b** is_query=True prepends QUERY_INSTRUCTION; passage mode no prefix; batching sub-splits verified
+  - [x] **T.1.5.c** Retry logic: fast_retry fixture (tenacity sleep no-op); TransportError recovers after 3 calls; reraises after 4 attempts
 - [x] **T.1.6** `test_file_walker.py` ✅ 2026-05-01:
   - [x] **T.1.6.a** Skip patterns (`.venv`, `__pycache__`, `node_modules`, `src/projects/configuration/`)
   - [x] **T.1.6.b** Filter by extensions (.py→python, .md→markdown, .exe→skip)
