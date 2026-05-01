@@ -68,7 +68,7 @@ if "%TEMPLATE%"=="1c-analysis" (
     set RALPH_PROMPT=Ты в режиме Analyze-1C-Research. Задача: прочитай файл %TASK_FILE%. ^
 Запусти итеративный анализ: Executor (фазы 1-4) → scorer → Reviewer (фаза 5) → fix gaps → repeat. ^
 Target score: 85. Max iterations: 7. Plateau: 3. ^
-Используй bsl-semantic-search, 1c-mcp-toolkit, bsl-platform-context. ^
+Используй bsl-semantic-search, 1c-mcp-crud, bsl-platform-context. ^
 Для каждого поля SQL — get_metadata. Для каждой точки — bsl_search на паттерн. ^
 Сохраняй результат в data/analyze-1c-research/{task-id}/analysis-report.md. ^
 Маркеры: ✓ get_metadata, ✓ pattern, ✓ execute_query. ^

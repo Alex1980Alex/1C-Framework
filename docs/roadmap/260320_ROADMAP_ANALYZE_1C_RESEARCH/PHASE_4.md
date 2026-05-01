@@ -25,7 +25,7 @@ Claude (main context):
   │
   ├── Iteration 1:
   │   ├── [EXECUTOR] Main context: full 5-phase analysis
-  │   │   (uses bsl-semantic-search, 1c-mcp-toolkit, etc.)
+  │   │   (uses bsl-semantic-search, 1c-mcp-crud, etc.)
   │   │   → writes analysis-report.md
   │   │
   │   ├── Agent(subagent_type="general"):
