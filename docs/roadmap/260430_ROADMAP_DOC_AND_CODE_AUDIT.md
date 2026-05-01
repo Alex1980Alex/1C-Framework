@@ -1,7 +1,7 @@
 # Roadmap — Documentation & Code Audit Findings (post-Phase 8 + 9.1)
 
-**Дата:** 2026-04-30 (вечер)
-**Статус:** ⏳ PROPOSED → DETAILED 2026-04-30 (максимальная декомпозиция)
+**Дата:** 2026-04-30 (вечер) → execution started 2026-05-01
+**Статус:** 🟡 IN PROGRESS — P0 ✅ DONE / P1 §3.1-3.6 ✅ DONE / P2-P4 ⏳ pending (см. §0 Session log)
 **Приоритет:** Высокий (P0 — security + production consistency)
 **Метод аудита:** 2 параллельных subagent'а (Explore type) на `docs/framework documentation/` и `src/`
 **Связано:** [`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)
@@ -16,6 +16,32 @@
 
 ## 0. Status Dashboard
 
+### Session log 2026-05-01 — execution progress
+
+**P0 ✅ COMPLETE (3/3 разделов):**
+- §2.1 embedding defaults Qwen3 4096d → commit `149dd82b` (7 src + tests/unit/test_config.py + regression test_phase8_invariants) + `855a8bd0` (3 docs + 3 skills migration notes)
+- §2.2 JWT auth wiring → commit `b483e45c` (–17 строк net, использует готовые Phase 12.3 deps из `src/api/auth/dependencies.py`) + `ffacedc6` (framework-api skill note)
+- §2.3 chapter 31 §32 refs → commit `34c233f8` (4 chapter 31 файлов с roadmap relative anchors)
+
+**P1 §3 ✅ DONE 6/6 запланированных chapters:**
+- commit `ab1e6e12` — refresh §3.1 (27.3 Memory_First_Hook), §3.2 (04.8 Dual_Vector_Search), §3.3 (28.x BSL_SEMANTIC_SEARCH), §3.4 (29.x XSKILL), §3.5 (01.3 tech stack), §3.6 (26 LAZY_MCP в 00_СОДЕРЖАНИЕ)
+
+**Bonus (вне roadmap, найден по ходу):**
+- HookInput Stop transcript_path bug → commit `ec630fc5` — `base/protocol.py` modern Stop events misclassified as Unknown → `_handle_stop` never fired. Fix: alias `transcript_path` → `self.transcript`. Подтверждено: после fix code-verify-reminder task auto-closes без manual workaround
+
+**Real effort vs estimate:** 9 ч spent / 56-84 ч estimated for full roadmap → 8 of ~25 high-level items closed (§2.1 + §2.2 + §2.3 + §3.1-3.6 + bonus). §2.2 оказался 15 min вместо 4-6 ч (JWT module Phase 12.3 уже был готов, оставалось wiring).
+
+**Pending P0 follow-ups (non-blocking, обнаружены code-verify subagent):**
+- `mcp.py:707` `_TEIEmbedder` не закрывает httpx Client — atexit handoff
+- `mcp.py:713` bare `except Exception: pass` — добавить `logger.debug(...)`
+- `embedding.py:18` Literal ordering (косметика, поставить `tei` первым)
+- `tenants.py` `_admin: bool` → `_admin: str` annotation cleanup (4 handlers)
+- `tenants.py` get/get_stats/get_usage не сравнивают path tenant_id с `_current_tenant` (pre-existing security gap, вне scope §2.2)
+
+**Working tree:** clean. **Total commits в session:** 7.
+
+### Original audit context
+
 После закрытия Phase 8 + 9.1 (миграция retrieval на Qwen3-Embedding-8B 4096d через TEI) образовался **технический долг рассинхронизации** между production-конфигурацией и:
 1. Документацией (старые главы упоминают E5/nomic как defaults)
 2. Кодом (legacy hardcoded models в src/)
@@ -27,14 +53,14 @@
 
 **Приоритеты (estimated effort из §11.7 detailed):**
 
-| Phase | Items | Effort | Tests added |
-|-------|-------|--------|-------------|
-| **P0 §2** (critical: defaults + JWT + chapter refs) | 3 sub-items × ~15 sub-sub | **6-9 ч** | ~12 |
-| **P1 §3** (docs refresh: 6 chapters) | 6 chapters | **4-6 ч** | 0 |
-| **P2 §4** (IMPLEMENT 4 stubs, НЕ delete) | 4 features | **21-32 ч** | ~25-30 |
-| **P3 §5** (5 new docs sections + TOC + enforcer) | 5 modules | **11-16 ч** | 0 |
-| **P4 §6** (config wire + providers + 4 TODOs) | 7 items | **14-21 ч** | ~10 |
-| **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** | ~50 |
+| Phase | Items | Effort | Tests added | Status |
+|-------|-------|--------|-------------|--------|
+| **P0 §2** (critical: defaults + JWT + chapter refs) | 3 sub-items × ~15 sub-sub | **6-9 ч** est / **~3.5 ч** actual | ~12 → 1 added (`test_phase8_invariants`) | ✅ DONE 2026-05-01 |
+| **P1 §3** (docs refresh: 6 chapters) | 6 chapters | **4-6 ч** est / **~5 ч** actual | 0 | ✅ DONE 2026-05-01 |
+| **P2 §4** (IMPLEMENT 4 stubs, НЕ delete) | 4 features | **21-32 ч** | ~25-30 | ⏳ pending |
+| **P3 §5** (5 new docs sections + TOC + enforcer) | 5 modules | **11-16 ч** | 0 | ⏳ pending |
+| **P4 §6** (config wire + providers + 4 TODOs) | 7 items | **14-21 ч** | ~10 | ⏳ pending |
+| **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** est / **~9 ч** spent | ~50 | 8/25 closed |
 
 **Realistic timeline:** 1-2 недели full-time, 3-4 недели part-time. Можно incremental — см. §11 Implementation Execution Checklist.
 
@@ -72,9 +98,13 @@
 
 ## 2. P0 — Critical inconsistencies (security + production consistency)
 
+> **✅ DONE 2026-05-01 (3/3 разделов).** Commits: `34c233f8` (§2.3), `149dd82b` + `855a8bd0` (§2.1), `b483e45c` + `ffacedc6` (§2.2). См. §0 Session log.
+
 **Цель:** убрать прямые конфликты между Phase 8 production switchover (Qwen3 4096d default) и кодом, где hardcoded legacy models. Также закрыть JWT auth stub.
 
 ### 2.1 P0 — Embedding defaults в core config (КРИТИЧНО)
+
+> **✅ DONE 2026-05-01 (commits `149dd82b` + `855a8bd0`).** All 7 src files migrated to Qwen3 4096d via TEI. Regression test `tests/unit/test_config.py::test_phase8_invariants` зелёный. CLAUDE.md updated. 3 docs + 3 skills migration notes added.
 
 После Phase 8 production retrieval работает на Qwen3 4096d через TEI. Однако базовые config-классы всё ещё имеют E5 1024d как default. Если кто-то запустит `python -m src.cli.main index` без явного `EMBEDDING__MODEL=Qwen/Qwen3-Embedding-8B`, индексация пойдёт на **E5** — **dim mismatch с production коллекциями 4096d** → upsert failure.
 
@@ -174,6 +204,8 @@
 **Rollback:** `git revert <commit>` восстановит E5 1024d defaults. Существующие 4096d коллекции продолжат работать (env overrides ясны), пользователи на дефолтах вернутся к E5.
 
 ### 2.2 P0 — JWT auth stub (security-critical)
+
+> **✅ DONE 2026-05-01 (commits `b483e45c` + `ffacedc6`).** Real effort = **15 min** vs estimate 4-6 ч. Phase 12.3 уже создал JWT-инфраструктуру (`src/api/auth/jwt_handler.py`, `src/api/auth/dependencies.py`, `src/api/auth/rbac.py`) — оставалось только заменить локальные стабы в `tenants.py` на импорт `get_current_role`/`get_current_tenant` из готовых deps. Net delta: –17 строк. `AUTH__ENABLED=false` graceful dev-mode сохранён. 42/42 auth-теста зелёные. Code-verify subagent → PASS.
 
 Multi-tenant isolation сейчас фиктивна:
 
@@ -353,6 +385,8 @@ def require_admin():
 
 ### 2.3 P0 — Stale chapter 32 references in chapter 31
 
+> **✅ DONE 2026-05-01 (commit `34c233f8`).** Все §32.X в chapter 31 (31.1/31.2/31.3/31.5) теперь markdown-ссылки на roadmap anchors. Попутно исправлен typo `§22 LoRA → §32.6.1 LoRA` в 31.1:127.
+
 Главы [`31.1_Обзор.md:121-126`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md) и [`31.2_Архитектура.md`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.2_Архитектура.md) ссылаются на `§32.2 Reranker`, `§32.3 Hybrid sparse+dense`, `§32.4 Auto-populate`, `§32.5.2 Cleanup snapshots` — эти секции существуют только в **roadmap** (`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md §32`), не в `docs/framework documentation/`.
 
 - [ ] **2.3.1** Заменить все `§32.X` в chapter 31 на относительные ссылки на roadmap: `[Roadmap §32.2](../../roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md#322-phase-92--cross-encoder-reranker-next-big-win-4-8-часов)`
@@ -364,6 +398,8 @@ def require_admin():
 
 ## 3. P1 — Documentation refresh (stale chapters → Phase 8 reality)
 
+> **✅ DONE 2026-05-01 (6/6 запланированных chapters, commit `ab1e6e12`).** Effort: ~5 ч. Все главы §3.1-3.6 закрыты с migration-notes на chapter 31. **Out-of-scope chapters** со stale refs (09.5/10.x/13.4/19.x, ~5-10 файлов, ~1-2 ч) — оставлены для будущей P1 итерации.
+
 **Цель:** обновить главы которые писались до Phase 8 (некоторые ещё до Phase 7) и упоминают deprecated модели/коллекции как production.
 
 **Общий шаблон работы для каждой главы:**
@@ -374,7 +410,7 @@ def require_admin():
 5. Verify: `git grep -n` тот же шаблон не должен показать unmarked мест после edit
 6. Cross-reference с chapter 31 (production guide) и roadmap 260426 §30 для context
 
-### 3.1 P1 — Chapter 27.3 Memory_First_Hook
+### 3.1 P1 — Chapter 27.3 Memory_First_Hook ✅ DONE 2026-05-01 (`ab1e6e12`)
 
 [`27.3_Memory_First_Hook.md:16,78,86-87`](../framework%20documentation/27_UNIFIED_MEMORY/27.3_Memory_First_Hook.md) описывает Layer 2 semantic search через Ollama nomic 768d. Phase 9.1 (commit `ac91c4b7`) заменил это на **TEI Qwen3 4096d**. Hook сейчас работает корректно, доки врут.
 
@@ -406,7 +442,7 @@ def require_admin():
 - [ ] **3.1.4.a** `grep -n "nomic\|768d" "docs/framework documentation/27_UNIFIED_MEMORY/27.3_Memory_First_Hook.md"` — пусто или только в migration note контексте
 - [ ] **3.1.4.b** Smoke test memory-first-hook: запустить `echo '{"prompt":"BSL процедура"}' | python .claude/hooks/memory-first-hook.py` — должны быть результаты с скилами
 
-### 3.2 P1 — Chapter 04.8 Dual_Vector_Search
+### 3.2 P1 — Chapter 04.8 Dual_Vector_Search ✅ DONE 2026-05-01 (`ab1e6e12`)
 
 [`04.8_Dual_Vector_Search.md:23,55,74,90`](../framework%20documentation/04_ПОИСК/04.8_Dual_Vector_Search.md) упоминает `bsl_code_v4` как 768d nomic. Реально `bsl_code_v4` (research) и `bsl_code_v4_late` (production) — оба **4096d Qwen3**.
 
@@ -429,7 +465,7 @@ def require_admin():
 - [ ] **3.2.3.a** ADR-008 (Late Chunking decision)
 - [ ] **3.2.3.b** Roadmap 260426 §21.10 (production switchover decision)
 
-### 3.3 P1 — Chapter 28 BSL_SEMANTIC_SEARCH
+### 3.3 P1 — Chapter 28 BSL_SEMANTIC_SEARCH ✅ DONE 2026-05-01 (`ab1e6e12`)
 
 #### 3.3.0 Pre-flight
 - [ ] **3.3.0.a** Read 28.1, 28.2, 28.3, 28.4, 28.5 — full chapter audit (5 файлов)
@@ -451,7 +487,7 @@ def require_admin():
 #### 3.3.3 28.2-28.5 audit
 - [ ] **3.3.3.a** Прочитать оставшиеся 3 файла, найти deprecated terms (если есть) — применить тот же fix pattern
 
-### 3.4 P1 — Chapter 29 XSKILL_CONTINUOUS_LEARNING
+### 3.4 P1 — Chapter 29 XSKILL_CONTINUOUS_LEARNING ✅ DONE 2026-05-01 (`ab1e6e12`)
 
 #### 3.4.0 Pre-flight
 - [ ] **3.4.0.a** Read 29.1-29.7 (7 файлов)
@@ -483,7 +519,7 @@ def require_admin():
 #### 3.4.4 29.2-29.3, 29.5, 29.7 audit
 - [ ] **3.4.4.a** Прочитать остальные файлы, применить тот же fix pattern
 
-### 3.5 P1 — Chapter 01.3 Технологический_стек
+### 3.5 P1 — Chapter 01.3 Технологический_стек ✅ DONE 2026-05-01 (`ab1e6e12`)
 
 [`01.3_Технологический_стек.md:11,26`](../framework%20documentation/01_ОБЗОР/01.3_Технологический_стек.md) — E5 1024d перечислена как default embedding. После Phase 8 — **Qwen3-Embedding-8B 4096d через TEI**.
 
@@ -500,7 +536,7 @@ def require_admin():
 - [ ] **3.5.2.a** Если есть таблица «Active Qdrant collections» в 01.3 — обновить под Phase 8 + 9.1 snapshot (10 коллекций × 4096d, 80 908 pts)
 - [ ] **3.5.2.b** Cross-link на 31.1 / 31.2
 
-### 3.6 P1 — Chapter 26 LAZY_MCP отсутствует в TOC
+### 3.6 P1 — Chapter 26 LAZY_MCP отсутствует в TOC ✅ DONE 2026-05-01 (`ab1e6e12`)
 
 Папка `docs/framework documentation/26_LAZY_MCP/` существует с 6 файлами, но `00_СОДЕРЖАНИЕ.md` её **не упоминает**. Структурный navigation gap.
 
