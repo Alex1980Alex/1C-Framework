@@ -147,11 +147,8 @@ llm-rotation = ["mistralai>=1.0", "openai>=1.0", "google-generativeai>=0.8", ...
 **Conclusion:** Не dead — это поддерживаемый opt-in vector store provider. Provider pattern означает `chroma.py` всегда нужен, даже если default = qdrant.
 
 **Action:**
-- [ ] **D.4.1** Document: добавить в pyproject комментарий
-  ```toml
-  "chromadb>=0.5",  # Vector store provider (opt-in via VECTOR_STORE__PROVIDER=chroma)
-  ```
-- [ ] **D.4.2** Update главу 02.1 / 02.2 указанием что Qdrant — production default, Chroma — alternative
+- [x] **D.4.1** Comment added to pyproject: `# opt-in provider via VECTOR_STORE__PROVIDER=chroma` ✅ 2026-05-01
+- [x] **D.4.2** 02.2 уже содержит Qdrant как default; Chroma — через opt-in env var ✅
 
 ### 2.5 🟠 Нет `safety`/`pip-audit` в CI
 
