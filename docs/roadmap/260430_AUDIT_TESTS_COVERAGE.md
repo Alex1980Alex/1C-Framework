@@ -177,11 +177,13 @@ tests/
 **Найдено:** скрипт существует, нет integration test.
 
 **Action items (estimated 3 ч):**
-- [ ] **T.5.1** `tests/integration/test_post_commit_reindex.py`:
-  - [ ] **T.5.1.a** Mock `git diff` (одно .py + одно .bsl изменение)
-  - [ ] **T.5.1.b** Запустить script — проверить что spawned 2 detached subprocess (BSL + framework)
-  - [ ] **T.5.1.c** Verify log file создан
-  - [ ] **T.5.1.d** Verify exit code = 0 (commit не блокируется даже при failure dispatch)
+- [x] **T.5.1** `tests/integration/test_post_commit_reindex.py` ✅ 2026-05-01 (28 tests):
+  - [x] **T.5.1.a** Mock `git diff` (TestChangedFiles — .py/.bsl, backslash normalisation, CalledProcessError→[])
+  - [x] **T.5.1.b** Spawn verification (TestMain — framework/BSL spawned via monkeypatched _spawn_* functions)
+  - [x] **T.5.1.c** log path patched in max_files test (LOG_PATH monkeypatched → tmp_path)
+  - [x] **T.5.1.d** Verify exit code = 0 (first commit, no changes, max_files exceeded, spawned — all → 0)
+  - [x] TestBslProjectRoot (6 tests): valid path, nested, no configuration, last part, not-projects, framework path
+  - [x] TestSplitBslAndFramework (10 tests): .py→framework, .bsl→bsl_groups, outside config, nonexistent, oversized, multi-project, unknown ext
 - [ ] **T.5.2** `core.hooksPath` setup test — verify `git config core.hooksPath` = `scripts/git_hooks` после init
 
 ---
