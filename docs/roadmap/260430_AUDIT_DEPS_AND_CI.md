@@ -157,22 +157,9 @@ llm-rotation = ["mistralai>=1.0", "openai>=1.0", "google-generativeai>=0.8", ...
 **Импакт:** при появлении CVE в одном из ~70 transitive deps — никто не узнает. Текущий процесс upstream'у LangChain отслеживается ad-hoc.
 
 **Action:**
-- [ ] **D.5.1** Add scheduled job в `ci.yml`:
-  ```yaml
-  security-audit:
-    name: Security Audit (pip-audit)
-    runs-on: ubuntu-latest
-    schedule:
-      - cron: '0 6 * * 1'  # Monday 06:00 UTC
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: pip install pip-audit
-      - run: pip-audit --strict
-  ```
-- [ ] **D.5.2** Alternative: использовать GitHub Dependabot для автоматического tracking (вкл. `dependabot.yml` в `.github/`)
-- [ ] **D.5.3** Document policy: критические (CVSS >= 7.0) — fix в течение 7 дней; medium — следующая итерация
+- [x] **D.5.1** `security-audit` job добавлен в `ci.yml` (schedule: Monday 06:00 UTC + workflow_dispatch) ✅ 2026-05-01
+- [ ] **D.5.2** Dependabot — backlog P2
+- [x] **D.5.3** Policy задокументирована в ci.yml comment: `# advisory; fix CVSS >= 7.0 within 7 days, medium in next iteration` ✅
 
 ### 2.6 🟡 Phase 8/9.1 integration в `[bsl]`/`[memory]` extras
 
