@@ -20,7 +20,7 @@ dependencies = [
     "pdfplumber>=0.11",
 
     # === Vector Stores ===
-    "chromadb>=0.5",
+    "chromadb>=0.5",          # opt-in provider via VECTOR_STORE__PROVIDER=chroma (src/pdf_framework/vector_store/providers/chroma.py)
 
     # === Embeddings ===
     "sentence-transformers>=3.0",
