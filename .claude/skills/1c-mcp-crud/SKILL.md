@@ -20,7 +20,7 @@ MCP-сервер для работы с базой 1С:Предприятие ч
 | CRUD объектов | `create_object`, `update_object`, `post_document`, `mark_for_deletion` |
 | Навигационные ссылки | `get_link_of_object`, `get_object_by_link` |
 | Анализ зависимостей | `find_references_to_object` |
-| Безопасность и аудит | `get_access_rights`, `get_event_log` |
+| Безопасность и аудит | `get_access_rights`, `get_event_log`, `submit_for_deanonymization` |
 
 ## Триггеры
 
