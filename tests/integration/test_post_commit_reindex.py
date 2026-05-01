@@ -280,8 +280,8 @@ class TestMain:
         assert mod.main() == 0
         assert spawned == []
 
-    def test_main_always_returns_0(self, monkeypatch):
-        """main() never propagates errors — git hook must not block commits."""
+    def test_main_returns_0_even_if_spawn_raises(self, monkeypatch):
+        """main() must not block git commits even when spawn fails (missing venv etc.)."""
         self._patch_argv(monkeypatch)
         monkeypatch.setattr(mod.subprocess, "check_output", lambda *a, **kw: "abc123\n")
         monkeypatch.setattr(
@@ -292,6 +292,9 @@ class TestMain:
             mod, "_split_bsl_and_framework",
             lambda paths: (["src/framework_search/utils.py"], []),
         )
-        monkeypatch.setattr(mod, "_spawn_framework_reindex", lambda p: None)
+        monkeypatch.setattr(
+            mod, "_spawn_framework_reindex",
+            lambda p: (_ for _ in ()).throw(OSError("spawn failed")),
+        )
         monkeypatch.setattr(mod, "_spawn_bsl_reindex", lambda p, f: None)
         assert mod.main() == 0
