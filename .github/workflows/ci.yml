@@ -196,12 +196,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install pip-audit
-        run: pip install pip-audit
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Audit dependencies
-        run: pip-audit --strict -r <(pip install --dry-run -e ".[dev,qdrant,morphology]" 2>&1 | grep "Would install" | sed 's/.*Would install//' | tr ' ' '\n' | grep '==' | sed 's/-/==/1' || echo "")
-        continue-on-error: true  # advisory only; fix critical CVEs (CVSS >= 7.0) within 7 days
+      - name: Install dependencies + pip-audit
+        run: |
+          uv pip install --system -e ".[dev,qdrant,morphology]"
+          uv pip install --system pip-audit
+
+      - name: Audit installed packages
+        run: pip-audit --strict
+        continue-on-error: true  # advisory; fix CVSS >= 7.0 within 7 days, medium in next iteration
 
   skill-router-eval:
     name: Skill Router Evaluation
