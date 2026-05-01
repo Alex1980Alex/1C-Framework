@@ -513,7 +513,8 @@ class QdrantVectorStore(BaseVectorStore):
 
         # Count before delete
         conditions = [
-            FieldCondition(key=key, match=MatchValue(value=value)) for key, value in filter.items()
+            FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+            for key, value in filter.items()
         ]
         qdrant_filter = Filter(must=conditions)
 
