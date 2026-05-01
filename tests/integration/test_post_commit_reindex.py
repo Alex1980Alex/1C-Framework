@@ -160,11 +160,12 @@ class TestSplitBslAndFramework:
     def test_bsl_stat_oserror_skipped(self, repo, monkeypatch):
         rel = "src/projects/configuration/MyProj/File.bsl"
         _make_file(repo, rel)
-        target = (repo / Path(rel)).resolve()
+        # Use str comparison to avoid resolve()→stat() recursion when patching Path.stat
+        target_str = str(repo / Path(rel))
         orig_stat = Path.stat
 
         def patched_stat(self, *args, **kwargs):
-            if self.resolve() == target:
+            if str(self) == target_str:
                 raise OSError("permission denied")
             return orig_stat(self, *args, **kwargs)
 
@@ -175,11 +176,11 @@ class TestSplitBslAndFramework:
     def test_framework_stat_oserror_skipped(self, repo, monkeypatch):
         rel = "src/framework_search/utils.py"
         _make_file(repo, rel)
-        target = (repo / Path(rel)).resolve()
+        target_str = str(repo / Path(rel))
         orig_stat = Path.stat
 
         def patched_stat(self, *args, **kwargs):
-            if self.resolve() == target:
+            if str(self) == target_str:
                 raise OSError("permission denied")
             return orig_stat(self, *args, **kwargs)
 
