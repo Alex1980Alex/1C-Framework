@@ -1,7 +1,7 @@
 # Roadmap — Documentation & Code Audit Findings (post-Phase 8 + 9.1)
 
 **Дата:** 2026-04-30 (вечер) → execution started 2026-05-01
-**Статус:** 🟡 IN PROGRESS — P0 ✅ DONE / P1 §3.1-3.6 ✅ DONE / P2 §4 ✅ DONE / P3-P4 ⏳ pending (см. §0 Session log)
+**Статус:** 🟡 IN PROGRESS — P0 ✅ DONE / P1 §3.1-3.6 ✅ DONE / P2 §4 ✅ DONE / P3 §5 ✅ DONE / P4 §6 ⏳ pending (см. §0 Session log)
 **Приоритет:** Высокий (P0 — security + production consistency)
 **Метод аудита:** 2 параллельных subagent'а (Explore type) на `docs/framework documentation/` и `src/`
 **Связано:** [`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)
