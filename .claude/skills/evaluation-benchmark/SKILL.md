@@ -5,6 +5,8 @@ description: "Evaluation & Benchmark — оценка качества поис�
 
 # Evaluation & Benchmark
 
+> **Phase 8 default (2026-05-01, §2.1.3):** `RAGConfig.embedding_model` (`src/pdf_framework/evaluation/autorag.py`) переключён с E5 1024d на Qwen3-Embedding-8B 4096d. Eval-датасеты под старые E5-коллекции требуют recreate Qdrant на 4096d.
+
 ## Когда использовать
 - "оценить качество поиска", "метрики", "regression test"
 - "RAGAS", "benchmark", "precision", "recall", "NDCG"

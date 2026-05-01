@@ -5,6 +5,8 @@ description: "Indexing Pipeline — индексация PDF документо�
 
 # Indexing Pipeline
 
+> **Phase 8 note (2026-05-01, §2.1.7):** `SemanticSplitter` сохранён на `all-MiniLM-L6-v2` 384d как lightweight chunk-boundary detector — намеренное решение (Option B). Production retrieval использует Qwen3 4096d через TEI, но 8B-модель в-процессе для per-sentence-pair similarity непрактична.
+
 ## Когда использовать
 - "как проиндексировать", "ошибка индексации", "потерялись страницы"
 - "loader", "splitter", "page_offsets", "batch indexing"

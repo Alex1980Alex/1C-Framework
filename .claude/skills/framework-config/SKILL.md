@@ -5,6 +5,8 @@ description: "Переменные окружения PDF Vector Framework (.env
 
 # Framework Configuration — все .env параметры
 
+> **Phase 8 defaults aligned (2026-05-01, §2.1):** `EmbeddingSettings`/`VectorStoreSettings` no-env defaults теперь production: `EMBEDDING__PROVIDER=tei`, `MODEL=Qwen/Qwen3-Embedding-8B`, `DIMENSIONS=4096`; `VECTOR_STORE__DIMENSIONS=4096`. Новые поля: `EMBEDDING__TEI_BASE_URL`, `EMBEDDING__TEI_CLIENT_BATCH`. Regression: `tests/unit/test_config.py::test_phase8_invariants`.
+
 ## Когда использовать
 - "как настроить .env", "какие переменные окружения", "конфигурация фреймворка"
 - "ANTHROPIC__API_KEY", "EMBEDDING__MODEL", "какой профиль выбрать"
