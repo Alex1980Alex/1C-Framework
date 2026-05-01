@@ -803,7 +803,9 @@
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\claude-backend\\\\switch-claude-backend.ps1\" -Backend zai)",
       "Bash(py -3 -c \"from pathlib import Path; p = Path\\('C:/1С-Framework/src/bsl/sonar/config_manager.py'\\).resolve\\(\\); print\\([str\\(p.parents[i]\\) for i in range\\(5\\)]\\)\")",
       "Bash(Get-ChildItem *)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "mcp__pdf-vector-graph__get_stats",
+      "mcp__pdf-vector-graph__search_documents"
     ]
   },
   "enableAllProjectMcpServers": true,
