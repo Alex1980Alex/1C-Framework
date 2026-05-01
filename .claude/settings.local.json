@@ -800,7 +800,9 @@
       "Bash(awk '{print $9}')",
       "Bash(GIT_AUTHOR_NAME=\"Alex Terletskii\" GIT_AUTHOR_EMAIL=\"alexterletskii80@gmail.com\" GIT_COMMITTER_NAME=\"Alex Terletskii\" GIT_COMMITTER_EMAIL=\"alexterletskii80@gmail.com\" git add scripts/claude-backend/setup-zai.ps1 scripts/claude-backend/switch-claude-backend.ps1 .gitignore)",
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\claude-backend\\\\setup-zai.ps1\" -ApiKey \"96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9\" -Model \"glm-5.1\")",
-      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\claude-backend\\\\switch-claude-backend.ps1\" -Backend zai)"
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\claude-backend\\\\switch-claude-backend.ps1\" -Backend zai)",
+      "Bash(py -3 -c \"from pathlib import Path; p = Path\\('C:/1С-Framework/src/bsl/sonar/config_manager.py'\\).resolve\\(\\); print\\([str\\(p.parents[i]\\) for i in range\\(5\\)]\\)\")",
+      "Bash(Get-ChildItem *)"
     ]
   },
   "enableAllProjectMcpServers": true,
