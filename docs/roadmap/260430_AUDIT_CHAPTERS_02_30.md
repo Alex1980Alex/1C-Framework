@@ -1,7 +1,7 @@
 # Audit: docs/framework documentation/ главы 02-30 vs реальность
 
 **Дата:** 2026-04-30 (вечер)
-**Статус:** ⏳ AUDIT REPORT
+**Статус:** ✅ DONE (2026-05-01) — всё закрыто: 02.1 Qdrant v1.17.1, 02.2 Qwen3/TEI embedding defaults + legacy E5 section, 04.1 vector strategy description, 28.4 bsl_code_v4_late (уже был обновлён), 29.6 DROPPED banner (уже был), 29.4 dims (уже был)
 **Scope:** Cross-check ~24 глав документации (исключая уже отдельно аудитированную 01_ОБЗОР и свежесозданную 31_QWEN3_RETRIEVAL_PRODUCTION).
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §3 — главный roadmap

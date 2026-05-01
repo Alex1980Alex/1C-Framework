@@ -1,7 +1,7 @@
 # Audit: docs/framework documentation/01_ОБЗОР/ vs реальность
 
 **Дата:** 2026-04-30 (вечер)
-**Статус:** ⏳ AUDIT REPORT
+**Статус:** ✅ DONE (2026-05-01) — всё закрыто: 01.1 metrics (фазы/файлы/LOC/агенты/провайдеры/MCP), 01.2 embedding stack + agent count + hooks/skills counts + learned_patterns dim, 01.3 Qdrant version + latency
 **Scope:** Глубокий cross-check 3 файлов (`01.1_Введение.md`, `01.2_Архитектура.md`, `01.3_Технологический_стек.md`) против фактической имплементации в `src/`, Qdrant collections, Docker state.
 **Связано:** [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §3.5
 
