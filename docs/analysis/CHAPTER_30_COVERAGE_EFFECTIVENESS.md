@@ -170,13 +170,13 @@ Top-10 реально активируемых скиллов за послед�
 | 1c-doc-research | 55 |
 | va-bdd-testing | 48 |
 | learning-loop | 45 |
-| 1c-mcp-toolkit | 44 |
+| 1c-mcp-crud | 44 |
 | task-protocol | 42 |
 | evaluation-benchmark | 37 |
 | create-hook | 37 |
 | z-ai-delegation | 28 |
 
-**Аномалия**: `1c-mcp-toolkit` (44 активации) описывает **DISABLED** MCP-сервер (ROCTUP .epf :6003). В MEMORY.md стоит feedback "Не вызывать skill `1c-mcp-toolkit`". Однако skill активировался 44 раза за месяц — либо feedback не работает, либо skill-router продолжает его предлагать.
+**Аномалия**: `1c-mcp-crud` (44 активации) описывает **DISABLED** MCP-сервер (ROCTUP .epf :6003). В MEMORY.md стоит feedback "Не вызывать skill `1c-mcp-crud`". Однако skill активировался 44 раза за месяц — либо feedback не работает, либо skill-router продолжает его предлагать.
 
 ---
 
@@ -203,7 +203,7 @@ Top-10 реально активируемых скиллов за послед�
 
 1. **30.2, таблица «Дополнительные роутеры UserPromptSubmit»**: удалить или пометить `research-task-detector.py` как «зарегистрирован как orphan-файл, не в settings.json». Либо вернуть его в `settings.json`.
 2. **30.5, таблица «Ключевые MCP-серверы»**: `serena` помечена активной, фактически `disabled: true`. Удалить или поменять статус.
-3. **MEMORY.md → skill 1c-mcp-toolkit**: feedback «не вызывать» нарушается 44 раза/мес. Либо усилить блокировку (hook-level), либо удалить feedback.
+3. **MEMORY.md → skill 1c-mcp-crud**: feedback «не вызывать» нарушается 44 раза/мес. Либо усилить блокировку (hook-level), либо удалить feedback.
 
 ### P1 — устаревшие цифры
 
@@ -244,7 +244,7 @@ Top-10 реально активируемых скиллов за послед�
 ### Долгие (месяц)
 
 - [ ] Перекалибровать skill-router под реальный workload (BSL/1С top-5, а не LangChain)
-- [ ] Удалить или деактивировать skill `1c-mcp-toolkit` (44 активации/мес на DISABLED сервер)
+- [ ] Удалить или деактивировать skill `1c-mcp-crud` (44 активации/мес на DISABLED сервер)
 - [ ] Ввести latency-SLA для UserPromptSubmit хуков (budget 200ms)
 - [ ] Автоматизировать этот аудит: скрипт `audit-chapter-30.py` с запуском в CI
 

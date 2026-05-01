@@ -31,7 +31,7 @@
 
 | MCP сервер | Инструменты | Роль в изучении |
 |-----------|------------|----------------|
-| **1c-mcp-toolkit** | `get_metadata`, `find_references_to_object`, `execute_query`, `execute_code`, `get_event_log`, `get_access_rights` | Runtime: структура, данные, выполнение кода, проведение документов |
+| **1c-mcp-crud** | `get_metadata`, `find_references_to_object`, `execute_query`, `execute_code`, `get_event_log`, `get_access_rights` | Runtime: структура, данные, выполнение кода, проведение документов |
 | **EDT-MCP** | `list_modules`, `get_module_structure`, `get_symbol_info`, `validate_query`, `get_problems` | Исходный код: модули объектов, процедуры проведения, валидации, запросы |
 | **bsl-semantic-search** | `bsl_search`, `bsl_hybrid_search`, `bsl_object_info` | Поиск похожего кода, информация об объектах |
 | **bsl-platform-context** | `search`, `getMembers` | API платформы 1С 8.3.27 |
@@ -62,7 +62,7 @@
 
 ## Цикл изучения одного объекта (6 фаз)
 
-### Фаза 1: МЕТАДАННЫЕ (1c-mcp-toolkit, read-only)
+### Фаза 1: МЕТАДАННЫЕ (1c-mcp-crud, read-only)
 
 ```
 get_metadata("Документ.ЗаказНаПеревозку")
@@ -106,7 +106,7 @@ get_problems()
 - Какие зависимости нужны (справочники, другие документы)
 - Бизнес-смысл документа
 
-### Фаза 4: ПРОВЕРКА НА РЕАЛЬНОЙ БАЗЕ (1c-mcp-toolkit, write)
+### Фаза 4: ПРОВЕРКА НА РЕАЛЬНОЙ БАЗЕ (1c-mcp-crud, write)
 
 ```
 // Подготовка зависимостей
@@ -258,7 +258,7 @@ Edit  → cache/document_register_map.md (добавить строку)
 
 | Правило | Реализация |
 |---------|-----------|
-| Только тестовая база | 1c-mcp-toolkit подключён к `testdb1c_research` |
+| Только тестовая база | 1c-mcp-crud подключён к `testdb1c_research` |
 | Префикс тестовых данных | `ТЕСТ_AR_` для всех создаваемых объектов |
 | Cleanup каждой итерации | Удаление всех `ТЕСТ_AR_*` в конце фазы 6 |
 | Не трогать реальные данные | Только чтение существующих, создание только тестовых |
@@ -285,7 +285,7 @@ Edit  → cache/document_register_map.md (добавить строку)
 
 - [x] SQL база `testdb1c_research` создана (backup/restore)
 - [ ] Регистрация ИБ `research` в кластере 1С (ручной шаг)
-- [ ] Подключение 1c-mcp-toolkit к `research` базе
+- [ ] Подключение 1c-mcp-crud к `research` базе
 - [ ] Структура кэша: `_index.json`, папки `documents/`, `registers/`, `catalogs/`
 - [ ] Ralph template `1c-study` в `ralph.sh` и `ralph.bat`
 - [ ] Первый запуск: 5 итераций = 5 документов
