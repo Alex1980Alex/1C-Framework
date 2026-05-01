@@ -802,7 +802,8 @@
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\claude-backend\\\\setup-zai.ps1\" -ApiKey \"96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9\" -Model \"glm-5.1\")",
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\claude-backend\\\\switch-claude-backend.ps1\" -Backend zai)",
       "Bash(py -3 -c \"from pathlib import Path; p = Path\\('C:/1С-Framework/src/bsl/sonar/config_manager.py'\\).resolve\\(\\); print\\([str\\(p.parents[i]\\) for i in range\\(5\\)]\\)\")",
-      "Bash(Get-ChildItem *)"
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object Name)"
     ]
   },
   "enableAllProjectMcpServers": true,
