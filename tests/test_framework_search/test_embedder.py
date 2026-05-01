@@ -32,8 +32,10 @@ def fast_retry():
     retry_obj = FrameworkTEIEmbedder._post_embed_sub.retry
     orig = retry_obj.sleep
     retry_obj.sleep = lambda _: None
-    yield
-    retry_obj.sleep = orig
+    try:
+        yield
+    finally:
+        retry_obj.sleep = orig
 
 
 class TestEmbedBatchBasic:
