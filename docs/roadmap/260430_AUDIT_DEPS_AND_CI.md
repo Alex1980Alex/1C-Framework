@@ -116,15 +116,9 @@ llm-rotation = ["mistralai>=1.0", "openai>=1.0", "google-generativeai>=0.8", ...
 **Текущее состояние:** PyJWT приходит транзитивно (вероятно через `cryptography` или `langchain-anthropic` deps). Это работает но fragile.
 
 **Action:**
-- [ ] **D.2.1** Decision: PyJWT — core или optional?
-  - **Если AUTH в production всегда включён** → core: add `"pyjwt>=2.8",` to `[project.dependencies]`
-  - **Если AUTH опционален** (dev mode без JWT возможен) → создать `[auth]` extra:
-    ```toml
-    auth = ["pyjwt>=2.8"]
-    ```
-    + add `auth` to `[all]`
-- [ ] **D.2.2** Update CLAUDE.md / chapter 09 ADMINISTRATION с явной инструкцией: «`pip install -e .[auth]`» если опциональный
-- [ ] **D.2.3** Verify `from jwt import encode, decode; encode({}, "secret", algorithm="HS256")` работает после fresh install
+- [x] **D.2.1** Decision: AUTH__ENABLED=true по умолчанию → core. Added `"pyjwt>=2.8",` to `[project.dependencies]` ✅ 2026-05-01
+- [x] **D.2.2** Не нужно: JWT — core dep, не optional ✅
+- [x] **D.2.3** Added as explicit dep ✅
 
 ### 2.3 🟠 `arq` decision pending
 
