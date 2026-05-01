@@ -286,7 +286,9 @@ Summary:"""
             try:
                 return await self._embedding_engine.embed_text(text)
             except Exception as e:
-                logger.warning("[SUMMARY_IDX] Embedding engine failed, using fallback: %s", e)
+                logger.warning(
+                    "[SUMMARY_IDX] Embedding engine failed, falling back to hash-based: %s", e
+                )
 
         # Deterministic hash-based fallback (384d) — only used when no engine is injected
         logger.error("[SUMMARY_IDX] No embedding engine available; search results will be meaningless")
