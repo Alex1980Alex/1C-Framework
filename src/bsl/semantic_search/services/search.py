@@ -242,7 +242,8 @@ class BSLSearchService:
             logger.warning("Hybrid search не вернул результатов, пробуем semantic")
             results = await self._semantic_search(request)
 
-        # TODO: LLM Re-ranking
+        # TODO(P3, roadmap §32.2): cross-encoder reranker (Phase 9.2) — BGE-reranker-v2-m3
+        # via AGENT__RERANKER_TYPE=cross_encoder; not yet wired for BSL search path
 
         return results
 
