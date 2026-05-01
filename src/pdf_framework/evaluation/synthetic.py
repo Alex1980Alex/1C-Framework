@@ -6,10 +6,12 @@ Creates golden datasets for evaluation.
 Based on RAGAS synthetic data generation.
 
 Author: Claude Code
-Version: 1.0.0 - Phase 21: RAGAS Evaluation
+Version: 1.1.0 - Phase 21: RAGAS Evaluation + §6.3.3 human JSONL loader
 """
 
+import json
 import logging
+from pathlib import Path
 from typing import Any
 
 from anthropic import Anthropic
