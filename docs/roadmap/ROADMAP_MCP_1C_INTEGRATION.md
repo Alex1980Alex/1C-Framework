@@ -7,7 +7,7 @@
 | #   | Проект                            | Категория    | Уникальные возможности                                                                         | GitHub                                                       |
 | --- | --------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | 1   | vladimir-kharin/1c_mcp            | Данные       | HTTP-сервис + Python proxy, stdio + SSE, расширение 1С                                         | [link](https://github.com/vladimir-kharin/1c_mcp)            |
-| 2   | ROCTUP/1c-mcp-toolkit             | Данные       | REST API + long polling, Docker, .epf обработка, каналы изоляции                               | [link](https://github.com/ROCTUP/1c-mcp-toolkit)             |
+| 2   | ROCTUP/1c-mcp-crud             | Данные       | REST API + long polling, Docker, .epf обработка, каналы изоляции                               | [link](https://github.com/ROCTUP/1c-mcp-crud)             |
 | 3   | ruslan-hut/onec-mcp               | Данные       | Go gateway, поиск контрагентов, отчёты продаж                                                  | [link](https://github.com/ruslan-hut/onec-mcp)               |
 | 4   | artesk/1C_MCP_metadata            | Метаданные   | Структура метаданных, фильтрация по типам объектов                                             | [link](https://github.com/artesk/1C_MCP_metadata)            |
 | 5   | FSerg/mcp-1c-v1                   | Метаданные   | RAG + Qdrant по структуре конфигурации                                                         | [link](https://github.com/FSerg/mcp-1c-v1)                   |
@@ -50,7 +50,7 @@
 
 ## Детальный анализ ключевых инструментов
 
-### ROCTUP/1c-mcp-toolkit — Лучший выбор для данных + метаданных
+### ROCTUP/1c-mcp-crud — Лучший выбор для данных + метаданных
 
 **Почему первый:** Docker + .epf = быстрый старт без изменения конфигурации. Даёт и чтение, и запись, и метаданные в одном пакете.
 
@@ -58,7 +58,7 @@
 | ---------------------- | ---------------------------------------------------------------------------------- |
 | MCP Tools              | `execute_query` (запросы 1С), `get_metadata` (структура конфигурации)              |
 | Архитектура            | Claude ──MCP──► Python Proxy (FastAPI:6003) ──long polling──► .epf в 1С ──► TestDB |
-| Установка              | `docker run -d -p 6003:6003 roctup/1c-mcp-toolkit-proxy` + открыть .epf в 1С       |
+| Установка              | `docker run -d -p 6003:6003 roctup/1c-mcp-crud-proxy` + открыть .epf в 1С       |
 | Каналы изоляции        | `?channel=dev` / `?channel=prod` — разделение dev/prod                             |
 | REST API               | Параллельный доступ через curl (skill `calling-1c-rest-api-via-curl`)              |
 | Платформы              | 8.2.13+ и 8.3                                                                      |
@@ -151,10 +151,10 @@
 
 ## Фазы внедрения
 
-### Фаза 1: Данные + Метаданные через ROCTUP/1c-mcp-toolkit ✓ COMPLETE (2026-03-14)
+### Фаза 1: Данные + Метаданные через ROCTUP/1c-mcp-crud ✓ COMPLETE (2026-03-14)
 > MVP: Claude читает данные, выполняет запросы, видит структуру конфигурации TestDB
 
-**Инструменты:** ROCTUP/1c-mcp-toolkit (Docker + .epf)
+**Инструменты:** ROCTUP/1c-mcp-crud (Docker + .epf)
 
 **Почему ROCTUP первый (а не OData или vladimir-kharin/1c_mcp):**
 - Docker 1 команда — не нужен IIS, не нужно публиковать HTTP-сервис
@@ -166,7 +166,7 @@
 | Шаг | Действие                                          | Статус | Результат                                   |
 | --- | ------------------------------------------------- | ------ | ------------------------------------------- |
 | 1.1 | Установить Docker Desktop                         | ✓      | Docker Desktop работает                     |
-| 1.2 | Запустить контейнер `roctup/1c-mcp-toolkit-proxy` | ✓      | Порт 6003, Up 5 hours                       |
+| 1.2 | Запустить контейнер `roctup/1c-mcp-crud-proxy` | ✓      | Порт 6003, Up 5 hours                       |
 | 1.3 | Скачать `MCP_Toolkit_Клиент.epf`                  | ✓      | Обработка в 1С                              |
 | 1.4 | Открыть .epf в 1С TestDB                          | ✓      | Подключено к TestDB                         |
 | 1.5 | Добавить в `.mcp.json`                            | ✓      | `http://localhost:6003/mcp`                 |
@@ -315,7 +315,7 @@
 
 | Шаг   | Действие                                                   | Статус | Результат                          |
 | ----- | ---------------------------------------------------------- | ------ | ---------------------------------- |
-| 3.5.1 | Экспорт метаданных через ROCTUP/1c-mcp-toolkit             | ✓      | 1000 объектов                      |
+| 3.5.1 | Экспорт метаданных через ROCTUP/1c-mcp-crud             | ✓      | 1000 объектов                      |
 | 3.5.2 | Создать коллекцию `bsl_metadata` в Qdrant                  | ✓      | Multi-vector config                |
 | 3.5.3 | Скрипт загрузки с 2 векторами: object_name + friendly_name | ✓      | `metadata_indexer_v2.py`           |
 | 3.5.4 | Загрузка метаданных в Qdrant                               | ✓      | **1000 indexed, 0 failed**         |
@@ -465,7 +465,7 @@ cd "D:/1С-Framework" && MSYS_NO_PATHCONV=1 \
 Claude Code
   │
   │ ═══ Фаза 1 (P0) ═══════════════════════════════════════════════════
-  ├── ROCTUP Toolkit (1c-mcp-toolkit)         ─── Данные + Метаданные ► Docker:6003 ──► .epf ──► TestDB
+  ├── ROCTUP Toolkit (1c-mcp-crud)         ─── Данные + Метаданные ► Docker:6003 ──► .epf ──► TestDB
   │   ├── execute_query                            Запросы 1С (чтение, запись)
   │   └── get_metadata                             Структура конфигурации
   │
@@ -514,7 +514,7 @@ Claude Code
 
 | Приоритет | Фаза     | Инструмент                   | Ценность                                                           | Срок    |
 | --------- | -------- | ---------------------------- | ------------------------------------------------------------------ | ------- |
-| **P0**    | Фаза 1   | ROCTUP/1c-mcp-toolkit        | Данные + метаданные, Docker + .epf, 0 изменений конфигурации       | 1 день  |
+| **P0**    | Фаза 1   | ROCTUP/1c-mcp-crud        | Данные + метаданные, Docker + .epf, 0 изменений конфигурации       | 1 день  |
 | **P0**    | Фаза 2   | DitriXNew/EDT-MCP            | 33 tools: BSL R/W, рефакторинг, валидация, типизация, граф вызовов | 1-2 дня |
 | **P1**    | Фаза 3   | 1c_mcp + OData               | Полноценный CRUD + быстрое batch-чтение                            | 2 дня   |
 | **P1**    | Фаза 3.5 | Наш bsl-semantic-search      | Мультивекторный RRF по метаданным (идеи FSerg)                     | 1 день  |
