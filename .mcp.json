@@ -113,13 +113,6 @@
       },
       "timeout": 60000
     },
-    "serena": {
-      "command": "C:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
-      "args": ["start-mcp-server", "--context", "ide-assistant"],
-      "cwd": "C:\\1С-Framework\\tools\\serena",
-      "timeout": 180000,
-      "disabled": true
-    },
     "task-master-ai": {
       "command": "npx",
       "args": ["-y", "--package=task-master-ai", "task-master-ai"],
