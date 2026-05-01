@@ -6,8 +6,8 @@ Phase 60: Multi-tenant Isolation - tenant CRUD, stats, quotas.
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from src.api.auth.dependencies import get_current_role, get_current_tenant
 from src.api.dependencies.components import Components, get_components
 from src.pdf_framework.multitenancy.tenant_store import get_tenant_store_manager
 from src.pdf_framework.schemas.tenant import (
@@ -20,30 +20,13 @@ from src.pdf_framework.schemas.tenant import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tenants", tags=["tenants"])
-security = HTTPBearer()
 
 
-async def get_current_tenant(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> str:
-    """Get tenant_id from JWT token.
-
-    Phase 12: Extract tenant_id from JWT claims.
-    For now, return default tenant.
-    """
-    # TODO: Parse JWT and extract tenant_id
-    return "default"
-
-
-async def require_admin(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> bool:
-    """Verify admin role for tenant management operations.
-
-    Phase 60: Only admins can manage tenants.
-    """
-    # TODO: Parse JWT and verify admin role
-    return True
+async def require_admin(role: str = Depends(get_current_role)) -> str:
+    """Verify admin role. Uses Phase 12.3 JWT dep (AUTH__ENABLED honored)."""
+    if role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "admin role required")
+    return role
 
 
 @router.post("", response_model=Tenant, status_code=status.HTTP_201_CREATED)
