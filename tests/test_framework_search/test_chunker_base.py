@@ -7,7 +7,7 @@ import uuid
 
 import pytest
 
-from framework_search.chunker_base import Chunk
+from src.framework_search.chunker_base import Chunk
 
 pytestmark = pytest.mark.unit
 
