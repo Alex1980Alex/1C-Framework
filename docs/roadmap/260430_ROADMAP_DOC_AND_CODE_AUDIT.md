@@ -65,7 +65,7 @@
 - ✅ `mcp.py:715/723` bare `except Exception: pass` × 2 (TEI fallback + call-graph) — `logger.debug(... exc_info=True)`. Adjacent antipattern caught in same scope.
 - ✅ `embedding.py:18` Literal["tei", ...] reorder — actual default leads
 - ✅ `tenants.py:36/82/282/329` `_admin: bool` → `_admin: str` (require_admin returns str)
-- ⏳ `tenants.py` get/get_stats/get_usage не сравнивают path tenant_id с `_current_tenant` (pre-existing security gap, вне scope §2.2 — отдельный issue)
+- ✅ `tenants.py` get/get_stats/get_usage path tenant_id IDOR fix (pre-existing security gap, исправлено вне §2.2 scope) — helper `_assert_tenant_access(path_tenant_id, current_tenant, role)` блокирует non-admin доступ к чужому tenant с 403; admin bypass для cross-tenant audit. 3 handlers обновлены (`get_tenant`, `get_tenant_stats`, `get_tenant_usage`).
 
 **Sonnet usage (3 agents, parallel/sequential):** ~32 tool calls, ~90k tokens, ~135 s wall-clock; все 3 PASS self-verification без friction.
 
