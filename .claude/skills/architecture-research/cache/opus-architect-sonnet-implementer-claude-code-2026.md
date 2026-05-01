@@ -31,6 +31,19 @@
 
 Caveat: support-doc Anthropic пишет "limits are shared across Claude and Claude Code" — формулировка устарела/конфликтует с ноябрьским анонсом. Текущая UI Settings page (`/settings → Usage`) показывает раздельные шкалы — это источник истины.
 
+### Что заполняет "Sonnet only" шкалу — gotchas (verified 2026-05-01)
+
+Эмпирически после реального прогона 3 Sonnet subagent'ов из Opus-сессии (общий tool budget ~32 calls, ~90k tokens, ~135 s) шкала **"Sonnet only" остаётся 0%**, а растёт только "All models". Возможные причины:
+
+1. **UI lag** — Anthropic usage dashboard обновляется с задержкой (минуты-часы для weekly агрегатов). Команда `/cost` в Claude Code показывает session-level разбивку быстрее.
+2. **Subagent invocations считаются под parent-session billing line.** Когда основная сессия = Opus и она вызывает Agent(model="sonnet"), весь трафик может списываться как Opus-driven работа, потому что Anthropic классифицирует request по "main conversation model", а не по реально вызванной модели в subagent.
+3. **"Sonnet only" буквально означает "Sonnet-only sessions"**: то есть ситуация когда `/model sonnet` поставлен на main chat (не subagent), и весь поток request/response идёт через Sonnet endpoint. Тогда квота заполняется. Subagent с `model: sonnet` — это **embedded delegation**, не отдельная сессия.
+4. **Issue #27183** (anthropics/claude-code) подтверждает аналогичную проблему: opusplan auto-switching не всегда переключает на Sonnet даже когда должен. Routing/billing в Claude Code не настолько прозрачен, как кажется по UI.
+
+**Practical verification**: попробовать `/model sonnet` в main chat → выполнить любую задачу → проверить дашборд. Если квота двигается — теория #3 подтверждена, и custom subagent'ы НЕ дают экономии Opus-квоты.
+
+**Implication для проекта**: если цель — реально использовать "Sonnet only" квоту, **переключай main chat на Sonnet** (через `/model sonnet` или `/model opusplan` если он работает в твоей версии), а не пытайся достичь этого через Sonnet subagent'ы. Subagent-паттерн остаётся ценен для **output isolation** и **параллельности**, но не как механизм биллинговой экономии в Max-плане.
+
 ---
 
 ## Способ 1 — `/model opusplan` (встроенный)
