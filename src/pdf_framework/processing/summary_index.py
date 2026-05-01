@@ -280,16 +280,19 @@ Summary:"""
             return f"Summary not available for {document_id}"
 
     async def _embed_text(self, text: str) -> list[float]:
-        """Generate embedding for text."""
-        # TODO: Use actual embedding engine from components
-        import hashlib
+        """Generate embedding for text using injected engine or hash fallback."""
+        if self._embedding_engine is not None:
+            try:
+                return await self._embedding_engine.embed_text(text)
+            except Exception as e:
+                logger.warning("[SUMMARY_IDX] Embedding engine failed, using fallback: %s", e)
 
-        # Repeat hash to reach target dimensions (384)
+        # Deterministic hash-based fallback (384d) — only used when no engine is injected
+        import hashlib
         target_dim = 384
         hash_val = hashlib.sha256(text.encode()).hexdigest()
         hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
-        embedding = [float(int(h, 16)) / 15.0 for h in hex_chars]
-        return embedding
+        return [float(int(h, 16)) / 15.0 for h in hex_chars]
 
 
 # Global document summary index instance
