@@ -43,6 +43,16 @@
 - Z.AI providers down → written directly (~1 ч vs 11-16 ч estimate)
 - §5.99 enforcer live test: pending (verify guardrails mapping fires correctly)
 
+**P4 §6 ✅ COMPLETE (7/7 items, 2026-05-01 — session resumed from summary):**
+- ✅ §6.1 wire `classifier_cache_enabled` + `route_*_strategy` → `adaptive.py`: `QueryClassifier(cache_enabled=...)` + `_apply_route_overrides()` (uses `add_route()` public API; `RouteConfig` is `@dataclass`, mutable)
+- ✅ §6.2 deprecated provider docstrings → `giga.py`, `bgem3.py`: Status block (EMBEDDING__PROVIDER=giga/bgem3, trade-offs vs Qwen3, roadmap refs)
+- ✅ §6.3.1 `add_pairs_from_feedback` stub → `dspy_optimizer.py`: async impl, `feedback_store.get_positive(limit=100)`, `except AttributeError: raise` + broad except warn
+- ✅ §6.3.2 `embedding_engine` injection → `summary_index.py`: optional param, `_embed_text()` async dispatch; fallback logs `ERROR`; `import hashlib` at module level
+- ✅ §6.3.3 human JSONL loader → `synthetic.py`: `human_questions_file: str | Path | None` param, `_load_human_questions()` (JSONL, per-line `json.loads`, `OSError` catch, limit enforcement)
+- ✅ §6.3.4 TODO comment → `bsl/semantic_search/services/search.py:245`: labeled P3 + roadmap §32.2 + model ref
+- ✅ code-verify `quality-review`: PARTIAL → P1 fixes applied (hashlib module-level, ERROR log level, AttributeError re-raise) → PASS
+- Commits: auto-save ×5 + manual verify fixes; all clean
+
 **P2 §4 ✅ COMPLETE (4/4 stubs implemented, 2026-05-01 third pass):**
 - ✅ §4.1 `bsl_similar()` — Qdrant scroll by `module_path` → `query_points` vector similarity → markdown table; changed to `def` (sync, consistent with `bsl_hybrid_search`); MatchAny list-filter support added to `QdrantVectorStore` (`qdrant.py`, replace_all 6 occurrences)
 - ✅ §4.2 SONAR ConfigManager — `load()` JSON+graceful fallback, `save()` atomic via tempfile+os.replace, `_DEFAULT_CONFIG_PATH` anchored to `__file__`; `cmd_analyze` — real subprocess, token masked in log (`-Dsonar.token=***`), scanner path check simplified
