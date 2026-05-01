@@ -36,7 +36,7 @@ ZAIProxy (HTTP server, port 8000)
 | 2 | gemini | gemini-2.5-flash | openai | Yes |
 | 3 | openrouter | google/gemma-3-27b-it:free | openai | Yes |
 | 4 | mistral | mistral-small-latest | openai | Yes |
-| 5 | ollama-local | qwen2.5:7b | ollama | No |
+| 5 | ollama-local | qwen2.5-coder:7b | ollama | No |
 | 6 | ollama-cloud | qwen2.5:7b | ollama | No |
 
 ## Health States
