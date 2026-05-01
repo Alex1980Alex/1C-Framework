@@ -30,10 +30,10 @@ ZAIProxy (HTTP server, port 8000)
 
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
-| 0 | **zai-glm5** | **glm-5** | **anthropic** | Yes (ZAI_API_KEY) |
+| 0 | **zai-glm5** | **glm-5.1** | **anthropic** | Yes (ZAI_API_KEY) |
 | 1 | zhipu | glm-4-flash | openai | Yes |
-| 2 | gemini | gemini-2.0-flash | openai | Yes |
-| 3 | openrouter | llama-3.3-70b:free | openai | Yes |
+| 2 | gemini | gemini-2.5-flash | openai | Yes |
+| 3 | openrouter | google/gemma-3-27b-it:free | openai | Yes |
 | 4 | mistral | mistral-small-latest | openai | Yes |
 | 5 | ollama-local | qwen2.5:7b | ollama | No |
 | 6 | ollama-cloud | qwen2.5:7b | ollama | No |
