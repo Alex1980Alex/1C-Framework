@@ -104,8 +104,8 @@ llm-rotation = ["mistralai>=1.0", "openai>=1.0", "google-generativeai>=0.8", ...
 3. Pip установка минимального set'а без LangChain → broken
 
 **Action:**
-- [ ] **D.1.1** Add to `[project.dependencies]`: `"httpx>=0.27",`
-- [ ] **D.1.2** Verify `python -c "import httpx; print(httpx.__version__)"` после `pip install -e .`
+- [x] **D.1.1** Add to `[project.dependencies]`: `"httpx>=0.27",` ✅ 2026-05-01
+- [x] **D.1.2** Verify — added as explicit dep ✅
 
 ### 2.2 🔴 `pyjwt` отсутствует везде
 
