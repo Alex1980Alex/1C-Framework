@@ -17,6 +17,7 @@ _FAKE_EMBEDDING = [0.1] * 4096
 
 
 def run(coro):
+    # pytest-asyncio not installed; asyncio.run() is the portable alternative
     return asyncio.run(coro)
 
 
