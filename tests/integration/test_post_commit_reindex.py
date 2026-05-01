@@ -267,6 +267,7 @@ class TestMain:
         assert mod.main() == 0
         assert len(spawned) == 1
         assert spawned[0][0] == bsl_group["project"]
+        assert spawned[0][1] == bsl_group["files"]
 
     def test_no_indexed_files_returns_0_without_spawning(self, monkeypatch):
         self._patch_argv(monkeypatch)
