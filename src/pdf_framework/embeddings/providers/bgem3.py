@@ -10,6 +10,16 @@ Model: BAAI/bge-m3
 
 Author: Claude Code
 Version: 1.0.0 - Phase 56: BGE-M3 Unified Model
+
+**Status (2026-04-30):** Path D alternative. Production uses Qwen3-Embedding-8B (Phase 8)
+via TEI. BGE-M3 is the preferred fallback for multilingual content where Qwen3 is
+unavailable (e.g., offline/low-memory environments). Dense dim 1024 vs Qwen3 4096 —
+collections are NOT interchangeable. Activate via EMBEDDING__PROVIDER=bgem3.
+
+Use cases vs Qwen3:
+- Sparse + ColBERT retrieval in a single model (unique capability)
+- Offline deployments without TEI Docker
+- Multilingual content (100+ languages, dense MTEB ~62)
 """
 
 import logging
