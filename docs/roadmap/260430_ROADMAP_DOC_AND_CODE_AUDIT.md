@@ -80,8 +80,8 @@
 | **P1 §3** (docs refresh: 6 chapters) | 6 chapters | **4-6 ч** est / **~5 ч** actual | 0 | ✅ DONE 2026-05-01 |
 | **P2 §4** (IMPLEMENT 4 stubs, НЕ delete) | 4 features | **21-32 ч** est / **~3 ч** actual | ~0 (no new tests yet) | ✅ DONE 2026-05-01 |
 | **P3 §5** (5 new docs sections + TOC + enforcer) | 5 modules | **11-16 ч** est / **~1 ч** actual | 0 | ✅ DONE 2026-05-01 |
-| **P4 §6** (config wire + providers + 4 TODOs) | 7 items | **14-21 ч** | ~10 | ⏳ pending |
-| **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** est / **~10 ч** spent | ~50 | 13/25 closed |
+| **P4 §6** (config wire + providers + 4 TODOs) | 7 items | **14-21 ч** est / **~2 ч** actual | ~0 | ✅ DONE 2026-05-01 |
+| **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** est / **~12 ч** spent | ~50 | ✅ ALL CLOSED |
 
 **Realistic timeline:** 1-2 недели full-time, 3-4 недели part-time. Можно incremental — см. §11 Implementation Execution Checklist.
 
