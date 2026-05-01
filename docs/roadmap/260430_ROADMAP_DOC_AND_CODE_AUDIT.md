@@ -31,6 +31,18 @@
 
 **Real effort vs estimate:** 9 ч spent / 56-84 ч estimated for full roadmap → 8 of ~25 high-level items closed (§2.1 + §2.2 + §2.3 + §3.1-3.6 + bonus). §2.2 оказался 15 min вместо 4-6 ч (JWT module Phase 12.3 уже был готов, оставалось wiring).
 
+**P3 §5 ✅ COMPLETE (5/5 modules documented, 2026-05-01):**
+- ✅ §5.1 guardrails → `33_GUARDRAILS/33.1_Обзор.md` — PIIDetector (7 types, Luhn), InjectionDefense (10 patterns + base64), ContentFilter; middleware integration
+- ✅ §5.2 knowledge_base → `34_KNOWLEDGE_BASE/34.1_Обзор.md` — CollectionStore + DocumentRegistry (SQLite/aiosqlite), REST API table
+- ✅ §5.3 multitenancy → `09.10_Multi_Tenancy_Deep_Dive.md` — collection sanitization, lazy-init, Phase 60 quotas, JWT integration, single→multi migration
+- ✅ §5.4 extensions → `35_EXTENSIONS/35.1_Обзор.md` — placeholder stub (no active code; гкс_MCPToolkit submodule noted)
+- ✅ §5.5 workers → `09.11_Async_Workers.md` — ARQ worker, 5 tasks, Redis progress tracking, Docker Compose
+- ✅ `00_СОДЕРЖАНИЕ.md` — chapters 33/34/35 + 09.10/09.11 added to TOC + quick links
+- ✅ `docs-change-enforcer.py` — CODE_TO_DOMAIN updated (guardrails→33_GUARDRAILS, knowledge_base→34_KNOWLEDGE_BASE, extensions→35_EXTENSIONS)
+- Commits: auto-save ×3 (33.1, 34.1, 09.10) + `217eda06` (TOC + 09.11 + 35.1 + enforcer)
+- Z.AI providers down → written directly (~1 ч vs 11-16 ч estimate)
+- §5.99 enforcer live test: pending (verify guardrails mapping fires correctly)
+
 **P2 §4 ✅ COMPLETE (4/4 stubs implemented, 2026-05-01 third pass):**
 - ✅ §4.1 `bsl_similar()` — Qdrant scroll by `module_path` → `query_points` vector similarity → markdown table; changed to `def` (sync, consistent with `bsl_hybrid_search`); MatchAny list-filter support added to `QdrantVectorStore` (`qdrant.py`, replace_all 6 occurrences)
 - ✅ §4.2 SONAR ConfigManager — `load()` JSON+graceful fallback, `save()` atomic via tempfile+os.replace, `_DEFAULT_CONFIG_PATH` anchored to `__file__`; `cmd_analyze` — real subprocess, token masked in log (`-Dsonar.token=***`), scanner path check simplified
