@@ -23,8 +23,8 @@ FILES = [
         "type": "CommonModule (integration)",
     },
     {
-        "name": "MCPToolkit Form (Form Module)",
-        "path": BASE / "tools/1c-mcp-crud/1c-mcp-toolkit/toolkit/1c-mcp-toolkit-main/1c/MCPToolkit/MCPToolkit/Forms/Форма/Ext/Form/Module.bsl",
+        "name": "ФормаНастроекОтчета (Form Module)",
+        "path": BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonForms/ФормаНастроекОтчета/Ext/Form/Module.bsl",
         "type": "Form Module (managed)",
     },
 ]
