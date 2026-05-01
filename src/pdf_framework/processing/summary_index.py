@@ -6,6 +6,7 @@ Author: Claude Code
 Version: 1.4.0 - Phase 13.4: Document Summary Index
 """
 
+import hashlib
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
