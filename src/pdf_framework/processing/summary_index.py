@@ -290,8 +290,11 @@ Summary:"""
                     "[SUMMARY_IDX] Embedding engine failed, falling back to hash-based: %s", e
                 )
 
-        # Deterministic hash-based fallback (384d) — only used when no engine is injected
-        logger.error("[SUMMARY_IDX] No embedding engine available; search results will be meaningless")
+        else:
+            logger.error(
+                "[SUMMARY_IDX] No embedding engine available; search results will be meaningless"
+            )
+        # Deterministic hash-based fallback (384d) — only used when no engine is injected or fails
         target_dim = 384
         hash_val = hashlib.sha256(text.encode()).hexdigest()
         hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
