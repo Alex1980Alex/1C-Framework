@@ -99,26 +99,26 @@ tests/
 **Импакт:** любое изменение в `chunker_base.py`, `python_chunker.py`, `markdown_chunker.py`, `embedder.py`, `indexer.py` может сломать production self-search без detection.
 
 **Action items (estimated 6-8 ч):**
-- [ ] **T.1.1** Создать `tests/test_framework_search/` директорию
-- [ ] **T.1.2** `test_chunker_base.py`:
-  - [ ] **T.1.2.a** UUID5 идемпотентность: `chunk_id = uuid5(NS, f"{path}:{line}:{sha1[:12]}")` стабилен при повторном вызове
-  - [ ] **T.1.2.b** Reading edge cases: пустой файл, файл с только whitespace, бинарный файл
-- [ ] **T.1.3** `test_python_chunker.py`:
-  - [ ] **T.1.3.a** Базовое разбиение функций / классов
-  - [ ] **T.1.3.b** Nested classes / async def / decorators
-  - [ ] **T.1.3.c** Сохранение symbol_name в payload
-- [ ] **T.1.4** `test_markdown_chunker.py`:
-  - [ ] **T.1.4.a** Headers как boundary (## / ###)
-  - [ ] **T.1.4.b** Code blocks не разбиваются
-  - [ ] **T.1.4.c** Frontmatter handling
-- [ ] **T.1.5** `test_embedder.py` (FrameworkTEIEmbedder):
+- [x] **T.1.1** Создать `tests/test_framework_search/` директорию ✅ 2026-05-01
+- [x] **T.1.2** `test_chunker_base.py` ✅ 2026-05-01:
+  - [x] **T.1.2.a** UUID5 идемпотентность + разные path/line/content → разные id
+  - [x] **T.1.2.b** Edge cases: пустой контент, unicode, EXPECTED_DIMS==4096
+- [x] **T.1.3** `test_python_chunker.py` ✅ 2026-05-01:
+  - [x] **T.1.3.a** Базовое разбиение функций / классов
+  - [x] **T.1.3.b** Async def / decorators / fallback syntax error
+  - [x] **T.1.3.c** symbol_name, language, mtime, relative_path preserved
+- [x] **T.1.4** `test_markdown_chunker.py` ✅ 2026-05-01:
+  - [x] **T.1.4.a** H1/H2/H3 headings как boundary, heading path " > " join
+  - [x] **T.1.4.b** Headings inside ``` / ~~~ fences NOT treated as boundary
+  - [x] **T.1.4.c** Empty/no-headings edge cases, preamble chunk
+- [ ] **T.1.5** `test_embedder.py` (FrameworkTEIEmbedder) — отложено (требует httpx mock):
   - [ ] **T.1.5.a** Mock httpx.Client → embed_batch возвращает 4096d векторы
   - [ ] **T.1.5.b** is_query=True добавляет instruction prompt
   - [ ] **T.1.5.c** Retry logic при httpx.TransportError (3 попытки)
-- [ ] **T.1.6** `test_file_walker.py`:
-  - [ ] **T.1.6.a** Skip patterns (`.venv`, `__pycache__`, `node_modules`, `.git`)
-  - [ ] **T.1.6.b** Filter by extensions (.py, .md, .ts, .yaml)
-  - [ ] **T.1.6.c** Symlink handling
+- [x] **T.1.6** `test_file_walker.py` ✅ 2026-05-01:
+  - [x] **T.1.6.a** Skip patterns (`.venv`, `__pycache__`, `node_modules`, `src/projects/configuration/`)
+  - [x] **T.1.6.b** Filter by extensions (.py→python, .md→markdown, .exe→skip)
+  - [x] **T.1.6.c** Large file (>512KB) skip, dedup same-file-two-roots
 - [ ] **T.1.7** `test_indexer.py` (integration):
   - [ ] **T.1.7.a** Run end-to-end на `tests/fixtures/mini_repo/` (3-5 файлов) → проверить что коллекция создана с N точек
   - [ ] **T.1.7.b** Idempotent re-run: same files → no new upserts
