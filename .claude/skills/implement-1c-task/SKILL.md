@@ -3,7 +3,7 @@ name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
 version: 2.2.0
 updated: 2026-04-19
-tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger]
+tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-crud, bsl-debugger]
 triggers:
   - реализовать задачу 1С
   - implement 1c task
@@ -17,7 +17,7 @@ triggers:
 > - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
 > - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
 > - **v2.1.0 (2026-04-14):** добавлен Этап 0 (откачен).
-> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-toolkit + bsl-debug-server.
+> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-crud + bsl-debug-server.
 
 ## Overview
 
@@ -27,7 +27,7 @@ Skill для реализации задачи по конфигурации 1С
 
 **Отличия v2 от v1:**
 - EDT-MCP: чтение/запись BSL-модулей прямо в проект EDT, валидация запросов, проверка ошибок
-- 1c-mcp-toolkit: верификация SQL на живых данных ДО записи, подготовка тестовых данных, проверка результатов ПОСЛЕ
+- 1c-mcp-crud: верификация SQL на живых данных ДО записи, подготовка тестовых данных, проверка результатов ПОСЛЕ
 - bsl-debug-server: статический анализ BSL-кода, отладка чистой логики в OneScript
 
 ## Входные данные
@@ -55,7 +55,7 @@ Skill для реализации задачи по конфигурации 1С
 | `search_in_code` | Этап 1, 5: поиск паттернов в коде проекта |
 | `get_symbol_info` | Этап 1: информация о символе (тип, параметры) |
 
-### 1c-mcp-toolkit — верификация на живых данных
+### 1c-mcp-crud — верификация на живых данных
 
 | Инструмент | Когда использовать |
 |---|---|
@@ -80,7 +80,7 @@ Skill для реализации задачи по конфигурации 1С
 Нет доступа к объектам 1С (Документы, Регистры, Справочники). Подходит ТОЛЬКО для:
 - Проверки чистой логики (условия, циклы, формирование массивов)
 - Статического анализа (bsl_analyze) — работает с любым BSL-кодом
-- НЕ подходит для запросов к базе — для этого используй 1c-mcp-toolkit
+- НЕ подходит для запросов к базе — для этого используй 1c-mcp-crud
 
 ### Вспомогательные
 
@@ -143,7 +143,7 @@ Skill для реализации задачи по конфигурации 1С
 
 3. Если validate_query прошёл — проверить на живых данных:
    ```
-   1c-mcp-toolkit: execute_query(query_text_with_test_params)
+   1c-mcp-crud: execute_query(query_text_with_test_params)
      → убедиться что запрос возвращает ожидаемые данные
    ```
 
@@ -151,7 +151,7 @@ Skill для реализации задачи по конфигурации 1С
 
 5. Проверить имена полей:
    ```
-   1c-mcp-toolkit: get_metadata(object_type, object_name)
+   1c-mcp-crud: get_metadata(object_type, object_name)
      → сверить имена полей в запросе с метаданными
    ```
 
@@ -314,7 +314,7 @@ Skill для реализации задачи по конфигурации 1С
 
 3. Если в ANALYSIS-REPORT указаны объекты-источники данных:
    ```
-   1c-mcp-toolkit: get_metadata(object_type, object_name)
+   1c-mcp-crud: get_metadata(object_type, object_name)
      → финальная проверка что все используемые поля существуют
    ```
 
@@ -330,11 +330,11 @@ Skill для реализации задачи по конфигурации 1С
 
 1. **Подготовка тестовых данных** (если требуется в тест-плане):
    ```
-   1c-mcp-toolkit: execute_query(find_test_candidates)
+   1c-mcp-crud: execute_query(find_test_candidates)
      → найти подходящие объекты для тестирования
-   1c-mcp-toolkit: execute_code(create_test_data)
+   1c-mcp-crud: execute_code(create_test_data)
      → создать тестовые записи согласно тест-плану
-   1c-mcp-toolkit: execute_query(verify_test_data)
+   1c-mcp-crud: execute_query(verify_test_data)
      → убедиться что тестовые данные созданы
    ```
 
@@ -347,13 +347,13 @@ Skill для реализации задачи по конфигурации 1С
 
 3. **Проверка результата**:
    ```
-   1c-mcp-toolkit: execute_query(verification_query)
+   1c-mcp-crud: execute_query(verification_query)
      → проверить что данные изменились как ожидалось
    ```
 
 4. **Очистка тестовых данных** (если создавались):
    ```
-   1c-mcp-toolkit: execute_code(cleanup_test_data)
+   1c-mcp-crud: execute_code(cleanup_test_data)
      → вернуть данные к исходному состоянию
    ```
 
@@ -504,7 +504,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 4. Повторить validate_query
 5. Если поле не найдено — возможно, нужен другой алиас или полное имя
 
-### 1c-mcp-toolkit: execute_query вернул пустой результат
+### 1c-mcp-crud: execute_query вернул пустой результат
 
 1. Проверить параметры запроса (правильные ссылки?)
 2. Проверить условия WHERE (слишком строгие?)
