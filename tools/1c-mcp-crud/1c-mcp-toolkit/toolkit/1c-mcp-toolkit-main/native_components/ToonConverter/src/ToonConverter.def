@@ -1,6 +1,0 @@
-LIBRARY ToonConverter
-EXPORTS
-    GetClassNames
-    GetClassObject
-    DestroyObject
-    SetPlatformCapabilities
