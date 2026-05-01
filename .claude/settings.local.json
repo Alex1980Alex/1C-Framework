@@ -797,7 +797,8 @@
       "Bash(awk '{print $NF}')",
       "Bash(read file *)",
       "Bash([ ! -f \"C:/1С-Framework/docs/framework documentation/$file\" ])",
-      "Bash(awk '{print $9}')"
+      "Bash(awk '{print $9}')",
+      "Bash(GIT_AUTHOR_NAME=\"Alex Terletskii\" GIT_AUTHOR_EMAIL=\"alexterletskii80@gmail.com\" GIT_COMMITTER_NAME=\"Alex Terletskii\" GIT_COMMITTER_EMAIL=\"alexterletskii80@gmail.com\" git add scripts/claude-backend/setup-zai.ps1 scripts/claude-backend/switch-claude-backend.ps1 .gitignore)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -233,6 +233,24 @@
       "github_repos_count": 12
     },
     {
+      "file": "glm-5.1-claude-code-integration-2026.md",
+      "title": "GLM-5.1 + Claude Code CLI — интеграция через Z.AI Anthropic-compatible endpoint",
+      "keywords": [
+        "glm-5.1", "glm-5-turbo", "glm-4.5-air", "z.ai", "zai",
+        "claude-code", "anthropic-compatible-endpoint", "ANTHROPIC_BASE_URL",
+        "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_DEFAULT_OPUS_MODEL",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+        "model-mapping", "drop-in-replacement", "settings.json",
+        "claude-backend-switcher", "setup-zai.ps1", "glm-coding-plan",
+        "llm-routing", "backend-switch", "api.z.ai", "auth-token",
+        "off-peak-multiplier", "github-actions-limitation"
+      ],
+      "last_verified": "2026-05-01",
+      "sources_count": 9,
+      "github_repos_count": 2,
+      "cross_ref": "scripts/claude-backend/README.md"
+    },
+    {
       "file": "framework-gaps-analysis-2026-04.md",
       "title": "Framework Gaps Analysis — слабые места PDF Framework (April 2026)",
       "keywords": [
