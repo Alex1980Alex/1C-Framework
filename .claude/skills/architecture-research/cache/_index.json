@@ -262,6 +262,22 @@
       "last_verified": "2026-04-23",
       "sources_count": 5,
       "github_repos_count": 0
+    },
+    {
+      "file": "zai-coding-plan-fair-usage-recovery-2026.md",
+      "title": "Z.AI Coding Plan — Fair Usage Policy violation (code 1313) recovery",
+      "keywords": [
+        "z.ai", "zai", "glm-coding-plan", "fair-usage-policy", "code-1313",
+        "code-1113", "rate-limit", "429", "insufficient-balance", "payg",
+        "subscription-throttle", "weekly-quota", "7-day-cycle", "appeal-process",
+        "anthropic-compatible-endpoint", "openai-compatible-endpoint",
+        "llm-rotation", "zai-glm5", "cooldown-policy", "permanent-ban",
+        "non-coding-detection", "concurrent-request-limit"
+      ],
+      "last_verified": "2026-05-01",
+      "sources_count": 9,
+      "github_repos_count": 1,
+      "cross_ref": "glm-5.1-claude-code-integration-2026.md"
     }
   ]
 }
