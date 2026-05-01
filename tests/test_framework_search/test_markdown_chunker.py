@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from framework_search.markdown_chunker import chunk_markdown
+from src.framework_search.markdown_chunker import chunk_markdown
 
 pytestmark = pytest.mark.unit
 

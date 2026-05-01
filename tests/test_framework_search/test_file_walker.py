@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from framework_search.file_walker import _matches_skip, iter_indexable_files
+from src.framework_search.file_walker import _matches_skip, iter_indexable_files
 
 pytestmark = pytest.mark.unit
 
