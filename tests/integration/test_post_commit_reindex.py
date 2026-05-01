@@ -157,6 +157,36 @@ class TestSplitBslAndFramework:
         assert fw == []
         assert bsl == []
 
+    def test_bsl_stat_oserror_skipped(self, repo, monkeypatch):
+        rel = "src/projects/configuration/MyProj/File.bsl"
+        _make_file(repo, rel)
+        target = (repo / Path(rel)).resolve()
+        orig_stat = Path.stat
+
+        def patched_stat(self, *args, **kwargs):
+            if self.resolve() == target:
+                raise OSError("permission denied")
+            return orig_stat(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "stat", patched_stat)
+        fw, bsl = mod._split_bsl_and_framework([rel])
+        assert bsl == []
+
+    def test_framework_stat_oserror_skipped(self, repo, monkeypatch):
+        rel = "src/framework_search/utils.py"
+        _make_file(repo, rel)
+        target = (repo / Path(rel)).resolve()
+        orig_stat = Path.stat
+
+        def patched_stat(self, *args, **kwargs):
+            if self.resolve() == target:
+                raise OSError("permission denied")
+            return orig_stat(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "stat", patched_stat)
+        fw, bsl = mod._split_bsl_and_framework([rel])
+        assert fw == []
+
 
 # ---------------------------------------------------------------------------
 # _changed_files
