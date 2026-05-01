@@ -205,19 +205,16 @@ async def bsl_search(query: str, limit: int = 10, mode: str = "semantic") -> str
 # Tool 2: bsl_similar - Поиск похожих модулей
 # ================================================================
 @mcp.tool()
-async def bsl_similar(file_path: str, limit: int = 5) -> str:
-    """
-    Поиск модулей, похожих на указанный
+def bsl_similar(file_path: str, limit: int = 5) -> str:
+    """Find modules similar to the given file_path using Qdrant vector similarity.
 
     Args:
-        file_path: Путь к файлу-образцу
-        limit: Количество похожих модулей
+        file_path: module_path in the Qdrant index (e.g. path to BSL file)
+        limit: number of similar modules to return
 
     Returns:
-        Список похожих модулей с оценкой схожести
+        Markdown table of similar modules with similarity scores
     """
-    await ensure_services()
-
     logger.info(f"bsl_similar: file='{file_path}', limit={limit}")
 
     try:

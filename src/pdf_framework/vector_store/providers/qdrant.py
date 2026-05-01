@@ -241,13 +241,13 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         # Build filter if provided
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -280,12 +280,12 @@ class QdrantVectorStore(BaseVectorStore):
             await self.initialize()
 
         import numpy as np
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -447,12 +447,12 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue, PayloadSelectorInclude
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue, PayloadSelectorInclude
 
         scroll_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             scroll_filter = Filter(must=conditions)
@@ -506,7 +506,7 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         if not filter:
             return 0
@@ -599,6 +599,7 @@ class QdrantVectorStore(BaseVectorStore):
             Filter,
             Fusion,
             FusionQuery,
+            MatchAny,
             MatchValue,
             Prefetch,
         )
@@ -610,7 +611,7 @@ class QdrantVectorStore(BaseVectorStore):
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -931,12 +932,12 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)

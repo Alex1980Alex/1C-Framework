@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_CONFIG_PATH = Path("data/sonar_config.json")
+_DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[3] / "data" / "sonar_config.json"
 
 
 class SonarQubeConfig(BaseModel):

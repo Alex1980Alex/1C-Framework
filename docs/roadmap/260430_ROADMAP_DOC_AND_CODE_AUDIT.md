@@ -1,7 +1,7 @@
 # Roadmap — Documentation & Code Audit Findings (post-Phase 8 + 9.1)
 
 **Дата:** 2026-04-30 (вечер) → execution started 2026-05-01
-**Статус:** 🟡 IN PROGRESS — P0 ✅ DONE / P1 §3.1-3.6 ✅ DONE / P2-P4 ⏳ pending (см. §0 Session log)
+**Статус:** 🟡 IN PROGRESS — P0 ✅ DONE / P1 §3.1-3.6 ✅ DONE / P2 §4 ✅ DONE / P3-P4 ⏳ pending (см. §0 Session log)
 **Приоритет:** Высокий (P0 — security + production consistency)
 **Метод аудита:** 2 параллельных subagent'а (Explore type) на `docs/framework documentation/` и `src/`
 **Связано:** [`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)
@@ -31,6 +31,13 @@
 
 **Real effort vs estimate:** 9 ч spent / 56-84 ч estimated for full roadmap → 8 of ~25 high-level items closed (§2.1 + §2.2 + §2.3 + §3.1-3.6 + bonus). §2.2 оказался 15 min вместо 4-6 ч (JWT module Phase 12.3 уже был готов, оставалось wiring).
 
+**P2 §4 ✅ COMPLETE (4/4 stubs implemented, 2026-05-01 third pass):**
+- ✅ §4.1 `bsl_similar()` — Qdrant scroll by `module_path` → `query_points` vector similarity → markdown table; changed to `def` (sync, consistent with `bsl_hybrid_search`); MatchAny list-filter support added to `QdrantVectorStore` (`qdrant.py`, replace_all 6 occurrences)
+- ✅ §4.2 SONAR ConfigManager — `load()` JSON+graceful fallback, `save()` atomic via tempfile+os.replace, `_DEFAULT_CONFIG_PATH` anchored to `__file__`; `cmd_analyze` — real subprocess, token masked in log (`-Dsonar.token=***`), scanner path check simplified
+- ✅ §4.3 RAPTOR tree traversal — `_tree_traversal_search`: top-down loop max_depth→0, level+parent_id filters, trail dedup, fallback to collapsed on empty
+- ✅ §4.4 HyDE multi_query + zero_shot — `multi_query`: n parallel generations, average embedding (numpy L2-norm); `zero_shot`: custom no-examples prompt template; Literal type hint updated
+- Code-verify: PARTIAL→FAIL→fixed: token leak (log masking), parent_id_in list filter (MatchAny), async/sync mismatch (async→def), CWD path (→__file__), scanner path guard (simplified)
+
 **P0 follow-ups (resolved 2026-05-01 second pass via Sonnet implementer subagent, commit `b9def03f`):**
 - ✅ `mcp.py:714` `_TEIEmbedder` httpx Client cleanup — `atexit.register(embedder._tei.close)`
 - ✅ `mcp.py:715/723` bare `except Exception: pass` × 2 (TEI fallback + call-graph) — `logger.debug(... exc_info=True)`. Adjacent antipattern caught in same scope.
@@ -59,7 +66,7 @@
 |-------|-------|--------|-------------|--------|
 | **P0 §2** (critical: defaults + JWT + chapter refs) | 3 sub-items × ~15 sub-sub | **6-9 ч** est / **~3.5 ч** actual | ~12 → 1 added (`test_phase8_invariants`) | ✅ DONE 2026-05-01 |
 | **P1 §3** (docs refresh: 6 chapters) | 6 chapters | **4-6 ч** est / **~5 ч** actual | 0 | ✅ DONE 2026-05-01 |
-| **P2 §4** (IMPLEMENT 4 stubs, НЕ delete) | 4 features | **21-32 ч** | ~25-30 | ⏳ pending |
+| **P2 §4** (IMPLEMENT 4 stubs, НЕ delete) | 4 features | **21-32 ч** est / **~3 ч** actual | ~0 (no new tests yet) | ✅ DONE 2026-05-01 |
 | **P3 §5** (5 new docs sections + TOC + enforcer) | 5 modules | **11-16 ч** | 0 | ⏳ pending |
 | **P4 §6** (config wire + providers + 4 TODOs) | 7 items | **14-21 ч** | ~10 | ⏳ pending |
 | **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** est / **~9 ч** spent | ~50 | 8/25 closed |

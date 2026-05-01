@@ -54,7 +54,7 @@ def cmd_analyze(args):
     config = manager.load()
 
     scanner = config.sonar_scanner_path
-    if not Path(scanner).is_absolute() and not Path(scanner).exists():
+    if not Path(scanner).exists():
         fallback = shutil.which("sonar-scanner")
         if fallback:
             scanner = fallback
@@ -72,7 +72,8 @@ def cmd_analyze(args):
     if config.token:
         cmd.append(f"-Dsonar.token={config.token}")
 
-    logger.info("Running: %s", " ".join(cmd))
+    cmd_log = [arg if not arg.startswith("-Dsonar.token=") else "-Dsonar.token=***" for arg in cmd]
+    logger.info("Running: %s", " ".join(cmd_log))
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
     issues_url = f"{config.host}/dashboard?id={project_key}"
