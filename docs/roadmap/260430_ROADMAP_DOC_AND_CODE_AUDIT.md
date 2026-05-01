@@ -67,9 +67,9 @@
 | **P0 §2** (critical: defaults + JWT + chapter refs) | 3 sub-items × ~15 sub-sub | **6-9 ч** est / **~3.5 ч** actual | ~12 → 1 added (`test_phase8_invariants`) | ✅ DONE 2026-05-01 |
 | **P1 §3** (docs refresh: 6 chapters) | 6 chapters | **4-6 ч** est / **~5 ч** actual | 0 | ✅ DONE 2026-05-01 |
 | **P2 §4** (IMPLEMENT 4 stubs, НЕ delete) | 4 features | **21-32 ч** est / **~3 ч** actual | ~0 (no new tests yet) | ✅ DONE 2026-05-01 |
-| **P3 §5** (5 new docs sections + TOC + enforcer) | 5 modules | **11-16 ч** | 0 | ⏳ pending |
+| **P3 §5** (5 new docs sections + TOC + enforcer) | 5 modules | **11-16 ч** est / **~1 ч** actual | 0 | ✅ DONE 2026-05-01 |
 | **P4 §6** (config wire + providers + 4 TODOs) | 7 items | **14-21 ч** | ~10 | ⏳ pending |
-| **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** est / **~9 ч** spent | ~50 | 8/25 closed |
+| **TOTAL** | ~25 high-level, **~150+ sub-sub-tasks** | **56-84 ч** est / **~10 ч** spent | ~50 | 13/25 closed |
 
 **Realistic timeline:** 1-2 недели full-time, 3-4 недели part-time. Можно incremental — см. §11 Implementation Execution Checklist.
 
