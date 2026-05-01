@@ -186,6 +186,48 @@ class TestFormatFederatedContext:
         assert re.match(r"^\d+\. \[\w+\|\d\.\d+\]", data_lines[0].strip())
 
 
+class TestDimAlignment:
+    """Regression for Phase 9.1 dim mismatch bug (hook used 768d Ollama nomic while
+    Qdrant collections were 4096d Qwen3 — caused silent 0-result semantic recall)."""
+
+    EXPECTED_DIM = 4096
+    KNOWN_COLLECTIONS = {"skill_library", "experience_embeddings", "conversation_memory"}
+
+    def test_hook_declares_expected_collections(self) -> None:
+        declared = {name for name, _ in mod.SEMANTIC_COLLECTIONS}
+        assert declared == self.KNOWN_COLLECTIONS
+
+    def test_hook_comment_documents_4096d(self) -> None:
+        hook_src = (HOOKS_DIR / "memory-first-hook.py").read_text(encoding="utf-8")
+        assert "4096" in hook_src
+
+    @pytest.mark.integration
+    def test_qdrant_collection_dims_match_expected(self) -> None:
+        import httpx
+        try:
+            httpx.get("http://127.0.0.1:6333/collections", timeout=2).raise_for_status()
+        except Exception:
+            pytest.skip("Qdrant not available at localhost:6333")
+        mismatches = []
+        for collection_name, _ in mod.SEMANTIC_COLLECTIONS:
+            try:
+                r = httpx.get(
+                    f"http://127.0.0.1:6333/collections/{collection_name}", timeout=2
+                )
+                if r.status_code == 404:
+                    continue
+                vectors = r.json()["result"]["config"]["params"]["vectors"]
+                actual_dim = (
+                    vectors.get("size")
+                    or next(iter(vectors.values()))["size"]
+                )
+                if actual_dim != self.EXPECTED_DIM:
+                    mismatches.append(f"{collection_name}: actual={actual_dim}")
+            except Exception:
+                continue
+        assert not mismatches, "Dim mismatch (Phase 9.1 regression):\n" + "\n".join(mismatches)
+
+
 class TestHookIntegrationSubprocess:
     def test_subprocess_empty_dirs(self, tmp_path):
         hook_script = HOOKS_DIR / "memory-first-hook.py"
