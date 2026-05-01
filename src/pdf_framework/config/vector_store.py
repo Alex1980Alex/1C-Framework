@@ -12,7 +12,7 @@ class VectorStoreSettings(BaseSettings):
     """Vector store configuration."""
 
     provider: Literal["chroma", "qdrant", "faiss", "pgvector"] = "chroma"
-    dimensions: int = 1024  # Must match embedding model dimensions
+    dimensions: int = 4096  # Must match embedding model dimensions (Phase 8: Qwen3-Embedding-8B)
 
     # Phase 23: Qdrant settings
     qdrant_url: str = "http://localhost:6333"

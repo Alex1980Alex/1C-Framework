@@ -102,7 +102,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
                     return response.json()
                 else:
                     return {
-                        "embedding": {"provider": "local", "model": "all-MiniLM-L6-v2"},
+                        "embedding": {"provider": "tei", "model": "Qwen/Qwen3-Embedding-8B"},
                         "vector_store": {"provider": "chroma"},
                         "graph_store": {"provider": "networkx"},
                         "info": "Эндпоинт /config не доступен. Показаны значения по умолчанию.",

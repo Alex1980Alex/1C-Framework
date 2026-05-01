@@ -699,25 +699,18 @@ def _get_hybrid_pipeline():
         except Exception:
             qdrant = None
 
-        # E5-large embedder via FastEmbed ONNX (~3s load vs ~40s for PyTorch)
+        # TEI Qwen3 4096d fallback (Phase 8 §2.1.6). Was E5-large 1024d, dim-mismatched.
         embedder = None
         if qdrant:
             try:
-                import warnings
-
-                warnings.filterwarnings("ignore", category=UserWarning)
-                from fastembed import TextEmbedding
-
-                class _E5Embedder:
+                from src.framework_search.embedder import FrameworkTEIEmbedder
+                class _TEIEmbedder:
                     def __init__(self):
-                        self._model = TextEmbedding("intfloat/multilingual-e5-large")
-
+                        self._tei = FrameworkTEIEmbedder()
                     def embed_query(self, text: str) -> list[float]:
-                        results = list(self._model.query_embed(text))
-                        return results[0].tolist()
-
-                embedder = _E5Embedder()
-            except ImportError:
+                        return self._tei.embed_batch([text], is_query=True)[0]
+                embedder = _TEIEmbedder()
+            except Exception:  # noqa: BLE001 — TEI down → no fallback
                 pass
 
         # Call graph (optional)

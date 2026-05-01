@@ -75,15 +75,16 @@ class TestEmbeddingSettings:
     """Test EmbeddingSettings validation."""
 
     def test_default_embedding_settings(self):
-        """EmbeddingSettings should have sensible defaults."""
+        """EmbeddingSettings defaults to Phase 8 production (Qwen3 4096d via TEI, §2.1)."""
         settings = EmbeddingSettings()
 
-        assert settings.model == "intfloat/multilingual-e5-large"
-        assert settings.dimensions == 1024
+        assert settings.model == "Qwen/Qwen3-Embedding-8B"
+        assert settings.dimensions == 4096
         assert settings.device == "auto"
         assert settings.batch_size == 64
-        assert settings.provider == "local"
+        assert settings.provider == "tei"
         assert settings.backend == "torch"
+        assert settings.tei_base_url == "http://localhost:8080"
 
     def test_custom_embedding_settings(self):
         """EmbeddingSettings should accept custom values."""
@@ -116,6 +117,14 @@ class TestEmbeddingSettings:
         )
 
         assert settings.cache_enabled is False
+
+    def test_phase8_invariants(self):
+        """Regression: Phase 8 production defaults aligned (roadmap §2.1.99.c)."""
+        e = EmbeddingSettings()
+        v = VectorStoreSettings()
+        assert e.model == "Qwen/Qwen3-Embedding-8B"
+        assert e.dimensions == 4096
+        assert v.dimensions == 4096
 
 
 # =============================================================================

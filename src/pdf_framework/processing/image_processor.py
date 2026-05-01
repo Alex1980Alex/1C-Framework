@@ -273,7 +273,7 @@ class ImageProcessor:
 
 def create_image_processor(
     api_key: str = "",
-    embedding_model: str = "intfloat/multilingual-e5-large",
+    embedding_model: str = "Qwen/Qwen3-Embedding-8B",  # Phase 8 default (text caption embedding)
     vision_model: str = "claude-sonnet-4-5-20250929",
     output_dir: str | Path | None = None,
 ) -> ImageProcessor:
