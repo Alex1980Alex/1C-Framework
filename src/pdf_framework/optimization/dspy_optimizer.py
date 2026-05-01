@@ -118,6 +118,8 @@ class DSPyOptimizer:
             if count:
                 logger.info("[DSPY] Imported %d positive feedback pairs", count)
             return count
+        except AttributeError:
+            raise  # feedback_store missing get_positive — programming error, re-raise
         except Exception as e:
             logger.warning("[DSPY] Failed to import from feedback store: %s", e)
             return 0
