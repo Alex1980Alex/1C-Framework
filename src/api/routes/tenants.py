@@ -29,6 +29,12 @@ async def require_admin(role: str = Depends(get_current_role)) -> str:
     return role
 
 
+def _assert_tenant_access(path_tenant_id: str, current_tenant: str, role: str) -> None:
+    """Block IDOR: non-admin can only access their own tenant resources."""
+    if role != "admin" and path_tenant_id != current_tenant:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access to other tenant denied")
+
+
 @router.post("", response_model=Tenant, status_code=status.HTTP_201_CREATED)
 async def create_tenant(
     request: TenantCreate,
