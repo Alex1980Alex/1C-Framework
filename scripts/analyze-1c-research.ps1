@@ -94,10 +94,10 @@ function Test-MCP() {
     if ($r1 -and $r1.Length -gt 20) { $checks["bsl-semantic-search"] = "OK"; Log "  bsl-semantic-search: OK" }
     else { $checks["bsl-semantic-search"] = "FAIL"; $allOk = $false; Log "  bsl-semantic-search: FAIL" }
 
-    # 2. 1c-mcp-toolkit: get_metadata is cheapest
+    # 2. 1c-mcp-crud: get_metadata is cheapest
     $r2 = Run-Phase "MCP-1C" "Call get_metadata with object_type='Configuration' and object_name=''. Output only the result." "$phasesDir/mcp_check_1c.md" 3
-    if ($r2 -and $r2.Length -gt 20) { $checks["1c-mcp-toolkit"] = "OK"; Log "  1c-mcp-toolkit: OK" }
-    else { $checks["1c-mcp-toolkit"] = "FAIL"; $allOk = $false; Log "  1c-mcp-toolkit: FAIL" }
+    if ($r2 -and $r2.Length -gt 20) { $checks["1c-mcp-crud"] = "OK"; Log "  1c-mcp-crud: OK" }
+    else { $checks["1c-mcp-crud"] = "FAIL"; $allOk = $false; Log "  1c-mcp-crud: FAIL" }
 
     # 3. bsl-platform-context: search is cheapest
     $r3 = Run-Phase "MCP-API" "Call the bsl-platform-context search tool with query 'Справочник'. Output only the result." "$phasesDir/mcp_check_api.md" 3

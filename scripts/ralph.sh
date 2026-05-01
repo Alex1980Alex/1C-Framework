@@ -214,7 +214,7 @@ TEMPLATES[1c-study]='ЗАДАЧА: Автономное изучение кон�
 КОНТЕКСТ:
 - Конфигурация: УправлениеТранспортомНаПЛК v2026.1.1.0
 - Тестовая база: testdb1c_research (копия, безопасна для экспериментов)
-- MCP: 1c-mcp-toolkit (runtime: get_metadata, execute_query, execute_code, find_references, get_access_rights, get_event_log)
+- MCP: 1c-mcp-crud (runtime: get_metadata, execute_query, execute_code, find_references, get_access_rights, get_event_log)
 - MCP: EDT-MCP (код: list_modules, get_module_structure, get_symbol_info, validate_query, get_problems)
 - Кэш: .claude/skills/1c-config-knowledge/cache/
 - Дорожная карта: docs/roadmap/ROADMAP_AUTORESEARCH_1C_STUDY.md
@@ -227,7 +227,7 @@ TEMPLATES[1c-study]='ЗАДАЧА: Автономное изучение кон�
 
 6 ФАЗ ИЗУЧЕНИЯ:
 
-ФАЗА 1 МЕТАДАННЫЕ (1c-mcp-toolkit, read-only):
+ФАЗА 1 МЕТАДАННЫЕ (1c-mcp-crud, read-only):
   get_metadata, find_references, execute_query первые 3 записи, get_access_rights
 
 ФАЗА 2 ИСХОДНЫЙ КОД (EDT-MCP, read-only):
@@ -236,7 +236,7 @@ TEMPLATES[1c-study]='ЗАДАЧА: Автономное изучение кон�
 ФАЗА 3 ГИПОТЕЗА (LLM reasoning):
   Сформулировать: обязательные реквизиты, движения, зависимости, бизнес-смысл
 
-ФАЗА 4 ПРОВЕРКА НА БАЗЕ (1c-mcp-toolkit, write):
+ФАЗА 4 ПРОВЕРКА НА БАЗЕ (1c-mcp-crud, write):
   Создать зависимости (префикс ТЕСТ_AR_), создать и провести документ,
   при ошибке — записать и исправить, проверить движения по регистрам
 
