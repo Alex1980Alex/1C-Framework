@@ -15,7 +15,7 @@ class EmbeddingSettings(BaseSettings):
     Override via EMBEDDING__PROVIDER / EMBEDDING__MODEL / EMBEDDING__DIMENSIONS env vars.
     """
 
-    provider: Literal["openai", "voyage", "local", "giga", "jina", "tei", "bgem3"] = "tei"
+    provider: Literal["tei", "openai", "voyage", "local", "giga", "jina", "bgem3"] = "tei"
     model: str = "Qwen/Qwen3-Embedding-8B"
     dimensions: int = 4096
     batch_size: int = 64

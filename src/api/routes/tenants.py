@@ -33,7 +33,7 @@ async def require_admin(role: str = Depends(get_current_role)) -> str:
 async def create_tenant(
     request: TenantCreate,
     components: Components = Depends(get_components),
-    _admin: bool = Depends(require_admin),
+    _admin: str = Depends(require_admin),
 ) -> Tenant:
     """Create a new tenant.
 
@@ -79,7 +79,7 @@ async def create_tenant(
 async def list_tenants(
     active_only: bool = True,
     components: Components = Depends(get_components),
-    _admin: bool = Depends(require_admin),
+    _admin: str = Depends(require_admin),
 ) -> list[Tenant]:
     """List all tenants.
 
@@ -279,7 +279,7 @@ async def update_tenant(
     tenant_id: str,
     request: TenantUpdate,
     components: Components = Depends(get_components),
-    _admin: bool = Depends(require_admin),
+    _admin: str = Depends(require_admin),
 ) -> Tenant:
     """Update tenant.
 
@@ -326,7 +326,7 @@ async def update_tenant(
 async def delete_tenant(
     tenant_id: str,
     components: Components = Depends(get_components),
-    _admin: bool = Depends(require_admin),
+    _admin: str = Depends(require_admin),
 ) -> None:
     """Delete tenant and all data (GDPR right to erasure).
 

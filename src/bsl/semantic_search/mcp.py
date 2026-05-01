@@ -9,6 +9,7 @@ SQLite FTS5 fallback когда Qdrant недоступен.
 Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
+import atexit
 import logging
 import os
 import sqlite3
@@ -710,15 +711,16 @@ def _get_hybrid_pipeline():
                     def embed_query(self, text: str) -> list[float]:
                         return self._tei.embed_batch([text], is_query=True)[0]
                 embedder = _TEIEmbedder()
-            except Exception:  # noqa: BLE001 — TEI down → no fallback
-                pass
+                atexit.register(embedder._tei.close)
+            except Exception as exc:  # noqa: BLE001 — TEI down → no fallback
+                logger.debug("TEI embedder fallback unavailable: %s", exc, exc_info=True)
 
         # Call graph (optional)
         cg = None
         try:
             cg = _get_call_graph()
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001 — call graph optional
+            logger.debug("Call graph unavailable: %s", exc, exc_info=True)
 
         _hybrid_pipeline = BSLHybridPipeline(
             sqlite_db=_SQLITE_DB,
