@@ -97,13 +97,30 @@ class DSPyOptimizer:
         """Add a new evaluation pair to the dataset."""
         self._dataset.append(pair)
 
-    def add_pairs_from_feedback(self, feedback_store: Any) -> int:
-        """Import high-confidence Q&A pairs from feedback store.
+    async def add_pairs_from_feedback(self, feedback_store: Any) -> int:
+        """Import positive Q&A pairs from FeedbackStore (score=1).
+
+        Loads up to 100 most recent positive feedback entries and adds
+        them to the evaluation dataset as EvaluationPair objects.
 
         Returns number of pairs added.
         """
-        # TODO: integrate with FeedbackStore to auto-populate
-        return 0
+        try:
+            positive_entries = await feedback_store.get_positive(limit=100)
+            count = 0
+            for entry in positive_entries:
+                self.add_pair(EvaluationPair(
+                    question=entry.question,
+                    answer=entry.answer,
+                    source="feedback",
+                ))
+                count += 1
+            if count:
+                logger.info("[DSPY] Imported %d positive feedback pairs", count)
+            return count
+        except Exception as e:
+            logger.warning("[DSPY] Failed to import from feedback store: %s", e)
+            return 0
 
     @property
     def dataset_size(self) -> int:
