@@ -187,8 +187,10 @@ async def get_tenant_stats(
     tenant_id: str,
     components: Components = Depends(get_components),
     _current_tenant: str = Depends(get_current_tenant),
+    _role: str = Depends(get_current_role),
 ) -> TenantStats:
     """Get tenant usage statistics."""
+    _assert_tenant_access(tenant_id, _current_tenant, _role)
     try:
         store_manager = get_tenant_store_manager(
             settings=components.settings.vector_store,
