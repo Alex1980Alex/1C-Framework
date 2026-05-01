@@ -149,14 +149,14 @@ tests/
 - `dual_vector.py` (Phase 36)
 - `auto_merge.py` (Parent-Child автомерж)
 
+**Note (actual audit 2026-05-01):** только 15 файлов, не 36. `BM25SearchStrategy` (16 tests), `AutoMergeStrategy` (10 tests) уже покрыты. `two_stage.py`/`dual_vector.py` не существуют как отдельные модули.
+
 **Action items (estimated 4-6 ч):**
-- [ ] **T.3.1** `tests/test_search_strategies/`:
-  - [ ] `test_mmr.py` — diversity λ=0/0.5/1, проверка отсутствия duplicates
-  - [ ] `test_bm25_qdrant.py` — sparse vectors, FusionQuery RRF
-  - [ ] `test_bm25_fts5.py` — SQLite fallback, language=russian, k1/b params
-  - [ ] `test_two_stage.py` — FlashRank reranking порядок
-  - [ ] `test_dual_vector.py` — комбинация dense + sparse query
-  - [ ] `test_auto_merge.py` — child→parent merge при threshold≥3
+- [x] **T.3.1a** `tests/test_search_strategies/test_vector_mmr.py` ✅ 2026-05-01 (20 tests):
+  - [x] `VectorSearchStrategy` — results forwarded, embed_text called, use_mmr routing, k/filter pass-through, elapsed_ms
+  - [x] `MMRSearchStrategy` — search_mmr always called, diversity override → lambda_mult, default settings, boundary values (0.0/1.0)
+- [ ] `test_bm25_qdrant.py` — sparse vectors, FusionQuery RRF (deferred, bm25 already well-covered in test_phase16)
+- [ ] `test_hybrid_search.py` — three-way RRF merge exhaustive tests (partially covered in test_phase16/test_hybrid_bm25.py)
 
 ### 2.4 🟠 loaders/ (PDF) — частичное покрытие
 
