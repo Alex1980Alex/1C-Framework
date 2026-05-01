@@ -5,6 +5,8 @@ description: "REST API PDF Vector Framework (FastAPI/uvicorn). ТОЛЬКО пр
 
 # Framework REST API — все endpoints
 
+> **§2.2 P0 (2026-05-01):** `src/api/routes/tenants.py` подключён к Phase 12.3 JWT deps (`src/api/auth/dependencies.py`). `get_current_tenant` и `require_admin` теперь реальные JWT-парсеры с `AUTH__ENABLED` graceful dev mode (default tenant + admin role когда auth disabled). До правки имел стабы возвращавшие `"default"`/`True` — multi-tenant isolation не работала. См. commit `b483e45c`.
+
 ## Когда использовать
 - "какие endpoints есть", "как отправить API запрос", "curl пример"
 - "POST /search/", "OpenAI compatible", "websocket"
