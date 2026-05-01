@@ -264,6 +264,23 @@
       "github_repos_count": 0
     },
     {
+      "file": "opus-architect-sonnet-implementer-claude-code-2026.md",
+      "title": "Opus Architect + Sonnet Implementer — Claude Code multi-model workflows",
+      "keywords": [
+        "opus", "sonnet", "haiku", "claude-code", "multi-model",
+        "opusplan", "/model", "model-alias", "subagent-model-selection",
+        "architect-implementer", "advisor-strategy", "max-plan",
+        "sonnet-quota", "independent-quota", "weekly-limits",
+        "task-tool", "delegation", "model-inherit", "issue-27183",
+        "issue-12487", "anthropic-pricing", "cost-optimization",
+        "wshobson-agents", "implementer-agent", "depth-limit"
+      ],
+      "last_verified": "2026-05-01",
+      "sources_count": 11,
+      "github_repos_count": 3,
+      "cross_ref": ".claude/agents/learning-loop.md"
+    },
+    {
       "file": "zai-coding-plan-fair-usage-recovery-2026.md",
       "title": "Z.AI Coding Plan — Fair Usage Policy violation (code 1313) recovery",
       "keywords": [
