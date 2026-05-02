@@ -53,6 +53,14 @@
       "created": "2026-04-22",
       "last_verified": "2026-04-22",
       "sources": ["its.1c.ru/v8std/700/i8100689.htm", "its.1c.ru/v8std/700/i8100488.htm", "its.1c.ru/v8std/600/i8100488.htm", "its.1c.ru/v8std/600/i8100532.htm", "its.1c.ru/metod8dev/i8102472.htm", "its.1c.ru/v839doc/TI000001241", "its.1c.ru/updlib/bsp/3.1/updatessl_3.1.html", "its.1c.ru/edtdoc/i345.html", "its.1c.ru/edtdoc/i046.html", "forum.infostart.ru/forum9/topic258038", "forum.infostart.ru/forum9/topic40458", "forum.infostart.ru/forum9/topic239622", "forum.infostart.ru/forum9/topic296212", "infostart.ru/1c/articles/300363", "infostart.ru/1c/articles/1128549", "infostart.ru/1c/articles/607206", "1s-up.ru/udalenie-v-1s", "koderline.ru"]
+    },
+    "sql-server-2022-for-1c": {
+      "title": "SQL Server 2022 для 1С:Предприятие — установка, лицензирование, конфигурация",
+      "file": "sql-server-2022-for-1c.md",
+      "keywords": ["SQL Server 2022", "MS SQL", "Developer Edition", "Express", "лицензия SQL", "установка SQL для 1С", "Native Client", "SNAC 11", "OLE DB Driver", "клиент-серверный 1С", "collation", "Cyrillic_General_CI_AS", "TempDB", "sysadmin", "лицензия разработчика 1С", "developer.1c.ru", "1С 8.3.23"],
+      "created": "2026-05-02",
+      "last_verified": "2026-05-02",
+      "sources": ["infostart.ru/1c/articles/1010055", "infostart.ru/1c/articles/1844839", "forum.infostart.ru/forum9/topic290303", "infostart.ru/1c/tools/511299", "infostart.ru/1c/articles/2389984", "learn.microsoft.com/sql/sql-server/editions-and-components-of-sql-server-2022", "microsoft.com/sql-server/sql-server-downloads", "developer.1c.ru"]
     }
   }
 }
