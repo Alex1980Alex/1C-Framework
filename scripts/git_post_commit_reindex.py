@@ -107,17 +107,19 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
 
 
 def _bsl_project_root(rel: str) -> Path | None:
-    """Walk down the path until we have configuration/<X>, return abs."""
+    """Walk down the path until we have configuration/<X>, return abs.
+
+    After 2026-05-02 migration the BSL project layout is `configuration/<X>/...`
+    directly at repo root (was `src/projects/configuration/<X>/...`).
+    Strict: `configuration` MUST be the FIRST segment of the repo-relative path.
+    """
     parts = Path(rel).parts
-    try:
-        idx = parts.index("configuration")
-    except ValueError:
+    if not parts or parts[0] != "configuration":
         return None
-    # After 2026-05-02 migration: configuration/<X>/... at repo root (idx=0).
     # Need at least one segment after `configuration` to identify the project.
-    if idx + 1 >= len(parts):
+    if len(parts) < 2:
         return None
-    return (REPO_ROOT / Path(*parts[: idx + 2])).resolve()
+    return (REPO_ROOT / Path(*parts[: 2])).resolve()
 
 
 def _spawn_detached_cmd(cmd: list[str], log_path: Path, header: str) -> None:
