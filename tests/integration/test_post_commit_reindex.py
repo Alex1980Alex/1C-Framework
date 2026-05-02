@@ -70,8 +70,9 @@ class TestBslProjectRoot:
         # No project name after configuration
         assert mod._bsl_project_root("configuration") is None
 
-    def test_configuration_not_preceded_by_projects_returns_none(self):
-        # "other" instead of "projects"
+    def test_configuration_not_at_repo_root_returns_none(self):
+        # Post 2026-05-02 migration: configuration MUST be the first path segment.
+        # Paths like "src/.../configuration/..." (legacy or accidental) must reject.
         assert (
             mod._bsl_project_root(
                 "src/other/configuration/MyProject/File.bsl"
