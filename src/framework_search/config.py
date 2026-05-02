@@ -62,7 +62,7 @@ SKIP_PATTERNS: list[str] = [
     "/tmp/",
     "/logs/",
     "/.obsidian/",
-    "/src/projects/configuration/",       # BSL projects -> bsl_code_v4_late
+    "/configuration/",                    # BSL projects -> bsl_code_v4_late
     # Imported third-party reference docs (huge, not "framework code")
     "/docs/documentation/Lang Chain Docs/",
     "/docs/documentation/Claude Code Docs/",
