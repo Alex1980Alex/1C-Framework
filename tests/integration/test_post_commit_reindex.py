@@ -49,7 +49,7 @@ class TestBslProjectRoot:
     def test_valid_path_returns_project_root(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         result = mod._bsl_project_root(
-            "src/projects/configuration/MyProject/Documents/Doc.bsl"
+            "configuration/MyProject/Documents/Doc.bsl"
         )
         assert result is not None
         assert result.name == "MyProject"
@@ -57,7 +57,7 @@ class TestBslProjectRoot:
     def test_nested_file_still_returns_project_root(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         result = mod._bsl_project_root(
-            "src/projects/configuration/ProjX/Sub/Deep/Module.bsl"
+            "configuration/ProjX/Sub/Deep/Module.bsl"
         )
         assert result is not None
         assert result.name == "ProjX"
@@ -96,7 +96,7 @@ class TestSplitBslAndFramework:
         assert bsl == []
 
     def test_bsl_under_config_goes_to_bsl_groups(self, repo):
-        rel = "src/projects/configuration/MyProj/Documents/Doc.bsl"
+        rel = "configuration/MyProj/Documents/Doc.bsl"
         _make_file(repo, rel)
         fw, bsl = mod._split_bsl_and_framework([rel])
         assert fw == []
@@ -117,7 +117,7 @@ class TestSplitBslAndFramework:
         assert bsl == []
 
     def test_oversized_bsl_file_skipped(self, repo):
-        rel = "src/projects/configuration/MyProj/Huge.bsl"
+        rel = "configuration/MyProj/Huge.bsl"
         _make_file(repo, rel, size=mod.BSL_MAX_FILE_BYTES + 1)
         fw, bsl = mod._split_bsl_and_framework([rel])
         assert bsl == []
@@ -129,8 +129,8 @@ class TestSplitBslAndFramework:
 
     def test_multiple_bsl_same_project_grouped(self, repo):
         rels = [
-            "src/projects/configuration/MyProj/Doc1.bsl",
-            "src/projects/configuration/MyProj/Doc2.bsl",
+            "configuration/MyProj/Doc1.bsl",
+            "configuration/MyProj/Doc2.bsl",
         ]
         for rel in rels:
             _make_file(repo, rel)
@@ -139,8 +139,8 @@ class TestSplitBslAndFramework:
         assert len(bsl[0]["files"]) == 2
 
     def test_bsl_multiple_projects_separate_groups(self, repo):
-        rel_a = "src/projects/configuration/ProjA/File.bsl"
-        rel_b = "src/projects/configuration/ProjB/File.bsl"
+        rel_a = "configuration/ProjA/File.bsl"
+        rel_b = "configuration/ProjB/File.bsl"
         _make_file(repo, rel_a)
         _make_file(repo, rel_b)
         fw, bsl = mod._split_bsl_and_framework([rel_a, rel_b])
@@ -260,8 +260,8 @@ class TestMain:
     def test_bsl_files_call_spawn_bsl(self, monkeypatch):
         self._patch_argv(monkeypatch)
         monkeypatch.setattr(mod.subprocess, "check_output", lambda *a, **kw: "abc123\n")
-        rel = "src/projects/configuration/X/F.bsl"
-        bsl_group = {"project": "/repo/src/projects/configuration/X", "files": ["/repo/F.bsl"]}
+        rel = "configuration/X/F.bsl"
+        bsl_group = {"project": "/repo/configuration/X", "files": ["/repo/F.bsl"]}
         monkeypatch.setattr(mod, "_changed_files", lambda *a, **kw: [rel])
         monkeypatch.setattr(
             mod, "_split_bsl_and_framework",
