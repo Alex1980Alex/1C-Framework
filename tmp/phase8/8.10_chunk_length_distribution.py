@@ -8,7 +8,7 @@ CPU-only (no GPU model load). Output stays in tmp/phase8/.
 
 Usage:
     .venv/Scripts/python.exe tmp/phase8/8.10_chunk_length_distribution.py \
-        --project "src/projects/configuration/260416_GKSTCPLK-2368 ..."
+        --project "configuration/260416_GKSTCPLK-2368 ..."
 """
 
 import argparse
