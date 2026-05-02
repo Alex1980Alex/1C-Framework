@@ -156,7 +156,7 @@ SKIP_PATTERNS = [
     # Empty module markers (no logic to document)
     "__init__.py",
     # 1C project task folders (separate repos, not framework code)
-    "src/projects/",
+    "configuration/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
     # Shared utilities (generic modules like mcp_oauth — not PDF framework core)
