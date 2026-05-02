@@ -68,7 +68,7 @@ class InitializerAgent:
         agent = InitializerAgent()
         result = agent.run(
             project_id="GKSTCPLK-1996",
-            project_path="src/projects/configuration/...",
+            project_path="configuration/...",
             task_description="Добавить регистр накопления"
         )
     """
