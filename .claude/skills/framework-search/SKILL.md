@@ -24,7 +24,7 @@ description: "Framework Self-Search — semantic поиск по самому ф
 
 ## НЕ для
 
-- **BSL код** (`src/bsl/`, `src/projects/configuration/`) → `bsl-development` skill + `bsl_code_v4_late` collection
+- **BSL код** (`src/bsl/`, `configuration/`) → `bsl-development` skill + `bsl_code_v4_late` collection
 - **PDF документов** (`data/pdfs/`) → `search-pipeline-debug` + `pdf_documents` collection
 - **Точные lookup'ы по имени** (`grep "function_name"`) — там быстрее Grep/Glob
 
@@ -92,7 +92,7 @@ nvidia-smi --query-gpu=memory.used,memory.free --format=csv
 **Исключено** (`SKIP_PATTERNS` в `config.py`):
 - `__pycache__/`, `.venv/`, `node_modules/`, `.git/`, `dist/`, `build/`, кэши
 - `data/`, `cache/`, `tmp/`, `logs/`
-- `src/projects/configuration/` (BSL projects идут в `bsl_code_v4_late`)
+- `configuration/` (BSL projects идут в `bsl_code_v4_late`)
 - `docs/documentation/{Lang Chain Docs,Claude Code Docs,Протокол контекста модели,Language Server Protocol}/` (импортированная сторонняя документация)
 - Файлы > 512 KB (защита от monstro-md)
 
@@ -233,7 +233,7 @@ git config core.hooksPath scripts/git_hooks
 **Split на 2 pipeline:**
 
 `git_post_commit_reindex.py` разделяет diff на две группы:
-- `.bsl` под `src/projects/configuration/<X>/` → **BSL pipeline** (`scripts/reindex_bsl_qwen3.py --paths --embedder qwen3-tei`) → коллекция `bsl_code_v4_late`. Cap файла: 4 MB. Группируются по project root (один spawn на проект).
+- `.bsl` под `configuration/<X>/` → **BSL pipeline** (`scripts/reindex_bsl_qwen3.py --paths --embedder qwen3-tei`) → коллекция `bsl_code_v4_late`. Cap файла: 4 MB. Группируются по project root (один spawn на проект).
 - Остальное (`.py .md .json .ts .js .toml .yaml .ini`) → **framework pipeline** (`scripts/index_framework.py --paths`) → коллекция `framework_code_v1`. Cap: 512 KB.
 
 Оба pipeline спавнятся detached, логи раздельные:
