@@ -764,20 +764,21 @@ def flush_batch(
 
 
 def _detect_bsl_project(bsl_path: Path) -> Path | None:
-    """Walk up from a .bsl file path until we find `src/projects/configuration/<X>`.
+    """Walk up from a .bsl file path until we find `configuration/<X>`.
 
     Returns the path up to and including <X>, or None if not under a recognized
     BSL project layout. Used by --paths mode to auto-derive --project for
     context enrichment when only file paths are passed (e.g. from git hooks).
+
+    Layout post 2026-05-02 migration: `<repo_root>/configuration/<X>/...`.
     """
     parts = bsl_path.resolve().parts
     try:
         idx = parts.index("configuration")
     except ValueError:
         return None
-    if idx == 0 or idx + 1 >= len(parts):
-        return None
-    if parts[idx - 1] != "projects":
+    # Need at least one segment after `configuration` to identify the project.
+    if idx + 1 >= len(parts):
         return None
     return Path(*parts[: idx + 2])
 
