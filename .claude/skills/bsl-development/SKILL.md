@@ -124,7 +124,7 @@ mcp__bsl-debugger__get_variables()
 
 ## Auto-reindex BSL при git commit (2026-04-30)
 
-При активном `git config core.hooksPath scripts/git_hooks` автоматически срабатывает incremental reindex `bsl_code_v4_late` для изменённых `.bsl` файлов в `src/projects/configuration/<X>/`.
+При активном `git config core.hooksPath scripts/git_hooks` автоматически срабатывает incremental reindex `bsl_code_v4_late` для изменённых `.bsl` файлов в `configuration/<X>/`.
 
 **Команда incremental BSL reindex (используется хуком, можно вызвать вручную):**
 
@@ -137,7 +137,7 @@ python scripts/reindex_bsl_qwen3.py \
 ```
 
 **Особенности `--paths` режима:**
-- Auto-detect project root из path (walk до `src/projects/configuration/<X>/`)
+- Auto-detect project root из path (walk до `configuration/<X>/`)
 - Все файлы должны быть в одном project root (иначе ERROR)
 - `--recreate` запрещён (нельзя дропнуть production-коллекцию для incremental)
 - Контекст-обогащение работает (если есть `cache/bsl_call_graph.db`)
