@@ -25,8 +25,8 @@ class TestMatchesSkip:
         assert _matches_skip("tools/ui/node_modules/react/index.js")
 
     def test_bsl_projects_prefix_match(self) -> None:
-        # "/src/projects/configuration/" → prefix without leading slash
-        assert _matches_skip("src/projects/configuration/Module1.bsl")
+        # "/configuration/" → prefix without leading slash
+        assert _matches_skip("configuration/Module1.bsl")
 
     def test_tools_serena_skipped(self) -> None:
         assert _matches_skip("tools/serena/agent.py")

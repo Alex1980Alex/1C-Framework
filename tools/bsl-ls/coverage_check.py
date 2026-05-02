@@ -10,7 +10,7 @@ from tree_sitter import Language, Parser
 
 
 BASE = Path(r"D:\1С-Framework")
-_PROJECT = BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src"
+_PROJECT = BASE / "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src"
 FILES = [
     {
         "name": "гкс_ОчередьСообщенийRMQ (CommonModule)",

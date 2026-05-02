@@ -68,7 +68,7 @@ class TestBslProjectRoot:
     def test_configuration_is_last_part_returns_none(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         # No project name after configuration
-        assert mod._bsl_project_root("src/projects/configuration") is None
+        assert mod._bsl_project_root("configuration") is None
 
     def test_configuration_not_preceded_by_projects_returns_none(self):
         # "other" instead of "projects"
