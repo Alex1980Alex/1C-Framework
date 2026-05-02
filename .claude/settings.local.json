@@ -808,7 +808,8 @@
       "mcp__pdf-vector-graph__search_documents",
       "PowerShell(winget search *)",
       "PowerShell(Test-Path *)",
-      "PowerShell($pw = -join \\(\\(65..90\\) + \\(97..122\\) + \\(48..57\\) + @\\(33,35,36,37,42,43,45,61,63,64\\) | Get-Random -Count 20 | ForEach-Object {[char]$_}\\); Write-Output \"SA_PASSWORD: $pw\")"
+      "PowerShell($pw = -join \\(\\(65..90\\) + \\(97..122\\) + \\(48..57\\) + @\\(33,35,36,37,42,43,45,61,63,64\\) | Get-Random -Count 20 | ForEach-Object {[char]$_}\\); Write-Output \"SA_PASSWORD: $pw\")",
+      "PowerShell($identity = [Security.Principal.WindowsIdentity]::GetCurrent\\(\\); $principal = New-Object Security.Principal.WindowsPrincipal\\($identity\\); $isAdmin = $principal.IsInRole\\([Security.Principal.WindowsBuiltInRole]::Administrator\\); Write-Output \"User: $\\($identity.Name\\)\"; Write-Output \"IsAdmin: $isAdmin\"; Write-Output \"IntegrityLevel: $\\(\\(whoami /groups | Select-String 'Mandatory Label'\\).ToString\\(\\).Trim\\(\\)\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,
