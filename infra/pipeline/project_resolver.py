@@ -8,7 +8,7 @@ Example usage:
     resolver = ProjectResolver()
     info = resolver.resolve("251222_GKSTCPLK-1996")
     # or
-    info = resolver.resolve("D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996")
+    info = resolver.resolve("D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996")
 """
 
 from dataclasses import dataclass, field
@@ -82,7 +82,7 @@ class ProjectResolver:
 
     Accepts either:
     - Project name (folder name): "251222_GKSTCPLK-1996"
-    - Full path: "D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996"
+    - Full path: "D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996"
 
     Searches in known project directories if only name is provided.
     """
@@ -228,7 +228,7 @@ class ProjectResolver:
                     Examples:
                     - "251222_GKSTCPLK-1996"
                     - "GKSTCPLK-1996"
-                    - "D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996"
+                    - "D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996"
 
         Returns:
             ProjectInfo with resolved paths and metadata.
@@ -344,6 +344,6 @@ def resolve_project(project: str) -> ProjectInfo:
         >>> from shared.pipeline.project_resolver import resolve_project
         >>> info = resolve_project("251222_GKSTCPLK-1996")
         >>> print(info.path)
-        D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996
+        D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996
     """
     return get_resolver().resolve(project)
