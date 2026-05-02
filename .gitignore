@@ -7,8 +7,8 @@ venv/
 .tmp/
 
 # Detached subprojects (own git history, not part of parent repo)
-src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/
-src/projects/configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников/
+configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/
+configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников/
 
 # Python
 __pycache__/

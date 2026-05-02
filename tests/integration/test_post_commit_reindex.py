@@ -33,6 +33,17 @@ def _make_file(root: Path, rel: str, size: int = 100) -> None:
     p.write_bytes(b"x" * size)
 
 
+def _make_bsl_project(root: Path, rel_project_dir: str, configuration_root: str = "src") -> Path:
+    """Create a fake BSL project marker (.bsl-language-server.json) at the given path."""
+    proj = root / Path(rel_project_dir)
+    proj.mkdir(parents=True, exist_ok=True)
+    (proj / ".bsl-language-server.json").write_text(
+        '{"configurationRoot": "' + configuration_root + '"}',
+        encoding="utf-8",
+    )
+    return proj
+
+
 @pytest.fixture()
 def repo(tmp_path, monkeypatch):
     """Patch REPO_ROOT to tmp_path so path checks use temp files."""
@@ -46,8 +57,16 @@ def repo(tmp_path, monkeypatch):
 
 
 class TestBslProjectRoot:
+    """Tests for marker-based BSL project root discovery via .bsl-language-server.json.
+
+    Post 2026-05-02 refactor: project root is identified by walking UP from a file
+    path until finding a directory that contains `.bsl-language-server.json`.
+    Works for any layout: `configuration/<task>/`, `<edt-workspace>/`, etc.
+    """
+
     def test_valid_path_returns_project_root(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
+        _make_bsl_project(tmp_path, "configuration/MyProject")
         result = mod._bsl_project_root(
             "configuration/MyProject/Documents/Doc.bsl"
         )
@@ -56,31 +75,31 @@ class TestBslProjectRoot:
 
     def test_nested_file_still_returns_project_root(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
+        _make_bsl_project(tmp_path, "configuration/ProjX")
         result = mod._bsl_project_root(
             "configuration/ProjX/Sub/Deep/Module.bsl"
         )
         assert result is not None
         assert result.name == "ProjX"
 
-    def test_no_configuration_segment_returns_none(self):
-        assert mod._bsl_project_root("src/bsl/CommonModule.bsl") is None
-
-    def test_configuration_is_last_part_returns_none(self, tmp_path, monkeypatch):
+    def test_edt_project_at_repo_root(self, tmp_path, monkeypatch):
+        """EDT layout: marker at repo root level, BSL files in nested Конфигурация/src/."""
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
-        # No project name after configuration
-        assert mod._bsl_project_root("configuration") is None
-
-    def test_configuration_not_at_repo_root_returns_none(self):
-        # Post 2026-05-02 migration: configuration MUST be the first path segment.
-        # Paths like "src/.../configuration/..." (legacy or accidental) must reject.
-        assert (
-            mod._bsl_project_root(
-                "src/other/configuration/MyProject/File.bsl"
-            )
-            is None
+        _make_bsl_project(tmp_path, "ИБMyEDT", configuration_root="Конфигурация/src")
+        result = mod._bsl_project_root(
+            "ИБMyEDT/Конфигурация/src/Catalogs/Foo/Module.bsl"
         )
+        assert result is not None
+        assert result.name == "ИБMyEDT"
 
-    def test_framework_path_returns_none(self):
+    def test_no_marker_returns_none(self, tmp_path, monkeypatch):
+        """Path without .bsl-language-server.json marker is not a BSL project."""
+        monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
+        # No marker created
+        assert mod._bsl_project_root("configuration/MyProject/Doc.bsl") is None
+
+    def test_framework_path_returns_none(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         assert mod._bsl_project_root("src/framework_search/config.py") is None
 
 
@@ -97,6 +116,7 @@ class TestSplitBslAndFramework:
         assert bsl == []
 
     def test_bsl_under_config_goes_to_bsl_groups(self, repo):
+        _make_bsl_project(repo, "configuration/MyProj")
         rel = "configuration/MyProj/Documents/Doc.bsl"
         _make_file(repo, rel)
         fw, bsl = mod._split_bsl_and_framework([rel])
@@ -105,7 +125,8 @@ class TestSplitBslAndFramework:
         assert bsl[0]["project"].endswith("MyProj")
         assert len(bsl[0]["files"]) == 1
 
-    def test_bsl_outside_config_prefix_ignored(self, repo):
+    def test_bsl_outside_marker_ignored(self, repo):
+        # No .bsl-language-server.json marker → not a BSL project, file ignored.
         rel = "src/bsl/CommonModule.bsl"
         _make_file(repo, rel)
         fw, bsl = mod._split_bsl_and_framework([rel])
@@ -118,6 +139,7 @@ class TestSplitBslAndFramework:
         assert bsl == []
 
     def test_oversized_bsl_file_skipped(self, repo):
+        _make_bsl_project(repo, "configuration/MyProj")
         rel = "configuration/MyProj/Huge.bsl"
         _make_file(repo, rel, size=mod.BSL_MAX_FILE_BYTES + 1)
         fw, bsl = mod._split_bsl_and_framework([rel])
@@ -129,6 +151,7 @@ class TestSplitBslAndFramework:
         assert fw == []
 
     def test_multiple_bsl_same_project_grouped(self, repo):
+        _make_bsl_project(repo, "configuration/MyProj")
         rels = [
             "configuration/MyProj/Doc1.bsl",
             "configuration/MyProj/Doc2.bsl",
@@ -140,6 +163,8 @@ class TestSplitBslAndFramework:
         assert len(bsl[0]["files"]) == 2
 
     def test_bsl_multiple_projects_separate_groups(self, repo):
+        _make_bsl_project(repo, "configuration/ProjA")
+        _make_bsl_project(repo, "configuration/ProjB")
         rel_a = "configuration/ProjA/File.bsl"
         rel_b = "configuration/ProjB/File.bsl"
         _make_file(repo, rel_a)

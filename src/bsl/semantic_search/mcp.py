@@ -540,14 +540,15 @@ def _get_metadata_extractor(project_root: str | None = None):
         if project_root:
             root = FilePath(project_root)
         else:
-            # Auto-detect EDT project under configuration/ (post 2026-05-02 migration)
-            config_dir = _FRAMEWORK_ROOT / "configuration"
-            root = _FRAMEWORK_ROOT
-            if config_dir.is_dir():
-                for d in sorted(config_dir.iterdir()):
-                    if d.is_dir() and (d / "src").is_dir():
-                        root = d
-                        break
+            # Auto-detect via .bsl-language-server.json marker.
+            # Falls back to framework root if no BSL projects found.
+            from src.bsl.project_discovery import find_bsl_projects, get_bsl_source_root
+            projects = find_bsl_projects(_FRAMEWORK_ROOT)
+            if projects:
+                # Pick first discovered project; configurationRoot tells where src lives.
+                root = FilePath(get_bsl_source_root(projects[0]).parent)
+            else:
+                root = FilePath(_FRAMEWORK_ROOT)
         _metadata_extractor = MetadataExtractor(root)
     return _metadata_extractor
 

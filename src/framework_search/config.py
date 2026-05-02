@@ -63,6 +63,11 @@ SKIP_PATTERNS: list[str] = [
     "/logs/",
     "/.obsidian/",
     "/configuration/",                    # BSL projects -> bsl_code_v4_late
+                                          # NB: post 2026-05-02, BSL projects are
+                                          # discovered via .bsl-language-server.json
+                                          # marker (see src/bsl/project_discovery.py).
+                                          # EDT projects at repo root are naturally
+                                          # excluded — they're not in DEFAULT_INDEX_ROOTS.
     # Imported third-party reference docs (huge, not "framework code")
     "/docs/documentation/Lang Chain Docs/",
     "/docs/documentation/Claude Code Docs/",

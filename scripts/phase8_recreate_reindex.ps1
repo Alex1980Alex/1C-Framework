@@ -27,7 +27,7 @@ Usage:
   pwsh -File scripts/phase8_recreate_reindex.ps1 -SkipRecreate
   pwsh -File scripts/phase8_recreate_reindex.ps1 -SkipReindex
   pwsh -File scripts/phase8_recreate_reindex.ps1 -SkipSmoke
-  pwsh -File scripts/phase8_recreate_reindex.ps1 -BslProjectPath "src/projects/configuration/<name>"
+  pwsh -File scripts/phase8_recreate_reindex.ps1 -BslProjectPath "configuration/<name>"
 #>
 
 param(

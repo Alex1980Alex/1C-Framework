@@ -23,7 +23,7 @@ Usage:
   pwsh -File scripts/phase8_12_baseline_tei.ps1 -AutoConfirm
   pwsh -File scripts/phase8_12_baseline_tei.ps1 -SkipTeiStart    # already running
   pwsh -File scripts/phase8_12_baseline_tei.ps1 -SkipReindex     # smoke-only
-  pwsh -File scripts/phase8_12_baseline_tei.ps1 -BslProjectPath "src/projects/configuration/<name>"
+  pwsh -File scripts/phase8_12_baseline_tei.ps1 -BslProjectPath "configuration/<name>"
   pwsh -File scripts/phase8_12_baseline_tei.ps1 -Qwen3ModelDir "D:/hf-manual/Qwen3-Embedding-8B"
 #>
 
