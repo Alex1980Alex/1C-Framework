@@ -329,7 +329,7 @@ def test_encoding_stress_cyrillic_paths(verbose: bool) -> TestResult:
     stdin = {
         "tool_name": "Edit",
         "tool_input": {
-            "file_path": "D:/1С-Framework/src/projects/configuration/260204_GKSTCPLK-2099/src/DataProcessors/гкс_АРМПромежуточныйКомпозит/Forms/ФормаФормированиеКомпозитнойФормы/Ext/Form/Module.bsl",
+            "file_path": "C:/1С-Framework/configuration/260204_GKSTCPLK-2099/src/DataProcessors/гкс_АРМПромежуточныйКомпозит/Forms/ФормаФормированиеКомпозитнойФормы/Ext/Form/Module.bsl",
             "old_string": "Процедура",
             "new_string": "Процедура // modified",
         },
