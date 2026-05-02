@@ -806,7 +806,8 @@
       "Bash(Select-Object Name)",
       "mcp__pdf-vector-graph__get_stats",
       "mcp__pdf-vector-graph__search_documents",
-      "PowerShell(winget search *)"
+      "PowerShell(winget search *)",
+      "PowerShell(Test-Path *)"
     ]
   },
   "enableAllProjectMcpServers": true,
