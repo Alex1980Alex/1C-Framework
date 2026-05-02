@@ -87,15 +87,6 @@ class ProjectResolver:
     Searches in known project directories if only name is provided.
     """
 
-    # Default search directories (relative to framework root)
-    # Post 2026-05-02 migration: configuration/ moved from src/projects/ to repo root.
-    DEFAULT_SEARCH_PATHS = [
-        "configuration",
-        "extensions",
-        "dataprocessors",
-        "reports",
-    ]
-
     # Pattern to extract project ID from folder name
     # Examples: 251222_GKSTCPLK-1996 -> GKSTCPLK-1996
     #          GKSTCPLK-1996 -> GKSTCPLK-1996
@@ -114,6 +105,7 @@ class ProjectResolver:
             additional_search_paths: Extra paths to search for projects.
         """
         self.framework_root = framework_root or self._detect_framework_root()
+        self._known_projects: List[Path] = []  # populated by _build_search_paths
         self.search_paths = self._build_search_paths(additional_search_paths or [])
 
     def _detect_framework_root(self) -> Path:
@@ -135,25 +127,38 @@ class ProjectResolver:
         return Path.cwd()
 
     def _build_search_paths(self, additional: List[str]) -> List[Path]:
-        """Build list of absolute search paths."""
-        paths = []
+        """Discover BSL projects via .bsl-language-server.json markers.
 
-        # Add default paths
-        for rel_path in self.DEFAULT_SEARCH_PATHS:
-            full_path = self.framework_root / rel_path
-            if full_path.exists():
-                paths.append(full_path)
+        Populates `self._known_projects` with all discovered project roots
+        and returns their unique parent directories as search paths
+        (used by _find_by_name partial-match fallback).
+        """
+        # Lazy-import to avoid forcing the dependency at module load.
+        try:
+            import sys
+            if str(self.framework_root) not in sys.path:
+                sys.path.insert(0, str(self.framework_root))
+            from src.bsl.project_discovery import find_bsl_projects
+            self._known_projects = find_bsl_projects(self.framework_root)
+        except ImportError:
+            self._known_projects = []
+
+        seen: set[Path] = set()
+        paths: List[Path] = []
+        for proj in self._known_projects:
+            parent = proj.parent
+            if parent not in seen:
+                seen.add(parent)
+                paths.append(parent)
 
         # Add additional paths
         for path_str in additional:
             path = Path(path_str)
-            if path.is_absolute():
-                if path.exists():
-                    paths.append(path)
-            else:
-                full_path = self.framework_root / path_str
-                if full_path.exists():
-                    paths.append(full_path)
+            if not path.is_absolute():
+                path = self.framework_root / path_str
+            if path.exists() and path not in seen:
+                seen.add(path)
+                paths.append(path)
 
         return paths
 
@@ -205,19 +210,18 @@ class ProjectResolver:
         return "unknown"
 
     def _find_by_name(self, name: str) -> Optional[Path]:
-        """Find project by name in search paths."""
-        for search_path in self.search_paths:
-            candidate = search_path / name
-            if candidate.exists() and candidate.is_dir():
-                return candidate
+        """Find project by name among discovered BSL projects.
 
-        # Try partial match (name might be partial)
-        for search_path in self.search_paths:
-            if search_path.exists():
-                for item in search_path.iterdir():
-                    if item.is_dir() and name.lower() in item.name.lower():
-                        return item
-
+        Matches against `_known_projects` (populated from .bsl-language-server.json
+        markers). Tries exact basename match first, then partial substring.
+        """
+        name_lower = name.lower()
+        for proj in self._known_projects:
+            if proj.name.lower() == name_lower:
+                return proj
+        for proj in self._known_projects:
+            if name_lower in proj.name.lower():
+                return proj
         return None
 
     def resolve(self, project: str) -> ProjectInfo:

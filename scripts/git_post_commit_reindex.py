@@ -28,13 +28,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.framework_search.config import EXT_TO_LANGUAGE, MAX_FILE_BYTES, REPO_ROOT  # noqa: E402
 from src.framework_search.file_walker import _matches_skip  # noqa: E402
+from src.bsl.project_discovery import find_project_for_relpath  # noqa: E402
 
 LOG_PATH = PROJECT_ROOT / "cache" / "framework_search_reindex.log"
 BSL_LOG_PATH = PROJECT_ROOT / "cache" / "bsl_reindex.log"
 PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "index_framework.py"
 BSL_INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "reindex_bsl_qwen3.py"
-BSL_CONFIG_PREFIX = "configuration/"
 # BSL common modules can legitimately be 1-2 MB; use a higher cap than the
 # framework MAX_FILE_BYTES (512 KB tuned for Python/MD).
 BSL_MAX_FILE_BYTES = 4 * 1024 * 1024  # 4 MB
@@ -66,20 +66,20 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
         by 1С project root so each spawn handles a single project.
 
     Framework: matches EXT_TO_LANGUAGE + passes SKIP_PATTERNS + size cap.
-    BSL: matches '.bsl' + lives under configuration/<X>/.
+    BSL: matches '.bsl' + lives under a directory containing
+         `.bsl-language-server.json` (the BSL project marker).
     """
     framework: list[str] = []
     bsl_by_project: dict[str, list[str]] = {}
 
     for rel in paths:
-        rel_low = rel.lower().replace("\\", "/")
         abs_path = REPO_ROOT / rel
         if not abs_path.exists() or not abs_path.is_file():
             continue
         ext = Path(rel).suffix.lower()
 
-        # BSL branch: .bsl under configuration/<X>/
-        if ext == ".bsl" and rel_low.startswith(BSL_CONFIG_PREFIX):
+        # BSL branch: .bsl under a marker-defined project root.
+        if ext == ".bsl":
             project = _bsl_project_root(rel)
             if project is not None:
                 try:
@@ -88,7 +88,7 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
                 except OSError:
                     continue
                 bsl_by_project.setdefault(str(project), []).append(str(abs_path))
-            continue
+                continue
 
         # Framework branch: standard extension + skip filter
         if _matches_skip(rel):
@@ -107,19 +107,15 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
 
 
 def _bsl_project_root(rel: str) -> Path | None:
-    """Walk down the path until we have configuration/<X>, return abs.
+    """Resolve repo-relative path to its BSL project root via marker discovery.
 
-    After 2026-05-02 migration the BSL project layout is `configuration/<X>/...`
-    directly at repo root (was `src/projects/configuration/<X>/...`).
-    Strict: `configuration` MUST be the FIRST segment of the repo-relative path.
+    A BSL project root is any directory containing `.bsl-language-server.json`.
+    Walks UP from the file location to find the nearest such directory.
+
+    Returns the absolute project root, or None if the path is not under a
+    BSL project (e.g., framework code, docs, test fixtures).
     """
-    parts = Path(rel).parts
-    if not parts or parts[0] != "configuration":
-        return None
-    # Need at least one segment after `configuration` to identify the project.
-    if len(parts) < 2:
-        return None
-    return (REPO_ROOT / Path(*parts[: 2])).resolve()
+    return find_project_for_relpath(rel, REPO_ROOT)
 
 
 def _spawn_detached_cmd(cmd: list[str], log_path: Path, header: str) -> None:

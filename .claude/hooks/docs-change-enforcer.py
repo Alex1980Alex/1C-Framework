@@ -157,6 +157,9 @@ SKIP_PATTERNS = [
     "__init__.py",
     # 1C project task folders (separate repos, not framework code)
     "configuration/",
+    # EDT project at repo root — same category as configuration/<task>/.
+    # Identified by .bsl-language-server.json marker (see src/bsl/project_discovery.py).
+    "ИБTransportManagementDevelop/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
     # Shared utilities (generic modules like mcp_oauth — not PDF framework core)

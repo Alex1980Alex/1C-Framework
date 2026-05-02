@@ -764,23 +764,22 @@ def flush_batch(
 
 
 def _detect_bsl_project(bsl_path: Path) -> Path | None:
-    """Walk up from a .bsl file path until we find `configuration/<X>`.
+    """Walk UP from a .bsl file path to find the nearest BSL project root.
 
-    Returns the path up to and including <X>, or None if not under a recognized
-    BSL project layout. Used by --paths mode to auto-derive --project for
-    context enrichment when only file paths are passed (e.g. from git hooks).
+    A BSL project root is any directory containing `.bsl-language-server.json`
+    (the standard 1c-syntax/bsl-language-server config). Used by --paths mode
+    to auto-derive --project for context enrichment when only file paths are
+    passed (e.g. from git hooks).
 
-    Layout post 2026-05-02 migration: `<repo_root>/configuration/<X>/...`.
+    Returns the absolute project root, or None if no marker found above.
     """
-    parts = bsl_path.resolve().parts
-    try:
-        idx = parts.index("configuration")
-    except ValueError:
-        return None
-    # Need at least one segment after `configuration` to identify the project.
-    if idx + 1 >= len(parts):
-        return None
-    return Path(*parts[: idx + 2])
+    # Lazy import to avoid circular dependencies at module load.
+    import sys
+    repo_root_local = Path(__file__).resolve().parent.parent
+    if str(repo_root_local) not in sys.path:
+        sys.path.insert(0, str(repo_root_local))
+    from src.bsl.project_discovery import find_project_for_path
+    return find_project_for_path(bsl_path, repo_root_local)
 
 
 def _delete_stale_for_paths(
