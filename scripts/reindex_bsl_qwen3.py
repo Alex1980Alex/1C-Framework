@@ -904,7 +904,7 @@ def main() -> None:
             project = _detect_bsl_project(path_objs[0])
             if project is None:
                 print(f"ERROR: cannot auto-detect project root from {path_objs[0]} "
-                      f"(expected layout: src/projects/configuration/<X>/...)")
+                      f"(expected layout: configuration/<X>/...)")
                 sys.exit(1)
             print(f"[--paths] auto-detected project: {project}")
         # Sanity-check: all files must be under the same project root.

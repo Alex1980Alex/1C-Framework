@@ -88,11 +88,12 @@ class ProjectResolver:
     """
 
     # Default search directories (relative to framework root)
+    # Post 2026-05-02 migration: configuration/ moved from src/projects/ to repo root.
     DEFAULT_SEARCH_PATHS = [
-        "src/projects/configuration",
-        "src/projects/extensions",
-        "src/projects/dataprocessors",
-        "src/projects/reports",
+        "configuration",
+        "extensions",
+        "dataprocessors",
+        "reports",
     ]
 
     # Pattern to extract project ID from folder name
