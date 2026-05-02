@@ -545,7 +545,7 @@ class HybridSearchEngine:
             results = cursor.fetchall()
             conn.close()
 
-            # Группируем по проектам (ищем паттерн src/projects/configuration/*)
+            # Группируем по проектам (ищем паттерн configuration/*)
             projects = {}
 
             for path, doc_type, modified_at in results:
@@ -553,14 +553,14 @@ class HybridSearchEngine:
                 path_normalized = path.replace("\\", "/")
 
                 # Ищем проект по паттерну
-                # Паттерн: */src/projects/configuration/{PROJECT_NAME}/*
-                if "src/projects/configuration/" in path_normalized:
-                    parts = path_normalized.split("src/projects/configuration/")
+                # Паттерн: */configuration/{PROJECT_NAME}/*
+                if "configuration/" in path_normalized:
+                    parts = path_normalized.split("configuration/")
                     if len(parts) > 1:
                         project_parts = parts[1].split("/")
                         if project_parts:
                             project_name = project_parts[0]
-                            base_path = parts[0] + "src/projects/configuration/" + project_name
+                            base_path = parts[0] + "configuration/" + project_name
 
                             if base_path not in projects:
                                 projects[base_path] = {

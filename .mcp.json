@@ -5,7 +5,7 @@
       "args": ["C:\\1С-Framework\\tools\\bsl-code-search\\index.js"],
       "cwd": "C:\\1С-Framework",
       "env": {
-        "BSL_SOURCE_DIR": "src/projects"
+        "BSL_SOURCE_DIR": "configuration"
       },
       "timeout": 30000
     },
