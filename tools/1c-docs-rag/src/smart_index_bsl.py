@@ -45,8 +45,8 @@ LANGUAGE_TO_EXTENSION: Dict[str, str] = {
 
 # Глобальные паттерны пропуска (для всех языков)
 GLOBAL_SKIP_PATTERNS: List[str] = [
-    "src\\projects\\configuration",
-    "src/projects/configuration",
+    "configuration\\",
+    "configuration/",
     "node_modules",
     "__pycache__",
     ".venv",

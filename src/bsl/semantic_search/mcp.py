@@ -540,8 +540,8 @@ def _get_metadata_extractor(project_root: str | None = None):
         if project_root:
             root = FilePath(project_root)
         else:
-            # Auto-detect EDT project under src/projects/configuration/
-            config_dir = _FRAMEWORK_ROOT / "src" / "projects" / "configuration"
+            # Auto-detect EDT project under configuration/ (post 2026-05-02 migration)
+            config_dir = _FRAMEWORK_ROOT / "configuration"
             root = _FRAMEWORK_ROOT
             if config_dir.is_dir():
                 for d in sorted(config_dir.iterdir()):
