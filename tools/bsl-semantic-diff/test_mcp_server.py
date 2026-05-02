@@ -38,7 +38,7 @@ async def test_mcp_tools():
         print(stats_result[0].text)
 
         # Тест 2: Анализ метаданных (если конфигурация существует)
-        config_path = Path("D:/1C-Enterprise_Framework/src/projects/configuration/250926_GKSTCPLK-1697")
+        config_path = Path("C:/1С-Framework/configuration/250926_GKSTCPLK-1697")
 
         if config_path.exists():
             print("\nТест 2: Анализ метаданных конфигурации")
