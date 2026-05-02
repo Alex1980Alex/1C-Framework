@@ -831,7 +831,8 @@
       "Bash(pwsh -NoProfile -Command \"Get-Command -Syntax \\(Get-Item 'scripts/reindex_bsl_fast.ps1'\\).FullName\")",
       "Bash(pwsh -NoProfile -Command \"Get-Help 'C:/1С-Framework/scripts/reindex_bsl_fast.ps1' -Examples\")",
       "Bash(pwsh -NoProfile -Command ' *)",
-      "Bash(pwsh -NoProfile -Command \"Get-Help 'C:/1С-Framework/scripts/reindex_bsl_fast.ps1' -Detailed | Select-Object -First 30\")"
+      "Bash(pwsh -NoProfile -Command \"Get-Help 'C:/1С-Framework/scripts/reindex_bsl_fast.ps1' -Detailed | Select-Object -First 30\")",
+      "Bash(Select-Object -First 1)"
     ]
   },
   "enableAllProjectMcpServers": true,
