@@ -1,0 +1,26 @@
+{
+    "$schema": "https://1c-syntax.github.io/bsl-language-server/configuration/schema.json",
+    "language": "ru",
+    "configurationRoot": "Конфигурация/src",
+    "diagnostics": {
+        "analyzeOnStart": false,
+        "computeTrigger": "onSave",
+        "skipSupport": "withSupportLocked"
+    },
+    "codeLens": {
+        "parameters": {
+            "cognitiveComplexity": false,
+            "cyclomaticComplexity": false
+        }
+    },
+    "inlayHint": {
+        "parameters": {
+            "cognitiveComplexity": false,
+            "cyclomaticComplexity": false,
+            "sourceDefinedMethodCall": false
+        }
+    },
+    "documentLink": {
+        "showDiagnosticDescription": false
+    }
+}

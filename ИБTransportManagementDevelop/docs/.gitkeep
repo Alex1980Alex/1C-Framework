@@ -1,0 +1,6 @@
+# ТЗ и документация задач 1С для проекта ИБTransportManagementDevelop.
+# Структура:
+#   docs/<YYMMDD>_<JIRA-TICKET>/
+#     ANALYSIS-REPORT.md
+#     IMPLEMENTATION-PROGRESS.md
+#     test-plan.md

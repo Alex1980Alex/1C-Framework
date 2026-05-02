@@ -10,8 +10,34 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-04-28",
+  "last_updated": "2026-05-02",
   "topics": {
+    "qwen3-embedding-speedup": {
+      "file": "qwen3-embedding-speedup.md",
+      "domain": "embeddings",
+      "category": "optimization",
+      "created": "2026-05-02",
+      "last_verified": "2026-05-02",
+      "keywords": [
+        "Qwen3-Embedding-8B",
+        "sentence-transformers",
+        "flash-attention-2",
+        "fa2",
+        "late-chunking",
+        "inference speed",
+        "batch size",
+        "qwen3-tei",
+        "qwen3-st",
+        "padding_side",
+        "input flattening",
+        "GPU optimization",
+        "RTX 3090",
+        "BSL reindex",
+        "bsl_code_v4_late",
+        "Phase 8.12.9"
+      ],
+      "summary": "Speedup рецепты для qwen3-st reindex BSL: --enable-fa2 (1.5-2x на длинных parent-блоках late-chunking), batch-size 100+ (ST v5.4 input flattening экономит VRAM), buffer-size 1024. Альтернатива qwen3-tei (Docker, 2-3x быстрее но без late-chunking → bsl_code_v4 не bsl_code_v4_late). Не помогает: distributed multi-GPU для 8B, --pooling-mode standard на qwen3-st (теряем +24% recall@10). Антипаттерны: FA2 без padding_side='left', batch>200 OOM, перезапуск идущего реиндекса (нет resume). Verified 2026-05-02 via HF model card, sentence-transformers efficiency docs, GitHub issue #628."
+    },
     "qwen3-embedding-deployment-fa2-tei": {
       "file": "qwen3-embedding-deployment-fa2-tei.md",
       "domain": "embeddings",
