@@ -34,7 +34,7 @@ BSL_LOG_PATH = PROJECT_ROOT / "cache" / "bsl_reindex.log"
 PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "index_framework.py"
 BSL_INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "reindex_bsl_qwen3.py"
-BSL_CONFIG_PREFIX = "src/projects/configuration/"
+BSL_CONFIG_PREFIX = "configuration/"
 # BSL common modules can legitimately be 1-2 MB; use a higher cap than the
 # framework MAX_FILE_BYTES (512 KB tuned for Python/MD).
 BSL_MAX_FILE_BYTES = 4 * 1024 * 1024  # 4 MB
@@ -66,7 +66,7 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
         by 1С project root so each spawn handles a single project.
 
     Framework: matches EXT_TO_LANGUAGE + passes SKIP_PATTERNS + size cap.
-    BSL: matches '.bsl' + lives under src/projects/configuration/<X>/.
+    BSL: matches '.bsl' + lives under configuration/<X>/.
     """
     framework: list[str] = []
     bsl_by_project: dict[str, list[str]] = {}
@@ -78,7 +78,7 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
             continue
         ext = Path(rel).suffix.lower()
 
-        # BSL branch: .bsl under src/projects/configuration/<X>/
+        # BSL branch: .bsl under configuration/<X>/
         if ext == ".bsl" and rel_low.startswith(BSL_CONFIG_PREFIX):
             project = _bsl_project_root(rel)
             if project is not None:
@@ -107,13 +107,15 @@ def _split_bsl_and_framework(paths: list[str]) -> tuple[list[str], list[dict[str
 
 
 def _bsl_project_root(rel: str) -> Path | None:
-    """Walk down the path until we have src/projects/configuration/<X>, return abs."""
+    """Walk down the path until we have configuration/<X>, return abs."""
     parts = Path(rel).parts
     try:
         idx = parts.index("configuration")
     except ValueError:
         return None
-    if idx == 0 or parts[idx - 1] != "projects" or idx + 1 >= len(parts):
+    # After 2026-05-02 migration: configuration/<X>/... at repo root (idx=0).
+    # Need at least one segment after `configuration` to identify the project.
+    if idx + 1 >= len(parts):
         return None
     return (REPO_ROOT / Path(*parts[: idx + 2])).resolve()
 

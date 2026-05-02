@@ -26,7 +26,7 @@ def _matches_skip(posix_path: str) -> bool:
       1. Substring (any position) — patterns like '/__pycache__/' that should
          match nested dirs (e.g. 'src/foo/__pycache__/x').
       2. Prefix without leading slash — for top-level skips like
-         '/src/projects/configuration/' to also catch 'src/projects/...'
+         '/configuration/' to also catch 'configuration/...'
          since repo-relative POSIX paths don't have a leading slash.
     """
     low = posix_path.lower()
