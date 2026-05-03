@@ -44,7 +44,8 @@ EXPECTED_DIMS = 4096
 
 
 class Qwen3EmbeddingService:
-    """Embedding service for BSL code search using Qwen3-Embedding via Ollama."""
+    """Embedding service using Qwen3-Embedding-8B inline via sentence-transformers.
+    Singleton: model loads once on first call (~15-30s, ~16 GB VRAM)."""
 
     _instance: ClassVar[Qwen3EmbeddingService | None] = None
     _initialized: ClassVar[bool] = False
@@ -52,7 +53,7 @@ class Qwen3EmbeddingService:
     def __new__(
         cls,
         ollama_host: str = "http://localhost:11434",
-        model: str = "qwen3-embedding:8b",
+        model: str = "Qwen/Qwen3-Embedding-8B",
     ) -> Qwen3EmbeddingService:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -60,29 +61,37 @@ class Qwen3EmbeddingService:
 
     def __init__(
         self,
-        ollama_host: str = "http://localhost:11434",
-        model: str = "qwen3-embedding:8b",
+        ollama_host: str = "http://localhost:11434",  # kept for backward-compat, unused
+        model: str = "Qwen/Qwen3-Embedding-8B",
     ) -> None:
         if Qwen3EmbeddingService._initialized:
             return
-
-        self.ollama_host = ollama_host.rstrip("/")
         self.model = model
-        self.embed_endpoint = f"{self.ollama_host}/api/embed"
-        self._client: httpx.Client | None = None
+        self._st_model = None  # lazy SentenceTransformer
         self._dims: int | None = None
-
+        self._lock = threading.Lock()
         Qwen3EmbeddingService._initialized = True
-        logger.info(
-            "Qwen3EmbeddingService initialized: host=%s, model=%s",
-            ollama_host,
-            model,
-        )
+        logger.info("Qwen3EmbeddingService initialized: backend=ST inline, model=%s", model)
 
-    def _get_client(self) -> httpx.Client:
-        if self._client is None or self._client.is_closed:
-            self._client = httpx.Client(timeout=300.0)
-        return self._client
+    def _ensure_model(self):
+        """Lazy-load Qwen3-Embedding-8B via sentence-transformers (~15-30s cold)."""
+        if self._st_model is not None:
+            return self._st_model
+        with self._lock:
+            if self._st_model is not None:
+                return self._st_model
+            from sentence_transformers import SentenceTransformer
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            logger.info("Loading Qwen3-Embedding-8B on %s (~15-30s, ~16 GB VRAM)...", device)
+            self._st_model = SentenceTransformer(
+                self.model,
+                device=device,
+                tokenizer_kwargs={"padding_side": "left"},
+            )
+            self._dims = EXPECTED_DIMS
+            logger.info("Qwen3-Embedding-8B ST loaded on %s", device)
+            return self._st_model
 
     @property
     def dims(self) -> int:
