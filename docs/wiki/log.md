@@ -131,3 +131,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 2
 - Summary: Session 2026-05-02. Skills: task-protocol, qdrant-operations, evaluation-benchmark, code-verify, claude-code-cli-interactive, claude-code-settings, simplify, update-config. Changed 2 files in .claude/settings.local.json, claude/settings.local.json
 
+
+## 2026-05-03 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: z-ai-delegation, deployment, task-protocol
+- Files changed: 3
+- Summary: Session 2026-05-03. Skills: z-ai-delegation, deployment, task-protocol. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, ИБTransportManagementDevelop/docs. Commit: docs(roadmap): GraphRAG для BSL — max coverage сложных запросов. Commit: chore: auto-commit 3 file(s) changed. Commit: chore: auto-commit 197 file(s) changed
+
