@@ -49,7 +49,8 @@ def fetch_subgraph(session):
         MATCH (n) WHERE n:Module OR n:Symbol OR n:Object
         RETURN id(n) AS nid, labels(n)[0] AS label, n.name AS name,
                coalesce(n.object_type, '') AS object_type,
-               coalesce(n.module_path, n.path, '') AS path
+               coalesce(n.module_path, n.path, '') AS path,
+               coalesce(n.subsystem, '') AS subsystem
     """)
     nodes = {r["nid"]: dict(r) for r in nodes_q}
     edges_q = session.run("""
