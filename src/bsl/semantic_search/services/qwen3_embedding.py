@@ -171,11 +171,16 @@ class Qwen3EmbeddingService:
         return results
 
     def close(self) -> None:
-        """Close HTTP client."""
-        if self._client is not None:
-            self._client.close()
-            self._client = None
-            logger.info("Qwen3EmbeddingService HTTP client closed")
+        """Release ST model + clear CUDA cache."""
+        if self._st_model is not None:
+            self._st_model = None
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except Exception:
+                pass
+            logger.info("Qwen3EmbeddingService: ST model released, CUDA cache cleared")
 
     @classmethod
     def reset(cls) -> None:
