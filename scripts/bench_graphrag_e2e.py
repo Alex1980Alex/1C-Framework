@@ -138,6 +138,15 @@ RETURN s.name AS name, s.module_path AS module, count(c) AS in_degree, 'Symbol' 
 ORDER BY in_degree DESC LIMIT $k
 """
 
+CYPHER_CALLERS_MULTIHOP = """
+MATCH (callee:Symbol)
+WHERE toLower(callee.name) CONTAINS toLower($name)
+  AND ($module_hint = '' OR toLower(coalesce(callee.module_path,'')) CONTAINS toLower($module_hint))
+MATCH (caller:Symbol)-[:CALLS*1..3]->(callee)
+RETURN DISTINCT caller.name AS name, caller.module_path AS module, 'Symbol' AS kind
+LIMIT $k
+"""
+
 
 def extract_target(query: str) -> tuple[str, str]:
     """Return (symbol_name, module_hint).
