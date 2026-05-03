@@ -286,11 +286,16 @@ class BSLSearchService:
                 self._embedding_service = FrameworkTEIEmbedder()
                 atexit.register(self._embedding_service.close)
 
-            # Генерация embedding для запроса
-            query_embedding = self._embedding_service.create_embedding(query)
+            try:
+                query_embedding = self._embedding_service.embed_batch(
+                    [query], is_query=True
+                )[0]
+            except Exception as exc:
+                logger.error(f"TEI embedding failed: {exc}", exc_info=True)
+                return []
 
             if not query_embedding:
-                logger.error("Не удалось создать embedding для запроса")
+                logger.error("TEI вернул пустой embedding для запроса")
                 return []
 
             # Поиск в Qdrant
