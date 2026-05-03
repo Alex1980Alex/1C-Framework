@@ -78,11 +78,19 @@ class Qwen3EmbeddingService:
         if Qwen3EmbeddingService._initialized:
             return
         self.model = model
-        self._st_model = None  # lazy SentenceTransformer
+        self._st_model = None  # lazy SentenceTransformer (only when use_st=True)
         self._dims: int | None = None
         self._lock = threading.Lock()
+        # BSL_EMBEDDER selects primary backend. Default "tei" — production-aligned
+        # (shared with framework-search MCP, memory-hooks, post-commit reindex).
+        # "st" — opt-in inline sentence-transformers (only when TEI intentionally stopped).
+        self._use_st = os.environ.get("BSL_EMBEDDER", "tei").lower() == "st"
         Qwen3EmbeddingService._initialized = True
-        logger.info("Qwen3EmbeddingService initialized: backend=ST inline, model=%s", model)
+        logger.info(
+            "Qwen3EmbeddingService initialized: backend=%s, model=%s",
+            "ST inline (TEI fallback)" if self._use_st else "TEI HTTP (no ST load)",
+            model,
+        )
 
     def _ensure_model(self):
         """Lazy-load Qwen3-Embedding-8B via sentence-transformers (~15-30s cold)."""
