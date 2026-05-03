@@ -3,6 +3,18 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "embedding-backend-mcp-tei-vs-ollama.md",
+      "title": "Embedding backend для MCP — Ollama vs TEI vs sentence-transformers",
+      "keywords": [
+        "embedding-backend", "qwen3", "tei", "ollama", "sentence-transformers",
+        "late-chunking", "gpu-contention", "mcp-server", "bsl-semantic-search",
+        "pooling-mismatch", "keep_alive", "fp16-dtype-bug", "issue-642", "pr-663"
+      ],
+      "last_verified": "2026-05-03",
+      "sources_count": 8,
+      "github_repos_count": 2
+    },
+    {
       "file": "graph-rag-community-summary-deterministic.md",
       "title": "GraphRAG community summaries — deterministic vs LLM-based",
       "keywords": [
