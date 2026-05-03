@@ -83,6 +83,8 @@ def hybrid_search(query: str, *,
         res.results = vector_fn(query, k=k); res.layers_consulted.append("Layer 1: bsl_code_v4_late")
     elif st == "graph" and graph_fn:
         res.results = graph_fn(query, k=k, query_type=qt); res.layers_consulted.append("Layer 3: Neo4j")
+        if not res.results and vector_fn:
+            res.results = vector_fn(query, k=k); res.layers_consulted.append("Layer 1 (graph empty fallback)")
     elif st == "community" and community_fn:
         res.results = community_fn(query, k=k); res.layers_consulted.append("Layer 4: communities")
     elif st == "hybrid":
