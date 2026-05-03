@@ -138,6 +138,18 @@ RETURN s.name AS name, s.module_path AS module, count(c) AS in_degree, 'Symbol' 
 ORDER BY in_degree DESC LIMIT $k
 """
 
+CYPHER_NEGATIVE_PATTERN = """
+MATCH (s:Symbol)
+WHERE s.is_export = true
+  AND NOT EXISTS {
+    MATCH (s)-[:CALLS]->(excl:Symbol)
+    WHERE toLower(excl.name) CONTAINS toLower($excluded)
+       OR toLower(coalesce(excl.module_path,'')) CONTAINS toLower($excluded)
+  }
+RETURN s.name AS name, s.module_path AS module, 'Symbol' AS kind
+LIMIT $k
+"""
+
 CYPHER_CALLERS_MULTIHOP = """
 MATCH (callee:Symbol)
 WHERE toLower(callee.name) CONTAINS toLower($name)
