@@ -44,6 +44,7 @@ from .refactor import (
 )
 from .services.embedding import EmbeddingService
 from .services.search import BSLSearchService, SearchMode, SearchRequest
+from src.framework_search.config import DEFAULT_TEI_URL
 
 # Создаем FastMCP server
 mcp = FastMCP("BSL Semantic Search")
@@ -428,7 +429,7 @@ async def bsl_stats() -> str:
 **По типам**:
 {type_stats}
 
-**Ollama**: {settings.ollama_host}
+**Embedder**: TEI (FrameworkTEIEmbedder) {DEFAULT_TEI_URL}
 **Модель embeddings**: {settings.embedding_model}
 """
         except FileNotFoundError:
