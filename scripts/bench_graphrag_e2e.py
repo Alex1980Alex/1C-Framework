@@ -133,36 +133,66 @@ LIMIT $k
 """
 
 
-def extract_target(query: str) -> str:
-    """Heuristic: pick the longest CamelCase / underscore identifier; for
-    dotted names like Module.Function — return the trailing function name
-    (Symbol.name in DB stores bare function names, not module-qualified)."""
+def extract_target(query: str) -> tuple[str, str]:
+    """Return (symbol_name, module_hint).
+
+    - module_hint: identifiers starting with subsystem/module prefixes
+      ('гкс_', 'обх_', 'УТ_') or generic Russian-prefixed-with-underscore names.
+      These typically denote a 1C module (e.g., "гкс_Взвешивание").
+    - symbol_name: trailing CamelCase function name; for "Module.Function"
+      dotted form, the part after dot.
+
+    Pattern from FalkorDB CodeGraph + Neo4j GraphRAG: separate symbol from
+    module hint to disambiguate same-named functions across modules.
+    """
     import re
     candidates = re.findall(r"[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_\.]{3,}", query)
     candidates = [c for c in candidates if any(ch.isupper() for ch in c) or "_" in c]
     if not candidates:
-        return ""
-    longest = max(candidates, key=len)
-    if "." in longest:
-        return longest.split(".")[-1]
-    return longest
+        return "", ""
+    module_hint = ""
+    symbol = ""
+    module_prefixes = ("гкс_", "обх_", "УТ_", "БСП_", "сис_")
+    for c in sorted(candidates, key=len, reverse=True):
+        if "." in c:
+            head, tail = c.rsplit(".", 1)
+            if not module_hint and (head.startswith(module_prefixes) or "_" in head):
+                module_hint = head
+            if not symbol:
+                symbol = tail
+        elif c.startswith(module_prefixes):
+            if not module_hint:
+                module_hint = c
+        elif not symbol:
+            symbol = c
+    if not symbol and module_hint:
+        symbol = module_hint
+    return symbol, module_hint
 
 
 def make_graph_fn(driver):
     def f(query: str, k: int = 10, query_type: str = "semantic"):
-        target = extract_target(query) or query[:60]
+        target, module_hint = extract_target(query)
+        if not target: target = query[:60]
+        params = {"name": target, "module_hint": module_hint, "k": k}
         if query_type == "multi_hop_callers":
-            cypher = CYPHER_CALLERS
+            # If the query targets a module (no specific symbol), use module-only Cypher
+            if module_hint and target == module_hint:
+                cypher = CYPHER_CALLERS_MODULE_ONLY
+            else:
+                cypher = CYPHER_CALLERS
         elif query_type == "impact_analysis":
             cypher = CYPHER_IMPACT
         elif query_type == "dead_code":
             cypher = CYPHER_DEAD
+            params = {"k": k}
         elif query_type == "architectural":
             cypher = CYPHER_SUBSYSTEM
+            params = {"name": target, "k": k}
         else:
             cypher = CYPHER_IMPACT
         with driver.session() as session:
-            recs = session.run(cypher, name=target, k=k).data()
+            recs = session.run(cypher, **params).data()
         return [{"id": f"{r.get('module', '')}/{r.get('name', '')}",
                  "name": r.get("name", ""), "module": r.get("module", ""),
                  "kind": r.get("kind", "graph"), "score": 0.5} for r in recs]
