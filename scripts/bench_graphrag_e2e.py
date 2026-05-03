@@ -87,7 +87,7 @@ def make_community_fn(qdrant: QdrantClient):
 CYPHER_CALLERS = """
 MATCH (callee:Symbol)
 WHERE toLower(callee.name) CONTAINS toLower($name)
-   OR toLower(coalesce(callee.module_path, '')) CONTAINS toLower($name)
+  AND ($module_hint = '' OR toLower(coalesce(callee.module_path, '')) CONTAINS toLower($module_hint))
 WITH collect(DISTINCT callee) AS targets
 UNWIND targets AS t
 MATCH (caller:Symbol)-[:CALLS]->(t)
@@ -98,11 +98,21 @@ LIMIT $k
 CYPHER_IMPACT = """
 MATCH (target:Symbol)
 WHERE toLower(target.name) CONTAINS toLower($name)
-   OR toLower(coalesce(target.module_path, '')) CONTAINS toLower($name)
+  AND ($module_hint = '' OR toLower(coalesce(target.module_path, '')) CONTAINS toLower($module_hint))
 OPTIONAL MATCH (caller:Symbol)-[:CALLS]->(target)
 RETURN DISTINCT coalesce(caller.name, target.name) AS name,
                 coalesce(caller.module_path, target.module_path) AS module,
                 'Symbol' AS kind
+LIMIT $k
+"""
+
+CYPHER_CALLERS_MODULE_ONLY = """
+MATCH (callee:Symbol)
+WHERE toLower(coalesce(callee.module_path, '')) CONTAINS toLower($module_hint)
+WITH collect(DISTINCT callee) AS targets
+UNWIND targets AS t
+MATCH (caller:Symbol)-[:CALLS]->(t)
+RETURN DISTINCT caller.name AS name, caller.module_path AS module, 'Symbol' AS kind
 LIMIT $k
 """
 
