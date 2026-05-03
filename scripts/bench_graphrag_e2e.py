@@ -190,10 +190,19 @@ def make_graph_fn(driver):
         target, module_hint = extract_target(query)
         if not target: target = query[:60]
         params = {"name": target, "module_hint": module_hint, "k": k}
-        if query_type == "multi_hop_callers":
-            # If the query targets a module (no specific symbol), use module-only Cypher
+        # Detect multi-hop chain hints in query text — switch to *1..3 traversal.
+        ql = query.lower()
+        multihop_hints = ("через 2", "через 3", "транзитивно", "цепочка вызовов",
+                          "уровн", "2-3 уровн", "несколько уровн")
+        deep_chain = any(h in ql for h in multihop_hints)
+        if query_type == "topology":
+            cypher = CYPHER_TOPOLOGY
+            params = {"k": k}
+        elif query_type == "multi_hop_callers":
             if module_hint and target == module_hint:
                 cypher = CYPHER_CALLERS_MODULE_ONLY
+            elif deep_chain:
+                cypher = CYPHER_CALLERS_MULTIHOP
             else:
                 cypher = CYPHER_CALLERS
         elif query_type == "impact_analysis":
