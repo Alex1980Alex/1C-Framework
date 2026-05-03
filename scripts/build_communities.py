@@ -203,7 +203,6 @@ def embed_and_upsert(qdrant, points, summaries):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0, help="Limit communities for smoke test")
-    ap.add_argument("--no-llm", action="store_true", help="Use stub summaries instead of LLM")
     args = ap.parse_args()
 
     t0 = time.time()
@@ -216,18 +215,10 @@ def main():
         if args.limit > 0:
             communities = dict(list(communities.items())[:args.limit])
             print(f"  Limited to {len(communities)} communities for smoke test")
-        # Generate summaries
-        print(f"\nGenerating LLM summaries ({len(communities)} communities)...")
-        summaries = {}
-        for i, (cid, nids) in enumerate(communities.items(), 1):
-            nlines, elines = build_summary_input(nids, nodes, edges)
-            prompt = SUMMARY_PROMPT.format(nodes_listing=nlines, edges_listing=elines)
-            if args.no_llm:
-                summaries[cid] = f"Stub: {len(nids)} nodes, top labels in community"
-            else:
-                summaries[cid] = call_llm(prompt)
-            if i % 10 == 0:
-                print(f"  [{i}/{len(communities)}] summaries done")
+        # Deterministic summaries — no LLM dependency, 100% reproducible.
+        print(f"\nGenerating deterministic summaries ({len(communities)} communities)...")
+        summaries = {cid: build_deterministic_summary(nids, nodes, edges)
+                     for cid, nids in communities.items()}
         # Save
         points = save_communities(session, qdrant, communities, nodes, summaries)
         # Embed + upsert (only if not --no-llm to save time on stubs)
