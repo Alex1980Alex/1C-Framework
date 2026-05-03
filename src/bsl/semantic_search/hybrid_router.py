@@ -8,7 +8,7 @@ from typing import Any, Literal
 logger = logging.getLogger(__name__)
 
 QueryType = Literal["semantic", "multi_hop_callers", "impact_analysis", "architectural",
-                    "dead_code", "cross_cutting", "topology", "mixed"]
+                    "dead_code", "cross_cutting", "topology", "negative_pattern", "mixed"]
 Strategy = Literal["vector", "graph", "community", "hybrid"]
 
 
