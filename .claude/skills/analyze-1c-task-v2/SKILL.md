@@ -148,6 +148,40 @@ Skill для комплексного анализа задачи по конф�
 - **bsl-platform-context** — API платформы 1С
 - **Grep/Glob** — поиск файлов и паттернов
 
+### GraphRAG router (fallback)
+
+Если `bsl-semantic-search` MCP недоступен или нужны типы запросов вне его покрытия — используй встроенный GraphRAG router (`src/bsl/semantic_search/hybrid_router.py` + `scripts/bench_graphrag_e2e.py`). 8 типов запросов с auto-classification, P50 82ms, 12/12 (100%) на max-complexity тестах.
+
+**Вызов** (прямой Python из Bash):
+
+```python
+from src.bsl.semantic_search.hybrid_router import hybrid_search
+from scripts.bench_graphrag_e2e import make_vector_fn, make_graph_fn, make_community_fn, embed_query
+# wire backends (Qdrant + Neo4j) и hybrid_search(query, k=10) → результаты с метаданными
+```
+
+**8 типов и куда применять в фазах анализа:**
+
+| Тип запроса (auto-detect) | Strategy | Применение в фазах /analyze-1c-task |
+|---------------------------|----------|------------------------------------|
+| `semantic` | vector | Фаза 3 — общий поиск похожего кода |
+| `multi_hop_callers` (`-[:CALLS*1..3]->`) | graph | Фаза 4 — кто вызывает изменяемую функцию через 2-3 уровня |
+| `impact_analysis` (+ module hint) | graph | Фаза 2 — какие модули пострадают при изменении |
+| `architectural` | community | Фаза 2 — Delta-spec классификация подсистем |
+| `dead_code` | graph | Фаза 5 — экспортные функции без callers |
+| `cross_cutting` | hybrid | Фаза 3 — функции в нескольких подсистемах |
+| `topology` (in-degree rank) | graph | Фаза 5 — узкие места, горячие функции |
+| `negative_pattern` (`NOT EXISTS`) | hybrid | Фаза 5 — "X но не Y" проверки |
+
+**Module disambiguation** — extract_target автоматически отделяет module_hint (`гкс_Взвешивание`) от symbol (`СформироватьДвижения`). Для запросов про конкретный документ это даёт laser-focused результаты вместо ambiguous match.
+
+**Когда использовать GraphRAG router vs MCP-tools:**
+- MCP `bsl_search` / `bsl_hybrid_search` — стандартный путь, доступен в production
+- GraphRAG router — когда MCP падает, или нужны типы `topology` / `negative_pattern` / `community` overview, не покрытые MCP
+- Оба используют одни бэкенды (Qdrant `bsl_code_v4_late` + Neo4j) — результаты совместимы
+
+Подробности: [`docs/roadmap/260502_ROADMAP_GRAPHRAG_BSL_COMPLEX_QUERIES.md`](../../../docs/roadmap/260502_ROADMAP_GRAPHRAG_BSL_COMPLEX_QUERIES.md), benchmark — [`tmp/phase6_e2e_results.json`](../../../tmp/phase6_e2e_results.json).
+
 ### Маркировка точек модификации в плане (Фаза 4)
 
 Для каждой точки указать **все применимые** маркеры:
