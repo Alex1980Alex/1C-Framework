@@ -20,6 +20,9 @@ coexist (16+16 > 24). TEI is the production embedding service per CLAUDE.md
 (7+ Qdrant collections, memory-hooks, framework-search), so BSL aligns
 with it by default. The ST path remains for the case TEI is later replaced
 or BSL needs Late-Chunking-aligned indexing on its own profile.
+
+Note: BSL_EMBEDDER is read once at first instantiation (singleton).
+Runtime changes to the env var require Qwen3EmbeddingService.reset().
 """
 
 from __future__ import annotations
