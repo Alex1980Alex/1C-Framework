@@ -85,9 +85,10 @@ def build_summary_input(community_nids, nodes, edges, max_nodes=40):
     by_label = defaultdict(list)
     for nid in community_nids:
         n = nodes[nid]
-        by_label[n["label"]].append(n["name"])
+        name = n.get("name") or n.get("path") or f"node-{nid}"
+        by_label[n["label"]].append(str(name))
     for label in ("Object", "Module", "Symbol"):
-        items = by_label.get(label, [])[:max_nodes // 3]
+        items = [x for x in by_label.get(label, []) if x][:max_nodes // 3]
         if items: nlines.append(f"{label}: " + ", ".join(items))
     elines = []
     seen = set()
