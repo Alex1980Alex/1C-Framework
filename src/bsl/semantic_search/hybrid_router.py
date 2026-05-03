@@ -44,6 +44,10 @@ def classify_query(query: str) -> QueryType:
                    "узкие места", "больше всего вызовов",
                    "больше всего исходящих", "ранжируй по", "топ-",
                    "статистика графа"]
+    negative_kw = ["не вызывают", "не используют", "не вызывает",
+                   "которые не ", "без вызова", "которые НЕ "]
+    if any(k in q for k in negative_kw) and ("но" in q or "однако" in q or "имеют" in q):
+        return "negative_pattern"
     if any(k in q for k in topology_kw): return "topology"
     if any(k in q for k in callers_kw): return "multi_hop_callers"
     if any(k in q for k in impact_kw): return "impact_analysis"
@@ -63,6 +67,7 @@ def strategy_for(query_type: QueryType) -> Strategy:
         "dead_code": "graph",
         "cross_cutting": "hybrid",
         "topology": "graph",
+        "negative_pattern": "hybrid",
         "mixed": "hybrid",
     }.get(query_type, "hybrid")
 
