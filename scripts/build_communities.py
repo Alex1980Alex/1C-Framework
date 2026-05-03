@@ -103,21 +103,51 @@ def build_summary_input(community_nids, nodes, edges, max_nodes=40):
     return "\n".join(nlines), "; ".join(elines) if elines else "(no internal calls)"
 
 
-def call_llm(prompt: str, max_tokens: int = 500):
-    """Call LLM rotation (cheap_llm_call async). Falls back to stub on failure."""
-    try:
-        import asyncio
-        from src.shared.llm_rotation import cheap_llm_call
-        result = asyncio.run(cheap_llm_call(
-            prompt=prompt,
-            component="bsl_community_summary",
-            max_tokens=max_tokens,
-            temperature=0.3,
-        ))
-        return result or f"(Empty response from LLM rotation)"
-    except Exception as e:
-        print(f"    [LLM stub] {e}")
-        return f"(Stub summary: {len(prompt)} char prompt; LLM rotation unavailable)"
+def build_deterministic_summary(community_nids, nodes, edges, top_n: int = 5) -> str:
+    """Structured Russian summary from graph data — no LLM dependency.
+
+    Pattern from FalkorDB CodeGraph + Neo4j GraphRAG field guide: instead of
+    LLM narrative (lossy, non-deterministic, fails on rate-limit), compose
+    a telegraphic summary from concrete graph features. Maximum accuracy,
+    100% reproducibility, microseconds per community.
+    """
+    from collections import Counter
+    cset = set(community_nids)
+    objects, modules, symbols = [], [], []
+    for nid in community_nids:
+        n = nodes[nid]
+        lab = n.get("label")
+        if lab == "Object": objects.append(n)
+        elif lab == "Module": modules.append(n)
+        elif lab == "Symbol": symbols.append(n)
+
+    subs = Counter(n.get("subsystem", "") for n in modules + objects if n.get("subsystem"))
+    obj_types = Counter(o.get("object_type", "") for o in objects if o.get("object_type"))
+
+    in_deg = Counter()
+    internal_calls = 0
+    for s, t, rel in edges:
+        if rel != "CALLS": continue
+        if t in cset: in_deg[t] += 1
+        if s in cset and t in cset: internal_calls += 1
+    top_syms = [(nodes[nid]["name"], deg) for nid, deg in in_deg.most_common(top_n)
+                if nid in cset and nodes[nid].get("name")]
+
+    parts = []
+    if subs:
+        parts.append("Подсистемы: " + ", ".join(s for s, _ in subs.most_common(3)) + ".")
+    if obj_types:
+        parts.append("Объекты: " + ", ".join(f"{t} ({n})" for t, n in obj_types.most_common(5)) + ".")
+    parts.append(f"Модулей: {len(modules)}, символов: {len(symbols)}, объектов: {len(objects)}.")
+    parts.append(f"Внутренних вызовов CALLS: {internal_calls}.")
+    if top_syms:
+        parts.append("Ключевые функции (по числу вызывающих): "
+                     + ", ".join(f"{name}({deg})" for name, deg in top_syms) + ".")
+    if objects:
+        obj_names = [o.get("name", "") for o in objects if o.get("name")][:5]
+        if obj_names:
+            parts.append("Примеры объектов: " + ", ".join(obj_names) + ".")
+    return " ".join(parts)
 
 
 def save_communities(session, qdrant, communities, nodes, summaries):
