@@ -103,11 +103,18 @@ def build_summary_input(community_nids, nodes, edges, max_nodes=40):
     return "\n".join(nlines), "; ".join(elines) if elines else "(no internal calls)"
 
 
-def call_llm(prompt: str, model: str = "zai/glm-5", max_tokens: int = 500):
-    """Call LLM rotation MCP. Falls back to stub if rotation unavailable."""
+def call_llm(prompt: str, max_tokens: int = 500):
+    """Call LLM rotation (cheap_llm_call async). Falls back to stub on failure."""
     try:
-        from src.shared.llm_rotation import client
-        return client.complete(prompt=prompt, model=model, max_tokens=max_tokens)
+        import asyncio
+        from src.shared.llm_rotation import cheap_llm_call
+        result = asyncio.run(cheap_llm_call(
+            prompt=prompt,
+            component="bsl_community_summary",
+            max_tokens=max_tokens,
+            temperature=0.3,
+        ))
+        return result or f"(Empty response from LLM rotation)"
     except Exception as e:
         print(f"    [LLM stub] {e}")
         return f"(Stub summary: {len(prompt)} char prompt; LLM rotation unavailable)"
