@@ -95,7 +95,7 @@ def build_summary_input(community_nids, nodes, edges, max_nodes=40):
     for s, t, rel in edges:
         if s in cset and t in cset and rel == "CALLS":
             ns, nt = nodes.get(s), nodes.get(t)
-            if ns and nt:
+            if ns and nt and ns.get("name") and nt.get("name"):
                 key = f"{ns['name']}->{nt['name']}"
                 if key not in seen:
                     seen.add(key); elines.append(key)

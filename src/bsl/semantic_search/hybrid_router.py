@@ -25,10 +25,18 @@ def classify_query(query: str) -> QueryType:
     """Rule-based classifier — recognizes Russian + English query patterns."""
     q = query.lower()
     callers_kw = ["кто вызывает", "кто использует", "callers of", "callers"]
-    impact_kw = ["что сломается", "если переименую", "if i rename", "impact", "влияние", "повлияет"]
-    arch_kw = ["overview", "обзор", "устройство", "архитектура", "опиши подсистему", "describe subsystem"]
-    dead_kw = ["dead code", "не вызывается", "никем не используется", "unused", "мертвый"]
-    cross_kw = ["функциональн", "fo и регистр", "регистр и функцион", "cross-cutting"]
+    impact_kw = ["что сломается", "сломается", "если переименую", "если изменю",
+                 "if i rename", "impact", "влияние", "повлия", "пострадают"]
+    arch_kw = ["overview", "обзор", "устройство", "архитектура",
+               "опиши подсистему", "опиши арм", "опиши устройство",
+               "describe subsystem", "арм оператора"]
+    dead_kw = ["dead code", "не вызывается", "не вызываются",
+               "никем не используется", "никем не вызывается", "никем не вызываются",
+               "unused", "мертвый"]
+    cross_kw = ["функциональн", "fo и регистр", "фо и регистр",
+                "регистр и функцион", "cross-cutting",
+                "пишут в регистр", "пишут регистр",
+                "читают регистр", "читают из регистра"]
     if any(k in q for k in callers_kw): return "multi_hop_callers"
     if any(k in q for k in impact_kw): return "impact_analysis"
     if any(k in q for k in arch_kw): return "architectural"
