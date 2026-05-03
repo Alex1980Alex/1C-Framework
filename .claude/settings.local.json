@@ -835,7 +835,8 @@
       "Bash(Select-Object -First 1)",
       "Bash(tee cache/graph_embeddings_build.log)",
       "Bash(tee cache/neo4j_load.log)",
-      "Bash(Q=\"document posting\" timeout 60 \"C:/1С-Framework/.venv/Scripts/python.exe\" tmp/smoke_bsl.py)"
+      "Bash(Q=\"document posting\" timeout 60 \"C:/1С-Framework/.venv/Scripts/python.exe\" tmp/smoke_bsl.py)",
+      "PowerShell(Get-Command *)"
     ]
   },
   "enableAllProjectMcpServers": true,
