@@ -217,9 +217,15 @@ def make_graph_fn(driver):
             cypher = CYPHER_IMPACT
         with driver.session() as session:
             recs = session.run(cypher, **params).data()
-        return [{"id": f"{r.get('module', '')}/{r.get('name', '')}",
-                 "name": r.get("name", ""), "module": r.get("module", ""),
-                 "kind": r.get("kind", "graph"), "score": 0.5} for r in recs]
+        out = []
+        for r in recs:
+            in_deg = r.get("in_degree")
+            score = float(in_deg) if in_deg is not None else 0.5
+            out.append({"id": f"{r.get('module', '')}/{r.get('name', '')}",
+                        "name": r.get("name", ""), "module": r.get("module", ""),
+                        "kind": r.get("kind", "graph"),
+                        "in_degree": in_deg, "score": score})
+        return out
     return f
 
 
