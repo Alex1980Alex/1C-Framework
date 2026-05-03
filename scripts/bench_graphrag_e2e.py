@@ -210,6 +210,10 @@ def make_graph_fn(driver):
         if query_type == "topology":
             cypher = CYPHER_TOPOLOGY
             params = {"k": k}
+        elif query_type == "negative_pattern":
+            cypher = CYPHER_NEGATIVE_PATTERN
+            excluded = module_hint or target
+            params = {"excluded": excluded, "k": k}
         elif query_type == "multi_hop_callers":
             if module_hint and target == module_hint:
                 cypher = CYPHER_CALLERS_MODULE_ONLY

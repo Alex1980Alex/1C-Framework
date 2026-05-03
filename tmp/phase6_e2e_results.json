@@ -23,8 +23,8 @@
       "total": 5
     }
   },
-  "latency_p50_ms": 103.4,
-  "latency_p95_ms": 266.9,
+  "latency_p50_ms": 188.2,
+  "latency_p95_ms": 423.2,
   "results": [
     {
       "id": "MH-1",
@@ -35,7 +35,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 392.1,
+      "latency_ms": 525.5,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -64,7 +64,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 266.9,
+      "latency_ms": 266.8,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -93,7 +93,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 254.0,
+      "latency_ms": 255.9,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -122,7 +122,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 63.1,
+      "latency_ms": 43.1,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -150,7 +150,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 19.6,
+      "latency_ms": 26.5,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -178,7 +178,7 @@
       "n_results": 1,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 76.7,
+      "latency_ms": 26.5,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -198,7 +198,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 281.1,
+      "latency_ms": 374.6,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -227,7 +227,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 195.3,
+      "latency_ms": 251.5,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -256,7 +256,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 215.8,
+      "latency_ms": 261.3,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -285,7 +285,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 208.1,
+      "latency_ms": 240.8,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -314,7 +314,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 103.4,
+      "latency_ms": 173.9,
       "layers": [
         "Layer 4: communities"
       ],
@@ -342,7 +342,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 92.5,
+      "latency_ms": 140.1,
       "layers": [
         "Layer 4: communities"
       ],
@@ -370,7 +370,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 93.4,
+      "latency_ms": 188.2,
       "layers": [
         "Layer 4: communities"
       ],
@@ -398,7 +398,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 68.9,
+      "latency_ms": 154.2,
       "layers": [
         "Layer 4: communities"
       ],
@@ -426,7 +426,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 71.0,
+      "latency_ms": 174.4,
       "layers": [
         "Layer 4: communities"
       ],
@@ -454,7 +454,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 11.9,
+      "latency_ms": 4.6,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -482,7 +482,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.8,
+      "latency_ms": 2.8,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -510,7 +510,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.4,
+      "latency_ms": 1.7,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -538,7 +538,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.2,
+      "latency_ms": 1.4,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -566,7 +566,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.2,
+      "latency_ms": 1.6,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -594,7 +594,7 @@
       "n_results": 8,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 156.9,
+      "latency_ms": 373.7,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -624,7 +624,7 @@
       "n_results": 8,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 231.5,
+      "latency_ms": 422.8,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -654,7 +654,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 130.6,
+      "latency_ms": 454.5,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -684,7 +684,7 @@
       "n_results": 8,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 196.2,
+      "latency_ms": 406.2,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -714,7 +714,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 203.9,
+      "latency_ms": 423.2,
       "layers": [
         "Layer 1",
         "Layer 3",
