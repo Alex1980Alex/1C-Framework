@@ -313,10 +313,10 @@ class BSLSearchService:
                 payload = hit.payload or {}
                 results.append(
                     {
-                        "file_path": payload.get("file_path", ""),
+                        "file_path": payload.get("module_path", ""),
                         "module_type": payload.get("module_type", "Unknown"),
                         "score": hit.score,
-                        "summary": payload.get("searchable_text", "")[:500],
+                        "summary": payload.get("content", "")[:500],
                         "functions_count": payload.get("functions_count", 0),
                         "variables_count": payload.get("variables_count", 0),
                         "functions": payload.get("functions", []),
