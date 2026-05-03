@@ -1,20 +1,31 @@
 """
-BSL Code Search Embedding Service — Phase 8.13 (sentence-transformers inline).
+BSL Code Search Embedding Service — Phase 8.13 (TEI primary, ST opt-in).
 
 Provides code-optimized embeddings for 1C:Enterprise BSL code search
-using Qwen3-Embedding-8B inline via sentence-transformers (singleton load).
+using Qwen3-Embedding-8B. Backend selected by env flag BSL_EMBEDDER.
 
-Backend chain:
-1. sentence-transformers inline (primary) — Qwen3-Embedding-8B FP16, 4096d.
-   Reference implementation, matches `bsl_code_v4_late` index pooling exactly,
-   no GPU contention with other backends. ~16 GB VRAM, lazy-loaded once.
-2. TEI HTTP fallback (Qwen3TEIQueryService) — when ST fails to load.
-3. None (graceful degradation → FTS5 text search)
+Backend chain (default — BSL_EMBEDDER unset or "tei"):
+1. TEI HTTP (primary) — Qwen3TEIQueryService at http://localhost:8080.
+   Shared with framework-search MCP, memory-hooks, post-commit reindex.
+   Warm ~80ms, no GPU contention (TEI already holds the model on card).
+2. None (graceful degradation → FTS5 text search) when TEI down.
+
+Backend chain (opt-in — BSL_EMBEDDER=st):
+1. sentence-transformers inline — Qwen3-Embedding-8B, ~16 GB VRAM, lazy-loaded.
+   Use only when TEI is intentionally stopped (otherwise CUDA OOM).
+2. TEI HTTP fallback — when ST fails to load.
+
+Architectural rationale (2026-05-04): on a 24 GB card TEI and ST cannot
+coexist (16+16 > 24). TEI is the production embedding service per CLAUDE.md
+(7+ Qdrant collections, memory-hooks, framework-search), so BSL aligns
+with it by default. The ST path remains for the case TEI is later replaced
+or BSL needs Late-Chunking-aligned indexing on its own profile.
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import threading
 from typing import ClassVar
 
