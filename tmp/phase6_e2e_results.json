@@ -23,8 +23,8 @@
       "total": 5
     }
   },
-  "latency_p50_ms": 139.9,
-  "latency_p95_ms": 336.0,
+  "latency_p50_ms": 103.4,
+  "latency_p95_ms": 266.9,
   "results": [
     {
       "id": "MH-1",
@@ -35,7 +35,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 487.2,
+      "latency_ms": 392.1,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -64,7 +64,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 336.0,
+      "latency_ms": 266.9,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -93,22 +93,23 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 41.1,
+      "latency_ms": 254.0,
       "layers": [
-        "Layer 3: Neo4j"
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
       ],
       "top3": [
         {
-          "name": "ОбработкаПроведения",
-          "kind": "Symbol"
+          "name": "ПКС_Весы",
+          "kind": "code"
         },
         {
-          "name": "ОбработкаПроведения",
-          "kind": "Symbol"
+          "name": "ПКС_Весы",
+          "kind": "code"
         },
         {
-          "name": "ОбработкаПроведения",
-          "kind": "Symbol"
+          "name": "ОбработатьВзвешиваниеПриЗаписи",
+          "kind": "code"
         }
       ]
     },
@@ -121,7 +122,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 41.1,
+      "latency_ms": 63.1,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -149,7 +150,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 39.9,
+      "latency_ms": 19.6,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -177,7 +178,7 @@
       "n_results": 1,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 55.4,
+      "latency_ms": 76.7,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -194,21 +195,26 @@
       "query": "Какие модули повлияют на изменение интерфейса гкс_АсинхронныеСервисы.ЗапуститьЗадание?",
       "detected": "impact_analysis",
       "strategy": "graph",
-      "n_results": 2,
+      "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 40.9,
+      "latency_ms": 281.1,
       "layers": [
-        "Layer 3: Neo4j"
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
       ],
       "top3": [
         {
           "name": "ЗапуститьЗаданиеСОжиданием",
-          "kind": "Symbol"
+          "kind": "code"
         },
         {
-          "name": "ЗапуститьЗадание",
-          "kind": "Symbol"
+          "name": "ФоновоеЗаданиеЗапуститьНаКлиенте",
+          "kind": "code"
+        },
+        {
+          "name": "ПриВключенииОтложенногоОбновления",
+          "kind": "code"
         }
       ]
     },
@@ -221,22 +227,23 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 13.0,
+      "latency_ms": 195.3,
       "layers": [
-        "Layer 3: Neo4j"
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
       ],
       "top3": [
         {
-          "name": "ДобавитьКомандыПечати",
-          "kind": "Symbol"
+          "name": "ОрганизацияПриИзмененииНаСервере",
+          "kind": "code"
         },
         {
-          "name": "ДобавитьКомандыПечати",
-          "kind": "Symbol"
+          "name": "ПослеЗаписи",
+          "kind": "code"
         },
         {
-          "name": "КомандыПечатиОбъекта",
-          "kind": "Symbol"
+          "name": "ОрганизацияПриИзмененииНаСервере",
+          "kind": "code"
         }
       ]
     },
@@ -249,22 +256,23 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 37.3,
+      "latency_ms": 215.8,
       "layers": [
-        "Layer 3: Neo4j"
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
       ],
       "top3": [
         {
-          "name": "ПриСозданииНаСервере",
-          "kind": "Symbol"
+          "name": "СформироватьНаправлениеНаРазгрузку",
+          "kind": "code"
         },
         {
-          "name": "ПриСозданииНаСервере",
-          "kind": "Symbol"
+          "name": "КомандаОтменитьРазрешение",
+          "kind": "code"
         },
         {
-          "name": "ПриСозданииНаСервере",
-          "kind": "Symbol"
+          "name": "СформироватьНаправлениеНаРазгрузкуПриНеобходимости",
+          "kind": "code"
         }
       ]
     },
@@ -277,7 +285,7 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 350.0,
+      "latency_ms": 208.1,
       "layers": [
         "Layer 3: Neo4j",
         "Layer 1 (graph empty fallback)"
@@ -306,21 +314,21 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 140.5,
+      "latency_ms": 103.4,
       "layers": [
         "Layer 4: communities"
       ],
       "top3": [
         {
-          "name": "Community-8",
+          "name": "Community-15",
           "kind": "community"
         },
         {
-          "name": "Community-47",
+          "name": "Community-9",
           "kind": "community"
         },
         {
-          "name": "Community-43",
+          "name": "Community-1",
           "kind": "community"
         }
       ]
@@ -334,21 +342,21 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 139.9,
+      "latency_ms": 92.5,
       "layers": [
         "Layer 4: communities"
       ],
       "top3": [
         {
-          "name": "Community-8",
+          "name": "Community-15",
           "kind": "community"
         },
         {
-          "name": "Community-47",
+          "name": "Community-9",
           "kind": "community"
         },
         {
-          "name": "Community-43",
+          "name": "Community-1",
           "kind": "community"
         }
       ]
@@ -362,21 +370,21 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 160.5,
+      "latency_ms": 93.4,
       "layers": [
         "Layer 4: communities"
       ],
       "top3": [
         {
-          "name": "Community-8",
+          "name": "Community-31",
           "kind": "community"
         },
         {
-          "name": "Community-47",
+          "name": "Community-4",
           "kind": "community"
         },
         {
-          "name": "Community-43",
+          "name": "Community-16",
           "kind": "community"
         }
       ]
@@ -390,21 +398,21 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 142.5,
+      "latency_ms": 68.9,
       "layers": [
         "Layer 4: communities"
       ],
       "top3": [
         {
-          "name": "Community-8",
+          "name": "Community-5",
           "kind": "community"
         },
         {
-          "name": "Community-47",
+          "name": "Community-15",
           "kind": "community"
         },
         {
-          "name": "Community-43",
+          "name": "Community-9",
           "kind": "community"
         }
       ]
@@ -418,21 +426,21 @@
       "n_results": 10,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 151.5,
+      "latency_ms": 71.0,
       "layers": [
         "Layer 4: communities"
       ],
       "top3": [
         {
-          "name": "Community-8",
+          "name": "Community-4",
           "kind": "community"
         },
         {
-          "name": "Community-47",
+          "name": "Community-20",
           "kind": "community"
         },
         {
-          "name": "Community-43",
+          "name": "Community-6",
           "kind": "community"
         }
       ]
@@ -446,7 +454,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 2.6,
+      "latency_ms": 11.9,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -502,7 +510,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.6,
+      "latency_ms": 1.4,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -530,7 +538,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.6,
+      "latency_ms": 1.2,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -558,7 +566,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 1.6,
+      "latency_ms": 1.2,
       "layers": [
         "Layer 3: Neo4j"
       ],
@@ -583,10 +591,10 @@
       "query": "Какие документы пишут в регистр гкс_РегистрацияНаПЛК?",
       "detected": "cross_cutting",
       "strategy": "hybrid",
-      "n_results": 10,
+      "n_results": 8,
       "expected_min": 1,
       "pass": true,
-      "latency_ms": 224.1,
+      "latency_ms": 156.9,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -616,7 +624,7 @@
       "n_results": 8,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 249.6,
+      "latency_ms": 231.5,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -646,7 +654,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 219.2,
+      "latency_ms": 130.6,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -676,7 +684,7 @@
       "n_results": 8,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 268.2,
+      "latency_ms": 196.2,
       "layers": [
         "Layer 1",
         "Layer 3",
@@ -706,7 +714,7 @@
       "n_results": 10,
       "expected_min": 0,
       "pass": true,
-      "latency_ms": 235.0,
+      "latency_ms": 203.9,
       "layers": [
         "Layer 1",
         "Layer 3",
