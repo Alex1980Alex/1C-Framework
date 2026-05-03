@@ -3,6 +3,19 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "graph-rag-community-summary-deterministic.md",
+      "title": "GraphRAG community summaries — deterministic vs LLM-based",
+      "keywords": [
+        "graphrag", "community-summary", "leiden", "neo4j", "deterministic",
+        "falkordb-codegraph", "microsoft-graphrag", "code-retrieval",
+        "callgraph", "module-disambiguation", "cypher", "structured-summary",
+        "phase-6-5", "bsl"
+      ],
+      "last_verified": "2026-05-03",
+      "sources_count": 5,
+      "github_repos_count": 3
+    },
+    {
       "file": "code-retrieval-golden-set-construction-2025.md",
       "title": "Code Retrieval Golden Set Construction — Best Practices 2025",
       "keywords": [
