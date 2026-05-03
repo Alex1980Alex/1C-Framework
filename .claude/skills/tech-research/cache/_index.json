@@ -10,8 +10,33 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-02",
+  "last_updated": "2026-05-03",
   "topics": {
+    "qwen3-embedding-tei-fp16-bug": {
+      "file": "qwen3-embedding-tei-fp16-bug.md",
+      "domain": "embeddings",
+      "category": "deployment-architecture",
+      "created": "2026-05-03",
+      "last_verified": "2026-05-03",
+      "keywords": [
+        "qwen3-embedding",
+        "tei",
+        "fp16-dtype-bug",
+        "issue-642",
+        "pr-663",
+        "sentence-transformers",
+        "ollama",
+        "keep_alive",
+        "late-chunking",
+        "last-token-pooling",
+        "gpu-contention",
+        "mcp-embedding",
+        "bsl-semantic-search",
+        "TEI-1.7.4",
+        "TEI-1.8.1"
+      ],
+      "summary": "Критический FP16 batched bug в TEI 1.7.0-1.7.3 для Qwen3-Embedding моделей: cosine similarity с sentence-transformers reference <0.2 (норма >0.95). Root cause — FP32 minimum value downcast + missing to_dtype on attention_bias. Fix в PR #663 (TEI v1.7.4, July 7). Полный Qwen3 support 0.6B/4B/8B + FlashQwen3 CUDA в v1.8.0. Текущий проект на TEI 1.7.2 — БЕЗ fix'а, требует upgrade. Best practices: один backend per pipeline (не смешивать indexer и querier), Late Chunking только через sentence-transformers (TEI не умеет), Ollama keep_alive=0 для редких MCP-вызовов (выгружает 7.7GB Q4 после ответа). Verify recommended: cosine ST vs TEI на 10 тестовых queries должно быть >0.95 — иначе индекс bsl_code_v4_late потенциально с искажёнными векторами на batched FP16 chunks. Verified 2026-05-03 via TEI issue tracker #642/#665/#668, PR #663, releases page, Qwen3-Embedding-8B HF model card, Late Chunking arxiv:2409.04701v3, Ollama FAQ docs."
+    },
     "qwen3-embedding-speedup": {
       "file": "qwen3-embedding-speedup.md",
       "domain": "embeddings",
