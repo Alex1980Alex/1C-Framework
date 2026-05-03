@@ -188,10 +188,12 @@ def embed_and_upsert(qdrant, points, summaries):
     print(f"Embedding {len(points)} community summaries...")
     from sentence_transformers import SentenceTransformer
     import torch
+    # device_map="auto" + .to() triggers "Cannot copy out of meta tensor".
+    # Pick device upfront and let SentenceTransformer load weights there.
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model = SentenceTransformer("Qwen/Qwen3-Embedding-8B",
-        model_kwargs={"device_map": "auto"},
+        device=device,
         tokenizer_kwargs={"padding_side": "left"})
-    if torch.cuda.is_available(): model = model.to("cuda")
     texts = [p["payload"]["summary"] or p["payload"]["name"] for p in points]
     embs = model.encode(texts, batch_size=20, show_progress_bar=False, convert_to_numpy=True)
     qpoints = [qm.PointStruct(id=p["id"], vector=e.tolist(), payload=p["payload"])
