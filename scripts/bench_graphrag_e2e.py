@@ -119,13 +119,18 @@ LIMIT $k
 
 
 def extract_target(query: str) -> str:
-    """Heuristic: pick the longest CamelCase / underscore identifier."""
+    """Heuristic: pick the longest CamelCase / underscore identifier; for
+    dotted names like Module.Function — return the trailing function name
+    (Symbol.name in DB stores bare function names, not module-qualified)."""
     import re
     candidates = re.findall(r"[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_\.]{3,}", query)
     candidates = [c for c in candidates if any(ch.isupper() for ch in c) or "_" in c]
     if not candidates:
         return ""
-    return max(candidates, key=len)
+    longest = max(candidates, key=len)
+    if "." in longest:
+        return longest.split(".")[-1]
+    return longest
 
 
 def make_graph_fn(driver):
