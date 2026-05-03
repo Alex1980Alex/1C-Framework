@@ -55,6 +55,7 @@ def strategy_for(query_type: QueryType) -> Strategy:
         "architectural": "community",
         "dead_code": "graph",
         "cross_cutting": "hybrid",
+        "topology": "graph",
         "mixed": "hybrid",
     }.get(query_type, "hybrid")
 
