@@ -394,7 +394,7 @@ async def bsl_stats() -> str:
 **Статус**: {collection_info.status}
 
 **Qdrant**: {settings.qdrant_host}:{settings.qdrant_port}
-**Ollama**: {settings.ollama_host}
+**Embedder**: TEI (FrameworkTEIEmbedder) {DEFAULT_TEI_URL}
 """
             except Exception as e:
                 logger.warning(f"Qdrant stats failed, trying SQLite: {e}")
