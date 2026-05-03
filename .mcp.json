@@ -53,12 +53,9 @@
         "-jar",
         "C:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
         "--platform-path",
-        "C:\\Program Files\\1cv8\\8.3.27.1859",
+        "C:\\Program Files (x86)\\1cv8\\8.3.27.1936",
         "--verbose"
       ],
-      "env": {
-        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
-      },
       "timeout": 30000
     },
     "memory-ai": {
