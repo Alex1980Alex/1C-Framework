@@ -116,36 +116,15 @@ class Qwen3EmbeddingService:
             return None
 
     def _embed_ollama_batch(self, texts: list[str]) -> list[list[float] | None]:
-        """Batch embedding via Ollama /api/embed (supports list input)."""
+        """Batch embedding via sentence-transformers (legacy method name)."""
         texts = [self._truncate(t) for t in texts]
         try:
-            client = self._get_client()
-            response = client.post(
-                self.embed_endpoint,
-                json={"model": self.model, "input": texts},
-            )
-            response.raise_for_status()
-            data = response.json()
-            embeddings = data.get("embeddings", [])
-            if len(embeddings) == len(texts):
-                if self._dims is None and embeddings:
-                    self._dims = len(embeddings[0])
-                    logger.info("Detected embedding dimensions: %d", self._dims)
-                return [emb if isinstance(emb, list) else None for emb in embeddings]
-            logger.warning(
-                "Ollama batch: expected %d, got %d embeddings",
-                len(texts),
-                len(embeddings),
-            )
-            return [None] * len(texts)
-        except httpx.HTTPStatusError as e:
-            logger.error("Ollama batch HTTP error: %s", e.response.status_code)
-            return [None] * len(texts)
-        except httpx.ConnectError:
-            logger.error("Ollama not available at %s", self.ollama_host)
-            return [None] * len(texts)
+            model = self._ensure_model()
+            vecs = model.encode(texts, convert_to_numpy=True, batch_size=8,
+                                show_progress_bar=False, normalize_embeddings=True)
+            return [v.tolist() for v in vecs]
         except Exception as e:
-            logger.error("Ollama batch error: %s", e)
+            logger.error("ST batch embed error: %s", e)
             return [None] * len(texts)
 
     def _tei_fallback(self) -> Qwen3TEIQueryService | None:
