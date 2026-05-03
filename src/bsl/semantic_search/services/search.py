@@ -277,13 +277,14 @@ class BSLSearchService:
                     host=settings.qdrant_host, port=settings.qdrant_port
                 )
 
-            # Инициализация embedding service
+            # Phase 8 §2.1: TEI Qwen3-Embedding-8B 4096d (was Ollama; tag mismatch silently returned empty embedding).
             if self._embedding_service is None:
-                from .embedding import EmbeddingService
+                import atexit
 
-                self._embedding_service = EmbeddingService(
-                    ollama_host=settings.ollama_host, model=settings.embedding_model
-                )
+                from src.framework_search.embedder import FrameworkTEIEmbedder
+
+                self._embedding_service = FrameworkTEIEmbedder()
+                atexit.register(self._embedding_service.close)
 
             # Генерация embedding для запроса
             query_embedding = self._embedding_service.create_embedding(query)
