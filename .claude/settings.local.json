@@ -834,7 +834,8 @@
       "Bash(pwsh -NoProfile -Command \"Get-Help 'C:/1С-Framework/scripts/reindex_bsl_fast.ps1' -Detailed | Select-Object -First 30\")",
       "Bash(Select-Object -First 1)",
       "Bash(tee cache/graph_embeddings_build.log)",
-      "Bash(tee cache/neo4j_load.log)"
+      "Bash(tee cache/neo4j_load.log)",
+      "Bash(Q=\"document posting\" timeout 60 \"C:/1С-Framework/.venv/Scripts/python.exe\" tmp/smoke_bsl.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
