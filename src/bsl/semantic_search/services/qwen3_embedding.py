@@ -153,39 +153,47 @@ class Qwen3EmbeddingService:
         return self._tei
 
     def embed_query(self, text: str) -> list[float] | None:
-        """Embed query via Ollama; on connect failure fallback to TEI HTTP."""
+        """Embed query. Default: TEI HTTP. BSL_EMBEDDER=st: ST inline → TEI fallback."""
+        if not self._use_st:
+            tei = self._tei_fallback()
+            return tei.embed_query(text) if tei else None
         instructed = QUERY_INSTRUCTION + text
         result = self._embed_ollama(instructed)
         if result is None:
             tei = self._tei_fallback()
             if tei is not None:
-                logger.info("Falling back to TEI for query embedding")
-                return tei.embed_query(text)  # tei applies QUERY_INSTRUCTION itself
+                logger.info("ST failed → falling back to TEI for query embedding")
+                return tei.embed_query(text)
         return result
 
     def embed_document(self, text: str) -> list[float] | None:
-        """Embed passage via Ollama; on connect failure fallback to TEI HTTP."""
+        """Embed passage. Default: TEI HTTP. BSL_EMBEDDER=st: ST inline → TEI fallback."""
+        if not self._use_st:
+            tei = self._tei_fallback()
+            return tei.embed_document(text) if tei else None
         instructed = DOCUMENT_INSTRUCTION + text
         result = self._embed_ollama(instructed)
         if result is None:
             tei = self._tei_fallback()
             if tei is not None:
-                logger.info("Falling back to TEI for document embedding")
+                logger.info("ST failed → falling back to TEI for document embedding")
                 return tei.embed_document(text)
         return result
 
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float] | None]:
-        """Batch embed via Ollama; on connect failure fallback to TEI HTTP."""
+        """Batch embed. Default: TEI HTTP. BSL_EMBEDDER=st: ST inline → TEI fallback."""
         if not texts:
             return []
+        if not self._use_st:
+            tei = self._tei_fallback()
+            return tei.embed_batch(texts, is_query=is_query) if tei else [None] * len(texts)
         prefix = QUERY_INSTRUCTION if is_query else DOCUMENT_INSTRUCTION
         instructed = [prefix + t for t in texts]
         results = self._embed_ollama_batch(instructed)
-        # If ALL results None — Ollama down → fallback to TEI
         if results and all(r is None for r in results):
             tei = self._tei_fallback()
             if tei is not None:
-                logger.info("Falling back to TEI for batch embedding (%d texts)", len(texts))
+                logger.info("ST failed → falling back to TEI for batch embedding (%d texts)", len(texts))
                 return tei.embed_batch(texts, is_query=is_query)
         return results
 
