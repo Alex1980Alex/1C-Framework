@@ -1,20 +1,21 @@
 """
-BSL Code Search Embedding Service — Phase 60
+BSL Code Search Embedding Service — Phase 8.13 (sentence-transformers inline).
 
 Provides code-optimized embeddings for 1C:Enterprise BSL code search
-using Qwen3-Embedding model via Ollama.
+using Qwen3-Embedding-8B inline via sentence-transformers (singleton load).
 
-3-level fallback:
-1. Ollama local (primary) — qwen3-embedding, 1024d
-2. Ollama nomic-embed-text (fallback) — 768d (incompatible with v3 collection)
+Backend chain:
+1. sentence-transformers inline (primary) — Qwen3-Embedding-8B FP16, 4096d.
+   Reference implementation, matches `bsl_code_v4_late` index pooling exactly,
+   no GPU contention with other backends. ~16 GB VRAM, lazy-loaded once.
+2. TEI HTTP fallback (Qwen3TEIQueryService) — when ST fails to load.
 3. None (graceful degradation → FTS5 text search)
-
-Instruction prompts optimize retrieval for BSL code patterns.
 """
 
 from __future__ import annotations
 
 import logging
+import threading
 from typing import ClassVar
 
 import httpx
