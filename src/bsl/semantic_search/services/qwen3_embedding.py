@@ -147,7 +147,7 @@ class Qwen3EmbeddingService:
             return [None] * len(texts)
 
     def _tei_fallback(self) -> Qwen3TEIQueryService | None:
-        """Lazy-init TEI fallback when Ollama unreachable. None if TEI also down."""
+        """Lazy-init TEI client. Used as primary (BSL_EMBEDDER=tei) or fallback (=st)."""
         if not hasattr(self, "_tei"):
             self._tei = Qwen3TEIQueryService()
         return self._tei
