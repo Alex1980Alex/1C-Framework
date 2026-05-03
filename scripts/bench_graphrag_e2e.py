@@ -85,8 +85,12 @@ def make_community_fn(qdrant: QdrantClient):
 
 
 CYPHER_CALLERS = """
-MATCH (caller:Symbol)-[:CALLS]->(callee:Symbol)
+MATCH (callee:Symbol)
 WHERE toLower(callee.name) CONTAINS toLower($name)
+   OR toLower(coalesce(callee.module_path, '')) CONTAINS toLower($name)
+WITH collect(DISTINCT callee) AS targets
+UNWIND targets AS t
+MATCH (caller:Symbol)-[:CALLS]->(t)
 RETURN DISTINCT caller.name AS name, caller.module_path AS module, 'Symbol' AS kind
 LIMIT $k
 """
@@ -94,7 +98,8 @@ LIMIT $k
 CYPHER_IMPACT = """
 MATCH (target:Symbol)
 WHERE toLower(target.name) CONTAINS toLower($name)
-OPTIONAL MATCH (caller)-[:CALLS]->(target)
+   OR toLower(coalesce(target.module_path, '')) CONTAINS toLower($name)
+OPTIONAL MATCH (caller:Symbol)-[:CALLS]->(target)
 RETURN DISTINCT coalesce(caller.name, target.name) AS name,
                 coalesce(caller.module_path, target.module_path) AS module,
                 'Symbol' AS kind
