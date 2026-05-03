@@ -102,33 +102,17 @@ class Qwen3EmbeddingService:
         return text[:MAX_INPUT_CHARS] if len(text) > MAX_INPUT_CHARS else text
 
     def _embed_ollama(self, text: str) -> list[float] | None:
-        """Single embedding via Ollama /api/embed endpoint."""
+        """Single embedding via sentence-transformers inline (legacy method name).
+
+        Renamed-in-place for backward-compat — backend is now ST, not Ollama."""
         text = self._truncate(text)
         try:
-            client = self._get_client()
-            response = client.post(
-                self.embed_endpoint,
-                json={"model": self.model, "input": text},
-            )
-            response.raise_for_status()
-            data = response.json()
-            embeddings = data.get("embeddings", [])
-            if embeddings and isinstance(embeddings[0], list):
-                result = embeddings[0]
-                if self._dims is None:
-                    self._dims = len(result)
-                    logger.info("Detected embedding dimensions: %d", self._dims)
-                return result
-            logger.warning("No embeddings in Ollama response")
-            return None
-        except httpx.HTTPStatusError as e:
-            logger.error("Ollama HTTP error: %s", e.response.status_code)
-            return None
-        except httpx.ConnectError:
-            logger.error("Ollama not available at %s", self.ollama_host)
-            return None
+            model = self._ensure_model()
+            vec = model.encode([text], convert_to_numpy=True,
+                               show_progress_bar=False, normalize_embeddings=True)[0]
+            return vec.tolist()
         except Exception as e:
-            logger.error("Ollama embedding error: %s", e)
+            logger.error("ST embed error: %s", e)
             return None
 
     def _embed_ollama_batch(self, texts: list[str]) -> list[list[float] | None]:
