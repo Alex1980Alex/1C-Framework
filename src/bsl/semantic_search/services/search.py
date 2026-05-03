@@ -298,18 +298,14 @@ class BSLSearchService:
                 logger.error("TEI вернул пустой embedding для запроса")
                 return []
 
-            # Поиск в Qdrant
+            # Поиск в Qdrant (query_points — search() removed in qdrant-client ≥1.13)
             collection_name = getattr(self.qdrant, "collection_name", settings.collection_name)
-            search_params = {
-                "collection_name": collection_name,
-                "query_vector": query_embedding,
-                "limit": limit,
-            }
-
-            if filters:
-                search_params["query_filter"] = filters
-
-            search_results = self._qdrant_client.search(**search_params)
+            search_results = self._qdrant_client.query_points(
+                collection_name=collection_name,
+                query=query_embedding,
+                limit=limit,
+                query_filter=filters,
+            ).points
 
             # Преобразование результатов
             results = []
