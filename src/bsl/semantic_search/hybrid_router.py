@@ -38,7 +38,13 @@ def classify_query(query: str) -> QueryType:
     cross_kw = ["функциональн", "fo и регистр", "фо и регистр",
                 "регистр и функцион", "cross-cutting",
                 "пишут в регистр", "пишут регистр",
-                "читают регистр", "читают из регистра"]
+                "читают регистр", "читают из регистра",
+                "одновременно", "вместе используются", "общие функции"]
+    topology_kw = ["самые часто", "часто вызываемые", "топ функций",
+                   "узкие места", "больше всего вызовов",
+                   "больше всего исходящих", "ранжируй по", "топ-",
+                   "статистика графа"]
+    if any(k in q for k in topology_kw): return "topology"
     if any(k in q for k in callers_kw): return "multi_hop_callers"
     if any(k in q for k in impact_kw): return "impact_analysis"
     if any(k in q for k in arch_kw): return "architectural"

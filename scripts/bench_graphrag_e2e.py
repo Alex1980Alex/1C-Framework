@@ -132,6 +132,12 @@ RETURN DISTINCT o.name AS name, m.path AS module, 'Object' AS kind
 LIMIT $k
 """
 
+CYPHER_TOPOLOGY = """
+MATCH (s:Symbol)<-[c:CALLS]-()
+RETURN s.name AS name, s.module_path AS module, count(c) AS in_degree, 'Symbol' AS kind
+ORDER BY in_degree DESC LIMIT $k
+"""
+
 
 def extract_target(query: str) -> tuple[str, str]:
     """Return (symbol_name, module_hint).
