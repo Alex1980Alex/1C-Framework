@@ -11,8 +11,10 @@ Purpose: Bracket every slash-command invocation with a start record at
 
 Detection:
     User prompt that starts with "/<command>" — the first non-whitespace token.
-    Slash commands invoked by Claude Code arrive as a UserPromptSubmit with the
-    command-name tag plus arguments in the prompt body.
+    Claude Code v2.1.126+ wraps real slash invocations with a leading backtick
+    ("`/cmd args"); single/double quotes are also tolerated for safety. The
+    leading-noise prefix is stripped before the slash regex runs, so synthetic
+    "/cmd" stdin (smoke tests) and real CLI input both match the same path.
 
 Storage:
     data/.current-runs.json  — small JSON map {session_id: {run_id, command,
@@ -43,6 +45,12 @@ sys.path.insert(0, _HOOK_DIR)
 from base import BaseHook, HookInput, HookOutput
 
 _SLASH_RE = re.compile(r"^\s*/([\w:.-]+)")
+# Real Claude Code (v2.1.126+) wraps slash commands with a leading backtick:
+#   `/implement-1c-task проверь...
+# The original regex only matched bare "/cmd" — synthetic smoke-tests passed,
+# but every real slash invocation slipped through silently. _LEADING_NOISE_RE
+# strips backtick/single-quote/double-quote prefixes before _SLASH_RE runs.
+_LEADING_NOISE_RE = re.compile(r"^\s*[`'\"]+")
 
 
 class SlashCommandTracker(BaseHook):
@@ -135,7 +143,8 @@ class SlashCommandTracker(BaseHook):
 def _extract_slash_command(prompt: str) -> str:
     if not prompt:
         return ""
-    match = _SLASH_RE.match(prompt)
+    cleaned = _LEADING_NOISE_RE.sub("", prompt)
+    match = _SLASH_RE.match(cleaned)
     if not match:
         return ""
     return match.group(1) or ""
