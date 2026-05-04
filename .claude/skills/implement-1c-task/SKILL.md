@@ -14,6 +14,7 @@ triggers:
 # Реализация задачи 1С — 8-этапный pipeline (v2)
 
 > **История версий:**
+> - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
 > - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
 > - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
 > - **v2.1.0 (2026-04-14):** добавлен Этап 0 (откачен).
@@ -94,6 +95,37 @@ Skill для реализации задачи по конфигурации 1С
 ---
 
 ## 8 этапов реализации
+
+### Этап 0: Preflight — проверка доступности MCP-серверов (ОБЯЗАТЕЛЬНО)
+
+**Цель:** До чтения ANALYSIS-REPORT убедиться, что инструменты pipeline зарегистрированы в текущей сессии. Без этой проверки skill уходит в этапы, где нужные tool-вызовы просто не существуют, и тратит итерации впустую.
+
+**Шаги:**
+
+1. Проверить три ключевых сервера через `ToolSearch` (или прямой вызов любого ping-tool сервера):
+
+   | Сервер | Probe-вызов | Ожидание |
+   |---|---|---|
+   | `edt-mcp` | `mcp__edt-mcp__list_projects` (или `ToolSearch query: "edt"`) | в результатах есть `mcp__edt-mcp__*` |
+   | `1c-mcp-crud` | `mcp__1c-mcp-crud__get_metadata` (или `ToolSearch query: "+1c crud"`) | в результатах есть `mcp__1c-mcp-crud__*` |
+   | `bsl-debug-server` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
+
+2. Сопоставить результат с матрицей капабилити:
+
+   | edt-mcp | 1c-mcp-crud | bsl-debug-server | Режим pipeline |
+   |---|---|---|---|
+   | ✓ | ✓ | ✓ | **Full** — все 8 этапов работают как описано |
+   | ✓ | ✗ | * | **Code-only** — Этапы 1, 3 (write), 4, 5, 7, 8. Этап 2 — только `validate_query` (синтаксис), без `execute_query`. Этап 6 — SKIP с пометкой "ожидает ручного тестирования" |
+   | ✗ | ✓ | * | **Read-only verify** — Этап 2 на данных, Этап 6 на данных. Запись кода невозможна (нет `write_module_source`) → STOP с просьбой запустить EDT |
+   | ✗ | ✗ | * | **Read-only research** — только Этап 1 через fallback (см. ниже), сбор контекста. Запись и валидация невозможны → STOP перед Этапом 2 |
+
+3. Если режим не **Full** — сообщить пользователю явно: какие серверы отсутствуют, какие этапы будут пропущены, что нужно поднять (EDT на `localhost:8765`, путь к `1c-mcp-crud` в `.mcp.json:144-153`). Дождаться решения: продолжить в деградированном режиме или прервать.
+
+4. Сохранить выбранный режим в IMPLEMENTATION-PROGRESS.md под заголовком `Pipeline mode: Full | Code-only | Read-only verify | Read-only research`.
+
+**Контрольная точка:** Известен режим pipeline. Все последующие этапы выполняются с учётом ограничений режима.
+
+---
 
 ### Этап 1: Подготовка
 
