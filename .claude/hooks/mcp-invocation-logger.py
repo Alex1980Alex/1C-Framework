@@ -50,9 +50,10 @@ class McpInvocationLogger(BaseHook):
         if not inp.tool_name or not inp.tool_name.startswith("mcp__"):
             return None
 
-        # Workaround for protocol.py.detected_event: it only checks the legacy
-        # "tool_result" key for PostToolUse. Modern Claude Code sends
-        # "tool_response", so we derive the event directly from the raw payload.
+        # Workaround: base/protocol.py:46 detected_event checks
+        #   if "tool_result" in self.raw  →  "PostToolUse"
+        # but modern Claude Code sends the key as "tool_response", so the
+        # property misclassifies Post events as Pre. Derive directly here.
         event = (
             "PostToolUse"
             if ("tool_response" in inp.raw or "tool_result" in inp.raw)
