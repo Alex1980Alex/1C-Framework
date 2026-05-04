@@ -57,7 +57,7 @@ from datetime import datetime
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
-from base import BaseHook, HookInput, HookOutput
+from base import BaseHook, HookInput
 
 
 _CMD_NAME_TAG_RE = re.compile(r"<command-name>\s*/?([a-zA-Z0-9][a-zA-Z0-9_:.-]*)\s*</command-name>")
