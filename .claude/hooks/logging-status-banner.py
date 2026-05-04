@@ -42,9 +42,10 @@ class LoggingStatusBanner(BaseHook):
     HOOK_NAME = "LoggingStatusBanner"
 
     def execute(self, inp: HookInput) -> HookOutput | None:
-        if inp.detected_event != "SessionStart":
-            return None
-
+        # No event check — settings.json registers this hook only on SessionStart.
+        # base/protocol.py:53 detected_event returns "Unknown" for SessionStart
+        # payloads (only session_id is present), so an event check would
+        # incorrectly skip every legitimate fire.
         mcp_present = MCP_HOOK.is_file()
         slash_present = SLASH_HOOK.is_file()
         slash_n, mcp_n = _recent_counts()
