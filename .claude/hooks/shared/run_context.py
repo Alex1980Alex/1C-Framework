@@ -18,14 +18,19 @@ values — logging must never block the parent hook.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import tempfile
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Iterator, Optional
 
 MAX_AGE_HOURS = 12
+TMP_GC_AGE_SECONDS = 3600  # cleanup orphan .tmp files older than 1 hour
+LOCK_TIMEOUT_SECONDS = 2.0
+LOCK_RETRY_DELAY = 0.05
 
 _MAP_FILE: Optional[Path] = None
 
