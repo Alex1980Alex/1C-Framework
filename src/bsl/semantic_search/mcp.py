@@ -89,6 +89,15 @@ def _get_sqlite_conn():
     return conn
 
 
+def _bg_warmup() -> None:
+    global _qdrant_available
+    try:
+        _qdrant_available = _check_qdrant()
+    except Exception as exc:
+        _qdrant_available = False
+        logger.warning(f"BG warmup failed: {exc}")
+
+
 async def ensure_services():
     """Ленивая инициализация всех сервисов"""
     global _services_initialized, search_service, _qdrant_available
