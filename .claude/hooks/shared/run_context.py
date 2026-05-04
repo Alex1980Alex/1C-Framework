@@ -52,6 +52,93 @@ def _get_map_file() -> Path:
     return _MAP_FILE
 
 
+@contextlib.contextmanager
+def _file_lock(filepath: Path) -> Iterator[bool]:
+    """Best-effort exclusive lock around the map file.
+
+    Uses msvcrt.locking on Windows, fcntl.flock on POSIX. Lock is held on a
+    sidecar `.lock` file (separate from the data file so locking doesn't
+    interfere with the atomic rename in _write_map).
+
+    Yields True if the lock was acquired, False on timeout or unsupported
+    platform — callers can still proceed (degrades to old non-locked behavior),
+    so concurrent overwrites only become more likely, not actually broken.
+    """
+    lock_path = filepath.with_suffix(filepath.suffix + ".lock")
+    try:
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        yield False
+        return
+
+    fd = None
+    locked = False
+    try:
+        fd = os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o600)
+        deadline = time.time() + LOCK_TIMEOUT_SECONDS
+
+        try:
+            import msvcrt  # Windows
+            while time.time() < deadline:
+                try:
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                    locked = True
+                    break
+                except OSError:
+                    time.sleep(LOCK_RETRY_DELAY)
+        except ImportError:
+            try:
+                import fcntl  # POSIX
+                while time.time() < deadline:
+                    try:
+                        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        locked = True
+                        break
+                    except OSError:
+                        time.sleep(LOCK_RETRY_DELAY)
+            except ImportError:
+                pass  # No locking available — caller proceeds unprotected.
+
+        yield locked
+    except OSError:
+        yield False
+    finally:
+        if fd is not None:
+            if locked:
+                try:
+                    import msvcrt
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                except (ImportError, OSError):
+                    try:
+                        import fcntl
+                        fcntl.flock(fd, fcntl.LOCK_UN)
+                    except (ImportError, OSError):
+                        pass
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
+
+def _gc_orphan_tmp(directory: Path) -> None:
+    """Remove .current-runs.*.tmp files older than TMP_GC_AGE_SECONDS.
+
+    Orphans appear when a process is killed between mkstemp and os.replace.
+    The 1-hour threshold is way longer than any legitimate atomic-write
+    sequence, so live writes are never collected.
+    """
+    try:
+        cutoff = time.time() - TMP_GC_AGE_SECONDS
+        for tmp in directory.glob(".current-runs.*.tmp"):
+            try:
+                if tmp.stat().st_mtime < cutoff:
+                    tmp.unlink()
+            except OSError:
+                continue
+    except OSError:
+        pass
+
+
 def _read_map() -> dict:
     """Read map, dropping entries older than MAX_AGE_HOURS."""
     filepath = _get_map_file()
