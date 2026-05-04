@@ -80,61 +80,59 @@ def _file_lock(filepath: Path) -> Iterator[bool]:
     Yields True if the lock was acquired, False on timeout or unsupported
     platform — callers can still proceed (degrades to old non-locked behavior),
     so concurrent overwrites only become more likely, not actually broken.
+
+    Open/setup failures are handled BEFORE entering the protected block, so
+    there is exactly one `yield` reachable per invocation — a generator-based
+    contextmanager with two yields would raise RuntimeError if the caller's
+    body propagated an exception.
     """
     lock_path = filepath.with_suffix(filepath.suffix + ".lock")
+
+    # Setup phase — any OSError here means we never acquired anything,
+    # so yield False once and exit. No fd, no lock to release.
     try:
         lock_path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o600)
     except OSError:
         yield False
         return
 
-    fd = None
+    # Acquire phase — try to grab the lock; either way we yield exactly once.
     locked = False
     try:
-        fd = os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o600)
         deadline = time.time() + LOCK_TIMEOUT_SECONDS
-
-        try:
-            import msvcrt  # Windows
+        if _HAS_MSVCRT:
             while time.time() < deadline:
                 try:
-                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                    _msvcrt.locking(fd, _msvcrt.LK_NBLCK, 1)
                     locked = True
                     break
                 except OSError:
                     time.sleep(LOCK_RETRY_DELAY)
-        except ImportError:
-            try:
-                import fcntl  # POSIX
-                while time.time() < deadline:
-                    try:
-                        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                        locked = True
-                        break
-                    except OSError:
-                        time.sleep(LOCK_RETRY_DELAY)
-            except ImportError:
-                pass  # No locking available — caller proceeds unprotected.
+        elif _HAS_FCNTL:
+            while time.time() < deadline:
+                try:
+                    _fcntl.flock(fd, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+                    locked = True
+                    break
+                except OSError:
+                    time.sleep(LOCK_RETRY_DELAY)
+        # else: no locking backend — caller proceeds unprotected.
 
         yield locked
-    except OSError:
-        yield False
     finally:
-        if fd is not None:
-            if locked:
-                try:
-                    import msvcrt
-                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
-                except (ImportError, OSError):
-                    try:
-                        import fcntl
-                        fcntl.flock(fd, fcntl.LOCK_UN)
-                    except (ImportError, OSError):
-                        pass
+        if locked:
             try:
-                os.close(fd)
+                if _HAS_MSVCRT:
+                    _msvcrt.locking(fd, _msvcrt.LK_UNLCK, 1)
+                elif _HAS_FCNTL:
+                    _fcntl.flock(fd, _fcntl.LOCK_UN)
             except OSError:
                 pass
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 def _gc_orphan_tmp(directory: Path) -> None:
