@@ -149,3 +149,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 4
 - Summary: Session 2026-05-04. Skills: task-protocol, evaluation-benchmark, qdrant-operations, code-verify, bsl-development, tech-research, embedding-models. Changed 4 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, src/bsl, ИБTransportManagementDevelop/docs. Commit: chore: auto-save qwen3_embedding.py. Commit: chore: auto-save qwen3_embedding.py. Commit: chore: auto-save qwen3_embedding.py
 
+
+## 2026-05-05 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: embedding-models, search-pipeline-debug, qdrant-operations, code-verify, bsl-development
+- Files changed: 3
+- Summary: Session 2026-05-05. Skills: embedding-models, search-pipeline-debug, qdrant-operations, code-verify, bsl-development, audit-docs, update-config, task-protocol. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, ИБTransportManagementDevelop/docs. Commit: fix: Исправлено логирование slash-команд при backtick-quoted prompts. Commit: chore: auto-save run_context.py. Commit: chore: auto-save run_context.py
+
