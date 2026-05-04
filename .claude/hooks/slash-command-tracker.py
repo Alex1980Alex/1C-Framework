@@ -59,6 +59,11 @@ class SlashCommandTracker(BaseHook):
         return None
 
     def _handle_prompt(self, inp: HookInput) -> None:
+        # Skip "//comments" before regex match — the regex would otherwise
+        # strip the first slash and treat "//foo" as command "/foo".
+        if inp.prompt and inp.prompt.lstrip().startswith("//"):
+            return
+
         command = _extract_slash_command(inp.prompt)
         if not command:
             return
