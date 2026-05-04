@@ -4,7 +4,7 @@ Stores `{session_id: {run_id, command, started_at}}` so multiple Claude Code
 sessions can run concurrent slash commands without colliding.
 
 Used by:
-- slash-command-tracker (UserPromptSubmit) — set_run() at command start
+- slash-command-tracker (UserPromptExpansion) — set_run() at command start
 - mcp-invocation-logger (PreToolUse/PostToolUse) — get_run_id() to tag MCP calls
 - slash-command-tracker (Stop) — clear_run() at command end
 
