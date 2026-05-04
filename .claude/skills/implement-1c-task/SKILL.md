@@ -139,12 +139,16 @@ Skill для реализации задачи по конфигурации 1С
    - Порядок выполнения
    - Зависимости между точками
 
-2. Определить проект EDT:
+2. Определить проект EDT (**режим Full / Code-only**):
    ```
    EDT-MCP: list_projects → получить имя проекта (напр. "УправлениеТранспортомНаПЛК")
    ```
 
+   **Fallback (режим Read-only research, edt-mcp недоступен):** имя проекта берётся из пути src/ в ANALYSIS-REPORT (обычно `<repo>/configuration/<TaskFolder>/src/` или `ИБTransportManagementDevelop/src/`). Имя «проекта EDT» в этом режиме не используется как идентификатор — все обращения идут к файлам напрямую.
+
 3. Для КАЖДОЙ точки модификации:
+
+   **Основной путь (edt-mcp доступен):**
    ```
    EDT-MCP: get_module_structure(project, module_path)
      → получить актуальные номера строк методов
@@ -152,10 +156,31 @@ Skill для реализации задачи по конфигурации 1С
      → получить текущий код точки вставки
    ```
 
-4. Сверить номера строк из ANALYSIS-REPORT с актуальными из EDT-MCP.
-   Если расхождение — использовать актуальные номера.
+   **Fallback (edt-mcp недоступен):** структура модуля и тело метода читаются без EDT.
+   ```
+   bsl-code-search: get_module_ast(file_path)
+     → процедуры/функции в модуле (имена + диапазоны строк)
+   ИЛИ
+   bsl-semantic-search: bsl_object_info(object_name)
+     → метаданные объекта + список модулей + call graph stats
+   bsl-semantic-search: bsl_coding_context(object_name, task_description)
+     → агрегированный контекст: object info + dependencies + style + similar code
 
-**Контрольная точка:** Для каждой точки модификации известны актуальные строки и текущий код.
+   Read(file_path, offset=method_start_line, limit=method_length)
+     → текущий код точки вставки (через стандартный Read)
+   ```
+
+   **Ограничения fallback'а** (зафиксировать в IMPLEMENTATION-PROGRESS.md):
+   - Нет `get_content_assist` — автодополнение имён перечислений/регистров недоступно, проверять вручную через `bsl-platform-context` или `Grep` по конфигурации.
+   - Нет `get_symbol_info` — типы параметров/возвращаемых значений выводить из сигнатуры в `get_module_ast` или из аннотаций кода.
+   - Нет `search_in_code` по проекту EDT — заменяется на `Grep` + `bsl_search` (семантический).
+
+4. Сверить номера строк из ANALYSIS-REPORT с актуальными.
+   - **Full / Code-only:** актуальные = из EDT-MCP.
+   - **Read-only research:** актуальные = из `get_module_ast`.
+   Если расхождение — использовать актуальные номера и зафиксировать в IMPLEMENTATION-PROGRESS.md.
+
+**Контрольная точка:** Для каждой точки модификации известны актуальные строки и текущий код. Источник (EDT-MCP / bsl-code-search) задокументирован.
 
 ---
 
