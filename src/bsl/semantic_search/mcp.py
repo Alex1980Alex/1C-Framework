@@ -59,8 +59,8 @@ register_resources_and_prompts(mcp)
 # Глобальные сервисы (ленивая инициализация)
 _services_initialized = False
 search_service = None
-embedding_service = None
-_qdrant_available = False
+_qdrant_available: bool | None = None
+_warmup_thread: threading.Thread | None = None
 
 # Auto-detect framework root and SQLite DB path
 _FRAMEWORK_ROOT = FilePath(__file__).resolve().parent.parent.parent.parent
