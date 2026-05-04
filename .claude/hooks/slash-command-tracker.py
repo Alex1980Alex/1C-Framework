@@ -1,40 +1,41 @@
 #!/usr/bin/env python3
 """
 Hook: slash-command-tracker
-Event: UserPromptSubmit, Stop
+Event: UserPromptExpansion, Stop
 Matcher: (none)
 Purpose: Bracket every slash-command invocation with a start record at
-         UserPromptSubmit and an end record at Stop. Generates a per-run UUID
-         and stores it in data/.current-runs.json so other hooks
+         UserPromptExpansion and an end record at Stop. Generates a per-run
+         UUID and stores it in data/.current-runs.json so other hooks
          (mcp-invocation-logger, future phase markers) can attach it to their
          own log entries via shared.run_context.get_run_id().
 
 Detection:
-    User prompt that starts with "/<command>" — the first non-whitespace token.
-    Claude Code v2.1.126+ wraps real slash invocations with a leading backtick
-    ("`/cmd args"); single/double quotes are also tolerated for safety. The
-    leading-noise prefix is stripped before the slash regex runs, so synthetic
-    "/cmd" stdin (smoke tests) and real CLI input both match the same path.
+    UserPromptExpansion is the official Claude Code 2.x event for slash-
+    command expansions (https://code.claude.com/docs/en/hooks). Its payload
+    carries `command_name` and `command_args` directly, so no prompt-string
+    parsing is required. UserPromptSubmit is NOT used here: empirically
+    verified (2026-05-05) that real slash invocations bypass UPS on
+    Windows — only the Skill tool sees them, and PreToolUse:Skill cannot
+    distinguish slash-originated invocations from Claude-initiated Skill()
+    calls. UserPromptExpansion fires exclusively on the slash path.
 
 Storage:
     data/.current-runs.json  — small JSON map {session_id: {run_id, command,
                                started_at}}. Atomic-write via shared.run_context.
 
 Log entries (in data/hook-invocations.jsonl):
-    category="slash_run", outcome="start"  — emitted at UserPromptSubmit
+    category="slash_run", outcome="start"  — emitted at UserPromptExpansion
     category="slash_run", outcome="end"    — emitted at Stop with elapsed_ms
                                              measured from started_at
 
 Idempotency:
-    UserPromptSubmit fires once per user message. If the user submits a non-
-    slash prompt while a run is active, the active run is left intact (the user
-    might be replying to the agent mid-run). The Stop hook clears the entry.
+    UserPromptExpansion fires once per slash invocation. The Stop hook
+    clears the entry after recording elapsed_ms.
 
 Timeout: 3s
 """
 
 import os
-import re
 import sys
 import uuid
 from datetime import datetime
@@ -44,14 +45,6 @@ sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
 
-_SLASH_RE = re.compile(r"^\s*/([\w:.-]+)")
-# Real Claude Code (v2.1.126+) wraps slash commands with a leading backtick:
-#   `/implement-1c-task проверь...
-# The original regex only matched bare "/cmd" — synthetic smoke-tests passed,
-# but every real slash invocation slipped through silently. _LEADING_NOISE_RE
-# strips backtick/single-quote/double-quote prefixes before _SLASH_RE runs.
-_LEADING_NOISE_RE = re.compile(r"^\s*[`'\"]+")
-
 
 class SlashCommandTracker(BaseHook):
     HOOK_NAME = "SlashCommandTracker"
@@ -59,20 +52,19 @@ class SlashCommandTracker(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         event = inp.detected_event
 
-        if event == "UserPromptSubmit":
-            self._handle_prompt(inp)
+        if event == "UserPromptExpansion":
+            self._handle_expansion(inp)
         elif event == "Stop":
             self._handle_stop(inp)
 
         return None
 
-    def _handle_prompt(self, inp: HookInput) -> None:
-        # Skip "//comments" before regex match — the regex would otherwise
-        # strip the first slash and treat "//foo" as command "/foo".
-        if inp.prompt and inp.prompt.lstrip().startswith("//"):
+    def _handle_expansion(self, inp: HookInput) -> None:
+        # Only track slash commands; mcp_prompt expansions are out of scope.
+        if inp.raw.get("expansion_type") != "slash_command":
             return
 
-        command = _extract_slash_command(inp.prompt)
+        command = str(inp.raw.get("command_name", "")).strip()
         if not command:
             return
 
@@ -85,7 +77,7 @@ class SlashCommandTracker(BaseHook):
             pass
 
         self._log(
-            event="UserPromptSubmit",
+            event="UserPromptExpansion",
             outcome="start",
             session_id=inp.session_id,
             run_id=run_id,
@@ -138,16 +130,6 @@ class SlashCommandTracker(BaseHook):
             )
         except Exception:
             pass
-
-
-def _extract_slash_command(prompt: str) -> str:
-    if not prompt:
-        return ""
-    cleaned = _LEADING_NOISE_RE.sub("", prompt)
-    match = _SLASH_RE.match(cleaned)
-    if not match:
-        return ""
-    return match.group(1) or ""
 
 
 def _elapsed_since(started_at: str) -> int:
