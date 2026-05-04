@@ -138,6 +138,8 @@ class InvocationTimer:
         self.tool: Optional[str] = None
         self.session_id: str = ""
         self.agent_id: str = ""  # Phase 7
+        self.category: str = "hook"  # Phase 8
+        self.run_id: str = ""  # Phase 8
         self._start: float = 0.0
 
     def start(self) -> "InvocationTimer":
@@ -157,4 +159,6 @@ class InvocationTimer:
             session_id=self.session_id,
             error=error,
             agent_id=self.agent_id,  # Phase 7
+            category=self.category,  # Phase 8
+            run_id=self.run_id,  # Phase 8
         )
