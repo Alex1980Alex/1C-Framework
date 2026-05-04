@@ -60,7 +60,10 @@ class SlashCommandTracker(BaseHook):
         return None
 
     def _handle_expansion(self, inp: HookInput) -> None:
-        # Only track slash commands; mcp_prompt expansions are out of scope.
+        # `expansion_type` is "slash_command" for /cmd, "mcp_prompt" for MCP
+        # server prompts, or absent on malformed payloads. Only track the
+        # slash path — MCP prompts have their own observability via the
+        # mcp-invocation-logger.
         if inp.raw.get("expansion_type") != "slash_command":
             return
 
