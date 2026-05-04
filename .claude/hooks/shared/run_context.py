@@ -192,17 +192,23 @@ def _write_map(data: dict) -> None:
 
 
 def set_run(session_id: str, run_id: str, command: str) -> None:
-    """Register a slash-command run for the given Claude session."""
+    """Register a slash-command run for the given Claude session.
+
+    Read-modify-write is wrapped in _file_lock so concurrent Claude sessions
+    don't drop each other's entries. Falls back to unprotected RMW if locking
+    is unavailable — same risk as the old code, never strictly worse.
+    """
     if not session_id or not run_id:
         return
     try:
-        data = _read_map()
-        data[session_id] = {
-            "run_id": run_id,
-            "command": command,
-            "started_at": datetime.now().isoformat(),
-        }
-        _write_map(data)
+        with _file_lock(_get_map_file()):
+            data = _read_map()
+            data[session_id] = {
+                "run_id": run_id,
+                "command": command,
+                "started_at": datetime.now().isoformat(),
+            }
+            _write_map(data)
     except Exception:
         pass
 
