@@ -12,12 +12,13 @@ $ARGUMENTS
 **Используй skill implement-1c-task** — единый источник методологии реализации.
 
 Skill определяет:
+- **Этап 0 Preflight (ОБЯЗАТЕЛЬНО)** — проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` и выбор режима pipeline (Full / Code-only / Read-only verify / Read-only research). Без этого skill уходит в этапы где нужные tool-вызовы не существуют.
 - 8 последовательных этапов (Подготовка → Валидация запросов → BSL → Статанализ → Верификация → Тестирование → Документация → Git)
 - 3 основных MCP-сервера: **EDT-MCP**, **1c-mcp-crud**, **bsl-debug-server**
-- Вспомогательные: Serena, bsl-semantic-search, bsl-platform-context
+- Вспомогательные: bsl-semantic-search (+ fallback для Этапа 1), bsl-code-search, bsl-platform-context
 - Обязательные циклы проверки и правила
 
-> **История версий скилла:** v2.1.1 (2026-04-14) — откат Этапа 0 «Активация Serena» после [углублённого аудита](../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Serena на BSL-задачах ценности не даёт (LSP для BSL не существует, `.serena/project.yml` с `language: bsl` невалиден).
+> **История версий скилла:** v2.3.0 (2026-05-05) — Этап 0 Preflight + fallback Этапа 1 через `bsl-semantic-search` / `bsl-code-search` / `Read` когда `edt-mcp` отсутствует. v2.1.1 (2026-04-14) — откат Этапа 0 «Активация Serena» после [углублённого аудита](../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Serena на BSL-задачах ценности не даёт (LSP для BSL не существует, `.serena/project.yml` с `language: bsl` невалиден).
 
 ### 3 MCP-сервера — обязательное использование
 
