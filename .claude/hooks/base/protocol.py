@@ -42,6 +42,13 @@ class HookInput:
     @property
     def detected_event(self) -> str:
         """Detect hook event type from input fields."""
+        # Authoritative: hook_event_name from payload (Claude Code 2.x).
+        # UserPromptExpansion shares the `prompt` field with UserPromptSubmit,
+        # so without this check the property misclassifies slash-command
+        # expansions as UserPromptSubmit.
+        explicit = self.raw.get("hook_event_name")
+        if explicit:
+            return explicit
         if self.tool_name:
             if "tool_result" in self.raw:
                 return "PostToolUse"
