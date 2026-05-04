@@ -404,7 +404,7 @@ async def bsl_stats() -> str:
 
 **Коллекция**: {settings.collection_name}
 **Векторная размерность**: {settings.embedding_dim}
-**Модель embeddings**: {settings.embedding_model}
+**Модель embeddings**: {TEI_PRODUCTION_MODEL}
 
 **Количество точек**: {collection_info.points_count}
 **Статус**: {collection_info.status}
