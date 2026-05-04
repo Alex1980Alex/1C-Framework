@@ -60,8 +60,8 @@ sys.path.insert(0, _HOOK_DIR)
 from base import BaseHook, HookInput, HookOutput
 
 
-_CMD_NAME_TAG_RE = re.compile(r"<command-name>\s*/?([a-zA-Z][a-zA-Z0-9_:.-]*)\s*</command-name>")
-_RAW_SLASH_RE = re.compile(r"^\s*/([a-zA-Z][a-zA-Z0-9_:.-]*)(?:\s|$)")
+_CMD_NAME_TAG_RE = re.compile(r"<command-name>\s*/?([a-zA-Z0-9][a-zA-Z0-9_:.-]*)\s*</command-name>")
+_RAW_SLASH_RE = re.compile(r"^\s*/([a-zA-Z0-9][a-zA-Z0-9_:.-]*)(?:\s|$)")
 
 
 def _detect_slash_command(prompt: str) -> str:
