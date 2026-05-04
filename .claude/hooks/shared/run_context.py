@@ -164,10 +164,16 @@ def _read_map() -> dict:
 
 
 def _write_map(data: dict) -> None:
-    """Atomic write: tmp file + rename, so concurrent reads never see partial JSON."""
+    """Atomic write: tmp file + rename, so concurrent reads never see partial JSON.
+
+    Also opportunistically cleans orphan .tmp files from killed processes — the
+    GC pass is cheap (single glob) and runs only when we're already touching
+    this directory.
+    """
     filepath = _get_map_file()
     try:
         filepath.parent.mkdir(parents=True, exist_ok=True)
+        _gc_orphan_tmp(filepath.parent)
         tmp_fd, tmp_path = tempfile.mkstemp(
             prefix=".current-runs.", suffix=".tmp", dir=str(filepath.parent)
         )
