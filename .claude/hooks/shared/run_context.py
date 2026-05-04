@@ -237,13 +237,17 @@ def get_run(session_id: str) -> dict:
 
 
 def clear_run(session_id: str) -> dict:
-    """Remove and return the entry for this session (Stop hook)."""
+    """Remove and return the entry for this session (Stop hook).
+
+    Locked RMW for the same reason as set_run.
+    """
     if not session_id:
         return {}
     try:
-        data = _read_map()
-        entry = data.pop(session_id, {})
-        _write_map(data)
-        return dict(entry)
+        with _file_lock(_get_map_file()):
+            data = _read_map()
+            entry = data.pop(session_id, {})
+            _write_map(data)
+            return dict(entry)
     except Exception:
         return {}
