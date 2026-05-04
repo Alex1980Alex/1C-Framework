@@ -50,7 +50,16 @@ class McpInvocationLogger(BaseHook):
         if not inp.tool_name or not inp.tool_name.startswith("mcp__"):
             return None
 
-        outcome, error = self._classify_outcome(inp)
+        # Workaround for protocol.py.detected_event: it only checks the legacy
+        # "tool_result" key for PostToolUse. Modern Claude Code sends
+        # "tool_response", so we derive the event directly from the raw payload.
+        event = (
+            "PostToolUse"
+            if ("tool_response" in inp.raw or "tool_result" in inp.raw)
+            else "PreToolUse"
+        )
+
+        outcome, error = self._classify_outcome(inp, event)
 
         try:
             from shared.invocation_logger import log_invocation
@@ -58,7 +67,7 @@ class McpInvocationLogger(BaseHook):
 
             log_invocation(
                 hook=self.HOOK_NAME,
-                event=inp.detected_event,
+                event=event,
                 tool=inp.tool_name,
                 elapsed_ms=self.elapsed_ms,
                 outcome=outcome,
@@ -73,9 +82,9 @@ class McpInvocationLogger(BaseHook):
         return None
 
     @staticmethod
-    def _classify_outcome(inp: HookInput) -> tuple[str, str | None]:
+    def _classify_outcome(inp: HookInput, event: str) -> tuple[str, str | None]:
         """For PostToolUse, peek at tool_response to flag errors."""
-        if inp.detected_event != "PostToolUse":
+        if event != "PostToolUse":
             return "allow", None
 
         response = inp.raw.get("tool_response", inp.tool_result)
