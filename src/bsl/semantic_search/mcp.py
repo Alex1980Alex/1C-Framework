@@ -91,17 +91,17 @@ def _get_sqlite_conn():
 
 async def ensure_services():
     """Ленивая инициализация всех сервисов"""
-    global _services_initialized, search_service, embedding_service, _qdrant_available
+    global _services_initialized, search_service, _qdrant_available
 
     if _services_initialized:
         return
 
     logger.info("=== Инициализация BSL Semantic Search сервисов ===")
 
-    settings = get_bsl_settings()
-
-    # Проверяем Qdrant
-    _qdrant_available = _check_qdrant()
+    if _warmup_thread is not None and _warmup_thread.is_alive():
+        _warmup_thread.join(timeout=3.0)
+    if _qdrant_available is None:
+        _qdrant_available = _check_qdrant()
     if _qdrant_available:
         logger.info("Qdrant ДОСТУПЕН")
     else:
