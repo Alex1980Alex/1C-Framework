@@ -43,9 +43,10 @@ from .refactor import (
     RenameDriver,
     RenameResult,
 )
-from .services.embedding import EmbeddingService
 from .services.search import BSLSearchService, SearchMode, SearchRequest
 from src.framework_search.config import DEFAULT_TEI_URL
+
+TEI_PRODUCTION_MODEL = "Qwen/Qwen3-Embedding-8B"
 
 # Создаем FastMCP server
 mcp = FastMCP("BSL Semantic Search")
