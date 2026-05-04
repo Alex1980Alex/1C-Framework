@@ -111,12 +111,6 @@ async def ensure_services():
         else:
             logger.warning("SQLite DB не найдена. Запустите: scripts/index-folder.bat")
 
-    # Embedding Service
-    embedding_service = EmbeddingService(
-        ollama_host=settings.ollama_host, model=settings.embedding_model
-    )
-    logger.info("Embedding Service OK")
-
     # BSL Search Service
     search_service = BSLSearchService(
         qdrant_service=None, neo4j_service=None, hybrid_engine=None, llm_service=None
