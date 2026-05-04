@@ -32,6 +32,23 @@ TMP_GC_AGE_SECONDS = 3600  # cleanup orphan .tmp files older than 1 hour
 LOCK_TIMEOUT_SECONDS = 2.0
 LOCK_RETRY_DELAY = 0.05
 
+# Resolve platform locking backend once at import time. Repeated try/import in
+# the lock context manager would still work (CPython caches sys.modules) but
+# adds noise — flags are clearer at the call site.
+try:
+    import msvcrt as _msvcrt  # type: ignore[import-not-found]
+    _HAS_MSVCRT = True
+except ImportError:
+    _msvcrt = None  # type: ignore[assignment]
+    _HAS_MSVCRT = False
+
+try:
+    import fcntl as _fcntl  # type: ignore[import-not-found]
+    _HAS_FCNTL = True
+except ImportError:
+    _fcntl = None  # type: ignore[assignment]
+    _HAS_FCNTL = False
+
 _MAP_FILE: Optional[Path] = None
 
 
