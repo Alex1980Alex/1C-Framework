@@ -1,41 +1,55 @@
 #!/usr/bin/env python3
 """
 Hook: slash-command-tracker
-Event: UserPromptExpansion, Stop
+Event: UserPromptSubmit, Stop
 Matcher: (none)
 Purpose: Bracket every slash-command invocation with a start record at
-         UserPromptExpansion and an end record at Stop. Generates a per-run
+         UserPromptSubmit and an end record at Stop. Generates a per-run
          UUID and stores it in data/.current-runs.json so other hooks
          (mcp-invocation-logger, future phase markers) can attach it to their
          own log entries via shared.run_context.get_run_id().
 
-Detection:
-    UserPromptExpansion is the official Claude Code 2.x event for slash-
-    command expansions (https://code.claude.com/docs/en/hooks). Its payload
-    carries `command_name` and `command_args` directly, so no prompt-string
-    parsing is required. UserPromptSubmit is NOT used here: empirically
-    verified (2026-05-05) that real slash invocations bypass UPS on
-    Windows — only the Skill tool sees them, and PreToolUse:Skill cannot
-    distinguish slash-originated invocations from Claude-initiated Skill()
-    calls. UserPromptExpansion fires exclusively on the slash path.
+Detection (2026-05-05 update):
+    Originally registered on UserPromptExpansion — the official Claude Code 2.x
+    event for slash-command expansions per
+    https://code.claude.com/docs/en/hooks. Empirically verified on Windows
+    (build 2.x, session 10108f33-...) that UPE is NOT emitted for real CLI
+    `/cmd` invocations — zero hook entries even with valid registration in
+    settings.json. UPS, however, fires reliably (9 hooks logged in the same
+    real session). Switching detection to UserPromptSubmit + prompt parsing.
+
+    The UPS payload's `prompt` field carries one of two forms depending on
+    where in the pipeline the hook fires:
+      - Pre-expansion (raw CLI typed): "/cmd arg1 arg2 ..."
+      - Post-expansion (skill body inlined): contains "<command-name>NAME</command-name>"
+        wrapper around the original command name (Claude Code 2.x convention).
+    We check both: a `<command-name>` tag wins (most authoritative), with
+    `/^\\s*\\/[a-z][a-z0-9_-]*` as fallback for raw form.
+
+    Plain user prompts (no slash, no command-name tag) are ignored — the
+    hook is a no-op for them so it doesn't pollute the slash_run log.
 
 Storage:
     data/.current-runs.json  — small JSON map {session_id: {run_id, command,
                                started_at}}. Atomic-write via shared.run_context.
 
 Log entries (in data/hook-invocations.jsonl):
-    category="slash_run", outcome="start"  — emitted at UserPromptExpansion
+    category="slash_run", outcome="start"  — emitted at UserPromptSubmit when
+                                             a slash invocation is detected
     category="slash_run", outcome="end"    — emitted at Stop with elapsed_ms
                                              measured from started_at
 
 Idempotency:
-    UserPromptExpansion fires once per slash invocation. The Stop hook
-    clears the entry after recording elapsed_ms.
+    Each UPS fires once per user turn. If a session already has an active
+    entry (set_run was called and clear_run not yet) and a new slash command
+    arrives, the old entry is overwritten — Claude Code only ever has one
+    in-flight slash command per session, so this matches reality.
 
 Timeout: 3s
 """
 
 import os
+import re
 import sys
 import uuid
 from datetime import datetime
@@ -46,30 +60,84 @@ sys.path.insert(0, _HOOK_DIR)
 from base import BaseHook, HookInput, HookOutput
 
 
+_CMD_NAME_TAG_RE = re.compile(r"<command-name>\s*/?([a-zA-Z][a-zA-Z0-9_:.-]*)\s*</command-name>")
+_RAW_SLASH_RE = re.compile(r"^\s*/([a-zA-Z][a-zA-Z0-9_:.-]*)(?:\s|$)")
+
+
+def _detect_slash_command(prompt: str) -> str:
+    """Return the slash command name found in the prompt, or '' if none.
+
+    Two-stage detection:
+      1. <command-name>NAME</command-name> wrapper (post-expansion form)
+      2. Raw "/cmd ..." prefix (pre-expansion CLI form)
+    """
+    if not prompt:
+        return ""
+    m = _CMD_NAME_TAG_RE.search(prompt)
+    if m:
+        return m.group(1)
+    m = _RAW_SLASH_RE.match(prompt)
+    if m:
+        return m.group(1)
+    return ""
+
+
 class SlashCommandTracker(BaseHook):
     HOOK_NAME = "SlashCommandTracker"
 
-    def execute(self, inp: HookInput) -> HookOutput | None:
+    def execute(self, inp: HookInput):
         event = inp.detected_event
 
-        if event == "UserPromptExpansion":
-            self._handle_expansion(inp)
+        if event == "UserPromptSubmit":
+            self._handle_prompt_submit(inp)
         elif event == "Stop":
             self._handle_stop(inp)
+        # UserPromptExpansion path retained for future platform fix; if the
+        # event ever starts emitting again, the documented `command_name`
+        # field is used directly without prompt parsing.
+        elif event == "UserPromptExpansion":
+            self._handle_expansion(inp)
 
         return None
 
+    def _handle_prompt_submit(self, inp: HookInput) -> None:
+        command = _detect_slash_command(inp.prompt or "")
+        if not command:
+            return  # Plain prompt — no slash invocation to track.
+
+        run_id = uuid.uuid4().hex
+
+        try:
+            from shared.run_context import set_run
+            set_run(inp.session_id, run_id, command)
+        except Exception:
+            pass
+
+        self._log(
+            event="UserPromptSubmit",
+            outcome="start",
+            session_id=inp.session_id,
+            run_id=run_id,
+            tool=f"slash:{command}",
+        )
+
     def _handle_expansion(self, inp: HookInput) -> None:
-        # `expansion_type` is "slash_command" for /cmd, "mcp_prompt" for MCP
-        # server prompts, or absent on malformed payloads. Only track the
-        # slash path — MCP prompts have their own observability via the
-        # mcp-invocation-logger.
+        # Legacy path — kept in case Claude Code re-enables UPE emission for
+        # slash commands. Listens to the documented `command_name` field.
         if inp.raw.get("expansion_type") != "slash_command":
             return
 
         command = str(inp.raw.get("command_name", "")).strip()
         if not command:
             return
+
+        # Skip if UPS already recorded this turn — avoids duplicate run_id.
+        try:
+            from shared.run_context import get_run
+            if get_run(inp.session_id):
+                return
+        except Exception:
+            pass
 
         run_id = uuid.uuid4().hex
 
