@@ -138,11 +138,7 @@ def _extract_slash_command(prompt: str) -> str:
     match = _SLASH_RE.match(prompt)
     if not match:
         return ""
-    name = match.group(1)
-    # Filter out built-in non-tracking prefixes (e.g. "//comments")
-    if not name or name.startswith("/"):
-        return ""
-    return name
+    return match.group(1) or ""
 
 
 def _elapsed_since(started_at: str) -> int:
