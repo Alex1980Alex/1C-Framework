@@ -98,6 +98,13 @@ def _bg_warmup() -> None:
         logger.warning(f"BG warmup failed: {exc}")
 
 
+def _start_warmup() -> None:
+    global _warmup_thread
+    if _warmup_thread is None:
+        _warmup_thread = threading.Thread(target=_bg_warmup, daemon=True, name="bsl-mcp-warmup")
+        _warmup_thread.start()
+
+
 async def ensure_services():
     """Ленивая инициализация всех сервисов"""
     global _services_initialized, search_service, _qdrant_available
