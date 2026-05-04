@@ -72,6 +72,8 @@ def log_invocation(
     session_id: str = "",
     error: Optional[str] = None,
     agent_id: str = "",  # Phase 7: Subagent monitoring
+    category: str = "hook",  # Phase 8: Multi-source log unification
+    run_id: str = "",  # Phase 8: Cross-hook correlation (slash-command run)
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -84,6 +86,13 @@ def log_invocation(
         session_id: Claude Code session ID (from stdin JSON)
         error: Error message if outcome is "error"
         agent_id: Subagent ID (for subagent monitoring, Phase 7)
+        category: Log category for filtering — "hook" (default, BaseHook auto-log),
+                  "mcp_call" (MCP server invocation),
+                  "slash_run" (slash-command lifecycle: start/end),
+                  "phase" (skill phase marker). Future categories add here.
+        run_id: UUID linking events to one slash-command invocation.
+                Set by slash-command-tracker on UserPromptSubmit, read by other
+                hooks via shared/run_context.get_run_id(session_id).
     """
     try:
         filepath = _get_log_file()
@@ -100,6 +109,8 @@ def log_invocation(
             "session": session_id or "",
             "error": error,
             "agent_id": agent_id,  # Phase 7
+            "category": category,  # Phase 8
+            "run_id": run_id,  # Phase 8
         }
 
         line = json.dumps(entry, ensure_ascii=False) + "\n"
