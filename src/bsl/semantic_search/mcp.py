@@ -445,7 +445,7 @@ async def bsl_stats() -> str:
 {type_stats}
 
 **Embedder**: TEI (FrameworkTEIEmbedder) {DEFAULT_TEI_URL}
-**Модель embeddings**: {settings.embedding_model}
+**Модель embeddings**: {TEI_PRODUCTION_MODEL}
 """
         except FileNotFoundError:
             return "Индекс не найден. Запустите: scripts/index-folder.bat"
