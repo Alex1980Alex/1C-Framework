@@ -140,6 +140,7 @@ SKIP_PATTERNS = [
     "tools/",
     "docker/",
     "infra/",
+    "external/",
     "pyproject.toml",
     # OpenSpec SDD artifacts (specs/proposals/designs/tasks — self-documenting via openspec-* skills)
     "openspec/",
