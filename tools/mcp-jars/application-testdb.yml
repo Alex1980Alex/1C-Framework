@@ -22,7 +22,7 @@ app:
     user: "a.terletskiy@sodru.com"
     password: "Alex80Alex"
 
-  platform-version: "8.3.27.1859"
+  platform-version: "8.3.27.1936"
 
   tools:
     builder: DESIGNER
@@ -33,5 +33,5 @@ app:
   # Phase 8.7: Incremental dump configuration
   dump:
     type: INCREMENTAL
-    path: "D:\\1С-Framework\\build\\dumps"
+    path: "C:\\1С-Framework\\build\\dumps"
     checksum-algorithm: SHA-256
