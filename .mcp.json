@@ -127,7 +127,7 @@
       "timeout": 60000
     },
     "mcp-onec-test-runner": {
-      "command": "java",
+      "command": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64\\bin\\java.exe",
       "args": [
         "-Dfile.encoding=UTF-8",
         "-Dspring.config.additional-location=file:C:/1С-Framework/tools/mcp-jars/",
@@ -137,7 +137,7 @@
       ],
       "cwd": "C:\\1С-Framework\\tools\\mcp-jars",
       "env": {
-        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
+        "JAVA_HOME": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64"
       },
       "timeout": 120000
     },
