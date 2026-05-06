@@ -1,7 +1,7 @@
 app:
   id: testdb
   format: DESIGNER
-  base-path: "D:\\1С-Framework\\src\\bsl"
+  base-path: "C:\\1С-Framework\\src\\bsl"
 
   source-set:
     - path: "."
