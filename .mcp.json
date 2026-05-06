@@ -181,7 +181,7 @@
       "timeout": 60000
     },
     "obsidian-mcp": {
-      "command": "uvx",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\uvx.exe",
       "args": ["mcp-obsidian"],
       "env": {
         "OBSIDIAN_API_KEY": "ce43f3ec7b3abd209c3f532b701d9c66901b01f7e43c85933dc37a469a645f28",
