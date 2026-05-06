@@ -158,3 +158,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 3
 - Summary: Session 2026-05-05. Skills: embedding-models, search-pipeline-debug, qdrant-operations, code-verify, bsl-development, audit-docs, update-config, task-protocol. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, ИБTransportManagementDevelop/docs. Commit: fix: Исправлено логирование slash-команд при backtick-quoted prompts. Commit: chore: auto-save run_context.py. Commit: chore: auto-save run_context.py
 
+
+## 2026-05-06 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: create-hook, code-verify, claude-code-hooks-bugs, implement-1c-task, framework-troubleshooting
+- Files changed: 3
+- Summary: Session 2026-05-06. Skills: create-hook, code-verify, claude-code-hooks-bugs, implement-1c-task, framework-troubleshooting. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, ИБTransportManagementDevelop/docs. Commit: chore: auto-save edt-mcp-plugin-install.md, _index.json. Commit: chore: auto-commit 3 file(s) changed
+
