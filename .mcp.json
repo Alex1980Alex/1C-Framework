@@ -152,39 +152,6 @@
       },
       "timeout": 60000
     },
-    "1c-mcp-crud-infeeda": {
-      "command": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\venv\\Scripts\\python.exe",
-      "args": ["D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\mcp_entrypoint.py"],
-      "env": {
-        "PYTHONIOENCODING": "utf-8",
-        "MCP_ONEC_URL": "http://localhost/tm_infeeda",
-        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
-        "MCP_ONEC_PASSWORD": "Alex80Alex"
-      },
-      "timeout": 60000
-    },
-    "1c-mcp-crud-daily": {
-      "command": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\venv\\Scripts\\python.exe",
-      "args": ["D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\mcp_entrypoint.py"],
-      "env": {
-        "PYTHONIOENCODING": "utf-8",
-        "MCP_ONEC_URL": "http://localhost/DAILY_TM_BAT",
-        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
-        "MCP_ONEC_PASSWORD": "Alex80Alex"
-      },
-      "timeout": 60000
-    },
-    "1c-mcp-crud-dev39144": {
-      "command": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\venv\\Scripts\\python.exe",
-      "args": ["D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\mcp_entrypoint.py"],
-      "env": {
-        "PYTHONIOENCODING": "utf-8",
-        "MCP_ONEC_URL": "http://localhost/DEV_ATERLETSKIY_39144_MFM",
-        "MCP_ONEC_USERNAME": "",
-        "MCP_ONEC_PASSWORD": ""
-      },
-      "timeout": 60000
-    },
     "1c-debug": {
       "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": ["C:\\1С-Framework\\tools\\bsl-debug-server\\mcp_debug_server.py"],
