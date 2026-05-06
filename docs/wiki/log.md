@@ -167,3 +167,12 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Files changed: 3
 - Summary: Session 2026-05-06. Skills: create-hook, code-verify, claude-code-hooks-bugs, implement-1c-task, framework-troubleshooting. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, ИБTransportManagementDevelop/docs. Commit: chore: auto-save edt-mcp-plugin-install.md, _index.json. Commit: chore: auto-commit 3 file(s) changed
 
+
+## 2026-05-07 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: create-hook, code-verify, claude-code-hooks-bugs, implement-1c-task, framework-troubleshooting
+- Files changed: 3
+- Summary: Session 2026-05-07. Skills: create-hook, code-verify, claude-code-hooks-bugs, implement-1c-task, framework-troubleshooting, update-config. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, ИБTransportManagementDevelop/docs. Commit: chore: auto-save .mcp.json. Commit: chore: auto-commit 3 file(s) changed. Commit: chore: auto-save application-testdb.yml, .mcp.json
+
