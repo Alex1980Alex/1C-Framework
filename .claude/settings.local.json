@@ -868,7 +868,8 @@
       "Read(//c/Apache24/**)",
       "Bash(./bin/httpd.exe -t)",
       "Bash(/c/1С-Framework/.venv/Scripts/python.exe *)",
-      "Bash(PYTHONPATH=. PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/transport MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex MCP_ONEC_SERVICE_ROOT=mcp timeout 12 ./venv/Scripts/python.exe -m src.py_server)"
+      "Bash(PYTHONPATH=. PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/transport MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex MCP_ONEC_SERVICE_ROOT=mcp timeout 12 ./venv/Scripts/python.exe -m src.py_server)",
+      "Bash(\"/c/1С-Framework/.venv/Scripts/python.exe\" scripts/smoke_test_implement_1c_task.py)"
     ]
   },
   "enableAllProjectMcpServers": true,
