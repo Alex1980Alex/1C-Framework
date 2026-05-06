@@ -533,25 +533,75 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 
 ### Этап 8: Git commit
 
-**Цель:** Закоммитить изменения.
+**Цель:** Закоммитить изменения, аккуратно работая с многоуровневой структурой репозиториев.
 
-**Шаги:**
+#### Структура репозиториев
 
-1. Если проект в submodule:
+В этом проекте встречаются **три уровня вложенности**:
+
+```
+C:\1С-Framework\                          ← MAIN repo
+├── configuration/<TaskFolder>/           ← submodule (gitlink in main)
+│   └── docs/<task>/IMPLEMENTATION-PROGRESS.md  ← задача-документация
+├── ИБTransportManagementDevelop/         ← STANDALONE repo (НЕ submodule main!)
+│   └── Конфигурация/                     ← submodule of ИБTM (НЕ виден main)
+│       └── src/.../*.bsl                 ← BSL-исходники (правит EDT-MCP)
+└── external/1c_mcp/                      ← обычно untracked
+```
+
+**Ключевые отличия:**
+- `configuration/<TaskFolder>` — submodule main repo: gitlink обновляется в main commit'е.
+- `ИБTransportManagementDevelop` — самостоятельный git-репо, **не зарегистрирован** как submodule main. `git status` в main его не видит. Изменения BSL живут только там и в его собственном submodule `Конфигурация`.
+- Это значит: BSL-фикс попадёт в main repo только если main явно tracks `ИБTransportManagementDevelop`. Обычно — НЕ tracks. Документация фикса (IMPLEMENTATION-PROGRESS.md) живёт в `configuration/<TaskFolder>` и попадает в main через gitlink.
+
+#### Шаги
+
+1. **Самый внутренний submodule с BSL-кодом** (обычно `ИБTransportManagementDevelop/Конфигурация`):
    ```bash
-   cd <submodule_path>
-   git add -A
-   git commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
-   cd <main_repo>
-   git add <submodule_path>
-   git commit -m "chore: update submodule ref (НОМЕР-ЗАДАЧИ)"
+   git -C <inner_submodule> add <specific_file_path>
+   git -C <inner_submodule> commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
+   ```
+   ⚠ **НЕ использовать `git add -A`** — submodule может содержать чужой dirty state.
+   ⚠ **НЕ использовать `git add <submodule-dir>`** в родителе — git попытается проиндексировать **untracked файлы внутри** (включая длинные пути Windows → fatal: filename too long).
+
+2. **Промежуточный repo** (`ИБTransportManagementDevelop`) — обновить gitlink на внутренний submodule:
+   ```bash
+   git -C <middle_repo> add <inner_submodule_dirname>
+   git -C <middle_repo> commit -m "chore(НОМЕР-ЗАДАЧИ): bump <inner> submodule ref"
+   ```
+   Здесь `git add <submodule_dirname>` — **корректно**: git распознаёт submodule entry и обновляет только gitlink, не содержимое.
+
+3. **Submodule с документацией** (`configuration/<TaskFolder>`) — закоммитить IMPLEMENTATION-PROGRESS.md:
+   ```bash
+   git -C <docs_submodule> add "docs/<task>/IMPLEMENTATION-PROGRESS.md"
+   git -C <docs_submodule> commit -m "docs(НОМЕР-ЗАДАЧИ): add implementation progress"
    ```
 
-2. Если проект в основном репо:
+4. **Main repo** — обновить gitlink на documentation submodule:
    ```bash
-   git add <changed_files>
-   git commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
+   git add <docs_submodule_path>
+   git commit -m "chore(НОМЕР-ЗАДАЧИ): bump configuration submodule ref"
    ```
+
+#### Git identity без `git config`
+
+CLAUDE.md запрещает `git config` (включая локальный). Если submodule наследует identity от родителя — коммит проходит. Если в submodule пусто — коммит падает с `fatal: unable to auto-detect email address`. Решение — **per-command override**:
+
+```bash
+git -c user.name="Имя" -c user.email="email@example.com" commit -m "..."
+```
+
+Эти `-c` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Identity берётся из main repo (`git config user.name` + `git config user.email`).
+
+#### Diagnostic: убедиться что main repo не tracks ИБTransportManagementDevelop
+
+Если в main `git status` появляется `M ИБTransportManagementDevelop` или `m ИБTransportManagementDevelop` — ИБTM зарегистрирован как submodule, тогда нужен дополнительный коммит gitlink в main. По умолчанию (на 2026-05) — не зарегистрирован, и main repo тол только знает про `configuration/<TaskFolder>`.
+
+```bash
+git ls-files --stage ИБTransportManagementDevelop 2>/dev/null
+# пусто → standalone, main не tracks
+# 160000 <hash> 0    ИБTransportManagementDevelop → submodule, нужно add+commit
+```
 
 ---
 
