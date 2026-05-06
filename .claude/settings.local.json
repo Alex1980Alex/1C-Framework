@@ -848,7 +848,10 @@
       "PowerShell(Test-NetConnection *)",
       "Bash(gh release *)",
       "Read(//c/Users/Tech. Boutique/AppData/Roaming/1C/**)",
-      "Read(//c/Users/Tech. Boutique/AppData/Local/1C/**)"
+      "Read(//c/Users/Tech. Boutique/AppData/Local/1C/**)",
+      "PowerShell($edtc = \"C:\\\\Users\\\\Tech. Boutique\\\\AppData\\\\Local\\\\1C\\\\1cedtstart\\\\installations\\\\1C_EDT \\(Lite\\) 2025.2\\\\1cedt\\\\1cedtc.exe\"; $repo = \"jar:file:/C:/Users/Tech.%20Boutique/Downloads/MCP-EDT.v1.26.1.zip!/\"; & $edtc -application org.eclipse.equinox.p2.director -repository $repo -installIU com.ditrix.edt.mcp.server.feature.feature.group -nosplash 2>&1; \"EXIT_CODE=$LASTEXITCODE\")",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(Get-Content *)"
     ]
   },
   "enableAllProjectMcpServers": true,
