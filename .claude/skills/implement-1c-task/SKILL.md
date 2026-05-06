@@ -769,12 +769,18 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 
 - [ ] Все точки модификации из ANALYSIS-REPORT реализованы
 - [ ] Каждый блок кода имеет комментарий с номером задачи
-- [ ] EDT-MCP: get_project_errors = 0 ошибок
-- [ ] Все SQL-запросы прошли validate_query
-- [ ] Все SQL-запросы проверены на живых данных (execute_query)
-- [ ] bsl_analyze: 0 ошибок (предупреждения допустимы)
-- [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной
+- [ ] EDT-MCP: `get_project_errors(severity="ERRORS") = 0`
+- [ ] Все SQL-запросы прошли `validate_query`
+- [ ] Все SQL-запросы проверены на живых данных (`execute_query`) — с workaround `ПРЕДСТАВЛЕНИЕ()` для ссылок (см. Известные ограничения 1c-mcp-crud)
+- [ ] `bsl_analyze`: 0 ошибок ИЛИ только known false-positive'ы (chained call / препроцессор) — зафиксировано в IMPLEMENTATION-PROGRESS.md
+- [ ] **Этап 6 → шаг 0**: конфигурация БД обновлена (`update_database` или ручной EDT) — без этого live-вызовы возвращают старое поведение
+- [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной (минимум — SQL-симуляция, если БД не обновлена)
 - [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
 - [ ] Отклонения от ANALYSIS-REPORT зафиксированы
-- [ ] Git commit выполнен
+- [ ] **Git commit:**
+  - [ ] Коммит во внутреннем repo с BSL (без `git add -A`, без `git add <submodule-dir>`)
+  - [ ] Промежуточный repo обновил gitlink (если есть вложенный submodule)
+  - [ ] Documentation submodule (`configuration/<TaskFolder>`) закоммичен с PROGRESS-файлом
+  - [ ] Main repo обновил gitlink на documentation submodule
+  - [ ] Submodule без identity → коммит через `git -c user.name=... -c user.email=...`
