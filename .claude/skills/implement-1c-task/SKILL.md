@@ -14,6 +14,7 @@ triggers:
 # Реализация задачи 1С — 8-этапный pipeline (v2)
 
 > **История версий:**
+> - **v2.5.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2335. **Этап 4** — явный graceful-skip для `bsl_analyze` на production BSL: OneScript-парсер падает на директивах препроцессора `#Если ... Тогда` и chained-вызовах вида `Запрос.Выполнить().Пустой()` (стандартные 1С-конструкции). Если EDT `get_project_errors` = 0, ошибки `bsl_analyze` на этих паттернах фиксируем как tool-limitation и идём дальше. **Этап 6** — добавлен ОБЯЗАТЕЛЬНЫЙ шаг 0 «Обновление БД» через `mcp__edt-mcp__update_database` (или ручной EDT → Update Database) ПЕРЕД любым `execute_code`-вызовом изменённой функции; без этого live-инфобаза работает на старой скомпилированной конфигурации и `execute_code` возвращает старое поведение. **Этап 8** — переписан раздел git: 3-уровневая структура repo (main / submodule / nested standalone), запрет `git add <submodule-dir>` (подцепляет untracked), pattern `git -c user.name=... -c user.email=...` для submodule без локальной identity (CLAUDE.md запрещает `git config`). Добавлен раздел [Известные ограничения 1c-mcp-crud](#известные-ограничения-1c-mcp-crud) с workaround'ами для сериализации ссылок (`ПРЕДСТАВЛЕНИЕ()`) и пустого `attributes:[]` для регистров.
 > - **v2.4.0 (2026-05-07):** в Preflight добавлен **TCP-probe** портов `:8765` (edt-mcp) и `:1550` (1С debug agent) — отдельный сигнал от наличия MCP-tool в сессии. Добавлен **fallback для Этапа 5** (`find_references` через `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph`; `get_project_errors` через `bsl-debugger:bsl_analyze` per-file). Кросс-ссылки на новый раздел [16.6 EDT-MCP setup](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) и smoke-test `scripts/smoke_test_implement_1c_task.py`. Триггер изменений — выполнение Phase 4 + 5 [roadmap'а 260505](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md).
 > - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
 > - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
@@ -334,17 +335,19 @@ Skill для реализации задачи по конфигурации 1С
 
 1. Для каждого изменённого модуля:
    ```
-   bsl-debug-server: bsl_analyze(file_path_or_code)
+   bsl-debug-server: bsl_analyze(file=<absolute_path>)
      → получить предупреждения и ошибки линтера
    ```
 
-2. Для новых процедур с чистой логикой (без обращений к базе):
+2. **Если `bsl_analyze` падает с parse error** — проверить, попадает ли ошибка в список known false-positive'ов (см. ниже). Если да — фиксируем как tool-limitation и считаем этап пройденным (EDT-валидация в Этапе 3 уже подтвердила корректность кода). Если нет — есть реальная ошибка, исправлять через Этап 3.
+
+3. Для новых процедур с чистой логикой (без обращений к базе):
    ```
    bsl-debug-server: bsl_execute(code_fragment)
      → проверить что логика работает (условия, циклы, массивы)
    ```
 
-3. При сложной логике (вложенные циклы, условия) — пошаговая отладка:
+4. При сложной логике (вложенные циклы, условия) — пошаговая отладка:
    ```
    bsl-debug-server: bsl_debug_start(file, breakpoints)
    bsl-debug-server: bsl_debug_step(session, "stepInto")
@@ -353,14 +356,30 @@ Skill для реализации задачи по конфигурации 1С
    bsl-debug-server: bsl_debug_stop(session)
    ```
 
-4. Исправить найденные проблемы (повторить Этап 3 для исправлений).
+5. Исправить найденные **реальные** проблемы (повторить Этап 3 для исправлений).
 
-**Контрольная точка:** bsl_analyze возвращает 0 ошибок и 0 критичных предупреждений.
+**Контрольная точка:**
+- EDT `get_project_errors(severity="ERRORS") = 0` (авторитетный источник для 1С) — ОБЯЗАТЕЛЬНО
+- `bsl_analyze` = 0 ошибок ИЛИ все ошибки попадают в known false-positive'ы
 
-**Когда ПРОПУСТИТЬ bsl_execute/bsl_debug:**
+**Known false-positive'ы `bsl_analyze` (OneScript-парсер ≠ 1С-компилятор):**
+
+| Паттерн | Сообщение парсера | Корректное поведение |
+|---|---|---|
+| `#Если ТолстыйКлиентОбычноеПриложение Или Сервер ... Тогда` (директива препроцессора в строке 1) | `Неожиданный токен: Тогда` | Стандартная BSL-директива препроцессора. EDT компилирует. Игнорировать. |
+| `Запрос.Выполнить().Пустой()` (chained method call) | `Ожидается имя свойства` | Стандартный паттерн 1С. Игнорировать. |
+| `НовыйОбъект.Записать(РежимЗаписиДокумента.Проведение)` (composite ref в аргументе) | разные | Если EDT принимает — игнорировать. |
+
+**Workaround при padении на препроцессоре:** передавать в `bsl_analyze(source=<тело_метода>)` только тело новой функции (без директив препроцессора), а не весь файл через `file=...`.
+
+**Когда ПРОПУСТИТЬ bsl_execute/bsl_debug (но НЕ bsl_analyze):**
 - Код состоит только из вызовов методов 1С (РегистрыСведений, Документы)
 - Код — простой SQL-запрос + проверка результата
-- В этих случаях достаточно bsl_analyze
+- В этих случаях достаточно bsl_analyze (или его graceful-skip)
+
+**Логирование в IMPLEMENTATION-PROGRESS.md:**
+- `bsl_analyze: 0 errors / N warnings` — успех
+- `bsl_analyze: SKIP (OneScript false-positive on <pattern>); EDT errors = 0` — tool-limitation, проверка через EDT
 
 ---
 
