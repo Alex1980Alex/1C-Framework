@@ -1,8 +1,8 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.3.0
-updated: 2026-05-05
+version: 2.4.0
+updated: 2026-05-07
 tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-crud, bsl-debugger]
 triggers:
   - реализовать задачу 1С
@@ -14,6 +14,7 @@ triggers:
 # Реализация задачи 1С — 8-этапный pipeline (v2)
 
 > **История версий:**
+> - **v2.4.0 (2026-05-07):** в Preflight добавлен **TCP-probe** портов `:8765` (edt-mcp) и `:1550` (1С debug agent) — отдельный сигнал от наличия MCP-tool в сессии. Добавлен **fallback для Этапа 5** (`find_references` через `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph`; `get_project_errors` через `bsl-debugger:bsl_analyze` per-file). Кросс-ссылки на новый раздел [16.6 EDT-MCP setup](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) и smoke-test `scripts/smoke_test_implement_1c_task.py`. Триггер изменений — выполнение Phase 4 + 5 [roadmap'а 260505](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md).
 > - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
 > - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
 > - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
@@ -110,7 +111,20 @@ Skill для реализации задачи по конфигурации 1С
    | `1c-mcp-crud` | `mcp__1c-mcp-crud__get_metadata` (или `ToolSearch query: "+1c crud"`) | в результатах есть `mcp__1c-mcp-crud__*` |
    | `bsl-debug-server` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
 
-2. Сопоставить результат с матрицей капабилити:
+2. **TCP-probe ключевых портов** — отдельный сигнал от наличия MCP-tool в сессии (tool может быть зарегистрирован, но HTTP-bridge упасть):
+
+   | Порт | Сервис | Команда | Ожидание |
+   |---|---|---|---|
+   | `:8765` | EDT-MCP HTTP-bridge | `Test-NetConnection -ComputerName localhost -Port 8765 -InformationLevel Quiet` | `True` для режимов **Full** и **Code-only** |
+   | `:1550` | 1С debug agent (`ragent.exe -debug`) | `Test-NetConnection -ComputerName localhost -Port 1550 -InformationLevel Quiet` | `True` только если нужна runtime-отладка в Этапе 4 |
+
+   Альтернатива одной командой:
+   ```powershell
+   python scripts/smoke_test_implement_1c_task.py
+   ```
+   Скрипт парсит [.mcp.json](../../../.mcp.json), TCP-probe + MCP-handshake, возвращает exit-code `0` (Full) / `1` (degraded) / `2` (unusable). Подробности: [16.6 EDT-MCP setup](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md).
+
+3. Сопоставить результат с матрицей капабилити:
 
    | edt-mcp | 1c-mcp-crud | bsl-debug-server | Режим pipeline |
    |---|---|---|---|
@@ -119,9 +133,9 @@ Skill для реализации задачи по конфигурации 1С
    | ✗ | ✓ | * | **Read-only verify** — Этап 2 на данных, Этап 6 на данных. Запись кода невозможна (нет `write_module_source`) → STOP с просьбой запустить EDT |
    | ✗ | ✗ | * | **Read-only research** — только Этап 1 через fallback (см. ниже), сбор контекста. Запись и валидация невозможны → STOP перед Этапом 2 |
 
-3. Если режим не **Full** — сообщить пользователю явно: какие серверы отсутствуют, какие этапы будут пропущены, что нужно поднять (EDT на `localhost:8765`, путь к `1c-mcp-crud` в `.mcp.json:144-153`). Дождаться решения: продолжить в деградированном режиме или прервать.
+4. Если режим не **Full** — сообщить пользователю явно: какие серверы отсутствуют, какие этапы будут пропущены, что нужно поднять (EDT на `localhost:8765`, путь к `1c-mcp-crud` в `.mcp.json`, см. [16.6](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md)). Дождаться решения: продолжить в деградированном режиме или прервать.
 
-4. Сохранить выбранный режим в IMPLEMENTATION-PROGRESS.md под заголовком `Pipeline mode: Full | Code-only | Read-only verify | Read-only research`.
+5. Сохранить выбранный режим в IMPLEMENTATION-PROGRESS.md под заголовком `Pipeline mode: Full | Code-only | Read-only verify | Read-only research`.
 
 **Контрольная точка:** Известен режим pipeline. Все последующие этапы выполняются с учётом ограничений режима.
 
@@ -357,17 +371,37 @@ Skill для реализации задачи по конфигурации 1С
 **Шаги:**
 
 1. Для каждого изменённого/нового метода:
+
+   **Основной путь (edt-mcp доступен):**
    ```
    EDT-MCP: find_references(project, module, symbol)
      → найти все места вызова
    ```
 
+   **Fallback (edt-mcp недоступен, режим Read-only research):**
+   ```
+   bsl-code-search: find_callers(symbol_name)
+     → AST-уровень: прямые вызовы по конфигурации
+   bsl-semantic-search: bsl_call_graph(object_name, depth=2)
+     → семантический граф зависимостей через Neo4j
+   ```
+   Ограничение: оба fallback'а работают по индексу, не учитывают live-проект EDT — могут пропустить недавно добавленные вызовы (до переиндексации). Зафиксировать в IMPLEMENTATION-PROGRESS.md.
+
 2. Проверить общие ошибки проекта:
+
+   **Основной путь (edt-mcp доступен):**
    ```
    EDT-MCP: get_project_errors(project, severity="ERROR")
    EDT-MCP: get_project_errors(project, severity="WARNING")
      → убедиться что новых ошибок/предупреждений не появилось
    ```
+
+   **Fallback (edt-mcp недоступен):**
+   ```
+   bsl-debugger: bsl_analyze(file_path) для каждого изменённого .bsl
+     → статический линтер по локальному файлу (без cross-module проверки)
+   ```
+   В режиме без EDT cross-module ошибки (несовпадение сигнатур, отсутствующие модули) обнаружить нельзя — отметить как «требует EDT-валидации перед merge».
 
 3. Если в ANALYSIS-REPORT указаны объекты-источники данных:
    ```

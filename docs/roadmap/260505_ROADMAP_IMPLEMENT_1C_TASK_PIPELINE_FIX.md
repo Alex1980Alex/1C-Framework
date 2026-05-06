@@ -1,9 +1,22 @@
 # Дорожная карта: восстановление работоспособности `/implement-1c-task`
 
-> **Дата:** 2026-05-05
+> **Дата:** 2026-05-05 (создана) → **2026-05-07 (DONE)**
 > **Триггер:** smoke-test реального выполнения команды `/implement-1c-task` — pipeline корректно остановился на Этапе 0 (Preflight v2.3.0).
-> **Скилл:** [implement-1c-task/SKILL.md](../../.claude/skills/implement-1c-task/SKILL.md) (v2.3.0)
-> **Связанные документы:** [16.5_MCP_серверы_для_1С.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md), [09.9_MCP_Health_Dashboard.md](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md), [260331_ROADMAP_MCP_IMPROVEMENTS.md](260331_ROADMAP_MCP_IMPROVEMENTS.md)
+> **Скилл:** [implement-1c-task/SKILL.md](../../.claude/skills/implement-1c-task/SKILL.md) (**v2.4.0** — TCP-probe + Stage 5 fallback)
+> **Связанные документы:** [16.5_MCP_серверы_для_1С.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md), [16.6_EDT_MCP_setup.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) (новый), [09.9_MCP_Health_Dashboard.md](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md), [260331_ROADMAP_MCP_IMPROVEMENTS.md](260331_ROADMAP_MCP_IMPROVEMENTS.md)
+
+## Status (2026-05-07)
+
+| Фаза | Статус | Артефакт |
+|---|---|---|
+| Phase 1: восстановить `1c-mcp-crud` | ✅ DONE | Путь мигрирован на `C:\1С-Framework\external\1c_mcp\` (commit `bf887153e`); `MCP_ONEC_PASSWORD` заполнен; mirror-конфиги признаны устаревшими и не добавлены |
+| Phase 2: восстановить `edt-mcp` | ✅ DONE | EDT IDE поднята пользователем, порт `:8765` LISTENING; новый раздел [16.6_EDT_MCP_setup.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) |
+| Phase 3: runtime debug 1С (`:1550`) | 🟡 DOCUMENTED | Операционка остаётся за пользователем; пошаговая инструкция в 16.6 §«1С debug agent». Не блокер — `bsl_analyze` покрывает Этап 4 |
+| Phase 4: усилить SKILL.md fallback'ами | ✅ DONE | SKILL.md v2.4.0: TCP-probe `:8765`/`:1550` в Stage 0; Stage 5 fallback — `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph` + `bsl-debugger:bsl_analyze` |
+| Phase 5: smoke-test + preflight hook | ✅ DONE (script) / ⏭ SKIPPED (hook) | [`scripts/smoke_test_implement_1c_task.py`](../../scripts/smoke_test_implement_1c_task.py) — paths/ports/handshakes, exit 0/1/2 = Full/degraded/unusable. Preflight `UserPromptSubmit` hook не создан (опционально по §5.2) |
+| Phase 6: документация | ✅ DONE | 16.5 ссылается на 16.6; КОМАНДЫ_CLAUDE_CODE.md содержит блок «Требования к среде» у `/implement-1c-task`; новая memory `feedback_mcp_json_paths.md` |
+
+Pipeline mode без debug agent (типичный сценарий) — `Code-only` (запись и валидация работают, runtime-debug опционален).
 
 ---
 
@@ -209,4 +222,4 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 
 ---
 
-**Статус документа:** черновик. Нуждается в ответах на открытые вопросы Фазы 1.1 для перехода к выполнению.
+**Статус документа:** ✅ DONE (2026-05-07). См. таблицу Status в шапке. Открытые вопросы §5.1 (расположение исходников `1c_mcp`) разрешены — Variant C (внутри основного фреймворка, `C:\1С-Framework\external\1c_mcp\`).
