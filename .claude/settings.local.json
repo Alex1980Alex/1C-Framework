@@ -856,7 +856,12 @@
       "PowerShell(npm view *)",
       "PowerShell(Stop-Job *)",
       "Bash(\"/c/1С-Framework/.venv/Scripts/pip.exe\" install *)",
-      "Bash(./venv/Scripts/pip.exe install *)"
+      "Bash(./venv/Scripts/pip.exe install *)",
+      "Bash(\"C:\\\\1С-Framework\\\\.venv\\\\Scripts\\\\uv.exe\" --version)",
+      "Bash(PYTHONPATH=. PYTHONIOENCODING=utf-8 ./venv/Scripts/python.exe -c \"import src.py_server; print\\('IMPORT_OK'\\); print\\('module:', src.py_server.__file__\\)\")",
+      "Bash(\"C:\\\\Program Files\\\\1C\\\\1CE\\\\components\\\\axiom-jdk-full-17.0.16+12-x86_64\\\\bin\\\\java.exe\" -Dfile.encoding=UTF-8 -jar \"C:\\\\1С-Framework\\\\tools\\\\mcp-jars\\\\mcp-bsl-context-0.3.1.jar\" --help)",
+      "Bash(PYTHONPATH=. PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/ИБTransportManagementDevelop MCP_ONEC_USERNAME=a.terletskiy@sodru.com MCP_ONEC_PASSWORD=Alex80Alex timeout 12 ./venv/Scripts/python.exe -m src.py_server)",
+      "Bash(JAVA_HOME=\"C:\\\\\\\\Program Files\\\\\\\\1C\\\\\\\\1CE\\\\\\\\components\\\\\\\\axiom-jdk-full-17.0.16+12-x86_64\" timeout 25 \"C:\\\\\\\\Program Files\\\\\\\\1C\\\\\\\\1CE\\\\\\\\components\\\\\\\\axiom-jdk-full-17.0.16+12-x86_64\\\\\\\\bin\\\\\\\\java.exe\" -Dfile.encoding=UTF-8 -Dspring.config.additional-location=file:C:/1С-Framework/tools/mcp-jars/ -jar C:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar --spring.profiles.active=mcp,testdb)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -258,3 +258,20 @@
 23:34:36.565 INFO  - Starting MainKt v0.5.1 using Java 17.0.16 with PID 28304 (C:\1С-Framework\tools\mcp-jars\mcp-yaxunit-runner-0.5.1.jar started by Tech. Boutique in C:\1С-Framework)
 23:34:36.566 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
 23:34:36.566 INFO  - The following 2 profiles are active: "mcp", "testdb"
+23:34:37.700 WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'designerBuildAction' defined in URL [jar:nested:/C:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/application/actions/build/DesignerBuildAction.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'platformDsl' defined in URL [jar:nested:/C:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/infrastructure/platform/dsl/PlatformDsl.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'platformUtilities' defined in URL [jar:nested:/C:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/infrastructure/platform/dsl/common/PlatformUtilities.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'app-io.github.alkoleft.mcp.configuration.properties.ApplicationProperties': Could not bind properties to 'ApplicationProperties' : prefix=app, ignoreInvalidFields=false, ignoreUnknownFields=true
+23:34:37.742 ERROR - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to bind properties under 'app' to io.github.alkoleft.mcp.configuration.properties.ApplicationProperties:
+
+    Reason: java.lang.IllegalArgumentException: Базовый путь не существует: D:\1С-Framework\src\bsl
+
+Action:
+
+Update your application's configuration
+
