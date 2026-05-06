@@ -880,7 +880,8 @@
       "Read(//c/Users/Tech. Boutique/AppData/Local/claude-cli-nodejs/**)",
       "Read(//c/Users/Tech. Boutique/**)",
       "Bash(MCP_ONEC_URL=\"http://localhost/transport\" MCP_ONEC_SERVICE_ROOT=\"mcp\" MCP_ONEC_USERNAME=\"a.terletskiy@sodrugestvo.ru\" MCP_ONEC_PASSWORD=\"Alex80Alex\" MCP_LOG_LEVEL=\"DEBUG\" PYTHONIOENCODING=\"utf-8\" PYTHONPATH=\"C:/1С-Framework/external/1c_mcp\" timeout 5 \"C:/1С-Framework/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server stdio)",
-      "Bash(MCP_ONEC_URL=\"http://localhost/transport\" MCP_ONEC_SERVICE_ROOT=\"mcp\" MCP_ONEC_USERNAME=\"a.terletskiy@sodrugestvo.ru\" MCP_ONEC_PASSWORD=\"Alex80Alex\" PYTHONPATH=\"C:/1С-Framework/external/1c_mcp\" PYTHONIOENCODING=\"utf-8\" \"C:/1С-Framework/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server stdio)"
+      "Bash(MCP_ONEC_URL=\"http://localhost/transport\" MCP_ONEC_SERVICE_ROOT=\"mcp\" MCP_ONEC_USERNAME=\"a.terletskiy@sodrugestvo.ru\" MCP_ONEC_PASSWORD=\"Alex80Alex\" PYTHONPATH=\"C:/1С-Framework/external/1c_mcp\" PYTHONIOENCODING=\"utf-8\" \"C:/1С-Framework/external/1c_mcp/venv/Scripts/python.exe\" -m src.py_server stdio)",
+      "PowerShell(& \"$PWD\\\\scripts\\\\reindex_bsl_fast.ps1\" -Project \"ИБTransportManagementDevelop\" 2>&1 | Select-Object -Last 50)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -1884,3 +1884,12 @@ Update your application's configuration
 01:37:04.759 INFO  - Starting MainKt v0.5.1 using Java 17.0.16 with PID 27204 (C:\1С-Framework\tools\mcp-jars\mcp-yaxunit-runner-0.5.1.jar started by Tech. Boutique in C:\1С-Framework)
 01:37:04.761 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
 01:37:04.762 INFO  - The following 2 profiles are active: "mcp", "testdb"
+01:37:06.535 INFO  - Enable tools capabilities, notification: true
+01:37:06.639 INFO  - Registered tools: 8
+01:37:06.639 INFO  - Enable resources capabilities, notification: true
+01:37:06.641 INFO  - Enable prompts capabilities, notification: true
+01:37:06.641 INFO  - Enable completions capabilities
+01:37:06.848 INFO  - Client initialize request - Protocol: 2025-11-25, Capabilities: ClientCapabilities[experimental=null, roots=RootCapabilities[listChanged=null], sampling=null], Info: Implementation[name=claude-code, version=2.1.131]
+01:37:06.868 WARN  - Client requested unsupported protocol version: 2025-11-25, so the server will suggest the 2024-11-05 version instead
+01:37:07.094 INFO  - Started MainKt in 2.969 seconds (process running for 4.069)
+01:37:07.117 INFO  - EDT формат не выбран, автозапуск пропущен
