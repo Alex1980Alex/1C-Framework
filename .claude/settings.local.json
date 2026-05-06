@@ -873,7 +873,10 @@
       "PowerShell(Write-Output \"=== iis appcmd sites ===\"; & \"$env:windir\\\\system32\\\\inetsrv\\\\appcmd.exe\" list site 2>&1 | Out-String; Write-Output \"\"; Write-Output \"=== iis appcmd apps ===\"; & \"$env:windir\\\\system32\\\\inetsrv\\\\appcmd.exe\" list app 2>&1 | Out-String; Write-Output \"\"; Write-Output \"=== search default.vrd ===\"; Get-ChildItem -Path \"C:\\\\\" -Filter \"default.vrd\" -Recurse -ErrorAction SilentlyContinue -Force 2>$null | Select-Object FullName, LastWriteTime | Format-Table -AutoSize)",
       "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\webinst.exe\" -? 2>&1 | Out-String)",
       "PowerShell(Copy-Item *)",
-      "PowerShell(ConvertTo-SecureString *)"
+      "PowerShell(ConvertTo-SecureString *)",
+      "Bash(\"C:\\\\1С-Framework\\\\external\\\\1c_mcp\\\\venv\\\\Scripts\\\\python.exe\" -m src.py_server --help)",
+      "Bash(PYTHONPATH=\"C:\\\\1С-Framework\\\\external\\\\1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/transport MCP_ONEC_SERVICE_ROOT=mcp MCP_ONEC_USERNAME=a.terletskiy@sodrugestvo.ru MCP_ONEC_PASSWORD=Alex80Alex timeout 5 \"C:\\\\1С-Framework\\\\external\\\\1c_mcp\\\\venv\\\\Scripts\\\\python.exe\" -m src.py_server stdio)",
+      "Bash(PYTHONPATH=\"C:\\\\1С-Framework\\\\external\\\\1c_mcp\" PYTHONIOENCODING=utf-8 MCP_ONEC_URL=http://localhost/transport MCP_ONEC_SERVICE_ROOT=mcp MCP_ONEC_USERNAME=a.terletskiy@sodrugestvo.ru MCP_ONEC_PASSWORD=Alex80Alex timeout 8 \"C:\\\\1С-Framework\\\\external\\\\1c_mcp\\\\venv\\\\Scripts\\\\python.exe\" -m src.py_server stdio)"
     ]
   },
   "enableAllProjectMcpServers": true,
