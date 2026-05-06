@@ -148,7 +148,7 @@
       "env": {
         "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
         "PYTHONIOENCODING": "utf-8",
-        "MCP_ONEC_URL": "http://localhost/ИБTransportManagementDevelop",
+        "MCP_ONEC_URL": "http://localhost/transport",
         "MCP_ONEC_SERVICE_ROOT": "mcp",
         "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
         "MCP_ONEC_PASSWORD": "Alex80Alex"
