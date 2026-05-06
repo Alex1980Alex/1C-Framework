@@ -61,6 +61,14 @@
       "created": "2026-05-02",
       "last_verified": "2026-05-02",
       "sources": ["infostart.ru/1c/articles/1010055", "infostart.ru/1c/articles/1844839", "forum.infostart.ru/forum9/topic290303", "infostart.ru/1c/tools/511299", "infostart.ru/1c/articles/2389984", "learn.microsoft.com/sql/sql-server/editions-and-components-of-sql-server-2022", "microsoft.com/sql-server/sql-server-downloads", "developer.1c.ru"]
+    },
+    "edt-mcp-plugin-install": {
+      "title": "Установка плагина 1C:EDT MCP Server (DitriX/Diversus23) — update site, версии, совместимость",
+      "file": "edt-mcp-plugin-install.md",
+      "keywords": ["EDT-MCP", "MCP Server EDT", "DitriX", "Diversus23", "ditrixnew.github.io/EDT-MCP", "update site EDT", "p2 director", "плагин EDT", "установка плагина EDT", "1.26.1", "1.27.0", "1.30.1", "Attach debug MCP", "EDT 2025.x", "EDT 2026.1", "порт 8765", "mcp-remote", "Plain text mode Cursor", "feature.feature.group"],
+      "created": "2026-05-06",
+      "last_verified": "2026-05-06",
+      "sources": ["github.com/DitriXNew/EDT-MCP", "ditrixnew.github.io/EDT-MCP", "lobehub.com/mcp/ditrixnew-edt-mcp", "pulsemcp.com/servers/ditrixnew-1c-edt", "github.com/marmyshev/edt-plugins", ".mcp.json"]
     }
   }
 }
