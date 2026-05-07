@@ -156,6 +156,10 @@ SKIP_PATTERNS = [
     ".gitattributes",
     # Empty module markers (no logic to document)
     "__init__.py",
+    # 1C platform artifacts (1cv8.exe CREATEINFOBASE writes a status log to repo root;
+    # contains DB connection string with credentials — should also be in .gitignore.
+    # Listed here so docs-change-enforcer doesn't block on it as UNMAPPED.)
+    "createinfobase",
     # 1C project task folders (separate repos, not framework code)
     "configuration/",
     # EDT project at repo root — same category as configuration/<task>/.
