@@ -223,3 +223,34 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 ---
 
 **Статус документа:** ✅ DONE (2026-05-07). См. таблицу Status в шапке. Открытые вопросы §5.1 (расположение исходников `1c_mcp`) разрешены — Variant C (внутри основного фреймворка, `C:\1С-Framework\external\1c_mcp\`).
+
+---
+
+## 7. Validation end-to-end (2026-05-07)
+
+После закрытия всех фаз pipeline прогнан на реальной задаче в той же сессии — впервые с момента smoke-test'а 2026-05-05, который и инициировал этот roadmap.
+
+**Кейс:** `GKSTCPLK-2182-A` — заполнение `гкс_ДатаНачалаАнализа`/`гкс_ДатаОкончанияАнализа` в `КомандаЗаполнитьСредневзвешеннымиНаСервере` АРМ «Композитные пробы», чтобы регистр `гкс_ФактическиеПоказателиКачества` получал движения для назначения `ПриёмкаКомпозит`. ANALYSIS-REPORT: [`configuration/260304_GKSTCPLK-2182.../docs/260507_…/ANALYSIS-REPORT.md`](../../configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/docs/260507_Фактичекие%20показатели%20качества%20приемка%20композит/ANALYSIS-REPORT.md). Прогресс: [`IMPLEMENTATION-PROGRESS.md`](../../configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/docs/260507_Фактичекие%20показатели%20качества%20приемка%20композит/IMPLEMENTATION-PROGRESS.md).
+
+| Stage | Статус | Доказательство |
+|---|---|---|
+| 0 Preflight | ✅ Full | `smoke_test_implement_1c_task.py` exit 0; все 4 критичных MCP handshake'ятся; preflight-hook `implement-1c-task-preflight.py` проверен real chain-тестом (slash-tracker → preflight, `run_id=92e0c05c…88b0a` идентичен в обоих лог-записях) |
+| 1 Подготовка | ✅ | EDT path resolution: ANALYSIS-REPORT'овский Designer-style `Documents/.../Ext/ManagerModule.bsl` flatten'ится в EDT до `DataProcessors/.../Forms/Форма/Module.bsl` — обнаружено через `list_modules` (fallback от `read_method_source` File-not-found) |
+| 2 Validate queries | ⏭ SKIP | в правке нет SQL |
+| 3 BSL write | ✅ | `mcp__edt-mcp__write_module_source` mode=searchReplace, syntax check passed (990→1004 строки), `get_project_errors(objects=[DataProcessor.гкс_АРМКомпозитныеПробы], severity=ERRORS)` → 0 |
+| 4 Static analyze | ✅ graceful | `bsl_analyze(file=...)` падает на line 355 (известный OneScript false-positive на production BSL — задокументировано в SKILL.md v2.5.0); `bsl_analyze(source=<body>)` PASS, 0 ошибок, 1 процедура распознана с annotation `&НаСервере` |
+| 5 Cross-deps | ✅ | `find_references` → 37 references, все валидные; `get_project_errors` whole project → 2 pre-existing baseline ошибки в other objects (`Справочник.гкс_ВходящиеДанныеWarehouse`, `ОбщийМодуль.гкс_ИнтеграцияСКверионКлиент`), не связаны с правкой |
+| 6 Live verify | ✅ partial | `update_database(applicationId=3a3cfb6b-..., fullUpdate=false, autoRestructure=true)` → `INCREMENTAL_UPDATE_REQUIRED → UPDATED`; baseline через `execute_query` точно совпал с ANALYSIS-REPORT §1.2 (72/53/18/0/67); sanity-симуляция через `execute_code` без записи на ЛА `ЕВУТ-000009`: даты до — пусты `01.01.0001`, после — обе `07.05.2026 19:26:09`. T1 через АРМ — за пользователем (Rule 7) |
+| 7 Documentation | ✅ | IMPLEMENTATION-PROGRESS.md, 179 строк, полная stage-trace |
+| 8 Git commit | ✅ | 4 коммита в 3 git-репозиториях: inner submodule `Конфигурация` `d3db501` (BSL), main repo `71a9ba481` (gitlink Конфигурация), docs submodule `c6616817` (PROGRESS), main repo `907b89ce1` (gitlink configuration/260304). **Discovery:** `ИБTransportManagementDevelop/` — обычная подпапка main repo (не отдельный standalone repo, как пишет SKILL.md v2.5.0 §Этап 8); фактическая структура — main tracks 2 submodule напрямую: `configuration/<TaskFolder>` и `ИБTransportManagementDevelop/Конфигурация`. **TODO для SKILL.md v2.6.0:** уточнить описание layout'а под этот случай |
+
+**Известные ограничения, обнаруженные в ходе e2e:**
+- `1c-mcp-crud:execute_query` падает на сериализации перечислений с прямой выборкой `Ссылка` — обходим через `ПРЕДСТАВЛЕНИЕ()` (известный workaround, задокументирован в SKILL.md v2.5.0 §«Известные ограничения 1c-mcp-crud»).
+- `1c-mcp-crud:execute_code` запрещает `Возврат` вне процедуры/функции — переписывать через `Если/Иначе`.
+- ANALYSIS-REPORT'ы используют Designer-style пути (`.../Ext/ManagerModule.bsl`), EDT их flatten'ит — Stage 1 должен иметь явный fallback `list_modules` (через `objectName=...`) когда `read_method_source` возвращает File-not-found.
+
+**Что ушло на пользователя:**
+- T1 happy-path в АРМ (Rule 7).
+- Backfill 53 уже-Выполнен ЛА с пустыми датами (open question §6.1 ANALYSIS-REPORT'а).
+- Реальный номер задачи (§6.3) — закоммичено с условным `GKSTCPLK-2182-A`.
+- Push: локальные коммиты не запушены, перед push — ротация пароля БД из утечки `fce77bbca` (см. §«Soft fix» в commit `ce75d2f0f`).
