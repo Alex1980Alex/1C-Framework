@@ -174,7 +174,7 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
    - TCP-connect для HTTP-bridge серверов (`:8765`).
    - Запускает MCP-handshake (initialize JSON-RPC) для каждого stdio-сервера и проверяет наличие 8 ключевых tools из 4 серверов: `edt-mcp`, `1c-mcp-crud`, `bsl-debugger`, `bsl-semantic-search`.
    - Возвращает `Pipeline mode` и exit-code: `0` = Full, `1` = degraded, `2` = unusable.
-2. **Cron / hook**: запускать ежедневно либо при `UserPromptSubmit` для команды `/implement-1c-task` через `.claude/hooks/implement-1c-task-preflight.py`.
+2. **Cron / hook**: ✅ DONE — `.claude/hooks/implement-1c-task-preflight.py` зарегистрирован в `settings.json` после `slash-command-tracker.py`, `timeout: 30`. Содержит content-based фильтр на `/implement-1c-task` (тэг + raw + backtick-noise обход), запускает smoke-test через subprocess, парсит `--json`, при `exit_code=0/1/2` рендерит `OK/WARN/FAIL` в `systemMessage`. Не блокирует: даже при unusable пользователь может принудительно продолжить.
 3. **Запись в** [`data/hook-invocations.jsonl`](../../data/hook-invocations.jsonl) с `category="preflight"` (см. Universal MCP logging в [CLAUDE.md](../../CLAUDE.md)) — для ретроспективы.
 4. **Алёрт в Stop-hook**, если smoke-test упал в течение последних 24ч и пользователь запускал `/implement-1c-task`.
 
