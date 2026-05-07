@@ -174,6 +174,17 @@ Skill для реализации задачи по конфигурации 1С
      → получить текущий код точки вставки
    ```
 
+   **Path-fallback при File-not-found (Designer→EDT flatten):**
+
+   ANALYSIS-REPORT'ы используют Designer-style пути из выгрузки конфигурации (например `Documents/<Имя>/Ext/ManagerModule.bsl`, `DataProcessors/<Имя>/Forms/<Форма>/Ext/Form/Module.bsl`). EDT в открытом проекте хранит модули по своему layout'у (`DataProcessors/<Имя>/Forms/<Форма>/Module.bsl` без `Ext/Form/`). При расхождении `read_method_source(project, <designer_path>, ...)` падает с `File not found`.
+
+   ```
+   EDT-MCP: list_modules(project, objectName="<ИмяОбъектаКонфигурации>")
+     → массив { module_path, module_type } для всех модулей объекта
+   ```
+
+   Из массива выбрать `module_path` совпадающий по типу (`ManagerModule` / `ObjectModule` / `FormModule` / `CommandModule`) и повторить `read_method_source` с EDT-путём. Соответствие Designer→EDT зафиксировать в IMPLEMENTATION-PROGRESS.md, чтобы последующие точки той же задачи использовали уже разрешённый путь без повторного fallback'а.
+
    **Fallback (edt-mcp недоступен):** структура модуля и тело метода читаются без EDT.
    ```
    bsl-code-search: get_module_ast(file_path)
