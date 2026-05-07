@@ -886,7 +886,8 @@
       "PowerShell(sqlcmd *)",
       "PowerShell($saPwd = 'Alex80Alex'; $saTest = & sqlcmd -S localhost -U sa -P $saPwd -Q \"SELECT @@VERSION\" -h -1 2>&1; Write-Host \"sqlcmd exit code: $LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { Write-Host \"ERROR — sa login failed:\"; $saTest } else { Write-Host \"OK — sa login valid\" })",
       "Bash(awk '{print $NF, $5}')",
-      "mcp__1c-debug__debug_targets"
+      "mcp__1c-debug__debug_targets",
+      "mcp__1c-debug__debug_ping"
     ]
   },
   "enableAllProjectMcpServers": true,
