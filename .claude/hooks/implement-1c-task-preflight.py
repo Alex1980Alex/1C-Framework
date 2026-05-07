@@ -53,24 +53,11 @@ PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 ROADMAP_REF = "docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md"
 
 
-def _detect_command(prompt: str) -> str:
-    if not prompt:
-        return ""
-    m = _CMD_NAME_TAG_RE.search(prompt)
-    if m:
-        return m.group(1)
-    cleaned = _LEADING_NOISE_RE.sub("", prompt)
-    m = _RAW_SLASH_RE.match(cleaned)
-    if m:
-        return m.group(1)
-    return ""
-
-
 class ImplementOneCTaskPreflight(BaseHook):
     HOOK_NAME = "ImplementOneCTaskPreflight"
 
     def execute(self, inp: HookInput):
-        if _detect_command(inp.prompt or "") != TARGET_COMMAND:
+        if detect_slash_command(inp.prompt or "") != TARGET_COMMAND:
             return None
 
         if not SMOKE_TEST_SCRIPT.exists():
