@@ -551,51 +551,50 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 
 #### Структура репозиториев
 
-В этом проекте встречаются **три уровня вложенности**:
+Main repo напрямую tracks **два submodule** (по подтверждённому 2026-05-07 layout'у):
 
 ```
-C:\1С-Framework\                          ← MAIN repo
-├── configuration/<TaskFolder>/           ← submodule (gitlink in main)
-│   └── docs/<task>/IMPLEMENTATION-PROGRESS.md  ← задача-документация
-├── ИБTransportManagementDevelop/         ← STANDALONE repo (НЕ submodule main!)
-│   └── Конфигурация/                     ← submodule of ИБTM (НЕ виден main)
-│       └── src/.../*.bsl                 ← BSL-исходники (правит EDT-MCP)
-└── external/1c_mcp/                      ← обычно untracked
+C:\1С-Framework\                                   ← MAIN repo
+├── configuration/<TaskFolder>/                    ← SUBMODULE №1 (gitlink in main)
+│   └── docs/<task>/IMPLEMENTATION-PROGRESS.md     ← задача-документация
+├── ИБTransportManagementDevelop/                  ← обычная подпапка main repo (НЕ отдельный git-репо)
+│   └── Конфигурация/                              ← SUBMODULE №2 (gitlink in main, путь = "ИБTransportManagementDevelop/Конфигурация")
+│       └── src/.../*.bsl                          ← BSL-исходники (правит EDT-MCP)
+└── external/1c_mcp/                               ← обычно untracked
 ```
 
-**Ключевые отличия:**
-- `configuration/<TaskFolder>` — submodule main repo: gitlink обновляется в main commit'е.
-- `ИБTransportManagementDevelop` — самостоятельный git-репо, **не зарегистрирован** как submodule main. `git status` в main его не видит. Изменения BSL живут только там и в его собственном submodule `Конфигурация`.
-- Это значит: BSL-фикс попадёт в main repo только если main явно tracks `ИБTransportManagementDevelop`. Обычно — НЕ tracks. Документация фикса (IMPLEMENTATION-PROGRESS.md) живёт в `configuration/<TaskFolder>` и попадает в main через gitlink.
+**Ключевые факты:**
+- Main tracks два submodule: `configuration/<TaskFolder>` (документация) и `ИБTransportManagementDevelop/Конфигурация` (BSL-исходники).
+- `ИБTransportManagementDevelop/` сам по себе — **обычная подпапка** main repo, не самостоятельный git-репо и не submodule. У него нет своего `.git/`. Промежуточного "middle repo" с собственными коммитами/gitlink'ом не существует.
+- Поэтому при изменении BSL обновляется ровно одна цепочка submodule (`Конфигурация`) → main gitlink, без промежуточного шага.
 
 #### Шаги
 
-1. **Самый внутренний submodule с BSL-кодом** (обычно `ИБTransportManagementDevelop/Конфигурация`):
+1. **Submodule с BSL-кодом** (`ИБTransportManagementDevelop/Конфигурация`):
    ```bash
-   git -C <inner_submodule> add <specific_file_path>
-   git -C <inner_submodule> commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
+   git -C "ИБTransportManagementDevelop/Конфигурация" add <specific_file_path>
+   git -C "ИБTransportManagementDevelop/Конфигурация" commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
    ```
    ⚠ **НЕ использовать `git add -A`** — submodule может содержать чужой dirty state.
    ⚠ **НЕ использовать `git add <submodule-dir>`** в родителе — git попытается проиндексировать **untracked файлы внутри** (включая длинные пути Windows → fatal: filename too long).
 
-2. **Промежуточный repo** (`ИБTransportManagementDevelop`) — обновить gitlink на внутренний submodule:
+2. **Submodule с документацией** (`configuration/<TaskFolder>`) — закоммитить IMPLEMENTATION-PROGRESS.md:
    ```bash
-   git -C <middle_repo> add <inner_submodule_dirname>
-   git -C <middle_repo> commit -m "chore(НОМЕР-ЗАДАЧИ): bump <inner> submodule ref"
-   ```
-   Здесь `git add <submodule_dirname>` — **корректно**: git распознаёт submodule entry и обновляет только gitlink, не содержимое.
-
-3. **Submodule с документацией** (`configuration/<TaskFolder>`) — закоммитить IMPLEMENTATION-PROGRESS.md:
-   ```bash
-   git -C <docs_submodule> add "docs/<task>/IMPLEMENTATION-PROGRESS.md"
-   git -C <docs_submodule> commit -m "docs(НОМЕР-ЗАДАЧИ): add implementation progress"
+   git -C "configuration/<TaskFolder>" add "docs/<task>/IMPLEMENTATION-PROGRESS.md"
+   git -C "configuration/<TaskFolder>" commit -m "docs(НОМЕР-ЗАДАЧИ): add implementation progress"
    ```
 
-4. **Main repo** — обновить gitlink на documentation submodule:
+3. **Main repo** — обновить оба gitlink'а (по одному коммиту на submodule или одним коммитом сразу):
    ```bash
-   git add <docs_submodule_path>
+   git add "ИБTransportManagementDevelop/Конфигурация"
+   git commit -m "chore(НОМЕР-ЗАДАЧИ): bump Конфигурация submodule ref"
+
+   git add "configuration/<TaskFolder>"
    git commit -m "chore(НОМЕР-ЗАДАЧИ): bump configuration submodule ref"
    ```
+   Здесь `git add <submodule_path>` — **корректно**: git распознаёт submodule entry и обновляет только gitlink, не содержимое.
+
+**Итого:** одна задача = до 4 коммитов в 3 репозиториях (BSL submodule, docs submodule, main ×2 gitlink). Если правка только в одном из submodule — соответствующая половина пропускается.
 
 #### Git identity без `git config`
 
@@ -607,15 +606,18 @@ git -c user.name="Имя" -c user.email="email@example.com" commit -m "..."
 
 Эти `-c` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Identity берётся из main repo (`git config user.name` + `git config user.email`).
 
-#### Diagnostic: убедиться что main repo не tracks ИБTransportManagementDevelop
+#### Diagnostic: подтвердить layout перед коммитом
 
-Если в main `git status` появляется `M ИБTransportManagementDevelop` или `m ИБTransportManagementDevelop` — ИБTM зарегистрирован как submodule, тогда нужен дополнительный коммит gitlink в main. По умолчанию (на 2026-05) — не зарегистрирован, и main repo тол только знает про `configuration/<TaskFolder>`.
+Перед началом git-этапа убедиться, что main действительно tracks оба submodule (а не один или ноль):
 
 ```bash
-git ls-files --stage ИБTransportManagementDevelop 2>/dev/null
-# пусто → standalone, main не tracks
-# 160000 <hash> 0    ИБTransportManagementDevelop → submodule, нужно add+commit
+git ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
+# ожидается: 160000 <hash> 0  ИБTransportManagementDevelop/Конфигурация
+git ls-files --stage "configuration/<TaskFolder>"
+# ожидается: 160000 <hash> 0  configuration/<TaskFolder>
 ```
+
+Если один из путей пуст — submodule не зарегистрирован в main, тогда либо `.gitmodules` не содержит соответствующую запись, либо текущий рабочий tree разошёлся с main индексом — остановиться и сверить с пользователем перед write-операциями. `M ИБTransportManagementDevelop` в `git status` (без `/Конфигурация`) на этом layout'е — аномалия, указывающая что внутри обычной подпапки появились отдельные изменения вне зарегистрированного submodule.
 
 ---
 
