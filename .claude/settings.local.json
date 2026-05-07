@@ -885,7 +885,8 @@
       "PowerShell(if \\($env:MSSQL_SA_PWD\\) { Write-Host \"MSSQL_SA_PWD is set in tool env \\(length: $\\($env:MSSQL_SA_PWD.Length\\)\\)\" } else { Write-Host \"MSSQL_SA_PWD NOT visible in tool env\" })",
       "PowerShell(sqlcmd *)",
       "PowerShell($saPwd = 'Alex80Alex'; $saTest = & sqlcmd -S localhost -U sa -P $saPwd -Q \"SELECT @@VERSION\" -h -1 2>&1; Write-Host \"sqlcmd exit code: $LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { Write-Host \"ERROR — sa login failed:\"; $saTest } else { Write-Host \"OK — sa login valid\" })",
-      "Bash(awk '{print $NF, $5}')"
+      "Bash(awk '{print $NF, $5}')",
+      "mcp__1c-debug__debug_targets"
     ]
   },
   "enableAllProjectMcpServers": true,
