@@ -619,9 +619,9 @@ git -c user.name="Имя" -c user.email="email@example.com" commit -m "..."
 
 Эти `-c` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Identity берётся из main repo (`git config user.name` + `git config user.email`).
 
-#### Diagnostic: подтвердить layout перед коммитом
+#### Diagnostic: подтвердить 3-уровневый layout перед коммитом
 
-Перед началом git-этапа убедиться, что main действительно tracks оба submodule (а не один или ноль):
+Шаг 1 — убедиться что **level 3** (submodule) действительно зарегистрирован в индексе **level 1** (main):
 
 ```bash
 git ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
@@ -630,7 +630,18 @@ git ls-files --stage "configuration/<TaskFolder>"
 # ожидается: 160000 <hash> 0  configuration/<TaskFolder>
 ```
 
-Если один из путей пуст — submodule не зарегистрирован в main, тогда либо `.gitmodules` не содержит соответствующую запись, либо текущий рабочий tree разошёлся с main индексом — остановиться и сверить с пользователем перед write-операциями. `M ИБTransportManagementDevelop` в `git status` (без `/Конфигурация`) на этом layout'е — аномалия, указывающая что внутри обычной подпапки появились отдельные изменения вне зарегистрированного submodule.
+Mode `160000` = gitlink (submodule). Если строка пуста или mode ≠ `160000` — submodule не зарегистрирован, остановиться и сверить с пользователем (вероятно сломан `.gitmodules` или рабочий tree разошёлся с индексом).
+
+Шаг 2 — убедиться что **level 2** (`configuration/`, `ИБTransportManagementDevelop/`) — действительно простая директория, а не самозванец:
+
+```bash
+test -d "ИБTransportManagementDevelop/.git" && echo "АНОМАЛИЯ: level 2 имеет свой .git" || echo "OK: level 2 — обычная директория"
+test -d "configuration/.git" && echo "АНОМАЛИЯ: level 2 имеет свой .git" || echo "OK: level 2 — обычная директория"
+```
+
+Ожидание: `OK` для обоих. Если у level-2 директории появился собственный `.git/` — это другой layout (как ошибочно описывала v2.5.0), и git-flow из шагов 1-3 надо переcмотреть отдельно.
+
+Шаг 3 — `git status` в main: типичный `m configuration/<TaskFolder>` или `m ИБTransportManagementDevelop/Конфигурация` (lowercase `m` = submodule modified content) — **нормально**, ожидается перед bump'ом gitlink'а. А вот `M ИБTransportManagementDevelop` (uppercase, без `/Конфигурация`) — **аномалия**: значит внутри level-2 директории появились трекаемые main'ом файлы вне зарегистрированного submodule. Не bump'ить, разобраться сначала.
 
 ---
 
