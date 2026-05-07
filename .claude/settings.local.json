@@ -888,7 +888,8 @@
       "Bash(awk '{print $NF, $5}')",
       "mcp__1c-debug__debug_targets",
       "mcp__1c-debug__debug_ping",
-      "mcp__1c-debug__debug_connect"
+      "mcp__1c-debug__debug_connect",
+      "mcp__1c-debug__debug_set_breakpoint"
     ]
   },
   "enableAllProjectMcpServers": true,
