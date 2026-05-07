@@ -1,5 +1,0 @@
-SQL Login: 1c_dev_53196
-Password : XZ2.08gT3!fRxCMjqM?k
-Server   : localhost
-Created  : 2026-05-07 15:03:55
-Purpose  : Connection for 1C InfoBase 260507_DEV_ATERLETSKIY_53196

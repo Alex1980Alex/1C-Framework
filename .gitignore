@@ -101,3 +101,10 @@ logs/dump_cfg/
 
 # Z.AI backend switcher (contains API key)
 scripts/claude-backend/zai-config.json
+
+# Dev secrets and 1C platform artifacts (contain DB credentials in plaintext)
+# Note: fce77bbca already leaked CREATEINFOBASE + tmp/dev_creds_53196.txt + mcp-server.log
+# into local history — rotate the affected DB password before pushing this branch.
+CREATEINFOBASE
+tmp/dev_creds_*.txt
+/mcp-server.log
