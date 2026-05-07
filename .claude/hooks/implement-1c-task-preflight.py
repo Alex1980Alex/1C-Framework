@@ -22,7 +22,12 @@ Logging:
   log with an empty string (Phase 8 invariant: log_invocation accepts "").
 
 Roadmap: docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md (Phase 5.2)
-Timeout: 30s (covers 3x stdio MCP handshakes @ 6s + TCP/HTTP probes + slack)
+
+Timeouts:
+  - hook (settings.json):  30s — outer budget Claude Code enforces
+  - subprocess (this file): 25s — `SMOKE_TEST_TIMEOUT`; covers 3x stdio MCP
+    handshakes @ 6s + TCP/HTTP probes; leaves 5s slack so we still emit
+    `systemMessage` before the outer hook timeout fires.
 """
 
 from __future__ import annotations
