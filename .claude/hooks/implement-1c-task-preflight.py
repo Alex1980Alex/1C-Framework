@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -43,10 +42,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput  # noqa: E402
-
-_CMD_NAME_TAG_RE = re.compile(r"<command-name>\s*/?([a-zA-Z0-9][a-zA-Z0-9_:.-]*)\s*</command-name>")
-_RAW_SLASH_RE = re.compile(r"^\s*/([a-zA-Z0-9][a-zA-Z0-9_:.-]*)(?:\s|$)")
-_LEADING_NOISE_RE = re.compile(r"^\s*[`'\"]+")
+from shared.slash_detect import detect_slash_command  # noqa: E402
 
 TARGET_COMMAND = "implement-1c-task"
 SMOKE_TEST_TIMEOUT = 25  # seconds; matches handshake budget in smoke-test (3x ~6s + slack)
