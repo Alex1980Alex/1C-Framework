@@ -49,7 +49,6 @@ Timeout: 3s
 """
 
 import os
-import re
 import sys
 import uuid
 from datetime import datetime
@@ -58,37 +57,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput
-
-
-_CMD_NAME_TAG_RE = re.compile(r"<command-name>\s*/?([a-zA-Z0-9][a-zA-Z0-9_:.-]*)\s*</command-name>")
-_RAW_SLASH_RE = re.compile(r"^\s*/([a-zA-Z0-9][a-zA-Z0-9_:.-]*)(?:\s|$)")
-# Claude Code v2.1.126+ wraps real CLI slash invocations with a leading
-# backtick: "`/cmd args". Originally fixed in commit fbdf1b720; the fix was
-# accidentally dropped during the UPE→UPS rewrite and re-introduced here
-# after a live regression on session 2800d2fd-... (2026-05-05). Synthetic
-# stdin tests don't carry the backtick — the regression is invisible to
-# health-checks and only surfaces in real sessions, so don't remove this.
-_LEADING_NOISE_RE = re.compile(r"^\s*[`'\"]+")
-
-
-def _detect_slash_command(prompt: str) -> str:
-    """Return the slash command name found in the prompt, or '' if none.
-
-    Two-stage detection:
-      1. <command-name>NAME</command-name> wrapper (post-expansion form)
-      2. Raw "/cmd ..." prefix (pre-expansion CLI form, possibly with
-         leading backtick/quote noise from Claude Code v2.1.126+)
-    """
-    if not prompt:
-        return ""
-    m = _CMD_NAME_TAG_RE.search(prompt)
-    if m:
-        return m.group(1)
-    cleaned = _LEADING_NOISE_RE.sub("", prompt)
-    m = _RAW_SLASH_RE.match(cleaned)
-    if m:
-        return m.group(1)
-    return ""
+from shared.slash_detect import detect_slash_command as _detect_slash_command  # noqa: F401
 
 
 class SlashCommandTracker(BaseHook):
