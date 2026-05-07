@@ -552,22 +552,34 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 
 #### Структура репозиториев
 
-Main repo напрямую tracks **два submodule** (по подтверждённому 2026-05-07 layout'у):
+Layout — **трёхуровневый**, при этом level 2 это **обычная директория** main repo (не git-репо, не submodule). Подтверждено 2026-05-07 через `git ls-files --stage` и инспекцию `.git/` в каждой папке цепочки.
 
 ```
-C:\1С-Framework\                                   ← MAIN repo
-├── configuration/<TaskFolder>/                    ← SUBMODULE №1 (gitlink in main)
-│   └── docs/<task>/IMPLEMENTATION-PROGRESS.md     ← задача-документация
-├── ИБTransportManagementDevelop/                  ← обычная подпапка main repo (НЕ отдельный git-репо)
-│   └── Конфигурация/                              ← SUBMODULE №2 (gitlink in main, путь = "ИБTransportManagementDevelop/Конфигурация")
+Level 1 — MAIN repo (.git здесь)
+C:\1С-Framework\
+│
+├── configuration/                                 ← Level 2: обычная подпапка main, БЕЗ своего .git/
+│   ├── 260304_GKSTCPLK-2182…/                     ← Level 3: SUBMODULE (gitlink in main)
+│   │   ├── .git                                   ← gitlink-файл (содержимое = "gitdir: ...")
+│   │   └── docs/<task>/IMPLEMENTATION-PROGRESS.md
+│   └── 260416_GKSTCPLK-2368…/                     ← Level 3: SUBMODULE (gitlink in main)
+│
+├── ИБTransportManagementDevelop/                  ← Level 2: обычная подпапка main, БЕЗ своего .git/
+│   └── Конфигурация/                              ← Level 3: SUBMODULE (gitlink in main)
+│       ├── .git                                   ← gitlink-файл
 │       └── src/.../*.bsl                          ← BSL-исходники (правит EDT-MCP)
-└── external/1c_mcp/                               ← обычно untracked
+│
+├── external/1c_mcp/                               ← обычно untracked в main
+└── …
 ```
 
 **Ключевые факты:**
-- Main tracks два submodule: `configuration/<TaskFolder>` (документация) и `ИБTransportManagementDevelop/Конфигурация` (BSL-исходники).
-- `ИБTransportManagementDevelop/` сам по себе — **обычная подпапка** main repo, не самостоятельный git-репо и не submodule. У него нет своего `.git/`. Промежуточного "middle repo" с собственными коммитами/gitlink'ом не существует.
-- Поэтому при изменении BSL обновляется ровно одна цепочка submodule (`Конфигурация`) → main gitlink, без промежуточного шага.
+- **Level 1 (main repo):** единственный репозиторий с настоящим каталогом `.git/` в корне. Все gitlink'и хранятся в индексе main.
+- **Level 2 (`configuration/`, `ИБTransportManagementDevelop/`):** просто директории — `git rev-parse --is-inside-work-tree` внутри них всё ещё показывает main, своего `.git/` НЕТ. Сюда нельзя `cd` и сделать локальный коммит — это будет коммит в main.
+- **Level 3 (`configuration/<TaskFolder>/`, `ИБTransportManagementDevelop/Конфигурация/`):** submodule'ы — отдельные git-репозитории со своим `.git`-указателем (gitfile), своей историей и своим `HEAD`.
+- В индексе main путь submodule хранится **цельным** (со слешем): `"configuration/<TaskFolder>"` и `"ИБTransportManagementDevelop/Конфигурация"`. Это и есть аргумент для `git add` при bump'е gitlink'а.
+- `git add ИБTransportManagementDevelop` (без `/Конфигурация`) — **другая** операция: индексирует level-2 директорию как контент main, что обычно нежелательно (см. Diagnostic ниже).
+- Промежуточного git-репо между level 1 и level 3 нет (в отличие от ошибочного описания v2.5.0). Поэтому шага «commit gitlink в middle repo» в этом pipeline не существует.
 
 #### Шаги
 
