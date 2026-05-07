@@ -69,6 +69,14 @@
       "created": "2026-05-06",
       "last_verified": "2026-05-06",
       "sources": ["github.com/DitriXNew/EDT-MCP", "ditrixnew.github.io/EDT-MCP", "lobehub.com/mcp/ditrixnew-edt-mcp", "pulsemcp.com/servers/ditrixnew-1c-edt", "github.com/marmyshev/edt-plugins", ".mcp.json"]
+    },
+    "dbgs-rdbg-debug-server": {
+      "title": "Сервер отладки 1С (dbgs.exe / RDBG / Debug UI) — протокол, команды, ограничения",
+      "file": "dbgs-rdbg-debug-server.md",
+      "keywords": ["dbgs", "dbgs.exe", "RDBG", "debug server", "сервер отладки", "Debug UI", "attachDebugUI", "ibInDebug", "1550", "headless debug", "автономная отладка", "TCP/IP debug", "HTTP debug", "yukon39", "bsl-debug-server", "DAP", "Debug Adapter Protocol", "1 Debug UI per infobase", "ManagedClient", "Worked", "StopOnNextLine", "setAutoAttachSettings", "pingDebugUIParams"],
+      "created": "2026-05-08",
+      "last_verified": "2026-05-08",
+      "sources": ["kb.1ci.com/§32.2.2", "1c-dn.com/library", "github.com/yukon39/bsl-debug-server", "github.com/yukon39/vsc-bsl-dap", "edt.1c.ru/dev/edt/2022.2/apidocs", "tools/bsl-debug-server/mcp_debug_server.py", "docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md"]
     }
   }
 }
