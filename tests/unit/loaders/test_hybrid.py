@@ -97,7 +97,9 @@ class TestSupportedExtensions:
 @pytest.mark.unit
 class TestInit:
     def test_default_init_no_vision_client(self):
-        loader = HybridLoader(api_key="")
+        from src.pdf_framework.config import HybridLoaderSettings
+
+        loader = HybridLoader(settings=HybridLoaderSettings(enable_vision_ocr=False), api_key="")
         assert loader._vision_client is None
         assert loader._get_vision_client() is None
 
