@@ -107,3 +107,16 @@ class TestInit:
         loader = HybridLoader(api_key="test-key", base_url="http://x")
         assert loader._api_key == "test-key"
         assert loader._base_url == "http://x"
+
+
+# Cascade flow tests — verify L3/L4 routing without invoking pymupdf4llm/fitz/Anthropic.
+# We monkeypatch _load_sync (L1+L2) and the L3/L4 helpers to track calls.
+
+def _make_fake_doc():
+    from src.pdf_framework.schemas.documents import DocumentMetadata, ProcessedDocument
+
+    meta = DocumentMetadata(
+        source="/tmp/x.pdf", title="x", author="", page_count=1,
+        extra={"page_offsets": [(0, 1)], "tables": [], "loader_stats": {}},
+    )
+    return ProcessedDocument(id="d1", source_path="/tmp/x.pdf", metadata=meta, raw_text="page one")
