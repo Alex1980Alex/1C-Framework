@@ -165,12 +165,16 @@ tests/
 **Phase 28 hybrid loader** (4 уровня каскада L1-L4) — критический pipeline. Найдено `tests/test_docling_integration.py`, но cascade tests разбросаны.
 
 **Action items (estimated 3-4 ч):**
-- [ ] **T.4.1** `tests/test_loaders/test_hybrid_cascade.py`:
-  - [ ] L1 fitz fast → если text >= threshold, не идти на L2
-  - [ ] L2 docling → таблицы, layout
-  - [ ] L3 vision OCR → если text < threshold (scanned PDF)
-  - [ ] L4 ensemble verification
-- [ ] **T.4.2** Smart router auto-selection — fixture с 4 типами PDF (text-heavy, scan, table-heavy, mixed)
+- [x] **T.4.1 (partial)** `tests/unit/loaders/test_hybrid.py` ✅ 2026-05-08 — **rewrite** старого broken-файла (8/8 fail на устаревший API: `_select_level`, `_loaders`, `_get_fallback_loader` не существуют) под актуальный API (4-уровневый sequential cascade в `_load_sync`):
+  - [x] **TestIsVisionRefusal** (6 tests) — refusal patterns (rus + eng), case-insensitive, empty string
+  - [x] **TestIsValidTable** (5 tests) — valid markdown table, missing pipe/separator, too short, empty
+  - [x] **TestMergeTables** (3 tests) — single page, table on missing page silently skipped, multiple tables on same page joined; verifies offsets advance by len(page_text)+2
+  - [x] **TestSplitByOffsets** (3 tests) — round-trip с _merge_tables, single page, empty offsets
+  - [x] **TestSupportedExtensions** (1 test) — `[".pdf"]`
+  - [x] **TestInit** (2 tests) — vision_client lazy=None when `enable_vision_ocr=False`+api_key="", custom api_key/base_url stored
+  - **Verified:** 20/20 PASS, ловит регрессию в pure-helpers без mocking pymupdf4llm/fitz/Anthropic
+- [ ] **T.4.1 (deferred)** Full cascade flow tests — требуют mocking `pymupdf4llm.to_markdown`, `fitz.open`, `DoclingLoader.load`, `Anthropic` client. Реалистичный effort ~3-4ч + fixture-PDFs. Открытый backlog: моментальные регрессии с уровнями L1→L4 (когда какой уровень skip'нется).
+- [ ] **T.4.2** Smart router auto-selection — fixture с 4 типами PDF (text-heavy, scan, table-heavy, mixed). Не начат — требует генерации/хранения фикстур.
 
 ### 2.5 🟠 auto-reindex on commit — нет integration test
 
