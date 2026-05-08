@@ -222,7 +222,7 @@ tests/
 | **T.3** | search/strategies test coverage (6 файлов) | 🟠 P1 | 4-6 ч |
 | **T.4** | loaders hybrid cascade test | 🟠 P1 | 3-4 ч |
 | **T.5** | post-commit reindex integration test | 🟠 P1 | 3 ч |
-| **T.6** | pytest markers per-phase | 🟡 P2 | 1 ч |
+| **T.6** | pytest markers per-phase | 🟡 P2 ✅ DONE 2026-05-08 | ~30 мин |
 | **T.7** | pytest-cov в CI (opt-in) | 🟡 P2 | 1 ч |
 | **TOTAL** | — | — | **~20-25 ч** |
 
