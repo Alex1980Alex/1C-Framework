@@ -59,3 +59,12 @@ class TestMergeTables:
         raw, offsets = HybridLoader._merge_tables(["only"], [1], tables)
         assert raw == "only"
         assert offsets == [(0, 1)]
+
+    def test_multiple_tables_on_same_page_joined(self):
+        t1 = TableInfo(page_number=2, markdown="| a |\n| --- |\n| 1 |")
+        t2 = TableInfo(page_number=2, markdown="| b |\n| --- |\n| 2 |")
+        raw, offsets = HybridLoader._merge_tables(["A", "B"], [1, 2], [t1, t2])
+        page2_block = raw.split("\n\n", 1)[1]
+        assert "| a |" in page2_block and "| b |" in page2_block
+        assert offsets[0] == (0, 1)
+        assert offsets[1][0] > 0 and offsets[1][1] == 2
