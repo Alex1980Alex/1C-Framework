@@ -1,7 +1,7 @@
 # Audit: tests/ coverage vs реализация
 
-**Дата:** 2026-04-30 (вечер)
-**Статус:** 🔄 IN PROGRESS — T.1 ✅ DONE | T.1.5 ✅ DONE | T.1.7 ✅ DONE | T.2 ✅ DONE | T.3 🔄 PARTIAL | T.5 ✅ DONE (2026-05-01)
+**Дата:** 2026-04-30 (вечер) → 2026-05-08 (T.1.7 closure verification)
+**Статус:** 🔄 P0 ✅ FULLY CLOSED — T.1 ✅ DONE (incl. T.1.7 30/30 ✅ 2026-05-08) | T.2 ✅ DONE | T.5 ✅ DONE | T.3 🔄 PARTIAL | T.4/T.6/T.7 backlog
 **Scope:** `tests/` directory — структура, покрытие, gaps по новым модулям после Phase 8 + 9.1
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 — «tests scope не покрыт»
