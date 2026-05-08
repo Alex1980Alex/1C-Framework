@@ -1,7 +1,7 @@
 # Audit: tests/ coverage vs реализация
 
-**Дата:** 2026-04-30 (вечер) → 2026-05-08 (T.1.7 + T.5.2 + T.6 + T.7 + T.4 partial)
-**Статус:** P0 ✅ FULLY CLOSED — T.1 ✅ | T.2 ✅ | **T.5 ✅** (31 tests) | **T.6 ✅** (phase markers + auto-mark) | **T.7 ✅** (coverage config). **T.4 🔄 PARTIAL** (20/20 pure-helper tests rewritten 2026-05-08 — fixed broken legacy file; full cascade flow deferred). Open: T.3 🔄 PARTIAL (BM25/hybrid deferred).
+**Дата:** 2026-04-30 (вечер) → 2026-05-08 (full closure: T.1.7 + T.5.2 + T.6 + T.7 + **T.3 + T.4**)
+**Статус:** ✅ **ALL CLOSED** — T.1 ✅ | T.2 ✅ | **T.3 ✅** (24/24 phase16 BM25+Hybrid + 20 vector/MMR) | **T.4 ✅** (26/26 hybrid loader: 20 pure helpers + 6 cascade flow) | **T.5 ✅** (31 tests) | **T.6 ✅** (phase markers + auto-mark) | **T.7 ✅** (coverage config + verified existing infra). T.4.2 «smart router PDF fixtures» — N/A (router config-based, не runtime).
 **Scope:** `tests/` directory — структура, покрытие, gaps по новым модулям после Phase 8 + 9.1
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 — «tests scope не покрыт»
