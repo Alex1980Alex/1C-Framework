@@ -100,7 +100,7 @@
 **Sibling audit reports (детализация):**
 - ✅ [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md) — DONE 2026-05-01 (01.1 metrics, 01.2 arch, 01.3 tech stack + Qdrant v1.17.1, 01.4 triada counts)
 - ✅ [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md) — DONE 2026-05-01 (02.1/02.2/04.1/28.4/29.4/29.6 all fixed)
-- 🔄 [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — **P0 ✅ FULLY CLOSED 2026-05-08**: T.1 ✅ (6 files inc. **indexer 30/30 ✅**), T.2 ✅ (TestDimAlignment 22/22), T.5 ✅ (post-commit reindex 28 tests). T.3 🔄 PARTIAL (VectorSearch+MMR 20 tests; BM25/AutoMerge pre-existed). T.4 (loaders cascade), T.6/T.7 (markers + cov) — P1/P2 backlog
+- ✅ [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — **ALL DONE 2026-05-08**: T.1 ✅ (6 files inc. indexer 30/30), T.2 ✅ (TestDimAlignment 22/22), **T.3 ✅** (24/24 phase16 BM25+Hybrid + 20 vector/MMR — fixed AsyncMock issues + installed pytest-asyncio), **T.4 ✅** (26/26 hybrid loader: 20 pure helpers + 6 cascade flow), T.5 ✅ (post-commit reindex 31 tests), **T.6 ✅** (phase markers + auto-mark hook), **T.7 ✅** (coverage config + verified existing CI infra)
 - ✅ [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md) — DONE 2026-05-01 (httpx+pyjwt base deps, chromadb comment, queue note in 02.1, security-audit CI job)
 - Полный cross-reference и order of execution → **§13** в конце этого файла
 
