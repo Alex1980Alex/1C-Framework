@@ -347,3 +347,7 @@ class TestCoreHooksPath:
             capture_output=True, text=True, check=False,
         )
         return result.returncode, result.stdout.strip()
+
+    def test_repo_has_git_dir(self):
+        if not (REPO_ROOT / ".git").exists():
+            pytest.skip(f"Not running inside a git repo at {REPO_ROOT}")
