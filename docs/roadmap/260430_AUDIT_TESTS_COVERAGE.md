@@ -186,7 +186,12 @@ tests/
   - [x] **T.5.1.d** Verify exit code = 0 (first commit, no changes, max_files exceeded, spawned — all → 0)
   - [x] TestBslProjectRoot (6 tests): valid path, nested, no configuration, last part, not-projects, framework path
   - [x] TestSplitBslAndFramework (10 tests): .py→framework, .bsl→bsl_groups, outside config, nonexistent, oversized, multi-project, unknown ext
-- [ ] **T.5.2** `core.hooksPath` setup test — verify `git config core.hooksPath` = `scripts/git_hooks` после init
+- [x] **T.5.2** `core.hooksPath` setup test ✅ 2026-05-08 (3 tests added to `tests/integration/test_post_commit_reindex.py`):
+  - [x] `TestCoreHooksPath::test_repo_has_git_dir` — skip-guard для CI/fresh-clone
+  - [x] `TestCoreHooksPath::test_core_hooks_path_set_to_scripts_git_hooks` — `git config --local --get core.hooksPath` returncode==0 + normalised value ends with `scripts/git_hooks` (cross-platform `\` → `/`)
+  - [x] `TestCoreHooksPath::test_post_commit_hook_present_in_target_dir` — assert `scripts/git_hooks/post-commit` exists, чтобы конфиг не указывал на пустую директорию
+  - [x] Marked `@pytest.mark.integration` — opt-in (не падает в CI без setup); локально ловит случай, когда `git config --unset core.hooksPath` или fresh clone без активации
+  - [x] Verified PASS на текущем repo (`core.hooksPath = scripts/git_hooks`, post-commit hook present); 30/30 tests in test_post_commit_reindex.py остаются green
 
 ---
 
