@@ -207,7 +207,7 @@ tests/
 ### 3.2 Слабые места (общие)
 
 - **Mock vs real Qdrant**: часть тестов идёт против real container (необходим Docker), часть — против mock'ов. Нет consistent strategy. **Рекомендация:** разделить по `tests/integration/` (real Qdrant) vs `tests/unit/` (mocked).
-- **Test discovery**: `pytest` находит всё, но running individual phase suites неудобно — нет `pytest.ini` markers `@pytest.mark.phase8`. **Рекомендация:** добавить markers, в `pyproject.toml [tool.pytest.ini_options]`.
+- **Test discovery**: `pytest` находит всё, но running individual phase suites неудобно — нет `pytest.ini` markers `@pytest.mark.phase8`. ✅ DONE 2026-05-08 (T.6): markers `phase4/8/9/14..23/framework_search/bsl` зарегистрированы в `pyproject.toml [tool.pytest.ini_options]`; auto-mark по path в `tests/conftest.py::pytest_collection_modifyitems` — `pytest -m phase8` работает без per-test декораторов. Verified: `pytest -m phase9 tests/integration/test_post_commit_reindex.py` → 30 tests, `pytest -m framework_search` → 115 tests.
 - **CI flakiness**: integration tests могут flake из-за async timing. Не наблюдалось напрямую, но риск есть.
 - **Coverage measurement**: нет `pytest-cov` в CI или README. **Рекомендация:** добавить как opt-in (`make coverage`).
 
