@@ -169,6 +169,25 @@ markers = [
     "bsl: BSL semantic search / refactoring / debugger tests",
 ]
 
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "src/*/__init__.py",
+    "tests/*",
+    "scripts/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
