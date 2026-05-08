@@ -68,3 +68,21 @@ class TestMergeTables:
         assert "| a |" in page2_block and "| b |" in page2_block
         assert offsets[0] == (0, 1)
         assert offsets[1][0] > 0 and offsets[1][1] == 2
+
+
+@pytest.mark.unit
+class TestSplitByOffsets:
+    def test_round_trip_three_pages(self):
+        raw = "alpha\n\nbeta\n\ngamma"
+        offsets = [(0, 1), (7, 2), (13, 3)]
+        pages, nums = HybridLoader._split_by_offsets(raw, offsets)
+        assert pages == ["alpha", "beta", "gamma"]
+        assert nums == [1, 2, 3]
+
+    def test_single_page(self):
+        pages, nums = HybridLoader._split_by_offsets("solo", [(0, 1)])
+        assert pages == ["solo"] and nums == [1]
+
+    def test_empty_offsets(self):
+        pages, nums = HybridLoader._split_by_offsets("", [])
+        assert pages == [] and nums == []
