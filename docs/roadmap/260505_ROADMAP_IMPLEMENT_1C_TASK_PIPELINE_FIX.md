@@ -210,7 +210,7 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 
 1. **Где сейчас живут исходники `1c_mcp`?** Нужен ответ от пользователя — без него Фаза 1 не может стартовать. Возможные варианты A/B/C перечислены в Фазе 1.1.
 2. **Как стандартизировать запуск EDT для команды разработчиков?** Документация (Фаза 2.1) или auto-start хук (Фаза 2.2)?
-3. **Нужна ли поддержка одновременной работы с 4 базами** (`TestDB` / `tm_infeeda` / `DAILY_TM_BAT` / `DEV_ATERLETSKIY_39144_MFM`)? Сейчас 4 отдельных MCP-сервера, но `/implement-1c-task` использует только базовый `1c-mcp-crud` (TestDB). Если нужно — добавить в Этап 6 явный выбор базы.
+3. **Нужна ли поддержка одновременной работы с 4 базами** (`TestDB` / `tm_infeeda` / `DAILY_TM_BAT` / `DEV_ATERLETSKIY_39144_MFM`)? ✅ RESOLVED (2026-05-08) — **N/A, multi-base support отклонён**. Корректировка premise: на момент написания roadmap'а (2026-05-05) предполагалось наличие 4 mirror-серверов в `.mcp.json`. После path-миграции (commit `bf887153e`) и memory `feedback_mcp_json_paths.md` mirror-конфиги были признаны устаревшими — текущий `.mcp.json` содержит **один** `1c-mcp-crud` сервер с `MCP_ONEC_URL=http://localhost/transport` (TestDB). Решение: pipeline остаётся однобазовым (TestDB через single `1c-mcp-crud`), переключение на другую базу — ручная подмена `MCP_ONEC_URL` в `.mcp.json` + restart Claude Code сессии. Расширение SKILL.md Этапа 6 на multi-base — не требуется. Если в будущем появится операционная необходимость одновременно работать с двумя базами в одной сессии — реактивировать как новый roadmap с обоснованием use case (например, сравнение поведения staging vs production).
 
 ---
 
