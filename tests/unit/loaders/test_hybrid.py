@@ -44,3 +44,18 @@ class TestIsValidTable:
 
     def test_empty_string_returns_false(self):
         assert HybridLoader._is_valid_table("") is False
+
+
+@pytest.mark.unit
+class TestMergeTables:
+    def test_single_page_single_table(self):
+        tables = [TableInfo(page_number=1, markdown="| a |\n| --- |\n| 1 |")]
+        raw, offsets = HybridLoader._merge_tables(["page one"], [1], tables)
+        assert "page one" in raw and "| a |" in raw
+        assert offsets == [(0, 1)]
+
+    def test_table_on_missing_page_silently_skipped(self):
+        tables = [TableInfo(page_number=5, markdown="| x |\n| --- |\n| 9 |")]
+        raw, offsets = HybridLoader._merge_tables(["only"], [1], tables)
+        assert raw == "only"
+        assert offsets == [(0, 1)]
