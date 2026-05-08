@@ -898,7 +898,8 @@
       "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" help cluster)",
       "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" help infobase)",
       "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" help server)",
-      "Bash(C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe server *)"
+      "Bash(C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe server *)",
+      "Bash(sc.exe query *)"
     ]
   },
   "enableAllProjectMcpServers": true,
