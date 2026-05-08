@@ -111,3 +111,47 @@
 - [ ] Известна точная последовательность команд от stop-event до успешного `evalLocalVariables`
 - [ ] Зафиксирована в cache/dbgs-rdbg-debug-server.md §13
 - [ ] (Опционально) есть captured wire-traffic примеры от EDT
+
+---
+
+## 3. P1 — Implement post-fire handshake (2-3ч)
+
+### 3.1 Добавить event-loop обработчик stop-events
+
+В `RDBGClient` ввести фоновую задачу `_event_loop` (параллельно с `_ping_loop` или интегрированно). Псевдокод:
+
+```python
+async def _event_loop(self) -> None:
+    """Listen for stop-events via pingDebugUIParams, handle re-attach."""
+    while self._attached and self._registered:
+        await asyncio.sleep(0.5)
+        try:
+            events = await self.ping()
+            for ev in events:
+                if ev.get("type") == "TargetStopped":
+                    await self.attach_debug_targets([ev["target_id"]])
+                    self._stopped_targets.add(ev["target_id"])
+        except Exception as e:
+            log.debug("event_loop ping failed: %s", e)
+```
+
+Поля:
+- `_stopped_targets: set[str]` — отслеживает текущие stopped-targets
+- `last_stopped_target_id: Optional[str]` — для tools без явного target_id
+
+### 3.2 Re-attach в tools перед запросом
+
+`debug_variables` / `debug_evaluate` / `debug_step` перед основным запросом:
+1. Target в `_stopped_targets`? Если да — `attach_debug_targets([target_id])` (idempotent)
+2. Только затем `evalLocalVariables` / `evalExpr` / `step`
+
+Защита от race window если event-loop пропустил stop-event.
+
+### 3.3 Сохранять target_id из последнего fired BP
+
+`last_stopped_target_id` обновляется в event-loop. Tools без явного target_id (`debug_stack_trace()`) используют его вместо `_find_stopped_target` по `state` field (который может lag).
+
+**Acceptance criteria P1:**
+- [ ] После BP-fire `debug_variables` возвращает не-пустой массив с локальными переменными
+- [ ] `debug_stack_trace` возвращает stack ≥1 frame
+- [ ] `debug_evaluate("ТекущаяДата()")` возвращает дату-время
