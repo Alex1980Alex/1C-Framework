@@ -152,6 +152,21 @@ markers = [
     "integration: marks tests as integration tests (require external services)",
     "e2e: marks tests as end-to-end tests (require full stack)",
     "unit: marks tests as unit tests (fast, isolated)",
+    "phase4: Phase 4 (skill router / semantic skill indexer)",
+    "phase8: Phase 8 (Qwen3 retrieval, TEI, late chunking, OOM)",
+    "phase9: Phase 9 (memory hooks alignment, framework_search)",
+    "phase14: Phase 14 suite",
+    "phase15: Phase 15 suite",
+    "phase16: Phase 16 suite",
+    "phase17: Phase 17 suite",
+    "phase18: Phase 18 suite",
+    "phase19: Phase 19 suite",
+    "phase20: Phase 20 suite",
+    "phase21: Phase 21 suite",
+    "phase22: Phase 22 suite",
+    "phase23: Phase 23 suite",
+    "framework_search: framework_search self-index subsystem",
+    "bsl: BSL semantic search / refactoring / debugger tests",
 ]
 
 [tool.mypy]
