@@ -330,3 +330,9 @@ class TestMain:
         )
         monkeypatch.setattr(mod, "_spawn_bsl_reindex", lambda p, f: None)
         assert mod.main() == 0
+
+
+# T.5.2 of 260430_AUDIT_TESTS_COVERAGE.md — без core.hooksPath post-commit скрипт
+# не запускается → auto-reindex-on-commit (Phase 9.1 finale, CLAUDE.md) тихо мёртв.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+EXPECTED_HOOKS_PATH = "scripts/git_hooks"
