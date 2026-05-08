@@ -42,3 +42,25 @@
 - ✅ Trigger BP-fire через провести ЛА → target → `state: StopOnNextLine`, окно 1С зависает
 - ✅ `debug_targets` возвращает `stopped_target` UUID
 - ✅ `debug_step("Continue")` на **running** target отвечает корректно
+
+### 1.2 Что НЕ работает (задача данного roadmap)
+
+После того как BP fired и target в `StopOnNextLine`:
+
+| Tool | Симптом | RDBG-ошибка |
+|---|---|---|
+| `debug_stack_trace` | Тихо падает / возвращает stale stack от первого hit | `getCallStack` 400 / target_id mismatch |
+| `debug_variables(stack_level=0)` | Возвращает `variables: []` или 400 | `evalLocalVariables` 400 «UI+ - часть отладки не зарегистрирована» / «Предмет отладки не зарегистрирован» |
+| `debug_evaluate(expression)` | Сразу 400 | `evalExpr` 400 «UI+ не зарегистрирована» |
+| `debug_step("Continue")` после BP-fire | 400 | `step` 400 «Предмет отладки не зарегистрирован» |
+
+**Ключевое:** до BP-fire (target Worked) все эти tools работают. После fire — silent detach/state-loss.
+
+### 1.3 Гипотеза (требует подтверждения в P0)
+
+После доставки stop-event RDBG **отсоединяет target от Debug UI session**. Чтобы продолжить, Debug UI должен:
+1. Получить notification через `pingDebugUIParams` о состоянии target
+2. Заново вызвать `attachDetachDbgTargets` для остановленного target (`attach=true`)
+3. Только после этого RDBG позволит `evalLocalVariables` / `evalExpr` / `step`
+
+Точная последовательность в нашем wrapper'е НЕ реализована.
