@@ -30,3 +30,15 @@
 | `attach_debug_targets` для **всех** running targets в `debug_connect` | ✅ | критично — без этого BPs не доставляются |
 | Background `_ping_loop` каждые 2с, отмена в `detach()` | ✅ | предотвращает RDBG session GC после ~30-60с idle |
 | 400-error body logging в `_post()` | ✅ | surfacing RDBG-сообщений в exception |
+
+**Окружение настроено:**
+- 1С Server Agent service `binPath` содержит `-debug -http` (через [`enable-1c-server-debug-http.cmd`](../../scripts/enable-1c-server-debug-http.cmd))
+- `dbgs.exe` слушает `:1550` (auto-spawn ragent'ом)
+- 1cv8c.exe запускается с `/Debug /DebuggerURL "http://localhost:1550"` через [`start-onec-autonomous-debug.ps1`](../../scripts/start-onec-autonomous-debug.ps1)
+
+**Доказательства работающей части (3 успешных воспроизведения 2026-05-08):**
+- ✅ `debug_connect` → `result: registered`, `fully_registered: true`
+- ✅ `debug_set_breakpoint` с magic UUID — RDBG возвращает 200 OK, BP регистрируется
+- ✅ Trigger BP-fire через провести ЛА → target → `state: StopOnNextLine`, окно 1С зависает
+- ✅ `debug_targets` возвращает `stopped_target` UUID
+- ✅ `debug_step("Continue")` на **running** target отвечает корректно
