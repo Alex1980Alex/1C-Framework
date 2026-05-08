@@ -157,8 +157,9 @@ tests/
 - [x] **T.3.1a** `tests/test_search_strategies/test_vector_mmr.py` ✅ 2026-05-01 (20 tests):
   - [x] `VectorSearchStrategy` — results forwarded, embed_text called, use_mmr routing, k/filter pass-through, elapsed_ms
   - [x] `MMRSearchStrategy` — search_mmr always called, diversity override → lambda_mult, default settings, boundary values (0.0/1.0)
-- [ ] `test_bm25_qdrant.py` — sparse vectors, FusionQuery RRF (deferred, bm25 already well-covered in test_phase16)
-- [ ] `test_hybrid_search.py` — three-way RRF merge exhaustive tests (partially covered in test_phase16/test_hybrid_bm25.py)
+- [x] **T.3.1b** `test_phase16/test_bm25_strategy.py` (16 tests) ✅ 2026-05-08 fixed: `_make_mock_vector_store` теперь предоставляет `get_by_ids` как async-coroutine (раньше MagicMock collection.get не подходил под актуальный API `await store.get_by_ids`); `_make_mock_bm25` теперь возвращает `get_chunks_by_ids` как `AsyncMock([])` для запуска fallback-пути. Без фикса 4/16 тестов FAIL.
+- [x] **T.3.1c** `test_phase16/test_hybrid_bm25.py` (8 tests) ✅ 2026-05-08 — три-source RRF merge, bm25_failure_graceful, weights, deduplication; стало зелёным после установки `pytest-asyncio>=0.24` (раньше 5/8 fail из-за «async functions not natively supported»).
+- [x] **T.3 verified:** 24/24 phase16 BM25/Hybrid tests PASS (7+3+6 strategy + 5+3 hybrid). Сепаратные `test_bm25_qdrant.py` / `test_hybrid_search.py` не требуются — purposes покрыты существующими файлами.
 
 ### 2.4 🟠 loaders/ (PDF) — частичное покрытие
 
