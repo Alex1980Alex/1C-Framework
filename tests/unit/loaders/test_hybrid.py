@@ -120,3 +120,20 @@ def _make_fake_doc():
         extra={"page_offsets": [(0, 1)], "tables": [], "loader_stats": {}},
     )
     return ProcessedDocument(id="d1", source_path="/tmp/x.pdf", metadata=meta, raw_text="page one")
+
+
+@pytest.mark.unit
+class TestCascadeFlow:
+    @pytest.mark.asyncio
+    async def test_load_invokes_load_sync(self, monkeypatch):
+        from src.pdf_framework.config import HybridLoaderSettings
+
+        loader = HybridLoader(
+            settings=HybridLoaderSettings(enable_docling_tables=False, enable_vision_ocr=False),
+            api_key="",
+        )
+        captured: list = []
+        monkeypatch.setattr(loader, "_load_sync", lambda src: (captured.append(src), _make_fake_doc())[1])
+        doc = await loader.load("/tmp/x.pdf")
+        assert captured == ["/tmp/x.pdf"]
+        assert doc.raw_text == "page one"
