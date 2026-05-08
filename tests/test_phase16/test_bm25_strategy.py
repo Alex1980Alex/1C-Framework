@@ -14,11 +14,19 @@ from src.pdf_framework.search.strategies.bm25_search import BM25SearchStrategy
 def _make_mock_bm25(results: list[tuple[str, float]]):
     store = AsyncMock()
     store.search = AsyncMock(return_value=results)
+    # New BM25 API: chunk_meta lookup. Return empty so vector_store fallback runs
+    # in tests (existing test-data flows verify the fallback path).
+    store.get_chunks_by_ids = AsyncMock(return_value=[])
     return store
 
 
 def _make_mock_vector_store(chunks: dict[str, DocumentChunk]):
     store = MagicMock()
+
+    async def mock_get_by_ids(ids):
+        return [chunks[cid] for cid in ids if cid in chunks]
+
+    store.get_by_ids = mock_get_by_ids
     collection = MagicMock()
 
     def mock_get(ids, include=None):
