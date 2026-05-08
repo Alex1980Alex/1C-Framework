@@ -64,3 +64,50 @@
 3. Только после этого RDBG позволит `evalLocalVariables` / `evalExpr` / `step`
 
 Точная последовательность в нашем wrapper'е НЕ реализована.
+
+---
+
+## 2. P0 — Reverse-engineering RDBG sequence (3-4ч)
+
+**Цель:** определить точную последовательность RDBG-команд между BP-fire и успешным `evalLocalVariables`.
+
+### 2.1 Изучить yukon39/bsl-debug-server post-BP flow
+
+- Прочитать `DebugAgentService.java` и debug-event handlers в [yukon39 source tree](https://github.com/yukon39/bsl-debug-server)
+- Найти где обрабатываются stop-events / breakpoint-hit events
+- Определить какие RDBG-команды yukon39 шлёт в ответ на stop-event:
+  - `getDbgTargetState`?
+  - `attachDetachDbgTargets` с `attach=true`?
+  - `onDebugTargetEvent` / `onTargetStarted` / etc.?
+
+**Output:** документ `cache/dbgs-rdbg-debug-server.md` §13 «Post-BP-fire handshake» с точной sequence.
+
+### 2.2 Изучить связанные RDBG requests
+
+В [yukon39 source tree](https://api.github.com/repos/yukon39/bsl-debug-server/git/trees/master?recursive=1) есть:
+- `RDBGCheckTerminateAbilityRequest` / Response
+- `RDBGGetDbgTargetStateRequest` / Response
+- `RDBGGetDbgAllTargetStatesRequest` / Response
+
+Прочитать структуру, понять semantics (когда вызываются, что возвращают).
+
+### 2.3 Захватить реальный wire-traffic от EDT
+
+- Запустить EDT с активной debug-сессией
+- mitm-proxy / wireshark / tcpdump на :1550
+- Провести документ → захватить XML-запросы EDT → dbgs.exe
+- Сравнить с нашей последовательностью
+
+### 2.4 Изучить опубликованные XSD-схемы протокола
+
+Платформа 1С публикует XSD на v8.1c.ru. Проверить:
+- `debugRDBGRequestResponse.xsd`
+- `debugBaseData.xsd`
+- `debugCalculations.xsd`
+
+Из XSD понять обязательные поля в `RDBGEvalLocalVariablesRequest` / `RDBGEvalExprRequest` после stop-event. Особенно `BSLModuleIdInternal.version` (configVersion) — возможно требуется match.
+
+**Acceptance criteria P0:**
+- [ ] Известна точная последовательность команд от stop-event до успешного `evalLocalVariables`
+- [ ] Зафиксирована в cache/dbgs-rdbg-debug-server.md §13
+- [ ] (Опционально) есть captured wire-traffic примеры от EDT
