@@ -137,3 +137,21 @@ class TestCascadeFlow:
         doc = await loader.load("/tmp/x.pdf")
         assert captured == ["/tmp/x.pdf"]
         assert doc.raw_text == "page one"
+
+    @pytest.mark.asyncio
+    async def test_l3_skipped_when_disabled(self, monkeypatch):
+        from src.pdf_framework.config import HybridLoaderSettings
+
+        loader = HybridLoader(
+            settings=HybridLoaderSettings(enable_docling_tables=False, enable_vision_ocr=False),
+            api_key="",
+        )
+        l3_called = []
+
+        async def fake_l3(*a, **kw):
+            l3_called.append(True)
+            return []
+        monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
+        monkeypatch.setattr(loader, "_extract_docling_tables", fake_l3)
+        await loader.load("/tmp/x.pdf")
+        assert l3_called == []
