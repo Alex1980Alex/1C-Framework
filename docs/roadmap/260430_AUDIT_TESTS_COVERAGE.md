@@ -223,7 +223,7 @@ tests/
 | **T.4** | loaders hybrid cascade test | 🟠 P1 | 3-4 ч |
 | **T.5** | post-commit reindex integration test | 🟠 P1 | 3 ч |
 | **T.6** | pytest markers per-phase | 🟡 P2 ✅ DONE 2026-05-08 | ~30 мин |
-| **T.7** | pytest-cov в CI (opt-in) | 🟡 P2 | 1 ч |
+| **T.7** | pytest-cov в CI (opt-in) | 🟡 P2 ✅ DONE 2026-05-08 (infra existed; coverage config added) | ~15 мин |
 | **TOTAL** | — | — | **~20-25 ч** |
 
 ### 4.1 Order of execution
