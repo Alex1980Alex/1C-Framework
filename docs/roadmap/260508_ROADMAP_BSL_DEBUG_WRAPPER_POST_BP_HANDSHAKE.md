@@ -235,3 +235,22 @@ async def _event_loop(self) -> None:
 3. **Сохранение Debug UI session при /mcp reconnect.** Когда Python wrapper умирает без detach — старая session живёт в dbgs.exe до GC (~60с) → новый wrapper попадает на `ibInDebug`. Workaround сейчас — kill dbgs.exe. Идея: на startup wrapper'а сначала вызвать `getDebugID` + `detachDebugUI` для всех мёртвых session'ов с тем же `infobaseAlias`.
 
 4. **Scenario B автоматизация для CI.** Можно ли в `scripts/run_va_bdd.ps1` интегрировать автоматический fire BP на критичной строке + захват variables в JSON для regression-тестов? Open-ended — отдельный roadmap если будет potreby.
+
+---
+
+## 7. Ссылки
+
+- [yukon39/bsl-debug-server](https://github.com/yukon39/bsl-debug-server) — Java DAP-implementation, эталон XML-форматов
+- [yukon39/vsc-bsl-dap](https://github.com/yukon39/vsc-bsl-dap) — VS Code DAP-плагин (примеры event handling)
+- [edt.1c.ru — RDBG API reference](https://edt.1c.ru/dev/edt/2022.2/apidocs/com/_1c/g5/v8/dt/debug/model/rdbg/request/response/) — список команд протокола
+- [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) — наш wrapper (~700 строк после правок 2026-05-08)
+- [`cache/dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md) — research findings (12 разделов, magic UUIDs, scenarios B1/B2/B3)
+- [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) — operational guide для Scenario B
+
+---
+
+## 8. Решение пользователя
+
+Начинать сейчас или после закрытия GKSTCPLK-2468 через Path B (SQL diagnostic)?
+
+**Рекомендация:** Path B (SQL diagnostic) сначала — даёт ответ по реальной задаче за минуты. Этот roadmap — параллельный track для улучшения dev-tooling, не блокер production-работы.
