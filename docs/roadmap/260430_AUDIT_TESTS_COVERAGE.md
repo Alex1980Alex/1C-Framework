@@ -224,7 +224,7 @@ tests/
 | **T.1** | framework_search/ test suite (7 файлов) | 🔴 P0 | 6-8 ч |
 | **T.2** | Phase 9.1 dim alignment regression test | 🔴 P0 | 2 ч |
 | **T.3** | search/strategies test coverage (6 файлов) | 🟠 P1 | 4-6 ч |
-| **T.4** | loaders hybrid cascade test | 🟠 P1 | 3-4 ч |
+| **T.4** | loaders hybrid cascade test | 🟠 P1 🔄 PARTIAL — pure helpers covered (20/20 PASS 2026-05-08, fixed broken legacy file); full cascade flow w/ mocked pymupdf/fitz/Anthropic deferred | 3-4 ч (~1ч spent on rewrite) |
 | **T.5** | post-commit reindex integration test | 🟠 P1 | 3 ч |
 | **T.6** | pytest markers per-phase | 🟡 P2 ✅ DONE 2026-05-08 | ~30 мин |
 | **T.7** | pytest-cov в CI (opt-in) | 🟡 P2 ✅ DONE 2026-05-08 (infra existed; coverage config added) | ~15 мин |
