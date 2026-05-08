@@ -890,7 +890,15 @@
       "mcp__1c-debug__debug_ping",
       "mcp__1c-debug__debug_connect",
       "mcp__1c-debug__debug_set_breakpoint",
-      "Bash(sc.exe qc *)"
+      "Bash(sc.exe qc *)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" cluster list)",
+      "Bash(C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe cluster *)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" cluster --help)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" cluster help update)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" help cluster)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" help infobase)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\" help server)",
+      "Bash(C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe server *)"
     ]
   },
   "enableAllProjectMcpServers": true,
