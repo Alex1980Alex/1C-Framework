@@ -155,3 +155,43 @@ async def _event_loop(self) -> None:
 - [ ] После BP-fire `debug_variables` возвращает не-пустой массив с локальными переменными
 - [ ] `debug_stack_trace` возвращает stack ≥1 frame
 - [ ] `debug_evaluate("ТекущаяДата()")` возвращает дату-время
+
+---
+
+## 4. P2 — Stabilize variables/eval/step (2-3ч)
+
+### 4.1 Fix `debug_variables` empty-array bug
+
+При stack_level=0 на entry метода (ОбработкаПроведения) возвращается `variables: []`. Возможные причины:
+- Параметры ещё не bound к scope на entry-line — попробовать stack_level=1
+- `evalLocalVariables` schema требует обязательное `srcCalcInfo.calcItem` (не только `stackLevel`)
+- Нужен правильный `expressionResultID` (UUID, не пустая строка)
+
+Проверить через P0.3 wire-capture.
+
+### 4.2 Fix `debug_step("Continue")` resume семантику
+
+После BP-fire `Continue` должен:
+1. Re-attach target (см. §3.2)
+2. Отправить `step` action=Continue
+3. Дождаться через event-loop события «target Worked»
+4. Удалить target из `_stopped_targets`
+
+### 4.3 Fix `debug_evaluate` для composite types
+
+Для сложных типов (СправочникСсылка, ДокументСсылка, Структура) RDBG требует:
+- `presOptions` с `maxTextSize` ≥ 4096
+- `srcCalcInfo.calcItem.expression` правильно escape'нутая строка
+- Возможно `viewInterface` для пользовательских presentation
+
+### 4.4 Add diagnostic tools
+
+Полезные tools для troubleshooting:
+- `debug_get_breakpoints()` — `RDBGGetBreakpointsRequest`, читает зарегистрированные BPs (верификация что set_breakpoint реально применился)
+- `debug_attach_targets(target_ids: list)` — explicit re-attach
+- `debug_target_state(target_id)` — `RDBGGetDbgTargetStateRequest` для одного target
+
+**Acceptance criteria P2:**
+- [ ] `debug_step("Continue")` после BP-fire реально продолжает выполнение
+- [ ] `debug_evaluate("ЭтотОбъект.Ссылка")` возвращает форматированную ссылку
+- [ ] `debug_get_breakpoints()` показывает registered BPs
