@@ -1,7 +1,7 @@
 # Audit: tests/ coverage vs реализация
 
-**Дата:** 2026-04-30 (вечер) → 2026-05-08 (T.1.7 + T.5.2 + T.6 + T.7)
-**Статус:** P0 ✅ FULLY CLOSED — T.1 ✅ DONE (incl. T.1.7 30/30 ✅) | T.2 ✅ DONE | **T.5 ✅ FULLY DONE** (T.5.1 28 + T.5.2 3 tests) | **T.6 ✅ DONE** (phase markers + auto-mark hook) | **T.7 ✅ DONE** (coverage config + verified existing infra). Open: T.3 🔄 PARTIAL (BM25/hybrid deferred), T.4 (loaders cascade, P1).
+**Дата:** 2026-04-30 (вечер) → 2026-05-08 (T.1.7 + T.5.2 + T.6 + T.7 + T.4 partial)
+**Статус:** P0 ✅ FULLY CLOSED — T.1 ✅ | T.2 ✅ | **T.5 ✅** (31 tests) | **T.6 ✅** (phase markers + auto-mark) | **T.7 ✅** (coverage config). **T.4 🔄 PARTIAL** (20/20 pure-helper tests rewritten 2026-05-08 — fixed broken legacy file; full cascade flow deferred). Open: T.3 🔄 PARTIAL (BM25/hybrid deferred).
 **Scope:** `tests/` directory — структура, покрытие, gaps по новым модулям после Phase 8 + 9.1
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 — «tests scope не покрыт»
