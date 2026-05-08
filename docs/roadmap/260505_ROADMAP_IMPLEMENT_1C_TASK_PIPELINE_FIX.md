@@ -244,10 +244,10 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 | 7 Documentation | ✅ | IMPLEMENTATION-PROGRESS.md, 179 строк, полная stage-trace |
 | 8 Git commit | ✅ | 4 коммита в 3 git-репозиториях: inner submodule `Конфигурация` `d3db501` (BSL), main repo `71a9ba481` (gitlink Конфигурация), docs submodule `c6616817` (PROGRESS), main repo `907b89ce1` (gitlink configuration/260304). **Discovery:** `ИБTransportManagementDevelop/` — обычная подпапка main repo (не отдельный standalone repo, как пишет SKILL.md v2.5.0 §Этап 8); фактическая структура — main tracks 2 submodule напрямую: `configuration/<TaskFolder>` и `ИБTransportManagementDevelop/Конфигурация`. **Resolved in SKILL.md v2.6.0 + v2.6.1 (2026-05-07):** §Этап 8 переписан под точную 3-уровневую структуру (level 2 — обычная директория без `.git/`, level 3 — submodule с gitlink mode 160000); удалён шаг «commit gitlink в middle repo» из v2.5.0; добавлен diagnostic-блок с проверкой `git ls-files --stage` для обоих gitlink'ов и detection level-2 аномалии (`test -d <dir>/.git`) |
 
-**Известные ограничения, обнаруженные в ходе e2e:**
-- `1c-mcp-crud:execute_query` падает на сериализации перечислений с прямой выборкой `Ссылка` — обходим через `ПРЕДСТАВЛЕНИЕ()` (известный workaround, задокументирован в SKILL.md v2.5.0 §«Известные ограничения 1c-mcp-crud»).
-- `1c-mcp-crud:execute_code` запрещает `Возврат` вне процедуры/функции — переписывать через `Если/Иначе`.
-- ANALYSIS-REPORT'ы используют Designer-style пути (`.../Ext/ManagerModule.bsl`), EDT их flatten'ит — Stage 1 должен иметь явный fallback `list_modules` (через `objectName=...`) когда `read_method_source` возвращает File-not-found.
+**Известные ограничения, обнаруженные в ходе e2e** (все резолвлены в SKILL.md):
+- `1c-mcp-crud:execute_query` падает на сериализации перечислений с прямой выборкой `Ссылка` — обходим через `ПРЕДСТАВЛЕНИЕ()` (SKILL.md v2.5.0 §«Известные ограничения 1c-mcp-crud» → Ограничение 2).
+- `1c-mcp-crud:execute_code` запрещает `Возврат` вне процедуры/функции — переписывать через `Если/Иначе` с присваиванием `Результат` в каждой ветке (SKILL.md **v2.6.2** (2026-05-08) §Ограничение 3).
+- ANALYSIS-REPORT'ы используют Designer-style пути (`.../Ext/ManagerModule.bsl`), EDT их flatten'ит — Stage 1 имеет явный fallback `list_modules` (через `objectName=...`) когда `read_method_source` возвращает File-not-found (SKILL.md v2.6.0 §Этап 1 → Path-fallback).
 
 **Что ушло на пользователя:**
 - T1 happy-path в АРМ (Rule 7).
