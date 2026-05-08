@@ -336,3 +336,14 @@ class TestMain:
 # не запускается → auto-reindex-on-commit (Phase 9.1 finale, CLAUDE.md) тихо мёртв.
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 EXPECTED_HOOKS_PATH = "scripts/git_hooks"
+
+
+@pytest.mark.integration
+class TestCoreHooksPath:
+
+    def _run_git_config(self, key: str) -> tuple[int, str]:
+        result = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "config", "--local", "--get", key],
+            capture_output=True, text=True, check=False,
+        )
+        return result.returncode, result.stdout.strip()
