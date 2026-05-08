@@ -163,11 +163,9 @@ class ImplementOneCTaskSmokeStopAlert(BaseHook):
                         worst_preflight = entry
                     else:
                         prev = _parse_exit_code(worst_preflight.get("outcome", "")) or 0
+                        prev_ts = _parse_ts(worst_preflight.get("ts", "")) or datetime.min
                         # Prefer higher severity; tie-break on most recent.
-                        if exit_code > prev or (
-                            exit_code == prev
-                            and (ts > _parse_ts(worst_preflight.get("ts", "")) or datetime.min)
-                        ):
+                        if exit_code > prev or (exit_code == prev and ts > prev_ts):
                             worst_preflight = entry
 
         if not (user_ran_implement and worst_preflight):
