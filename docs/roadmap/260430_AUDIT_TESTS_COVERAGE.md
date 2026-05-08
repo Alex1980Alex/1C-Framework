@@ -174,8 +174,15 @@ tests/
   - [x] **TestSupportedExtensions** (1 test) — `[".pdf"]`
   - [x] **TestInit** (2 tests) — vision_client lazy=None when `enable_vision_ocr=False`+api_key="", custom api_key/base_url stored
   - **Verified:** 20/20 PASS, ловит регрессию в pure-helpers без mocking pymupdf4llm/fitz/Anthropic
-- [ ] **T.4.1 (deferred)** Full cascade flow tests — требуют mocking `pymupdf4llm.to_markdown`, `fitz.open`, `DoclingLoader.load`, `Anthropic` client. Реалистичный effort ~3-4ч + fixture-PDFs. Открытый backlog: моментальные регрессии с уровнями L1→L4 (когда какой уровень skip'нется).
-- [ ] **T.4.2** Smart router auto-selection — fixture с 4 типами PDF (text-heavy, scan, table-heavy, mixed). Не начат — требует генерации/хранения фикстур.
+- [x] **T.4.1 (full)** Cascade flow tests ✅ 2026-05-08 (6 tests in `TestCascadeFlow`):
+  - [x] `test_load_invokes_load_sync` — `load()` обёртывает sync L1+L2 через `asyncio.to_thread(_load_sync, ...)`; источник передан корректно
+  - [x] `test_l3_skipped_when_disabled` — `enable_docling_tables=False` → `_extract_docling_tables` НЕ вызывается
+  - [x] `test_l3_called_when_enabled` — `enable_docling_tables=True` → ровно один вызов с правильным `pdf_path`
+  - [x] `test_l4_skipped_without_api_key` — `enable_vision_ocr=True` + пустой api_key → `_level4_vision_ocr` skip'ается
+  - [x] `test_l4_called_when_enabled_with_key` — оба условия выполнены → ровно один вызов
+  - [x] `test_l4_skipped_when_setting_disabled` — `enable_vision_ocr=False` + api_key="any-key" → skip
+  - **Strategy:** monkeypatched `_load_sync`, `_extract_docling_tables`, `_level4_vision_ocr` на инстансе; helper `_make_fake_doc()` возвращает `ProcessedDocument` без чтения реального PDF. **Не требует mocking** pymupdf4llm/fitz/Anthropic — мы тестируем routing-logic в `load()`, не сами загрузчики.
+- [ ] **T.4.2** Smart router auto-selection — *N/A в текущей архитектуре*: HybridLoader не имеет «smart router» сверху, выбор уровней — конфигурационный (`enable_docling_tables`, `enable_vision_ocr` через `HybridLoaderSettings`). Routing уже покрыт T.4.1 cascade flow tests. Original audit премис о router'е был неточным.
 
 ### 2.5 🟠 auto-reindex on commit — нет integration test
 
