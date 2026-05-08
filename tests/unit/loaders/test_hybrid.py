@@ -194,6 +194,24 @@ class TestCascadeFlow:
         assert l4_called == []
 
     @pytest.mark.asyncio
+    async def test_l4_called_when_enabled_with_key(self, monkeypatch):
+        from src.pdf_framework.config import HybridLoaderSettings
+
+        loader = HybridLoader(
+            settings=HybridLoaderSettings(enable_docling_tables=False, enable_vision_ocr=True),
+            api_key="real-key",
+        )
+        l4_called = []
+
+        async def fake_l4(pdf_path, doc):
+            l4_called.append(pdf_path)
+            return []
+        monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
+        monkeypatch.setattr(loader, "_level4_vision_ocr", fake_l4)
+        await loader.load("/tmp/x.pdf")
+        assert len(l4_called) == 1
+
+    @pytest.mark.asyncio
     async def test_l4_skipped_when_setting_disabled(self, monkeypatch):
         from src.pdf_framework.config import HybridLoaderSettings
 
