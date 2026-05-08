@@ -119,10 +119,12 @@ tests/
   - [x] **T.1.6.a** Skip patterns (`.venv`, `__pycache__`, `node_modules`, `src/projects/configuration/`)
   - [x] **T.1.6.b** Filter by extensions (.py→python, .md→markdown, .exe→skip)
   - [x] **T.1.6.c** Large file (>512KB) skip, dedup same-file-two-roots
-- [ ] **T.1.7** `test_indexer.py` (integration):
-  - [ ] **T.1.7.a** Run end-to-end на `tests/fixtures/mini_repo/` (3-5 файлов) → проверить что коллекция создана с N точек
-  - [ ] **T.1.7.b** Idempotent re-run: same files → no new upserts
-  - [ ] **T.1.7.c** File modified → upsert обновляет соответствующие чанки
+- [x] **T.1.7** `test_indexer.py` ✅ 2026-05-08 (30 tests, all green):
+  - [x] **T.1.7.a** End-to-end run on multi-file tmp_path (TestRunIndexEndToEnd::test_upsert_called_on_normal_run + TestCollectChunks::test_py_and_md_files_indexed/test_stats_files_indexed) — collection ensured + chunks collected + upsert invoked with batched embeddings
+  - [x] **T.1.7.b** Idempotency via deterministic chunk IDs (test_chunk_ids_are_deterministic) — same path/content/line offsets produce identical UUID5 IDs across runs → upsert is no-op
+  - [x] **T.1.7.c** Modified file produces new chunk IDs (test_modified_file_new_chunk_ids) — content change shifts UUID5 hash domain → fresh upsert payload
+  - [x] Bonus: TestRunIndexEndToEnd::test_delete_stale_called_on_incremental + test_no_delete_on_full_run — stale-path cleanup respects mode toggle
+  - [x] Strategy: monkeypatched `_init_qdrant` / `_embed_chunks` (no live Qdrant/TEI required) — T.1.7 stays in unit lane while still exercising the full indexer.run_index orchestration
 
 ### 2.2 🔴 Phase 9.1 dim mismatch — нет regression теста
 
