@@ -362,3 +362,7 @@ class TestCoreHooksPath:
         assert normalised.endswith(EXPECTED_HOOKS_PATH), (
             f"core.hooksPath = '{value}' not '{EXPECTED_HOOKS_PATH}'. Fix: {fix_cmd}"
         )
+
+    def test_post_commit_hook_present_in_target_dir(self):
+        target = REPO_ROOT / EXPECTED_HOOKS_PATH / "post-commit"
+        assert target.exists(), f"Hook script {target} missing — core.hooksPath would point at empty dir"
