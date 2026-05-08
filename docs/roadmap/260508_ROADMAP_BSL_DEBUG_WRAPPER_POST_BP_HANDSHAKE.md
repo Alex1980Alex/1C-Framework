@@ -195,3 +195,43 @@ async def _event_loop(self) -> None:
 - [ ] `debug_step("Continue")` после BP-fire реально продолжает выполнение
 - [ ] `debug_evaluate("ЭтотОбъект.Ссылка")` возвращает форматированную ссылку
 - [ ] `debug_get_breakpoints()` показывает registered BPs
+
+---
+
+## 5. P3 — Tests + docs (1-2ч)
+
+### 5.1 Unit-тесты wrapper'а
+
+Создать `tools/bsl-debug-server/tests/test_mcp_debug_server.py`:
+- Mock RDBG-сервера (httpx_mock или responses)
+- Тесты для каждого tool: connect, set_breakpoint, stack_trace, variables, evaluate, step, disconnect
+- Edge cases: zero UUID auto-resolve, attach race condition, session GC
+
+### 5.2 Integration smoke test
+
+`scripts/smoke_test_debug_pipeline.py`:
+- Запустить dbgs.exe + 1cv8c с /Debug
+- debug_connect → set BP → trigger fire → читать variables → step Continue
+- exit-code 0 если успех, ≥1 если fail
+
+### 5.3 Update docs
+
+- **SKILL.md `implement-1c-task` Этап 4** — опция использования runtime debug через MCP, когда подходит (циклы / state machine), когда нет (простой SQL)
+- **`16.7_Autonomous_Debug_Workflow.md` §16.7.10** — full example post-BP-fire flow с MCP-вызовами + troubleshooting checklist
+
+**Acceptance criteria P3:**
+- [ ] Tests pass: `pytest tools/bsl-debug-server/tests/`
+- [ ] Smoke test exit 0
+- [ ] Документация описывает full post-BP-fire flow
+
+---
+
+## 6. Открытые вопросы
+
+1. **configVersion mismatch.** RDBG может silently дропать BPs если `BSLModuleIdInternal.version` не совпадает с running configVersion. Сейчас wrapper не передаёт `version`. Проверить в P0.4.
+
+2. **Multiple worker rphost'ы.** При posting документа могут spawn'иться JOB targets (фоновые задания), не attached к нашей UI session. Решение: dynamic re-attach в event-loop при появлении новых targets.
+
+3. **Сохранение Debug UI session при /mcp reconnect.** Когда Python wrapper умирает без detach — старая session живёт в dbgs.exe до GC (~60с) → новый wrapper попадает на `ibInDebug`. Workaround сейчас — kill dbgs.exe. Идея: на startup wrapper'а сначала вызвать `getDebugID` + `detachDebugUI` для всех мёртвых session'ов с тем же `infobaseAlias`.
+
+4. **Scenario B автоматизация для CI.** Можно ли в `scripts/run_va_bdd.ps1` интегрировать автоматический fire BP на критичной строке + захват variables в JSON для regression-тестов? Open-ended — отдельный roadmap если будет potreby.
