@@ -155,3 +155,21 @@ class TestCascadeFlow:
         monkeypatch.setattr(loader, "_extract_docling_tables", fake_l3)
         await loader.load("/tmp/x.pdf")
         assert l3_called == []
+
+    @pytest.mark.asyncio
+    async def test_l3_called_when_enabled(self, monkeypatch):
+        from src.pdf_framework.config import HybridLoaderSettings
+
+        loader = HybridLoader(
+            settings=HybridLoaderSettings(enable_docling_tables=True, enable_vision_ocr=False),
+            api_key="",
+        )
+        l3_called = []
+
+        async def fake_l3(pdf_path, existing):
+            l3_called.append(pdf_path)
+            return []
+        monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
+        monkeypatch.setattr(loader, "_extract_docling_tables", fake_l3)
+        await loader.load("/tmp/x.pdf")
+        assert len(l3_called) == 1
