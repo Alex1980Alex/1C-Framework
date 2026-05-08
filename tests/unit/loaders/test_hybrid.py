@@ -86,3 +86,22 @@ class TestSplitByOffsets:
     def test_empty_offsets(self):
         pages, nums = HybridLoader._split_by_offsets("", [])
         assert pages == [] and nums == []
+
+
+@pytest.mark.unit
+class TestSupportedExtensions:
+    def test_returns_pdf_only(self):
+        assert HybridLoader().supported_extensions() == [".pdf"]
+
+
+@pytest.mark.unit
+class TestInit:
+    def test_default_init_no_vision_client(self):
+        loader = HybridLoader(api_key="")
+        assert loader._vision_client is None
+        assert loader._get_vision_client() is None
+
+    def test_custom_api_key_and_base_url_stored(self):
+        loader = HybridLoader(api_key="test-key", base_url="http://x")
+        assert loader._api_key == "test-key"
+        assert loader._base_url == "http://x"
