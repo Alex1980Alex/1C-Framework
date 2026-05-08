@@ -16,3 +16,12 @@ class TestIsVisionRefusal:
 
     def test_russian_не_могу_просмотреть(self):
         assert HybridLoader._is_vision_refusal("Я не могу просмотреть документ") is True
+
+    def test_english_i_cannot_case_insensitive(self):
+        assert HybridLoader._is_vision_refusal("I Cannot help with this image") is True
+
+    def test_english_cannot_transcribe(self):
+        assert HybridLoader._is_vision_refusal("Cannot transcribe page contents") is True
+
+    def test_empty_string_returns_false(self):
+        assert HybridLoader._is_vision_refusal("") is False
