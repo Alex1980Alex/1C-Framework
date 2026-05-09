@@ -243,7 +243,12 @@ async def get_neighbors(entity_id: str, depth: int = 1):
 
 
 @router.post("/incremental-update")
-async def incremental_graph_update(document_id: str, tenant_id: str = "default"):
+async def incremental_graph_update(
+    document_id: str,
+    tenant_id: str = "default",
+    _current_tenant: str = Depends(get_current_tenant),
+    _role: str = Depends(get_current_role),
+):
     """Incrementally update graph for a document.
 
     Only processes changed chunks instead of full document rebuild.
@@ -251,8 +256,13 @@ async def incremental_graph_update(document_id: str, tenant_id: str = "default")
     Phase 61: Incremental Graph Update - detects changes,
     re-extracts entities for modified/new chunks, and updates
     entity embeddings.
+
+    IDOR guard (roadmap 260509 §2.3): non-admin callers can only update graphs
+    in their own tenant. Admins may target any tenant via `tenant_id`.
     """
     from src.pdf_framework.graph_store.incremental import IncrementalGraphUpdater
+
+    assert_tenant_access(tenant_id, _current_tenant, _role)
 
     components = await get_components()
 
