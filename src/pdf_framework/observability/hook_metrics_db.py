@@ -135,12 +135,22 @@ class HookMetricsDB:
         migrations = [
             ("skill_activations", "source", "TEXT DEFAULT 'post-tool-use'"),
             ("skill_accuracy", "source", "TEXT"),
+            # Phase 8 / roadmap §3.3: cross-hook correlation fields surfaced
+            # in invocations table (already in JSONL but were dropped on ingest).
+            ("invocations", "run_id", "TEXT"),
+            ("invocations", "category", "TEXT DEFAULT 'hook'"),
+            ("invocations", "agent_id", "TEXT"),
         ]
         for table, column, col_type in migrations:
             try:
                 conn.execute(f"SELECT {column} FROM {table} LIMIT 1")
             except sqlite3.OperationalError:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+        # Index on run_id для cross-hook trace queries (idempotent).
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_invocations_run_id ON invocations(run_id)")
+        except sqlite3.OperationalError:
+            pass
         conn.commit()
 
     def ingest_from_logs(self) -> dict[str, int]:
