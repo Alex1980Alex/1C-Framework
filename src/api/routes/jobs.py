@@ -9,10 +9,15 @@ from typing import Any
 
 from arq import create_pool
 from arq.connections import RedisSettings
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from src.api.auth.dependencies import (
+    assert_tenant_access,
+    get_current_role,
+    get_current_tenant,
+)
 from src.pdf_framework.config import get_settings
 
 logger = logging.getLogger(__name__)
