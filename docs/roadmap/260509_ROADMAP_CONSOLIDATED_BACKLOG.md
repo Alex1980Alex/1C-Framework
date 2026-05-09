@@ -84,3 +84,29 @@
 - [ ] **2.3.5** Security checklist: `pip-audit` + JWT secret rotation policy
 
 **Effort:** ~3 ч | **Severity:** Critical (multi-tenant security)
+
+### 2.4 P0 — TOC vs filesystem desync (43 declared-missing)
+
+**Что:** `00_СОДЕРЖАНИЕ.md` декларирует 214 файлов, реально 182. Chapter 21 (LLM_ROTATION) — только 21.1 в TOC, в FS 21.2-21.8 (8 subsections undocumented). Новые 16.6/16.7/27.7 отсутствуют.
+
+- [ ] **2.4.1** Скрипт `scripts/validate_toc.py` — парсит TOC, проверяет existence каждого `[link](path)`, diff vs `glob`
+- [ ] **2.4.2** Запустить → точный diff
+- [ ] **2.4.3** TOC обновить: 21.2-21.8, 16.6, 16.7, 27.7
+- [ ] **2.4.4** Удалить orphan declarations или создать stubs
+- [ ] **2.4.5** `tests/test_docs_invariants.py` → новый класс `TestTOCConsistency`
+- [ ] **2.4.6** CI integration
+
+**Effort:** ~3 ч | **Severity:** Discoverability
+
+### 2.5 P0 — Pytest job в CI verification
+
+**Что:** Audit 260430_DEPS_AND_CI.md помечает D.7 DONE, но Track A6 (test coverage) от 260423 говорит unit tests не runs systematically. Verify.
+
+- [ ] **2.5.1** Inspect `.github/workflows/ci.yml` test job (continue-on-error, Qdrant service)
+- [ ] **2.5.2** Если test job не runs на каждый PR — переписать (убрать `continue-on-error` для unit, оставить для integration)
+- [ ] **2.5.3** Coverage gate: `pytest --cov-fail-under=70` для core
+- [ ] **2.5.4** Codecov upload: verify CODECOV_TOKEN
+
+**Effort:** ~2 ч | **Severity:** Regression detection
+
+---
