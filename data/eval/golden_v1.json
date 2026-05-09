@@ -1,0 +1,427 @@
+{
+  "version": "v1.1",
+  "created": "2026-05-09",
+  "updated": "2026-05-09",
+  "schema_version": 1,
+  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass).",
+  "description": "Golden evaluation dataset for hybrid retrieval + RAG quality benchmarks. Each item has a query, expected ground-truth chunk_ids (in pdf_documents collection), expected answer keywords (loose check), and difficulty label.",
+  "fields": {
+    "id": "stable identifier (gv1-NNN)",
+    "query": "natural-language user query",
+    "expected_chunk_ids": "list of chunk IDs that should appear in top-K retrieval (gold standard)",
+    "expected_keywords": "list of strings — answer should mention at least one (loose semantic check)",
+    "expected_answer_summary": "short ideal answer for human review (not used for automated metric)",
+    "difficulty": "easy | medium | hard — easy = single-chunk lookup, medium = synthesis across 2-3 chunks, hard = multi-step or analytical",
+    "category": "factual | conceptual | procedural | analytical | comparative",
+    "domain": "rag-framework | 1c | embeddings | infra"
+  },
+  "items": [
+    {
+      "id": "gv1-001",
+      "query": "What embedding model does the framework use after Phase 8?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["Qwen3", "Qwen3-Embedding-8B", "4096", "TEI"],
+      "expected_answer_summary": "Qwen3-Embedding-8B (4096d) served via TEI Docker. Replaces multilingual-e5-large.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-002",
+      "query": "How does Hybrid Search combine vector and BM25 results?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["RRF", "Reciprocal Rank Fusion", "BM25", "vector"],
+      "expected_answer_summary": "Hybrid Search uses Reciprocal Rank Fusion (RRF) to combine dense vector search with BM25 sparse retrieval, optionally adding graph-based search as a third leg.",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-003",
+      "query": "Steps to index a PDF document via the CLI",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["index", "PDF", "loader", "splitter", "Qdrant"],
+      "expected_answer_summary": "Use python -m src.cli index <file.pdf> [--graph] [--raptor] etc. Pipeline: load → split → embed → upsert into Qdrant collection.",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-004",
+      "query": "Compare Self-RAG and Adaptive RAG agents",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["Self-RAG", "Adaptive", "grading", "decomposition"],
+      "expected_answer_summary": "Self-RAG performs grading + rewriting + hallucination check. Adaptive RAG classifies the query and routes to a strategy with optional decomposition into sub-queries.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-005",
+      "query": "What reranking strategies are available?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["reranker", "cross-encoder", "FlashRank", "LLM rerank"],
+      "expected_answer_summary": "Four rerankers: cross-encoder (default), FlashRank (fast), Cohere (cloud), LLM-based (slow but high quality).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-006",
+      "query": "How does the framework handle multi-tenancy isolation?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["tenant", "isolation", "collection", "JWT", "assert_tenant_access"],
+      "expected_answer_summary": "Per-tenant Qdrant collections, JWT-derived tenant_id, IDOR guard via assert_tenant_access on all routes accepting tenant_id from user input.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-007",
+      "query": "Что такое регистр накопления в 1С?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["регистр накопления", "движение", "оборот", "остаток"],
+      "expected_answer_summary": "Регистр накопления — объект 1С для учёта оборотов и остатков. Поддерживает два вида: остатки и обороты.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c"
+    },
+    {
+      "id": "gv1-008",
+      "query": "Как реализован Late Chunking в bsl_code_v4_late коллекции?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["Late Chunking", "Qwen3", "context", "long"],
+      "expected_answer_summary": "Late Chunking: эмбеддинг считается на полном документе, потом разбивается на chunks с сохранением long-range context. Использует Qwen3-Embedding-8B 4096d.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-009",
+      "query": "Какие коллекции Qdrant есть для retrieval после Phase 8?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["Qdrant", "collection", "bsl_code_v4", "framework_code_v1", "pdf_documents"],
+      "expected_answer_summary": "10 коллекций × 4096d Qwen3: bsl_code_v4_late, bsl_code_v4, framework_code_v1, graph_embeddings, wiki_pages_v1, pdf_documents, skill_library, learned_patterns, experience_embeddings, conversation_memory.",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-010",
+      "query": "What is the difference between Self-RAG grading and DeepEval faithfulness?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["Self-RAG", "grading", "DeepEval", "faithfulness"],
+      "expected_answer_summary": "Self-RAG grading is online (during inference) — agent self-checks retrieval relevance + answer hallucination. DeepEval faithfulness is offline (CI) — measures if answer is grounded in context, threshold-based.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-011",
+      "query": "Какой strategy выбрать для точного поиска по ключевому термину?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["bm25", "FTS5", "лемматизация", "точное совпадение"],
+      "expected_answer_summary": "BM25 strategy — 5ms latency, FTS5 backend с русской лемматизацией. Идеально для exact term match.",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-012",
+      "query": "How does GraphRAG Local differ from GraphRAG Global?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["GraphRAG", "local", "global", "community", "map-reduce"],
+      "expected_answer_summary": "Local: search within a single community (1-3s). Global: map-reduce across all communities (5-15s) — broader thematic queries.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-013",
+      "query": "What is RRF k parameter in Hybrid Search?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["RRF", "rrf_k", "60", "ranking"],
+      "expected_answer_summary": "Reciprocal Rank Fusion smoothing parameter. Default rrf_k=60. Score = weight / (rrf_k + rank + 1).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-014",
+      "query": "Когда использовать MMR вместо обычного vector search?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["MMR", "diversity", "лямбда", "разнообразие"],
+      "expected_answer_summary": "MMR — когда нужно diversity результатов (избежать повторов). Параметр diversity (λ) от 0.0 (relevance only) до 1.0 (max diversity).",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-015",
+      "query": "What environment variables configure Langfuse?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["OBSERVABILITY__LANGFUSE_ENABLED", "PUBLIC_KEY", "SECRET_KEY", "HOST"],
+      "expected_answer_summary": "OBSERVABILITY__LANGFUSE_ENABLED, PUBLIC_KEY, SECRET_KEY, HOST через pydantic-settings nested delimiter. Legacy fallback на LANGFUSE_PUBLIC_KEY/SECRET_KEY.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-016",
+      "query": "Как восстановить feedback из JSONL backup?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["replay", "backup", "JSONL", "scripts/replay_feedback_backup.py"],
+      "expected_answer_summary": "scripts/replay_feedback_backup.py --target-db data/feedback_restored.db. Опции: --since/--until для date range, --dedupe для idempotent replay.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-017",
+      "query": "What is the smoke gate threshold for retrieval quality?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["NDCG", "0.55", "threshold", "schema gate"],
+      "expected_answer_summary": "NDCG@10 ≥ 0.55 (placeholder, calibrated against E5 baseline 0.45). Activates when golden_v1 has ≥50 items with ground truth.",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-018",
+      "query": "Зачем нужен IDOR guard в multi-tenant API?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["IDOR", "tenant_id", "JWT", "403", "assert_tenant_access"],
+      "expected_answer_summary": "IDOR guard блокирует non-admin доступ к чужим tenants через path/query/body tenant_id. assert_tenant_access сверяет path_tenant_id с JWT-derived current_tenant.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-019",
+      "query": "What does the Ralph Wiggum pattern do?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["Ralph Wiggum", "feedback", "retry", "self-correcting"],
+      "expected_answer_summary": "Self-correcting LLM loop: 2-3 attempts where validation feedback (length, language, refusal) injects into next attempt. NOT transient retry — semantic correction.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-020",
+      "query": "Какие 4 декоратора предоставляет utils/retry.py?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["retry_llm_call", "retry_embedding", "retry_db_operation", "retry_network"],
+      "expected_answer_summary": "@retry_llm_call (5 attempts/120s), @retry_embedding (5/90s + RuntimeError), @retry_db_operation (3/0.5s fixed), @retry_network (4/60s). Plus create_retry() factory.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-021",
+      "query": "How does Adaptive RAG decide between simple and complex routing?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["classifier", "complexity", "BM25 early termination", "decompose"],
+      "expected_answer_summary": "Classifier предсказывает complexity (simple/moderate/complex). Simple → BM25 early termination ~125ms. Moderate → hybrid + reranker. Complex → decompose + multi-step.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-022",
+      "query": "Что такое план обмена в 1С и для чего используется?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["план обмена", "распределённая ИБ", "регистрация изменений", "узел"],
+      "expected_answer_summary": "План обмена — объект 1С для распределённой работы. Регистрирует изменения объектов для последующей передачи между узлами (master/slave или peer-to-peer).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c"
+    },
+    {
+      "id": "gv1-023",
+      "query": "Как работает обработчик ПриЗаписи в модуле объекта?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["ПриЗаписи", "событие", "транзакция", "Отказ"],
+      "expected_answer_summary": "Срабатывает при сохранении объекта в БД, внутри транзакции. Параметры — Отказ (cancel) и др. Используется для validation, derived field calculation.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c"
+    },
+    {
+      "id": "gv1-024",
+      "query": "Как индексировать BSL код через MCP-сервер?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["bsl-semantic-search", "reindex_bsl", "FTS5", "Qdrant"],
+      "expected_answer_summary": "scripts/reindex_bsl.bat — full 3-фазная BSL индексация: FTS5 BM25 + Qdrant Qwen3 4096d + Call Graph. Через bsl-semantic-search MCP server.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c"
+    },
+    {
+      "id": "gv1-025",
+      "query": "What chunking strategies are available in the framework?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["chunking", "parent-child", "RAPTOR", "late chunking", "proposition"],
+      "expected_answer_summary": "Recursive (default), Parent-Child (small/large pairs), RAPTOR (hierarchical clusters), Late Chunking (Qwen3 long context), Proposition (semantic atoms).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-026",
+      "query": "Как настроить TEI Docker для embedding?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["TEI", "Qwen3", "MAX_CLIENT_BATCH_SIZE", "Docker"],
+      "expected_answer_summary": "Docker pdf-rag-tei с Qwen/Qwen3-Embedding-8B. MAX_CLIENT_BATCH_SIZE=32 (default), 4096d output. EMBEDDING__PROVIDER=tei.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-027",
+      "query": "What is sparse vector for in BM25 + dense hybrid retrieval?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["sparse", "BM25", "named vectors", "Qdrant"],
+      "expected_answer_summary": "Sparse vector представляет BM25 term-frequency weights в Qdrant. Named vectors layout: dense (4096d) + bm25 (sparse). Hybrid search через RRF fusion двух prefetch.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-028",
+      "query": "Как работает knowledge graph в фреймворке?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["graph", "entity", "relation", "Neo4j", "community"],
+      "expected_answer_summary": "Entities извлекаются из chunks при индексации (--graph), хранятся в Neo4j или NetworkX. Relations + community detection (Leiden) для GraphRAG.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-029",
+      "query": "What does --raptor flag do during indexing?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["RAPTOR", "tree", "summarization", "cluster"],
+      "expected_answer_summary": "Builds hierarchical summary tree: chunks → clusters → LLM summaries (recursive). Enables high-level queries via collapsed tree search или top-down traversal.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-030",
+      "query": "Какие callback'и поддерживает middleware для LLM?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["LangfuseCallbackHandler", "BaseCallbackHandler", "middleware", "with_middleware"],
+      "expected_answer_summary": "with_middleware(llm, *handlers, enable_langfuse=True) принимает LangfuseCallbackHandler + любые BaseCallbackHandler. Поддерживает on_llm_start/end/error.",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-031",
+      "query": "How are skills routed and activated?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["skill-router", "4 layers", "keyword", "fuzzy", "TF-IDF", "semantic"],
+      "expected_answer_summary": "4 слоя skill-router: keyword match, fuzzy match, TF-IDF similarity, semantic embedding. Bundles + affinities + scoring. Triggers через PreToolUse hooks.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-032",
+      "query": "What is contextual retrieval (Anthropic)?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["contextual", "Anthropic", "context", "embedding", "67%"],
+      "expected_answer_summary": "Anthropic technique: prepend chunk-level context (~50-100 tokens describing chunk's place in document) before embedding. Reduces retrieval failures by ~67% per their paper.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-033",
+      "query": "Как в фреймворке реализован semantic cache?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["semantic cache", "cosine", "0.95", "TTL", "invalidation"],
+      "expected_answer_summary": "Semantic cache хранит query embeddings, hit при cosine ≥ 0.95 threshold. TTL 3600s default, max_entries=5000. Кэш в data/cache/semantic_cache.db.",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-034",
+      "query": "What are the 5 phases of Learning Loop?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["SEARCH", "FETCH", "EXECUTE", "VERIFY", "CREATE"],
+      "expected_answer_summary": "SEARCH (existing skill?) → FETCH (knowledge from sources) → EXECUTE (subagent + attribution) → VERIFY (knowledge-compliance) → CREATE (new skill).",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-035",
+      "query": "Сравни v1 и v2 AutoResearch архитектуру",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["AutoResearch", "v1", "v2", "три агента", "Executor", "Reviewer", "Comparator"],
+      "expected_answer_summary": "v1: одиночный измерительный цикл measure→change→verify→keep/revert. v2: трёхагентная архитектура (Executor + Reviewer + Comparator) с blind A/B comparison и calibrated scoring.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework"
+    },
+    {
+      "id": "gv1-036",
+      "query": "Как использовать lazy-mcp profile для экономии контекста?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["lazy-mcp", "on-demand", "11 категорий", "27 серверов"],
+      "expected_answer_summary": "Lazy-MCP — proxy для on-demand загрузки 27 серверов в 11 категориях. Активация по mention pattern. Экономит контекст vs full профиль.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-037",
+      "query": "Как ВызватьИсключение работает в BSL?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["ВызватьИсключение", "исключение", "Попытка", "Исключение"],
+      "expected_answer_summary": "ВызватьИсключение(\"сообщение\") бросает исключение которое ловится ближайшим Попытка...Исключение блоком. Используется для signaling business errors.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c"
+    },
+    {
+      "id": "gv1-038",
+      "query": "What is the auto-reindex on commit pipeline?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["git post-commit", "auto-reindex", "BSL", "framework", "scripts/git_hooks"],
+      "expected_answer_summary": "git post-commit hook (scripts/git_hooks) запускает re-индексацию изменённых BSL и framework файлов в Qdrant. 3-уровневое резервирование.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "embeddings"
+    },
+    {
+      "id": "gv1-039",
+      "query": "Почему run_id важен для cross-hook trace?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["run_id", "slash-command-tracker", "correlation", "UUID"],
+      "expected_answer_summary": "run_id — UUID slash-command run, генерится UPS-хуком. Все последующие хуки (включая MCP) подхватывают через .current-runs.json. db.get_run_trace(run_id) даёт full chain.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "infra"
+    },
+    {
+      "id": "gv1-040",
+      "query": "What happens when faithfulness drops below DeepEval threshold?",
+      "expected_chunk_ids": [],
+      "expected_keywords": ["DeepEval", "faithfulness", "0.7", "CI fail", "regression"],
+      "expected_answer_summary": "CI gate в test_deepeval.py падает с assertion error если faithfulness < 0.7. PR блокируется. Triggers RCA для retrieval/generation pipeline.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework"
+    }
+  ],
+  "stats": {
+    "count": 40,
+    "by_difficulty": {"easy": 9, "medium": 17, "hard": 14},
+    "by_domain": {"rag-framework": 17, "embeddings": 7, "infra": 11, "1c": 5},
+    "by_category": {"factual": 14, "conceptual": 8, "procedural": 9, "analytical": 5, "comparative": 4}
+  },
+  "todo": "Expand to ≥50 (activates quality gate via items_with_chunks check) and ≥100 для full benchmark. Populate expected_chunk_ids by grounding queries against actual indexed pdf_documents corpus. v2.0 may use DSPy.Synthesize when `dspy` available."
+}
