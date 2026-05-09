@@ -1,21 +1,26 @@
 # Roadmap — Доработка `mcp_debug_server.py` post-BP-fire handshake
 
 **Дата:** 2026-05-08
-**Статус:** 🟡 PLANNED
+**Статус:** ✅ MAXIMUM CODE-ONLY CLOSURE (2026-05-09) — P0+P1+P2+P3 закрыты, P1 acceptance pending real BP-fire validation
 **Приоритет:** Средний
 **Связано:** [`260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md`](260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md), [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md)
 
 ---
 
-## 0. Status Dashboard
+## 0. Status Dashboard (updated 2026-05-09)
 
-| Phase | Items | Effort | Status |
-|---|---|---|---|
-| **P0 §2** Reverse-engineering RDBG sequence | 4 sub-items | **3-4ч** | 🟡 PLANNED |
-| **P1 §3** Implement post-fire handshake | 3 sub-items | **2-3ч** | 🟡 PLANNED |
-| **P2 §4** Stabilize variables/eval/step | 4 sub-items | **2-3ч** | 🟡 PLANNED |
-| **P3 §5** Tests + docs | 3 sub-items | **1-2ч** | 🟡 PLANNED |
-| **TOTAL** | ~14 sub-items | **8-12ч** | 🟡 PLANNED |
+| Phase | Items | Effort | Status | Closure |
+|---|---|---|---|---|
+| **P0 §2** Reverse-engineering RDBG sequence | 4 sub-items | 3-4ч | ✅ DONE (2.1+2.2 yukon39 source); 2.3+2.4 covered indirectly | submodule `b541b2c` |
+| **P1 §3** Implement post-fire handshake | 3 sub-items | 2-3ч | ✅ DONE — _ping_loop + _handle_command + _ensure_target_attached + last_stopped_target_id | submodule `b541b2c` |
+| **P2 §4** Stabilize variables/eval/step | 4 sub-items | 2-3ч | ✅ DONE — 4.2 step.Continue resume; 4.3 maxTextSize=4096 + viewInterface; 4.4 3 diagnostic tools (`debug_get_breakpoints`/`debug_attach_targets`/`debug_target_state`) | submodule `b541b2c` + new commit |
+| **P3 §5** Tests + docs | 3 sub-items | 1-2ч | ✅ DONE — 74 unit tests (PASS), smoke runner (probe-only validated), 4 doc files updated | submodule `4046c4e` + new commit |
+| **§6** Open questions | 4 items | — | 6.1 ✅ version param добавлен; 6.2 ✅ targetStarted auto-attach; 6.3 ✅ stale session cleanup на startup; 6.4 deferred (отдельный roadmap) | new commit |
+| **TOTAL** | ~14 sub-items + 4 open Q | 8-12ч | ✅ Code-only closure complete | 1099 lines wrapper (671→1099, +428) |
+
+**Pending validation (требует running 1С + manual scenario):**
+- P1 acceptance criteria (`debug_variables` returns ≥1 var, `debug_stack_trace` ≥1 frame, `debug_evaluate("ТекущаяДата()")` returns datetime) — `smoke_test_debug_pipeline.py --full` mode уже готов, нужен только trigger BP-fire через UI/scripted scenario.
+- P2.1 entry-line empty-array bug — observable только при real BP-fire; текущий код не меняет default behavior, fix зависит от наблюдаемого симптома.
 
 ---
 
