@@ -58,6 +58,15 @@ DOCS_BASE = "docs/framework documentation"
 
 CODE_TO_DOMAIN = [
     # code_prefix                           docs_subdir              skill_name
+    # SPECIFIC OVERRIDES (must come before general prefixes — first match wins)
+    # Roadmap §3.1/§3.7/§3.3 closure findings: these specific files document
+    # to 09_АДМИНИСТРИРОВАНИЕ (observability/monitoring), not generic categories.
+    ("src/pdf_framework/callbacks/langfuse/",   "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),  # Langfuse = observability
+    ("src/pdf_framework/callbacks/metrics/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/pdf_framework/callbacks/logging/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/pdf_framework/config/observability.py", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),  # Langfuse settings
+    ("src/pdf_framework/utils/retry.py",        "09_АДМИНИСТРИРОВАНИЕ",  "tenacity-retry"),  # Retry policy in 09.4
+    # GENERAL PREFIXES (fallback after specific overrides)
     ("src/pdf_framework/search/",           "04_ПОИСК",              "search-pipeline-debug"),
     ("src/pdf_framework/agents/",           "05_RAG_АГЕНТЫ",         "agent-orchestration"),
     ("src/pdf_framework/loaders/",          "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
@@ -78,6 +87,7 @@ CODE_TO_DOMAIN = [
     ("src/extensions/",                     "35_EXTENSIONS",           "pdf-knowledge"),
     ("src/api/routes/",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
     ("src/api/middleware/",                 "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
+    ("src/api/auth/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),  # IDOR in 09.2
     ("src/api/app.py",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
     ("src/cli/",                           "06_ИНТЕРФЕЙСЫ",         "framework-cli"),
     ("src/mcp_server/",                    "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
