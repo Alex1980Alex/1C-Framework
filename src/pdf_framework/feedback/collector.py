@@ -56,16 +56,29 @@ class FeedbackCollector:
         self,
         db_path: str | Path | None = None,
         settings: Settings | None = None,
+        backup_dir: str | Path | None = None,
+        backup_enabled: bool = True,
     ):
         """Initialize the feedback collector.
 
         Args:
             db_path: Path to SQLite database
             settings: Application settings
+            backup_dir: Path to JSONL backup directory (default: data_dir/feedback/backups)
+            backup_enabled: Toggle dual-write JSONL backup (roadmap 260509 §3.5)
         """
         self._settings = settings or get_settings()
         self._db_path = Path(db_path or self._settings.data_dir / "feedback.db")
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        self._backup_enabled = backup_enabled
+        self._backup_dir = Path(backup_dir or self._settings.data_dir / "feedback" / "backups")
+        if self._backup_enabled:
+            try:
+                self._backup_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                logger.warning(f"[FEEDBACK] Backup dir unavailable, dual-write disabled: {e}")
+                self._backup_enabled = False
 
         self._init_db()
 
