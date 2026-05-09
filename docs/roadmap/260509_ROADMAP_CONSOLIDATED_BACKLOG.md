@@ -241,3 +241,59 @@
 - [ ] **4.4.3** Document pattern в `09.X_Async_Patterns.md`
 
 **Effort:** 1-2 days
+
+### 4.5 P2 — Delegation Iter 4-5 (260320 + 260423 C4)
+
+- [ ] **4.5.1** Iter 4 design: trained router (vector similarity over outcome embeddings)
+- [ ] **4.5.2** `src/shared/llm_rotation/router/trained.py`
+- [ ] **4.5.3** A/B vs LinUCB (10% canary)
+- [ ] **4.5.4** Iter 5 SAFLA: quality degradation, composite reward
+
+**Effort:** 2-3 days each | **Зависимость:** 3.1 (observability для measurement)
+
+### 4.6 P2 — Memory P5 advanced (260403 Phase 8)
+
+Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR per-user erase.
+
+**Effort:** 1-2 weeks | **Status:** out-of-scope для near-term
+
+### 4.7 P2 — MCP Inspector smoke (260423 B6)
+
+- [ ] **4.7.1** Install `npx @modelcontextprotocol/inspector`
+- [ ] **4.7.2** Script: foreach `.mcp.json` server — connect + list_tools, fail on timeout
+- [ ] **4.7.3** Wire в `pre-commit-config.yaml`
+
+**Effort:** 0.5 day
+
+### 4.8 P2 — Phase 67 External tools (260423 C7)
+
+- [ ] **4.8.1** Inventory candidates: claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server
+- [ ] **4.8.2** Decision matrix: keep / replace / remove
+- [ ] **4.8.3** Update `.mcp.json`
+
+**Effort:** 2-3 days
+
+### 4.9 P2 — Async PostToolUse hooks (260329 step 2.3)
+
+- [ ] **4.9.1** Identify hooks с >2s typical latency
+- [ ] **4.9.2** Refactor: sync entrypoint + fire-and-forget tail
+- [ ] **4.9.3** Settings.json `"async": true` flag (если supported)
+
+**Effort:** 1 day
+
+### 4.10 P2 — GPU BSL Phase 4-5 (260326)
+
+Phase 4: Colab indexing automation wrapper. Phase 5: Qdrant Cloud Free Tier (cloud-only path).
+
+**Effort:** 1-2 days each | **Status:** deferred unless need
+
+### 4.11 P2 — 25_LEARNING_LOOP chapter expansion
+
+- [ ] **4.11.1** Audit `learning-loop` skill (5-фазный pipeline) → reference
+- [ ] **4.11.2** Expand 25.1 Обзор: 21 → ~150 lines с диаграммой
+- [ ] **4.11.3** Expand 25.3 Архитектура_субагента (44 → 100+)
+- [ ] **4.11.4** Expand 25.6 Диагностика (40 → 100+)
+
+**Effort:** 3-4 ч
+
+---
