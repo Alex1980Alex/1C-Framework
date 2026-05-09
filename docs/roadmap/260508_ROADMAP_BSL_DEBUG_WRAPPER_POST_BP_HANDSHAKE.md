@@ -30,6 +30,48 @@ Live BP-fire validation (`Документ.гкс_ЛабораторныйАна
 
 ---
 
+## 10. Real-world finding 2026-05-10 — pre-existing rphost invisible (Phase 1.5 follow-up)
+
+При попытке P1 acceptance validation через `1c-mcp-crud post_document` (IIS-based scenario) обнаружен **новый failure mode**, более ранний по pipeline чем 260510 eval-registration bug:
+
+### Симптомы
+1. ✅ `debug_connect(IBTransportManagementDevelop)` → fully_registered, session_id resolved
+2. ✅ `debug_set_breakpoint(ObjectModule, line=141, ...)` → BP successfully registered, `debug_get_breakpoints` подтверждает
+3. ✅ `debug_targets()` на момент connect → `[]` (empty, no rphost attached)
+4. ✅ `1c-mcp-crud post_document` (через IIS `/hs/mcp/rpc` → rphost) → **HTTP 200 за 0.8с**, документ проведён, **BP НЕ fire**
+5. ✅ `debug_ping()` → `events: []` (zero `targetStarted` event для rphost-MCP)
+6. ✅ `debug_targets()` после post → всё ещё `[]`
+
+### Root cause
+- `getDbgAllTargetStates` (RDBG endpoint) возвращает **только attached к нашей debug UI session targets**
+- Pre-existing rphosts (alive ДО `debug_connect`) **не emit'ят `targetStarted`** при subsequent активности — событие фигурирует только при первом spawn'е процесса
+- BPs регистрируются на уровне dbgs.exe, но **доставляются ТОЛЬКО attached targets**
+- Итог: для типичного IIS-extension сценария (1c-mcp-crud, любая HTTP service публикация в существующем rphost) BP set'ы **молчат**
+
+Это распространяется на **любые long-running rphost'ы**: фоновые задания, регламентные операции, веб-клиентские сессии, активные до debug_connect. По сути, wrapper до сих пор работал только для freshly-spawned rphosts (что бывает редко в production-like окружении).
+
+### Fix (committed 2026-05-10)
+- **`RDBGClient.set_break_on_next_statement()`** — yukon39 mirror `HTTPDebugClient.setBreakOnNextStatement` (Java line 262)
+- **`debug_break_on_next` MCP tool** — после armed, RDBG ставит «break on next statement» **глобально на всех eligible targets** (включая pre-existing!)
+- Workflow:
+  1. `debug_connect(...)` + `debug_set_breakpoint(...)` (precise BP)
+  2. `debug_break_on_next()` — armed
+  3. Trigger any BSL execution на rphost (e.g., post_document)
+  4. Wrapper auto-attaches rphost когда тот break'нется на next statement → captured as stopped target
+  5. `debug_step("Continue")` — выходит из break point, продолжает execution → достигает precise BP → stops
+  6. Standard inspect path: `debug_stack_trace`, `debug_variables`, `debug_evaluate`, `debug_step`
+
+### Acceptance criteria Phase 1.5
+- [x] `RDBGClient.set_break_on_next_statement()` реализован
+- [x] `debug_break_on_next` MCP tool зарегистрирован
+- [x] 78 unit-тестов pass (no regression)
+- [ ] **Real validation pending:** Claude Code restart → re-run scenario из §10 «Симптомы» → BP fires → 260510 eval bug либо подтверждается, либо опровергается на этом полном пути
+
+### Affects
+- Roadmap 260510 §0 «pending validation» теперь чище: после Phase 1.5 acceptance путь до BP fire **полностью покрыт wrapper'ом**, остаётся только UI+ registration bug на eval (если он действительно существует).
+
+---
+
 ## 1. Контекст
 
 ### 1.1 Что есть (текущее состояние, 2026-05-08)
