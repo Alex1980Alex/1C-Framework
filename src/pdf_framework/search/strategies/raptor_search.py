@@ -3,16 +3,19 @@
 Search across RAPTOR tree hierarchy with collapsed tree mode.
 
 Author: Claude Code
-Version: 1.4.0 - Phase 13.2: RAPTOR Search Strategy
+Version: 1.5.0 - Phase 13.2 + roadmap §4.2 (optional LLM rerank).
 """
 
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
+
+if TYPE_CHECKING:
+    from src.pdf_framework.search.reranking.llm_reranker import LLMReranker
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,13 @@ class RAPTORSearchConfig(BaseModel):
     max_depth: int = 4
     include_leaves: bool = True
     include_summaries: bool = True
+
+    # Roadmap §4.2: optional LLM-based rerank atop RAPTOR base scoring.
+    # When True (and llm_reranker provided to the strategy), the top
+    # `llm_rerank_fetch_k` candidates are sent to the LLM judge, then
+    # truncated to user `k`. Cost: 1 LLM call per query. Latency +1-3s.
+    enable_llm_rerank: bool = False
+    llm_rerank_fetch_k: int = 20
 
 
 class RAPTORSearchStrategy:
