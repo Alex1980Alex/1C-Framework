@@ -23,7 +23,10 @@ class ObservabilitySettings(BaseSettings):
     langfuse_enabled: bool = False
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
-    langfuse_host: str = "https://cloud.langfuse.com"
+    # Empty default — final fallback to "https://cloud.langfuse.com" lives in
+    # LangfuseCallbackHandler._resolve_credentials so legacy `LANGFUSE_HOST`
+    # env override keeps working (roadmap 260509 §3.1, reviewer finding #1).
+    langfuse_host: str = ""
     langfuse_project_name: str = "pdf-framework"
 
 
