@@ -47,6 +47,9 @@
 
 ### 2.1 P0 — ADR-008 verdict + safe smoke-gate (260423 C1)
 
+**Цель:** Закрыть ADR-008 (DSPy migration) переводом proposed → accepted и зафиксировать в CI smoke-gate, который автоматически проваливает PR при деградации NDCG ниже baseline (E5 = 0.45, threshold ≥ 0.55).
+**Выгоды:** Регрессии retrieval ловятся на CI ещё до merge; разблокируется поток B1/B2/B7 (Contextual Retrieval, GEPA, DeepEval) — без числового SLA эти улучшения нечем измерить; формальное закрытие architectural decision снимает «висящий» документ.
+
 **Что:** RAGAS eval ✅ DONE 2026-04-21 (вердикт PASS), но safe smoke-gate в CI не настроен. Блокирует merge новых retrieval-фич.
 
 - [ ] **2.1.1** Прочитать `docs/adr/008-dspy-migration.md` → exit criteria (NDCG threshold, latency budget)
@@ -59,6 +62,9 @@
 **Effort:** ~6 ч | **Зависимость:** 2.2 (golden dataset)
 
 ### 2.2 P0 — Golden eval dataset (260423 C2) — UNBLOCKER для B1/B2/B7
+
+**Цель:** Собрать эталонный набор из ≥100 размеченных query → relevant_chunk_ids → ideal_answer на трёх production коллекциях для воспроизводимых benchmark'ов.
+**Выгоды:** Объективное измерение всех retrieval/RAG-улучшений (Contextual Retrieval, GEPA, Matryoshka, RAPTOR rerank) — нечего сравнивать без ground truth; базис для CI smoke-gate (2.1) и DeepEval gating (3.9); первая исторически воспроизводимая baseline для regression tracking; снимает блокировку с 5 P1/P2 items.
 
 **Что:** Curated 100-query evaluation set с ground-truth (relevant chunks + ideal answer).
 
@@ -75,6 +81,9 @@
 
 ### 2.3 P0 — JWT auth IDOR completion (260423 A1)
 
+**Цель:** Полностью покрыть handlers `src/api/routes/tenants.py` через `_assert_tenant_access`, чтобы non-admin пользователи не могли читать/менять/удалять данные чужих тенантов через прямую подстановку `tenant_id` в URL.
+**Выгоды:** Закрытие critical IDOR-уязвимости в multi-tenant API (защита customer data); готовность к security audit / pen-test; компилаентность для enterprise rollout; устранение security debt с минимальным effort (~3 ч).
+
 **Что:** `auth.py` имеет `_admin: str` IDOR-fix, но не все handlers `tenants.py` покрыты.
 
 - [ ] **2.3.1** Audit `src/api/routes/tenants.py` через `_assert_tenant_access`
@@ -86,6 +95,9 @@
 **Effort:** ~3 ч | **Severity:** Critical (multi-tenant security)
 
 ### 2.4 P0 — TOC vs filesystem desync (43 declared-missing)
+
+**Цель:** Привести `00_СОДЕРЖАНИЕ.md` в строгое соответствие с реальной структурой `docs/framework documentation/`: добавить отсутствующие 21.2-21.8 (LLM_ROTATION), 16.6/16.7 (EDT MCP), 27.7; удалить orphan declarations и зафиксировать invariant в CI.
+**Выгоды:** Discoverability — пользователи и AI-агенты находят актуальную документацию через TOC, а не через `glob`; устранение dead links в навигации; CI invariant `validate_toc.py` исключает дальнейший drift автоматически; ~32 «потерянных» файла возвращаются в индекс.
 
 **Что:** `00_СОДЕРЖАНИЕ.md` декларирует 214 файлов, реально 182. Chapter 21 (LLM_ROTATION) — только 21.1 в TOC, в FS 21.2-21.8 (8 subsections undocumented). Новые 16.6/16.7/27.7 отсутствуют.
 
@@ -99,6 +111,9 @@
 **Effort:** ~3 ч | **Severity:** Discoverability
 
 ### 2.5 P0 — Pytest job в CI verification
+
+**Цель:** Подтвердить, что `test` job в `.github/workflows/ci.yml` действительно прогоняет unit tests на каждый PR без `continue-on-error` для core, и поднять coverage gate до 70% с upload в Codecov.
+**Выгоды:** Автоматическая защита от regressions на каждом PR (без CI gate большая часть тестов фактически декоративна); видимость покрытия через Codecov; уверенность при будущих рефакторингах (3.7 retry, 3.8 Send API); снятие риска ложно-зелёного main.
 
 **Что:** Audit 260430_DEPS_AND_CI.md помечает D.7 DONE, но Track A6 (test coverage) от 260423 говорит unit tests не runs systematically. Verify.
 
@@ -115,6 +130,9 @@
 
 ### 3.1 P1 — OpenLLMetry + Langfuse (260423 B3) — observability foundation
 
+**Цель:** Развернуть распределённый tracing для LLM-вызовов и agent execution через `traceloop-sdk` (auto-instrument LangChain) + Langfuse Cloud (UI + storage), с manual spans для `agent.invoke`, `tool.call`, retrieval.
+**Выгоды:** End-to-end visibility token usage / latency / cost per query — фундамент для любого performance debugging в production; разблокирует Memory P5 observability (3.3) и Delegation Iter 4-5 (4.5) — обе полагаются на measurable outcomes; ускоряет диагностику production incidents с часов до минут.
+
 - [ ] **3.1.1** Audit `src/pdf_framework/observability/`
 - [ ] **3.1.2** Add `traceloop-sdk` в `[langfuse]` extra
 - [ ] **3.1.3** Wire env vars: `LANGFUSE__ENABLED/PUBLIC_KEY/SECRET_KEY/HOST`
@@ -126,6 +144,9 @@
 **Effort:** 3-5 days | **Unblocks:** 3.3 Memory P5, 4.5 Delegation Iter 4-5
 
 ### 3.2 P1 — Contextual Retrieval (260423 B1) — Anthropic, -67% failures
+
+**Цель:** Внедрить Anthropic Contextual Retrieval — генерация LLM-контекста для каждого chunk (~50-100 токенов «о чём этот chunk относительно документа») и append к тексту перед embedding в `HybridLoader`.
+**Выгоды:** По paper Anthropic — снижение retrieval failures до 67%; significant lift NDCG@10 на golden_v1; minimum-effort ROI после установки baseline (одно изменение в indexing pipeline даёт измеримый quality gain); не ломает existing collections (re-index opt-in).
 
 - [ ] **3.2.1** Cache paper в `architecture-research/cache/`
 - [ ] **3.2.2** `ContextualEnricher` class в `src/pdf_framework/processing/`
@@ -139,6 +160,9 @@
 
 ### 3.3 P1 — Memory P5 observability (260403 + 260423 C3)
 
+**Цель:** Завершить Phase 5 memory migration — cross-hook tracing через `correlation_id`, унифицированная metrics-схема `data/metrics/hooks.json`, CLI dashboard для visibility cycle hook → MCP → storage.
+**Выгоды:** Debug-ready memory orchestrator (P0-P4 уже DONE, без observability дальше масштабировать слепо); измеримость hook performance (sub-2s SLA enforcement, см. 4.9); foundation для Phase 6+ scale-out (cross-instance sync, 4.6); закрытие давнего observability-долга.
+
 - [ ] **3.3.1** Inventory `src/memory/orchestrator/`
 - [ ] **3.3.2** Cross-hook tracing через `correlation_id` (расширить slash-tracker pattern)
 - [ ] **3.3.3** Unified metrics schema `data/metrics/hooks.json`
@@ -148,6 +172,9 @@
 **Effort:** 2-3 days | **Зависимость:** 3.1
 
 ### 3.4 P1 — GEPA replaces MIPROv2 (260423 B2)
+
+**Цель:** Migrate teleprompted DSPy modules с `dspy.MIPROv2` (deprecated) на `dspy.GEPA` (Generative Evolutionary Prompt Adaptation, DSPy ≥ 2.5), re-compile и сохранить compiled modules в `data/dspy/compiled/`.
+**Выгоды:** Ожидаемый +5% quality lift на golden_v1 при том же compute; современный prompt optimizer с simpler API и более стабильной сходимостью; устранение deprecation warnings и подготовка к будущим DSPy upgrades; одна prompt-engineering система везде.
 
 - [ ] **3.4.1** Audit DSPy usage в `src/pdf_framework/agents/`
 - [ ] **3.4.2** Migrate `dspy.MIPROv2` → `dspy.GEPA`
@@ -159,6 +186,9 @@
 
 ### 3.5 P1 — Dual-write feedback (260423 A2)
 
+**Цель:** Параллельная запись feedback events в JSONL backup `data/feedback/backup_YYYY-MM-DD.jsonl` рядом с SQLite + recovery script `scripts/replay_feedback_backup.py`.
+**Выгоды:** Защита от corruption SQLite (data durability — single point of failure ликвидирован); audit trail в plain-text позволяет ручной анализ без БД; revivability при crash через replay; малый effort (~3-5 ч) для значимого reliability gain.
+
 - [ ] **3.5.1** `feedback/collector.py` — `_write_jsonl_backup`
 - [ ] **3.5.2** Path: `data/feedback/backup_YYYY-MM-DD.jsonl`
 - [ ] **3.5.3** Recovery `scripts/replay_feedback_backup.py`
@@ -169,6 +199,9 @@
 
 ### 3.6 P1 — Test coverage to 70% (260423 A6)
 
+**Цель:** Поднять coverage `src/pdf_framework/` до 70% через таргетированные unit tests на под-покрытые модули (`agents/research_v2/`, `agents/deep/`, `optimization/`, `evaluation/runner.py`) и закрепить gate в CI.
+**Выгоды:** Снижение regression-риска при будущих рефакторингах; tests-as-documentation для under-documented модулей; CI gate (2.5.3) предотвращает дрейф вниз; высокая уверенность при работе через Z.AI delegation (можно проверять generated code тестами).
+
 - [ ] **3.6.1** Run `pytest --cov=src/pdf_framework` → baseline
 - [ ] **3.6.2** Identify modules < 70%: `agents/research_v2/`, `agents/deep/`, `optimization/`, `evaluation/runner.py` likely candidates
 - [ ] **3.6.3** Add ~5-10 unit tests per under-covered module
@@ -177,6 +210,9 @@
 **Effort:** 3-5 days
 
 ### 3.7 P1 — Retry unification (260423 A3)
+
+**Цель:** Заменить ~5-10 ad-hoc retry-loops (`for attempt in`, `httpx_retries`, кастомные `@retry`) на единую обёртку `src/pdf_framework/utils/retry.py` через tenacity (max_attempts=3, exp backoff, jitter).
+**Выгоды:** Consistent backoff/jitter behavior на всём codebase (избегаем thundering herd); меньше bug-источников (одно место для fix retry-related issues); proper handling rate-limit ответов от LLM/Qdrant API; легче добавлять circuit breakers в будущем.
 
 - [ ] **3.7.1** `grep -rn "for attempt in\|httpx_retries\|@retry\|tenacity" src/`
 - [ ] **3.7.2** ~5-10 places to unify
@@ -188,6 +224,9 @@
 
 ### 3.8 P1 — LangGraph Send API (260423 B4)
 
+**Цель:** Refactor sequential multi-step query decompose в `src/pdf_framework/agents/adaptive/` на параллельный LangGraph `Send(queries)` API.
+**Выгоды:** Снижение latency 5-query decompose в N раз (5 параллельных retrievals вместо последовательных); native LangGraph idiom (упрощает onboarding); better resource utilization Qdrant connection pool; preserves existing semantics (опасности regression низкие).
+
 - [ ] **3.8.1** Audit `src/pdf_framework/agents/adaptive/` — multi-step decompose
 - [ ] **3.8.2** Refactor sequential → `Send(queries)` parallel
 - [ ] **3.8.3** Benchmark latency 5-query decompose до/после
@@ -196,6 +235,9 @@
 **Effort:** ~2 days
 
 ### 3.9 P1 — DeepEval CI gating (260423 B7)
+
+**Цель:** Подключить DeepEval metrics (faithfulness, hallucination) с порогами `faithfulness > 0.7`, `hallucination < 0.1` как CI gate в smoke-suite, зафиксировать threshold rationale в ADR-009.
+**Выгоды:** Автоматическое предотвращение regressions качества generated answers (a не только retrieval); numerical SLA для RAG-quality в публичной форме (ADR); защита от prompt-changes / model-version-changes без регрессии; complement к 2.1 (NDCG retrieval) — closes loop end-to-end.
 
 - [ ] **3.9.1** `deepeval` в `[eval]` extra
 - [ ] **3.9.2** `tests/eval/test_deepeval.py`: faithfulness > 0.7, hallucination < 0.1
@@ -210,6 +252,9 @@
 
 ### 4.1 P2 — Matryoshka embeddings A/B (260423 B5)
 
+**Цель:** Сравнить полноразмерные 4096d Qwen3 embeddings vs truncated MRL 1024d/512d на recall (NDCG@10) на golden_v1 — Qwen3 поддерживает Matryoshka representations.
+**Выгоды:** При delta < 5% — миграция `framework_code_v1` (21k+ points) на 1024d даёт 4× faster search и 4× меньше storage в Qdrant; lower memory footprint позволяет fit'нуть больше коллекций на той же машине; data-driven решение вместо угадывания «4096d is best».
+
 - [ ] **4.1.1** Recreate `pdf_documents_mrl_1024` collection × 1024d (truncate)
 - [ ] **4.1.2** Benchmark NDCG@10: 4096d vs MRL 1024d/512d
 - [ ] **4.1.3** Если -delta < 5% → migrate `framework_code_v1` на MRL 1024d (4× faster)
@@ -218,6 +263,9 @@
 **Effort:** 3-5 days
 
 ### 4.2 P2 — RAPTOR + LLM rerank (260423 A7)
+
+**Цель:** Добавить опциональный LLM-reranker top-20 chunks в `raptor_search.py` через параметр `enable_llm_rerank: bool` с кешированием rerank-decisions.
+**Выгоды:** Improved precision на сложных query (обработка nuance которые embedding-similarity не ловит); latency cost (~1-2s) оправдан для high-stakes use-cases (research, legal); cache минимизирует RPM hit на повторах; opt-in — не ломает default fast path.
 
 - [ ] **4.2.1** `raptor_search.py` — `enable_llm_rerank: bool` parameter
 - [ ] **4.2.2** Reranker: pass top-20 to LLM, sort by relevance score
@@ -228,6 +276,9 @@
 
 ### 4.3 P2 — Stub embedding edge-case fix (260423 A5)
 
+**Цель:** Найти и исправить случаи возврата stub/`np.zeros(...)` embeddings вместо real embeddings в edge-cases (empty input, encoding errors), либо хотя бы log warning и raise.
+**Выгоды:** Корректность search в edge-cases (zero-vector матчит всё / ничего → ложные результаты); предотвращение silent quality degradation, который сложно поймать без целевого теста; малый effort (~2 ч) для устранения «тихого» bug-class'а.
+
 - [ ] **4.3.1** `grep -rE "stub|placeholder|np\.zeros\(" src/pdf_framework/embeddings/`
 - [ ] **4.3.2** Fix или log warning
 - [ ] **4.3.3** Test: edge case → real embed
@@ -236,6 +287,9 @@
 
 ### 4.4 P2 — Sync-in-async cleanup (260423 A4)
 
+**Цель:** Заменить `asyncio.to_thread` / `run_in_executor` обёртки на native async equivalents где доступны (httpx async client, async Qdrant client, etc.) и задокументировать оставшиеся обоснованные случаи.
+**Выгоды:** Lower latency (no thread-pool roundtrip); снижение thread pool contention при высоком QPS; лучшее использование async event loop; documented async patterns для contributors.
+
 - [ ] **4.4.1** `grep -rE "asyncio.to_thread\|run_in_executor" src/`
 - [ ] **4.4.2** Replace c native async equivalent где возможно
 - [ ] **4.4.3** Document pattern в `09.X_Async_Patterns.md`
@@ -243,6 +297,9 @@
 **Effort:** 1-2 days
 
 ### 4.5 P2 — Delegation Iter 4-5 (260320 + 260423 C4)
+
+**Цель:** Iter 4 — trained router (vector similarity over outcome embeddings) с A/B vs LinUCB на 10% canary; Iter 5 — SAFLA (composite reward с quality degradation penalty).
+**Выгоды:** Smarter LLM provider selection (учитывает task-similarity к прошлым успехам, а не только availability); quality-aware delegation вместо greedy «free first»; measurable cost savings + maintained quality; foundation для future RL-based routing.
 
 - [ ] **4.5.1** Iter 4 design: trained router (vector similarity over outcome embeddings)
 - [ ] **4.5.2** `src/shared/llm_rotation/router/trained.py`
@@ -253,11 +310,17 @@
 
 ### 4.6 P2 — Memory P5 advanced (260403 Phase 8)
 
+**Цель:** Помимо base observability — cross-instance memory sync (multi-replica deployment), encrypted memory at rest (SQLCipher / Postgres TDE), GDPR per-user erase API.
+**Выгоды:** Production multi-tenant compliance (SOC2 / GDPR требования к шифрованию и erasability); horizontal scaling memory orchestrator (одна instance не bottleneck); enterprise-readiness; out-of-scope в near-term, но фиксируем как target.
+
 Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR per-user erase.
 
 **Effort:** 1-2 weeks | **Status:** out-of-scope для near-term
 
 ### 4.7 P2 — MCP Inspector smoke (260423 B6)
+
+**Цель:** Скрипт через `npx @modelcontextprotocol/inspector` который для каждого сервера в `.mcp.json` делает connect + list_tools, fail on timeout; wire в `pre-commit-config.yaml`.
+**Выгоды:** Catch broken MCP-серверы до commit (не во время сессии когда уже мешает); защита от regression в `.mcp.json` (config drift, путей, env vars); 0.5 day effort для долгосрочной reliability gain — все 27+ MCP-серверов проверяются автоматически.
 
 - [ ] **4.7.1** Install `npx @modelcontextprotocol/inspector`
 - [ ] **4.7.2** Script: foreach `.mcp.json` server — connect + list_tools, fail on timeout
@@ -267,6 +330,9 @@ Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR p
 
 ### 4.8 P2 — Phase 67 External tools (260423 C7)
 
+**Цель:** Inventory + decision matrix для внешних tools (claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server) — keep / replace / remove с обоснованием на каждый.
+**Выгоды:** Сокращение surface area (меньше серверов = меньше maintenance); устранение dead deps; consolidation на проверенный stack; документированное обоснование для будущих переоценок.
+
 - [ ] **4.8.1** Inventory candidates: claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server
 - [ ] **4.8.2** Decision matrix: keep / replace / remove
 - [ ] **4.8.3** Update `.mcp.json`
@@ -274,6 +340,9 @@ Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR p
 **Effort:** 2-3 days
 
 ### 4.9 P2 — Async PostToolUse hooks (260329 step 2.3)
+
+**Цель:** Refactor PostToolUse-хуков с >2s typical latency на sync entrypoint + fire-and-forget tail (или `"async": true` flag если поддерживается).
+**Выгоды:** Снижение wait-time после каждого tool call (UX gain в interactive sessions); меньше блокировок agent loop; не ломает текущие хуки (post-fact обработка не критична).
 
 - [ ] **4.9.1** Identify hooks с >2s typical latency
 - [ ] **4.9.2** Refactor: sync entrypoint + fire-and-forget tail
@@ -283,11 +352,17 @@ Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR p
 
 ### 4.10 P2 — GPU BSL Phase 4-5 (260326)
 
+**Цель:** Phase 4 — Colab indexing automation wrapper (one-click reindex без локального GPU); Phase 5 — Qdrant Cloud Free Tier path для cloud-only operation.
+**Выгоды:** GPU-accelerated reindex для contributors без локального GPU (через Colab T4); cloud-only operation снимает требование Docker locally; удобно для коротких контрибьюшенов; deferred unless need — нет активного запроса.
+
 Phase 4: Colab indexing automation wrapper. Phase 5: Qdrant Cloud Free Tier (cloud-only path).
 
 **Effort:** 1-2 days each | **Status:** deferred unless need
 
 ### 4.11 P2 — 25_LEARNING_LOOP chapter expansion
+
+**Цель:** Расширить главу 25 (LEARNING_LOOP) с описанием 5-фазного pipeline (skill `learning-loop`): 25.1 Обзор 21 → ~150 строк с диаграммой; 25.3 Архитектура_субагента 44 → 100+; 25.6 Диагностика 40 → 100+.
+**Выгоды:** Discoverability self-learning механизма (сейчас один из самых сложных компонентов фреймворка под-документирован); onboarding для contributors; reference для AI-агентов при создании новых skills; устранение doc-debt после Phase 8 work.
 
 - [ ] **4.11.1** Audit `learning-loop` skill (5-фазный pipeline) → reference
 - [ ] **4.11.2** Expand 25.1 Обзор: 21 → ~150 lines с диаграммой
@@ -302,21 +377,36 @@ Phase 4: Colab indexing automation wrapper. Phase 5: Qdrant Cloud Free Tier (clo
 
 ### 5.1 P3 — Serena Phases 8-10 (260423 C5, on-demand)
 
+**Цель:** Phase 8-10 продолжения Serena audit (Phases 0-7 DONE с откатом hybrid refactor); парковочный backlog до появления конкретного запроса на advanced refactoring features.
+**Выгоды:** Завершение Serena migration (LSP-based BSL navigation в полном объёме); on-demand активация когда возникнет need в advanced symbol-anchored refactoring; не блокирует ничего сейчас.
+
 Phase 8 audit (260414) — Phases 0-7 DONE с откатом hybrid refactor. Phases 8-10 on-demand. **Status:** парковочный backlog.
 
 ### 5.2 P3 — 35_EXTENSIONS активация
+
+**Цель:** Активировать chapter 35 (расширения конфигурации 1С) когда появится первая extension-task; сейчас зарезервирована («Активного кода нет»).
+**Выгоды:** Готовая структура для extension-документации; placeholder помечен в TOC чтобы не было «потерянной» главы; не требует effort до Phase 9.4+.
 
 «Зарезервировано. Активного кода нет». Активировать когда появится первая extension-task. **Status:** Wait Phase 9.4+.
 
 ### 5.3 P3 — MCP Phase 11 OAuth2 (260331, 4/5 BLOCKED)
 
+**Цель:** OAuth2-аутентификация для production MCP — 4 шага из 5 BLOCKED поскольку требуют staging environment + testing с реальными external clients.
+**Выгоды:** Secure MCP в production rollout (multi-user / external clients вместо локального single-user); standard auth flow совместимый с enterprise SSO; ждёт actual production rollout — преждевременно делать без use-case.
+
 OAuth2 для production MCP — 4 шага требуют staging environment + testing. **Status:** Wait actual production rollout.
 
 ### 5.4 P3 — MCP Phase 12.3 Streamlit dashboard (260331)
 
+**Цель:** UX-альтернатива CLI dashboard через Streamlit для non-CLI пользователей; lower priority поскольку CLI dashboard `09.9` уже достаточен для текущих use-cases.
+**Выгоды:** Visual dashboard для non-technical stakeholders; optional UX polish; не блокирует MCP operations — только nice-to-have.
+
 CLI dashboard уже достаточен (09.9). Streamlit — low priority. **Status:** Optional UX polish.
 
 ### 5.5 P3 — TODO comments cleanup в BSL (6 markers)
+
+**Цель:** Закрыть 6 TODO-маркеров в BSL коде по мере появления соответствующих 1С-задач (нет смысла рефакторить «на всякий случай» — каждый TODO связан с конкретной business-логикой).
+**Выгоды:** Снижение технического долга; consistency code base; ad-hoc closure не требует выделенного roadmap-spot — захватывается естественно при touching кода.
 
 - `гкс_ОчередьСообщенийRMQ:319` — отложенное формирование движений
 - `гкс_ПечатьПриемныйАкт_ЗПП14:177` — temp workaround
@@ -328,6 +418,9 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 **Status:** Ad-hoc closure при появлении 1С-задач.
 
 ### 5.6 P3 — `scripts/doc_to_cache.py` placeholders (14 markers)
+
+**Цель:** Подтвердить, что 14 TODO в `scripts/doc_to_cache.py` — это template fill-points для doc generation pipeline, а НЕ implementation TODO; пометить как false positive в audit reports.
+**Выгоды:** Очистка inventory от ложных TODO; правильная приоритизация остального backlog (31 → 17 «настоящих» TODO); экономия времени на повторных аудитах.
 
 14 TODO — это template fill-points для doc generation, НЕ implementation TODO. **Status:** False positive, оставить.
 
