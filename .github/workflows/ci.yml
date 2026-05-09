@@ -44,6 +44,9 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src/
 
+      - name: TOC ↔ filesystem consistency
+        run: python scripts/validate_toc.py --json
+
   typecheck:
     name: Type Check (mypy)
     runs-on: ubuntu-latest
