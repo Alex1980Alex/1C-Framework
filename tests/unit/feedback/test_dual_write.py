@@ -67,27 +67,17 @@ class TestDualWrite:
             json.loads(line)
 
     def test_backup_failure_does_not_break_sqlite(self, tmp_path):
-        """Read-only backup dir → JSONL write fails, but SQLite still gets the row."""
+        """JSONL write fails (simulated) → SQLite still gets the row."""
         collector = FeedbackCollector(
             db_path=tmp_path / "feedback.db",
             backup_dir=tmp_path / "backups",
             backup_enabled=True,
         )
-        # Force backup writes to fail by replacing path with an invalid filename
-        # (use a file at a path that's actually a directory in the backup_dir)
-        bad_dir = tmp_path / "backups" / "blocker"
-        bad_dir.mkdir()
-        # Point backup target to the directory path → open("a") will fail with IsADirectoryError
-        collector._backup_dir = bad_dir.parent
-        # Override _write_jsonl_backup target via monkey-patching the date stem
-        # is overkill; simulate failure by patching the file open instead.
-        original_method = collector._write_jsonl_backup
-
         call_count = {"n": 0}
 
         def failing_backup(entry, row_id):
             call_count["n"] += 1
-            # Simulate an IO error inside the protected block
+            # Simulate an IO error captured by the production code's `except Exception`
             try:
                 raise OSError("simulated backup failure")
             except Exception as e:
@@ -97,17 +87,18 @@ class TestDualWrite:
                     f"[FEEDBACK] JSONL backup write failed (non-fatal): {e}"
                 )
 
+        original_method = collector._write_jsonl_backup
         collector._write_jsonl_backup = failing_backup  # type: ignore[method-assign]
+        try:
+            rid = collector.add_feedback(_make_entry("survives"))
+        finally:
+            collector._write_jsonl_backup = original_method  # type: ignore[method-assign]
 
-        rid = collector.add_feedback(_make_entry("survives"))
         assert rid is not None and rid > 0
         assert call_count["n"] == 1
         with sqlite3.connect(tmp_path / "feedback.db") as conn:
             (count,) = conn.execute("SELECT COUNT(*) FROM feedback").fetchone()
         assert count == 1, "SQLite write must succeed even when backup fails"
-
-        # Restore (avoid leaking patched state)
-        collector._write_jsonl_backup = original_method  # type: ignore[method-assign]
 
     def test_disabled_backup_writes_no_files(self, tmp_path):
         collector = FeedbackCollector(
