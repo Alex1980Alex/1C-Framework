@@ -27,7 +27,8 @@ description: "BSL Development — разработка на 1С:Предприя
 | **Reasoning (ОБЯЗАТЕЛЬНЫЙ)** | `mcp-reasoner` | 3 BSL-стратегии: архитектура, документы, подсистемы |
 | Семантический поиск | `bsl-semantic-search` | Поиск похожего кода (3,908+ модулей) |
 | Автодокументация | `auto-documenter` | generate_documentation, autoreview, autotestplan |
-| Отладка | `bsl-debugger` | breakpoints, step, variables, evaluate |
+| Отладка (OneScript, статика) | `bsl-debugger` | breakpoints, step, variables, evaluate — без live 1С |
+| Live отладка (RDBG, Scenario B) | `1c-debug` | post-BP-fire handshake против running 1С: debug_set_breakpoint, debug_variables, debug_evaluate, debug_step (см. [16.7](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) |
 | API платформы | `bsl-platform-context` | Типы, методы, свойства 1С:8.3.27 |
 | AST-анализ | `ast-grep-mcp` | Tree-sitter парсинг BSL |
 | LSP | `serena` | Symbol extraction, рефакторинг |
