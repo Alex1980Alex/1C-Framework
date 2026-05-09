@@ -182,6 +182,14 @@ class SlashCommandTracker(BaseHook):
 
 
 def _elapsed_since(started_at: str) -> int:
+    """Compute milliseconds since a slash-command's UserPromptSubmit start.
+
+    NOTE (roadmap §4.9 RCA): the value emitted on Stop event represents the
+    *full slash-run business duration* (e.g. 22 minutes for a long-running
+    `/implement-1c-task`), NOT the time spent inside this hook. Perf-style
+    queries on `invocations.elapsed_ms` must exclude `category='slash_run'`
+    rows — see `docs/framework documentation/09_АДМИНИСТРИРОВАНИЕ/09.13_Async_Hooks_Audit.md`.
+    """
     if not started_at:
         return 0
     try:
