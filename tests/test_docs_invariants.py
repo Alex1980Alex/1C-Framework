@@ -13,3 +13,16 @@ def _all_chapter_files() -> list[Path]:
     if not CHAPTER_DIR.exists():
         pytest.skip(f"Chapter dir missing: {CHAPTER_DIR}")
     return sorted(CHAPTER_DIR.glob("*.md"))
+
+
+@pytest.mark.unit
+class TestChapter01NoStaleProductionStack:
+    def test_legacy_mentions_are_marked(self):
+        offenders: list[str] = []
+        for path in _all_chapter_files():
+            text = path.read_text(encoding="utf-8")
+            for line_no, line in enumerate(text.splitlines(), start=1):
+                for pattern in LEGACY_PATTERNS:
+                    if pattern in line and not any(m in line for m in LEGACY_MARKERS):
+                        offenders.append(f"{path.name}:{line_no} '{pattern}': {line.strip()[:100]}")
+        assert not offenders, "Legacy mentions без маркера:\n" + "\n".join(offenders)
