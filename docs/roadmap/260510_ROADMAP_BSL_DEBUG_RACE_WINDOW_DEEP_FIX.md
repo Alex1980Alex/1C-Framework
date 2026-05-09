@@ -1,7 +1,7 @@
 # Roadmap — Глубокий фикс post-BP-fire UI+ registration race window
 
 **Дата:** 2026-05-10
-**Статус:** 🔴 PROPOSED — production-blocking finding
+**Статус:** 🟡 PROPOSED — production-blocking finding для eval/step pipeline (BP-fire scope закрыт `debug_break_on_next` 2026-05-10, см. [260508 §10](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md#L)). Этот roadmap концентрируется ТОЛЬКО на UI+ registration bug на пути eval/variables/step после BP fire. До 2026-05-10 trigger через 1c-mcp-crud вообще не доходил до BP fire (separate, более ранний баг).
 **Приоритет:** Высокий (закрывает P1 acceptance из 260508)
 **Связано:** [`260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md`](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md)
 
