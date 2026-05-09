@@ -1290,11 +1290,17 @@ async def index_document_async(
     request: IndexRequest,
     tenant_id: str = "default",
     components: Components = Depends(get_components),
+    _current_tenant: str = Depends(get_current_tenant),
+    _role: str = Depends(get_current_role),
 ):
     """Index a PDF document asynchronously via background queue.
 
     Returns immediately with a job_id. Use GET /jobs/{job_id} to check progress.
+
+    IDOR guard (roadmap 260509 §2.3): non-admin callers can only index into their
+    own tenant. Admins may target any tenant via the explicit `tenant_id` param.
     """
+    assert_tenant_access(tenant_id, _current_tenant, _role)
     if not components.settings.queue.enabled:
         raise HTTPException(
             status_code=503,
