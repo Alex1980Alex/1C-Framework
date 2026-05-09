@@ -1,6 +1,6 @@
 """Docs invariants — chapter 01_ОБЗОР vs Phase 8 production stack (§3.5.2) + TOC consistency."""
 
-import sys
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -10,6 +10,15 @@ DOCS_ROOT = REPO_ROOT / "docs" / "framework documentation"
 CHAPTER_DIR = DOCS_ROOT / "01_ОБЗОР"
 TOC_FILE = DOCS_ROOT / "00_СОДЕРЖАНИЕ.md"
 SCRIPTS_DIR = REPO_ROOT / "scripts"
+
+
+def _load_validate_toc():
+    spec = importlib.util.spec_from_file_location("validate_toc", SCRIPTS_DIR / "validate_toc.py")
+    if spec is None or spec.loader is None:
+        pytest.skip("scripts/validate_toc.py not loadable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 LEGACY_PATTERNS = ["multilingual-e5-large", "Qdrant 1.15", "qdrant/qdrant:v1.15"]
 BROAD_LEGACY_PATTERNS = LEGACY_PATTERNS + ["nomic-embed-text", "all-MiniLM-L6-v2", "bsl_code_v2", "bsl_code_v3"]
 LEGACY_MARKERS = ["legacy", "до Phase 8", "до Phase 9", "не выбрано", "Legacy", "Deprecated", "deprecated", "Dropped", "dropped", "удалена", "superseded", "boundary detector", "(НЕ retrieval)", "Phase 8 note", "Phase 8 default", "Migration note", "Phase 9.1"]
