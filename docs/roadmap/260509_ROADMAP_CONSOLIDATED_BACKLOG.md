@@ -428,6 +428,89 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 
 ---
 
+## 5b. Closure log — 2 sessions, 2026-05-09
+
+**21 / 31 items closed.** Audit-finding pattern: roadmap estimates были overstated в 1.5-3× потому что часть infrastructure уже была implemented к моменту execution. См. project memory `project_roadmap_audit_pattern.md`.
+
+| ID | Item | Closure | Commits |
+|---|---|---|---|
+| 2.1 | Smoke-gate framework | DONE — `tests/eval/test_smoke_gate.py` (9 schema gates) + CI step + 08.5 doc | `723c6fa33` |
+| 2.2 | Golden eval dataset | DONE v1.1 — 40 templated items + CHANGELOG | `dd2d8a9a7` |
+| 2.3 | JWT IDOR | DONE + CRITICAL bypass через `task_kwargs` (reviewer-found) | `723c6fa33` |
+| 2.4 | TOC sync | DONE — `scripts/validate_toc.py` + invariant test + CI step | auto-saves |
+| 2.5 | CI test job split + Codecov | DONE — unit gates merge / integration best-effort + Codecov public OIDC | `c38ee7749` |
+| 3.1 | Langfuse settings refactor | DONE phase A — handler refactor + smoke tests + 09.4 doc | `6ee613035` |
+| 3.2 | Contextual Retrieval | NO-OP — already Phase 50 (`processing/context_generator.py`) | `804c40487` |
+| 3.3 | Memory P5 obs | DONE — `hook_metrics_db` schema migration + cross-hook trace API | `6fa3a6152` |
+| 3.5 | Dual-write feedback | DONE — JSONL backup + replay script + 8 tests | `a01014245` |
+| 3.6 | Coverage gate | DONE pragmatic — codecov diff-coverage 70% (patch only) | (auto-saves) |
+| 3.7 | Retry unification | DONE — 1 callsite migrated, 8 Ralph Wiggum loops documented as exclusion | (auto-saves) |
+| 3.8 | LangGraph Send API | NO-OP — already Phase 26 `asyncio.gather` | — |
+| 3.9 | DeepEval CI gating | DONE — `tests/eval/test_deepeval.py` + ADR-009 + threshold rationale | (auto-saves) |
+| 4.2 | RAPTOR LLM rerank | DONE — opt-in `enable_llm_rerank` config | `acd6f1d1b` |
+| 4.3 | Stub embedding | NO-OP — patterns не существуют в codebase | — |
+| 4.4 | Sync-in-async | DOC — 09.12 Async_Patterns chapter (no code changes) | `d2a6403e3` |
+| 4.7 | MCP Inspector smoke | DONE — `scripts/mcp_smoke_check.py` + pre-commit hook (18/20 ok) | (auto-saves) |
+| 4.8 | External tools matrix | DOC — 26.7 chapter, 0 candidates landed, 20×keep | `43de03049` |
+| 4.9 | Async PostToolUse hooks | DOC — 09.13 audit + RCA SlashCommandTracker measurement artifact | `b9b852215` |
+| 4.11 | 25_LEARNING_LOOP expand | DONE — 25.1/25.3/25.6 +212 lines | (auto-saves) |
+| 5.6 | doc_to_cache placeholders | NO-OP — confirmed false positive, docstring note added | (auto-saves) |
+
+**Open items (10):**
+
+| ID | Item | Real blocker |
+|---|---|---|
+| 3.4 | GEPA replaces MIPROv2 | DSPy install + LLM creds для validation (5-line code change ready) |
+| 4.1 | Matryoshka A/B | Qdrant + 2-3h benchmark runs |
+| 4.5 | Delegation Iter 4-5 | Langfuse production trace для outcome embeddings (Iter 3 LinUCB ✅ done) |
+| 4.6 | Memory P5 advanced | Out-of-scope для near-term per roadmap |
+| 4.10 | GPU BSL Phase 4-5 | Explicit "deferred unless need" |
+| 5.1 | Serena Phases 8-10 | On-demand parking lot |
+| 5.2 | 35_EXTENSIONS активация | Wait Phase 9.4+ |
+| 5.3 | OAuth2 (MCP Phase 11) | Wait actual production rollout |
+| 5.4 | Streamlit dashboard | Optional UX polish, low priority |
+| 5.5 | BSL TODO cleanup | Ad-hoc closure при появлении 1С-задач |
+
+**Side findings:**
+- RCA `SlashCommandTracker` 250s avg = measurement artifact, not bug ([09.13](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.13_Async_Hooks_Audit.md))
+- Project memory recorded: `project_roadmap_audit_pattern.md` — audit-stale lesson для future sessions
+- Enforcer config improved: `docs-change-enforcer.py` mapping override block + SKIP_PATTERNS (codecov.yml, .pre-commit-config.yaml, data/eval/)
+
+---
+
+## 5c. Langfuse Production Rollout (new item)
+
+**Цель:** Перевести Langfuse из "infrastructure ready" (§3.1 phase A done) в "production active monitoring" — full observability stack для LLM calls, retrieval, agent execution, memory operations. Unblocks §3.3 wiring + §4.5 Delegation Iter 4-5 + §3.9 quality gate activation.
+
+**Выгоды:** End-to-end trace visibility (token usage, latency, cost per query); proactive quality regression detection (prompt drift, model upgrade impact); foundation для production debugging (вместо reactive log digging); outcome data corpus для §4.5 trained router learning.
+
+### Phase B subtasks
+
+- [ ] **5c.1 Langfuse Cloud account** — register на cloud.langfuse.com OR self-host через docker-compose. Cloud free tier 50K observations/month → достаточно для hobby/dev.
+- [ ] **5c.2 Add credentials в `.env`** — `OBSERVABILITY__LANGFUSE_ENABLED=true`, `OBSERVABILITY__LANGFUSE_PUBLIC_KEY=pk-lf-...`, `OBSERVABILITY__LANGFUSE_SECRET_KEY=sk-lf-...`, `OBSERVABILITY__LANGFUSE_HOST=https://cloud.langfuse.com`.
+- [ ] **5c.3 Smoke test против real Langfuse** — запустить локально query через `python -m src.cli.main search "тест" --strategy hybrid` → verify trace появился в dashboard. Confirms wiring работает.
+- [ ] **5c.4 Wire memory operations** — close §3.3.4 (deferred). Memory hooks (memory-first, memory-sync, session-memory-save) emitить spans через `observability.langfuse_setup.build_langfuse_callback()`.
+- [ ] **5c.5 Manual spans для critical paths** — добавить spans с метаданными в `agents/rag/agent.py:invoke`, `search/manager.py:search`, `tools/*` для granular tracing.
+- [ ] **5c.6 Dashboard configuration** — настроить alerts (latency P95 > 5s, hallucination rate > 0.15, cost per query > $0.50), saved views для daily monitoring.
+- [ ] **5c.7 Cost tracking baseline** — после 7 дней production traffic зафиксировать baseline в `docs/architecture/cost-baselines.md` (top-10 expensive queries, average tokens per RAG call).
+- [ ] **5c.8 Score collection wire-up** — кнопки 👍/👎 в Web UI → `langfuse.score()` API → корреляция с feedback loop §3.5.
+- [ ] **5c.9 Outcome corpus для §4.5** — после 30 дней traffic экспортировать (query, delegated_provider, success, latency, cost) tuples → JSONL для §4.5 Iter 4 trained router training.
+- [ ] **5c.10 ADR-010 production observability** — формализовать decision: tools (Langfuse vs альтернативы), retention policy, sampling strategy, cost limits.
+
+**Effort:** 5c.1-5c.3 = ~30 мин (basic setup). 5c.4-5c.6 = ~3-5 ч (wiring + production hardening). 5c.7-5c.9 = ongoing (накапливается с traffic). 5c.10 = ~2 ч когда есть baseline data.
+
+**Зависимости:**
+- 5c.1 → user-side (нужен Langfuse Cloud account ИЛИ Docker для self-hosted)
+- 5c.4 unblocks **§3.3.4** (Memory P5 Langfuse wiring) и closes Memory P5 fully
+- 5c.7 unblocks **§4.5 Delegation Iter 4-5** (нужен outcome corpus для trained router)
+- 5c.10 closes ADR-010 как formal observability strategy
+
+**Когда НЕ делать:** если framework планируется только для local dev/research (нет production users, нет cost concerns) — 5c.4-5c.10 overkill, достаточно 5c.1-5c.3 basic setup.
+
+**Кратко по value:** см. memory note `reference_codecov_public.md` (sibling pattern) и chapter [09.4 Мониторинг — Langfuse](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md#langfuse).
+
+---
+
 ## 6. Order of execution
 
 ### 6.1 Critical path (Week 1-2)
