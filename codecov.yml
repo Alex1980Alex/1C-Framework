@@ -1,10 +1,10 @@
-# Codecov configuration — roadmap 260509 §3.6.
+# Codecov configuration — roadmap 260509 §3.6 / §2.5.4 closed 2026-05-09.
 #
-# Status (§2.5.4 enabled 2026-05-09): Codecov активирован для repo
-# Alex1980Alex/1C-Framework. CI uploads coverage XML через
-# `codecov/codecov-action@v4` с `CODECOV_TOKEN` secret. Также сохраняется
-# как GitHub Actions artifact (belt-and-suspenders) на случай Codecov
-# rate limit / network failure.
+# Status: repo Alex1980Alex/1C-Framework сделан public →
+# Codecov tokenless OIDC mode активен (CODECOV_TOKEN secret НЕ нужен).
+# Free tier для public repos = unlimited uploads. CI uploads через
+# `codecov/codecov-action@v4` + GitHub Actions artifact (belt-and-suspenders)
+# на случай Codecov outage.
 #
 # Strategy: prioritise diff-coverage over total threshold.
 #
