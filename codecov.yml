@@ -1,0 +1,58 @@
+# Codecov configuration — roadmap 260509 §3.6.
+#
+# Strategy: prioritise diff-coverage over total threshold.
+#
+# Why diff-coverage instead of `--cov-fail-under=70`:
+#   - Total coverage on local Windows dev is ~3% (sentence_transformers
+#     fails to load → most pytest tests fail collection). Real CI
+#     baseline (Linux ubuntu-latest) is unknown until first run with
+#     full deps installed (`-e ".[dev,qdrant,morphology]"`).
+#   - Setting --cov-fail-under=70 without measured baseline blocks
+#     ALL PRs from day one.
+#   - Diff-coverage (target: 70% on changed lines) drives gradual
+#     improvement on PR-by-PR basis without retroactively requiring
+#     legacy code to be tested.
+#
+# Future: once CI publishes a stable total baseline (likely 30-50%),
+# a project-wide gate can be added (`coverage.status.project.target`).
+
+coverage:
+  status:
+    project:
+      default:
+        # Don't fail on project-wide drop yet — informational only.
+        # When CI baseline is stable, change to: target: auto, threshold: 1%
+        informational: true
+    patch:
+      default:
+        # Patch coverage (changed lines must be ≥70% covered).
+        # This is the actual quality gate that drives §3.6 forward.
+        target: 70%
+        threshold: 5%      # Allow up to 5% drop in patch coverage
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+
+# Files / paths excluded from coverage (vendored / generated / migrations)
+ignore:
+  - "src/pdf_framework/processing/splitters/parent_child.py"  # transitive sentence_transformers crash on Windows dev (roadmap §3.6 note)
+  - "scripts/**"
+  - "tests/**"
+  - "**/__init__.py"
+  - "src/bsl/**"  # BSL subsystem has its own test pipeline (VA BDD)
+
+comment:
+  layout: "diff, flags, files"
+  behavior: default
+  require_changes: false  # Always post comment on PRs
+
+# Flag config — distinguishes unit vs integration suites
+flags:
+  unit:
+    paths:
+      - src/pdf_framework
+    carryforward: true
+  integration:
+    paths:
+      - src/pdf_framework
+    carryforward: true
