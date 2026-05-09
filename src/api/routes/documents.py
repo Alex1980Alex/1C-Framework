@@ -11,6 +11,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from src.api.auth.dependencies import (
+    assert_tenant_access,
+    get_current_role,
+    get_current_tenant,
+)
 from src.api.dependencies.components import Components, get_components
 
 logger = logging.getLogger(__name__)
