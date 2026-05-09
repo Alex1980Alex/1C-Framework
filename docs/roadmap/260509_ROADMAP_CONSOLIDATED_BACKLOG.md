@@ -13,3 +13,13 @@
 - [`260326_ROADMAP_GPU_BSL_INDEXING.md`](260326_ROADMAP_GPU_BSL_INDEXING.md) — Phase 4-5
 
 ---
+
+## 0. Executive summary
+
+| Severity | Count | Total effort (est) | Блокирует |
+|---|---|---|---|
+| 🔴 P0 | 5 | ~12 ч | CI merge, security |
+| 🟠 P1 | 9 | ~7-10 дней | Production quality, observability |
+| 🟡 P2 | 11 | ~3-4 недели | Improvements, polish |
+| 🟢 P3 | 6 | ad-hoc | Long-term / on-demand |
+| **TOTAL** | **31** | **~6-9 weeks elapsed (1 dev)** | — |
