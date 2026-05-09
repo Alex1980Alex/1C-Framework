@@ -203,8 +203,9 @@ class HookMetricsDB:
 
                         cursor.execute(
                             """INSERT INTO invocations
-                               (timestamp, hook, event, tool, elapsed_ms, outcome, session, error)
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                               (timestamp, hook, event, tool, elapsed_ms, outcome,
+                                session, error, run_id, category, agent_id)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                             (
                                 ts,
                                 entry.get("hook"),
@@ -214,6 +215,9 @@ class HookMetricsDB:
                                 entry.get("outcome", "allow"),
                                 entry.get("session"),
                                 entry.get("error"),
+                                entry.get("run_id") or "",
+                                entry.get("category") or "hook",
+                                entry.get("agent_id") or "",
                             ),
                         )
                         count += 1
@@ -401,6 +405,65 @@ class HookMetricsDB:
                ORDER BY timestamp DESC
                LIMIT ?""",
             (limit,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def get_run_trace(self, run_id: str) -> list[dict[str, Any]]:
+        """Get all hook invocations belonging to a single slash-command run.
+
+        Cross-hook correlation entrypoint (roadmap 260509 §3.3): given a run_id
+        produced by `slash-command-tracker.py` (UUID stored in
+        `data/.current-runs.json`), return every hook invocation tagged with
+        that run_id, ordered by timestamp. Enables full-trace queries like:
+        "show me the chain of hooks fired for `/implement-1c-task` run X".
+
+        Args:
+            run_id: UUID assigned by slash-command-tracker.
+
+        Returns:
+            List of invocation dicts in chronological order. Empty list if
+            no invocations matched (run unknown or pre-Phase-8 logs).
+        """
+        if not run_id:
+            return []
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """SELECT * FROM invocations
+               WHERE run_id = ?
+               ORDER BY timestamp ASC""",
+            (run_id,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def get_run_summary(self, hours: int = 24, min_invocations: int = 2) -> list[dict[str, Any]]:
+        """Aggregate hook chains per run_id (last N hours).
+
+        Useful for spotting expensive or stuck slash-command runs.
+        Filters out single-hook "runs" (noise from un-correlated invocations).
+
+        Args:
+            hours: Look-back window.
+            min_invocations: Minimum hooks per run for inclusion.
+
+        Returns:
+            List of dicts: {run_id, hook_count, total_ms, first_ts, last_ts}.
+        """
+        cutoff = (datetime.now() - timedelta(hours=hours)).isoformat()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """SELECT
+                   run_id,
+                   COUNT(*) as hook_count,
+                   SUM(elapsed_ms) as total_ms,
+                   MIN(timestamp) as first_ts,
+                   MAX(timestamp) as last_ts
+               FROM invocations
+               WHERE timestamp >= ?
+                 AND run_id IS NOT NULL AND run_id != ''
+               GROUP BY run_id
+               HAVING hook_count >= ?
+               ORDER BY total_ms DESC""",
+            (cutoff, min_invocations),
         )
         return [dict(row) for row in cursor.fetchall()]
 
