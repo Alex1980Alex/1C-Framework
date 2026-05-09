@@ -26,3 +26,11 @@ class TestChapter01NoStaleProductionStack:
                     if pattern in line and not any(m in line for m in LEGACY_MARKERS):
                         offenders.append(f"{path.name}:{line_no} '{pattern}': {line.strip()[:100]}")
         assert not offenders, "Legacy mentions без маркера:\n" + "\n".join(offenders)
+
+    def test_qwen3_present_in_each_overview_file(self):
+        missing: list[str] = []
+        for path in _all_chapter_files():
+            text = path.read_text(encoding="utf-8")
+            if "Qwen3" not in text and "Qwen/Qwen3" not in text:
+                missing.append(path.name)
+        assert not missing, f"Qwen3 не упомянут в: {missing}"
