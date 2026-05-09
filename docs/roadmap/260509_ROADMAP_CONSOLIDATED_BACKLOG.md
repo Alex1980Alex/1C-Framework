@@ -110,3 +110,39 @@
 **Effort:** ~2 ч | **Severity:** Regression detection
 
 ---
+
+## 3. P1 — High (production quality / observability)
+
+### 3.1 P1 — OpenLLMetry + Langfuse (260423 B3) — observability foundation
+
+- [ ] **3.1.1** Audit `src/pdf_framework/observability/`
+- [ ] **3.1.2** Add `traceloop-sdk` в `[langfuse]` extra
+- [ ] **3.1.3** Wire env vars: `LANGFUSE__ENABLED/PUBLIC_KEY/SECRET_KEY/HOST`
+- [ ] **3.1.4** Auto-instrument LangChain (LLM calls)
+- [ ] **3.1.5** Manual spans: agent.invoke, tool.call, retrieval
+- [ ] **3.1.6** Документировать в `09.4_Мониторинг.md`
+- [ ] **3.1.7** Smoke: trace через /search видно в Langfuse
+
+**Effort:** 3-5 days | **Unblocks:** 3.3 Memory P5, 4.5 Delegation Iter 4-5
+
+### 3.2 P1 — Contextual Retrieval (260423 B1) — Anthropic, -67% failures
+
+- [ ] **3.2.1** Cache paper в `architecture-research/cache/`
+- [ ] **3.2.2** `ContextualEnricher` class в `src/pdf_framework/processing/`
+- [ ] **3.2.3** Integrate в `HybridLoader._load_sync` или separate processing step
+- [ ] **3.2.4** Append context to chunk text перед embedding
+- [ ] **3.2.5** Benchmark на golden_v1: NDCG@10 baseline vs +contextual
+- [ ] **3.2.6** Если +5% — make default
+- [ ] **3.2.7** Документация `03_ИНДЕКСАЦИЯ/03.7_Contextual_Retrieval.md`
+
+**Effort:** 2-3 days | **Зависимость:** 2.2
+
+### 3.3 P1 — Memory P5 observability (260403 + 260423 C3)
+
+- [ ] **3.3.1** Inventory `src/memory/orchestrator/`
+- [ ] **3.3.2** Cross-hook tracing через `correlation_id` (расширить slash-tracker pattern)
+- [ ] **3.3.3** Unified metrics schema `data/metrics/hooks.json`
+- [ ] **3.3.4** Wire в OpenLLMetry (3.1)
+- [ ] **3.3.5** CLI dashboard `scripts/hooks_dashboard.py`
+
+**Effort:** 2-3 days | **Зависимость:** 3.1
