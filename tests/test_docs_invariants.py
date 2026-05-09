@@ -55,8 +55,10 @@ def _all_doc_files() -> list[Path]:
 @pytest.mark.unit
 class TestAllChaptersNoStaleProductionStack:
     def test_broad_legacy_mentions_are_marked(self):
+        files = _all_doc_files()
+        assert len(files) > 5, f"Suspiciously few doc files: {len(files)}"
         offenders: list[str] = []
-        for path in _all_doc_files():
+        for path in files:
             text = path.read_text(encoding="utf-8")
             head = "\n".join(text.splitlines()[:30])
             file_exempt = any(b in head for b in FILE_LEVEL_BANNERS)
