@@ -144,6 +144,12 @@ SKIP_PATTERNS = [
     "code-skill-patterns.json",
     # CI/CD workflows (documented in CLAUDE.md Skill Router Eval)
     ".github/",
+    # Pre-commit / Codecov / Eval data — config + dataset, не product code
+    # (codecov.yml + .pre-commit-config.yaml documented in 09.4 Мониторинг,
+    # data/eval/golden_v1.json — versioned dataset с CHANGELOG.md рядом).
+    ".pre-commit-config.yaml",
+    "codecov.yml",
+    "data/eval/",
     # MCP configs, tooling, docker, infra (infrastructure, not product code)
     ".mcp/",
     ".mcp.json",
