@@ -74,6 +74,15 @@
       "date": "2026-04-30",
       "research": "../cache/embedding-deployment-fa2-tei-chunking.md",
       "tags": ["embedding-model", "qwen3", "late-chunking", "bsl-retrieval", "phase-8-12", "production-switchover", "tei", "ollama"]
+    },
+    {
+      "id": "ADR-009",
+      "file": "009-deepeval-thresholds.md",
+      "title": "DeepEval CI Gating Thresholds (faithfulness ≥ 0.7, hallucination ≤ 0.1)",
+      "status": "proposed",
+      "date": "2026-05-09",
+      "research": null,
+      "tags": ["eval", "deepeval", "ci-gate", "rag-quality", "faithfulness", "hallucination", "phase-3-9"]
     }
   ]
 }
