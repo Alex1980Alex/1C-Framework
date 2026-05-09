@@ -23,3 +23,22 @@
 | 🟡 P2 | 11 | ~3-4 недели | Improvements, polish |
 | 🟢 P3 | 6 | ad-hoc | Long-term / on-demand |
 | **TOTAL** | **31** | **~6-9 weeks elapsed (1 dev)** | — |
+
+**Three critical paths:**
+1. **CI/eval unblock:** C1 ADR-008 verdict + C2 golden eval dataset → разблокирует B1/B2/B7 quality benchmarks
+2. **Documentation sync:** TOC vs filesystem 43 declared-missing files (Chapter 21 LLM_ROTATION 8 subsections undocumented)
+3. **Observability stack:** B3 OpenLLMetry + Langfuse → unblocks Memory P5 (C3) + Delegation Iter 4-5 (C4)
+
+---
+
+## 1. Метод аудита
+
+3 параллельных Explore-агента 2026-05-09:
+
+| Scope | Найдено |
+|---|---|
+| Code TODO/FIXME | 23 TODO (Python: 2, BSL: 6, scripts: 15); 0 NotImplementedError; 5 ABC pass-stubs (legitimate); 24 skipped tests (env-guards) |
+| Existing roadmap backlog | ~25-30 deferred items, 5 cross-cutting тем |
+| Doc TOC vs filesystem | 43 declared-missing; 11 fs files outside TOC; 8 stub-suspect chapters; 1 explicit placeholder (35_EXTENSIONS) |
+
+---
