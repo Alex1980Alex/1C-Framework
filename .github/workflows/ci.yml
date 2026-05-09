@@ -178,12 +178,20 @@ jobs:
         # До тех пор — schema validation. Roadmap 260509 §3.9.
         run: pytest tests/eval/test_deepeval.py -v
 
-      - name: Upload coverage XML (unit)
-        # Roadmap §2.5.4 closed via GitHub-native artifacts (Codecov SaaS dropped
-        # to avoid external dep / regional access issues; coverage measurement
-        # стратегия описана в codecov.yml — оставлен как reference).
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unit
+          name: codecov-unit
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage XML artifact (unit)
+        # Belt-and-suspenders: artifact даже если Codecov upload fails (rate limit / network).
+        # Retention 30d для local download + offline review.
         uses: actions/upload-artifact@v4
-        if: always()  # save report даже при failed tests для diagnostics
+        if: always()
         with:
           name: coverage-unit-py${{ matrix.python-version }}
           path: coverage.xml
@@ -236,8 +244,16 @@ jobs:
           VECTOR_STORE__PROVIDER: qdrant
           VECTOR_STORE__QDRANT_URL: http://localhost:6333
 
-      - name: Upload coverage XML (integration)
-        # Roadmap §2.5.4 closed via GitHub-native artifacts (см. test-unit job).
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: integration
+          name: codecov-integration
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage XML artifact (integration)
         uses: actions/upload-artifact@v4
         if: always()
         with:
