@@ -1,7 +1,7 @@
 # Audit: pyproject.toml + CI/CD vs реальность
 
-**Дата:** 2026-04-30 (вечер)
-**Статус:** ✅ DONE (2026-05-01) — D.1/D.2/D.4/D.5/D.7/D.8 выполнены; D.3 documented; D.6 P2 backlog
+**Дата:** 2026-04-30 (вечер) → fully closed 2026-05-09
+**Статус:** ✅ FULLY DONE — initial 2026-05-01 (D.1/D.2/D.4/D.5/D.7/D.8). Final sweep 2026-05-09: D.5.2 Dependabot config (`.github/dependabot.yml`, weekly pip + monthly github-actions); D.6.2 nomic[local] помечен legacy fallback в pyproject.toml `[bsl]`; D.6.3 — `[memory]` extras наследуют httpx из base (комментарий добавлен). Acceptance criteria 4.1-4.3 verified: `httpx 0.28.1 / pyjwt 2.12.1`, imports `framework_search.embedder.FrameworkTEIEmbedder` + `api.auth.jwt_handler` работают чисто. 9/9 sub-task checkboxes ticked.
 **Scope:** `pyproject.toml`, `.github/workflows/`, `.pre-commit-config.yaml`, корневые repo-файлы (LICENSE, README, CONTRIBUTING, CHANGELOG)
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 (tools scope не покрыт)
