@@ -182,7 +182,7 @@ tests/
   - [x] `test_l4_called_when_enabled_with_key` — оба условия выполнены → ровно один вызов
   - [x] `test_l4_skipped_when_setting_disabled` — `enable_vision_ocr=False` + api_key="any-key" → skip
   - **Strategy:** monkeypatched `_load_sync`, `_extract_docling_tables`, `_level4_vision_ocr` на инстансе; helper `_make_fake_doc()` возвращает `ProcessedDocument` без чтения реального PDF. **Не требует mocking** pymupdf4llm/fitz/Anthropic — мы тестируем routing-logic в `load()`, не сами загрузчики.
-- [ ] **T.4.2** Smart router auto-selection — *N/A в текущей архитектуре*: HybridLoader не имеет «smart router» сверху, выбор уровней — конфигурационный (`enable_docling_tables`, `enable_vision_ocr` через `HybridLoaderSettings`). Routing уже покрыт T.4.1 cascade flow tests. Original audit премис о router'е был неточным.
+- [x] **T.4.2** Smart router auto-selection — ✅ N/A (закрыт как «не applicable»): HybridLoader не имеет «smart router» сверху, выбор уровней — конфигурационный (`enable_docling_tables`, `enable_vision_ocr` через `HybridLoaderSettings`). Routing уже покрыт T.4.1 cascade flow tests. Original audit премис о router'е был неточным.
 
 ### 2.5 🟠 auto-reindex on commit — нет integration test
 
