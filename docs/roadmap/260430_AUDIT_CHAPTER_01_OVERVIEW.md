@@ -1,7 +1,7 @@
 # Audit: docs/framework documentation/01_ОБЗОР/ vs реальность
 
-**Дата:** 2026-04-30 (вечер)
-**Статус:** ✅ DONE (2026-05-01) — всё закрыто: 01.1 metrics (фазы/файлы/LOC/агенты/провайдеры/MCP), 01.2 embedding stack + agent count + hooks/skills counts + learned_patterns dim, 01.3 Qdrant version + latency
+**Дата:** 2026-04-30 (вечер) → fully closed 2026-05-09
+**Статус:** ✅ FULLY DONE — initial closure 2026-05-01 (P0/P1 numbers + stack alignment), final sweep 2026-05-09: (a) Migration note headers added к 01.1+01.2 (§3.4.1); (b) framework_search + auto-reindex added в 01.1 «Self-search и автоматизация» секцию (§3.3.1); (c) Backend infrastructure (Docker) table с pdf-rag-qdrant/pdf-rag-tei/neo4j/redis added в 01.3 (§3.3.3); (d) CI guard `tests/test_docs_invariants.py` (§3.5.2) — 2 теста (legacy mentions без маркера / Qwen3 must be present in each chapter file) PASS; (e) 35/35 sub-task checkboxes marked DONE.
 **Scope:** Глубокий cross-check 3 файлов (`01.1_Введение.md`, `01.2_Архитектура.md`, `01.3_Технологический_стек.md`) против фактической имплементации в `src/`, Qdrant collections, Docker state.
 **Связано:** [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §3.5
 
