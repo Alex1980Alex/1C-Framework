@@ -72,9 +72,7 @@ class TestTOCConsistency:
     def test_no_declared_missing_and_no_orphans(self):
         if not TOC_FILE.is_file() or not DOCS_ROOT.is_dir():
             pytest.skip("Docs/TOC missing — repo layout changed")
-        if str(SCRIPTS_DIR) not in sys.path:
-            sys.path.insert(0, str(SCRIPTS_DIR))
-        import validate_toc
+        validate_toc = _load_validate_toc()
 
         declared = validate_toc.parse_toc_links(TOC_FILE, DOCS_ROOT)
         fs = validate_toc.collect_fs_md(DOCS_ROOT, ignore_filenames={TOC_FILE.name})
