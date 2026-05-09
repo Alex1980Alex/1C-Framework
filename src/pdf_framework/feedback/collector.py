@@ -148,11 +148,44 @@ class FeedbackCollector:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            row_id = cursor.lastrowid
         finally:
             conn.close()
 
-        logger.info(f"[FEEDBACK] Added {entry.feedback} feedback")
+        # Roadmap 260509 §3.5: dual-write JSONL backup (fail-soft).
+        # Append happens AFTER SQLite commit so backup never references a
+        # row that wasn't durably written. Failures here log a warning but
+        # never propagate — SQLite is still the primary store.
+        self._write_jsonl_backup(entry, row_id)
+        logger.info(f"[FEEDBACK] Added {entry.feedback} feedback (id={row_id})")
+        return row_id
+
+    def _write_jsonl_backup(self, entry: FeedbackEntry, row_id: int | None) -> None:
+        """Append a feedback entry to the daily JSONL backup file.
+
+        Format (one JSON object per line):
+            {"id": 42, "written_at": "2026-05-09T10:30:00+00:00", "entry": {...}}
+
+        Path: {backup_dir}/backup_YYYY-MM-DD.jsonl  (UTC date, daily rotation)
+
+        Fail-soft: any IO/encoding error is logged and swallowed — SQLite
+        path is the primary, backup is best-effort durability.
+        """
+        if not self._backup_enabled:
+            return
+        try:
+            now = datetime.now(UTC)
+            target = self._backup_dir / f"backup_{now.strftime('%Y-%m-%d')}.jsonl"
+            record = {
+                "id": row_id,
+                "written_at": now.isoformat(),
+                "entry": entry.model_dump(),
+            }
+            line = json.dumps(record, ensure_ascii=False)
+            with target.open("a", encoding="utf-8") as f:
+                f.write(line + "\n")
+        except Exception as e:
+            logger.warning(f"[FEEDBACK] JSONL backup write failed (non-fatal): {e}")
 
     def get_feedback(
         self,
