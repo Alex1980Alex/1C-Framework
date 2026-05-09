@@ -88,12 +88,16 @@ all = [
 # Phase 59: Async Processing Queue (ARQ + Redis) — optional extra; install with pip install -e ".[queue]" for async indexing
 queue = ["arq>=0.26"]
 # === BSL Development (Phase 44: Migration from 1C-Enterprise_Framework) ===
+# Phase 8 retrieval (Qwen3 4096d via TEI) использует httpx (base dep) + qdrant-client.
+# Late Chunking pooling — sentence-transformers (base). Дополнительный flash-attn опционален
+# через transformers extras; для production retrieval не требуется.
 bsl = [
     "qdrant-client>=1.12",
     "neo4j>=5.25",
     "fastmcp>=0.1",
-    "nomic[local]>=3.0",
+    "nomic[local]>=3.0",   # legacy fallback (до Phase 9.1 был активным embedder); сохранён для backward-compat скриптов
 ]
+# Phase 9.1: memory hooks aligned to Qwen3 4096d via TEI. TEI client = httpx (base dep).
 memory = [
     "qdrant-client>=1.12",
     "google-generativeai>=0.8",
