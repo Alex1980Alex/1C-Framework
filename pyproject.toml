@@ -76,6 +76,9 @@ docling = [
 voyage = ["voyageai>=0.3"]
 # Russian morphology (BM25 lemmatization)
 morphology = ["pymorphy3>=2.0"]
+# Phase 3.9: DeepEval CI gating (faithfulness, hallucination metrics)
+# Heavy deps (pulls torch, sentence-transformers); install via pip install -e ".[eval]"
+eval = ["deepeval>=0.20"]
 # NER (heavy dependency)
 nlp = ["spacy>=3.8"]
 # Deep Agents
