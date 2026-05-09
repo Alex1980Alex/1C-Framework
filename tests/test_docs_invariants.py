@@ -8,7 +8,7 @@ DOCS_ROOT = Path(__file__).resolve().parent.parent / "docs" / "framework documen
 CHAPTER_DIR = DOCS_ROOT / "01_ОБЗОР"
 LEGACY_PATTERNS = ["multilingual-e5-large", "Qdrant 1.15", "qdrant/qdrant:v1.15"]
 BROAD_LEGACY_PATTERNS = LEGACY_PATTERNS + ["nomic-embed-text", "all-MiniLM-L6-v2", "bsl_code_v2", "bsl_code_v3"]
-LEGACY_MARKERS = ["legacy", "до Phase 8", "до Phase 9", "fallback", "не выбрано", "Legacy", "Deprecated", "deprecated", "Dropped", "dropped", "удалена", "superseded", "boundary detector", "(НЕ retrieval)", "Phase 8 note", "Phase 8 default", "Migration note", "Phase 9.1", "Planned", "Future"]
+LEGACY_MARKERS = ["legacy", "до Phase 8", "до Phase 9", "не выбрано", "Legacy", "Deprecated", "deprecated", "Dropped", "dropped", "удалена", "superseded", "boundary detector", "(НЕ retrieval)", "Phase 8 note", "Phase 8 default", "Migration note", "Phase 9.1"]
 FILE_LEVEL_BANNERS = ["Migration note", "Legacy pipeline note", "Phase 8 note", "Phase 8 default", "Phase 8 + 9.1", "Phase 8 production reference", "DROPPED"]
 ALLOWLIST_DIRS = {"31_QWEN3_RETRIEVAL_PRODUCTION"}
 
