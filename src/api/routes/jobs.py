@@ -89,7 +89,11 @@ async def get_job_status(job_id: str) -> JobInfo | None:
 
 
 @router.post("/enqueue", response_model=dict[str, str])
-async def enqueue_job(request: JobCreateRequest) -> dict[str, str]:
+async def enqueue_job(
+    request: JobCreateRequest,
+    _current_tenant: str = Depends(get_current_tenant),
+    _role: str = Depends(get_current_role),
+) -> dict[str, str]:
     """Enqueue a new background job.
 
     Args:
@@ -97,7 +101,11 @@ async def enqueue_job(request: JobCreateRequest) -> dict[str, str]:
 
     Returns:
         dict with job_id
+
+    IDOR guard (roadmap 260509 §2.3): non-admin callers can only enqueue jobs
+    for their own tenant. Admins may target any tenant via `request.tenant_id`.
     """
+    assert_tenant_access(request.tenant_id, _current_tenant, _role)
     if not settings.queue.enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

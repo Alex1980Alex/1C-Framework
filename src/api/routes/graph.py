@@ -6,8 +6,13 @@ and community detection (Leiden + LLM summarization).
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from src.api.auth.dependencies import (
+    assert_tenant_access,
+    get_current_role,
+    get_current_tenant,
+)
 from src.api.dependencies.components import get_components
 
 logger = logging.getLogger(__name__)
