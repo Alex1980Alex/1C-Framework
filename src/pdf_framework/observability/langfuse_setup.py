@@ -74,7 +74,7 @@ def build_langfuse_callback(
         session_id=session_id,
     )
 
-    if not handler.is_enabled:  # type: ignore[attr-defined]
+    if not getattr(handler, "_enabled", False):
         # Handler self-disabled (missing creds / langfuse not installed)
         logger.info("[LANGFUSE] handler self-disabled — see preceding warning")
         return None
