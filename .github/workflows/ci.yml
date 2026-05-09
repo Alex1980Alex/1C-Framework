@@ -172,6 +172,12 @@ jobs:
         # До тех пор — schema validation. Roadmap 260509 §2.1.
         run: pytest tests/eval/test_smoke_gate.py -v
 
+      - name: DeepEval gate (schema validation)
+        # Faithfulness/hallucination gate активируется при установленном [eval]
+        # extra И golden_v1 с ≥ 50 items и ground-truth chunk_ids.
+        # До тех пор — schema validation. Roadmap 260509 §3.9.
+        run: pytest tests/eval/test_deepeval.py -v
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
