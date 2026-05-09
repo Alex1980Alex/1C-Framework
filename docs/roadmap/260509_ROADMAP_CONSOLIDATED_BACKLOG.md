@@ -185,3 +185,59 @@
 - [ ] **3.7.5** Tests pass
 
 **Effort:** 2-3 days
+
+### 3.8 P1 — LangGraph Send API (260423 B4)
+
+- [ ] **3.8.1** Audit `src/pdf_framework/agents/adaptive/` — multi-step decompose
+- [ ] **3.8.2** Refactor sequential → `Send(queries)` parallel
+- [ ] **3.8.3** Benchmark latency 5-query decompose до/после
+- [ ] **3.8.4** Tests: existing semantics preserved
+
+**Effort:** ~2 days
+
+### 3.9 P1 — DeepEval CI gating (260423 B7)
+
+- [ ] **3.9.1** `deepeval` в `[eval]` extra
+- [ ] **3.9.2** `tests/eval/test_deepeval.py`: faithfulness > 0.7, hallucination < 0.1
+- [ ] **3.9.3** Wire в smoke-gate (см. 2.1)
+- [ ] **3.9.4** ADR-009 threshold rationale
+
+**Effort:** ~2 days | **Зависимость:** 2.1
+
+---
+
+## 4. P2 — Medium (improvements / quality of life)
+
+### 4.1 P2 — Matryoshka embeddings A/B (260423 B5)
+
+- [ ] **4.1.1** Recreate `pdf_documents_mrl_1024` collection × 1024d (truncate)
+- [ ] **4.1.2** Benchmark NDCG@10: 4096d vs MRL 1024d/512d
+- [ ] **4.1.3** Если -delta < 5% → migrate `framework_code_v1` на MRL 1024d (4× faster)
+- [ ] **4.1.4** Document `04_ПОИСК/04.X_Matryoshka.md`
+
+**Effort:** 3-5 days
+
+### 4.2 P2 — RAPTOR + LLM rerank (260423 A7)
+
+- [ ] **4.2.1** `raptor_search.py` — `enable_llm_rerank: bool` parameter
+- [ ] **4.2.2** Reranker: pass top-20 to LLM, sort by relevance score
+- [ ] **4.2.3** Cache rerank decisions
+- [ ] **4.2.4** Benchmark на golden_v1
+
+**Effort:** 2-3 days
+
+### 4.3 P2 — Stub embedding edge-case fix (260423 A5)
+
+- [ ] **4.3.1** `grep -rE "stub|placeholder|np\.zeros\(" src/pdf_framework/embeddings/`
+- [ ] **4.3.2** Fix или log warning
+- [ ] **4.3.3** Test: edge case → real embed
+
+**Effort:** ~2 ч
+
+### 4.4 P2 — Sync-in-async cleanup (260423 A4)
+
+- [ ] **4.4.1** `grep -rE "asyncio.to_thread\|run_in_executor" src/`
+- [ ] **4.4.2** Replace c native async equivalent где возможно
+- [ ] **4.4.3** Document pattern в `09.X_Async_Patterns.md`
+
+**Effort:** 1-2 days
