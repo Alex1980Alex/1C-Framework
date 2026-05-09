@@ -146,3 +146,42 @@
 - [ ] **3.3.5** CLI dashboard `scripts/hooks_dashboard.py`
 
 **Effort:** 2-3 days | **Зависимость:** 3.1
+
+### 3.4 P1 — GEPA replaces MIPROv2 (260423 B2)
+
+- [ ] **3.4.1** Audit DSPy usage в `src/pdf_framework/agents/`
+- [ ] **3.4.2** Migrate `dspy.MIPROv2` → `dspy.GEPA`
+- [ ] **3.4.3** Re-compile teleprompted modules → save в `data/dspy/compiled/`
+- [ ] **3.4.4** Benchmark на golden_v1
+- [ ] **3.4.5** Если +5% — default
+
+**Effort:** 2-3 days | **Зависимость:** 2.2 + DSPy ≥ 2.5
+
+### 3.5 P1 — Dual-write feedback (260423 A2)
+
+- [ ] **3.5.1** `feedback/collector.py` — `_write_jsonl_backup`
+- [ ] **3.5.2** Path: `data/feedback/backup_YYYY-MM-DD.jsonl`
+- [ ] **3.5.3** Recovery `scripts/replay_feedback_backup.py`
+- [ ] **3.5.4** Tests: corrupt SQLite → backup читается → replay восстанавливает
+- [ ] **3.5.5** Документировать в `08.4_Feedback_Loop.md`
+
+**Effort:** 3-5 ч
+
+### 3.6 P1 — Test coverage to 70% (260423 A6)
+
+- [ ] **3.6.1** Run `pytest --cov=src/pdf_framework` → baseline
+- [ ] **3.6.2** Identify modules < 70%: `agents/research_v2/`, `agents/deep/`, `optimization/`, `evaluation/runner.py` likely candidates
+- [ ] **3.6.3** Add ~5-10 unit tests per under-covered module
+- [ ] **3.6.4** CI gate (см. 2.5.3)
+
+**Effort:** 3-5 days
+
+### 3.7 P1 — Retry unification (260423 A3)
+
+- [ ] **3.7.1** `grep -rn "for attempt in\|httpx_retries\|@retry\|tenacity" src/`
+- [ ] **3.7.2** ~5-10 places to unify
+- [ ] **3.7.3** `src/pdf_framework/utils/retry.py` — wrapper around tenacity (max_attempts=3, exp backoff, jitter)
+- [ ] **3.7.4** Replace manual retry loops
+- [ ] **3.7.5** Tests pass
+
+**Effort:** 2-3 days
