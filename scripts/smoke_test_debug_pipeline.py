@@ -131,8 +131,9 @@ async def full_cycle(args) -> dict:
               f"Запустите сценарий в 1С (макс {args.wait_bp}с)...", file=sys.stderr)
 
         # Wait for BP fire — ping_loop dispatches events to client._stopped_targets
-        deadline = asyncio.get_event_loop().time() + args.wait_bp
-        while asyncio.get_event_loop().time() < deadline:
+        loop = asyncio.get_running_loop()  # py3.12+ forward-compat
+        deadline = loop.time() + args.wait_bp
+        while loop.time() < deadline:
             if client.last_stopped_target_id:
                 break
             await asyncio.sleep(0.5)
