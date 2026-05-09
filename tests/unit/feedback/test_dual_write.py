@@ -127,13 +127,20 @@ class TestReplayFromBackup:
     """Verify scripts/replay_feedback_backup.py recovers data."""
 
     def _import_replay(self):
-        # Lazy import — replay script is in scripts/, not on sys.path by default
-        scripts_dir = Path(__file__).resolve().parents[3] / "scripts"
-        if str(scripts_dir) not in sys.path:
-            sys.path.insert(0, str(scripts_dir))
-        import replay_feedback_backup
+        # Isolated import via importlib (consistent with tests/test_docs_invariants.py)
+        # — avoids sys.path pollution for the rest of the pytest session.
+        import importlib.util
 
-        return replay_feedback_backup
+        repo_root = Path(__file__).resolve().parents[3]
+        spec = importlib.util.spec_from_file_location(
+            "replay_feedback_backup",
+            repo_root / "scripts" / "replay_feedback_backup.py",
+        )
+        if spec is None or spec.loader is None:
+            pytest.skip("scripts/replay_feedback_backup.py not loadable")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
     def test_replay_recovers_all_entries_into_fresh_sqlite(self, tmp_path):
         # 1. Write 3 entries → both SQLite + JSONL populated
