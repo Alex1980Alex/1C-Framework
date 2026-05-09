@@ -1,11 +1,15 @@
-"""Docs invariants — chapter 01_ОБЗОР vs Phase 8 production stack (§3.5.2)."""
+"""Docs invariants — chapter 01_ОБЗОР vs Phase 8 production stack (§3.5.2) + TOC consistency."""
 
+import sys
 from pathlib import Path
 
 import pytest
 
-DOCS_ROOT = Path(__file__).resolve().parent.parent / "docs" / "framework documentation"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DOCS_ROOT = REPO_ROOT / "docs" / "framework documentation"
 CHAPTER_DIR = DOCS_ROOT / "01_ОБЗОР"
+TOC_FILE = DOCS_ROOT / "00_СОДЕРЖАНИЕ.md"
+SCRIPTS_DIR = REPO_ROOT / "scripts"
 LEGACY_PATTERNS = ["multilingual-e5-large", "Qdrant 1.15", "qdrant/qdrant:v1.15"]
 BROAD_LEGACY_PATTERNS = LEGACY_PATTERNS + ["nomic-embed-text", "all-MiniLM-L6-v2", "bsl_code_v2", "bsl_code_v3"]
 LEGACY_MARKERS = ["legacy", "до Phase 8", "до Phase 9", "не выбрано", "Legacy", "Deprecated", "deprecated", "Dropped", "dropped", "удалена", "superseded", "boundary detector", "(НЕ retrieval)", "Phase 8 note", "Phase 8 default", "Migration note", "Phase 9.1"]
@@ -50,6 +54,31 @@ def _all_doc_files() -> list[Path]:
             continue
         out.append(path)
     return sorted(out)
+
+
+@pytest.mark.unit
+class TestTOCConsistency:
+    """TOC `00_СОДЕРЖАНИЕ.md` ↔ filesystem must match exactly (см. roadmap 260509 §2.4)."""
+
+    def test_no_declared_missing_and_no_orphans(self):
+        if not TOC_FILE.is_file() or not DOCS_ROOT.is_dir():
+            pytest.skip("Docs/TOC missing — repo layout changed")
+        if str(SCRIPTS_DIR) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS_DIR))
+        import validate_toc
+
+        declared = validate_toc.parse_toc_links(TOC_FILE, DOCS_ROOT)
+        fs = validate_toc.collect_fs_md(DOCS_ROOT, ignore_filenames={TOC_FILE.name})
+
+        declared_missing = sorted(declared - fs)
+        orphan_fs = sorted(fs - declared)
+
+        msg_parts: list[str] = []
+        if declared_missing:
+            msg_parts.append("TOC declares but disk lacks:\n  - " + "\n  - ".join(str(p) for p in declared_missing))
+        if orphan_fs:
+            msg_parts.append("Disk has but TOC omits:\n  + " + "\n  + ".join(str(p) for p in orphan_fs))
+        assert not msg_parts, "TOC ↔ filesystem desync (run `python scripts/validate_toc.py` for details):\n\n" + "\n\n".join(msg_parts)
 
 
 @pytest.mark.unit
