@@ -52,6 +52,9 @@ dependencies = [
     "rich>=13.0",
     "typer>=0.15",
     "prometheus-client>=0.21",
+    # tenacity is also a transitive dep through langchain, declared here explicitly
+    # because src/pdf_framework/utils/retry.py imports it directly (roadmap 260509 §3.7)
+    "tenacity>=8.0",
 ]
 
 [project.optional-dependencies]
