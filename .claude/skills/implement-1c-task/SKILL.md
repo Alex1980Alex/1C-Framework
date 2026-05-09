@@ -90,6 +90,21 @@ Skill для реализации задачи по конфигурации 1С
 - Статического анализа (bsl_analyze) — но **с известными false-positive'ами на стандартных 1С-конструкциях** (директивы препроцессора `#Если ... Тогда`, chained `Запрос.Выполнить().Пустой()`). См. Этап 4 → graceful skip.
 - НЕ подходит для запросов к базе — для этого используй 1c-mcp-crud
 
+### 1c-debug — live отладка через RDBG (Scenario B, post-BP-fire handshake)
+
+| Инструмент | Когда использовать |
+|---|---|
+| `debug_connect` | Этап 4 (step 5): attach как Debug UI к dbgs.exe :1550 (**сначала** Shift+F5 в Конфигураторе/EDT — иначе `ibInDebug`) |
+| `debug_set_breakpoint` | Этап 4 (step 5): BP в новой/изменённой процедуре через UUID метаданных |
+| `debug_ping` | Этап 4 (step 5): диспатч событий (targetStarted/callStackFormed/rteProcessing); также крутится в фоне `_ping_loop` |
+| `debug_stack_trace` | Этап 4 (step 5): кадры stack'а в момент остановки (cache hit из push event, без явного `target_id`) |
+| `debug_variables` | Этап 4 (step 5): локальные переменные в текущем кадре (auto-resolve через `last_stopped_target_id`) |
+| `debug_evaluate` | Этап 4 (step 5): любое BSL-выражение в контексте остановки (composite types до 4096 char) |
+| `debug_step` | Этап 4 (step 5): Continue / Step / StepIn / StepOut |
+| `debug_disconnect` | Этап 4 (step 5): clean teardown |
+
+**Когда применять:** только если задача требует runtime-валидации на живых данных (сложный алгоритм проведения, расчёт остатков). Для большинства задач достаточно Этапа 5 (find_references) + Этап 6 (1c-mcp-crud execute_code). Смотрите [16.7 Autonomous Debug Workflow](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) §16.7.10 для setup и smoke-теста инфраструктуры.
+
 ### Вспомогательные
 
 | Инструмент | Когда использовать |
