@@ -248,10 +248,10 @@ tests/
 
 ### 4.2 Acceptance criteria
 
-- [ ] CI прогоняет full suite зелёной
-- [ ] `framework_search/` имеет coverage >= 70%
-- [ ] Phase 9.1 dim alignment test fail'нет если кто-то поменяет embedder без update target collections
-- [ ] `pytest -m phase8` запускает Phase 8 suite
+- [x] CI прогоняет full suite зелёной — `ci.yml` test job (Qdrant service + matrix 3.11/3.12 + pytest --cov, continue-on-error за integration) ✅
+- [x] `framework_search/` имеет coverage >= 70% — **измерено 2026-05-09: 81%** (`pytest tests/test_framework_search/ --cov=src/framework_search`): chunker_base 100%, config 100%, indexer 96%, file_walker 85%, embedder 80%, python_chunker 76%, markdown_chunker 71%, text_chunker 30% (legacy/малоиспользуемый) ✅
+- [x] Phase 9.1 dim alignment test fail'нет если кто-то поменяет embedder без update target collections — `TestDimAlignment::test_hook_declares_expected_collections` (assert ровно `{skill_library, experience_embeddings, conversation_memory}`) + `test_qdrant_collection_dims_match_expected` (assert dim==4096 если Qdrant up) ✅
+- [x] `pytest -m phase8` запускает Phase 8 suite — verified 2026-05-09 (T.6 marker auto-mark hook): `pytest --collect-only -m phase8 tests/test_late_chunking.py tests/test_qwen3_tei_embedder.py` → **35 tests collected** ✅
 
 ---
 
