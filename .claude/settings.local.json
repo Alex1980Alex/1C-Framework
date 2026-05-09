@@ -909,7 +909,9 @@
       "Bash(awk '/^```/ {in_code=!in_code; next} in_code && /^- \\\\[ \\\\]/ {print \"INSIDE CODE BLOCK:\", NR}' docs/roadmap/260430_AUDIT_CHAPTER_01_OVERVIEW.md)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(awk -F: '$2 > 0 {sum += $2} END {print \" Total: \" sum}')",
-      "Bash(awk -F: '$2 > 0 {sum += $2} END {print \"   Total lines: \" sum}')"
+      "Bash(awk -F: '$2 > 0 {sum += $2} END {print \"   Total lines: \" sum}')",
+      "PowerShell(python -m pytest \"tests/test_docs_invariants.py::TestTOCConsistency\" -v 2>&1 | Select-Object -First 30)",
+      "PowerShell(python scripts/validate_toc.py --json 2>&1 | Select-Object -First 5)"
     ]
   },
   "enableAllProjectMcpServers": true,
