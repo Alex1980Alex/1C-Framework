@@ -372,7 +372,27 @@ Skill для реализации задачи по конфигурации 1С
    bsl-debug-server: bsl_debug_stop(session)
    ```
 
-5. Исправить найденные **реальные** проблемы (повторить Этап 3 для исправлений).
+5. **Live runtime debug через `1c-debug` MCP** — для проверки на живой ИБ (требует Scenario B setup, см. [16.7 Autonomous Debug Workflow](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)):
+   ```
+   1c-debug: debug_connect(infobase_alias="<база>")
+     → status=connected, session_id, attach=registered
+   1c-debug: debug_set_breakpoint(object_id="<UUID>", line=42, module_type="ObjectModule")
+     → BP установлен; запустите сценарий в 1С (создание документа, проведение)
+   1c-debug: debug_ping()
+     → диспатч событий (targetStarted, callStackFormed, rteProcessing)
+   ```
+   После срабатывания BP (post-BP-fire handshake, roadmap §13 / 2026-05-09):
+   ```
+   1c-debug: debug_stack_trace()       # без target_id — auto-resolve last_stopped
+   1c-debug: debug_variables()         # значения переменных в кадре stop'а
+   1c-debug: debug_evaluate(expression="Контрагент.ИНН")  # любое BSL-выражение
+   1c-debug: debug_step(action="StepIn")  # пошаговый прогон
+   1c-debug: debug_step(action="Continue")  # дать сценарию завершиться
+   1c-debug: debug_disconnect()
+   ```
+   Smoke-проверка инфраструктуры до начала: `python scripts/smoke_test_debug_pipeline.py --probe-only --json` — exit_code=0 значит handshake OK.
+
+6. Исправить найденные **реальные** проблемы (повторить Этап 3 для исправлений).
 
 **Контрольная точка:**
 - EDT `get_project_errors(severity="ERRORS") = 0` (авторитетный источник для 1С) — ОБЯЗАТЕЛЬНО
