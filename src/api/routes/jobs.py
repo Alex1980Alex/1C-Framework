@@ -104,8 +104,17 @@ async def enqueue_job(
 
     IDOR guard (roadmap 260509 §2.3): non-admin callers can only enqueue jobs
     for their own tenant. Admins may target any tenant via `request.tenant_id`.
+
+    Defence-in-depth: `task_kwargs` may also smuggle a `tenant_id` straight to
+    the worker via `**kwargs` expansion below — that path must be guarded too,
+    otherwise a non-admin who owns tenant=self can pass
+    `task_kwargs={"tenant_id": "victim"}` and reach victim's data. See
+    test_jobs_enqueue_blocks_tenant_in_task_kwargs.
     """
     assert_tenant_access(request.tenant_id, _current_tenant, _role)
+    nested_tenant = request.task_kwargs.get("tenant_id")
+    if nested_tenant is not None:
+        assert_tenant_access(nested_tenant, _current_tenant, _role)
     if not settings.queue.enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
