@@ -911,7 +911,10 @@
       "Bash(awk -F: '$2 > 0 {sum += $2} END {print \" Total: \" sum}')",
       "Bash(awk -F: '$2 > 0 {sum += $2} END {print \"   Total lines: \" sum}')",
       "PowerShell(python -m pytest \"tests/test_docs_invariants.py::TestTOCConsistency\" -v 2>&1 | Select-Object -First 30)",
-      "PowerShell(python scripts/validate_toc.py --json 2>&1 | Select-Object -First 5)"
+      "PowerShell(python scripts/validate_toc.py --json 2>&1 | Select-Object -First 5)",
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"TestDB\" 2>&1 | Select-Object -Last 20)",
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"TestDB\" 2>&1 | Select-Object -Last 8)",
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" 2>&1 | Select-Object -Last 6)"
     ]
   },
   "enableAllProjectMcpServers": true,
