@@ -263,9 +263,11 @@ class RAPTORSearchStrategy:
 def create_raptor_search_strategy(
     vector_store,
     config: RAPTORSearchConfig | None = None,
+    llm_reranker: "LLMReranker | None" = None,
 ) -> RAPTORSearchStrategy:
     """Factory function to create RAPTOR search strategy."""
     return RAPTORSearchStrategy(
         vector_store=vector_store,
         config=config,
+        llm_reranker=llm_reranker,
     )
