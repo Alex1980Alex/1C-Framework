@@ -137,8 +137,8 @@ tests/
   - [x] **T.2.1.a** `test_hook_declares_expected_collections` — проверяет `SEMANTIC_COLLECTIONS` содержит ровно {skill_library, experience_embeddings, conversation_memory}
   - [x] **T.2.1.b** `test_hook_comment_documents_4096d` — проверяет "4096" в тексте hook-скрипта
   - [x] **T.2.1.c** `@pytest.mark.integration test_qdrant_collection_dims_match_expected` — httpx GET `/collections/{name}`, skip если Qdrant недоступен; assert dim==4096; 22/22 passed ✅
-- [ ] **T.2.2** Запускать в CI как mandatory check (post-Phase 9.1)
-- [ ] **T.2.3** Документировать паттерн в lessons learned (chapter 31.5 §2 — уже есть, ссылаться)
+- [x] **T.2.2** Запускать в CI как mandatory check ✅ — `TestDimAlignment::test_hook_declares_expected_collections` + `test_hook_comment_documents_4096d` без integration-маркера → запускаются в default `pytest tests/` в `ci.yml` test job. `test_qdrant_collection_dims_match_expected` под `@pytest.mark.integration` — skip'ается без живого Qdrant, но `continue-on-error: true` (см. `260430_AUDIT_DEPS_AND_CI.md` D.7.3) не блокирует CI.
+- [x] **T.2.3** Документировать паттерн в lessons learned ✅ — chapter `31_QWEN3_RETRIEVAL_PRODUCTION/31.5_Миграция_и_итоги.md` §«Lessons learned» #2 (silent dim mismatch) уже описывает root cause + Phase 9.1 fix; sibling roadmap [260430_ROADMAP_DOC_AND_CODE_AUDIT.md](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §4.3 cross-link'ует.
 
 ### 2.3 🟠 search/strategies/ — слабое покрытие
 
