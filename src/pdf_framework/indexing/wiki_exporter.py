@@ -486,24 +486,36 @@ class IncrementalWikiSync:
                 await self._sync_with_retry(eid)
 
     async def _sync_with_retry(self, entity_id: str) -> None:
-        """Sync entity with retry logic."""
-        for attempt in range(self._max_retries):
-            try:
-                await self._forward_sync.sync_entity(entity_id)
-                return
-            except Exception as exc:
-                logger.warning(
-                    "[INC-SYNC] Retry %d/%d for %s: %s",
-                    attempt + 1, self._max_retries, entity_id, exc,
-                )
-                if attempt < self._max_retries - 1:
-                    delay = self._BACKOFF_DELAYS[min(attempt, len(self._BACKOFF_DELAYS) - 1)]
-                    await asyncio.sleep(delay)
+        """Sync entity with retry logic.
 
-        logger.error("[INC-SYNC] Failed after %d retries: %s", self._max_retries, entity_id)
-        if _metrics:
-            _metrics.counter("wiki_sync_failures_total")
-        await self._write_failed_event(entity_id, "retry_exhausted")
+        Migrated to tenacity (roadmap 260509 §3.7): retains the original
+        ``_BACKOFF_DELAYS`` schedule via ``wait_chain``, the broad-Exception
+        retry policy (sync_entity may raise a wide range of transport / store
+        errors that are typically transient), and the post-exhaustion
+        observability hooks.
+        """
+        try:
+            async for attempt in AsyncRetrying(
+                stop=stop_after_attempt(self._max_retries),
+                wait=wait_chain(*[wait_fixed(d) for d in self._BACKOFF_DELAYS]),
+                retry=retry_if_exception_type(Exception),
+                reraise=True,
+                before_sleep=lambda state: logger.warning(
+                    "[INC-SYNC] Retry %d/%d for %s: %s",
+                    state.attempt_number,
+                    self._max_retries,
+                    entity_id,
+                    state.outcome.exception() if state.outcome else "<unknown>",
+                ),
+            ):
+                with attempt:
+                    await self._forward_sync.sync_entity(entity_id)
+            return
+        except Exception:
+            logger.error("[INC-SYNC] Failed after %d retries: %s", self._max_retries, entity_id)
+            if _metrics:
+                _metrics.counter("wiki_sync_failures_total")
+            await self._write_failed_event(entity_id, "retry_exhausted")
 
     async def _delete_wiki_page(self, entity_id: str) -> None:
         """Delete wiki page for removed entity."""
