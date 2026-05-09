@@ -297,3 +297,64 @@ Phase 4: Colab indexing automation wrapper. Phase 5: Qdrant Cloud Free Tier (clo
 **Effort:** 3-4 ч
 
 ---
+
+## 5. P3 — Low (placeholders / on-demand)
+
+### 5.1 P3 — Serena Phases 8-10 (260423 C5, on-demand)
+
+Phase 8 audit (260414) — Phases 0-7 DONE с откатом hybrid refactor. Phases 8-10 on-demand. **Status:** парковочный backlog.
+
+### 5.2 P3 — 35_EXTENSIONS активация
+
+«Зарезервировано. Активного кода нет». Активировать когда появится первая extension-task. **Status:** Wait Phase 9.4+.
+
+### 5.3 P3 — MCP Phase 11 OAuth2 (260331, 4/5 BLOCKED)
+
+OAuth2 для production MCP — 4 шага требуют staging environment + testing. **Status:** Wait actual production rollout.
+
+### 5.4 P3 — MCP Phase 12.3 Streamlit dashboard (260331)
+
+CLI dashboard уже достаточен (09.9). Streamlit — low priority. **Status:** Optional UX polish.
+
+### 5.5 P3 — TODO comments cleanup в BSL (6 markers)
+
+- `гкс_ОчередьСообщенийRMQ:319` — отложенное формирование движений
+- `гкс_ПечатьПриемныйАкт_ЗПП14:177` — temp workaround
+- `ЮТЗапросыСлужебныйСервер:386` — unclear scope
+- `ЮТОкружение:29` — кеширование вне тестов
+- `ЮТФабрика:39` — web-клиент?
+- `ЮТЧитательСлужебныйКлиент:191` — фильтрация по путям
+
+**Status:** Ad-hoc closure при появлении 1С-задач.
+
+### 5.6 P3 — `scripts/doc_to_cache.py` placeholders (14 markers)
+
+14 TODO — это template fill-points для doc generation, НЕ implementation TODO. **Status:** False positive, оставить.
+
+---
+
+## 6. Order of execution
+
+### 6.1 Critical path (Week 1-2)
+
+1. **Week 1:** 2.4 (TOC sync) + 2.5 (CI pytest) — параллельно
+2. **Week 1-2:** 2.2 (golden eval dataset) — UNBLOCKER
+3. **Week 2:** 2.1 (ADR-008 smoke-gate) + 2.3 (JWT IDOR) — параллельно
+4. **Milestone Week 2:** ✅ CI fully green; merge unblocked
+
+### 6.2 Quality wave (Week 3-7)
+
+5. **Week 3-4:** 3.1 (OpenLLMetry) + 3.5 (Dual-write) + 3.7 (Retry unification)
+6. **Week 5-6:** 3.2 (Contextual Retrieval) + 3.4 (GEPA) — bench against golden_v1
+7. **Week 6-7:** 3.6 (Test coverage 70%) + 3.9 (DeepEval gating)
+
+### 6.3 Improvements wave (Week 8+)
+
+8. **Week 8-9:** 3.3 (Memory P5) + 3.8 (LangGraph Send) + 4.1 (Matryoshka A/B)
+9. **Week 10+:** 4.2-4.11 — pick by demand
+
+### 6.4 Backlog (no schedule)
+
+P3 items — on-demand activation.
+
+---
