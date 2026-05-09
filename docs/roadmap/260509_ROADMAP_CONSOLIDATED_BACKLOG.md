@@ -57,3 +57,30 @@
 - [ ] **2.1.6** ADR-008 lifecycle: proposed → accepted
 
 **Effort:** ~6 ч | **Зависимость:** 2.2 (golden dataset)
+
+### 2.2 P0 — Golden eval dataset (260423 C2) — UNBLOCKER для B1/B2/B7
+
+**Что:** Curated 100-query evaluation set с ground-truth (relevant chunks + ideal answer).
+
+- [ ] **2.2.1** Inventory existing eval datasets (`data/eval/`, `tests/eval/fixtures/`)
+- [ ] **2.2.2** Decide source: synthetic via DSPy `dspy.Synthesize` или manual curation
+- [ ] **2.2.3** Synthetic generation на `pdf_documents` (830 chunks); 100 questions × 3 difficulty
+- [ ] **2.2.4** Manual review (~5-10 ч): убрать low-quality, fix ground-truth
+- [ ] **2.2.5** Save `data/eval/golden_v1.json`: `{id, query, expected_chunk_ids, expected_answer, difficulty}`
+- [ ] **2.2.6** Versioning через `data/eval/CHANGELOG.md`
+- [ ] **2.2.7** Wire в RAGAS adapter
+- [ ] **2.2.8** Baseline measurements на 3 коллекциях, save в `data/eval/baselines/`
+
+**Effort:** ~16 ч | **Без этого блокирует:** B1, B2, B7
+
+### 2.3 P0 — JWT auth IDOR completion (260423 A1)
+
+**Что:** `auth.py` имеет `_admin: str` IDOR-fix, но не все handlers `tenants.py` покрыты.
+
+- [ ] **2.3.1** Audit `src/api/routes/tenants.py` через `_assert_tenant_access`
+- [ ] **2.3.2** Unit tests `test_tenants_idor.py`: non-admin не может delete/update/get-stats чужого tenant'а (403)
+- [ ] **2.3.3** Integration test с real JWT (admin vs viewer)
+- [ ] **2.3.4** Документировать в 09.7 или новый ADR
+- [ ] **2.3.5** Security checklist: `pip-audit` + JWT secret rotation policy
+
+**Effort:** ~3 ч | **Severity:** Critical (multi-tenant security)
