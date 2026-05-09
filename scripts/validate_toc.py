@@ -70,6 +70,13 @@ def collect_fs_md(docs_root: Path, ignore_filenames: set[str]) -> set[Path]:
 
 
 def main() -> int:
+    # Windows console default cp866 чужой для cyrillic путей в text-ветке вывода.
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError):
+            pass
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--toc", type=Path, default=DEFAULT_TOC, help="Path to TOC file")
     parser.add_argument("--docs-root", type=Path, default=None, help="Docs root (default: TOC parent)")
