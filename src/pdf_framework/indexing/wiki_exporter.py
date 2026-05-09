@@ -27,6 +27,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_chain,
+    wait_fixed,
+)
+
 from src.memory.orchestrator.memcube import ContentType, MemoryCube
 from src.memory.orchestrator.unified_id import MemoryType, SourceServer
 from src.pdf_framework.graph_store.base import BaseGraphStore
@@ -512,7 +520,16 @@ class IncrementalWikiSync:
                     await self._forward_sync.sync_entity(entity_id)
             return
         except Exception:
-            logger.error("[INC-SYNC] Failed after %d retries: %s", self._max_retries, entity_id)
+            # exc_info=True preserves the final attempt's exception details — old loop
+            # logged each attempt's exc at WARNING; new before_sleep callback fires only
+            # before sleeps (i.e. attempts 1..N-1), so the FINAL exc would otherwise be
+            # invisible. (Reviewer recommendation, roadmap §3.7.)
+            logger.error(
+                "[INC-SYNC] Failed after %d retries: %s",
+                self._max_retries,
+                entity_id,
+                exc_info=True,
+            )
             if _metrics:
                 _metrics.counter("wiki_sync_failures_total")
             await self._write_failed_event(entity_id, "retry_exhausted")
