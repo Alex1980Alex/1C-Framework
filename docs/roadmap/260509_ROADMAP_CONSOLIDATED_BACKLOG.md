@@ -16,18 +16,20 @@
 
 ## 0. Executive summary
 
-| Severity | Count | Total effort (est) | Блокирует |
-|---|---|---|---|
-| 🔴 P0 | 5 | ~12 ч | CI merge, security |
-| 🟠 P1 | 9 | ~7-10 дней | Production quality, observability |
-| 🟡 P2 | 11 | ~3-4 недели | Improvements, polish |
-| 🟢 P3 | 6 | ad-hoc | Long-term / on-demand |
-| **TOTAL** | **31** | **~6-9 weeks elapsed (1 dev)** | — |
+> **Closure update 2026-05-09 (после 2 сессий active work):** **21 / 31 items closed** (5 P0 + 8 P1 + 7 P2 + 1 P3). См. §11 Closure log ниже.
+
+| Severity | Count | Closed | Open | Total effort (est) |
+|---|---|---|---|---|
+| 🔴 P0 | 5 | **5** ✅ | 0 | done |
+| 🟠 P1 | 9 | **8** | 1 (§3.4 GEPA) | mostly done |
+| 🟡 P2 | 11 | **7** | 4 (§4.1, §4.5, §4.6, §4.10) | partial |
+| 🟢 P3 | 6 | **1** (§5.6) | 5 deferred | ad-hoc |
+| **TOTAL** | **31** | **21** ✅ | **10** (4 truly waiting on external + 6 deferred) | — |
 
 **Three critical paths:**
-1. **CI/eval unblock:** C1 ADR-008 verdict + C2 golden eval dataset → разблокирует B1/B2/B7 quality benchmarks
-2. **Documentation sync:** TOC vs filesystem 43 declared-missing files (Chapter 21 LLM_ROTATION 8 subsections undocumented)
-3. **Observability stack:** B3 OpenLLMetry + Langfuse → unblocks Memory P5 (C3) + Delegation Iter 4-5 (C4)
+1. **CI/eval unblock:** ✅ DONE — golden_v1 v1.1 (40 items) + smoke-gate + DeepEval gate + ADR-009.
+2. **Documentation sync:** ✅ DONE — `validate_toc.py` + invariant test + TOC 185/185 (all 5 chapters expanded: 09.4/09.12/09.13/26.7 + 25.1/25.3/25.6).
+3. **Observability stack:** ✅ Phase A done (Langfuse handler refactor + DeepEval + cross-hook correlation в hook_metrics_db). 🟡 Phase B (full production rollout) tracked отдельно — см. §12 ниже.
 
 ---
 
