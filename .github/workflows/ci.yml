@@ -178,14 +178,16 @@ jobs:
         # До тех пор — schema validation. Roadmap 260509 §3.9.
         run: pytest tests/eval/test_deepeval.py -v
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage XML (unit)
+        # Roadmap §2.5.4 closed via GitHub-native artifacts (Codecov SaaS dropped
+        # to avoid external dep / regional access issues; coverage measurement
+        # стратегия описана в codecov.yml — оставлен как reference).
+        uses: actions/upload-artifact@v4
+        if: always()  # save report даже при failed tests для diagnostics
         with:
-          file: ./coverage.xml
-          flags: unit
-          name: codecov-unit
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-unit-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 30
 
   test-integration:
     name: Integration Tests (Python ${{ matrix.python-version }})
