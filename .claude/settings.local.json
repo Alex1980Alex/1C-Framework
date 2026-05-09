@@ -905,7 +905,8 @@
       "mcp__1c-debug__debug_evaluate",
       "mcp__1c-debug__debug_step",
       "mcp__1c-debug__debug_disconnect",
-      "Bash(awk '/^```/ {in_code=!in_code; next} in_code && /^- \\\\[ \\\\]/ {print NR\": \"$0}' docs/roadmap/260430_ROADMAP_DOC_AND_CODE_AUDIT.md)"
+      "Bash(awk '/^```/ {in_code=!in_code; next} in_code && /^- \\\\[ \\\\]/ {print NR\": \"$0}' docs/roadmap/260430_ROADMAP_DOC_AND_CODE_AUDIT.md)",
+      "Bash(awk '/^```/ {in_code=!in_code; next} in_code && /^- \\\\[ \\\\]/ {print \"INSIDE CODE BLOCK:\", NR}' docs/roadmap/260430_AUDIT_CHAPTER_01_OVERVIEW.md)"
     ]
   },
   "enableAllProjectMcpServers": true,
