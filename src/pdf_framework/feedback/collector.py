@@ -170,6 +170,13 @@ class FeedbackCollector:
 
         Fail-soft: any IO/encoding error is logged and swallowed — SQLite
         path is the primary, backup is best-effort durability.
+
+        Concurrency assumption: single-writer process. POSIX `O_APPEND` makes
+        small appends atomic on Linux (entries < PIPE_BUF / 4 KB); on Windows
+        and for entries ≥ 4 KB interleaved lines from concurrent writers are
+        possible. Replay tolerates this via JSONDecodeError → skip warning,
+        but corrupt entries are lost. Run a single FeedbackCollector instance
+        per process for strict guarantees.
         """
         if not self._backup_enabled:
             return
