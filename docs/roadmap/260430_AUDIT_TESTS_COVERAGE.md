@@ -1,7 +1,7 @@
 # Audit: tests/ coverage vs реализация
 
-**Дата:** 2026-04-30 (вечер) → 2026-05-08 (full closure: T.1.7 + T.5.2 + T.6 + T.7 + **T.3 + T.4**)
-**Статус:** ✅ **ALL CLOSED** — T.1 ✅ | T.2 ✅ | **T.3 ✅** (24/24 phase16 BM25+Hybrid + 20 vector/MMR) | **T.4 ✅** (26/26 hybrid loader: 20 pure helpers + 6 cascade flow) | **T.5 ✅** (31 tests) | **T.6 ✅** (phase markers + auto-mark) | **T.7 ✅** (coverage config + verified existing infra). T.4.2 «smart router PDF fixtures» — N/A (router config-based, не runtime).
+**Дата:** 2026-04-30 (вечер) → 2026-05-08 (full closure: T.1.7 + T.5.2 + T.6 + T.7 + T.3 + T.4) → 2026-05-09 final acceptance verification
+**Статус:** ✅ **FULLY DONE** — все T.1-T.7 закрыты + 23/23 sub-task checkboxes ticked. **§4 acceptance criteria verified 2026-05-09:** (4.1) CI test job в ci.yml; (4.2) framework_search coverage = **81%** > 70% threshold; (4.3) `TestDimAlignment` ловит regression embedder×collection mismatch; (4.4) `pytest -m phase8` собирает 35 тестов через phase markers auto-mark hook. T.2.2 (CI mandatory) и T.2.3 (lessons learned ref) закрыты с явными ссылками на `ci.yml` и chapter 31.5 §«Lessons learned» #2.
 **Scope:** `tests/` directory — структура, покрытие, gaps по новым модулям после Phase 8 + 9.1
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 — «tests scope не покрыт»
