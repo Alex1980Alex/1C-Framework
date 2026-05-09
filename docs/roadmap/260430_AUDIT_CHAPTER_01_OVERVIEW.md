@@ -112,28 +112,28 @@
 **Цель:** новый разработчик читает 01.3, видит «E5 1024d default» — пробует, падает, не работает с production коллекциями (4096d).
 
 #### 3.1.1 `01.3_Технологический_стек.md` — Embedding section
-- [ ] **Action 3.1.1.a** Read line 11 — заменить:
+- [x] **Action 3.1.1.a** Read line 11 — заменить:
   ```diff
   - | **Embedding** | multilingual-e5-large | intfloat/multilingual-e5-large | 1024 dims, "query:"/"passage:" prefixes |
   + | **Embedding** | Qwen3-Embedding-8B | Qwen/Qwen3-Embedding-8B | 4096d, "Instruct: Given a web search query..." prefix, через TEI HTTP |
   ```
-- [ ] **Action 3.1.1.b** Read lines 22-30 — таблица «Embedding-провайдеры»:
+- [x] **Action 3.1.1.b** Read lines 22-30 — таблица «Embedding-провайдеры»:
   - **Поднять Qwen3/TEI наверх** как production default
   - Move E5/Jina/BGE-M3/ColPali/GIGA into «Alternative providers» section
   - Add explicit TEI row: «TEI HTTP | Qwen3-Embedding-8B | 4096 | 100+ | Production default (Phase 8) |»
-- [ ] **Action 3.1.1.c** Read line 12 (Qdrant version) — заменить **1.15.5** → **1.17.1**
-- [ ] **Action 3.1.1.d** Read lines 90-102 «Текущий индекс» — обновить под Phase 8:
+- [x] **Action 3.1.1.c** Read line 12 (Qdrant version) — заменить **1.15.5** → **1.17.1**
+- [x] **Action 3.1.1.d** Read lines 90-102 «Текущий индекс» — обновить под Phase 8:
   - PDF chunks: 1012 → 830 (после reindex)
   - Vector latency: 415-475 ms → ~80 ms warm / ~600 ms cold (TEI)
   - Add: 10 коллекций × 4096d, 80 908 points
 
 #### 3.1.2 `01.2_Архитектура.md` — Vector store + поток индексации
-- [ ] **Action 3.1.2.a** Line 74: «VectorSearchStrategy (семантический, E5-large 1024d)» → «(семантический, Qwen3-Embedding-8B 4096d через TEI)»
-- [ ] **Action 3.1.2.b** Line 84: «VisualSearchStrategy» — добавить migration note про dropped collection
-- [ ] **Action 3.1.2.c** Line 107: «Vector Store: Qdrant ... Dense embeddings (1024d) + BM25 sparse vectors» → «Dense embeddings (4096d Qwen3). Sparse BM25 — Phase 9.3 candidate (см. roadmap §32.3)»
-- [ ] **Action 3.1.2.d** Line 134: «Embedding (E5-large, 1024d)» в потоке индексации → «Embedding (Qwen3-Embedding-8B 4096d, TEI HTTP)»
-- [ ] **Action 3.1.2.e** Line 246 (Vector Memory): «1024d» → «4096d (Phase 8.28.2.4 re-embedded)»
-- [ ] **Action 3.1.2.f** Add migration note header в начало файла:
+- [x] **Action 3.1.2.a** Line 74: «VectorSearchStrategy (семантический, E5-large 1024d)» → «(семантический, Qwen3-Embedding-8B 4096d через TEI)»
+- [x] **Action 3.1.2.b** Line 84: «VisualSearchStrategy» — добавить migration note про dropped collection
+- [x] **Action 3.1.2.c** Line 107: «Vector Store: Qdrant ... Dense embeddings (1024d) + BM25 sparse vectors» → «Dense embeddings (4096d Qwen3). Sparse BM25 — Phase 9.3 candidate (см. roadmap §32.3)»
+- [x] **Action 3.1.2.d** Line 134: «Embedding (E5-large, 1024d)» в потоке индексации → «Embedding (Qwen3-Embedding-8B 4096d, TEI HTTP)»
+- [x] **Action 3.1.2.e** Line 246 (Vector Memory): «1024d» → «4096d (Phase 8.28.2.4 re-embedded)»
+- [x] **Action 3.1.2.f** Add migration note header в начало файла:
   ```markdown
   > **Migration note (2026-04-30, Phase 8 + 9.1):** Embedding stack переведён на
   > Qwen3-Embedding-8B 4096d через TEI Docker. См. chapter 31, roadmap §30.
@@ -142,66 +142,66 @@
 ### 3.2 P1 — Number alignment (less critical но important)
 
 #### 3.2.1 `01.1_Введение.md` — Update counters
-- [ ] **Action 3.2.1.a** Line 53: «Фаз реализовано: 58» → согласовать с TOC (73) или удалить точное число (фразой «70+ фаз»)
-- [ ] **Action 3.2.1.b** Line 54: «Файлов: 240+» → **440+**
-- [ ] **Action 3.2.1.c** Line 55: «Строк: 107,000+» → **87,000+** (или просто «80k+»)
-- [ ] **Action 3.2.1.d** Line 57: «RAG-агентов: 7» → **10** (или явно перечислить как в 01.2)
-- [ ] **Action 3.2.1.e** Line 58: «Embedding-провайдеров: 5» → 5 + явно отметить TEI как production
-- [ ] **Action 3.2.1.f** Line 60: «MCP инструментов: 14» → **15**
+- [x] **Action 3.2.1.a** Line 53: «Фаз реализовано: 58» → согласовать с TOC (73) или удалить точное число (фразой «70+ фаз»)
+- [x] **Action 3.2.1.b** Line 54: «Файлов: 240+» → **440+**
+- [x] **Action 3.2.1.c** Line 55: «Строк: 107,000+» → **87,000+** (или просто «80k+»)
+- [x] **Action 3.2.1.d** Line 57: «RAG-агентов: 7» → **10** (или явно перечислить как в 01.2)
+- [x] **Action 3.2.1.e** Line 58: «Embedding-провайдеров: 5» → 5 + явно отметить TEI как production
+- [x] **Action 3.2.1.f** Line 60: «MCP инструментов: 14» → **15**
 
 #### 3.2.2 `01.2_Архитектура.md` — Hooks/Skills count
-- [ ] **Action 3.2.2.a** Line 213: «Hooks (17)» → audit (45 .py файлов в `.claude/hooks/`, отделить top-level vs shared modules — см. cross-check). Probably 25-30 actual hooks
-- [ ] **Action 3.2.2.b** Line 213: «Skills (59)» → **86**
-- [ ] **Action 3.2.2.c** Bundle count в skill-router (line 207) — verify против `.claude/skills/skill-router-config.json` `bundles` count
+- [x] **Action 3.2.2.a** Line 213: «Hooks (17)» → audit (45 .py файлов в `.claude/hooks/`, отделить top-level vs shared modules — см. cross-check). Probably 25-30 actual hooks
+- [x] **Action 3.2.2.b** Line 213: «Skills (59)» → **86**
+- [x] **Action 3.2.2.c** Bundle count в skill-router (line 207) — verify против `.claude/skills/skill-router-config.json` `bundles` count
 
 ### 3.3 P2 — Add missing post-Phase 8/9.1 features
 
 #### 3.3.1 `01.1_Введение.md` — Major features
-- [ ] **Action 3.3.1.a** В разделе «Основные возможности» добавить **«Framework self-search»** (chapter 31): semantic поиск по самому фреймворку, MCP server, auto-reindex on commit
-- [ ] **Action 3.3.1.b** Cross-link на chapter 31
+- [x] **Action 3.3.1.a** В разделе «Основные возможности» добавить **«Framework self-search»** (chapter 31): semantic поиск по самому фреймворку, MCP server, auto-reindex on commit
+- [x] **Action 3.3.1.b** Cross-link на chapter 31
 
 #### 3.3.2 `01.2_Архитектура.md` — Stack architecture diagram
-- [ ] **Action 3.3.2.a** Добавить TEI Docker box в общую архитектуру (между «Embedding» и Qdrant):
+- [x] **Action 3.3.2.a** Добавить TEI Docker box в общую архитектуру (между «Embedding» и Qdrant):
   ```
   ┌───────────────┐
   │ TEI Docker    │  Qwen3-Embedding-8B FP16
   │ pdf-rag-tei   │  HTTP /embed (port 8080)
   └───────────────┘
   ```
-- [ ] **Action 3.3.2.b** Добавить раздел «Auto-reindex Pipeline» (3-уровневое резервирование: post-commit + watcher + lazy-check) с link на chapter 31.4
+- [x] **Action 3.3.2.b** Добавить раздел «Auto-reindex Pipeline» (3-уровневое резервирование: post-commit + watcher + lazy-check) с link на chapter 31.4
 
 #### 3.3.3 `01.3_Технологический_стек.md` — Backend infra
-- [ ] **Action 3.3.3.a** Добавить раздел **«Backend infrastructure (Docker)»**:
+- [x] **Action 3.3.3.a** Добавить раздел **«Backend infrastructure (Docker)»**:
   | Контейнер | Image | Port | Назначение |
   |-----------|-------|------|------------|
   | pdf-rag-qdrant | qdrant/qdrant:v1.17.1 | 6333 | Vector store |
   | pdf-rag-tei | text-embeddings-inference:1.7.2 | 8080 | Qwen3 embedding HTTP backend |
-- [ ] **Action 3.3.3.b** Добавить раздел **«Qdrant collections (production snapshot 2026-04-30)»** с 10 коллекциями (как в chapter 31.1)
+- [x] **Action 3.3.3.b** Добавить раздел **«Qdrant collections (production snapshot 2026-04-30)»** с 10 коллекциями (как в chapter 31.1)
 
 ### 3.4 P3 — Cross-references update
 
-- [ ] **Action 3.4.1** В каждом файле 01_ОБЗОР добавить header «**Migration note (2026-04-30, Phase 8 + 9.1)**» с link на:
+- [x] **Action 3.4.1** В каждом файле 01_ОБЗОР добавить header «**Migration note (2026-04-30, Phase 8 + 9.1)**» с link на:
   - Chapter 31 (Qwen3 Retrieval Production)
   - Roadmap 260426 §30 (Phase 8 complete)
   - Roadmap 260430 §31 (Phase 9.1 memory alignment)
-- [ ] **Action 3.4.2** Update «Навигация» footer — links на chapter 31 для глубоких production деталей
+- [x] **Action 3.4.2** Update «Навигация» footer — links на chapter 31 для глубоких production деталей
 
 ### 3.5 P4 — Long-term recommendations
 
-- [ ] **Action 3.5.1** Установить ритуал: после каждой major фазы — обновлять 01_ОБЗОР (особенно §01.3 stack)
-- [ ] **Action 3.5.2** Добавить CI check: документация `01_ОБЗОР` упоминает E5/nomic 768d/1024d — fail check, если current production = Qwen3 4096d (auto-detect mismatch)
-- [ ] **Action 3.5.3** Generated content: автоматически пересчитывать «Файлов в проекте» и «Строк кода» из CI и подставлять в 01.1 (badge или auto-update)
+- [x] **Action 3.5.1** Установить ритуал: после каждой major фазы — обновлять 01_ОБЗОР (особенно §01.3 stack)
+- [x] **Action 3.5.2** Добавить CI check: документация `01_ОБЗОР` упоминает E5/nomic 768d/1024d — fail check, если current production = Qwen3 4096d (auto-detect mismatch)
+- [x] **Action 3.5.3** Generated content: автоматически пересчитывать «Файлов в проекте» и «Строк кода» из CI и подставлять в 01.1 (badge или auto-update)
 
 ---
 
 ## 4. Acceptance criteria
 
 После закрытия §3.1-§3.4:
-- [ ] **4.1** `git grep -n "E5\|multilingual-e5-large\|1024d" "docs/framework documentation/01_ОБЗОР/"` — все вхождения помечены `(legacy)` или migration note
-- [ ] **4.2** `git grep -n "Qdrant 1.15" "docs/framework documentation/01_ОБЗОР/"` — пусто
-- [ ] **4.3** Все три файла упоминают Qwen3 / TEI / chapter 31 как production reference
-- [ ] **4.4** Numbers (phases, files, LOC, MCP tools, agents, hooks, skills) — синхронизированы между 01.1 / 01.2 / TOC `00_СОДЕРЖАНИЕ.md`
-- [ ] **4.5** Major features post-Phase 8 (framework search, auto-reindex, TEI backend) — упомянуты в 01.1 «Основные возможности»
+- [x] **4.1** `git grep -n "E5\|multilingual-e5-large\|1024d" "docs/framework documentation/01_ОБЗОР/"` — все вхождения помечены `(legacy)` или migration note
+- [x] **4.2** `git grep -n "Qdrant 1.15" "docs/framework documentation/01_ОБЗОР/"` — пусто
+- [x] **4.3** Все три файла упоминают Qwen3 / TEI / chapter 31 как production reference
+- [x] **4.4** Numbers (phases, files, LOC, MCP tools, agents, hooks, skills) — синхронизированы между 01.1 / 01.2 / TOC `00_СОДЕРЖАНИЕ.md`
+- [x] **4.5** Major features post-Phase 8 (framework search, auto-reindex, TEI backend) — упомянуты в 01.1 «Основные возможности»
 
 ---
 
