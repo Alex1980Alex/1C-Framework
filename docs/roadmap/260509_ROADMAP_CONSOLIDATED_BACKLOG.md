@@ -358,3 +358,48 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 P3 items — on-demand activation.
 
 ---
+
+## 7. Acceptance criteria
+
+- [ ] **7.1** CI прогоняет full suite зелёной включая eval smoke-gate
+- [ ] **7.2** TOC = filesystem (validate_toc.py = 0 diff)
+- [ ] **7.3** All 5 sibling audits 260430_* помечены ✅ ALL DONE (already true 2026-05-09)
+- [ ] **7.4** OTel traces видны в Langfuse Cloud для test query
+- [ ] **7.5** golden_v1 dataset (≥100 queries) committed в `data/eval/`
+- [ ] **7.6** ADR-008 lifecycle = accepted
+- [ ] **7.7** Coverage ≥ 70% для `src/pdf_framework/`
+- [ ] **7.8** No new TODO/FIXME без соответствующего entry в roadmap
+
+---
+
+## 8. Cross-cutting themes
+
+| Тема | Items | Common dependency |
+|---|---|---|
+| **Eval & Benchmark** | 2.1, 2.2, 3.2, 3.4, 3.9, 4.1, 4.2 | golden_v1 dataset (2.2) |
+| **Observability** | 3.1, 3.3, 4.5, 4.6 | OpenLLMetry+Langfuse (3.1) |
+| **Quality** | 3.2, 3.4, 4.1, 4.2 | Eval baseline |
+| **CI/CD** | 2.1, 2.4, 2.5, 3.6, 3.9, 4.7 | pytest infrastructure |
+| **Documentation** | 2.4, 4.11 | TOC sync |
+| **Async/Concurrency** | 3.7, 3.8, 4.4, 4.9 | tenacity unification (3.7) |
+
+**Топ блокирующие пути:**
+1. `2.2 golden_v1 dataset` → разблокирует все benchmark items (3.2, 3.4, 4.1, 4.2)
+2. `3.1 Langfuse` → разблокирует Memory P5 (3.3) + Delegation Iter 4-5 (4.5)
+3. `2.1 ADR-008 smoke-gate` → разблокирует merge новых retrieval-фич
+
+---
+
+## 9. Метрики прогресса
+
+| Категория | Total | DONE (2026-05-09) | Open | % |
+|---|---|---|---|---|
+| P0 Critical | 5 | 0 | 5 | 0% |
+| P1 High | 9 | 0 | 9 | 0% |
+| P2 Medium | 11 | 0 | 11 | 0% |
+| P3 Low | 6 | 0 | 6 | 0% |
+| **TOTAL** | **31** | **0** | **31** | **0%** |
+
+Целевая velocity: ~5 items / 2 weeks. После Critical path (Week 2) unblock factor для остальных = ×3 (зависимости разблокируются).
+
+---
