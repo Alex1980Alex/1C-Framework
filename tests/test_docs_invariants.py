@@ -7,3 +7,9 @@ import pytest
 CHAPTER_DIR = Path(__file__).resolve().parent.parent / "docs" / "framework documentation" / "01_ОБЗОР"
 LEGACY_PATTERNS = ["multilingual-e5-large", "Qdrant 1.15", "qdrant/qdrant:v1.15"]
 LEGACY_MARKERS = ["legacy", "до Phase 8", "fallback", "не выбрано", "Legacy"]
+
+
+def _all_chapter_files() -> list[Path]:
+    if not CHAPTER_DIR.exists():
+        pytest.skip(f"Chapter dir missing: {CHAPTER_DIR}")
+    return sorted(CHAPTER_DIR.glob("*.md"))
