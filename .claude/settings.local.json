@@ -914,7 +914,9 @@
       "PowerShell(python scripts/validate_toc.py --json 2>&1 | Select-Object -First 5)",
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"TestDB\" 2>&1 | Select-Object -Last 20)",
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"TestDB\" 2>&1 | Select-Object -Last 8)",
-      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" 2>&1 | Select-Object -Last 6)"
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" 2>&1 | Select-Object -Last 6)",
+      "mcp__1c-debug__debug_target_state",
+      "mcp__1c-debug__debug_get_breakpoints"
     ]
   },
   "enableAllProjectMcpServers": true,
