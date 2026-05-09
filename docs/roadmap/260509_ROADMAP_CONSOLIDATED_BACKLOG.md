@@ -403,3 +403,26 @@ P3 items — on-demand activation.
 Целевая velocity: ~5 items / 2 weeks. После Critical path (Week 2) unblock factor для остальных = ×3 (зависимости разблокируются).
 
 ---
+
+## 10. Связано
+
+**Главный roadmap (closed):** [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md)
+
+**Sibling closed audits (5/5 DONE 2026-05-09):**
+- [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md) — 35/35 ✅
+- [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md) — 26/26 ✅
+- [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md) — 9/9 ✅
+- [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — 23/23 ✅
+
+**Source roadmaps (parent backlog):**
+- [`260423_ROADMAP_FRAMEWORK_IMPROVEMENTS.md`](260423_ROADMAP_FRAMEWORK_IMPROVEMENTS.md) — 21-task Track A/B/C (большая часть items consolidated сюда)
+- [`260403_ROADMAP_MEMORY_MIGRATION.md`](260403_ROADMAP_MEMORY_MIGRATION.md) — Phase 5-8 P5 observability
+- [`260331_ROADMAP_MCP_IMPROVEMENTS.md`](260331_ROADMAP_MCP_IMPROVEMENTS.md) — Phase 11/12 deferred
+- [`260326_ROADMAP_GPU_BSL_INDEXING.md`](260326_ROADMAP_GPU_BSL_INDEXING.md) — Phase 4-5 deferred
+- [`260320_ROADMAP_DELEGATION_LEARNING.md`](260320_ROADMAP_DELEGATION_LEARNING.md) — Iter 4-5
+- [`260413_Hermes Agent и LLM Wiki.md`](260413_Hermes%20Agent%20и%20LLM%20Wiki%20Карпати%20персистентные%20системы%20знаний.md) — Phase 5-6 partial
+- [`260329_ROADMAP_POSTTOOLUSE_HOOKS.md`](260329_ROADMAP_POSTTOOLUSE_HOOKS.md) — step 2.3 async deferred
+
+---
+
+**Maintenance:** этот roadmap — living document. При закрытии item'а — поставить `[x]`, при появлении нового deferred work — добавить новую секцию с соответствующим severity. Обновлять §9 metrics weekly.
