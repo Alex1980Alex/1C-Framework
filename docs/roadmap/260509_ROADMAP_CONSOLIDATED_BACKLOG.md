@@ -42,3 +42,18 @@
 | Doc TOC vs filesystem | 43 declared-missing; 11 fs files outside TOC; 8 stub-suspect chapters; 1 explicit placeholder (35_EXTENSIONS) |
 
 ---
+
+## 2. P0 — Critical (blocks CI / security / merge)
+
+### 2.1 P0 — ADR-008 verdict + safe smoke-gate (260423 C1)
+
+**Что:** RAGAS eval ✅ DONE 2026-04-21 (вердикт PASS), но safe smoke-gate в CI не настроен. Блокирует merge новых retrieval-фич.
+
+- [ ] **2.1.1** Прочитать `docs/adr/008-dspy-migration.md` → exit criteria (NDCG threshold, latency budget)
+- [ ] **2.1.2** Создать `tests/eval/test_smoke_gate.py` — fail если NDCG < 0.55 (baseline E5 = 0.45)
+- [ ] **2.1.3** Wire в `ci.yml` после `test` job; dataset → strategy=hybrid → measure → assert
+- [ ] **2.1.4** Local smoke-test PASS
+- [ ] **2.1.5** Документировать в `08_ОЦЕНКА_КАЧЕСТВА/08.5_Smoke_Gate.md`
+- [ ] **2.1.6** ADR-008 lifecycle: proposed → accepted
+
+**Effort:** ~6 ч | **Зависимость:** 2.2 (golden dataset)
