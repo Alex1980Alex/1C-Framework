@@ -74,28 +74,34 @@ class TestAssertTenantAccess:
 
 @pytest.mark.unit
 class TestIDORGuardWiring:
-    """Smoke tests that the routes import and reference the guard.
+    """Smoke tests that the routes wire the guard.
 
-    These don't spin up a TestClient (integration would need ARQ/Redis/Qdrant
-    fixtures). Instead they verify the guard call is present in the source —
-    cheap protection against accidental removal.
+    Source-text grep (not import) — robust to optional deps (`arq`, `qdrant`)
+    that may be missing in the test environment. Cheap protection against
+    accidental removal of the guard call.
     """
 
-    @pytest.mark.parametrize("module_path", [
-        "src.api.routes.documents",
-        "src.api.routes.jobs",
-        "src.api.routes.graph",
+    @pytest.mark.parametrize("file_path", [
+        "src/api/routes/documents.py",
+        "src/api/routes/jobs.py",
+        "src/api/routes/graph.py",
     ])
-    def test_route_module_imports_guard(self, module_path: str):
-        import importlib
+    def test_route_file_calls_guard(self, file_path: str):
+        from pathlib import Path
 
-        mod = importlib.import_module(module_path)
-        assert hasattr(mod, "assert_tenant_access"), (
-            f"{module_path} must import assert_tenant_access (IDOR guard)"
+        repo_root = Path(__file__).resolve().parents[3]
+        source = (repo_root / file_path).read_text(encoding="utf-8")
+        assert "assert_tenant_access(" in source, (
+            f"{file_path} must call assert_tenant_access(...) — IDOR guard removed?"
+        )
+        assert "from src.api.auth.dependencies import" in source, (
+            f"{file_path} must import the shared auth dependencies"
         )
 
     def test_tenants_py_has_local_guard(self):
-        """tenants.py keeps its in-file `_assert_tenant_access` (legacy, predates shared helper)."""
-        from src.api.routes import tenants
+        """tenants.py keeps its in-file `_assert_tenant_access` (predates shared helper)."""
+        from pathlib import Path
 
-        assert hasattr(tenants, "_assert_tenant_access")
+        repo_root = Path(__file__).resolve().parents[3]
+        source = (repo_root / "src/api/routes/tenants.py").read_text(encoding="utf-8")
+        assert "_assert_tenant_access" in source
