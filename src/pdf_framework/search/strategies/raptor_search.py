@@ -50,6 +50,7 @@ class RAPTORSearchStrategy:
         self,
         vector_store,
         config: RAPTORSearchConfig | None = None,
+        llm_reranker: "LLMReranker | None" = None,
     ):
         """
         Initialize RAPTOR search strategy.
@@ -57,9 +58,13 @@ class RAPTORSearchStrategy:
         Args:
             vector_store: Vector store for embedding search
             config: RAPTOR search configuration
+            llm_reranker: Optional LLMReranker (roadmap §4.2). When provided
+                AND `config.enable_llm_rerank=True`, top candidates are
+                rescored by Claude after RAPTOR's level-weighted ranking.
         """
         self._vector_store = vector_store
         self._config = config or RAPTORSearchConfig()
+        self._llm_reranker = llm_reranker
 
     async def search(
         self,
@@ -82,10 +87,30 @@ class RAPTORSearchStrategy:
         Returns:
             SearchResponse with mixed leaf and summary results
         """
+        # Roadmap §4.2: when LLM rerank enabled, fetch a larger candidate pool
+        # so the LLM judge has enough material to discriminate. Final truncation
+        # to user `k` happens post-rerank.
+        rerank_active = (
+            self._config.enable_llm_rerank and self._llm_reranker is not None
+        )
+        fetch_k = max(k, self._config.llm_rerank_fetch_k) if rerank_active else k
+
         if self._config.search_mode == "collapsed":
-            return await self._collapsed_tree_search(query, query_embedding, k, filter)
+            response = await self._collapsed_tree_search(query, query_embedding, fetch_k, filter)
         else:
-            return await self._tree_traversal_search(query, query_embedding, k, filter)
+            response = await self._tree_traversal_search(query, query_embedding, fetch_k, filter)
+
+        if rerank_active and response.results:
+            try:
+                reranked = await self._llm_reranker.rerank(query, response.results, top_k=k)
+                response.results = reranked
+                response.total_found = len(reranked)
+                response.search_type = response.search_type + "+llm_rerank"
+            except Exception as e:
+                logger.warning("[RAPTOR] LLM rerank failed, keeping base ranking: %s", e)
+                response.results = response.results[:k]
+                response.total_found = len(response.results)
+        return response
 
     async def _collapsed_tree_search(
         self,
