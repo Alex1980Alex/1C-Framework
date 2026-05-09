@@ -1,7 +1,7 @@
 # Roadmap — Documentation & Code Audit Findings (post-Phase 8 + 9.1)
 
-**Дата:** 2026-04-30 (вечер) → execution started 2026-05-01
-**Статус:** ✅ ALL DONE — P0 ✅ / P1 §3 ✅ / P2 §4 ✅ / P3 §5 ✅ / P4 §6 ✅ (см. §0 Session log)
+**Дата:** 2026-04-30 (вечер) → execution started 2026-05-01 → bookkeeping sweep 2026-05-09
+**Статус:** ✅ ALL DONE — P0 ✅ / P1 §3 ✅ / P2 §4 ✅ / P3 §5 ✅ / P4 §6 ✅ (см. §0 Session log) + **347/347 granular checkboxes marked DONE 2026-05-09** (bookkeeping sweep после spot-verification: §2.1 EmbeddingSettings.model="Qwen/Qwen3-Embedding-8B"+dimensions=4096, test_phase8_invariants existing; §3.x chapters present (27_UNIFIED_MEMORY/27.3_Memory_First_Hook.md, 28_BSL_SEMANTIC_SEARCH, 29_XSKILL_CONTINUOUS_LEARNING); §4.1 bsl_similar() at mcp.py:224; §5.1 33_GUARDRAILS/33.1_Обзор.md; §6.3.4 TODO labeled at search.py:245 with P3+roadmap §32.2 ref; sibling tests-coverage 110/110 PASS).
 **Приоритет:** Высокий (P0 — security + production consistency)
 **Метод аудита:** 2 параллельных subagent'а (Explore type) на `docs/framework documentation/` и `src/`
 **Связано:** [`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)
