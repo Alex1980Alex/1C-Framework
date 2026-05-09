@@ -158,7 +158,7 @@ llm-rotation = ["mistralai>=1.0", "openai>=1.0", "google-generativeai>=0.8", ...
 
 **Action:**
 - [x] **D.5.1** `security-audit` job добавлен в `ci.yml` (schedule: Monday 06:00 UTC + workflow_dispatch) ✅ 2026-05-01
-- [ ] **D.5.2** Dependabot — backlog P2
+- [x] **D.5.2** Dependabot — backlog P2
 - [x] **D.5.3** Policy задокументирована в ci.yml comment: `# advisory; fix CVSS >= 7.0 within 7 days, medium in next iteration` ✅
 
 ### 2.6 🟡 Phase 8/9.1 integration в `[bsl]`/`[memory]` extras
@@ -178,9 +178,9 @@ memory = ["qdrant-client>=1.12", "google-generativeai>=0.8"]
 **Phase 9.1 memory alignment** — те же deps что `[memory]`, плюс TEI (через base httpx).
 
 **Action:**
-- [ ] **D.6.1** Verify: `pip install -e .[bsl]` достаточно для запуска BSL + Phase 8 retrieval
-- [ ] **D.6.2** Если `nomic[local]` всё ещё нужен (memory hooks было legacy) — оставить, но прокомментировать как optional fallback
-- [ ] **D.6.3** Audit `[memory]` extras: добавить `httpx>=0.27` явно (post §2.1) для clarity
+- [x] **D.6.1** Verify: `pip install -e .[bsl]` достаточно для запуска BSL + Phase 8 retrieval
+- [x] **D.6.2** Если `nomic[local]` всё ещё нужен (memory hooks было legacy) — оставить, но прокомментировать как optional fallback
+- [x] **D.6.3** Audit `[memory]` extras: добавить `httpx>=0.27` явно (post §2.1) для clarity
 
 ---
 
@@ -275,11 +275,11 @@ Healthy, ничего не пропущено.
 
 ### 5.2 Acceptance criteria
 
-- [ ] `pip install -e .` работает на чистом Python 3.11 venv без warnings
-- [ ] `python -c "from src.framework_search.embedder import FrameworkTEIEmbedder"` импортирует чисто
-- [ ] `python -c "from src.api.auth.jwt_handler import *"` импортирует чисто
-- [ ] CI прогоняет full suite zelёной (lint + types + tests + security)
-- [ ] `pip-audit` не находит критических CVE
+- [x] `pip install -e .` работает на чистом Python 3.11 venv без warnings
+- [x] `python -c "from src.framework_search.embedder import FrameworkTEIEmbedder"` импортирует чисто
+- [x] `python -c "from src.api.auth.jwt_handler import *"` импортирует чисто
+- [x] CI прогоняет full suite zelёной (lint + types + tests + security)
+- [x] `pip-audit` не находит критических CVE
 
 ---
 
