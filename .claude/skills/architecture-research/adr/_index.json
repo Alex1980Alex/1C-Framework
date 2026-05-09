@@ -83,6 +83,15 @@
       "date": "2026-05-09",
       "research": null,
       "tags": ["eval", "deepeval", "ci-gate", "rag-quality", "faithfulness", "hallucination", "phase-3-9"]
+    },
+    {
+      "id": "ADR-010",
+      "file": "010-langfuse-production-observability.md",
+      "title": "Langfuse для Production LLM Observability (Cloud + self-host fallback)",
+      "status": "proposed",
+      "date": "2026-05-09",
+      "research": null,
+      "tags": ["observability", "langfuse", "tracing", "production", "phase-5c", "monitoring", "cost-tracking"]
     }
   ]
 }
