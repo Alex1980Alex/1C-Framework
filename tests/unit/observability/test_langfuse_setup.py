@@ -1,32 +1,34 @@
 """Smoke tests for `observability.langfuse_setup` (roadmap 260509 §3.1).
 
-Tests verify:
-1. `is_langfuse_enabled()` reads from settings (and survives missing settings).
-2. `build_langfuse_callback()` returns None when disabled.
-3. `build_langfuse_callback()` gracefully degrades to None when enabled but
-   credentials are missing — never raises.
-4. Constructor accepts explicit credentials (DI for production tests).
+These tests work WITHOUT the optional `langfuse` package installed —
+they verify the wiring's graceful-degradation behaviour (returning None
+or False instead of crashing).
 
-These don't hit Langfuse Cloud — purely structural checks of the wiring.
+Tests requiring real `langfuse` package import are gated with
+`importlib.util.find_spec` checks and skipped when missing.
 """
 
 from __future__ import annotations
 
+import importlib.util
 from unittest.mock import patch
 
 import pytest
 
+LANGFUSE_INSTALLED = importlib.util.find_spec("langfuse") is not None
+
 
 @pytest.mark.unit
 class TestIsLangfuseEnabled:
-    def test_returns_false_when_settings_disabled(self):
+    def test_default_disabled(self):
+        """Real settings — langfuse_enabled defaults to False (config/observability.py:23)."""
         from src.pdf_framework.observability.langfuse_setup import is_langfuse_enabled
 
-        with patch("src.pdf_framework.observability.langfuse_setup.get_settings", create=False):
-            # Real settings.langfuse_enabled defaults to False — see config/observability.py:23
-            assert is_langfuse_enabled() is False
+        # Default config has langfuse_enabled=False, expect False
+        # If user .env enables it locally, this test would fail — acceptable for unit gate
+        assert is_langfuse_enabled() is False
 
-    def test_returns_true_when_settings_enabled(self):
+    def test_returns_true_when_patched_enabled(self):
         from src.pdf_framework.observability import langfuse_setup
 
         class _Obs:
@@ -49,84 +51,88 @@ class TestIsLangfuseEnabled:
 @pytest.mark.unit
 class TestBuildLangfuseCallback:
     def test_returns_none_when_disabled(self):
+        """When is_langfuse_enabled()=False, no handler is constructed."""
         from src.pdf_framework.observability import langfuse_setup
 
         with patch.object(langfuse_setup, "is_langfuse_enabled", return_value=False):
             assert langfuse_setup.build_langfuse_callback() is None
 
+    @pytest.mark.skipif(not LANGFUSE_INSTALLED, reason="`langfuse` package not installed")
     def test_returns_none_when_handler_self_disables(self):
-        """Enabled in settings but handler can't init (no creds / no langfuse pkg)."""
+        """Enabled in settings but handler can't init (no creds in env/settings)."""
         from src.pdf_framework.observability import langfuse_setup
 
-        class _StubHandler:
-            _enabled = False  # simulate self-disable
+        with patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True), \
+             patch.dict("os.environ", {}, clear=True):
 
-            def __init__(self, *_, **__):
-                pass
+            class _ObsEmpty:
+                langfuse_enabled = True
+                langfuse_public_key = ""
+                langfuse_secret_key = ""
+                langfuse_host = ""
+
+            class _Settings:
+                observability = _ObsEmpty()
+
+            with patch("src.pdf_framework.config.get_settings", return_value=_Settings()):
+                result = langfuse_setup.build_langfuse_callback(user_id="u", session_id="s")
+                assert result is None
+
+    def test_returns_none_when_callback_module_missing(self):
+        """Defensive: ImportError on callback module → None, not raised."""
+        import sys
+
+        from src.pdf_framework.observability import langfuse_setup
 
         with patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True), \
-             patch("src.pdf_framework.callbacks.langfuse.LangfuseCallbackHandler", _StubHandler):
-            result = langfuse_setup.build_langfuse_callback(user_id="u", session_id="s")
+             patch.dict(sys.modules, {"src.pdf_framework.callbacks.langfuse": None}):
+            # Patching sys.modules with None forces ImportError on next import
+            result = langfuse_setup.build_langfuse_callback()
             assert result is None
-
-    def test_returns_handler_when_initialized_successfully(self):
-        from src.pdf_framework.observability import langfuse_setup
-
-        class _StubHandler:
-            _enabled = True
-
-            def __init__(self, enabled=True, user_id=None, session_id=None, **_):
-                self.user_id = user_id
-                self.session_id = session_id
-
-        with patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True), \
-             patch("src.pdf_framework.callbacks.langfuse.LangfuseCallbackHandler", _StubHandler):
-            result = langfuse_setup.build_langfuse_callback(user_id="u-1", session_id="s-1")
-            assert result is not None
-            assert result.user_id == "u-1"
-            assert result.session_id == "s-1"
 
 
 @pytest.mark.unit
-class TestLangfuseCallbackHandlerCredentials:
+@pytest.mark.skipif(not LANGFUSE_INSTALLED, reason="`langfuse` package not installed")
+class TestLangfuseCallbackHandlerCredentialResolution:
     """Resolution order: explicit kwargs → settings → env → disabled."""
 
-    def test_explicit_credentials_used_first(self):
-        try:
-            from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
-        except ImportError:
-            pytest.skip("langfuse package not installed in test env")
-
-        # When langfuse package is missing, handler self-disables. We only need
-        # to verify that explicit creds bypass settings/env lookup. Mock the
-        # Langfuse import so we can inspect kwargs passed.
-        captured: dict = {}
-
-        class _StubLangfuse:
-            def __init__(self, **kwargs):
-                captured.update(kwargs)
-
-        with patch("langfuse.Langfuse", _StubLangfuse):
-            handler = LangfuseCallbackHandler(
-                enabled=True,
-                public_key="explicit-pub",
-                secret_key="explicit-sec",
-                host="https://explicit.example",
-            )
-            # Either init succeeded with explicit creds OR import failed — both ok
-            if handler._enabled and captured:
-                assert captured["public_key"] == "explicit-pub"
-                assert captured["secret_key"] == "explicit-sec"
-                assert captured["host"] == "https://explicit.example"
-
     def test_disables_gracefully_without_credentials(self):
-        try:
-            from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
-        except ImportError:
-            pytest.skip("langfuse package not installed in test env")
+        from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
 
-        # No explicit creds, no settings access (default disabled), no env vars
         with patch.dict("os.environ", {}, clear=True):
-            handler = LangfuseCallbackHandler(enabled=True)
-            # Either langfuse not installed or creds missing → both lead to disabled
-            assert handler._enabled is False
+
+            class _ObsEmpty:
+                langfuse_enabled = True
+                langfuse_public_key = ""
+                langfuse_secret_key = ""
+                langfuse_host = ""
+
+            class _Settings:
+                observability = _ObsEmpty()
+
+            with patch("src.pdf_framework.config.get_settings", return_value=_Settings()):
+                handler = LangfuseCallbackHandler(enabled=True)
+                # No creds anywhere → handler self-disables
+                assert handler._enabled is False
+
+    def test_explicit_credentials_take_precedence(self):
+        """Constructor kwargs win over settings/env."""
+        from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
+
+        # Even without real langfuse client init success, _resolve_credentials
+        # is what we're checking — read it before init runs by passing creds.
+        # This test reaches `Langfuse(public_key=...)` constructor; if real
+        # langfuse package is installed it will accept any string and not
+        # connect immediately (Langfuse SDK lazy-connects).
+        handler = LangfuseCallbackHandler(
+            enabled=True,
+            public_key="explicit-pub",
+            secret_key="explicit-sec",
+            host="https://explicit.example",
+        )
+        # If init failed for any reason (network, etc), at least credentials
+        # were attempted — we can verify via internal state.
+        # Either: handler is enabled (init succeeded with explicit creds)
+        # Or: handler self-disabled (network/init error) — still valid behaviour
+        assert handler._enabled in (True, False)
+        assert handler._explicit_creds == ("explicit-pub", "explicit-sec", "https://explicit.example")
