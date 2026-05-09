@@ -135,10 +135,52 @@ jobs:
       - name: Run pre-commit
         run: uv run pre-commit run --all-files
 
-  test:
-    name: Tests (Python ${{ matrix.python-version }})
+  test-unit:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    # Unit tests gate merges. No external services required. (roadmap 260509 §2.5)
     runs-on: ubuntu-latest
-    continue-on-error: true  # qdrant container may fail to initialize
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev,morphology]"
+
+      - name: Run unit tests
+        run: pytest tests/ -v -m unit --cov=src --cov-report=term --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unit
+          name: codecov-unit
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-integration:
+    name: Integration Tests (Python ${{ matrix.python-version }})
+    # Integration tests are best-effort: external services (Qdrant) may flake. (roadmap 260509 §2.5)
+    runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
@@ -175,8 +217,8 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -e ".[dev,qdrant,morphology]"
 
-      - name: Run tests
-        run: pytest tests/ -v --cov=src --cov-report=term --cov-report=xml
+      - name: Run integration & e2e tests
+        run: pytest tests/ -v -m "integration or e2e" --cov=src --cov-report=term --cov-report=xml
         env:
           VECTOR_STORE__PROVIDER: qdrant
           VECTOR_STORE__QDRANT_URL: http://localhost:6333
@@ -185,8 +227,8 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
+          flags: integration
+          name: codecov-integration
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
