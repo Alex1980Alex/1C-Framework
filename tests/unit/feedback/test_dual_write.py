@@ -135,7 +135,7 @@ class TestReplayFromBackup:
 
         return replay_feedback_backup
 
-    def test_replay_recovers_all_entries_after_sqlite_wipe(self, tmp_path):
+    def test_replay_recovers_all_entries_into_fresh_sqlite(self, tmp_path):
         # 1. Write 3 entries → both SQLite + JSONL populated
         primary_db = tmp_path / "feedback.db"
         backup_dir = tmp_path / "backups"
@@ -151,11 +151,9 @@ class TestReplayFromBackup:
             (count_before,) = conn.execute("SELECT COUNT(*) FROM feedback").fetchone()
         assert count_before == 3
 
-        # 2. Wipe primary SQLite (simulate corruption)
-        primary_db.unlink()
-        assert not primary_db.exists()
-
-        # 3. Replay JSONL → fresh SQLite
+        # 2. Replay JSONL → INDEPENDENT fresh SQLite (simulates the post-corruption
+        #    recovery path; we don't unlink primary_db because Windows holds a
+        #    sqlite3 file handle until GC, which would race with unlink).
         replay_module = self._import_replay()
         target_db = tmp_path / "feedback_restored.db"
         seen, inserted, skipped = replay_module.replay(
@@ -168,10 +166,14 @@ class TestReplayFromBackup:
         assert inserted == 3
         assert skipped == 0
 
-        # 4. Verify target DB has all 3 entries
+        # 3. Target DB has all 3 entries with backup_origin_id traceability
         with sqlite3.connect(target_db) as conn:
-            rows = conn.execute("SELECT query FROM feedback ORDER BY id").fetchall()
+            rows = conn.execute("SELECT query, metadata FROM feedback ORDER BY id").fetchall()
         assert [r[0] for r in rows] == ["q0", "q1", "q2"]
+        for _, raw_meta in rows:
+            meta = json.loads(raw_meta)
+            assert "backup_origin_id" in meta
+            assert "backup_source_file" in meta
 
     def test_dedupe_skips_existing_entries(self, tmp_path):
         primary_db = tmp_path / "feedback.db"
