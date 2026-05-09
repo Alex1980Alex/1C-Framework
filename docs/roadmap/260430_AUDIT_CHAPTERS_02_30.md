@@ -1,7 +1,7 @@
 # Audit: docs/framework documentation/ главы 02-30 vs реальность
 
-**Дата:** 2026-04-30 (вечер)
-**Статус:** ✅ DONE (2026-05-01) — всё закрыто: 02.1 Qdrant v1.17.1, 02.2 Qwen3/TEI embedding defaults + legacy E5 section, 04.1 vector strategy description, 28.4 bsl_code_v4_late (уже был обновлён), 29.6 DROPPED banner (уже был), 29.4 dims (уже был)
+**Дата:** 2026-04-30 (вечер) → fully closed 2026-05-09
+**Статус:** ✅ FULLY DONE — initial closure 2026-05-01 (02.1 v1.17.1, 02.2 Qwen3/TEI default, 04.1 vector strategy, 28.4/29.6/29.4 banners). Final §6 mass-grep sweep 2026-05-09 закрыл remaining stale refs: 02.3:10 (Qdrant healthz output), 09.5:20+95+144 (compose+env), 10.1:21+63 (troubleshooting), 13.4:141 (MCP env doc default), 19.1 header (migration note для legacy chapter), 19.3:42+44+90 (`bsl_code_v3` legacy markers), 30.2:51 (`skill_library` Phase 9.1 4096d), 10.3 header (migration ref на ch.31). 26/26 sub-task checkboxes ticked. CI guard `tests/test_docs_invariants.py` (sibling 01-overview audit) обнаружит будущие регрессии.
 **Scope:** Cross-check ~24 глав документации (исключая уже отдельно аудитированную 01_ОБЗОР и свежесозданную 31_QWEN3_RETRIEVAL_PRODUCTION).
 **Связано:**
 - [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §3 — главный roadmap
@@ -50,8 +50,8 @@
 | Docker storage path `data/qdrant_storage:/qdrant/storage` | Production: named volume `qdrant_storage` (per `docker/docker-compose.yml`) | 🟡 | Указать оба варианта (named volume + bind-mount) |
 
 **Action items:**
-- [ ] **A.2.1.1** Update line 68: `qdrant/qdrant:v1.15.5` → `qdrant/qdrant:v1.17.1`
-- [ ] **A.2.1.2** Добавить footer-бокс: «См. также главу 31 для production retrieval setup (TEI + Qwen3)»
+- [x] **A.2.1.1** Update line 68: `qdrant/qdrant:v1.15.5` → `qdrant/qdrant:v1.17.1`
+- [x] **A.2.1.2** Добавить footer-бокс: «См. также главу 31 для production retrieval setup (TEI + Qwen3)»
 
 ### 2.2 `02_БЫСТРЫЙ_СТАРТ/02.2_Конфигурация.md` — E5 default vs Qwen3 production
 
@@ -62,10 +62,10 @@
 | `EMBEDDING__DIMENSIONS=1024` упоминается? | Production: 4096 native (или 1024 MRL-truncated) | 🔴 | Update + объяснить MRL |
 
 **Action items:**
-- [ ] **A.2.2.1** Заменить пример `EMBEDDING__MODEL=intfloat/multilingual-e5-large` на `EMBEDDING__MODEL=Qwen/Qwen3-Embedding-8B`
-- [ ] **A.2.2.2** Добавить `EMBEDDING__PROVIDER=tei`, `EMBEDDING__TEI_BASE_URL=http://localhost:8080`, `EMBEDDING__DIMENSIONS=4096`
-- [ ] **A.2.2.3** Секция «Legacy E5 fallback» — оставить старый пример но как опциональный (не default)
-- [ ] **A.2.2.4** Cross-ref на главу 31.2 (TEI Docker config)
+- [x] **A.2.2.1** Заменить пример `EMBEDDING__MODEL=intfloat/multilingual-e5-large` на `EMBEDDING__MODEL=Qwen/Qwen3-Embedding-8B`
+- [x] **A.2.2.2** Добавить `EMBEDDING__PROVIDER=tei`, `EMBEDDING__TEI_BASE_URL=http://localhost:8080`, `EMBEDDING__DIMENSIONS=4096`
+- [x] **A.2.2.3** Секция «Legacy E5 fallback» — оставить старый пример но как опциональный (не default)
+- [x] **A.2.2.4** Cross-ref на главу 31.2 (TEI Docker config)
 
 ### 2.3 `04_ПОИСК/04.1_Обзор_стратегий.md` — E5 hardcoded в таблице стратегий
 
@@ -76,9 +76,9 @@
 | Reference на `bsl_code_v3` или `_e5_legacy` коллекции? | Все dropped в Phase 8 §27 | 🔴 (если есть) | Удалить упоминания |
 
 **Action items:**
-- [ ] **A.4.1.1** Update line 9: «E5-large (1024d)» → «Qwen3-Embedding-8B (4096d) через TEI; E5-large (1024d) — legacy fallback»
-- [ ] **A.4.1.2** Read весь файл, исправить все упоминания E5/nomic/1024d
-- [ ] **A.4.1.3** Если есть упоминание `bsl_code_v3` или `*_e5_legacy` — заменить на `bsl_code_v4_late` (production)
+- [x] **A.4.1.1** Update line 9: «E5-large (1024d)» → «Qwen3-Embedding-8B (4096d) через TEI; E5-large (1024d) — legacy fallback»
+- [x] **A.4.1.2** Read весь файл, исправить все упоминания E5/nomic/1024d
+- [x] **A.4.1.3** Если есть упоминание `bsl_code_v3` или `*_e5_legacy` — заменить на `bsl_code_v4_late` (production)
 
 ### 2.4 `28_BSL_SEMANTIC_SEARCH/28.4_Индексация.md` — `bsl_code_v2` + nomic stale
 
@@ -88,9 +88,9 @@
 | Возможные другие упоминания `bsl_code_v2` или `bsl_code_v3` в этой главе | — | 🔴 | grep по всему файлу |
 
 **Action items:**
-- [ ] **A.28.4.1** `grep -n "bsl_code_v[123]\|nomic" docs/framework documentation/28_BSL_SEMANTIC_SEARCH/*.md` — собрать все
-- [ ] **A.28.4.2** Update таблицы коллекций → `bsl_code_v4_late` (production) + `bsl_code_v4` (research baseline std pooling)
-- [ ] **A.28.4.3** Footer-бокс «Phase 8 production switchover см. главу 31, ADR-008»
+- [x] **A.28.4.1** `grep -n "bsl_code_v[123]\|nomic" docs/framework documentation/28_BSL_SEMANTIC_SEARCH/*.md` — собрать все
+- [x] **A.28.4.2** Update таблицы коллекций → `bsl_code_v4_late` (production) + `bsl_code_v4` (research baseline std pooling)
+- [x] **A.28.4.3** Footer-бокс «Phase 8 production switchover см. главу 31, ADR-008»
 
 ### 2.5 `29_XSKILL_CONTINUOUS_LEARNING/29.6_Visual_Grounding.md` — collection dropped
 
@@ -101,10 +101,10 @@
 
 **Решение пользователя:** НЕ удалять features → НЕ удалять главу
 **Action items:**
-- [ ] **A.29.6.1** Добавить prominent banner в самом верху:
+- [x] **A.29.6.1** Добавить prominent banner в самом верху:
   > ⚠️ **Status (2026-05-01):** Qdrant collection `visual_grounding` **dropped** в рамках Phase 8 cleanup (низкая ROI миграции 5 точек × 768d SigLIP на Qwen3 4096d). Реактивация — в Phase 9.4+ когда будет living source visual data. См. roadmap §32.5.1.
-- [ ] **A.29.6.2** Update line 20: `Qdrant: visual_grounding (768d)` → пометить как «(disabled, см. banner)»
-- [ ] **A.29.6.3** Cross-ref на главу 31.5 §«Что осталось на Phase 9.2+» / 9.4
+- [x] **A.29.6.2** Update line 20: `Qdrant: visual_grounding (768d)` → пометить как «(disabled, см. banner)»
+- [x] **A.29.6.3** Cross-ref на главу 31.5 §«Что осталось на Phase 9.2+» / 9.4
 
 ---
 
@@ -117,9 +117,9 @@
 | Sparse BM25 в Qdrant collection описан как default (если упоминается) | Production 4096d collections — **single-vector layout, без sparse**. BM25 fallback — SQLite FTS5 в `cache/docs-mcp/hybrid_search.db` | 🟠 | Уточнить состояние в production, явно пометить «sparse в Qdrant — Phase 9.3 candidate» |
 
 **Action items:**
-- [ ] **A.4.6.1** Read весь файл, найти упоминания «BM25 sparse vectors в Qdrant»
-- [ ] **A.4.6.2** Добавить ссылку на §32.3 (Hybrid sparse+dense) как future work
-- [ ] **A.4.6.3** Уточнить SQLite FTS5 fallback path
+- [x] **A.4.6.1** Read весь файл, найти упоминания «BM25 sparse vectors в Qdrant»
+- [x] **A.4.6.2** Добавить ссылку на §32.3 (Hybrid sparse+dense) как future work
+- [x] **A.4.6.3** Уточнить SQLite FTS5 fallback path
 
 ### 3.2 `29_XSKILL_CONTINUOUS_LEARNING/29.4_Retrieval_и_Scoring.md` — collections re-embedded
 
@@ -129,14 +129,14 @@
 | **«`experience_embeddings` 768d nomic»** (line 10) | Re-embedded на Qwen3 4096d через `scripts/reembed_collection.py` (Phase 9.1 finale) | 🟠 | Update |
 
 **Action items:**
-- [ ] **A.29.4.1** Update таблица коллекций (line 7-10): размерность 768→4096, model nomic-embed-text→Qwen3-Embedding-8B
-- [ ] **A.29.4.2** Footer-бокс: «Re-embedding в Phase 9.1 без regen (`scripts/reembed_collection.py`) — см. 31.3»
+- [x] **A.29.4.1** Update таблица коллекций (line 7-10): размерность 768→4096, model nomic-embed-text→Qwen3-Embedding-8B
+- [x] **A.29.4.2** Footer-бокс: «Re-embedding в Phase 9.1 без regen (`scripts/reembed_collection.py`) — см. 31.3»
 
 ### 3.3 `19_ИНДЕКСАЦИЯ_ПРОЕКТОВ/` — может содержать старые BSL collection refs
 
 **Action items:**
-- [ ] **A.19.1** `grep -rn "bsl_code_v[23]\|nomic-embed-text" "docs/framework documentation/19_ИНДЕКСАЦИЯ_ПРОЕКТОВ/"` — собрать упоминания
-- [ ] **A.19.2** Если есть — update на `bsl_code_v4_late` + Qwen3
+- [x] **A.19.1** `grep -rn "bsl_code_v[23]\|nomic-embed-text" "docs/framework documentation/19_ИНДЕКСАЦИЯ_ПРОЕКТОВ/"` — собрать упоминания
+- [x] **A.19.2** Если есть — update на `bsl_code_v4_late` + Qwen3
 
 ---
 
@@ -149,8 +149,8 @@
 - Если общий chunk_size заявлен 500/100 — проверить актуальность
 
 **Action items:**
-- [ ] **A.3.1** Read 03.x главы, найти упоминания chunk_size
-- [ ] **A.3.2** Cross-check с `src/pdf_framework/processing/splitter.py` defaults
+- [x] **A.3.1** Read 03.x главы, найти упоминания chunk_size
+- [x] **A.3.2** Cross-check с `src/pdf_framework/processing/splitter.py` defaults
 
 ---
 
@@ -225,8 +225,8 @@ grep -rn "§32\.\|roadmap.*§32" . | grep -v "260426_ROADMAP_PHASE_8"
 | **TOTAL** | 9 chapters | — | **~2.5 ч** |
 
 **После закрытия:**
-- [ ] Final grep по mass shortlist (§6) — должен возвращать только legacy-аннотированные matches
-- [ ] Update §0 Status Dashboard в главном roadmap'е (P1 → 100%)
+- [x] Final grep по mass shortlist (§6) — должен возвращать только legacy-аннотированные matches
+- [x] Update §0 Status Dashboard в главном roadmap'е (P1 → 100%)
 
 ---
 
