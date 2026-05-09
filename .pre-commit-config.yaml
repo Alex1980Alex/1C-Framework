@@ -75,6 +75,16 @@ repos:
         files: ^src/pdf_framework/(agents/rag/nodes|prompts/signatures)\.py$
         pass_filenames: false
 
+  # mcp-smoke-check — roadmap §4.7: structural validation .mcp.json servers
+  - repo: local
+    hooks:
+      - id: mcp-smoke-check
+        name: MCP Servers Smoke Check
+        entry: python scripts/mcp_smoke_check.py
+        language: system
+        files: ^\.mcp\.json$
+        pass_filenames: false
+
 # CI configuration
 ci:
   autofix_commit_msg: |
