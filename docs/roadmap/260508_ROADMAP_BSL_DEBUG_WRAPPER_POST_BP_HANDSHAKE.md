@@ -22,6 +22,12 @@
 - P1 acceptance criteria (`debug_variables` returns ≥1 var, `debug_stack_trace` ≥1 frame, `debug_evaluate("ТекущаяДата()")` returns datetime) — `smoke_test_debug_pipeline.py --full` mode уже готов, нужен только trigger BP-fire через UI/scripted scenario.
 - P2.1 entry-line empty-array bug — observable только при real BP-fire; текущий код не меняет default behavior, fix зависит от наблюдаемого симптома.
 
+### Real-world finding 2026-05-09 — P1.2 fix insufficient
+
+Live BP-fire validation (`Документ.гкс_ЛабораторныйАнализ:141`) показала что **P1.2 «re-attach в tools перед запросом» НЕ закрывает race window**. После BP fire (`state: StopOnNextLine` confirmed) все eval/step вызовы возвращают HTTP 400 «UI+ - часть отладки не зарегистрирована», даже после force re-attach через `attach_debug_targets`. P2.1 entry-line empty-array — symptom того же registration loss bug, не отдельная проблема.
+
+**Open follow-up:** [`260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md`](260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md) — wire capture от EDT для определения missing RDBG calls в post-fire sequence. До его закрытия wrapper полезен только для BP set + target tracking + visual stop indication; для productive eval/step требуется EDT.
+
 ---
 
 ## 1. Контекст
