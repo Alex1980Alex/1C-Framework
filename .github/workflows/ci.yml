@@ -236,14 +236,14 @@ jobs:
           VECTOR_STORE__PROVIDER: qdrant
           VECTOR_STORE__QDRANT_URL: http://localhost:6333
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage XML (integration)
+        # Roadmap §2.5.4 closed via GitHub-native artifacts (см. test-unit job).
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          file: ./coverage.xml
-          flags: integration
-          name: codecov-integration
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-integration-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 30
 
   security-audit:
     name: Security Audit (pip-audit)

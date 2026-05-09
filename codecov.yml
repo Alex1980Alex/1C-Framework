@@ -1,5 +1,17 @@
 # Codecov configuration — roadmap 260509 §3.6.
 #
+# Status (§2.5.4 closure 2026-05-09): Codecov SaaS upload в ci.yml DROPPED
+# (заменён `actions/upload-artifact@v4` для GitHub-native coverage XML
+# storage). Причина: avoid external SaaS dep, регионально доступная
+# альтернатива, no credentials management.
+#
+# Этот файл оставлен как REFERENCE для future re-enabling Codecov:
+#   1. Добавить CODECOV_TOKEN secret в repo settings
+#   2. Заменить `actions/upload-artifact` шаги на `codecov/codecov-action@v4`
+#      с `token: ${{ secrets.CODECOV_TOKEN }}`
+#   3. Codecov автоматически применит rules ниже (patch ≥70%, project
+#      informational, ignore patterns) при first upload
+#
 # Strategy: prioritise diff-coverage over total threshold.
 #
 # Why diff-coverage instead of `--cov-fail-under=70`:
