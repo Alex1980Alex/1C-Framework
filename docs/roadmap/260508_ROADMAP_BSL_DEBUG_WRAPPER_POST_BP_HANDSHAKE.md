@@ -457,7 +457,13 @@ async def _event_loop(self) -> None:
 - Result теперь содержит `method: "rac.turn_off"|"taskkill"|"noop"` для tracing
 - 7 новых tests: rac full chain, unknown PID handling, fallback when cluster unknown, find_rac_exe none, parse cluster UUID, parse process list
 
-**Tests** (`tests/test_mcp_debug_server.py`): **116/116 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 = 116)
+**Fix #3 — rac cluster-auth через env vars** ([`mcp_debug_server.py:_rac_auth_args`](../../tools/bsl-debug-server/mcp_debug_server.py)):
+- Module-level helper `_rac_auth_args()` читает `RAC_CLUSTER_USER` + `RAC_CLUSTER_PWD` env vars и возвращает CLI args для splat в rac calls
+- Inject'ится в `_rac_list_processes_by_pid` и `_recycle_via_rac` (НЕ в `_rac_get_cluster_uuid` — `cluster list` не принимает эти параметры)
+- Empty list когда env не задано → backward compat с security-level=0 (default localhost)
+- Закрывает Gap #1 «taskkill Access Denied для SYSTEM-owned» для случаев когда rac доступен, но cluster security-level=1+ требует cluster-admin auth
+
+**Tests** (`tests/test_mcp_debug_server.py`): **120/120 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 + 4 для Fix #3 = 120)
 
 ### 11.7 Implementation status (updated 2026-05-10 post-fixes)
 
