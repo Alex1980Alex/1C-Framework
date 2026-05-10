@@ -13,7 +13,7 @@ Drives the entire debug workflow без user interaction:
 Usage:
     python scripts/autonomous_debug_test.py <scenario.json>
 
-Scenario JSON example (configurations/scenarios/post_lab_doc.json):
+Scenario JSON example (scripts/scenarios/post_lab_doc.json):
     {
       "alias": "ИБTransportManagementDevelop",
       "iis": {
