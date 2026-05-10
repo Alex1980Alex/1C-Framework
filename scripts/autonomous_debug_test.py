@@ -54,11 +54,78 @@ import mcp_debug_server as mds  # noqa: E402
 
 # Exit codes
 EXIT_OK = 0
+EXIT_SCHEMA_INVALID = 9
 EXIT_HEALTH_FAILED = 10
 EXIT_CONNECT_FAILED = 11
 EXIT_BP_TIMEOUT = 12
 EXIT_INSPECTION_FAILED = 13
 EXIT_BSL_TRIGGER_FAILED = 14
+
+
+def validate_scenario(scenario: dict) -> list:
+    """Pure-Python scenario JSON schema validator (no jsonschema dep).
+
+    Returns: list of error strings (empty list если scenario валиден).
+    """
+    errors: list = []
+
+    def require(obj: dict, path: str, key: str, types: tuple) -> None:
+        if key not in obj:
+            errors.append(f"{path}.{key} is required")
+            return
+        val = obj[key]
+        if not isinstance(val, types):
+            type_names = " | ".join(t.__name__ for t in types)
+            errors.append(f"{path}.{key} must be {type_names}, got {type(val).__name__}")
+
+    if not isinstance(scenario, dict):
+        return ["scenario root must be object"]
+
+    require(scenario, "$", "alias", (str,))
+    require(scenario, "$", "bsl_trigger", (str,))
+    require(scenario, "$", "breakpoints", (list,))
+
+    if "iis" in scenario:
+        iis = scenario["iis"]
+        if isinstance(iis, dict):
+            require(iis, "$.iis", "url", (str,))
+        else:
+            errors.append("$.iis must be object")
+
+    if "force_recycle" in scenario and not isinstance(scenario["force_recycle"], bool):
+        errors.append("$.force_recycle must be bool")
+
+    if "stop_timeout_sec" in scenario and not isinstance(
+            scenario["stop_timeout_sec"], (int, float)):
+        errors.append("$.stop_timeout_sec must be number")
+
+    if "pre_trigger_wait_sec" in scenario and not isinstance(
+            scenario["pre_trigger_wait_sec"], (int, float)):
+        errors.append("$.pre_trigger_wait_sec must be number")
+
+    bps = scenario.get("breakpoints", [])
+    if isinstance(bps, list):
+        for i, bp in enumerate(bps):
+            path = f"$.breakpoints[{i}]"
+            if not isinstance(bp, dict):
+                errors.append(f"{path} must be object")
+                continue
+            require(bp, path, "object_id", (str,))
+            require(bp, path, "line", (int,))
+            if "module_type" in bp and not isinstance(bp["module_type"], str):
+                errors.append(f"{path}.module_type must be string")
+            if "inspections" in bp:
+                insps = bp["inspections"]
+                if not isinstance(insps, list):
+                    errors.append(f"{path}.inspections must be array")
+                    continue
+                for j, insp in enumerate(insps):
+                    if not isinstance(insp, dict):
+                        errors.append(f"{path}.inspections[{j}] must be object")
+                        continue
+                    require(insp, f"{path}.inspections[{j}]", "expr", (str,))
+
+    return errors
 
 
 def _print_section(title: str) -> None:
