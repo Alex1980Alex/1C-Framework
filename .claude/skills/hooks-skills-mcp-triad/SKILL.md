@@ -156,6 +156,7 @@ description: "Используй этот скилл для понимания �
 | `implement-1c-task` | 8-этапная реализация задачи: EDT-MCP + 1c-mcp-crud + bsl-debug-server, обязательные циклы валидации |
 | `bsl-development` | Разработка BSL: процедуры, обработка проведения, модули, 3 стратегии reasoner |
 | `1c-mcp-crud` | MCP доступ к живой базе 1С: execute_query, execute_code, get_metadata, event_log |
+| `1c-debug-hmr` | MCP отладка BSL с HMR: 13 tools (BP/stack/locals/eval/step), persistent RDBG session через `.active.json`, unified `ping()` dispatch |
 | `va-bdd-testing` | VA BDD тестирование: калиброванные step-паттерны, Stage 4a pre-scenario TestDB check, post-verification |
 | `auto-test-after-write` | Автопроверка BSL после Write через MCP (syntax + тесты) |
 | `brownfield-validate` | Валидация реализации vs OpenSpec (Gap/Design/Impl валидаторы) |
