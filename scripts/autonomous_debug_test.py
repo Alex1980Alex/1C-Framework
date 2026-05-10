@@ -103,6 +103,10 @@ def validate_scenario(scenario: dict) -> list:
             scenario["pre_trigger_wait_sec"], (int, float)):
         errors.append("$.pre_trigger_wait_sec must be number")
 
+    if "warmup_trigger_count" in scenario and not isinstance(
+            scenario["warmup_trigger_count"], int):
+        errors.append("$.warmup_trigger_count must be int")
+
     bps = scenario.get("breakpoints", [])
     if isinstance(bps, list):
         for i, bp in enumerate(bps):
