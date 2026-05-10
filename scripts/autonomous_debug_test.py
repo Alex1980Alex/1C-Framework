@@ -320,6 +320,12 @@ def main() -> int:
         return 2
 
     scenario = json.loads(args.scenario.read_text(encoding="utf-8"))
+    schema_errors = validate_scenario(scenario)
+    if schema_errors:
+        print(f"[FAIL] scenario schema validation failed:", file=sys.stderr)
+        for err in schema_errors:
+            print(f"  - {err}", file=sys.stderr)
+        return EXIT_SCHEMA_INVALID
     print(f"=== Autonomous debug test runner — {args.scenario.name} ===")
     print(f"Alias: {scenario.get('alias')}")
     print(f"BPs: {len(scenario.get('breakpoints', []))}")
