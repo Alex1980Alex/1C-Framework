@@ -77,6 +77,14 @@
       "created": "2026-05-08",
       "last_verified": "2026-05-10",
       "sources": ["kb.1ci.com/§32.2.2", "1c-dn.com/library", "github.com/yukon39/bsl-debug-server", "github.com/yukon39/vsc-bsl-dap", "github.com/1c-syntax/Coverage41C", "github.com/arkuznetsov/irac", "edt.1c.ru/dev/edt/2022.2/apidocs", "its.1c.ru/edtdoc/t000068", "its.1c.ru/edtdoc/10421", "its.1c.ru/metod8dev/i8105973", "its.1c.ru/metod8dev/5756", "wonderland.v8.1c.ru/blog/novyy-mekhanizm-otladki", "efsol.ru/manuals/1c-server-rphost-process-restart", "koderline.ru article-vklyuchenie-otladki-dlya-veb-i-http-servisov", "infostart.ru/1133240", "infostart.ru/1885817", "forum.infostart.ru/topic292879", "1c-dn.com/forum/forum1/topic2025", "tools/bsl-debug-server/src/main/java (local yukon39 source)", "tools/bsl-debug-server/mcp_debug_server.py", "docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md", "docs/roadmap/260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md"]
+    },
+    "rdbg-pre-existing-rphost-workarounds": {
+      "title": "RDBG pre-existing rphost — three sanctioned workarounds (force-recycle / preflight gate / pre-launch thin client) для mcp_debug_server.py wrapper",
+      "file": "rdbg-pre-existing-rphost-workarounds.md",
+      "created": "2026-05-10",
+      "last_verified": "2026-05-10",
+      "keywords": ["RDBG", "dbgs.exe", "rphost", "pre-existing rphost", "setBreakOnNextStatement", "setAutoAttachSettings", "attachDetachDbgTargets", "DBGUIExtCmdInfoStarted", "force-recycle", "taskkill rphost", "Console кластера", "rac process kill", "irac", "Coverage41C", "yukon39", "thin client debug", "автоматическое подключение отладчика", "HTTP сервис отладка", "веб-сервис отладка", "фоновое задание отладка", "Предмет отладки не зарегистрирован", "1c-mcp-crud отладка", "decision tree", "lifecycle модель"],
+      "sources": ["live test 2026-05-10", "github.com/yukon39/bsl-debug-server (HTTPDebugClient.java, ServerContext.java)", "github.com/yukon39/vsc-bsl-dap", "github.com/1c-syntax/Coverage41C", "github.com/arkuznetsov/irac", "its.1c.ru/edtdoc/t000068", "its.1c.ru/edtdoc/10421", "its.1c.ru/metod8dev/i8105973", "its.1c.ru/metod8dev/5756", "its.1c.ru/v8321doc TI000001030", "wonderland.v8.1c.ru", "efsol.ru/manuals/1c-server-rphost-process-restart", "koderline.ru", "1c-programmer-blog.ru", "1s-on.ru", "infostart.ru/1133240", "infostart.ru/1885817", "forum.infostart.ru/topic292879", "1c-dn.com/forum/forum1/topic2025", "edt.1c.ru/dev/edt/2022.2/apidocs", "tools/bsl-debug-server/mcp_debug_server.py", "scripts/start-onec-autonomous-debug.ps1", "docs/roadmap/260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md"]
     }
   }
 }
