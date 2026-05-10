@@ -478,6 +478,96 @@ async def _event_loop(self) -> None:
 
 **Tests** (`tests/test_mcp_debug_server.py`): **133/133 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 + 4 для Fix #3 + 3 для Fix #4 + 10 для Fix #5 = 133)
 
+## 12. Three-level autonomous control (planned 2026-05-10, post live-validation)
+
+**User requirement:** «нужно сделать так чтобы мы полностью контролировали результаты своей работы — максимальная автоматизация без моего участия. Ты создаёшь инструмент который тебе проверяет и подготавливает тестовую среду, потом тестирование, и [post-mortem] чтобы понять что сделал, что сработало, где затыки.»
+
+GitHub research (yukon39/bsl-debug-server, microsoft/debugpy, Coverage41C, FastMCP, testcontainers, K8s readiness, debugpy timeline) → синтезированы 3 уровня:
+
+### 12.1 Level 1 — `debug_health_check` (preflight + auto-prepare)
+
+MCP tool, `mode=probe` (default, read-only) | `mode=prepare` (action whitelist).
+
+**JSON shape (K8s readiness pattern):**
+```json
+{
+  "ready": bool,
+  "version": "mcp_debug_server@2026-05-10",
+  "checks": {"<probe_id>": {"status": "pass|warn|fail", "detail": str, "fix": str?}},
+  "auto_prepare_available": [str],
+  "recommended_workflow": "thin-client|force-recycle|service-restart|read-only",
+  "elapsed_ms": int
+}
+```
+
+**Probes (cheap-first ordering):** dbgs_port_1550 (TCP), rac_exe_path, ragent_debug_flag (Get-CimInstance binPath parse), rphost_count_baseline (tasklist + start times), env_vars (RAC_CLUSTER_USER, BSL_DEBUG_ALLOW_SERVICE_RESTART), sddl_au_grant (sc sdshow), auto_attach_filter_default, active_session.
+
+**Auto-prepare actions (explicit whitelist, never implicit):**
+- ✅ `kill-stale-rphosts` (через `_recycle_via_rac`)
+- ✅ `restart-ragent` (если env+SDDL grant)
+- ❌ NEVER auto-modify SDDL / set env vars (security boundary)
+
+### 12.2 Level 2 — `scripts/autonomous_debug_test.py` (E2E без user-input)
+
+Standalone Click CLI script для CI или manual smoke. Driver primitive: `1c-mcp-crud execute_code` (НЕ subprocess 1cv8c, НЕ COM).
+
+Architecture (debugpy timeline pattern):
+```python
+async with Client(mcp_debug_server) as cli:
+    health = await cli.call_tool("debug_health_check")
+    if not health["ready"]:
+        await cli.call_tool("debug_health_check",
+                            {"mode": "prepare", "actions": health["auto_prepare_available"]})
+    await cli.call_tool("debug_connect", {"infobase_alias": scenario.alias})
+    for bp in scenario.breakpoints:
+        await cli.call_tool("debug_set_breakpoint", bp)
+    timeline = EventTimeline()
+    timeline.start_recording(cli)
+    crud_task = asyncio.create_task(crud_client.call_tool("execute_code", {"code": scenario.bsl_trigger}))
+    for expected_bp in scenario.breakpoints:
+        evt = await timeline.wait_for("stopped", bp_id=expected_bp.id, timeout=15)
+        for inspection in expected_bp.inspections:
+            value = await cli.call_tool("debug_evaluate", {"expression": inspection.expr})
+            assert inspection.matcher(value)
+        await cli.call_tool("debug_step", {"action": "Continue"})
+    await crud_task
+    return timeline.summary()
+```
+
+Scenario JSON: alias + bsl_trigger + breakpoints[].{object_id, line, module_type, inspections[]}.
+
+### 12.3 Level 3 — `debug_session_summary` (post-mortem)
+
+MCP tool с aggregated metrics. Tracking pattern: append-only event log в memory dict + opt mirror в `data/debug_sessions/<id>.jsonl`.
+
+**Tracked fields:** session_id, started/ended_at, infobase_alias, breakpoints {set_count, fire_count, by_location}, evaluations {count, failures, avg_latency_ms, errors}, ui_plus_retries, recycle_method_used, force_recycle_invoked, workflow_path[], stop_events[], rphosts_seen[], warnings[].
+
+**API:** `debug_session_summary(session_id?: str = current, format: "json"|"markdown" = "json")`. Markdown рендер для PR descriptions.
+
+### 12.4 Anti-patterns (из research)
+
+| Pattern | Что НЕ делать |
+|---|---|
+| Subprocess MCP tests с sleep | FastMCP `Client(server)` in-memory |
+| Открыть Client в pytest fixture | `async with Client(...)` ВНУТРИ test body (event-loop bug) |
+| Auto-prepare без preflight | Default mode=probe; mode=prepare ТОЛЬКО с explicit actions |
+| Polling sleep loops | `timeline.wait_for(predicate, timeout=N)` async |
+| Trust subprocess exit code | Verify через timeline events (BSL Попытка/Исключение маскирует) |
+| Auto-kill всех rphosts | Filter by uptime>1h AND no_attached_debugger |
+| Tool sprawl | 3 tools (health_check, session_summary, autonomous = standalone), не 15 |
+
+### 12.5 Implementation order
+
+1. Level 1 (debug_health_check) — фундамент для L2
+2. Level 3 (debug_session_summary) — tracking infra независим от L2
+3. Level 2 (autonomous runner) — depends on L1+L3
+
+### 12.6 GitHub references
+
+[microsoft/debugpy](https://github.com/microsoft/debugpy), [jlowin/fastmcp](https://github.com/jlowin/fastmcp) + [gofastmcp.com/servers/testing](https://gofastmcp.com/servers/testing), [testcontainers-python](https://github.com/testcontainers/testcontainers-python), [1c-syntax/Coverage41C](https://github.com/1c-syntax/Coverage41C), [microsoft/playwright](https://github.com/microsoft/playwright) trace viewer, [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk), [Stop Vibe-Testing MCP Servers (jlowin)](https://jlowin.dev/blog/stop-vibe-testing-mcp-servers).
+
+---
+
 ### 11.7 Implementation status (updated 2026-05-10 post-fixes)
 
 - [x] **Solution A + B implemented** в [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py):
