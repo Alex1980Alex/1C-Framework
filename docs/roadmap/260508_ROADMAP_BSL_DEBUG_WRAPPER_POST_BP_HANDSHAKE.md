@@ -85,10 +85,12 @@ Live BP-fire validation (`Документ.гкс_ЛабораторныйАна
 - [x] `RDBGClient.set_break_on_next_statement()` реализован
 - [x] `debug_break_on_next` MCP tool зарегистрирован
 - [x] 78 unit-тестов pass (no regression)
-- [ ] **Real validation pending:** Claude Code restart → re-run scenario из §10 «Симптомы» → BP fires → 260510 eval bug либо подтверждается, либо опровергается на этом полном пути
+- [x] **Real validation 2026-05-10:** ❌ **FAILED** — `setBreakOnNextStatement` НЕ catches pre-existing IIS rphost. Подтверждено двумя триггерами: `post_document(dry_run=true)` <1с success без events; `execute_code` 50K-iter loop ~3с success без events. Wrapper continues to see `targets=[], events=[]` после armed break_on_next.
 
 ### Affects
-- Roadmap 260510 §0 «pending validation» теперь чище: после Phase 1.5 acceptance путь до BP fire **полностью покрыт wrapper'ом**, остаётся только UI+ registration bug на eval (если он действительно существует).
+- Phase 1.5 fix технически реализован, но НЕ закрывает заявленную цель (§10 «pre-existing rphost invisible» для IIS-сценария). Wrapper полезен для thin-client workflow (валидирован — см. §0), но не для 1c-mcp-crud / IIS HTTP-service triggers.
+- Roadmap 260510 «UI+ eval-registration bug» — на thin client сценарии 2026-05-10 НЕ воспроизвёлся; eval/variables/step возвращают `correctly`. До отдельного контр-примера 260510 можно считать closed (см. §0 validation results).
+- Полный набор кандидатных решений для §10 — добавлен в §11 ниже (research follow-up 2026-05-10).
 
 ---
 
