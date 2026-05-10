@@ -656,7 +656,13 @@ MCP tool с aggregated metrics. Tracking pattern: append-only event log в memor
 - ✅ A: `_get_stale_hint()` + `stale_warning` в health_check
 - ✅ D: `_stale_hint` в session_summary + session_diff
 - ❌ B: AVOIDED (per research)
-- 📌 mcp-hmr: задокументировано как option для опытных пользователей; default остаётся `python mcp_debug_server.py` (без hot-reload)
+- ✅ **mcp-hmr live validated 2026-05-10:** `pip install mcp-hmr` (0.0.3.5 + fastmcp 2.14.7 + hmr 0.7.6.3) → smoke test показал `Starting MCP server 'proxy' on http://127.0.0.1:9877/mcp` + `initialize` returns 200 OK. Hot-reload validation: touch `mcp_debug_server.py` → log пишет `watchfiles.main INFO 1 change detected` → mcp-hmr re-импортирует. Альтернативный профиль `1c-debug-hmr` добавлен в `.mcp.json` рядом с default `1c-debug` — opt-in, не ломает существующий workflow.
+
+**Использование mcp-hmr:**
+
+В Claude Code MCP dialog (`/mcp`) — переключиться с `1c-debug` на `1c-debug-hmr`. После этого: edit `mcp_debug_server.py` → mcp-hmr автоматически re-импортирует изменённые модули → новые helpers/logic доступны без `/mcp reconnect`. RDBGClient state может потеряться при reload изменённого модуля — это trade-off за скорость dev-цикла.
+
+⚠️ **Caveat:** mcp-hmr 0.0.3.5 (2026, ранний релиз). Подходит для dev environment; для production-стабильности использовать default `1c-debug`. Рассматривать staging period перед массовым переключением команды.
 
 **Tests** (`tests/test_mcp_debug_server.py`): **193/193 pass** (+7 для A+D: 3 stale-detection helper + 4 hint-propagation в 3 tools)
 
