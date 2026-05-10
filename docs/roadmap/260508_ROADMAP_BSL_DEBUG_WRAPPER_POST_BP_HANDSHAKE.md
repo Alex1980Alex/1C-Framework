@@ -329,3 +329,94 @@ async def _event_loop(self) -> None:
 Начинать сейчас или после закрытия GKSTCPLK-2468 через Path B (SQL diagnostic)?
 
 **Рекомендация:** Path B (SQL diagnostic) сначала — даёт ответ по реальной задаче за минуты. Этот roadmap — параллельный track для улучшения dev-tooling, не блокер production-работы.
+
+---
+
+## 11. Research follow-up 2026-05-10 — решения для §10 (IIS pre-existing rphost capture)
+
+После провала Phase 1.5 запущено двойное исследование (GitHub yukon39/EDT/Coverage41C + ITS/Infostart/блоги) для поиска корня и кандидатных решений. Полное содержание агентских отчётов сохранено в conversation log; здесь — синтез.
+
+### 11.1 Root cause (подтверждён двумя независимыми путями)
+
+**RDBG-команды протокола работают по lifecycle модели:**
+
+1. `attachDebugUI` создаёт debug session в dbgs.exe
+2. `setAutoAttachSettings(targetTypes=[Server, HTTPService, JOB], areaNames=[<infobase>])` ПУШИТ фильтр в dbgs (yukon39 [HTTPDebugClient.java:174-185](https://github.com/yukon39/bsl-debug-server/blob/master/src/main/java/com/github/yukon39/bsl/debugserver/httpDebug/HTTPDebugClient.java#L174))
+3. dbgs распространяет фильтр **только тем rphost'ам, которые зарегистрируются ПОСЛЕ этого момента** (rphost reads filter on startup, не retroactively)
+4. Когда новый rphost spawn'ится — он fire'т `DBGUIExtCmdInfoStarted` event → ping-loop wrapper'а ловит → `attachDebugTarget(targetId)` → target attached
+5. `setBreakOnNextStatement` ставит break-flag для **уже attached targets** ([HTTPDebugClient.java:262-271](https://github.com/yukon39/bsl-debug-server/blob/master/src/main/java/com/github/yukon39/bsl/debugserver/httpDebug/HTTPDebugClient.java#L262)) — pre-existing rphost не attached, флаг ему не доходит
+
+**Подтверждения root cause:**
+- Yukon39 source: `getDbgAllTargetStates` (HTTPDebugClient.java:226-237) возвращает state только для attached targets; `attachDetachDbgTargets` (HTTPDebugClient.java:190-202) принимает explicit IDs (нет wildcard / PID mode)
+- ITS / EDT docs: «среда должна сначала подключиться к серверу отладки и получить от него необходимую информацию» — auto-attach работает только для **subsequently-spawned** targets ([its.1c.ru/edtdoc t000068](https://its.1c.ru/db/content/edtdoc/src/topics/t000068.html))
+- `[1c-syntax/Coverage41C](https://github.com/1c-syntax/Coverage41C)` flag `--autoconnectTargets` помечен как «not for general use» — даже коммьюнити-проекты избегают надёжного решения через RDBG
+- Issue tracker `yukon39/bsl-debug-server` пуст по этой теме (#8, #9 не релевантны) — это не баг wrapper'а, а контрактное ограничение протокола
+
+**Что НЕ работает (опровергнутые попытки):**
+- ❌ `setBreakOnNextStatement` без attached targets — silent no-op (наша Phase 1.5)
+- ❌ Любая попытка retroactive attach pre-existing rphost'а — RDBG протокол не предоставляет API
+- ❌ Wildcard / PID-based attach — не существует в yukon39 / EDT / vsc-bsl-dap
+
+### 11.2 Sanctioned solutions (от вендора и сообщества)
+
+**Solution A — Force-recycle rphost (lowest effort, highest reliability).** ITS-санкционированный путь.
+- Запустить wrapper с `setAutoAttachSettings(targetTypes=[HTTPService, BackgroundJob, Server], areaNames=[<alias>])` сразу после `attachDebugUI`
+- OS-level kill pre-existing rphost: `taskkill /pid <pre_existing_rphost_pid>` ИЛИ Console кластера → «Выключить» с graceful drain ([efsol.ru](https://efsol.ru/manuals/1c-server-rphost-process-restart/))
+- Альтернатива через `rac process shutdown --cluster=<UUID> --process=<UUID>` (сообщество, не в индексированной ITS-доке; через wrapper [arkuznetsov/irac](https://github.com/arkuznetsov/irac))
+- Ragent spawn'ит fresh rphost → читает фильтр на регистрации → fire'т `DBGUIExtCmdInfoStarted` → wrapper auto-attach'ит → BPs работают
+- **Risk:** active sessions в pre-existing rphost'е разорвутся (но Console кластера передаёт их другому процессу — менее invasive чем taskkill)
+- **Effort:** ~4-6ч (Python wrapper для PID detect + taskkill/rac call + integration в `debug_connect`)
+
+**Solution B — Preflight gate (lowest UX surprise).** Вместо тихого падения — явная ошибка.
+- В `debug_connect`: detect pre-existing rphosts через `Get-Process rphost`
+- Если есть — return error: `"rphost {pid} already running before debug_connect — RDBG protocol cannot retroactively attach. Solutions: (1) restart 1C Server Agent, (2) kill rphost via Console кластера, (3) use --force-restart flag"`
+- **Effort:** ~1-2ч
+- **Trade-off:** не решает проблему, только говорит правду — но честнее текущего silent failure
+
+**Solution C — Pre-launch thin client workflow (already validated 2026-05-10).** Workflow-level path, без правок wrapper'а.
+- `start-onec-autonomous-debug.ps1` запускает 1cv8c.exe с `/Debug /DebuggerURL` ДО любых действий
+- Debug session attached к thin client rphost'у автоматически
+- Triggers через тонкого клиента (UI: «Провести», открыть форму) → BPs работают
+- **Validated empirically сегодня** (см. §0 Validation results table)
+- **Limitation:** не решает 1c-mcp-crud / IIS path; но для большинства dev-сценариев достаточно
+
+### 11.3 Recommended path
+
+**Combo A + B:** Solution B (preflight gate) сразу — minimal effort, честный UX. Solution A (auto-recycle) — отдельным roadmap'ом, опционально через флаг `debug_connect(force_recycle_rphost=true)`. Solution C — обновить документацию ([16.7_Autonomous_Debug_Workflow.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) как preferred workflow для dev.
+
+**Не рекомендуется:**
+- Coverage41C-style probe loop — fragile, depends on platform internals
+- Доработки самого `setBreakOnNextStatement` — не решит проблему, ограничение в RDBG-протоколе
+
+### 11.4 Полный список источников
+
+**GitHub:**
+- [yukon39/bsl-debug-server](https://github.com/yukon39/bsl-debug-server) — Java reference impl, эталон XML-форматов
+- [yukon39/bsl-debug-server/HTTPDebugClient.java](https://github.com/yukon39/bsl-debug-server/blob/master/src/main/java/com/github/yukon39/bsl/debugserver/httpDebug/HTTPDebugClient.java) — lines 174-185 (setAutoAttachSettings), 190-202 (attachDetachDbgTargets), 226-237 (getDbgAllTargetStates), 262-271 (setBreakOnNextStatement)
+- [yukon39/bsl-debug-server/ServerContext.java](https://github.com/yukon39/bsl-debug-server/blob/master/src/main/java/com/github/yukon39/bsl/debugserver/context/ServerContext.java) — lines 230-239 `debugTargetStarted` handler
+- [yukon39/vsc-bsl-dap](https://github.com/yukon39/vsc-bsl-dap) — VSCode DAP, тот же базовый стек, та же limitation
+- [1c-syntax/Coverage41C](https://github.com/1c-syntax/Coverage41C) — `--autoconnectTargets` flag (fragile, по README)
+- [arkuznetsov/irac](https://github.com/arkuznetsov/irac) — OScript wrapper над RAC
+
+**ITS (1С официально):**
+- [Подключение предметов отладки — t000068](https://its.1c.ru/db/content/edtdoc/src/topics/t000068.html) — auto-attach фильтры EDT
+- [Настройка отладки — 10421](https://its.1c.ru/db/edtdoc/content/10421/hdoc)
+- [Подключение к серверу отладки через https — i8105973](https://its.1c.ru/db/content/metod8dev/src/developers/scalability/instructions/i8105973.htm)
+- [Создание и отладка HTTP-сервисов — metod8dev/5756](https://its.1c.ru/db/metod8dev/content/5756/hdoc)
+- [Глава 32. Отладка — v8321doc TI000001030](https://its.1c.ru/db/v8321doc/bookmark/dev/TI000001030)
+
+**Сообщество и блоги:**
+- [Wonderland: новый механизм отладки](https://wonderland.v8.1c.ru/blog/novyy-mekhanizm-otladki/)
+- [Перезапуск rphost — efsol.ru](https://efsol.ru/manuals/1c-server-rphost-process-restart/) — Console кластера workflow
+- [Отладка по HTTP/TCP-IP — 1c-programmer-blog.ru](https://1c-programmer-blog.ru/platforma/otladka-po-protokolam-http-i-tcp-ip-v-1s.html)
+- [Включение отладки веб- и HTTP-сервисов — koderline.ru](https://www.koderline.ru/expert/narabotki/article-vklyuchenie-otladki-dlya-veb-i-http-servisov-v-1s-prosvechivaem-chernyy-yashchik/)
+- [Базовые настройки механизма отладки — infostart.ru/1133240](https://infostart.ru/1c/articles/1133240/)
+- [Отладка HTTP-сервисов в файловой базе — infostart.ru/1885817](https://infostart.ru/1c/articles/1885817/)
+- [Не работает отладка — 1s-on.ru](https://1s-on.ru/ne-rabotaet-otladka-1s/)
+- [HTTPService debug — 1c-dn.com forum 2025](https://1c-dn.com/forum/forum1/topic2025/)
+- [Отладка тонкий клиент + веб-сервер — forum.infostart.ru/topic292879](https://forum.infostart.ru/forum9/topic292879/)
+
+### 11.5 Open follow-up tasks
+
+- [ ] Создать отдельный roadmap `260511_ROADMAP_BSL_DEBUG_RPHOST_AUTO_RECYCLE.md` для Solution A (force-recycle) с phased plan: preflight gate (B) → флаг force_recycle (A) → docs update (C)
+- [ ] Closed: Roadmap [260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md](260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md) — сегодняшняя thin-client validation показала что eval-registration bug не воспроизвёлся; либо был артефактом старого scenario, либо фикс P1.2 покрыл. Контекст для possible reopen: документ `гкс_ЛабораторныйАнализ:141` ObjectModule, runID = thin client `d.sokolov@sodru.com` session `e3f71a05-b168-4273-b71d-5bf5caf4c201`
