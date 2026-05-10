@@ -164,6 +164,15 @@
       },
       "timeout": 60000
     },
+    "1c-debug-hmr": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\mcp-hmr.exe",
+      "args": ["mcp_debug_server:mcp"],
+      "cwd": "C:\\1С-Framework\\tools\\bsl-debug-server",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
     "openspec-mcp": {
       "command": "npx",
       "args": ["-y", "openspec-mcp@0.4.2", "."],
