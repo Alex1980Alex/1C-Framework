@@ -1,0 +1,42 @@
+{
+  "_comment": "Roadmap §12.2 sample scenario — повторяет multi-BP live тест 2026-05-10. Запуск: python scripts/autonomous_debug_test.py configurations/scenarios/post_lab_doc.json",
+  "alias": "ИБTransportManagementDevelop",
+  "iis": {
+    "url": "http://localhost/transport/hs/mcp/rpc",
+    "auth_user_env": "MCP_ONEC_USERNAME",
+    "auth_pwd_env": "MCP_ONEC_PASSWORD"
+  },
+  "force_recycle": false,
+  "bsl_trigger": "Док = Документы.гкс_ЛабораторныйАнализ.НайтиПоНомеру(\"ТМУТ-000006\").ПолучитьОбъект(); Док.Записать(РежимЗаписиДокумента.Проведение); Результат = Строка(Док.Ссылка);",
+  "breakpoints": [
+    {
+      "object_id": "9c496dda-a7d1-463a-945d-1916088f7b61",
+      "line": 141,
+      "module_type": "ObjectModule",
+      "_comment": "ОбработкаПроведения entry — ДопПараметры ещё Не определено",
+      "inspections": [
+        {"expr": "ТипЗнч(ДопПараметры).ПолноеИмя()", "expect_substring": "Тип"}
+      ]
+    },
+    {
+      "object_id": "9c496dda-a7d1-463a-945d-1916088f7b61",
+      "line": 145,
+      "module_type": "ObjectModule",
+      "_comment": "После ДопПараметры = ... — Структура с 4 ключами",
+      "inspections": [
+        {"expr": "ТипЗнч(ДопПараметры).ПолноеИмя()", "expect_substring": "Структура"},
+        {"expr": "ДопПараметры.Количество()", "expect_substring": "4"}
+      ]
+    },
+    {
+      "object_id": "0d22c470-3b77-4b76-94cd-e6a4aee6099f",
+      "line": 208,
+      "module_type": "CommonModule",
+      "_comment": "CommonModule.гкс_ПроведениеДокументов.ОбработкаПроведенияДокумента entry",
+      "inspections": [
+        {"expr": "Документ.Метаданные().ПолноеИмя()", "expect_substring": "Лабораторный"}
+      ]
+    }
+  ],
+  "stop_timeout_sec": 20
+}
