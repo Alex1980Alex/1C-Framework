@@ -556,6 +556,39 @@ MCP tool с aggregated metrics. Tracking pattern: append-only event log в memor
 | Auto-kill всех rphosts | Filter by uptime>1h AND no_attached_debugger |
 | Tool sprawl | 3 tools (health_check, session_summary, autonomous = standalone), не 15 |
 
+### 12.7 Improvements 2026-05-10 v2 (post live-validation iteration)
+
+После live-теста §12 выявлены 4 точки улучшения. Все реализованы + tested + 1 critical regression auto-detected:
+
+**Auto-detected regression (Fix #1 rollback):**
+- L2 autonomous test разоблачил, что `setAutoAttachSettings` с values `[HTTPService, WebService, BackgroundJob]` отвергается RDBG XSD (HTTP 400 «Несоответствие свойства targetType»)
+- Default rolled back to `[Server, ManagedClient]` (validated XSD-compliant)
+- Test добавлен с anti-regression assertion (HTTPService etc. НЕ должны попадать в body)
+- **Это и есть точка автономного контроля** — без L2 это вылезло бы только при следующей попытке reconnect
+
+**Improvement 1 — L2 pre-trigger wait** ([`scripts/autonomous_debug_test.py`](../../scripts/autonomous_debug_test.py)):
+- Scenario.pre_trigger_wait_sec (default 0; auto-bumped до 5s если force_recycle=true)
+- После force_recycle и ПЕРЕД triggering — sleep даёт ragent время spawn'ить fresh rphost'ы + ping_loop поймать DBGUIExtCmdInfoStarted events
+- Закрывает timing race пост-recycle
+
+**Improvement 2 — L1 cluster_load probe** (`_hc_probe_cluster_load`):
+- Парсит `rac process list` connections-field, warn если >threshold (default 10, env `BSL_DEBUG_CONN_THRESHOLD`)
+- Сигналит «debug может тормозить под прод-нагрузкой»
+- Включён в `_hc_collect_checks`
+
+**Improvement 3 — L3 cross-session diff** (`debug_session_diff` MCP tool):
+- `debug_session_summary` теперь mirror'ит JSON в `data/debug_sessions/<session_id>.json` (auto-create dir)
+- New tool `debug_session_diff(prev_session_id, curr_session_id?)` сравнивает counters/stop_events/eval failures
+- Verdict: `REGRESSION` если bp_fire_count↓ OR eval_failures↑ OR ui_plus_retries↑; `NO_REGRESSION` иначе
+- Пример workflow: запустить L2 на baseline branch → save session_id → переключиться → запустить L2 → diff → найти регрессию
+
+**Improvement 4 — L2 scenario schema validation** (`validate_scenario` в L2 script):
+- Pure-Python validator (no jsonschema dep)
+- Проверяет: alias/bsl_trigger/breakpoints required; force_recycle/timeout types; iis.url required если iis present; bp.{object_id, line} required; inspections[].expr required
+- Fail fast с exit code 9 (`EXIT_SCHEMA_INVALID`) и понятным error message — не нужно ждать timeout чтобы понять что scenario broken
+
+**Tests** (`tests/test_mcp_debug_server.py` + новый `scripts/test_autonomous_debug_test.py`): **182/182 pass** (+23 новых: 4 cluster_load probe + 6 session_diff + 13 scenario validator)
+
 ### 12.5 Implementation order
 
 1. Level 1 (debug_health_check) — фундамент для L2
