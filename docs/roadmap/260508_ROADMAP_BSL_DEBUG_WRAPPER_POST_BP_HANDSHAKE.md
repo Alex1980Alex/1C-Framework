@@ -616,6 +616,50 @@ MCP tool с aggregated metrics. Tracking pattern: append-only event log в memor
 
 **Tests** (`tests/test_mcp_debug_server.py` + `scripts/test_autonomous_debug_test.py`): **186/186 pass** (+3 для dry_run + 2 для warmup validation = 186)
 
+### 12.9 Stale-detection (A+D) + B research verdict
+
+**Контекст:** при изменении `mcp_debug_server.py` running MCP-процесс держит OLD код в памяти. Чтобы подхватить изменения — нужен `/mcp reconnect` (slash-команда Claude Code). Я не могу вызвать `/mcp` сам — это harness-команда. Реализованы два «assist» механизма + research альтернатив.
+
+**A — explicit `stale_warning` в `debug_health_check` response:**
+- Module-level `_MODULE_LOADED_AT = time.time()` запоминает Python-import timestamp
+- `_get_stale_hint()` сравнивает с `os.path.getmtime(__file__)` — если файл новее > MCP startup → вернёт строку «Wrapper file modified Ns after MCP start — running stale code. Run /mcp reconnect to pick up changes.»
+- Добавляется в `debug_health_check` JSON как поле `stale_warning` ТОЛЬКО при stale (no noise когда fresh)
+- Graceful: OSError при getmtime → returns None, не блокирует
+
+**D — passive `_stale_hint` в `debug_session_summary` + `debug_session_diff` responses:**
+- Same `_get_stale_hint()` инжектится как `_stale_hint` поле в JSON
+- Нет ломки API контракта — клиенты которые не знают о поле просто его игнорируют
+- User видит подсказку при post-mortem review (естественное место чтобы напомнить о reconnect)
+
+**B research verdict — AVOID (subprocess-per-tool wrapping):**
+
+Дочерний research-agent проанализировал GitHub patterns:
+| Найдено | Verdict |
+|---|---|
+| `pytest-forked` / `pytest-isolate` | работает на Linux (fork ~50ms), Windows fallback на spawn ~5x медленнее |
+| `MultiServerMCPClient` (LangChain) stateless mode | client-side, не server-side |
+| `mcp-reloader` (Node.js) | N/A — наш сервер Python |
+| **`mcp-hmr` (Python FastMCP hot reload)** | ⭐ **production-grade решение нашей exact problem** |
+
+**Лучшая альтернатива найдена — [`mcp-hmr`](https://pypi.org/project/mcp-hmr/) (PyPI, обсуждение [`fastmcp Discussion #2134`](https://github.com/jlowin/fastmcp/discussions/2134)):**
+- Drop-in замена `fastmcp run` — одна строка в `.mcp.json`:
+  ```json
+  "command": "mcp-hmr",
+  "args": ["mcp_debug_server.py:mcp"]
+  ```
+- Built on `hmr` (тот же engine что `uvicorn-hmr`) — fine-grained reload только изменённых модулей
+- Expensive init выживает, MCP-connection не дропается, Claude Code НЕ требует `/mcp reconnect`
+- Для нашего wrapper'а: RDBGClient + breakpoint cache + ping_loop сохраняются между reload'ами
+- Caveat: package молодой (2026), рекомендуется staging period перед prod-rollout
+
+**Implementation status §12.9:**
+- ✅ A: `_get_stale_hint()` + `stale_warning` в health_check
+- ✅ D: `_stale_hint` в session_summary + session_diff
+- ❌ B: AVOIDED (per research)
+- 📌 mcp-hmr: задокументировано как option для опытных пользователей; default остаётся `python mcp_debug_server.py` (без hot-reload)
+
+**Tests** (`tests/test_mcp_debug_server.py`): **193/193 pass** (+7 для A+D: 3 stale-detection helper + 4 hint-propagation в 3 tools)
+
 ### 12.5 Implementation order
 
 1. Level 1 (debug_health_check) — фундамент для L2
