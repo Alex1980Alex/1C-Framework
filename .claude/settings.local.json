@@ -922,7 +922,15 @@
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" -UserName \"a.terletskiy@sodrugestvo.ru\" -Password \"Alex80Alex\" 2>&1 | Select-Object -Last 8)",
       "Bash(sqlite3 \"C:/1С-Framework/cache/bsl_call_graph.db\" \".schema\")",
       "mcp__1c-mcp-crud__post_document",
-      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\")"
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\")",
+      "PowerShell(Get-Service *)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; $cluster = \"fb88a5c5-cb84-44e0-8819-2fcb4cc1659a\"; Write-Output \"=== rac process list ===\"; & $rac process list --cluster=$cluster 2>&1 | Select-Object -First 30; Write-Output \"=== try kill rphost 39460 ===\"; $procs = & $rac process list --cluster=$cluster 2>&1; $procs | Select-String \"process|pid|use\" | Select-Object -First 30)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac process help 2>&1 | Select-Object -First 30; Write-Output \"---\"; & $rac help 2>&1 | Select-String \"process|kill|shutdown\" | Select-Object -First 20)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac process 2>&1 | Select-Object -First 30)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac process --help 2>&1 | Select-Object -First 60)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac help process 2>&1 | Select-Object -First 50)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac help process 2>&1 | Out-String)",
+      "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; $cluster = \"fb88a5c5-cb84-44e0-8819-2fcb4cc1659a\"; & $rac process list --cluster=$cluster 2>&1 | Select-String \"process|pid|use|connections\" | Select-Object -First 24)"
     ]
   },
   "enableAllProjectMcpServers": true,
