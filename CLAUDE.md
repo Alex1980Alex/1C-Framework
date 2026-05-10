@@ -65,8 +65,8 @@ src/
 ## BSL Development (1C Enterprise)
 
 - **BSL код**: `src/bsl/` (semantic_search, mcp_server, mcp_integration, sonar, finetuning)
-- **Инструменты**: `tools/auto-documenter/` (Node.js), `tools/bsl-debugger/` (Node.js), `tools/ast-grep-mcp/`, `tools/bsl-semantic-diff/`
-- **MCP серверы**: bsl-semantic-search, bsl-platform-context, auto-documenter, bsl-debugger, ast-grep-mcp, bsl-semantic-diff
+- **Инструменты**: `tools/auto-documenter/` (Node.js), `tools/bsl-debugger/` (Node.js), `tools/bsl-debug-server/` (Python — live RDBG wrapper, **HMR-enabled через `mcp_hmr_proc.py`**), `tools/ast-grep-mcp/`, `tools/bsl-semantic-diff/`
+- **MCP серверы**: bsl-semantic-search, bsl-platform-context, auto-documenter, bsl-debugger, **`1c-debug` + `1c-debug-hmr`** (live BSL отладка через RDBG, HMR-вариант reload'ит при edit без потери session — `.active.json` persistence + unified `ping()` dispatch, добавлен 2026-05-10; см. [`docs/framework documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md`](docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md) + skill [`1c-debug-hmr`](.claude/skills/1c-debug-hmr/SKILL.md)), ast-grep-mcp, bsl-semantic-diff
 - **Memory**: `src/memory/` (ai_memory, vector_memory, skill_learning, orchestrator, infrastructure). P0-P4 DONE, P5 in progress. Hook: `session-memory-save.py` (Stop, auto-saves session to SQLite). Skill: `memory-unified`
 - **LLM Rotation**: `src/shared/llm_rotation/` (5 провайдеров, fallback)
 - **Субагенты**: `.claude/agents/` (learning-loop — 5-phase self-learning pipeline, monitor)
