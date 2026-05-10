@@ -256,6 +256,18 @@ async def run_scenario(scenario: dict) -> int:
               f"line={bp['line']}")
 
     _print_section("Phase 4 — Trigger BSL + capture stops")
+    # Pre-trigger wait: даём ragent время spawn'ить fresh rphost'ы и
+    # ping_loop поймать DBGUIExtCmdInfoStarted events. Auto-bumped до 5s
+    # если force_recycle=True (post-recycle race window). Roadmap §12.7.
+    pre_wait = scenario.get("pre_trigger_wait_sec")
+    if pre_wait is None:
+        pre_wait = 5 if scenario.get("force_recycle") else 0
+    if pre_wait > 0:
+        print(f"  Pre-trigger wait {pre_wait}s для warm-up auto-attach…")
+        await asyncio.sleep(pre_wait)
+        targets_raw = await mds.debug_targets()
+        attached_count = json.loads(targets_raw).get("count", 0)
+        print(f"  attached targets after wait: {attached_count}")
     trigger_task = asyncio.create_task(_trigger_bsl_via_iis(scenario))
     timeout_per_stop = scenario.get("stop_timeout_sec", 15)
     expected_stops = len(bps)
