@@ -679,6 +679,39 @@
       "last_verified": "2026-05-05",
       "sources_count": 1,
       "github_repos_count": 0
+    },
+    {
+      "file": "mcp-subprocess-per-tool-vs-hot-reload.md",
+      "title": "MCP Server: subprocess-per-tool wrapper vs hot reload (mcp-hmr)",
+      "keywords": [
+        "mcp-server",
+        "fastmcp",
+        "hot-reload",
+        "mcp-hmr",
+        "mcp-reloader",
+        "subprocess-per-tool",
+        "process-isolation",
+        "pytest-forked",
+        "pytest-isolate",
+        "watchmedo",
+        "watchdog",
+        "sighup",
+        "windows-spawn-penalty",
+        "cold-start-overhead",
+        "rdbg-client",
+        "mcp-debug-server",
+        "1c-debug",
+        "stateful-tool",
+        "mcp-reconnect",
+        "filesystemprovider",
+        "stdio-transport",
+        "discussion-2134",
+        "jlowin-fastmcp",
+        "mizchi"
+      ],
+      "last_verified": "2026-05-10",
+      "sources_count": 11,
+      "github_repos_count": 5
     }
   ]
 }
