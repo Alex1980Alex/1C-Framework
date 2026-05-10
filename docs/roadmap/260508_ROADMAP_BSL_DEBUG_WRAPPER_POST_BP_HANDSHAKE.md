@@ -463,7 +463,13 @@ async def _event_loop(self) -> None:
 - Empty list когда env не задано → backward compat с security-level=0 (default localhost)
 - Закрывает Gap #1 «taskkill Access Denied для SYSTEM-owned» для случаев когда rac доступен, но cluster security-level=1+ требует cluster-admin auth
 
-**Tests** (`tests/test_mcp_debug_server.py`): **120/120 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 + 4 для Fix #3 = 120)
+**Fix #4 — service-restart fallback path + one-time SDDL grant script:**
+- New helper `_recycle_via_service(pids)` ([`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py)) — `Restart-Service "1C:Enterprise 8.3 Server Agent"` через PowerShell. Returns `method: "service.restart"`. Kills ВСЕ rphost'ы; ragent респавнит fresh с активным filter.
+- Chain в `force_recycle_rphost_processes`: rac → **service.restart** (если `BSL_DEBUG_ALLOW_SERVICE_RESTART=true`) → taskkill. Env-gate потому что invasive (kills чужие user sessions).
+- Setup script [`scripts/grant-1c-debug-permissions.ps1`](../../scripts/grant-1c-debug-permissions.ps1) — admin запускает ОДИН раз, делает `sc sdset` + ACE `(A;;LCSWRPWPCR;;;AU)` для Authenticated Users. После grant `Restart-Service` работает БЕЗ UAC. Idempotent + `-Revoke` flag.
+- Закрывает Gap #1 для случая «rac.exe не найден + не admin» — admin запускает grant-script один раз → user задаёт env → `force_recycle_rphost=True` срабатывает через service.restart path.
+
+**Tests** (`tests/test_mcp_debug_server.py`): **123/123 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 + 4 для Fix #3 + 3 для Fix #4 = 123)
 
 ### 11.7 Implementation status (updated 2026-05-10 post-fixes)
 
