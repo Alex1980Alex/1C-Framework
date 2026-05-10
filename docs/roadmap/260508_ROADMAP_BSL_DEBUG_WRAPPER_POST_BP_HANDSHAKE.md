@@ -18,9 +18,29 @@
 | **§6** Open questions | 4 items | — | 6.1 ✅ version param добавлен; 6.2 ✅ targetStarted auto-attach; 6.3 ✅ stale session cleanup на startup; 6.4 deferred (отдельный roadmap) | new commit |
 | **TOTAL** | ~14 sub-items + 4 open Q | 8-12ч | ✅ Code-only closure complete | 1099 lines wrapper (671→1099, +428) |
 
-**Pending validation (требует running 1С + manual scenario):**
-- P1 acceptance criteria (`debug_variables` returns ≥1 var, `debug_stack_trace` ≥1 frame, `debug_evaluate("ТекущаяДата()")` returns datetime) — `smoke_test_debug_pipeline.py --full` mode уже готов, нужен только trigger BP-fire через UI/scripted scenario.
-- P2.1 entry-line empty-array bug — observable только при real BP-fire; текущий код не меняет default behavior, fix зависит от наблюдаемого симптома.
+**Validation results 2026-05-10 (live thin client scenario, ИБTransportManagementDevelop, `Документ.гкс_ЛабораторныйАнализ` ObjectModule:141):**
+
+| P1 Acceptance criterion | Result |
+|---|---|
+| `debug_variables` returns ≥1 var | ✅ 3 переменных (Отказ=Ложь Булево, РежимПроведения=Неоперативный, ДопПараметры=Неопределено) — auto-discovery через BSL-source parser, mode=`auto`. Explicit mode тоже OK. |
+| `debug_stack_trace` returns ≥1 frame | ✅ 1 frame, lineNo=141, moduleID matches BP target |
+| `debug_evaluate("ТекущаяДатаСеанса()")` | ✅ `Дата 2026-05-10T15:27:03`, evalResultState=correctly |
+| `debug_evaluate("Ссылка")` composite | ✅ `ДокументСсылка.гкс_ЛабораторныйАнализ`, presentation «Лабораторный анализ СоУТ-000001 от 13.03.2025 10:52:26», isExpandable=true |
+| `debug_evaluate("ЭтотОбъект.Номер + … + Проведен")` composite Строка | ✅ «СоУТ-000001 / 13.03.2025 10:52:26 / Проведен=Да» |
+| `debug_step("Step")` over | ✅ line 141 → 142, потом StopOnNextLine |
+| `debug_step("Continue")` resume | ✅ state=Worked, документ провёлся |
+| 260510 «UI+ - часть отладки не зарегистрирована» eval-bug | ✅ **НЕ репродьюсится** для thin client сценария |
+
+**Phase 1.5 acceptance (`debug_break_on_next` для pre-existing IIS rphost) — ❌ FAILED 2026-05-10:**
+
+| Шаг | Результат |
+|---|---|
+| `debug_connect` без 1cv8c.exe (только pre-existing rphost pid 39460) | OK, fully_registered=true, **`targets=[]`** |
+| `debug_break_on_next` armed | HTTP 200 |
+| Trigger через `1c-mcp-crud post_document(dry_run=true)` | success <1с, `events=[], targets=[]` ❌ |
+| Trigger через `1c-mcp-crud execute_code` (50K-iter loop с `Сообщить`) | success ~3с, `events=[], targets=[]` ❌ |
+
+Empirical conclusion: `setBreakOnNextStatement` (yukon39 [HTTPDebugClient.java:262-271](https://github.com/yukon39/bsl-debug-server/blob/master/src/main/java/com/github/yukon39/bsl/debugserver/httpDebug/HTTPDebugClient.java#L262)) применяется RDBG **только к attached targets** — для pre-existing rphost'а chicken-and-egg сохраняется. Root cause + workaround paths — см. §11.
 
 ### Real-world finding 2026-05-09 — P1.2 fix insufficient
 
