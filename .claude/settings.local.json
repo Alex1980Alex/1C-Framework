@@ -920,7 +920,8 @@
       "mcp__1c-debug__debug_break_on_next",
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" -UserName \"a.terletskiy@sodrugestvo.ru\" -Password \"Alex80Alex\")",
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" -UserName \"a.terletskiy@sodrugestvo.ru\" -Password \"Alex80Alex\" 2>&1 | Select-Object -Last 8)",
-      "Bash(sqlite3 \"C:/1С-Framework/cache/bsl_call_graph.db\" \".schema\")"
+      "Bash(sqlite3 \"C:/1С-Framework/cache/bsl_call_graph.db\" \".schema\")",
+      "mcp__1c-mcp-crud__post_document"
     ]
   },
   "enableAllProjectMcpServers": true,
