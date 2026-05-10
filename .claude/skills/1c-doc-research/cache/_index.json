@@ -71,7 +71,7 @@
       "sources": ["github.com/DitriXNew/EDT-MCP", "ditrixnew.github.io/EDT-MCP", "lobehub.com/mcp/ditrixnew-edt-mcp", "pulsemcp.com/servers/ditrixnew-1c-edt", "github.com/marmyshev/edt-plugins", ".mcp.json"]
     },
     "dbgs-rdbg-debug-server": {
-      "title": "Сервер отладки 1С (dbgs.exe / RDBG / Debug UI) — протокол, команды, ограничения, post-attach + post-BP-fire handshake, pre-existing rphost gap, UI+ initSettings fix",
+      "title": "Сервер отладки 1С (dbgs.exe / RDBG / Debug UI) — протокол, команды, ограничения, post-attach + post-BP-fire handshake, pre-existing rphost gap (setBreakOnNextStatement FAILED 2026-05-10 — нужен force-recycle rphost), UI+ initSettings fix, P1 thin-client validation passed",
       "file": "dbgs-rdbg-debug-server.md",
       "keywords": ["dbgs", "dbgs.exe", "RDBG", "debug server", "сервер отладки", "Debug UI", "attachDebugUI", "ibInDebug", "1550", "headless debug", "автономная отладка", "TCP/IP debug", "HTTP debug", "yukon39", "bsl-debug-server", "DAP", "Debug Adapter Protocol", "1 Debug UI per infobase", "ManagedClient", "Worked", "StopOnNextLine", "setAutoAttachSettings", "pingDebugUIParams", "post-BP-fire", "CallStackFormed", "DBGUIExtCmdInfoStarted", "attachDetachDbgTargets", "event-loop ping parser", "setBreakOnNextStatement", "debug_break_on_next", "pre-existing rphost", "getDbgAllTargetStates", "long-running rphost", "IIS HTTP service debug", "background job debug", "initSettings", "RDBGSetInitialDebugSettingsRequest", "UI+ часть отладки не зарегистрирована", "UI+ debug part not registered", "post-attach handshake", "evalLocalVariables 400", "evalExpr 400", "HTTPInitialDebugSettingsData", "bpWorkspace", "rteProcessing", "clearBreakOnNextStatement"],
       "created": "2026-05-08",
