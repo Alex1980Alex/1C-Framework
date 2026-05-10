@@ -469,7 +469,14 @@ async def _event_loop(self) -> None:
 - Setup script [`scripts/grant-1c-debug-permissions.ps1`](../../scripts/grant-1c-debug-permissions.ps1) — admin запускает ОДИН раз, делает `sc sdset` + ACE `(A;;LCSWRPWPCR;;;AU)` для Authenticated Users. После grant `Restart-Service` работает БЕЗ UAC. Idempotent + `-Revoke` flag.
 - Закрывает Gap #1 для случая «rac.exe не найден + не admin» — admin запускает grant-script один раз → user задаёт env → `force_recycle_rphost=True` срабатывает через service.restart path.
 
-**Tests** (`tests/test_mcp_debug_server.py`): **123/123 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 + 4 для Fix #3 + 3 для Fix #4 = 123)
+**Fix #5 — BP aggregation across modules (live finding 2026-05-10):**
+- Live test 3 BPs выявил: `RDBG setBreakpoints` команда **REPLACES workspace** при каждом вызове. Wrapper'овская реализация шла через single-line setBreakpoints на каждый `debug_set_breakpoint` MCP-call → каждый последующий call перезаписывал предыдущий для того же (module_type, object_id, property_id) tuple. Из 3 BPs (line 141 ObjectModule, line 145 ObjectModule, line 208 CommonModule) фактически живой остался только последний для каждой пары — поэтому BP1 (141) → перезаписан BP2 (145) → последний для ObjectModule. BP3 fired (CommonModule, отдельная пара).
+- New helper `_aggregate_breakpoints(cache, new_entry) -> dict` ([`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py)) — pure function, merges cache + new_entry → dict keyed by 7-tuple `(module_type, object_id, property_id, ext_id, url, extension_name, version)` → sorted dedupe'd line numbers.
+- Rewrite `set_breakpoints`: на каждый call (a) аggregate с cache, (b) build workspace_xml с MULTIPLE `moduleBPInfo` elements (один per group), (c) submit ОДНОЙ `setBreakpoints` HTTP request с full workspace, (d) reconcile cache from groups (consolidates duplicate entries).
+- Test update: existing `test_multiple_set_breakpoints_accumulate` (TestGetBreakpointsCache) переписан — pre-fix ожидал 3 separate cache entries, post-fix correct expectation = 1 entry с 3 merged lines.
+- 10 новых tests: TestAggregateBreakpoints × 6 (empty cache, dedupe lines, dedupe in same module, separate modules, separate properties, sorted output) + TestSetBreakpointsAggregation × 4 (2 lines same module → 1 moduleBPInfo with 2 lines, 2 modules → 2 moduleBPInfo, cache reconciliation, full live-scenario chain 141+145+208).
+
+**Tests** (`tests/test_mcp_debug_server.py`): **133/133 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 + 4 для Fix #3 + 3 для Fix #4 + 10 для Fix #5 = 133)
 
 ### 11.7 Implementation status (updated 2026-05-10 post-fixes)
 
