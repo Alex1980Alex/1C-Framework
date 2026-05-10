@@ -268,6 +268,25 @@ async def run_scenario(scenario: dict) -> int:
         targets_raw = await mds.debug_targets()
         attached_count = json.loads(targets_raw).get("count", 0)
         print(f"  attached targets after wait: {attached_count}")
+    # Fix #1 §12.8: warm-up trigger pattern. Перед основным trigger отправить
+    # N dummy execute_code чтобы spawn'ить fresh rphost'ов которые wrapper
+    # auto-attach'ит через setAutoAttachSettings filter (Server type matches).
+    # Затем основной trigger идёт уже на attached rphost.
+    warmup_count = scenario.get("warmup_trigger_count")
+    if warmup_count is None:
+        warmup_count = 1 if scenario.get("force_recycle") else 0
+    for i in range(warmup_count):
+        warmup_scenario = dict(scenario)
+        warmup_scenario["bsl_trigger"] = (
+            'Результат = "warmup #' + str(i + 1) + ' " + Строка(ТекущаяДатаСеанса());'
+        )
+        warm_exit, warm_msg = await _trigger_bsl_via_iis(warmup_scenario)
+        print(f"  warmup #{i + 1}: exit={warm_exit}, {warm_msg[:60]}")
+        await asyncio.sleep(1)  # дать ping_loop time подобрать targetStarted
+    if warmup_count > 0:
+        targets_raw = await mds.debug_targets()
+        attached_count = json.loads(targets_raw).get("count", 0)
+        print(f"  attached targets after warmup: {attached_count}")
     trigger_task = asyncio.create_task(_trigger_bsl_via_iis(scenario))
     timeout_per_stop = scenario.get("stop_timeout_sec", 15)
     expected_stops = len(bps)
