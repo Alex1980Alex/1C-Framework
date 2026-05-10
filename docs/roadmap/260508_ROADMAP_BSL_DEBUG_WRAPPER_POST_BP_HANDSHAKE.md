@@ -589,6 +589,33 @@ MCP tool с aggregated metrics. Tracking pattern: append-only event log в memor
 
 **Tests** (`tests/test_mcp_debug_server.py` + новый `scripts/test_autonomous_debug_test.py`): **182/182 pass** (+23 новых: 4 cluster_load probe + 6 session_diff + 13 scenario validator)
 
+### 12.8 Improvements 2026-05-10 v3 (post-chapter-36 documentation)
+
+**Fix #1 — IIS routing warm-up trigger** ([`scripts/autonomous_debug_test.py`](../../scripts/autonomous_debug_test.py)):
+- Scenario field `warmup_trigger_count` (default 1 если force_recycle, 0 иначе)
+- Перед основным trigger отправляется N dummy `execute_code` (`Результат = "warmup #N…"`) — каждый spawn'ит rphost, который wrapper auto-attach'ит через Server filter
+- После warmup'ов основной trigger направляется на already-attached rphost — closes IIS routing race window
+
+**Fix #4 — force_recycle dry_run mode** ([`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py)):
+- `force_recycle_rphost_processes(pids, dry_run=False)` — новый kwarg
+- Когда dry_run=True → returns `{method: "dry_run", would_kill: [pids], note: "..."}` без subprocess invocation
+- Auto-enabled через env `BSL_DEBUG_DRY_RUN_RECYCLE=true` в `debug_connect`'s force_recycle path
+- Use case: preview destructive action перед коммитом
+
+**Fix #6 — CLI runner для read-only tools** (`_cli_main` в `mcp_debug_server.py`):
+- `python tools/bsl-debug-server/mcp_debug_server.py <subcommand>` — fresh process import, no /mcp reload
+- Subcommands: `health-check`, `session-summary [--format json|markdown]`, `session-diff --prev <uuid> [--curr <uuid>]`
+- Mutating tools (connect/set-bp/eval/step) оставлены MCP-only — требуют persistent client state
+- UTF-8 stdout fix для Windows cp1251 default
+- Useful workflow: правишь wrapper → CLI вызов → видишь обновлённый output без перезапуска Claude Code
+
+**Limitations НЕ-fixable (design choices, документировано):**
+- #2 setAutoAttachSettings enum `[Server, ManagedClient]` — RDBG XSD ограничение, ждём вендорского расширения
+- #3 Multi-BP aggregation — already работает через Fix #5 cache, не требует доработки
+- #5 L2 module-direct import — это design feature (no /mcp reload в development workflow), а не баг
+
+**Tests** (`tests/test_mcp_debug_server.py` + `scripts/test_autonomous_debug_test.py`): **186/186 pass** (+3 для dry_run + 2 для warmup validation = 186)
+
 ### 12.5 Implementation order
 
 1. Level 1 (debug_health_check) — фундамент для L2
