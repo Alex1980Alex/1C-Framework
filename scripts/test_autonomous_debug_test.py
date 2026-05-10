@@ -110,3 +110,16 @@ class TestScenarioValidator:
         errors = adt.validate_scenario(scenario)
         # Должно содержать 4+ errors: alias, bsl_trigger, breakpoints, force_recycle
         assert len(errors) >= 4
+
+    def test_warmup_trigger_count_must_be_int(self):
+        # Fix #1 §12.8: warmup_trigger_count optional но если есть — int
+        scenario = _valid_scenario()
+        scenario["warmup_trigger_count"] = "two"
+        errors = adt.validate_scenario(scenario)
+        assert any("warmup_trigger_count must be int" in e for e in errors)
+
+    def test_warmup_trigger_count_int_passes(self):
+        scenario = _valid_scenario()
+        scenario["warmup_trigger_count"] = 3
+        errors = adt.validate_scenario(scenario)
+        assert errors == []
