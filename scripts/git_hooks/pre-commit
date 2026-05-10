@@ -1,0 +1,32 @@
+#!/bin/sh
+# pre-commit: invoke pre-commit framework (lint, secret-scan, type-check).
+#
+# Manually installed because `core.hooksPath=scripts/git_hooks` is set
+# globally for the auto-reindex pipeline, which prevents `pre-commit install`
+# from creating .git/hooks/pre-commit (it refuses to clobber the existing
+# hooksPath setup).
+#
+# Hooks live in .pre-commit-config.yaml at repo root. Added 2026-05-10
+# alongside gitleaks secret-scan hook after HF + OpenRouter token leak
+# via .claude/settings.local.json.
+
+set -e
+
+if [ -x .venv/Scripts/python.exe ]; then
+    PYTHON=.venv/Scripts/python.exe
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+elif command -v python >/dev/null 2>&1; then
+    PYTHON=python
+else
+    echo "[pre-commit] Python not found — hooks skipped"
+    exit 0
+fi
+
+if ! "$PYTHON" -m pre_commit --version >/dev/null 2>&1; then
+    echo "[pre-commit] pre-commit framework not installed — run:"
+    echo "    $PYTHON -m pip install pre-commit"
+    exit 0
+fi
+
+exec "$PYTHON" -m pre_commit run --hook-stage pre-commit "$@"

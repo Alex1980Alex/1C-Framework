@@ -112,3 +112,15 @@ scripts/claude-backend/zai-config.json
 CREATEINFOBASE
 tmp/dev_creds_*.txt
 /mcp-server.log
+
+# Claude Code local-scope settings — contain permission allowlists with
+# command literals (HF_TOKEN=..., OPENROUTER_API_KEY=...). Tracking this
+# file caused HF + OpenRouter secret leaks on 2026-05-10 (commits 035e48cc6,
+# e32c81df6, 3fad1ca7) — scrubbed via git-filter-repo, then untracked.
+# Always local-only — use env-var references in commands, never literals.
+.claude/settings.local.json
+**/*.local.json
+
+# 3rd-party tool distributions — should not live in source tree.
+# Use installers / package managers / LFS instead.
+tools/sonar-scanner-*/
