@@ -1,7 +1,7 @@
 # Roadmap — Доработка `mcp_debug_server.py` post-BP-fire handshake
 
 **Дата:** 2026-05-08
-**Статус:** ✅ MAXIMUM CODE-ONLY CLOSURE (2026-05-09) + Phase 1.5 follow-up (2026-05-10) — добавлен `debug_break_on_next` MCP tool, закрывающий gap «pre-existing rphost invisible» (см. §10 ниже). P1 acceptance pending Claude Code restart для подгрузки нового tool.
+**Статус:** ✅ P1 acceptance validated 2026-05-10 (thin client scenario, см. §0 «Validation results»). ❌ Phase 1.5 (`debug_break_on_next` для IIS-pre-existing-rphost) FAILED — `setBreakOnNextStatement` применяется только к attached targets, root cause RDBG-протокола (см. §10 + §11 research follow-up).
 **Приоритет:** Средний
 **Связано:** [`260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md`](260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md), [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md)
 
