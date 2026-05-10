@@ -6,7 +6,7 @@
     "auth_user_env": "MCP_ONEC_USERNAME",
     "auth_pwd_env": "MCP_ONEC_PASSWORD"
   },
-  "force_recycle": false,
+  "force_recycle": true,
   "bsl_trigger": "Док = Документы.гкс_ЛабораторныйАнализ.НайтиПоНомеру(\"ТМУТ-000006\").ПолучитьОбъект(); Док.Записать(РежимЗаписиДокумента.Проведение); Результат = Строка(Док.Ссылка);",
   "breakpoints": [
     {
