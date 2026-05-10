@@ -936,7 +936,8 @@
       "Bash(\"C:/1С-Framework/.venv/Scripts/mcp-hmr.exe\" --transport http --port 8765 mcp_debug_server:mcp)",
       "Bash(pkill -f mcp-hmr)",
       "PowerShell(Out-File *)",
-      "PowerShell(cd \"C:\\\\1С-Framework\\\\tools\\\\bsl-debug-server\"; $req = '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}' + \"`n\"; [System.IO.File]::WriteAllText\\(\"C:\\\\1С-Framework\\\\tmp\\\\hmr_req.txt\", $req, \\(New-Object System.Text.UTF8Encoding $false\\)\\); Get-Content \"C:\\\\1С-Framework\\\\tmp\\\\hmr_req.txt\" -Encoding Byte -TotalCount 5)"
+      "PowerShell(cd \"C:\\\\1С-Framework\\\\tools\\\\bsl-debug-server\"; $req = '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}' + \"`n\"; [System.IO.File]::WriteAllText\\(\"C:\\\\1С-Framework\\\\tmp\\\\hmr_req.txt\", $req, \\(New-Object System.Text.UTF8Encoding $false\\)\\); Get-Content \"C:\\\\1С-Framework\\\\tmp\\\\hmr_req.txt\" -Encoding Byte -TotalCount 5)",
+      "mcp__1c-debug-hmr__debug_ping"
     ]
   },
   "enableAllProjectMcpServers": true,
