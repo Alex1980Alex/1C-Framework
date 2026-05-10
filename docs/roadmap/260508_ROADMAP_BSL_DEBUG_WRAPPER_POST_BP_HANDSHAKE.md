@@ -416,7 +416,50 @@ async def _event_loop(self) -> None:
 - [HTTPService debug — 1c-dn.com forum 2025](https://1c-dn.com/forum/forum1/topic2025/)
 - [Отладка тонкий клиент + веб-сервер — forum.infostart.ru/topic292879](https://forum.infostart.ru/forum9/topic292879/)
 
-### 11.5 Implementation status (updated 2026-05-10)
+### 11.5 Live validation 2026-05-10 (Solutions A+B + два implementation gap'а)
+
+После рестарта Claude Code прогнали полный цикл на ИБTransportManagementDevelop. Результаты:
+
+**✅ Solution B (preflight gate, default)** — работает как задумано:
+- `debug_connect()` БЕЗ `force_recycle_rphost` обнаружил pre-existing rphost pid 39460
+- Response содержит `pre_existing_rphost_warning` block с PIDs, message, 3 next_steps, roadmap_ref
+- Не блокирует connect — connect завершился успешно с pre-existing target session 9262 (thin client)
+
+**⚠️ Solution A (force_recycle_rphost=True) — обнаружен gap #1:**
+- Wrapper корректно detected PID 39460, attempted taskkill, captured error
+- НО: `taskkill /F /PID 39460` вернул HTTP-эквивалент Access Denied (cp866-decoded: «Не удается завершить процесс. Отказано в доступе»)
+- Root cause: rphost запущен под SYSTEM service account (`1C:Enterprise 8.3 Server Agent`); non-elevated process не может kill'ить SYSTEM-owned
+- `Restart-Service "1C:Enterprise 8.3 Server Agent"` тоже Access Denied (тот же elevation требование)
+- Wrapper graceful captured failure: `failed: [{pid: 39460, error: "..."}]`, `killed: []` — корректное reporting, recycle не произошёл
+
+**Discovery: `rac process turn-off` работает БЕЗ admin elevation:**
+- `rac.exe` найден в `C:\Program Files (x86)\1cv8\8.3.27.1936\bin\`
+- `rac cluster list` returned `cluster: fb88a5c5-cb84-44e0-8819-2fcb4cc1659a` (security-level=0 = no auth required для localhost)
+- `rac process list --cluster=...` returned 6-connection rphost UUID `113d7d86-fc5d-4ad1-81d0-d43373398607` для PID 39460
+- `rac process turn-off --cluster=... --process=...` = exit 0; через 2с ragent spawn'ил fresh rphost pid 37092 (старый перешёл в drain mode)
+- Это правильный sanctioned путь для Solution A
+
+**❌ Implementation gap #2 (auto-attach filter):**
+- Default `set_auto_attach_settings` использовал `["Server", "ManagedClient"]` — НЕ включал `HTTPService`
+- Даже после успешного rac recycle, fresh rphost спавнящийся для IIS-trigger (1c-mcp-crud → /transport/hs/mcp/rpc) НЕ emit'ил `DBGUIExtCmdInfoStarted` в нашу debug session → не auto-attach'ился → BPs не fire
+- BSL execution через 1c-mcp-crud успешно завершалось <1с (1С отрабатывало), но invisible для wrapper'а
+
+### 11.6 Fixes applied 2026-05-10 (post-live-validation)
+
+**Fix #1 — auto-attach filter expansion** ([`mcp_debug_server.py:623-651`](../../tools/bsl-debug-server/mcp_debug_server.py#L623)):
+- `set_auto_attach_settings` default расширен с `[Server, ManagedClient]` → `[Server, ManagedClient, HTTPService, WebService, BackgroundJob]`
+- Покрывает: thin client, IIS HTTP-services, SOAP web-services, фоновые/регламентные задания
+- Test updated: `test_default_targets_includes_iis_and_jobs` проверяет все 5 типов
+
+**Fix #2 — rac process turn-off path в `force_recycle_rphost_processes`** ([`mcp_debug_server.py:1224-1340`](../../tools/bsl-debug-server/mcp_debug_server.py#L1224)):
+- Module-level helpers: `_find_rac_exe()`, `_rac_get_cluster_uuid()`, `_rac_list_processes_by_pid()`, `_recycle_via_rac()`, `_recycle_via_taskkill()`
+- `force_recycle_rphost_processes(pids)` теперь: rac (если найден + cluster reachable + UUID known) → fallback taskkill (если rac недоступен/cluster unknown/PID не в кластере)
+- Result теперь содержит `method: "rac.turn_off"|"taskkill"|"noop"` для tracing
+- 7 новых tests: rac full chain, unknown PID handling, fallback when cluster unknown, find_rac_exe none, parse cluster UUID, parse process list
+
+**Tests** (`tests/test_mcp_debug_server.py`): **116/116 pass** (95 baseline + 14 первоначальных §11 + 7 для Fix #2 = 116)
+
+### 11.7 Implementation status (updated 2026-05-10 post-fixes)
 
 - [x] **Solution A + B implemented** в [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py):
   - Module-level helpers `detect_pre_existing_rphosts()` (taskTaskList parse, Windows-only, graceful на других OS) + `force_recycle_rphost_processes(pids)` (taskkill /F, error capture per-PID)
