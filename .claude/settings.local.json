@@ -931,7 +931,10 @@
       "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac help process 2>&1 | Select-Object -First 50)",
       "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; & $rac help process 2>&1 | Out-String)",
       "PowerShell($rac = \"C:\\\\Program Files \\(x86\\)\\\\1cv8\\\\8.3.27.1936\\\\bin\\\\rac.exe\"; $cluster = \"fb88a5c5-cb84-44e0-8819-2fcb4cc1659a\"; & $rac process list --cluster=$cluster 2>&1 | Select-String \"process|pid|use|connections\" | Select-Object -First 24)",
-      "Bash(MCP_ONEC_USERNAME='a.terletskiy@sodrugestvo.ru' MCP_ONEC_PASSWORD='Alex80Alex' .venv/Scripts/python.exe scripts/autonomous_debug_test.py scripts/scenarios/post_lab_doc.json)"
+      "Bash(MCP_ONEC_USERNAME='a.terletskiy@sodrugestvo.ru' MCP_ONEC_PASSWORD='Alex80Alex' .venv/Scripts/python.exe scripts/autonomous_debug_test.py scripts/scenarios/post_lab_doc.json)",
+      "Bash(.venv/Scripts/mcp-hmr.exe --help)",
+      "Bash(\"C:/1С-Framework/.venv/Scripts/mcp-hmr.exe\" --transport http --port 8765 mcp_debug_server:mcp)",
+      "Bash(pkill -f mcp-hmr)"
     ]
   },
   "enableAllProjectMcpServers": true,
