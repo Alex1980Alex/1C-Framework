@@ -1,9 +1,63 @@
 # Roadmap — Глубокий фикс post-BP-fire UI+ registration race window
 
 **Дата:** 2026-05-10
-**Статус:** 🟡 PROPOSED — production-blocking finding для eval/step pipeline (BP-fire scope закрыт `debug_break_on_next` 2026-05-10, см. [260508 §10](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md#L)). Этот roadmap концентрируется ТОЛЬКО на UI+ registration bug на пути eval/variables/step после BP fire. До 2026-05-10 trigger через 1c-mcp-crud вообще не доходил до BP fire (separate, более ранний баг).
+**Статус:** 🟢 **ROOT CAUSE IDENTIFIED + FIX IMPLEMENTED v2** (2026-05-10) — pending live verification. Гипотезы A/B/C/D **отвергнуты** (см. §0.1 update); реальная причина — broken pre-existing `init_settings()` payload (slid two RDBG cmds into one body, RDBG silent-accepted). Подробности: [cache §14](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md) v2 update.
 **Приоритет:** Высокий (закрывает P1 acceptance из 260508)
-**Связано:** [`260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md`](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md)
+**Связано:** [`260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md`](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md), yukon39 [`Debugee.attach()`](../../tools/bsl-debug-server/src/main/java/com/github/yukon39/bsl/debugserver/debugee/Debugee.java) (canonical 4-step sequence)
+
+---
+
+## 0.1 Real-cause findings (2026-05-10)
+
+**Automated reproduction of original bug** через scenario B (`scripts/start-onec-autonomous-debug.ps1` + thin-client `/Debug` + click trigger):
+- Stop event пришёл, `state: StopOnNextLine`, `stopped_target` UUID resolved ✅
+- `debug_stack_trace` ✅ работает (decoded location: `Документ.гкс_<…>.Форма.ПриСозданииНаСервере:7`)
+- `debug_variables` ❌ `[]` empty (soft form bug)
+- `debug_evaluate("1+1")` ❌ HTTP 400 «UI+ - часть отладки не зарегистрирована»
+- `debug_step("Continue")` ❌ HTTP 400 same
+- → **roadmap §0 production-blocking bug confirmed via automated path** (раньше — только manual thick-client posting)
+
+**Гипотезы из §1 — все ОТВЕРГНУТЫ исследованием yukon39 source:**
+- ❌ A (ping-consumption) — наш `_ping_loop` уже работает; yukon39 `ServerContext.debugCallStackFormed()` (lines 248-286) после stop event RDBG-команд НЕ шлёт, только DAP `StoppedEvent` post'ит → eval должен работать сразу после canonical 4-step handshake
+- ❌ B (session A vs B mismatch) — даже live MCP с одной session фейлил
+- ❌ C (target auto-resumed) — `state: StopOnNextLine` in real-time
+- ⚠️ D (нужен дополнительный handshake) — **частично подтверждена**, но не «дополнительный» а **исходный handshake был broken**:
+
+### Real root cause
+
+Pre-existing `RDBGClient.init_settings()` слил два разных RDBG cmd в один payload:
+```python
+# BROKEN (pre-2026-05-10):
+body = _build_request(
+    self._base_fields(),
+    _rdbg("data",
+        _rdbg("breakOnNextLine", "false")     # ← initSettings field (правда, optional)
+        + _rdbg("autoAttachSettings", auto)),  # ← это поле НЕ из initSettings, а из setAutoAttachSettings
+)
+await self._post("initSettings", body)
+```
+RDBG возвращал HTTP 200 (silent accept), но **ничего не инициализировал** — ни UI+ promotion, ни autoAttach config. Поэтому каждый последующий eval/step падал с «UI+ не зарегистрирована». Это было замаскировано тем, что connect/stack/targets работали (они UI+ не требуют).
+
+### Yukon39 canonical 4-step handshake (источник истины)
+
+[`Debugee.java:97-109 attach()`](../../tools/bsl-debug-server/src/main/java/com/github/yukon39/bsl/debugserver/debugee/Debugee.java) — production DAP, vsc-bsl-dap для VS Code:
+```
+1. attachDebugUI                    → existing (OK)
+2. initSettings (empty <data/>)     → fixed v2
+3. clearBreakOnNextStatement        → ADDED v2 (был пропущен)
+4. setAutoAttachSettings            → split в отдельный cmd (был сломан)
+```
+
+`ServerContext.attach()` line 60 шлёт `new HTTPServerInitialDebugSettingsData()` без сеттеров — JAXB `XmlAccessType.NONE` сериализует пустой `<data/>`. NOT bpWorkspace + rteProcessing (что было в test fixture `RDBGSetInitialDebugSettingsRequestTest.xml` — это test, не prod).
+
+### Fix implementation (commit pending)
+
+Файлы:
+- [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) — `init_settings()` body → empty `<data/>`; **новый** `clear_break_on_next_statement()` метод; **новый** `set_auto_attach_settings()` (выделен из broken init_settings); добавлен NS `rte` + helper `_rte()`
+- [`tools/bsl-debug-server/tests/test_mcp_debug_server.py`](../../tools/bsl-debug-server/tests/test_mcp_debug_server.py) — +5 unit-tests (`TestInitSettingsHandshake`, `TestClearBreakOnNextStatement`, `TestSetAutoAttachSettings`) с anti-regression markers `breakOnNextLine`/`autoAttachSettings` NOT in initSettings body
+- `debug_connect` MCP-tool — orchestration: attach → init_settings → clear_break_on_next_statement → set_auto_attach_settings
+
+**Status:** 84/84 unit tests pass; live verification pending после `/mcp` reconnect. Если v2 не разблокирует eval — fallback гипотезы из research subagent: empty `<options/>` (drop foregroundAbility) или per-stop re-attach to target.
 
 ---
 
