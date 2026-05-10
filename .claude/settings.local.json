@@ -937,7 +937,8 @@
       "Bash(pkill -f mcp-hmr)",
       "PowerShell(Out-File *)",
       "PowerShell(cd \"C:\\\\1С-Framework\\\\tools\\\\bsl-debug-server\"; $req = '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}' + \"`n\"; [System.IO.File]::WriteAllText\\(\"C:\\\\1С-Framework\\\\tmp\\\\hmr_req.txt\", $req, \\(New-Object System.Text.UTF8Encoding $false\\)\\); Get-Content \"C:\\\\1С-Framework\\\\tmp\\\\hmr_req.txt\" -Encoding Byte -TotalCount 5)",
-      "mcp__1c-debug-hmr__debug_ping"
+      "mcp__1c-debug-hmr__debug_ping",
+      "PowerShell(\\(Get-Item tools/bsl-debug-server/mcp_debug_server.py\\).LastWriteTime = Get-Date; Write-Output \"touched: $\\(\\(Get-Item tools/bsl-debug-server/mcp_debug_server.py\\).LastWriteTime\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,
