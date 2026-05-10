@@ -416,7 +416,15 @@ async def _event_loop(self) -> None:
 - [HTTPService debug — 1c-dn.com forum 2025](https://1c-dn.com/forum/forum1/topic2025/)
 - [Отладка тонкий клиент + веб-сервер — forum.infostart.ru/topic292879](https://forum.infostart.ru/forum9/topic292879/)
 
-### 11.5 Open follow-up tasks
+### 11.5 Implementation status (updated 2026-05-10)
 
-- [ ] Создать отдельный roadmap `260511_ROADMAP_BSL_DEBUG_RPHOST_AUTO_RECYCLE.md` для Solution A (force-recycle) с phased plan: preflight gate (B) → флаг force_recycle (A) → docs update (C)
-- [ ] Closed: Roadmap [260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md](260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md) — сегодняшняя thin-client validation показала что eval-registration bug не воспроизвёлся; либо был артефактом старого scenario, либо фикс P1.2 покрыл. Контекст для possible reopen: документ `гкс_ЛабораторныйАнализ:141` ObjectModule, runID = thin client `d.sokolov@sodru.com` session `e3f71a05-b168-4273-b71d-5bf5caf4c201`
+- [x] **Solution A + B implemented** в [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py):
+  - Module-level helpers `detect_pre_existing_rphosts()` (taskTaskList parse, Windows-only, graceful на других OS) + `force_recycle_rphost_processes(pids)` (taskkill /F, error capture per-PID)
+  - `debug_connect` принял третий параметр `force_recycle_rphost: bool = False`
+  - Solution B (default behavior): preflight detect ДО attach → если есть pre-existing rphost'ы и force_recycle=False, response содержит `pre_existing_rphost_warning` с PIDs, объяснением gap'а, тремя next_steps (C → A → manual Console кластера) и roadmap_ref
+  - Solution A (force_recycle=True): после attach + setAutoAttachSettings (filter pushed) → taskkill /F → 3-second wait для ragent spawn fresh worker + ping_loop capture; result содержит `force_recycle: {requested_pids, killed, failed[], wait_after_kill_sec}`
+  - Guard: при `_registered=False` (ibInDebug) force_recycle skip'ается — фильтр не pushed, kill бесполезен
+- [x] **14 unit-тестов** в [`tests/test_mcp_debug_server.py`](../../tools/bsl-debug-server/tests/test_mcp_debug_server.py) (TestDetectPreExistingRphosts × 5, TestForceRecycleRphost × 5, TestDebugConnectPreflight × 4): non-Windows graceful, subprocess failures, CSV parse + malformed PID skip, partial kill failures, OSError capture, no-warning-when-clean, warning-when-pre-existing, force-recycle drives kill, ibInDebug guard. **Total tests pass: 109/109** (95 existing + 14 new), 0 regressions.
+- [ ] **Pending live validation:** Claude Code restart требуется для подгрузки нового параметра `force_recycle_rphost` через MCP. После restart — повторить scenario из §0 «Validation results» для Phase 1.5 с `force_recycle_rphost=true` и убедиться что rphost capture'ится (BPs fire на subsequent IIS-trigger).
+- [x] **Solution C (workflow):** validated 2026-05-10, документация в [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) уже содержит pre-launch thin client guide.
+- [x] **Tentatively closed:** Roadmap [260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md](260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md) — thin-client validation показала что eval-registration bug не воспроизвёлся; либо был артефактом старого scenario, либо покрыт P1.2 fix'ом. Контекст для possible reopen: документ `гкс_ЛабораторныйАнализ:141` ObjectModule, runID = thin client `d.sokolov@sodru.com` session `e3f71a05-b168-4273-b71d-5bf5caf4c201`.
