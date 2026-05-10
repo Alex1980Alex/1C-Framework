@@ -917,7 +917,8 @@
       "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" 2>&1 | Select-Object -Last 6)",
       "mcp__1c-debug__debug_target_state",
       "mcp__1c-debug__debug_get_breakpoints",
-      "mcp__1c-debug__debug_break_on_next"
+      "mcp__1c-debug__debug_break_on_next",
+      "PowerShell(& \"C:\\\\1С-Framework\\\\scripts\\\\start-onec-autonomous-debug.ps1\" -InfobaseAlias \"ИБTransportManagementDevelop\" -UserName \"a.terletskiy@sodrugestvo.ru\" -Password \"Alex80Alex\")"
     ]
   },
   "enableAllProjectMcpServers": true,
