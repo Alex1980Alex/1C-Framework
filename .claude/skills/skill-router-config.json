@@ -1921,6 +1921,72 @@
       ],
       "optional": []
     },
+    "1c-debug-hmr": {
+      "keywords": [
+        "отладка 1С",
+        "debug 1С",
+        "BSL debugger",
+        "remote debug 1C",
+        "breakpoint BSL",
+        "set BP BSL",
+        "callStackFormed",
+        "rphost debug",
+        "ManagedClient debug",
+        "StopOnNextLine",
+        "pre-existing rphost",
+        "force_recycle_rphost",
+        "debug_connect",
+        "debug_ping",
+        "debug_set_breakpoint",
+        "debug_stack_trace",
+        "debug_variables",
+        "debug_evaluate",
+        "debug_step",
+        "debug_targets",
+        "debug_break_on_next",
+        "debug_target_state",
+        "debug_get_breakpoints",
+        "debug_attach_targets",
+        "debug_disconnect",
+        "HMR debug wrapper",
+        ".active.json",
+        "session restoration debug",
+        "mcp_hmr_proc",
+        "RDBG"
+      ],
+      "weighted_keywords": {
+        "mcp__1c-debug-hmr": 5,
+        "mcp__1c-debug": 5,
+        "debug_connect": 5,
+        "debug_set_breakpoint": 5,
+        "debug_stack_trace": 5,
+        "debug_variables": 5,
+        "debug_break_on_next": 5,
+        "force_recycle_rphost": 5,
+        "callStackFormed": 4,
+        "StopOnNextLine": 4,
+        "pre-existing rphost": 4,
+        "RDBG": 4,
+        "отладка 1С": 4,
+        "breakpoint BSL": 4
+      },
+      "utterances": [
+        "поставь breakpoint в модуле",
+        "запусти отладку 1С",
+        "покажи стэк вызовов BSL",
+        "прочитай локалы на брейкпоинте",
+        "вычисли BSL выражение",
+        "пошагово пройди код",
+        "почему BP не срабатывает",
+        "force-recycle pre-existing rphost",
+        "set up BP and inspect locals",
+        "trigger BSL execution and stop on next statement"
+      ],
+      "skills": [
+        "1c-debug-hmr"
+      ],
+      "optional": []
+    },
     "bsl-memory": {
       "keywords": [
         "memory search",
