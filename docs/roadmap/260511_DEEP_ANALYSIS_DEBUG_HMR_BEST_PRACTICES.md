@@ -212,6 +212,15 @@ presentation: <base64-encoded cyrillic blob>
 
 **P2.B Drop frame / Force return (~5-8ч, BLOCKED)** — RDBG enum не имеет DropFrame/ForceReturn. Wrapper-level fallback потенциально invasive. **Deferred** до RDBG protocol vendor support research.
 
+**🎯 P2 expected payoff (если research unblock):**
+
+| Item | If shipped | Real example |
+|---|---|---|
+| P2.A Snapshot replay | -1-3ч/incident post-mortem | GKSTCPLK-2468 встреча 18:26: «не смогли воспроизвести» = lost 1-2 days waiting next ОПЭ. Snapshot replay → instant resolution |
+| P2.B Drop frame | -6-9 мин/iteration × ×5 iter/задача | GKSTCPLK-2468 v1→v2 ФНП type mismatch iteration cycle |
+
+**P2 — high-leverage**, но **research блокер**: RDBG protocol enum (`debugBaseData.xsd:72-80`) знает только `Step/StepIn/StepOut/Continue`. Реализация P2.B требует либо (a) vendor запроса к 1С на extension XSD, либо (b) creative wrapper hack через custom BSL prepend — invasive, ломкий. **Recommendation:** P2 deferred; revisit когда P0+P1 в production ≥1 квартал и собран user feedback.
+
 ### P3 (nice-to-have)
 
 - P3.A Data BPs (RDBG protocol research required)
