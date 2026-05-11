@@ -53,7 +53,7 @@
 | Architectural cause | Pre-existing rphost (alive до `debug_connect`) invisible: `getDbgAllTargetStates` returns []; `setBreakOnNextStatement` доставляется только attached targets |
 | Research confirmation | XSD 40+ commands analyzed — **NO attach-by-PID**; yukon39 same gap; Конфигуратор/EDT same gap; vendor (Vladimir Gurov, 1c-dn) acknowledges, promises future EDT release |
 | Available workarounds | `force_recycle_rphost=True` / `recycle_strategy="all_rphosts_of_ib"` (destructive), `debug_launch_thin_client` (UI participation), `iisreset` (admin) |
-| Proposed but не реализован | **JOB-based execution** через `ФоновыеЗадания.Выполнить()` — каждый execute_code оборачивается в БГ-задание, спавн нового JOB target visible via `DBGUIExtCmdInfoStarted`. Closes gap полностью. Effort ~1.5ч. Pending user decision |
+| ✅ Реализован (2026-05-12) | **JOB-based execution** через `ФоновыеЗадания.Выполнить()` — `гкс_ОтладкаВыполненияКода` CommonModule добавлен в конфигурацию (commits `c3315ae`+`bf57244`), задеплоен через full update_database. JOB-rphost visible via `DBGUIExtCmdInfoStartен`, закрывает RC2 полностью. Шаблон 6 задокументирован в SKILL.md |
 
 ### 📚 Документация обновлена
 
