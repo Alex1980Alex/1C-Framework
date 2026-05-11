@@ -320,6 +320,27 @@ async def debug_launch_thin_client(
 
 ## §7. Open questions
 
+### P0.4 follow-up (CRITICAL, обнаружен 2026-05-11 E2E)
+
+**Post-spawn rphost-attach gap** — после `debug_connect` + `setAutoAttachSettings` filter, новые rphost spawned для HTTP-service (1c-mcp-crud `execute_code`) **НЕ emit'ят DBGUIExtCmdInfoStarted** к нашему debug UI session, поэтому wrapper не auto-attach их и BP не fire.
+
+Подтверждено E2E:
+1. `debug_connect(infobase_alias="ИБTransportManagementDevelop", recycle_strategy="all_rphosts_of_cluster")` — killed pid 61720
+2. `debug_set_breakpoint` ManagerModule:80 — OK
+3. `execute_code` re-post composite → ragent spawned new rphost (pid 50964)
+4. `debug_ping` 3× empty → `no_fire_diagnostics` правильно идентифицировал: `targets_attached=0, active_rphost_pids=[50964]`
+5. BP не fire'нул
+
+**Possible solutions для P0.4 batch:**
+- (a) Polling background task в `_ping_loop` — `detect_pre_existing_rphosts()` каждые 2s, auto-attach any new pid через `attach_debug_targets`
+- (b) Re-arm `setAutoAttachSettings` filter каждые N seconds через background task
+- (c) Изучить RDBG-protocol nuance — почему filter не применяется к spawned-after-connect rphost (возможно версионная регрессия 8.3.27)
+- (d) `debug_break_on_next` re-arm после каждого empty ping cycle — catch-all fallback
+
+Acceptance: после P0.4 — `execute_code` через `1c-mcp-crud` triggers BP fire без manual recycle между attempts.
+
+### Прочие open questions
+
 1. **Multi-rphost cluster behaviour:** на production-cluster с N workers ragent балансирует load — даже после `recycle_strategy=all_rphosts_of_ib` следующий request может landed на rphost spawned уже без filter (если filter применился на N-1, а N-й spawned race-condition). Возможно потребуется sticky-session механизм или filter re-arm после каждого new rphost.
 2. **`bp_fire_smoke` side-effects:** smoke-check execute_code запустит реальный BSL — какой минимальный код безопасен на ЛЮБОЙ infobase? Кандидаты: `Результат = ТекущаяДата();` — pure read-only, но требует BP на встроенном модуле (1c-mcp-crud's `mcp_ИнструментЗапросыИКод` Module:97 — но это уже не trivial point). Возможно нужно создать dedicated test-module для smoke.
 3. **Alias env-mapping security:** разрешать ли любые алиасы или enforce'ить наличие в cluster (т.е. mapping → final-IB всё равно валидируется через §3.1)? Скорее всего enforce'ить — иначе вернёмся в исходную проблему.
