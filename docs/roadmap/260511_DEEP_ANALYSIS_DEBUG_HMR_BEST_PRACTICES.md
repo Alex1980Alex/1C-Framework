@@ -263,3 +263,35 @@ presentation: <base64-encoded cyrillic blob>
 После P0+P1: matrix coverage **14/19 industry-standard features** (vs 8/19 текущих). Уровень paid commercial debug tools (vsdbg / xdebug / RubyMine).
 
 **Estimated effort P0+P1:** ~12-16ч (P0 ~6-8ч, P1 ~6-8ч). **Acceptance:** GKSTCPLK-2468-class задачи debug в 2-3× быстрее.
+
+---
+
+## §8. Сводная таблица efficiency gains (real numbers)
+
+| Practice | Effort | Per-incident savings | Frequency | Quarterly impact |
+|---|---|---|---|---|
+| **BP-1 + P0.A** Conditional/Hit-count BPs | 3ч | -25-40 мин | 5/мес | +**3-7ч/мес** |
+| **BP-1 + P0.B** Logpoints | 2ч | -15-30 мин | 10/мес | +**2.5-5ч/мес** |
+| **BP-7 + P0.C** Source mapping | 2ч | -5-10 мин | 20/мес | +**1.5-3ч/мес** |
+| **BP-3 + P1.A** Coverage export | 4ч | Prevents 1-2 incidents | quarter | +**8-12ч/квартал** |
+| **BP-6 + P1.B** CI artifacts | 2ч | -10-20 мин/PR | 8-12/мес | +**1.5-4ч/мес** |
+| **BP-5 + P2.A** Time-travel snapshot | 6ч (P2) | -1-3ч/post-mortem | 1-2/квартал | +**2-6ч/квартал** |
+| **BP-2 + P2.B** Drop Frame | 5-8ч (P2 blocked) | -6-9 мин/iter | 5 iter/задача | +**0.5-1ч/задача** |
+
+**Bottom-line P0+P1 (~12-16ч одноразово):** **≈8-19 ч savings/мес** = ROI breakeven ≈ **3-4 недели работы**. Дальше — net profit + improved engineering quality.
+
+**Bottom-line +P2 (если unblock):** дополнительно **2-6ч savings/квартал** для post-mortem + 1-3 prevented "не воспроизводится" incidents.
+
+## §9. Risk-adjusted ROI
+
+| Practice | Implementation risk | Expected gain confidence | Recommended priority |
+|---|---|---|---|
+| P0.A Conditional BPs | low (XSD verify needed) | high (15+ DAP impls validate concept) | **SHIP FIRST** |
+| P0.B Logpoints | low (wrapper-level) | high | **SHIP** |
+| P0.C Source mapping | low (read-only) | high | **SHIP** |
+| P1.A Coverage export | medium (logpoint scale issues) | medium-high | ship после P0 |
+| P1.B CI artifacts | low | high | ship после P0 |
+| P2.A Snapshot replay | medium (storage volume) | medium | research first |
+| P2.B Drop frame | **high (protocol limit)** | low-medium | **DEFER** |
+
+Conservative path: **P0 only first**, validate gains на 1-2 real задачах, потом P1 — total ~12-16ч investment с measured ROI confidence.
