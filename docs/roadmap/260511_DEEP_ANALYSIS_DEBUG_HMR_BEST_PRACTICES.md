@@ -204,7 +204,15 @@ presentation: <base64-encoded cyrillic blob>
   - Root document UUID + ManagerModule propertyID → `{fqn: "Документ.гкс_*.МодульМенеджера", file_path: "Documents/гкс_*/ManagerModule.bsl", exists: true}`
   - Form child UUID + FormModule propertyID → `{fqn: "Документ.гкс_*.Форма.<name>", file_path: "Documents/гкс_*/Forms/<name>/Module.bsl", exists: true}`
 
-  **Tests:** 222/222 unit pass. Real-config UUIDs резолвятся в 100% случаев в пилотном smoke (3 из 3 picked from live index).
+  **Tests:** 222/222 unit pass. Real-config UUIDs резолвятся в 100% случаев в пилотном smoke (3 из 3 picked from live index). ✅ **Verified live на ИБTransportManagementDevelop** — `debug_stack_trace` для реального остановленного target вернул frame с `resolved_source: {fqn: "Configuration.Configuration", file_path: null, exists: false}` для root Configuration модуля; обогащение работает end-to-end.
+
+**P0.D Auto-Continue system stops (~1.5ч, добавлено 2026-05-11 после live E2E) — ✅ DONE.** Cascade-halt mitigation для `recycle_strategy="all_rphosts_of_ib"`: каждый newly-spawned rphost получает RDBG `stop_on_next` halt → cascade блокирует все 1c-mcp-crud HTTPService triggers. Wrapper auto-Continue'ит stops с `stopByBP=false` AND no `_break_on_next_armed`. Real BP fires (`stopByBP=true`) и user-armed `debug_break_on_next` остаются user-visible.
+
+  **Implementation:** [`system_stops.py`](../../tools/bsl-debug-server/system_stops.py) — `maybe_auto_continue_system_stop(client, target_id, stop_by_bp)`; [`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) — `_break_on_next_armed` flag (init + set True in `set_break_on_next_statement` + cleared on first user-visible stop), вызов `system_stops.maybe_auto_continue_system_stop` ПЕРВЫМ в `_handle_command(callStackFormed)` (раньше logpoint/hit_condition).
+
+  **Tests:** 222/222 unit pass + 3 направленных Python-теста (`stop_by_bp=False` → auto-Continue, `stop_by_bp=True` → keep visible, `_break_on_next_armed=True` → keep visible) — все 3 кейса PASS.
+
+  **Live status:** код корректен (verified via direct Python). Эффект в живой сессии требует **`/mcp` reconnect** — HMR watcher `.mcp.json` watch-list содержит только `bsl_locals.py`/`uuid_index.py`; новый `system_stops.py` не в watch-list, поэтому wrapper не перезапустился автоматически при добавлении. Сразу после reconnect — каскад `all_rphosts_of_ib` исчезнет.
 
 **🎯 P0 batch combined impact:**
 
