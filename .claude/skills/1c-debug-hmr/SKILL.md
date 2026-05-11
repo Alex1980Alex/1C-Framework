@@ -28,6 +28,8 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 - 'debug_set_logpoint', 'logpoint', 'tracepoint', 'conditional BP', 'hit count', 'hit_condition', 'message_template', 'resolved_source'
 - 'debug_arm_warm_rphosts', 'debug_arm_next_rphost', 'warm pool', 'silent arm', 'suspendedByOther'
 - 'cascade halt', 'BP propagation', 'attached_pending', 'break_on_next_silent_arm'
+- 'debug_coverage_register', 'debug_coverage_export', 'code coverage', 'genericCoverage.xml', 'SonarQube coverage', 'lineToCover', 'covered=true'
+- 'debug_session_summary artifacts', 'CI artifact', 'PR ZIP bundle', 'session ZIP'
 - 'HMR debug wrapper', '.active.json', 'session restoration'
 
 НЕ для написания BSL-кода — используй `bsl-development`.
