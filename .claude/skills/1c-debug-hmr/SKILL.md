@@ -284,6 +284,56 @@ debug_session_diff(prev_session_id=<UUID-из-footer>, curr_session_id=<current>
 
 Footer обновляется на текущий `session_id` ТОЛЬКО при успешном завершении всего pipeline (Этап 5.x PASS + Этап 6 PASS), чтобы baseline сохранялся для следующей попытки исправления.
 
+### Шаблон 6: JOB-based BP-verification (RC2 warm-pool gap)
+
+**Когда:** HTTP-service trigger не подходит — IIS warm-pool rphost уже запущен, `debug_arm_next_rphost` потребляется внутри execute_code call chain до нашего BP. Решение: фоновое задание спаунит НОВЫЙ rphost → `DBGUIExtCmdInfoStarted` → auto-attach → BP fires до первой BSL-инструкции.
+
+**Требования:** `гкс_ОтладкаВыполненияКода` (CommonModule, server=true) в БД. Добавлен в `Configuration.mdo` и задеплоен через `update_database`.
+
+```
+1. debug_connect(infobase_alias=<ИБ>, recycle_strategy="none")
+     НЕ использовать force_recycle — оставляем IIS-rphost как есть
+
+2. debug_set_breakpoint(object_id=<UUID>, line=<TARGET_LINE>, module_type=<TYPE>)
+
+3. debug_arm_next_rphost()
+     ──→ silent-arm: следующий JOB-rphost при запуске будет остановлен
+
+4. mcp__1c-mcp-crud__execute_code("
+       П = Новый Массив;
+       П.Добавить(""<BSL-фрагмент с вызовом нужного метода>"");
+       ФоновыеЗадания.Выполнить(""гкс_ОтладкаВыполненияКода.ВыполнитьКод"", П);
+     ")
+     execute_code возвращается сразу — JOB запущен асинхронно
+
+5. debug_ping (до 3 итераций, интервал 2с)
+     ──→ callStackFormed на JOB target (не HTTP target!)
+     target_id будет отличаться от HTTP-rphost
+
+6. debug_stack_trace
+     ──→ frames[0] = гкс_ОтладкаВыполненияКода.ВыполнитьКод (harness)
+     ──→ frames[1] = <Неизвестный модуль> (Выполнить harness)
+     ──→ frames[2] = <TARGET_MODULE>:<TARGET_LINE>  ← наша точка
+
+7. debug_variables / debug_evaluate — inspect как обычно
+
+8. debug_step(action="Continue") — release JOB rphost
+```
+
+**Ограничения JOB-based:**
+- Нельзя использовать `Возврат` на верхнем уровне BSL-фрагмента (ограничение `Выполнить`)
+- `Результат` внутри фрагмента — локальная переменная, недоступна снаружи. Для возврата значений — писать во временный РС или использовать `debug_evaluate` в момент останова
+- `УстановитьПривилегированныйРежим(Истина)` уже вызван в `ВыполнитьКод`, повторный вызов внутри фрагмента не нужен
+
+**Coverage через JOB:**
+```
+debug_coverage_register(lines=[...])          # до execute_code
+debug_arm_next_rphost()
+execute_code("ФоновыеЗадания.Выполнить(...)")
+debug_ping  ──→  coverage BPs fire на JOB target
+debug_coverage_export()  ──→  covered=true для строк в JOB-пути
+```
+
 ## Диагностика
 
 | Симптом | Причина | Решение |
