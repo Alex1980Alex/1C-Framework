@@ -304,7 +304,7 @@ presentation: <base64-encoded cyrillic blob>
 | Practice | Implementation risk | Expected gain confidence | Recommended priority |
 |---|---|---|---|
 | P0.A Conditional BPs | low (XSD verify needed) | high (15+ DAP impls validate concept) | **✅ SHIPPED 2026-05-11** |
-| P0.B Logpoints | low (wrapper-level) | high | **SHIP** |
+| P0.B Logpoints | low (wrapper-level) | high | **✅ SHIPPED 2026-05-11** |
 | P0.C Source mapping | low (read-only) | high | **SHIP** |
 | P1.A Coverage export | medium (logpoint scale issues) | medium-high | ship после P0 |
 | P1.B CI artifacts | low | high | ship после P0 |
