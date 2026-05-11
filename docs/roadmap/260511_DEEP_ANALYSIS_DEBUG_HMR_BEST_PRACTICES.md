@@ -186,7 +186,15 @@ presentation: <base64-encoded cyrillic blob>
   - BP2 set с `hit_condition="%5"` → registered в `_hit_conditions` без RDBG-side `condition` (wrapper-only — correct architectural separation)
   - `_aggregate_breakpoints` группирует BPs одного модуля сохраняя per-line condition (regression test confirms)
 
-**P0.B Logpoints (~2ч)** — `debug_set_logpoint(object_id, line, module_type, message_template)`. Internally BP + auto-Continue + log в `data/debug_logs/<session>.jsonl`. Closes Gap 4 (production-safe tracing).
+**P0.B Logpoints (~2ч) — ✅ DONE 2026-05-11.** `debug_set_logpoint(object_id, line, module_type, message_template, property_id="")`. Internally BP + render `{expr}` placeholders via `client.evaluate` + write JSONL entry to `data/debug_logs/<session_id>.jsonl` + auto-Continue (never user-visible halt). Closes Gap 4.
+
+  **Implementation:** [`logpoints.py`](../../tools/bsl-debug-server/logpoints.py) helper (`extract_placeholders` regex `\{([^{}]+)\}` skipping `{{escaped}}`, `fire_logpoint` evaluates+renders+logs+continues) + [`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) (`_logpoints` dict + `_log_dir`, `_record_logpoint`, `set_breakpoints(logpoint_template=...)`, `_handle_command(callStackFormed)` calls `logpoints.fire_logpoint` BEFORE hit-condition check, new MCP tool `debug_set_logpoint`).
+
+  **Tests:** 222/222 unit pass + standalone E2E Python test (`fire_logpoint` with mocked client → JSONL written, target_id removed from stopped, step awaited once with `Continue`).
+
+  **Architectural separation:** logpoints take priority over hit_conditions (they're tracepoints — never visible to user). Both layered in same callback: `logpoints.fire_logpoint() → if not fired, bp_conditions.auto_continue_if_unsatisfied()`.
+
+  **Note:** Schema-cache regression on Windows means new `debug_set_logpoint` tool requires `/mcp` reconnect once for first live invocation through harness (existing `1c-debug-hmr` MCP server retained old schema). HMR-wrapper reload is functional internally — verified via `notifications/tools/list_changed`.
 
 **P0.C Source mapping (~2ч)** — в `debug_stack_trace` response добавить `resolved_source` через cached `bsl-semantic-search:bsl_object_info`. Stack показывает FQN + file path вместо UUIDs. Closes Gap 7.
 
