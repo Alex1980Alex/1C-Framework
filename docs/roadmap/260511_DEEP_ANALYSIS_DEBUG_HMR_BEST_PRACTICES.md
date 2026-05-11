@@ -67,6 +67,21 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 
 **Применимость:** RDBG `DebugStepAction` enum (yukon39 `debugBaseData.xsd:72-80`) знает `Step / StepIn / StepOut / Continue` — НЕТ `DropFrame` / `ForceReturn`. **Research blocker** — может потребовать invasive wrapper-level (custom BSL prepend через `Documents.Reload()`).
 
+**🎯 Эффективность при внедрении (real-world сценарий GKSTCPLK-2468 v1 → v2):**
+
+В session 2026-05-11 первая реализация F2 (`РазблокироватьЗаблокированныеПриПринятииКомпозита`) оказалась **no-op** из-за type mismatch (ФНП vs Регистрация на ПЛК). Чтобы понять причину пришлось:
+1. revert РС записи через execute_code (~30s)
+2. re-trigger composite re-post (~10s)
+3. re-snapshot РС → compare BEFORE/AFTER (~20s)
+4. изменить F2 SQL → repeat от шага 1 (cycle ≈ 1-2 мин × 5+ итераций)
+
+**С BP-2 Drop Frame:** после первого stop в `СформироватьВспомогательныеДанныеДляЗаблокированныхТС:722` можно было бы:
+1. изменить state переменной `гкс_ДокументРегистрации` через debug_evaluate('гкс_ДокументРегистрации = ...')
+2. Drop Frame → restart процедуры с новым значением
+3. наблюдать результат без re-trigger всего composite cycle
+
+**Cycle drops с 1-2 мин → 10-15 sec.** На задаче типа GKSTCPLK-2468 с 5+ итерациями: экономия **~6-9 минут чистого debug time** + значительно меньше mental context-switching.
+
 ### BP-3: Coverage41C + sonar-bsl-plugin-community (1С-specific)
 
 [github.com/1c-syntax/Coverage41C](https://github.com/1c-syntax/Coverage41C) + [github.com/1c-syntax/sonar-bsl-plugin-community](https://github.com/1c-syntax/sonar-bsl-plugin-community).
