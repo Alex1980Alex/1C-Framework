@@ -129,6 +129,22 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 | `debug_coverage_export(output_path="")` | **(P1.A roadmap 260511)** Emit SonarQube `genericCoverage.xml` со всеми tracked lines (`covered=true` если hit, `false` иначе). Default path: `data/debug_coverage/<session>.xml`. Returns `{path, files_count, lines_total, lines_covered, coverage_pct}` |
 | `debug_session_summary(format="artifacts")` | **(P1.B roadmap 260511)** Существующий tool, новый format. Packages session в ZIP bundle: `summary.json` + `summary.md` + `breakpoints_cache.json` + `stop_events.json` + `logpoint_log.jsonl` (если есть) + `stack_snapshots/<tid>.json`. Returns `{path, size_bytes, files[]}`. Для PR upload как artifact |
 
+### Exception BPs (P3.B)
+
+| Tool | Назначение |
+|---|---|
+| `debug_set_exception_bp(message_pattern="", module_pattern="")` | **(P3.B roadmap 260511)** Add filter for unhandled exceptions. Both patterns — case-insensitive substring matches (empty = match any). Multiple calls accumulate (OR semantics across filters; AND within each filter). Default behavior (no filters): halt on ALL exceptions |
+| `debug_clear_exception_bps()` | **(P3.B roadmap 260511)** Reset to halt-all default |
+| `debug_list_exception_bps()` | **(P3.B roadmap 260511)** Inspect current filters |
+
+### Replay / Snapshots (P2.A)
+
+| Tool | Назначение |
+|---|---|
+| `debug_session_record(enable=True)` | **(P2.A roadmap 260511)** Toggle snapshot recording. When enabled, каждый user-visible stop (BP fire + unfiltered exception) appends entry в `data/debug_replays/<session>.jsonl`. NOT true time-travel — read-only post-mortem только |
+| `debug_replay_list()` | **(P2.A roadmap 260511)** Returns array of `{index, iso, target_id, reason, line, has_exception}` для всех snapshots текущей session |
+| `debug_replay_seek(index)` | **(P2.A roadmap 260511)** Returns full snapshot entry `{ts, iso, session_id, target_id, reason, stack, exception?}` на указанном index |
+
 ### Управление выполнением
 
 | Tool | Назначение |
