@@ -122,18 +122,26 @@ class ImplementOneCTaskPreflight(BaseHook):
         return out
 
     @staticmethod
-    def _render_message(exit_code: int, mode: str, failed: list) -> str:
+    def _render_message(exit_code: int, mode: str, failed: list, debug_hmr_ready: bool = False) -> str:
         prefix = "[implement-1c-task-preflight]"
+        # Этап 5.x BP-verification требует 1c-debug-hmr (roadmap 260510 §3.2).
+        # При его отсутствии в режимах Full / Full (no-BP) — surface'ить отдельной строкой.
+        debug_line = (
+            "\n  Debug environment: ready (BP-verification Этап 5.x доступна)"
+            if debug_hmr_ready
+            else "\n  Debug environment: not-ready — BP-verification Этапа 5.x будет SKIP "
+                 "(1c-debug-hmr недоступен; pipeline продолжит без live BP-trace)"
+        )
         if exit_code == 0:
             return (
-                f"{prefix} OK Pipeline mode: Full. All critical MCP servers reachable "
-                f"(edt-mcp + 1c-mcp-crud + bsl-debugger + bsl-semantic-search)."
+                f"{prefix} OK Pipeline mode: {mode}. All critical MCP servers reachable "
+                f"(edt-mcp + 1c-mcp-crud + bsl-debugger + bsl-semantic-search).{debug_line}"
             )
         if exit_code == 1:
             failed_part = ("\n  Unreachable: " + "; ".join(failed)) if failed else ""
             return (
                 f"{prefix} WARN Pipeline mode: {mode}. Some stages will be skipped or "
-                f"fall back to bsl-semantic-search/bsl-code-search.{failed_part}\n"
+                f"fall back to bsl-semantic-search/bsl-code-search.{failed_part}{debug_line}\n"
                 f"  Recovery: {ROADMAP_REF}"
             )
         if exit_code == 2:
