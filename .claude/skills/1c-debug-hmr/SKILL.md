@@ -14,7 +14,7 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 | Tool prefix | `mcp__1c-debug-hmr__*` (или `mcp__1c-debug__*` для plain-варианта без HMR) |
 | Wrapper | [`tools/bsl-debug-server/mcp_hmr_proc.py`](../../tools/bsl-debug-server/mcp_hmr_proc.py) |
 | Inner server | [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) |
-| Тестов | 199 unit (test_mcp_debug_server.py) + 13 schema (test_autonomous_debug_test.py) |
+| Тестов | 213+ unit (test_mcp_debug_server.py) + 13 schema (test_autonomous_debug_test.py) |
 | Подробная документация | [docs/framework documentation/36_AUTONOMOUS_DEBUG_CONTROL/](../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/) |
 
 ## Триггеры
