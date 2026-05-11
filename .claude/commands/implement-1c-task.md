@@ -71,5 +71,14 @@ Skill определяет:
 - Вносить изменения строго в порядке из ANALYSIS-REPORT
 - КАЖДЫЙ SQL → validate_query + execute_query ДО записи
 - КАЖДАЯ запись → get_project_errors ПОСЛЕ записи
+- КАЖДАЯ `[MODIFIED]` точка в режиме Full → BP-verification через `1c-debug-hmr` (Этап 5.x)
 - Проведение документов = ПОЛЬЗОВАТЕЛЬ (Claude не имеет GUI)
 - НЕ модифицировать файлы вне списка из ANALYSIS-REPORT
+
+## Используемые MCP-инструменты
+
+При вызове skill доступны (помимо стандартного набора):
+- `mcp__edt-mcp__*` — основной путь
+- `mcp__1c-mcp-crud__*` — живые данные
+- `mcp__bsl-debugger__*`, `mcp__bsl-semantic-search__*`, `mcp__bsl-code-search__*` — анализ
+- `mcp__1c-debug-hmr__*` — Этап 0 `debug_health_check` + Этап 5.x BP-verification + Этап 5.y regression diff (по умолчанию; plain `mcp__1c-debug__*` через `IMPLEMENT_1C_USE_PLAIN_DEBUG=true`)
