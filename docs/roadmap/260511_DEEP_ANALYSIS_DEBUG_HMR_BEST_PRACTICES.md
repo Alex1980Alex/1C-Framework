@@ -1,8 +1,85 @@
 # Deep Analysis — Maximum Debug Coverage для `1c-debug-hmr` Pipeline
 
 > **Дата:** 2026-05-11
-> **Статус:** Research COMPLETE → Recommendations pending approval
-> **Связано:** roadmaps 260510 + 260511 + 36_AUTONOMOUS_DEBUG_CONTROL
+> **Статус:** Research COMPLETE + **P0 batch SHIPPED** (P0.A–P0.G) + **P0.E/P0.G drain extensions** + docs §36.8
+> **Связано:** roadmaps 260510 + 260511 + 36_AUTONOMOUS_DEBUG_CONTROL §36.8
+
+---
+
+## §0. Промежуточные итоги (Interim Status — 2026-05-11)
+
+### ✅ Что реализовано и shipped в submodule + main
+
+| Item | Submodule commit | Main bump | Live verified? |
+|---|---|---|---|
+| **P0.A** Conditional + Hit-count BPs | `90574d1` | `f7209f6e6` | ⚠️ arch (register + XML escaping) |
+| **P0.B** Logpoints (`debug_set_logpoint`) | `9a5cc68` | `97061c765` | ⚠️ arch (tool callable + Python E2E) |
+| **P0.C** Source mapping (`resolved_source`) | `170640f` | `7bf13a40a` | ✅ **LIVE** (real frame с FQN) |
+| Round-1 code-verify fixes (4 PARTIAL items) | `d392003` | `7f30b9b38` | ✅ |
+| **P0.D** Cascade auto-Continue | `6d0152c` | `bdb34504d` | ✅ **LIVE** (cascade fixed) |
+| Critical `step()` signature fix (P0.A/B/D) | `23ce35d` | `e530601aa` | ✅ |
+| **P0.E** BP-propagation drain | `f769d51` | `ed96f7b3e` | ✅ **LIVE** (JOB targets drained) |
+| **P0.F** `debug_arm_warm_rphosts` | `b6ee7ea` | `0763b726b` | ✅ **LIVE** (1 JOB armed + reapply) |
+| P0.F PARTIAL fixes (memory leak, docs, reapply) | `433b8f8` | `64426fcc5` | ✅ |
+| **P0.G** `debug_arm_next_rphost` (silent) | `946e445` | `df05118f0` | ✅ **LIVE** (suspendedByOther captured) |
+| P0.G polish (pending discard, INFO log) | `a8457f6` | `01a3298eb` | ✅ |
+
+**Итого:** 7 P0 items shipped (исходно планировались 3 — A/B/C; D/E/F/G добавлены как unplanned bonus после live findings).
+
+### 📊 Метрики
+
+| Метрика | Значение |
+|---|---|
+| Unit тесты | 222/222 pass (+0 regression) |
+| Direct Python E2E | 12+ кейсов (success + exception paths для всех helpers) |
+| Code-verify rounds | 4 (1× FAIL critical bug → fix → PASS, 3× PARTIAL → fix → PASS) |
+| Live cluster verifications | 4 (P0.C/D/F/G полностью; P0.E косвенно) |
+| Critical bug caught by code-verify | 1 — wrong `step()` signature silently swallowed TypeError, Continue never sent (бы прошло в production без verify) |
+| New helper modules | 3 (`bp_conditions.py`, `logpoints.py`, `system_stops.py`) |
+| MCP tools (было → стало) | 15 → **18** (`debug_set_logpoint`, `debug_arm_warm_rphosts`, `debug_arm_next_rphost`) |
+| Cache files written | 3 (architecture-research + 1c-doc-research) |
+| Total commits (submodule + main) | ~20 |
+
+### 🚧 Что НЕ закрыто и почему
+
+**HTTPService warm-pool BP fire** — vendor-level ceiling RDBG protocol.
+
+| Аспект | Verdict |
+|---|---|
+| Architectural cause | Pre-existing rphost (alive до `debug_connect`) invisible: `getDbgAllTargetStates` returns []; `setBreakOnNextStatement` доставляется только attached targets |
+| Research confirmation | XSD 40+ commands analyzed — **NO attach-by-PID**; yukon39 same gap; Конфигуратор/EDT same gap; vendor (Vladimir Gurov, 1c-dn) acknowledges, promises future EDT release |
+| Available workarounds | `force_recycle_rphost=True` / `recycle_strategy="all_rphosts_of_ib"` (destructive), `debug_launch_thin_client` (UI participation), `iisreset` (admin) |
+| Proposed but не реализован | **JOB-based execution** через `ФоновыеЗадания.Выполнить()` — каждый execute_code оборачивается в БГ-задание, спавн нового JOB target visible via `DBGUIExtCmdInfoStarted`. Closes gap полностью. Effort ~1.5ч. Pending user decision |
+
+### 📚 Документация обновлена
+
+- **NEW** [`36.8_Advanced_Debug_Features.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.8_Advanced_Debug_Features.md) — 280-line chapter: feature catalog, API table (18 tools), workflows, warm-pool ceiling §10
+- [`36.1_Обзор.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.1_Обзор.md) — P0.A-G batch header + TOC entry §36.8
+- [`36.6_Диагностика.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.6_Диагностика.md) — RDBG limitations: warm-pool ceiling + vendor commitment
+- [`.claude/skills/1c-debug-hmr/SKILL.md`](../../.claude/skills/1c-debug-hmr/SKILL.md) — frontmatter: 13→18 tools + P0.A-G keywords; API tables: 3 new tools + extended `debug_set_breakpoint`/`debug_stack_trace`
+- **Cache:**
+  - [`bp_propagation_race_patterns.md`](../../.claude/skills/architecture-research/cache/bp_propagation_race_patterns.md) — survey 6 protocols (DAP/CDP/GDB/JDWP/vscode-js-debug/yukon39)
+  - [`rdbg-protocol-command-catalog.md`](../../.claude/skills/1c-doc-research/cache/rdbg-protocol-command-catalog.md) — 40+ RDBG commands + attach-by-PID verdict (NO)
+  - [`rdbg-target-type-enum-and-bp-timing.md`](../../.claude/skills/1c-doc-research/cache/rdbg-target-type-enum-and-bp-timing.md) — DebugTargetType enum + BP timing
+
+### 🎯 Effective coverage gain
+
+| Industry feature class | Before | After P0.A-G |
+|---|---|---|
+| Conditional BPs | ❌ | ✅ P0.A (RDBG-native condition) |
+| Hit-count BPs | ❌ | ✅ P0.A (wrapper-level counter) |
+| Logpoints / tracepoints | ❌ | ✅ P0.B (`debug_set_logpoint` + JSONL) |
+| Source mapping (UUID → FQN) | ❌ | ✅ P0.C (`resolved_source` in stack) |
+| Cascade-halt prevention | ❌ (manual Continue each) | ✅ P0.D (auto-filter system stops) |
+| BP propagation race fix | ❌ (lost BPs on fresh spawn) | ✅ P0.E (drain window 150ms) |
+| Warm-pool arming | ❌ | ✅ P0.F/G (visible + silent variants) |
+| **Industry coverage** | **8/19** | **14/19** (+6) |
+
+### 🔜 Следующие шаги (P1+P2+P3)
+
+См. §4 Prioritized Enhancement Roadmap ниже. P0 batch занял ~12ч factual time (планировалось 6-8ч; overage из-за code-verify FAIL discovery + extra P0.D/E/F/G items добавленных после live testing). P1+P2+P3 — на дальнейшие итерации.
+
+---
 
 ## §1. Executive Summary
 
