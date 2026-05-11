@@ -31,3 +31,18 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 | **Source mapping** (UUID → FQN) | ⚠ partial | ✅ | ✅ | ✅ | ✅ |
 
 **Gap summary:** 11/19 features absent. 4 critical (conditional, logpoint, coverage, CI artifacts).
+
+## §3. Top-5 Best Practices с GitHub (deep research)
+
+### BP-1: VS Code Debug Adapter Protocol — Conditional BPs + Logpoints
+
+[microsoft/debug-adapter-protocol](https://github.com/microsoft/debug-adapter-protocol) — открытый стандарт, реализован ≥40 adapter'ами.
+
+- `SetBreakpointsRequest.breakpoints[].condition` — expression evaluated при hit; BP не fire если false
+- `SetBreakpointsRequest.breakpoints[].hitCondition` — `">10"` / `"%5"` (every 5th) / `"=3"`
+- `SetBreakpointsRequest.breakpoints[].logMessage` — **logpoint**: evaluate + emit, no halt
+- `FunctionBreakpointsRequest` — break on method entry by name
+- `DataBreakpointsRequest` — break когда target variable changes value
+- `ExceptionBreakpointsRequest` — break on raise
+
+**Применимость к 1С:** RDBG XSD (`debugBreakpoints.xsd`) нужно проверить native support. Wrapper-level fallback — break + evaluate + auto-Continue if condition false. **Source:** [microsoft.github.io/debug-adapter-protocol/specification.html](https://microsoft.github.io/debug-adapter-protocol/specification.html), [code.visualstudio.com/blogs/2018/07/12/introducing-logpoints-and-auto-attach](https://code.visualstudio.com/blogs/2018/07/12/introducing-logpoints-and-auto-attach).
