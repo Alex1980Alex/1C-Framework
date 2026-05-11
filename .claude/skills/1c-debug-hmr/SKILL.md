@@ -30,6 +30,8 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 - 'cascade halt', 'BP propagation', 'attached_pending', 'break_on_next_silent_arm'
 - 'debug_coverage_register', 'debug_coverage_export', 'code coverage', 'genericCoverage.xml', 'SonarQube coverage', 'lineToCover', 'covered=true'
 - 'debug_session_summary artifacts', 'CI artifact', 'PR ZIP bundle', 'session ZIP'
+- 'debug_set_exception_bp', 'debug_clear_exception_bps', 'debug_list_exception_bps', 'exception breakpoint', 'rteProcessing filter', 'ВызватьИсключение', 'unhandled exception'
+- 'debug_session_record', 'debug_replay_list', 'debug_replay_seek', 'snapshot replay', 'time-travel debug', 'post-mortem inspection'
 - 'HMR debug wrapper', '.active.json', 'session restoration'
 
 НЕ для написания BSL-кода — используй `bsl-development`.
