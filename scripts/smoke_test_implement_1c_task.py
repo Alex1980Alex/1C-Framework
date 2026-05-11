@@ -69,6 +69,17 @@ class CheckResult:
 
 
 @dataclass
+class McpHealth:
+    """Структурированный health-check для всех опрошенных серверов.
+    Используется hook'ами (implement-1c-task-preflight) для surface'а на UI."""
+    edt_mcp: bool = False
+    onec_crud: bool = False
+    bsl_debugger: bool = False
+    bsl_semantic: bool = False
+    debug_hmr: bool = False
+
+
+@dataclass
 class Report:
     config_path: str
     paths: list[CheckResult] = field(default_factory=list)
@@ -78,6 +89,8 @@ class Report:
     onec_crud: bool = False
     bsl_debugger: bool = False
     bsl_semantic: bool = False
+    debug_hmr: bool = False  # опциональный — BP-verification в Этапе 5.x
+    mcp_health: McpHealth = field(default_factory=McpHealth)
     mode: str = "Read-only research"
     exit_code: int = 2
 
