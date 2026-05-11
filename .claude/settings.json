@@ -136,6 +136,11 @@
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/implement-1c-task-preflight.py",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/analyze-1c-task-preflight.py",
+            "timeout": 30
           }
         ]
       }
