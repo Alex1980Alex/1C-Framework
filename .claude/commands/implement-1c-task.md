@@ -12,13 +12,13 @@ $ARGUMENTS
 **Используй skill implement-1c-task** — единый источник методологии реализации.
 
 Skill определяет:
-- **Этап 0 Preflight (ОБЯЗАТЕЛЬНО)** — проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` и выбор режима pipeline (Full / Code-only / Read-only verify / Read-only research). Без этого skill уходит в этапы где нужные tool-вызовы не существуют.
-- 8 последовательных этапов (Подготовка → Валидация запросов → BSL → Статанализ → Верификация → Тестирование → Документация → Git)
-- 3 основных MCP-сервера: **EDT-MCP**, **1c-mcp-crud**, **bsl-debug-server**
+- **Этап 0 Preflight (ОБЯЗАТЕЛЬНО)** — `debug_health_check(mode="probe")` через `1c-debug-hmr` + handshakes `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` → выбор режима pipeline (**Full** / **Full (no-BP)** / Code-only / Read-only verify / Read-only research). Без этого skill уходит в этапы где нужные tool-вызовы не существуют.
+- 8 последовательных этапов (Подготовка → Валидация запросов → BSL → Статанализ → Верификация (вкл. Live BP-verification 5.x) → Тестирование → Документация → Git)
+- 4 основных MCP-сервера: **EDT-MCP**, **1c-mcp-crud**, **bsl-debug-server**, **1c-debug-hmr** (последний опциональный, нужен для BP-verification Этапа 5.x)
 - Вспомогательные: bsl-semantic-search (+ fallback для Этапа 1), bsl-code-search, bsl-platform-context
 - Обязательные циклы проверки и правила
 
-> **История версий скилла:** v2.3.0 (2026-05-05) — Этап 0 Preflight + fallback Этапа 1 через `bsl-semantic-search` / `bsl-code-search` / `Read` когда `edt-mcp` отсутствует. v2.1.1 (2026-04-14) — откат Этапа 0 «Активация Serena» после [углублённого аудита](../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Serena на BSL-задачах ценности не даёт (LSP для BSL не существует, `.serena/project.yml` с `language: bsl` невалиден).
+> **История версий скилла:** v2.7.0 (2026-05-11) — интеграция `1c-debug-hmr` в Этап 0 (`debug_health_check`) и Этап 5.x (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки + regression diff Этапа 5.y через `debug_session_diff`). Footer IMPLEMENTATION-PROGRESS.md получил маркер `<!-- debug_session_id: <UUID> -->` для baseline. Источник: [roadmap 260510](../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md). v2.3.0 (2026-05-05) — Этап 0 Preflight + fallback Этапа 1 через `bsl-semantic-search` / `bsl-code-search` / `Read` когда `edt-mcp` отсутствует. v2.1.1 (2026-04-14) — откат Этапа 0 «Активация Serena» после [углублённого аудита](../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md).
 
 ### 3 MCP-сервера — обязательное использование
 
