@@ -101,3 +101,31 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 [DAP Source spec](https://microsoft.github.io/debug-adapter-protocol/specification.html#Types_Source).
 
 **Применимость:** RDBG возвращает `objectID`/`propertyID` UUID. Wrapper уже decode'ит `presentation` partially. Добавить **explicit source resolution** через `bsl-semantic-search:bsl_object_info(UUID)` → FQN + file path. Stack frame показывает `гкс_ВходнойКонтрольКачества.Module.ЗаполнитьЗаблокированныеРегистрацииУсиленныйКонтроль (Module.bsl:295)` вместо UUIDs.
+
+## §4. Prioritized Enhancement Roadmap
+
+### P0 (high ROI, low risk, ~6-8ч)
+
+**P0.A Conditional + Hit-count BPs (~3ч)** — `debug_set_breakpoint(condition=..., hit_count=N)`. Wrapper-level: break + evaluate + auto-Continue if false. Closes Gap 3.
+
+**P0.B Logpoints (~2ч)** — `debug_set_logpoint(object_id, line, module_type, message_template)`. Internally BP + auto-Continue + log в `data/debug_logs/<session>.jsonl`. Closes Gap 4 (production-safe tracing).
+
+**P0.C Source mapping (~2ч)** — в `debug_stack_trace` response добавить `resolved_source` через cached `bsl-semantic-search:bsl_object_info`. Stack показывает FQN + file path вместо UUIDs. Closes Gap 7.
+
+### P1 (medium ROI, medium risk, ~6-8ч)
+
+**P1.A Coverage report export (~4ч)** — tools `debug_coverage_start(module_filter)` + `debug_coverage_stop() → genericCoverage.xml`. Logpoint-pattern на каждой executable line. SonarQube compatible. Closes Gap 1 (code path coverage).
+
+**P1.B CI artifact capture (~2ч)** — extend `debug_session_summary(format="artifacts")` → ZIP bundle (stack + variables + replay.jsonl + summary). Upload как PR artifact. Closes Gap 2 (regression detection через structured metrics).
+
+### P2 (high value, high cost — research blocked, ~10-15ч)
+
+**P2.A Snapshot-based time-travel (~6ч)** — `debug_session_record` + `debug_replay_seek(timestamp)`. Wrapper records each stop event + variable snapshot в `.replay.jsonl`.
+
+**P2.B Drop frame / Force return (~5-8ч, BLOCKED)** — RDBG enum не имеет DropFrame/ForceReturn. Wrapper-level fallback потенциально invasive. **Deferred** до RDBG protocol vendor support research.
+
+### P3 (nice-to-have)
+
+- P3.A Data BPs (RDBG protocol research required)
+- P3.B Exception BPs (wrapper-level через global trap + stack filter)
+- P3.C Stream debugger / pipeline visualization (1С-аналог — табличный документ / запрос)
