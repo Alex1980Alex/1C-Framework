@@ -92,12 +92,15 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 | `debug_target_state(target_id?)` | С пустым `target_id` — wrapper-side snapshot (infobase, session_id, attached_known_targets, last_stopped) без RDBG round-trip'а. С `target_id` — resolve через `get_targets()` |
 | `debug_targets()` | List active rphost / ManagedClient targets с состоянием (`Worked` / `StopOnNextLine` / etc.) |
 | `debug_attach_targets(target_ids[], attach=True)` | Принудительное attach/detach к Debug UI (troubleshooting если ping event-loop пропустил `targetStarted`) |
+| `debug_arm_warm_rphosts(target_types=["HTTPService","JOB","Server"])` | **(P0.F roadmap 260511)** Attach all visible targets matching filter, mark as `_attached_pending` (P0.E drain on next halt), re-apply BP workspace. Returns `armed_targets[]` + `bp_workspace_reapplied`. Pass `[]` to arm without filter |
+| `debug_arm_next_rphost()` | **(P0.G roadmap 260511)** Silent-arm next halting rphost via `setBreakOnNextStatement(silent=True)`. Wrapper auto-attaches + drains + Continues — no user-visible stop. Полезно для warm-pool HTTPService rphost'ов невидимых через getDbgAllTargetStates |
 
 ### Breakpoints
 
 | Tool | Назначение |
 |---|---|
-| `debug_set_breakpoint(object_id, line, module_type?, property_id?)` | Set BP. `module_type ∈ {CommonModule, ManagerModule, ObjectModule, RecordSetModule, FormModule, CommandModule}` — `propertyID` auto-resolves через MODULE_PROPERTY_IDS. Cache aggregation: multiple BPs одного модуля группируются в один request (RDBG `setBreakpoints` REPLACES workspace per call) |
+| `debug_set_breakpoint(object_id, line, module_type?, property_id?, condition?, hit_condition?)` | Set BP. `module_type ∈ {CommonModule, ManagerModule, ObjectModule, RecordSetModule, FormModule, CommandModule}` — `propertyID` auto-resolves. Cache aggregation: multiple BPs одного модуля группируются в один request. **(P0.A roadmap 260511)** `condition` — BSL-выражение, RDBG-native filter. `hit_condition` — VS Code DAP syntax (`>N`/`>=N`/`<N`/`<=N`/`=N`/`%N`), wrapper-level counter |
+| `debug_set_logpoint(object_id, line, message_template, module_type?, property_id?)` | **(P0.B roadmap 260511)** Tracepoint без halt: на каждом fire render'ит `{expr}` placeholders в template через `client.evaluate`, append'ит JSONL entry в `data/debug_logs/<session>.jsonl`, auto-Continue. SECURITY: placeholders execute as BSL в running rphost — не передавай untrusted templates |
 | `debug_get_breakpoints()` | Client-side cache (RDBG не expose'ит server-side getBreakpoints URL) |
 | `debug_break_on_next()` | Global trap — **следующая** BSL-инструкция на ANY rphost для этой infobase'ы остановится. Обходит pre-existing rphost gap (см. §10/§11 roadmap) |
 
