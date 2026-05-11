@@ -961,6 +961,9 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 - [ ] Все SQL-запросы проверены на живых данных (`execute_query`) — с workaround `ПРЕДСТАВЛЕНИЕ()` для ссылок (см. Известные ограничения 1c-mcp-crud)
 - [ ] `bsl_analyze`: 0 ошибок ИЛИ только known false-positive'ы (chained call / препроцессор) — зафиксировано в IMPLEMENTATION-PROGRESS.md
 - [ ] **Этап 6 → шаг 0**: конфигурация БД обновлена (`update_database` или ручной EDT) — без этого live-вызовы возвращают старое поведение
+- [ ] **Этап 5.x BP-verification (режим Full)**: ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (frames[0].lineNo соответствует MODIFIED_LINE), либо обоснованно помечены SKIP в IMPLEMENTATION-PROGRESS. Точки `[REFACTOR]` — освобождены.
+- [ ] **Этап 5.y Regression diff (если есть baseline session_id в footer)**: `debug_session_diff` verdict ∈ {NO_REGRESSION, IMPROVEMENT, NEUTRAL}; при REGRESSION pipeline блокируется.
+- [ ] **Footer IMPLEMENTATION-PROGRESS.md**: `<!-- debug_session_id: <UUID> -->` записан (если режим Full и BP-verification PASS) — для regression diff на следующем прогоне
 - [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной (минимум — SQL-симуляция, если БД не обновлена)
 - [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
