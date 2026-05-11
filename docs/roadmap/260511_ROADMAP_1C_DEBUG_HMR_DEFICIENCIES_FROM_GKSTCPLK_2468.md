@@ -2,7 +2,7 @@
 
 > **Origin:** Phase 2.5 R.2 + Этап 5.x BP-verification на GKSTCPLK-2468 (Устранить замечания по результатам ОПЭ — Направление заблокированные ТС). 6 trigger attempts на dev-базе ИБTransportManagementDevelop, 4 BP set, **0 BP fire** (0% fire rate). Static analysis с high confidence остался единственным источником истины; live test ПОСЛЕ implementation подтвердил корректность fix'а, но обнаружил серьёзные gaps в 1c-debug-hmr coverage.
 >
-> **Status:** draft, awaiting prioritization.
+> **Status:** Phase 1 (P0) **COMPLETE** (commits `564b0f8` + `fcc0ed8`). Phase 2 (P1-P3) **COMPLETE** (commits `c2e960e` + `54fea7d`). Tests: 199 → 215 passed. **Open:** post-spawn rphost-attach gap (RC2 residual) — see §7 P0.4 follow-up.
 >
 > **Owner:** Alex Terletskii.
 >
