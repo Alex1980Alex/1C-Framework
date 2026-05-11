@@ -110,6 +110,13 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 
 **Применимость:** RDBG не имеет аналога, но можно эмулировать через массовые logpoints (BP-2 pattern). Trade-off: N BPs × M hits = ×N latency, только для targeted coverage runs не для production.
 
+**🎯 Эффективность при внедрении (performance hunting сценарий):**
+
+Workflow 36.5 §3 «Performance hunting: отчёт долго формируется» — обычно требует ставить таймстампы через `Сообщить()` × 10-15 ключевых мест → выкатить в test → анализировать output. Цикл "догадка → инструментировать → измерить → исправить → re-trigger" = **30-60 мин per iteration**.
+
+- **С BP-4 callCount:** `Profiler.startPreciseCoverage(callCount: true)` → выполнить отчёт → `takePreciseCoverage` показывает что `ПолучитьДанныеБлокировкиДляРегистраций:1843` вызывается **1247 раз** (N+1 query antipattern!), а `СобратьСостоянияКачестваИзНабораЗаписей:1932` — 1 раз. Hotspot identified без любого изменения кода.
+- **Per-block coverage** дополнительно показывает что branch `Если ЭтоПервоеТС Тогда` (стр. 1946) hit 980 раз, alternative ветка `ИначеЕсли Не ЭтоПервоеТС И ЗначениеЗаполнено...` (стр. 1955) — 267 раз. Distribution = critical insight для optimization. **Cycle drops с 30-60 мин/iter → 5-10 мин/iter, ×5-6 ускорение performance hunting workflows.**
+
 ### BP-5: Time-Travel Debugging — rr / PyTrace / UDB / Replay.io
 
 [undo.io](https://undo.io/resources/how-i-debug-python-code-with-a-time-travel-debugger/), [pytrace.com](https://pytrace.com/), [developer.chrome.com/blog/chromium-chronicle-13](https://developer.chrome.com/blog/chromium-chronicle-13), [github.com/replayio/devtools](https://github.com/replayio/devtools).
