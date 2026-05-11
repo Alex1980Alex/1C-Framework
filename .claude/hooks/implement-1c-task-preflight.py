@@ -158,7 +158,7 @@ class ImplementOneCTaskPreflight(BaseHook):
             f"mode={mode}. Pipeline preflight inconclusive — Skill Stage 0 will re-probe."
         )
 
-    def _log_preflight(self, inp: HookInput, exit_code: int, mode: str) -> None:
+    def _log_preflight(self, inp: HookInput, exit_code: int, mode: str, debug_hmr_ready: bool = False) -> None:
         try:
             from shared.invocation_logger import log_invocation
             from shared.run_context import get_run_id
@@ -167,7 +167,7 @@ class ImplementOneCTaskPreflight(BaseHook):
                 event="UserPromptSubmit",
                 tool=f"slash:{TARGET_COMMAND}",
                 elapsed_ms=self.elapsed_ms,
-                outcome=f"mode={mode};exit={exit_code}",
+                outcome=f"mode={mode};exit={exit_code};debug_hmr={int(debug_hmr_ready)}",
                 session_id=inp.session_id,
                 category="preflight",
                 run_id=get_run_id(inp.session_id),
