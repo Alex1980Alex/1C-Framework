@@ -25,6 +25,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 - 'pre-existing rphost', 'force_recycle_rphost'
 - 'inspect locals', 'evaluate BSL expression', 'step over BSL'
 - 'debug_connect', 'debug_ping', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'debug_step', 'debug_targets', 'debug_break_on_next', 'debug_target_state', 'debug_get_breakpoints', 'debug_attach_targets', 'debug_disconnect'
+- 'debug_set_logpoint', 'logpoint', 'tracepoint', 'conditional BP', 'hit count', 'hit_condition', 'message_template', 'resolved_source'
+- 'debug_arm_warm_rphosts', 'debug_arm_next_rphost', 'warm pool', 'silent arm', 'suspendedByOther'
+- 'cascade halt', 'BP propagation', 'attached_pending', 'break_on_next_silent_arm'
 - 'HMR debug wrapper', '.active.json', 'session restoration'
 
 НЕ для написания BSL-кода — используй `bsl-development`.
