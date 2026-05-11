@@ -89,9 +89,50 @@ Skill для комплексного анализа задачи по конф�
   - Если гибрид (refactoring + новый функционал в одной задаче) → оба маркера в плане, разные точки модификации
   - Назначение: `implement-1c-task` v2.2+ использует этот маркер для выбора между стандартным путём (EDT-MCP `write_module_source`) и Этапом 3R (`bsl_rename_symbol` / `bsl_replace_method_body` / `bsl_safe_delete_symbol`)
 
+### Фаза 2.5: Runtime Trace (опциональная, добавлено v4.2.0)
+
+**Триггер активации** (любой из двух):
+- Пользователь добавил флаг `--trace` к команде `/analyze-1c-task --trace ...`
+- Skill self-decision: алгоритм существующего кода имеет **≥3 runtime-ветвлений** по значениям, которые **невозможно определить static reading** (вызовы `Пользователи.ТекущийПользователь()`, `ПолучитьФункциональнуюОпцию(...)`, условия по `Тип(Параметр)`, режимы проведения, контекст вызова `?:` цепочки)
+
+**Цель:** получить actual call graph + variable snapshots для алгоритма на runtime, чтобы Фаза 3 (Алгоритм) построилась на реальных данных, а не предположениях из static reading. Surface'ит discrepancies между static-предсказанием и runtime-поведением.
+
+**Pre-condition** (если не выполнено — phase SKIP с warning «runtime trace недоступен — runtime ветвления отмечены как [STATIC-ASSUMPTION]» в плане):
+- `mcp__1c-debug-hmr__debug_health_check(mode="probe")` → `ready: true`
+- В случае `auto_prepare_available[]` непустого — opt-in user prompt
+- 1С infobase с активной debug session (dbgs.exe на :1550 + ragent с `-debug -http`)
+
+**8-шаговый протокол:**
+
+1. `mcp__1c-debug-hmr__debug_connect(infobase_alias=<имя из workspace>)` — attach как Debug UI. Если warning `pre_existing_rphost_warning` непустой — предупредить пользователя и предложить Solution C (UI после connect) ИЛИ `force_recycle_rphost=True` (только dev).
+2. **Identify entry-point:** определить модуль + строку входа в подозрительный алгоритм из metadata (через `mcp__bsl-semantic-search__bsl_object_info` или `mcp__1c-mcp-crud__get_metadata_details`). Для отдельной процедуры — её первая исполняемая строка; для обработки проведения — начало `ОбработкаПроведения`.
+3. `mcp__1c-debug-hmr__debug_set_breakpoint(object_id=<UUID>, line=<entry_line>, module_type=<TYPE>)` — `propertyID` auto-resolve. Verify через `debug_get_breakpoints`.
+4. **Trigger через `execute_code`** — минимальный harness, вызывающий процедуру с реалистичными параметрами (использовать данные из живой базы через `execute_query`, не fabricate). Альтернатива: HTTP-сервис trigger через `execute_query`.
+5. `mcp__1c-debug-hmr__debug_ping` — wait for `callStackFormed` event (max 3 iterations).
+6. **Iterative inspection** — для каждого frame в стеке (top-down):
+   - `mcp__1c-debug-hmr__debug_stack_trace` — кадры stack'а
+   - `mcp__1c-debug-hmr__debug_variables(stack_level=N)` — auto-discover локальных переменных
+   - `mcp__1c-debug-hmr__debug_evaluate(expression=<условие_ветвления>)` — eval каждого `Если` condition для определения какая ветка истинна
+7. **Step через критические ветвления** — `debug_step(action="Step")` на КАЖДОЙ runtime-развилке (если), capture state ДО и ПОСЛЕ перехода. Цель — построить actual control flow graph без догадок.
+8. `mcp__1c-debug-hmr__debug_step(action="Continue")` — release rphost, дать сценарию завершиться. ОБЯЗАТЕЛЬНО даже при abort'е trace'а (иначе rphost висит в pause-state).
+
+**Output:** новая секция «3.x Runtime Trace» в ANALYSIS-REPORT.md (см. шаблон ниже).
+
+**Discrepancies — главная ценность фазы.** Если runtime показал branch, который static reading предсказал по-другому — это load-bearing finding для Фазы 3. Каждый discrepancy:
+- ссылка на строку BSL (модуль:строка)
+- что говорил static («условие А → ветка 1»)
+- что реально на runtime («Тип(Параметр)=ДокументСсылка → ветка 2»)
+- impact на план модификаций (Фаза 4)
+
+**Acceptance critera Фазы 2.5:**
+- ✅ Output содержит секцию Runtime Trace с jq-compatible JSON stack'ами
+- ✅ Discrepancies секция непуста если runtime ≠ static (если все совпало — явно записать «No discrepancies — static analysis sufficient»)
+- ✅ rphost не остался в pause-state (Continue вызван)
+- ⚠️ Без флага `--trace` и без self-decision триггера — фаза SKIP (время analysis не растёт)
+
 ### Фаза 3: Алгоритм
 - **ПОИСК ПАТТЕРНОВ**: через bsl-semantic-search найти аналогичные реализации
-- Логика решения (с учётом найденных паттернов)
+- Логика решения (с учётом найденных паттернов **И discrepancies из Фазы 2.5**, если она запускалась)
 - SQL-запросы (с проверенными именами полей)
 - Обработка граничных условий
 
