@@ -44,6 +44,13 @@ CRITICAL_SERVERS = {
     "bsl-semantic-search": "bsl-semantic-search — fallback контекста (Этап 1)",
 }
 
+# Optional servers — недоступность не блокирует pipeline, но снижает покрытие
+# проверки. `1c-debug-hmr` нужен для BP-verification Этапа 5.x; при отсутствии
+# pipeline работает в режиме "Full (no-BP)" — BP-verification SKIP.
+OPTIONAL_SERVERS = {
+    "1c-debug-hmr": "1c-debug-hmr — live BP-verification (Этап 5.x)",
+}
+
 PORTS = {
     8765: "edt-mcp HTTP-bridge",
     1550: "1С debug agent",
