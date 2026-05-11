@@ -77,4 +77,5 @@ Skill определяет:
 - Используй **`bsl-semantic-search`** (`bsl_search`/`bsl_hybrid_search`) для поиска похожего кода в 3 900+ модулях.
 - Используй **`pdf-vector-graph`** (`search_documents`/`ask_question`) для поиска в индексированной документации 1С.
 - Используй **`1c-mcp-crud`** (`get_metadata`/`validate_query`/`execute_query`) для верификации имён полей и SQL-запросов на живой базе.
+- **Для сложных runtime-алгоритмов** (≥3 ветвлений по runtime-данным: `Пользователи.ТекущийПользователь()`, `ПолучитьФункциональнуюОпцию`, `Тип(Параметр)`) используй опциональную **Фазу 2.5 Runtime Trace** через `1c-debug-hmr` — см. skill для протокола. Триггер: флаг `--trace` в `$ARGUMENTS` или self-decision skill'а. Output: секция «3.Y Runtime Trace» в ANALYSIS-REPORT с Entry/Stack/Variables/Branch evaluation/**Discrepancies** (static vs runtime).
 - Сохрани результат анализа в файл `ANALYSIS-REPORT.md`, а также в память через **`memory-orchestrator`** (`route_and_save`) для последующих сессий.
