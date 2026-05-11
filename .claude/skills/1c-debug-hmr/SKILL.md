@@ -82,9 +82,11 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 | Tool | Назначение |
 |---|---|
-| `debug_connect(debug_url, infobase_alias, force_recycle_rphost?)` | Attach debug UI к dbgs. `force_recycle_rphost=True` убивает pre-existing rphost'ы через `rac process turn-off` (ragent спавнит свежий, который видим в RDBG). Имя кластерной IB (не IIS publication name!) |
+| `debug_connect(debug_url, infobase_alias, force_recycle_rphost?, recycle_strategy?)` | Attach debug UI к dbgs. **Alias validation (§3.1 P0):** fail-fast если alias не в `rac infobase list`. **`recycle_strategy` (§3.2 P0):** `auto`/`none`/`pre_existing`/`all_rphosts_of_ib`/`all_rphosts_of_cluster`. `force_recycle_rphost=True` → resolves к `pre_existing` (backward-compat). Use `all_rphosts_of_ib` для HTTP-service triggers (closes RC2) |
+| `debug_launch_thin_client(infobase_alias, user?, password?, ...)` | **(§3.5 P1)** Запуск 1cv8c.exe с правильными `/Debug -http /DebuggerURL=http://localhost:1550`. Auto-detect platform path. Закрывает RC3 (protocol mismatch). После launch — waits up to `wait_target_timeout_sec` для регистрации target'а |
+| `debug_wait_for_target(timeout_sec, poll_interval_sec)` | **(§3.4 P1)** Block until ≥1 target в `debug_targets`. Sync primitive для гарантированного attach после `debug_connect` / `launch_thin_client` перед `set_breakpoint` |
 | `debug_disconnect()` | Detach + чистит `.active.json` |
-| `debug_ping()` | Pull events + **dispatch через `_handle_command`** (заполняет cache, auto-attach новых targets, обрабатывает `callStackFormed`/`quit`). Возвращает raw events для inspection |
+| `debug_ping()` | Pull events + **dispatch через `_handle_command`**. **(§3.6 P2)** После 3 consecutive empty pings — surface `no_fire_diagnostics` с auto-detected RC1/RC2 root causes и actionable suggestions |
 | `debug_target_state(target_id?)` | С пустым `target_id` — wrapper-side snapshot (infobase, session_id, attached_known_targets, last_stopped) без RDBG round-trip'а. С `target_id` — resolve через `get_targets()` |
 | `debug_targets()` | List active rphost / ManagedClient targets с состоянием (`Worked` / `StopOnNextLine` / etc.) |
 | `debug_attach_targets(target_ids[], attach=True)` | Принудительное attach/detach к Debug UI (troubleshooting если ping event-loop пропустил `targetStarted`) |
