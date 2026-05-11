@@ -197,6 +197,15 @@ presentation: <base64-encoded cyrillic blob>
 
 **P1.B CI artifact capture (~2ч)** — extend `debug_session_summary(format="artifacts")` → ZIP bundle (stack + variables + replay.jsonl + summary). Upload как PR artifact. Closes Gap 2 (regression detection через structured metrics).
 
+**🎯 P1 batch combined impact:**
+
+| Item | Effort | Real-world payoff |
+|---|---|---|
+| P1.A Coverage export | 4ч | **Prevention 1-2 incidents/квартал** (dead code branches detected ДО открытия следующего GKSTCPLK ticket'а). 1 incident ≈ ½ day dev work + meetings ≈ **4-6ч saved** |
+| P1.B CI artifacts | 2ч | **PR review −10-20 мин/PR**, ~8-12 PR/мес = **1.5-4ч/мес savings**. Reviewer trust значительно растёт (auto-evidence) |
+
+**P1 total: ~6-8ч investment → 6-12ч/мес savings + 1-2 prevented incidents/квартал. ROI breakeven ~3-4 недели.** Особо ценно для team scale-up — coverage-driven test design позволяет distribute debugging workload без потери context.
+
 ### P2 (high value, high cost — research blocked, ~10-15ч)
 
 **P2.A Snapshot-based time-travel (~6ч)** — `debug_session_record` + `debug_replay_seek(timestamp)`. Wrapper records each stop event + variable snapshot в `.replay.jsonl`.
