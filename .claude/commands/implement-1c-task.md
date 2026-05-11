@@ -44,6 +44,7 @@ Skill определяет:
 1. **Перед записью SQL:** `validate_query` → `execute_query` (тест) → запись
 2. **После записи кода:** `write_module_source` → `get_project_errors` → `read_method_source` (верификация)
 3. **После всех изменений:** `bsl_analyze` → `get_project_errors` (общий) → `execute_query` (результат)
+4. **После записи кода с [MODIFIED] (Этап 5.x BP-verification, режим Full):** `debug_set_breakpoint(line=<MODIFIED_LINE>)` → trigger через `execute_code` → `debug_ping` → `debug_stack_trace` (assert `frames[0].lineNo == MODIFIED_LINE`) → `debug_step(action="Continue")`. Fallback: `debug_break_on_next` → `force_recycle_rphost=True` (только dev-среда). При невозможности — SKIP с обоснованием в IMPLEMENTATION-PROGRESS.md, иначе блок перехода на Этап 6.
 
 ### Входные данные
 
