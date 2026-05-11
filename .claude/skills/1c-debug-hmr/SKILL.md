@@ -74,7 +74,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 Параллельно живёт `1c-debug` (без HMR) — те же tools, без watchfiles overhead'а.
 
-## API tools (13)
+## API tools (15)
+
+> **Roadmap 260511 update (2026-05-11):** добавлены `debug_wait_for_target` (§3.4) и `debug_launch_thin_client` (§3.5). `debug_connect` расширен `recycle_strategy` параметром (§3.2, backward-compat для `force_recycle_rphost=True`). `debug_ping` теперь surface'ит `no_fire_diagnostics` после 3 consecutive empty pings (§3.6). `_validate_infobase_alias` cross-check'ает alias через `rac infobase list` ПЕРЕД attach (§3.1, closes RC1 из GKSTCPLK-2468).
 
 ### Управление сессией
 
