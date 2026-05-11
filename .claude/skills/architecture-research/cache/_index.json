@@ -3,6 +3,30 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "bp_propagation_race_patterns.md",
+      "title": "BP-Registration vs Worker-Spawn Race — Debugger Patterns (DAP/CDP/GDB/JDWP/RDBG)",
+      "keywords": [
+        "debug-adapter-protocol",
+        "dap",
+        "cdp",
+        "waitForDebuggerOnStart",
+        "gdb-pending-breakpoints",
+        "jdwp-classprepare",
+        "vscode-js-debug",
+        "yukon39-bsl-debug-server",
+        "rdbg",
+        "bp-propagation-race",
+        "cascade-halt",
+        "configurationDone",
+        "scriptParsed",
+        "1c-debug-hmr",
+        "p0e-drain"
+      ],
+      "last_verified": "2026-05-11",
+      "sources_count": 9,
+      "github_repos_count": 6
+    },
+    {
       "file": "embedding-backend-mcp-tei-vs-ollama.md",
       "title": "Embedding backend для MCP — Ollama vs TEI vs sentence-transformers",
       "keywords": [
