@@ -271,6 +271,7 @@ Footer обновляется на текущий `session_id` ТОЛЬКО пр
 | `recycle_strategy="none"` при HTTP-service triggers | HTTP-service (`1c-mcp-crud:execute_code`) spawn'ит новый rphost вне pre-existing snapshot → 0 BP fire (RC2 из GKSTCPLK-2468) | Use `recycle_strategy="all_rphosts_of_ib"` (§3.2 P0) для HTTP-service workflow, либо Solution C (UI re-post после thin client launch) |
 | Только static analysis для BSL код-flow | Composite types / runtime branching могут отличаться от static prediction (e.g. `гкс_ДокументРегистрации` оказывается ФНП, не РегистрацияПЛК) | После Phase 2 в analyze-1c-task — обязательный Phase 2.5 Runtime Trace через 1c-debug-hmr: set BP + variables + evaluate ДО реализации |
 | Игнорировать `no_fire_diagnostics` в `debug_ping` | После 3 consecutive empty pings wrapper auto-detect'ит RC1/RC2 и suggestions; pre-§3.6 это требовало 5+ ручных проверок | Прочитать `no_fire_diagnostics.suggestions` — там готовые actionable hints |
+| Передавать `/P <password>` в `debug_launch_thin_client` на shared/production машине | 1cv8c.exe CLI argv виден всем юзерам через `Get-Process \| Select CommandLine` (Win32 process metadata). Пароль logged'ится в audit, попадает в WMI cache, exposed в Task Manager / Process Explorer всем сессиям | Только personal dev-машина с одним user account. В shared контекстах — Windows-auth (`/WA` flag) или сохранённые credentials в 1С client storage. Wrapper surface'ит `security_note` в response при наличии password — НЕ игнорировать |
 
 ## Связанные скиллы
 
