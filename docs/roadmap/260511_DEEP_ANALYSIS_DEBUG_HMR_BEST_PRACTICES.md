@@ -155,6 +155,22 @@ GKSTCPLK-2468 — встреча с пользователем 07.05.26 18:26 п
 
 **Применимость:** RDBG возвращает `objectID`/`propertyID` UUID. Wrapper уже decode'ит `presentation` partially. Добавить **explicit source resolution** через `bsl-semantic-search:bsl_object_info(UUID)` → FQN + file path. Stack frame показывает `гкс_ВходнойКонтрольКачества.Module.ЗаполнитьЗаблокированныеРегистрацииУсиленныйКонтроль (Module.bsl:295)` вместо UUIDs.
 
+**🎯 Эффективность при внедрении (cognitive load):**
+
+В GKSTCPLK-2468 E2E session stack trace выглядел так (real output):
+
+```
+moduleID.objectID: 9eb88c3d-3447-4285-8d01-1ab59d6435e3
+moduleID.propertyID: d5963243-262e-4398-b4d7-fb16d06484f6
+lineNo: 295
+presentation: <base64-encoded cyrillic blob>
+```
+
+Для понимания нужно: (1) decode base64, (2) cross-reference UUID через separate MCP call (`bsl-semantic-search:bsl_object_info`). На 10-frame stack — **5-7 мин** cognitive parsing.
+
+- **С BP-7 resolved source:** stack frame показывает inline `гкс_ВходнойКонтрольКачества.ЗаполнитьЗаблокированныеРегистрацииУсиленныйКонтроль (CommonModules/гкс_ВходнойКонтрольКачества/Ext/Module.bsl:295)`. **0 sec parsing**, immediate readability.
+- На задаче с 10-20 BP hits = **−1-2 часа** cognitive load + signs of frustration уменьшаются. Особенно ценно для onboarding новых team members (UUID stack — это barrier to entry, FQN — readable from day 1).
+
 ## §4. Prioritized Enhancement Roadmap
 
 ### P0 (high ROI, low risk, ~6-8ч)
