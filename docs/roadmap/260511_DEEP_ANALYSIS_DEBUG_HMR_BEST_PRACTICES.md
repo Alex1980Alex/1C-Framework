@@ -175,7 +175,16 @@ presentation: <base64-encoded cyrillic blob>
 
 ### P0 (high ROI, low risk, ~6-8ч)
 
-**P0.A Conditional + Hit-count BPs (~3ч)** — `debug_set_breakpoint(condition=..., hit_count=N)`. Wrapper-level: break + evaluate + auto-Continue if false. Closes Gap 3.
+**P0.A Conditional + Hit-count BPs (~3ч) — ✅ DONE 2026-05-11.** `debug_set_breakpoint(condition=..., hit_condition="%N"|">=N"|"=N"|...)`. RDBG-native `condition` (XSD `debugBreakpoints:condition` confirmed) + wrapper-level `hit_condition` через `_hit_conditions` dict + `bp_conditions.auto_continue_if_unsatisfied()`. VS Code DAP syntax compatible (`=5`/`5`/`>3`/`>=3`/`<5`/`<=5`/`%10`). Closes Gap 3.
+
+  **Implementation:** [`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) (`_aggregate_breakpoints` returns `dict[line, condition]`, `_build_bp_info_xml` with optional condition child, `_record_hit_condition`, `_handle_command(callStackFormed)` calls auto-continue) + new helper [`bp_conditions.py`](../../tools/bsl-debug-server/bp_conditions.py) (split out due to Z.AI 15-line edit guard).
+
+  **Tests:** 222/222 unit pass (existing `TestAggregateBreakpoints` assertions updated to new `dict[line, condition]` shape: `groups[key] == {10: "", 20: ""}` instead of `[10, 20]`).
+
+  **Live E2E verified on real cluster** (ИБTransportManagementDevelop, fresh rphost после `recycle_strategy="pre_existing"`):
+  - BP1 set с `condition="БлокирующаяГруппаТС.Наименование = \"группа: 1\""` → `debug_get_breakpoints` показал stored condition с правильным escaping `&quot;` в workspace XML
+  - BP2 set с `hit_condition="%5"` → registered в `_hit_conditions` без RDBG-side `condition` (wrapper-only — correct architectural separation)
+  - `_aggregate_breakpoints` группирует BPs одного модуля сохраняя per-line condition (regression test confirms)
 
 **P0.B Logpoints (~2ч)** — `debug_set_logpoint(object_id, line, module_type, message_template)`. Internally BP + auto-Continue + log в `data/debug_logs/<session>.jsonl`. Closes Gap 4 (production-safe tracing).
 
