@@ -152,7 +152,7 @@ description: "Используй этот скилл для понимания �
 
 | Skill | Назначение |
 |-------|-----------|
-| `analyze-1c-task-v2` | 5-фазный анализ задачи 1С (требования → объекты → алгоритм → план → верификация), SDD delta-specs |
+| `analyze-1c-task-v2` | 5-фазный анализ задачи 1С (требования → объекты → алгоритм → план → верификация), SDD delta-specs. **v4.2.0 (2026-05-11)**: опциональная **Фаза 2.5 Runtime Trace** между «Объекты» и «Алгоритм» — live BP-trace через `1c-debug-hmr` для алгоритмов с ≥3 ветвлений по runtime-данным. Триггер: флаг `--trace` или self-decision. Output: секция «3.Y Runtime Trace» в ANALYSIS-REPORT с Discrepancies (static vs runtime). Roadmap: [260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 2 |
 | `analyze-1c-research` | 3-агентный анализ (Executor + Reviewer + Comparator) с итеративным скорингом |
 | `implement-1c-task` | 8-этапная реализация задачи: EDT-MCP + 1c-mcp-crud + bsl-debug-server + **1c-debug-hmr** (BP-verification). v2.7.0 (2026-05-11): Этап 0 `debug_health_check`, Этап 5.x Live BP-verification (8-шаговый протокол для каждой `[MODIFIED]` точки), Этап 5.y `debug_session_diff` regression, footer `<!-- debug_session_id: <UUID> -->`. Режимы: Full / **Full (no-BP)** / Code-only / Read-only verify / Read-only research. Roadmap: [260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 |
 | `bsl-development` | Разработка BSL: процедуры, обработка проведения, модули, 3 стратегии reasoner |
