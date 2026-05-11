@@ -79,7 +79,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 Параллельно живёт `1c-debug` (без HMR) — те же tools, без watchfiles overhead'а.
 
-## API tools (20)
+## API tools (25)
+
+> **Roadmap 260511 P2.A + P3.B (2026-05-11, post-P1):** +5 tools — `debug_set_exception_bp` / `debug_clear_exception_bps` / `debug_list_exception_bps` (P3.B filtered exception BPs), `debug_session_record` / `debug_replay_list` / `debug_replay_seek` (P2.A snapshot replay).
 
 > **Roadmap 260511 P1 batch (2026-05-11, P0 follow-up):** +2 tools — `debug_coverage_register` + `debug_coverage_export` (P1.A SonarQube genericCoverage.xml). Extended `debug_session_summary(format="artifacts")` produces ZIP bundle for PR/CI (P1.B). Полная документация: [§36.8](../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.8_Advanced_Debug_Features.md).
 
