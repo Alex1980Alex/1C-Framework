@@ -141,6 +141,14 @@ GKSTCPLK-2468 — встреча с пользователем 07.05.26 18:26 п
 
 **Применимость:** при каждом BP fire wrapper экспортирует bundle: stack.json (10+ frames) + variables.json + expressions.json + session_summary.md + .replay.jsonl. Bundle uploads в GitHub Actions artifact. **Closes gap «regression caught через accidentally failing test, не через structured метрики» (260510 §1.2 пункт 4).**
 
+**🎯 Эффективность при внедрении (PR review сценарий):**
+
+В обоих GKSTCPLK-2257 и GKSTCPLK-2468 IMPLEMENTATION-PROGRESS.md содержит manually собранные сводки (taking ~15-20 мин/PR в conversational summary fashion). Reviewer должен mentally reconstruct: «как именно автор убедился что fix работает на runtime?» — answer не всегда explicit.
+
+- **С BP-6 CI artifact:** `debug_session_summary(format="artifacts")` создаёт ZIP который attach'ится к PR. Reviewer кликает → видит stack trace того момента когда BP fired, variables snapshot, evaluated invariants, session metrics (BP fire counts, eval failures, UI+ retries). **Trustless verification** — не «автор говорит работает», а **structured evidence**.
+- В GKSTCPLK-2468 текущее IMPLEMENTATION-PROGRESS вручную содержит «Stack hit: frames[0].lineNo=80...» — это **2-3 раза** в файле. С BP-6 это **auto-generated** для каждой `[MODIFIED]` точки.
+- **Прирост:** PR review time **−10-20 мин** (no need clarification questions); regression detection rate **+15-25%** (auto-diff structured metrics).
+
 ### BP-7: Source Mapping (DAP `Source` object)
 
 [DAP Source spec](https://microsoft.github.io/debug-adapter-protocol/specification.html#Types_Source).
