@@ -77,7 +77,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 Параллельно живёт `1c-debug` (без HMR) — те же tools, без watchfiles overhead'а.
 
-## API tools (18)
+## API tools (20)
+
+> **Roadmap 260511 P1 batch (2026-05-11, P0 follow-up):** +2 tools — `debug_coverage_register` + `debug_coverage_export` (P1.A SonarQube genericCoverage.xml). Extended `debug_session_summary(format="artifacts")` produces ZIP bundle for PR/CI (P1.B). Полная документация: [§36.8](../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.8_Advanced_Debug_Features.md).
 
 > **Roadmap 260511 P0.A–G batch (2026-05-11, later same day):** добавлены 3 новых tools — `debug_set_logpoint` (P0.B), `debug_arm_warm_rphosts` (P0.F), `debug_arm_next_rphost` (P0.G). Расширены `debug_set_breakpoint(condition, hit_condition)` (P0.A) и `debug_stack_trace` с `resolved_source` per frame (P0.C). Cascade auto-Continue (P0.D) + BP-propagation drain (P0.E) встроены в `_handle_command`. Полная документация: [§36.8 Advanced Debug Features](../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.8_Advanced_Debug_Features.md).
 >
