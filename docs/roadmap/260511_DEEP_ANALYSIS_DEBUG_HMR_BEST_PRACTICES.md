@@ -125,6 +125,14 @@ Workflow 36.5 §3 «Performance hunting: отчёт долго формируе�
 
 **Применимость к 1С:** настоящий time-travel требует rr-style CPU recording (невозможно через RDBG). Достижим **snapshot-based replay** — wrapper при каждом BP fire записывает `{timestamp, target, stack, variables}` в `.replay.jsonl`. `debug_replay_seek(timestamp)` возвращает snapshot. Менее мощно но достаточно для post-mortem analysis.
 
+**🎯 Эффективность при внедрении (incident post-mortem сценарий):**
+
+GKSTCPLK-2468 — встреча с пользователем 07.05.26 18:26 показала что **ОПЭ-наблюдение не воспроизводится** в момент встречи (transcript: «мы не смогли воспроизвести этот пример»). Скриншоты ОПЭ-сессии 04.05 показывают финальное состояние, но не intermediate steps (какая регистрация фейлила первой, какой rphost обработал, в какой последовательности).
+
+- **Сейчас (без BP-5):** разработчик возвращается через 2-3 дня для разбора → trying to reproduce → ~50% удач, остальное «не воспроизводится в dev».
+- **С BP-5 snapshot-based:** в момент ОПЭ-сессии autoenabled session record → `.replay.jsonl` сохраняет каждый BP hit с full stack + variables + ИНН-data. После incident → `debug_replay_seek(timestamp=<когда фейлили>)` возвращает full context для post-mortem.
+- **Outcome:** voor 1 типичного prod-incident'а: предотвращает 2-3 «не воспроизводится» loops × 30-60 мин каждый = **экономия 1-3 часа** + повышается incident resolution success rate с ~50% до ~85%.
+
 ### BP-6: Replay.io / Cypress / Playwright — CI Artifact Capture
 
 [github.com/replayio/devtools](https://github.com/replayio/devtools), [cypress.io](https://cypress.io), [playwright.dev](https://playwright.dev).
