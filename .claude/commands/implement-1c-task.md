@@ -59,8 +59,9 @@ Skill определяет:
 - Все SQL проверены: validate_query + execute_query на живых данных
 - Статический анализ: bsl_analyze = 0 ошибок
 - EDT проверка: get_project_errors = 0 ошибок
+- **BP-verification (Этап 5.x, режим Full):** BP-trace для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки в IMPLEMENTATION-PROGRESS.md (или обоснованный SKIP). Footer `<!-- debug_session_id: <UUID> -->` для baseline следующего прогона.
 - Тестирование на данных: execute_query подтверждает корректность
-- IMPLEMENTATION-PROGRESS.md с результатами каждого этапа
+- IMPLEMENTATION-PROGRESS.md с результатами каждого этапа + блок «Debug session» (если режим Full)
 - Git commit
 
 ---
