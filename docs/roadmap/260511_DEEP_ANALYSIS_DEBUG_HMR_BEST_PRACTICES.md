@@ -25,6 +25,8 @@
 | P0.G polish (pending discard, INFO log) | `a8457f6` | `01a3298eb` | ✅ |
 | **P1.B** Artifacts ZIP bundle (`format="artifacts"`) | `39de6a8` | `13a51489e` | ✅ Python E2E (6-file ZIP verified) |
 | **P1.A** Coverage export (`debug_coverage_register` + `debug_coverage_export`) | `a28aa28` | `5f3b1f2e1` | ✅ Python E2E (3 lines, 33.33% coverage, SonarQube XML) |
+| **P3.B** Exception BPs with message/module filters | `ab1c3cb` | `9e57fea8e` | ✅ Python E2E (7 cases incl. AND-within-filter / OR-across-filters) |
+| **P2.A** Snapshot recording + replay seek | `dcb7bf1` | `6dff72002` | ✅ Python E2E (record/list/seek/disabled-noop) |
 
 **Итого:** 7 P0 items shipped (исходно планировались 3 — A/B/C; D/E/F/G добавлены как unplanned bonus после live findings).
 
