@@ -166,6 +166,44 @@ Skill для комплексного анализа задачи по конф�
 ## 3. Детальный анализ механизма
 ### 3.X Найденные паттерны в конфигурации  <-- ОБЯЗАТЕЛЬНО
 
+### 3.Y Runtime Trace (опционально — только если запускалась Фаза 2.5)
+
+**Entry point**:
+- Модуль: `<ModuleFQN>`
+- Строка входа: `<lineNo>`
+- BP UUID: `<auto-resolved propertyID>`
+- Trigger harness: `<краткое описание execute_code / execute_query>`
+
+**Stack** (jq-compatible JSON для post-processing):
+
+` ``json
+[
+  {"level": 0, "moduleName": "<FQN>", "lineNo": <N>, "method": "<MethodName>"},
+  {"level": 1, "moduleName": "<FQN>", "lineNo": <N>, "method": "<CallerName>"},
+  ...
+]
+` ``
+
+**Variables snapshot**:
+
+| Variable | Value | Stack level |
+|---|---|---|
+| Контрагент | `<ПРЕДСТАВЛЕНИЕ>` | 0 |
+| Сумма | 12345.67 | 0 |
+| ... | ... | ... |
+
+**Branch evaluation** (runtime-результаты `Если`-условий, eval'нутые через debug_evaluate):
+
+| Условие | Static prediction | Runtime result | Branch taken |
+|---|---|---|---|
+| `Тип(Параметр) = Тип("ДокументСсылка...")` | `Истина` (assumed) | `Истина` | A |
+| `Пользователи.ТекущийПользователь() = Справочники.Пользователи.НайтиПоНаименованию("Админ")` | unknown (depends on session) | `Ложь` | B |
+
+**Discrepancies** (static prediction vs runtime — load-bearing для Фазы 4):
+
+- **Строка <N> модуля <FQN>**: static reading предсказывал `<X>`, runtime показал `<Y>`. Impact: точка модификации <M> в плане должна учитывать ветку <Y>, а не <X>.
+- Или: «No discrepancies — static analysis sufficient» если runtime совпал с предсказанием.
+
 ## 4. План изменений
 ### Точка модификации N: ... [ADDED|MODIFIED]
 - Файл, строка, действие, код
