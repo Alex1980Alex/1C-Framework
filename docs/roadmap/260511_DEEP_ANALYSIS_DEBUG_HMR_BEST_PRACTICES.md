@@ -196,7 +196,15 @@ presentation: <base64-encoded cyrillic blob>
 
   **Note:** Schema-cache regression on Windows means new `debug_set_logpoint` tool requires `/mcp` reconnect once for first live invocation through harness (existing `1c-debug-hmr` MCP server retained old schema). HMR-wrapper reload is functional internally — verified via `notifications/tools/list_changed`.
 
-**P0.C Source mapping (~2ч)** — в `debug_stack_trace` response добавить `resolved_source` через cached `bsl-semantic-search:bsl_object_info`. Stack показывает FQN + file path вместо UUIDs. Closes Gap 7.
+**P0.C Source mapping (~2ч) — ✅ DONE 2026-05-11.** Stack frames в `debug_stack_trace` теперь содержат `resolved_source: {fqn, file_path, exists}` для каждого frame. Реализовано через existing `uuid_index` (in-process UUID→path resolver уже работал для других целей — переиспользован, не пришлось подключать `bsl-semantic-search`). Closes Gap 7.
+
+  **Implementation:** [`uuid_index.py`](../../tools/bsl-debug-server/uuid_index.py): добавлены `_KIND_FQN` (kind→Russian: `document`→`Документ`, etc) + `_PROP_FQN` (propertyID→suffix: ManagerModule→`МодульМенеджера`) lookup tables, метод `UUIDIndex.get_source_info(oid, pid) -> {fqn, file_path, exists}`, module-level `get_source_info` convenience. [`mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) `debug_stack_trace`: enrich loop добавляет `resolved_source` к каждому frame через `uuid_index.get_source_info`.
+
+  **Live smoke verified** на ИБTransportManagementDevelop (3436 UUID entries в index):
+  - Root document UUID + ManagerModule propertyID → `{fqn: "Документ.гкс_*.МодульМенеджера", file_path: "Documents/гкс_*/ManagerModule.bsl", exists: true}`
+  - Form child UUID + FormModule propertyID → `{fqn: "Документ.гкс_*.Форма.<name>", file_path: "Documents/гкс_*/Forms/<name>/Module.bsl", exists: true}`
+
+  **Tests:** 222/222 unit pass. Real-config UUIDs резолвятся в 100% случаев в пилотном smoke (3 из 3 picked from live index).
 
 **🎯 P0 batch combined impact:**
 
