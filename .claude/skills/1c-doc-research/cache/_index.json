@@ -2,6 +2,12 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "rdbg-protocol-command-catalog": {
+      "title": "RDBG protocol — полный каталог команд (XSD-derived) + verdict по attach-by-PID",
+      "keywords": ["RDBG", "dbgs.exe", "attach by PID", "attachDebugUI", "attachDetachDbgTargets", "RDBGSGetDbgTargets", "setAutoAttachSettings", "DebugTargetType", "warm pool rphost", "EDT debug protocol", "yukon39", "RDBGAttachDetachDebugTargetsRequest", "Конфигуратор Подключение", "Предметы отладки"],
+      "last_verified": "2026-05-11",
+      "sources": ["XSD debugRDBGRequestResponse.xsd", "kb.1ci.com 4.11", "wonderland.v8.1c.ru", "edt.1c.ru/dev/edt API", "github.com/yukon39/bsl-debug-server", "1c-dn.com forum"]
+    },
     "pdf-preview-form": {
       "title": "Предпросмотр PDF на форме 1С",
       "keywords": ["pdf", "предпросмотр", "ДокументPDF", "ПолеPDFДокумента", "присоединённые файлы", "WebKit", "PDF.js", "Ghostscript"],
