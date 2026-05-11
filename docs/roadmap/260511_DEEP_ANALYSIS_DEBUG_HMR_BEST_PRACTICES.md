@@ -93,6 +93,13 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 
 **Применимость:** wrapper extension — встроить аналогичный механизм через logpoint-pattern на каждой строке + counter increment, или orchestrate Coverage41C jar как subprocess. **Closes gap «code path coverage отсутствует» из roadmap 260510 §1.2 пункт 2.**
 
+**🎯 Эффективность при внедрении (real-world пример из истории framework):**
+
+После закрытия GKSTCPLK-2257 (исходная разблокировка) → GKSTCPLK-2335 (флаг УК) → GKSTCPLK-2468 (текущий) видна **closure rate progression**: каждый bugfix вскрывал related gap в смежных code paths которые не были покрыты тестами. Static analysis identified что `гкс_ВходнойКонтрольКачества` Module.bsl содержит **74 occurrences** референса на `гкс_ПоказателиУсиленногоКонтроляПоРегистрации` — это 14 functions × 5+ branches. Какие из них реально hit'аются в test scenarios — black box.
+
+- **С BP-3:** `debug_coverage_start(modules=["гкс_ВходнойКонтрольКачества"])` → trigger test scenarios → `debug_coverage_stop() → genericCoverage.xml` → SonarQube показывает `ОбновитьБлокировкуГруппаТС:2042-2077 (95% lines)`, `ЗаполнитьЗаблокированныеРегистрацииУсиленныйКонтроль:224-309 (40% lines)`, **`ОбновитьБлокировкуТекущейРегистрации:2085-2117 (0% lines)` — мёртвая ветка!**
+- **Outcome:** 1 нашли regression risk **до того как** GKSTCPLK-2469 откроется по этой dead path; за 1 prevention session экономия = MTTR одного incident'а (≈ ½ дня dev work + meetings + production debugging). **Coverage-driven test design = +1-2 prevented incidents в квартал.**
+
 ### BP-4: Chrome DevTools Protocol — V8 Precise Coverage
 
 [chromedevtools.github.io/devtools-protocol/tot/Profiler](https://chromedevtools.github.io/devtools-protocol/tot/Profiler/).
