@@ -25,6 +25,7 @@ description: "Используй этот скилл для понимания �
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
 | `implement-1c-task-preflight.py` | Content-фильтр на `/implement-1c-task` → запуск `scripts/smoke_test_implement_1c_task.py --json` → systemMessage с pipeline mode (Full / **Full (no-BP)** / Code-only / Read-only verify / Read-only research / unusable) + строка «Debug environment: ready/not-ready» по полю `mcp_health.debug_hmr` (2026-05-11 — roadmap 260510 Phase 1 §3.1). Не блокирует. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>`. |
+| `analyze-1c-task-preflight.py` | Content-фильтр на `/analyze-1c-task` (с/без `--trace`) → probe debug-hmr через shared `shared/debug_hmr_health.probe_debug_hmr_ready()` → systemMessage с readiness Phase 2.5 Runtime Trace (2026-05-11 — roadmap 260510 Phase 3 §5.1). Не блокирует — Phase 2.5 opt-in. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>;trace_flag=<0\|1>`. |
 
 #### PreToolUse (4)
 

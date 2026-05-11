@@ -193,6 +193,53 @@ debug_disconnect  + debug_connect(force_recycle_rphost=True)
         process turn-off --cluster=<UUID> --process=<proc-UUID> localhost:1545
 ```
 
+### Шаблон 5: BP-verification в /implement-1c-task pipeline (Этап 5.x)
+
+8-шаговый протокол, исполняемый skill'ом `implement-1c-task` v2.7.0+ для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки модификации из ANALYSIS-REPORT. Mock-test reference: [`scripts/test_implement_1c_task_bp_verification.py`](../../../scripts/test_implement_1c_task_bp_verification.py) (5 сценариев).
+
+```
+1. debug_connect(infobase_alias=<ИБ>)
+     если не connected — attach как Debug UI; иначе reuse сессию
+2. debug_set_breakpoint(object_id=<UUID>, line=<MODIFIED_LINE>, module_type=<TYPE>)
+     propertyID auto-resolves
+3. debug_get_breakpoints
+     verify BP в client cache (enabled=True, lineNo совпадает)
+4. (trigger) mcp__1c-mcp-crud__execute_code "<минимальный harness вызывающий MODIFIED процедуру>"
+     OR HTTP-сервис trigger через execute_query
+     ВАЖНО: убедиться что update_database выполнен ДО trigger (иначе rphost на старой компиляции)
+5. debug_ping  ──→  callStackFormed (max 3 iterations)
+     если no stop ──→ fallback (a) debug_break_on_next + retry trigger
+                  ──→ fallback (b) debug_connect(force_recycle_rphost=True) + retry
+                  ──→ если оба fallback'а не сработали ──→ SKIP с обоснованием, block перехода на Этап 6
+6. debug_stack_trace  ──→  assert frames[0].lineNo == MODIFIED_LINE
+     если mismatch ──→ FAIL с error «expected line N in <module>, got M in <other>»
+                   ──→ still call debug_step(Continue) чтобы release rphost
+7. (опц.) debug_variables  ──→  state assertion против invariants из ANALYSIS-REPORT
+8. debug_step(action="Continue")  ──→  release rphost; обязательно даже на FAIL
+```
+
+**Регистрация результата** в IMPLEMENTATION-PROGRESS.md (Этап 7):
+
+```markdown
+### Точка N — BP verification
+- Module: <FQN>:<lineNo>
+- BP set: ✓ (propertyID=<auto>, enabled=true)
+- Trigger: execute_code "<краткое описание harness>"
+- Stack hit: frames[0].lineNo=<actual>, moduleName=<actual> — assert PASS / FAIL
+- Variables (если проверялись): <name=value@stack_level>
+- Step Continue: ✓ released rphost
+```
+
+**Опционально (Этап 5.y Regression diff)** — если в footer'е IMPLEMENTATION-PROGRESS.md есть `<!-- debug_session_id: <UUID> -->`:
+
+```
+debug_session_diff(prev_session_id=<UUID-из-footer>, curr_session_id=<current>)
+  ──→  verdict ∈ {NO_REGRESSION, IMPROVEMENT, NEUTRAL, REGRESSION}
+  если REGRESSION ──→ block перехода на Этап 6, вывод markdown-таблицы метрик
+```
+
+Footer обновляется на текущий `session_id` ТОЛЬКО при успешном завершении всего pipeline (Этап 5.x PASS + Этап 6 PASS), чтобы baseline сохранялся для следующей попытки исправления.
+
 ## Диагностика
 
 | Симптом | Причина | Решение |
@@ -220,12 +267,15 @@ debug_disconnect  + debug_connect(force_recycle_rphost=True)
 
 | Скилл | Связь |
 |---|---|
+| **`implement-1c-task`** | **Used by /implement-1c-task Этап 5.x BP-verification** — 8-шаговый протокол (Шаблон 5 выше) исполняется автоматически для каждой `[ADDED]`/`[MODIFIED]` точки в режиме Full. Также Этап 0 Preflight (`debug_health_check`) и Этап 5.y Regression diff (`debug_session_diff`). v2.7.0+ (2026-05-11). |
+| **`analyze-1c-task-v2`** | **Used by /analyze-1c-task --trace Phase 2.5 Runtime Trace** — live BP-trace для алгоритмов с ≥3 runtime-ветвлений (`Пользователи.ТекущийПользователь()`, `ПолучитьФункциональнуюОпцию`, `Тип(Параметр)`). Output: секция «3.Y Runtime Trace» в ANALYSIS-REPORT с Discrepancies (static vs runtime). v4.2.0+ (2026-05-11). |
 | `1c-mcp-crud` | Триггер BSL execution через HTTP-service для последующего trap'а в debug-wrapper |
 | `bsl-development` | Написание BSL-кода, который потом дебажим |
 | `va-bdd-testing` | UI-уровень тестов; debug-wrapper — server-side BSL inspection |
 | `1c-doc-research` | Спецификация платформы 8.3.27, RDBG-протокол |
 | `auto-test-after-write` | Автозапуск синтаксис-чека после write — параллельный pipeline |
-| `analyze-1c-task-v2` | 5-фазный анализ задачи; debug может потребоваться на фазе 4 (verification) |
+
+**Production integration:** Phase 1+2 roadmap [260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) закрыт 2026-05-11. Mock-acceptance тесты: [`test_implement_1c_task_bp_verification.py`](../../../scripts/test_implement_1c_task_bp_verification.py) (5 сценариев) + [`test_analyze_1c_task_runtime_trace.py`](../../../scripts/test_analyze_1c_task_runtime_trace.py) (5 сценариев).
 
 ## Источники
 
