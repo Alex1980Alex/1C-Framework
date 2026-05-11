@@ -320,7 +320,22 @@ async def debug_launch_thin_client(
 
 ## §7. Open questions
 
-### P0.4 follow-up (CRITICAL, обнаружен 2026-05-11 E2E)
+### P0.4 (IMPLEMENTED 2026-05-11, PARTIAL — раскрыл P0.5 deeper gap)
+
+**Implementation:** `_post_spawn_auto_attach` + `POST_SPAWN_POLL_INTERVAL=3` (~6с между polls) добавлены в `_ping_loop`. Каждые ~6с background task вызывает `get_targets()` (RDBG `getDbgAllTargetStates`) и diff'ит против `_known_attached_targets` — auto-attach'ит новые. 5 unit tests pass (`TestPostSpawnAutoAttach`).
+
+**E2E finding (CRITICAL):** polling itself работает корректно, **но source бесполезен** — `getDbgAllTargetStates` сам не видит HTTP-service spawned rphost'ы. Active rphost PID 57724 на OS-level → 0 targets в RDBG. Это **RDBG 8.3.27 protocol-level gap**: HTTP-service rphost'ы fundamentally не регистрируются к нашей Debug UI session через `DBGUIExtCmdInfoStarted` event.
+
+### P0.5 follow-up (REQUIRES RESEARCH — открыт 2026-05-11 после P0.4 E2E)
+
+**Cluster-process-UUID → Debug-UUID mapping API research.** Нужно:
+1. Изучить yukon39 reference для возможного `attach_by_cluster_uuid` endpoint
+2. Проверить — может быть существует `setDbgAttachUIByClusterProcess` или похожий RDBG API
+3. Альтернатива: research IIS COM-pool behavior (возможно rphost для HTTP-service routed через отдельный pool вне cluster-level debug filter)
+
+Acceptance: после P0.5 — `execute_code` через `1c-mcp-crud` triggers BP fire без manual recycle между attempts.
+
+### Старый P0.4 описание (для исторической справки)
 
 **Post-spawn rphost-attach gap** — после `debug_connect` + `setAutoAttachSettings` filter, новые rphost spawned для HTTP-service (1c-mcp-crud `execute_code`) **НЕ emit'ят DBGUIExtCmdInfoStarted** к нашему debug UI session, поэтому wrapper не auto-attach их и BP не fire.
 
