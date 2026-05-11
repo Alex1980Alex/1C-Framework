@@ -78,6 +78,14 @@
       "last_verified": "2026-05-10",
       "sources": ["kb.1ci.com/§32.2.2", "1c-dn.com/library", "github.com/yukon39/bsl-debug-server", "github.com/yukon39/vsc-bsl-dap", "github.com/1c-syntax/Coverage41C", "github.com/arkuznetsov/irac", "edt.1c.ru/dev/edt/2022.2/apidocs", "its.1c.ru/edtdoc/t000068", "its.1c.ru/edtdoc/10421", "its.1c.ru/metod8dev/i8105973", "its.1c.ru/metod8dev/5756", "wonderland.v8.1c.ru/blog/novyy-mekhanizm-otladki", "efsol.ru/manuals/1c-server-rphost-process-restart", "koderline.ru article-vklyuchenie-otladki-dlya-veb-i-http-servisov", "infostart.ru/1133240", "infostart.ru/1885817", "forum.infostart.ru/topic292879", "1c-dn.com/forum/forum1/topic2025", "tools/bsl-debug-server/src/main/java (local yukon39 source)", "tools/bsl-debug-server/mcp_debug_server.py", "docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md", "docs/roadmap/260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md"]
     },
+    "rdbg-target-type-enum-and-bp-timing": {
+      "title": "RDBG DebugTargetType enum (полный) + BP workspace per-attached timing — закрытие RC2 deeper gap для HTTP-service/JOB rphost (roadmap 260511 §P0.5)",
+      "file": "rdbg-target-type-enum-and-bp-timing.md",
+      "created": "2026-05-11",
+      "last_verified": "2026-05-11",
+      "keywords": ["RDBG", "DebugTargetType", "setAutoAttachSettings", "HTTPService", "JOB", "JobFileMode", "WEBService", "COMConnector", "OData", "setBreakpoints workspace", "per-attached", "targetStarted", "_reapply_bp_workspace", "yukon39 XSD", "debugAutoAttach.xsd", "debugBaseData.xsd", "1c-debug-hmr", "P0.5", "GKSTCPLK-2468", "rphost JOB execute_code", "BP fire short-lived target", "areaName filter"],
+      "sources": ["github.com/yukon39/bsl-debug-server (HTTPDebugClient.java)", "tools/bsl-debug-server/src/test/resources/xsd/debugAutoAttach.xsd", "tools/bsl-debug-server/src/test/resources/xsd/debugBaseData.xsd", "edt.1c.ru/dev/edt/2022.2/apidocs", "yellow-erp.com Chapter 27 Debugging", "github.com/yukon39/vsc-bsl-dap", "docs/roadmap/260511_ROADMAP_1C_DEBUG_HMR_DEFICIENCIES_FROM_GKSTCPLK_2468.md", "live E2E 2026-05-11 ИБTransportManagementDevelop"]
+    },
     "rdbg-pre-existing-rphost-workarounds": {
       "title": "RDBG pre-existing rphost — three sanctioned workarounds (force-recycle / preflight gate / pre-launch thin client) для mcp_debug_server.py wrapper",
       "file": "rdbg-pre-existing-rphost-workarounds.md",
