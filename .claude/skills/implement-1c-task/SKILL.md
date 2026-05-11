@@ -406,25 +406,25 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
    bsl-debug-server: bsl_debug_stop(session)
    ```
 
-5. **Live runtime debug через `1c-debug` MCP** — для проверки на живой ИБ (требует Scenario B setup, см. [16.7 Autonomous Debug Workflow](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)):
+5. **Live runtime debug в Этапе 4 — экспериментальный шаг, НЕ путать с обязательной BP-verification Этапа 5.x.**
+
+   Этот шаг используется опционально для проверки сложной чистой логики (вложенные циклы по runtime-данным) ДО выхода в Этап 5. Обязательная live-валидация изменённого кода против ANALYSIS-REPORT — это **Этап 5.x BP verification** (8-шаговый протокол), а не этот шаг.
+
+   Базовый вызов (через `1c-debug-hmr` MCP, fallback к `1c-debug`):
    ```
-   1c-debug: debug_connect(infobase_alias="<база>")
-     → status=connected, session_id, attach=registered
-   1c-debug: debug_set_breakpoint(object_id="<UUID>", line=42, module_type="ObjectModule")
-     → BP установлен; запустите сценарий в 1С (создание документа, проведение)
-   1c-debug: debug_ping()
-     → диспатч событий (targetStarted, callStackFormed, rteProcessing)
+   1c-debug-hmr: debug_connect(infobase_alias="<база>")  # если не connected с Этапа 0
+   1c-debug-hmr: debug_set_breakpoint(object_id="<UUID>", line=42, module_type="ObjectModule")
+   1c-debug-hmr: debug_ping()
    ```
    После срабатывания BP (post-BP-fire handshake, roadmap §13 / 2026-05-09):
    ```
-   1c-debug: debug_stack_trace()       # без target_id — auto-resolve last_stopped
-   1c-debug: debug_variables()         # значения переменных в кадре stop'а
-   1c-debug: debug_evaluate(expression="Контрагент.ИНН")  # любое BSL-выражение
-   1c-debug: debug_step(action="StepIn")  # пошаговый прогон
-   1c-debug: debug_step(action="Continue")  # дать сценарию завершиться
-   1c-debug: debug_disconnect()
+   1c-debug-hmr: debug_stack_trace()       # без target_id — auto-resolve last_stopped
+   1c-debug-hmr: debug_variables()         # значения переменных в кадре stop'а
+   1c-debug-hmr: debug_evaluate(expression="Контрагент.ИНН")
+   1c-debug-hmr: debug_step(action="StepIn")
+   1c-debug-hmr: debug_step(action="Continue")  # release rphost
    ```
-   Smoke-проверка инфраструктуры до начала: `python scripts/smoke_test_debug_pipeline.py --probe-only --json` — exit_code=0 значит handshake OK.
+   Smoke-проверка инфраструктуры до начала: `python scripts/smoke_test_debug_pipeline.py --probe-only --json` — exit_code=0 значит handshake OK. Если `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` — заменить `1c-debug-hmr` на `1c-debug`.
 
 6. Исправить найденные **реальные** проблемы (повторить Этап 3 для исправлений).
 
