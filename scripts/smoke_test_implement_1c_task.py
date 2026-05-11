@@ -289,6 +289,8 @@ def render_human(rep: Report) -> str:
     for r in rep.handshakes:
         lines.append(f"  {mark(r.ok)}  {r.name}  — {r.detail}")
     lines += ["", f"Pipeline mode: {rep.mode}", f"Exit code: {rep.exit_code}"]
+    if not rep.debug_hmr and rep.mode.startswith("Full"):
+        lines.append("  (BP-verification в Этапе 5.x SKIP — 1c-debug-hmr недоступен)")
     return "\n".join(lines)
 
 
