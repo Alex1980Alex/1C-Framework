@@ -1,5 +1,5 @@
 ---
-description: Комплексный 5-фазный анализ задачи 1С:Предприятие через skill `analyze-1c-task-v2`. Создаёт ANALYSIS-REPORT.md с пронумерованными точками модификации для последующего /implement-1c-task.
+description: Комплексный 5-фазный анализ задачи 1С:Предприятие через skill `analyze-1c-task-v2`. Создаёт ANALYSIS-REPORT.md с пронумерованными точками модификации для последующего /implement-1c-task. Поддерживает флаг `--trace` для опциональной Фазы 2.5 Runtime Trace (live BP-trace через 1c-debug-hmr).
 allowed-tools:
   - mcp__bsl-semantic-search__bsl_search
   - mcp__bsl-semantic-search__bsl_hybrid_search
@@ -18,6 +18,17 @@ allowed-tools:
   - mcp__pdf-vector-graph__search_documents
   - mcp__pdf-vector-graph__ask_question
   - mcp__memory-orchestrator__route_and_save
+  - mcp__1c-debug-hmr__debug_health_check
+  - mcp__1c-debug-hmr__debug_connect
+  - mcp__1c-debug-hmr__debug_disconnect
+  - mcp__1c-debug-hmr__debug_set_breakpoint
+  - mcp__1c-debug-hmr__debug_get_breakpoints
+  - mcp__1c-debug-hmr__debug_ping
+  - mcp__1c-debug-hmr__debug_stack_trace
+  - mcp__1c-debug-hmr__debug_variables
+  - mcp__1c-debug-hmr__debug_evaluate
+  - mcp__1c-debug-hmr__debug_step
+  - mcp__1c-debug-hmr__debug_targets
 ---
 
 # Комплексный анализ задачи 1С
