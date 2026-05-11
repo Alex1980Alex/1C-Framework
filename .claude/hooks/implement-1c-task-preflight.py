@@ -104,9 +104,10 @@ class ImplementOneCTaskPreflight(BaseHook):
 
         mode = (data or {}).get("mode", "unknown")
         failed = self._failed_handshakes(data)
-        self._log_preflight(inp, exit_code=exit_code, mode=mode)
+        debug_hmr_ready = bool(((data or {}).get("mcp_health") or {}).get("debug_hmr"))
+        self._log_preflight(inp, exit_code=exit_code, mode=mode, debug_hmr_ready=debug_hmr_ready)
 
-        return HookOutput().system_message(self._render_message(exit_code, mode, failed))
+        return HookOutput().system_message(self._render_message(exit_code, mode, failed, debug_hmr_ready))
 
     @staticmethod
     def _failed_handshakes(data) -> list:
