@@ -262,6 +262,11 @@ Footer обновляется на текущий `session_id` ТОЛЬКО пр
 | Manual `debug_ping` в надежде что cache не заполнится | Post-fix `ping()` ВСЕГДА dispatch'ит — manual и background равноправны | Просто использовать `debug_stack_trace` напрямую, cache уже заполнен |
 | Полагаться на schema MCP-tool после edit'а | Harness кеширует initial-handshake schema | `/mcp` reconnect ИЛИ workaround через прямой инструмент (rac.exe вместо `force_recycle_rphost`) |
 | Хранить session_id где-то ещё кроме `.active.json` | Дублирование state, race window | Только `.active.json`, single source of truth |
+| Использовать произвольный `infobase_alias` (e.g. `TestDB`) | До roadmap 260511 §3.1 (P0) RDBG silently возвращал registered=true; filter повисал на несуществующее имя → BPs не fire | Alias = имя из `rac infobase summary list --cluster=<UUID>`. Для коротких имён — env `DEBUG_INFOBASE_ALIASES="Short:Long;..."` (§3.7 P2). Validation теперь fail-fast |
+| `/DebuggerURL="tcp://..."` в thin client launch | 1С debug agent работает в http-mode (`-debug -http`) → protocol mismatch → "Неверно указан протокол отладки" | Use `http://localhost:1550` + `-http` flag. Лучше: `debug_launch_thin_client` (§3.5 P1) — auto-flagged |
+| `recycle_strategy="none"` при HTTP-service triggers | HTTP-service (`1c-mcp-crud:execute_code`) spawn'ит новый rphost вне pre-existing snapshot → 0 BP fire (RC2 из GKSTCPLK-2468) | Use `recycle_strategy="all_rphosts_of_ib"` (§3.2 P0) для HTTP-service workflow, либо Solution C (UI re-post после thin client launch) |
+| Только static analysis для BSL код-flow | Composite types / runtime branching могут отличаться от static prediction (e.g. `гкс_ДокументРегистрации` оказывается ФНП, не РегистрацияПЛК) | После Phase 2 в analyze-1c-task — обязательный Phase 2.5 Runtime Trace через 1c-debug-hmr: set BP + variables + evaluate ДО реализации |
+| Игнорировать `no_fire_diagnostics` в `debug_ping` | После 3 consecutive empty pings wrapper auto-detect'ит RC1/RC2 и suggestions; pre-§3.6 это требовало 5+ ручных проверок | Прочитать `no_fire_diagnostics.suggestions` — там готовые actionable hints |
 
 ## Связанные скиллы
 
