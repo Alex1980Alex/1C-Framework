@@ -119,6 +119,14 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 | `debug_variables(target_id?, stack_level=0, expressions?)` | **Auto-discovery** (default) — парсит BSL-source на текущей строке через `uuid_index + bsl_locals`, batch-eval'ит params + `Перем` + assignments. **Explicit names** — `expressions=["A","B"]` пропускает source parsing |
 | `debug_evaluate(expression, target_id?, stack_level=0)` | Eval любого BSL-выражения. Поддерживает composite types (Структура, ДокументСсылка, ЗначениеПеречисления) |
 
+### Coverage & Artifacts (P1 batch)
+
+| Tool | Назначение |
+|---|---|
+| `debug_coverage_register(lines: list[dict])` | **(P1.A roadmap 260511)** Register BSL lines for code coverage. Each entry: `{object_id, line, module_type?, property_id?, file_path?}`. Зарегистрированные BPs работают как silent counter — на fire wrapper инкрементит hit + auto-Continue (без JSONL noise) |
+| `debug_coverage_export(output_path="")` | **(P1.A roadmap 260511)** Emit SonarQube `genericCoverage.xml` со всеми tracked lines (`covered=true` если hit, `false` иначе). Default path: `data/debug_coverage/<session>.xml`. Returns `{path, files_count, lines_total, lines_covered, coverage_pct}` |
+| `debug_session_summary(format="artifacts")` | **(P1.B roadmap 260511)** Существующий tool, новый format. Packages session в ZIP bundle: `summary.json` + `summary.md` + `breakpoints_cache.json` + `stop_events.json` + `logpoint_log.jsonl` (если есть) + `stack_snapshots/<tid>.json`. Returns `{path, size_bytes, files[]}`. Для PR upload как artifact |
+
 ### Управление выполнением
 
 | Tool | Назначение |
