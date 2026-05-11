@@ -181,6 +181,16 @@ presentation: <base64-encoded cyrillic blob>
 
 **P0.C Source mapping (~2ч)** — в `debug_stack_trace` response добавить `resolved_source` через cached `bsl-semantic-search:bsl_object_info`. Stack показывает FQN + file path вместо UUIDs. Closes Gap 7.
 
+**🎯 P0 batch combined impact:**
+
+| Item | Effort | Time savings/incident | Frequency | Quarterly gain |
+|---|---|---|---|---|
+| P0.A Conditional/Hit BPs | 3ч | -25-40 мин/debug session | ~5 sessions/мес | **3-7 ч/мес** |
+| P0.B Logpoints | 2ч | -15-30 мин/trace cycle | ~10 cycles/мес | **2.5-5 ч/мес** |
+| P0.C Source mapping | 2ч | -5-10 мин/stack inspection | ~20 inspections/мес | **1.5-3 ч/мес** |
+
+**P0 total: ~7-8ч investment → 7-15ч/мес savings. ROI breakeven ~3 недели.** Дополнительные нематериальные бенефиты: меньше «отвлекающего noise» в debug session → snowball'ный эффект для focus + onboarding velocity.
+
 ### P1 (medium ROI, medium risk, ~6-8ч)
 
 **P1.A Coverage report export (~4ч)** — tools `debug_coverage_start(module_filter)` + `debug_coverage_stop() → genericCoverage.xml`. Logpoint-pattern на каждой executable line. SonarQube compatible. Closes Gap 1 (code path coverage).
