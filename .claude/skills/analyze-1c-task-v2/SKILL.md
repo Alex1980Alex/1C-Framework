@@ -44,6 +44,13 @@ Skill для комплексного анализа задачи по конф�
 - Для `[REFACTOR]` точек в плане ОБЯЗАТЕЛЬНО: тип символа (local_variable/parameter/module_local_proc/module_export_proc/form_handler), ожидаемый backend (ast-grep/multilspy/manual), confidence из routing matrix
 - Новый маркер `[REFACTOR]` дополняет `[ADDED]`/`[MODIFIED]` (может сочетаться: `[MODIFIED] [REFACTOR]` — существующий объект, операция — переименование/замена тела)
 
+**Улучшения v4.2 (2026-05-11, 1c-debug-hmr integration):**
+- Опциональная **Фаза 2.5 Runtime Trace** между «Объекты» и «Алгоритм» — live BP-trace через `mcp__1c-debug-hmr__*` для сложных runtime-алгоритмов (≥3 ветвлений по runtime-данным)
+- Триггер: флаг `--trace` или skill self-decision при наличии условий по `Пользователи.ТекущийПользователь()`, `ПолучитьФункциональнуюОпцию`, `Тип(Параметр)`, режимам проведения
+- Output: новая секция «3.Y Runtime Trace» в ANALYSIS-REPORT.md с Entry / Stack-JSON / Variables snapshot / Branch evaluation / **Discrepancies** (static vs runtime — load-bearing для Фазы 4)
+- Без флага `--trace` и без self-decision триггера — фаза SKIP, время не растёт
+- Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 2 (§4.1+§4.2)
+
 ## ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА АНАЛИЗА
 
 ### Правило 1: Ориентироваться на существующий код конфигурации
