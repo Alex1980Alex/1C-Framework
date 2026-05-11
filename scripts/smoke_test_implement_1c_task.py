@@ -230,7 +230,9 @@ async def run(config_path: Path) -> Report:
     rep.handshakes.append(CheckResult(name="edt-mcp", ok=edt_ok, detail=f"{edt_url} -> {edt_detail}"))
 
     # Stdio-серверы: handshake через initialize JSON-RPC.
-    stdio_targets = [n for n in ("1c-mcp-crud", "bsl-debugger", "bsl-semantic-search") if n in servers]
+    # 1c-debug-hmr опциональный — недоступность не меняет mode,
+    # только отключает BP-verification в Этапе 5.x (mode "Full (no-BP)").
+    stdio_targets = [n for n in ("1c-mcp-crud", "bsl-debugger", "bsl-semantic-search", "1c-debug-hmr") if n in servers]
     coros = [mcp_handshake(n, servers[n]) for n in stdio_targets]
     rep.handshakes.extend(await asyncio.gather(*coros))
 
@@ -239,9 +241,19 @@ async def run(config_path: Path) -> Report:
     rep.onec_crud = bool(by_name.get("1c-mcp-crud") and by_name["1c-mcp-crud"].ok)
     rep.bsl_debugger = bool(by_name.get("bsl-debugger") and by_name["bsl-debugger"].ok)
     rep.bsl_semantic = bool(by_name.get("bsl-semantic-search") and by_name["bsl-semantic-search"].ok)
+    rep.debug_hmr = bool(by_name.get("1c-debug-hmr") and by_name["1c-debug-hmr"].ok)
+
+    rep.mcp_health = McpHealth(
+        edt_mcp=rep.edt_mcp,
+        onec_crud=rep.onec_crud,
+        bsl_debugger=rep.bsl_debugger,
+        bsl_semantic=rep.bsl_semantic,
+        debug_hmr=rep.debug_hmr,
+    )
 
     if rep.edt_mcp and rep.onec_crud:
-        rep.mode = "Full"
+        # Full pipeline; debug-hmr — ортогональная ось (BP-verification в Этапе 5.x)
+        rep.mode = "Full" if rep.debug_hmr else "Full (no-BP)"
         rep.exit_code = 0
     elif rep.edt_mcp and not rep.onec_crud:
         rep.mode = "Code-only"
