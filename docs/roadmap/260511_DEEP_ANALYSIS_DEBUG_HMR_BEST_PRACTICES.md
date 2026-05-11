@@ -129,3 +129,40 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 - P3.A Data BPs (RDBG protocol research required)
 - P3.B Exception BPs (wrapper-level через global trap + stack filter)
 - P3.C Stream debugger / pipeline visualization (1С-аналог — табличный документ / запрос)
+
+## §5. Integration в 36_AUTONOMOUS_DEBUG_CONTROL
+
+После P0+P1:
+
+| Chapter | Update |
+|---|---|
+| 36.1 Обзор | Add Level 4 «Coverage & Replay» (recording → coverage report → PR artifact) |
+| 36.2 Health Check | New probe `coverage_engine_ready` — Coverage41C jar / wrapper-native ready |
+| 36.5 Workflows | New workflow «Coverage-driven test design»: uncovered paths → write test → re-run → close gap |
+| 36.6 Диагностика | Add «Conditional BP не fire'ит» (invalid expression syntax, scope issues) |
+| 36.7 HMR Wrapper | Document new tools (set_logpoint, replay_seek, coverage_*) в API table |
+| **36.8 NEW** | **Coverage & Replay workflow** — full chapter: API, examples, troubleshooting, CI integration |
+
+## §6. Open Questions
+
+1. **Приоритизация:** P0+P1 батчем (~12ч) или distributed по sessions?
+2. **RDBG protocol research для P2:** deep dive `debugBaseData.xsd` для DropFrame/DataBP feasibility или закрывать как "vendor support pending"?
+3. **Coverage tool choice:** wrapper-native (P1.A через logpoints) vs Coverage41C jar orchestration (subprocess)?
+4. **Replay storage:** local `.replay.jsonl` vs remote (S3 / GitHub Releases) для long-term archives?
+5. **Phase 4 в roadmap 260510 vs новый roadmap doc** для P0+P1 batch tracking?
+
+## §7. Recommendation
+
+**Start с P0 batch (6-8ч):**
+
+1. P0.A Conditional + Hit-count — XS если native, S если wrapper-level. Highest immediate value.
+2. P0.B Logpoints — wrapper-level, простой extend. Production-safe (no halt).
+3. P0.C Source mapping — самостоятельное value plus prerequisite для лучших error messages downstream.
+
+После P0 — **measure debugger productivity gain** на 1-2 реальных задачах. Если confirmed +30-50% speedup — приступить к P1.
+
+**P2 — deferred** до RDBG protocol research. **P3 — nice-to-have.**
+
+После P0+P1: matrix coverage **14/19 industry-standard features** (vs 8/19 текущих). Уровень paid commercial debug tools (vsdbg / xdebug / RubyMine).
+
+**Estimated effort P0+P1:** ~12-16ч (P0 ~6-8ч, P1 ~6-8ч). **Acceptance:** GKSTCPLK-2468-class задачи debug в 2-3× быстрее.
