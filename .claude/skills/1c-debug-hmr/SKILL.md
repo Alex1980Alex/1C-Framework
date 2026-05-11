@@ -108,7 +108,7 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 | Tool | Назначение |
 |---|---|
-| `debug_stack_trace(target_id?)` | Cache-first (через `last_stopped_target_id`), fallback на `getCallStack` HTTP. Error envelope: при exception возвращает `{"error": "<Type>: <repr>", "target_id": ...}` |
+| `debug_stack_trace(target_id?)` | Cache-first (через `last_stopped_target_id`), fallback на `getCallStack` HTTP. Error envelope: при exception возвращает `{"error": "<Type>: <repr>", "target_id": ...}`. **(P0.C roadmap 260511)** Каждый frame обогащён полем `resolved_source: {fqn, file_path, exists}` через `uuid_index.get_source_info` (UUID → `Документ.<name>.МодульМенеджера` + file path) |
 | `debug_variables(target_id?, stack_level=0, expressions?)` | **Auto-discovery** (default) — парсит BSL-source на текущей строке через `uuid_index + bsl_locals`, batch-eval'ит params + `Перем` + assignments. **Explicit names** — `expressions=["A","B"]` пропускает source parsing |
 | `debug_evaluate(expression, target_id?, stack_level=0)` | Eval любого BSL-выражения. Поддерживает composite types (Структура, ДокументСсылка, ЗначениеПеречисления) |
 
