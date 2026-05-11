@@ -23,6 +23,7 @@
 | P0.F PARTIAL fixes (memory leak, docs, reapply) | `433b8f8` | `64426fcc5` | ✅ |
 | **P0.G** `debug_arm_next_rphost` (silent) | `946e445` | `df05118f0` | ✅ **LIVE** (suspendedByOther captured) |
 | P0.G polish (pending discard, INFO log) | `a8457f6` | `01a3298eb` | ✅ |
+| **P1.B** Artifacts ZIP bundle (`format="artifacts"`) | `39de6a8` | `13a51489e` | ✅ Python E2E (6-file ZIP verified) |
 
 **Итого:** 7 P0 items shipped (исходно планировались 3 — A/B/C; D/E/F/G добавлены как unplanned bonus после live findings).
 
