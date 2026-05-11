@@ -47,6 +47,14 @@ Wrapper `1c-debug-hmr` достиг **production-grade baseline** после roa
 
 **Применимость к 1С:** RDBG XSD (`debugBreakpoints.xsd`) нужно проверить native support. Wrapper-level fallback — break + evaluate + auto-Continue if condition false. **Source:** [microsoft.github.io/debug-adapter-protocol/specification.html](https://microsoft.github.io/debug-adapter-protocol/specification.html), [code.visualstudio.com/blogs/2018/07/12/introducing-logpoints-and-auto-attach](https://code.visualstudio.com/blogs/2018/07/12/introducing-logpoints-and-auto-attach).
 
+**🎯 Эффективность при внедрении (реальный пример: GKSTCPLK-2468):**
+
+При анализе bottleneck в `ОбновитьСостояниеБлокировки:80` (E2E на real cluster) получили **7 одновременно stopped targets** (mix HTTPService + JOB), каждый из которых требовал stack inspection. Условие `СостояниеКачества = Перечисления.гкс_СостоянияКачества.КачПринято` вычислялось для разных Показатель/БлокирующаяГруппаТС комбинаций — 6 из 7 stops были irrelevant noise для конкретно искомого бага.
+
+- **С BP-1:** `debug_set_breakpoint(condition="БлокирующаяГруппаТС.Наименование = 'группа: 1' И Показатель.Наименование = 'ГМО'")` → fire **только** для группы 1 + ГМО = 1 stop из 7 → 6× меньше manual filter работы.
+- **Hit count:** `hit_count="=3"` ловит **только 3-й** проход цикла без интерактивного step-skip × 1-2.
+- **Logpoint:** `logMessage="ТМУТ={ДокументРегистрации.Номер} Стат={СостояниеКачества}"` — production-safe tracing вместо вставки `Сообщить()` calls + redeploy. **Экономия на task type «найди регрессию в проведении»: 30-50 мин/итерация → 5-10 мин.**
+
 ### BP-2: JetBrains IntelliJ — Drop Frame + Force Return + Rich Evaluator
 
 [blog.jetbrains.com/idea/2025/04/debugging-java-code-in-intellij-idea](https://blog.jetbrains.com/idea/2025/04/debugging-java-code-in-intellij-idea/) (April 2025).
