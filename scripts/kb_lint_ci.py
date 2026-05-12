@@ -51,6 +51,10 @@ def _install_cyrillic_safety_patch() -> None:
 
     ASCII-only stems (including ones that need genuine casing/space → kebab
     fixes) fall through to the upstream implementation unchanged.
+
+    Note: patch does not survive `importlib.reload(kb_lint.fixer)` — fine for
+    one-shot CLI use (pre-commit subprocess); minor caveat in pytest reload
+    fixtures.
     """
     from kb_lint import fixer
 
@@ -58,7 +62,7 @@ def _install_cyrillic_safety_patch() -> None:
 
     def _safe_fix_filename_casing(article):  # type: ignore[no-untyped-def]
         stem = article.path.stem
-        if not all(c.isascii() for c in stem):
+        if not stem.isascii():
             sys.stderr.write(
                 f"[kb_lint_ci] WARN: skip rename of '{article.path.name}' "
                 f"(non-ASCII stem — upstream regex would destroy Unicode)\n"
