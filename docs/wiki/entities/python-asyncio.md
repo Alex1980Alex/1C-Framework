@@ -11,7 +11,7 @@ metadata:
   source_document_id: ''
   source_graph: lightrag_v38
   wiki_links:
-  - '[[event-loop|Event Loop]]'
+  - '[[event-loop]]'
 source: memory-ai
 tags:
 - entity
@@ -33,7 +33,7 @@ Entity of type CONCEPT extracted from
 
 ## Where
 
-- [[event-loop|Event Loop]]
+- [[event-loop]]
 
 ## Content
 
