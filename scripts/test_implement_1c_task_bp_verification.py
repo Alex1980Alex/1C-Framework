@@ -347,5 +347,45 @@ def test_debug_hmr_unavailable_returns_skip_without_block():
     c.debug_step.assert_not_called()
 
 
+def test_alias_invalid_returns_skip_with_available_list():
+    """Roadmap 260511 §3.1 + §5 closure: debug_connect returns
+    status=error/reason=infobase_alias_not_found dict for invalid alias.
+    Orchestrator must surface SKIP without progressing to set_breakpoint.
+
+    Closes the last unchecked acceptance item in
+    docs/roadmap/260511_ROADMAP_1C_DEBUG_HMR_DEFICIENCIES_FROM_GKSTCPLK_2468.md §5.
+    """
+    c = MagicMock()
+    c.debug_connect.return_value = {
+        "status": "error",
+        "reason": "infobase_alias_not_found",
+        "provided": "TestDB",
+        "available": ["ИБTransportManagementDevelop", "260507_DEV_ATERLETSKIY_53196"],
+        "hint": "Use one of available infobases.",
+    }
+
+    result = verify_bp_for_point(
+        debug_client=c,
+        point_id="P1",
+        object_id="uuid-abc",
+        expected_line=42,
+        expected_module="Doc.ABC",
+        module_type="ObjectModule",
+        trigger_fn=lambda: None,
+    )
+
+    assert result.status == "SKIP"
+    assert "infobase_alias_not_found" in (result.reason or "")
+    # The available list should be surfaced in the reason so the human sees
+    # which infobase names exist in the cluster (debugging aid).
+    assert "ИБTransportManagementDevelop" in (result.reason or "")
+    # Pipeline must NOT progress past Step 1 — no BP set, no trigger, no step.
+    c.debug_set_breakpoint.assert_not_called()
+    c.debug_get_breakpoints.assert_not_called()
+    c.debug_step.assert_not_called()
+    # Only debug_connect should be in the call sequence.
+    assert result.call_sequence == ["debug_connect"]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
