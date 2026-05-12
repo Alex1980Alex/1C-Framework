@@ -173,7 +173,7 @@ def main() -> int:
     changed = 0
     for md in sorted(targets):
         text = md.read_text(encoding="utf-8")
-        new_text = wrap_md(text)
+        new_text = add_blanks_around_blocks(wrap_md(text))
         if text != new_text:
             md.write_text(new_text, encoding="utf-8")
             changed += 1
