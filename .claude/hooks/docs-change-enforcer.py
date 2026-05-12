@@ -148,6 +148,8 @@ SKIP_PATTERNS = [
     # (codecov.yml + .pre-commit-config.yaml documented in 09.4 Мониторинг,
     # data/eval/golden_v1.json — versioned dataset с CHANGELOG.md рядом).
     ".pre-commit-config.yaml",
+    ".kb-lint.toml",
+    ".kblintrc.yml",
     "codecov.yml",
     "data/eval/",
     # MCP configs, tooling, docker, infra (infrastructure, not product code)
