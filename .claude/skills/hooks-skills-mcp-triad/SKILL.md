@@ -62,7 +62,7 @@ description: "Используй этот скилл для понимания �
 |------|-----------|
 | `task-enforcer.py` | Блокировка без выполнения mandatory задач (incl. code-skill-enforcer) |
 | `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
-| `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `configuration/`, `ИБTransportManagementDevelop/` (EDT проект), `src/bsl/`, `openspec/`. При добавлении нового EDT-проекта в корень — добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. (Roadmap: динамическое обнаружение через `.bsl-language-server.json` маркер — см. `src/bsl/project_discovery.py`.) |
+| `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `configuration/`, `ИБTransportManagementDevelop/` (EDT проект), `src/bsl/`, `openspec/`, `.pre-commit-config.yaml`, `.kb-lint.toml`/`.kblintrc.yml` (kb-lint конфиги; `.kb-lint.toml` в root не читается — kb-lint 0.1.1 берёт `<wiki_path>/.kblintrc.yml`, см. `kb_lint/config.py:60-78`), `codecov.yml`, `data/eval/`. При добавлении нового EDT-проекта в корень — добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. (Roadmap: динамическое обнаружение через `.bsl-language-server.json` маркер — см. `src/bsl/project_discovery.py`.) |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
 
 #### SessionStart (1)
