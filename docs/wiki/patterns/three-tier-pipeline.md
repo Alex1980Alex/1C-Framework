@@ -14,6 +14,7 @@ unified_id: 019e1e2c-a8bc-78da-9013-6ed832390bcb
 
 **Где используется:** весь lifecycle хуков Claude Code
 **Как работает:**
+
 1. `UserPromptSubmit` — роутинг (skill-router, research-task-detector)
 2. `PreToolUse` — enforcement (code-skill-enforcer, z-ai-write-guard, approval-gate)
 3. `PostToolUse` — observation (task-protocol-observer, delegation-tracker, auto-git-save)

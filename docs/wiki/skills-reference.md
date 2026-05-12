@@ -10,7 +10,8 @@ title: Skills Reference
 unified_id: 019e1e30-10a8-704c-927a-3bca7a6d7e54
 ---
 
-Reference index for all Claude Code skills in `.claude/skills/`. Discovery via skill-router-config.json and trigger-keyword matching.
+Reference index for all Claude Code skills in `.claude/skills/`. Discovery via skill-router-config.json and
+trigger-keyword matching.
 
 ## Skill categories
 

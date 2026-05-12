@@ -14,4 +14,5 @@ unified_id: 019e1e2c-a8b1-74cf-9610-db24d0f36df3
 
 **Где используется:** `loaders/router.py`, `multitenancy/tenant_store.py`
 **Ключевые классы:** `SmartLoaderRouter`, `TenantVectorStoreManager`
-**Как работает:** `SmartLoaderRouter` адаптирует разные загрузчики под единый интерфейс. `TenantVectorStoreManager` изолирует данные тенантов в одном хранилище.
+**Как работает:** `SmartLoaderRouter` адаптирует разные загрузчики под единый интерфейс. `TenantVectorStoreManager`
+изолирует данные тенантов в одном хранилище.

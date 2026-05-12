@@ -14,8 +14,10 @@ unified_id: 019e1e2c-a8b1-7721-8ba9-5026f83d7b0d
 
 **Где используется:** `vector_store/base.py`, `graph_store/base.py`, `embeddings/engine.py`, `loaders/base.py`
 **Ключевые классы:** `BaseVectorStore`, `BaseGraphStore`, `BaseEmbeddingEngine`, `BaseLoader`
-**Как работает:** Четыре контракта определяют обязательные методы: `add_documents`, `search`, `delete` и др. Провайдеры наследуют ABC и реализуют все абстрактные методы.
+**Как работает:** Четыре контракта определяют обязательные методы: `add_documents`, `search`, `delete` и др. Провайдеры
+наследуют ABC и реализуют все абстрактные методы.
 **Пример:**
+
 ```python
 class QdrantVectorStore(BaseVectorStore):
     async def add_documents(self, docs): ...

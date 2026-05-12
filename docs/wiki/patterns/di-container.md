@@ -14,8 +14,10 @@ unified_id: 019e1e2c-a8b4-7300-8cd1-f840e4b6814e
 
 **Где используется:** `api/dependencies/components.py`
 **Ключевые классы:** `Components`
-**Как работает:** Синглтон `Components` создаёт и связывает stores, engines и strategies. Функция `get_components()` возвращает готовый контейнер с инжектированными зависимостями.
+**Как работает:** Синглтон `Components` создаёт и связывает stores, engines и strategies. Функция `get_components()`
+возвращает готовый контейнер с инжектированными зависимостями.
 **Пример:**
+
 ```python
 c = await get_components()  # Components singleton
 results = await c.search_manager.search("запрос", strategy="auto")

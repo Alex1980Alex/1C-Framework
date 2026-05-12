@@ -14,8 +14,10 @@ unified_id: 019e1e2c-a8b8-7315-83cd-a6c6d4074c52
 
 **Где используется:** `search/manager.py`, `loaders/templates/base.py`, `knowledge_base/document_registry.py`
 **Ключевые классы:** `SearchManager` (стратегии), `TEMPLATE_REGISTRY` (шаблоны парсинга), `DocumentRegistry` (документы)
-**Как работает:** Каждый реестр — `dict[str, type]` с методами `register`/`get`. Позволяет динамически подключать новые компоненты.
+**Как работает:** Каждый реестр — `dict[str, type]` с методами `register`/`get`. Позволяет динамически подключать новые
+компоненты.
 **Пример:**
+
 ```python
 TEMPLATE_REGISTRY["research_paper"] = ResearchPaperTemplate
 tpl = get_template("research_paper")

@@ -14,8 +14,10 @@ unified_id: 019e1e2c-a8bc-789b-abbf-c59547c7aece
 
 **Где используется:** `loaders/templates/base.py`
 **Ключевые классы:** `ParseTemplate`, `GenericTemplate`, `ResearchPaperTemplate`, `UserManualTemplate`
-**Как работает:** Базовый класс определяет скелет парсинга, а подклассы переопределяют хуки `element_priorities`, `skip_elements`, `chunk_size_overrides`.
+**Как работает:** Базовый класс определяет скелет парсинга, а подклассы переопределяют хуки `element_priorities`,
+`skip_elements`, `chunk_size_overrides`.
 **Пример:**
+
 ```python
 class ResearchPaperTemplate(ParseTemplate):
     element_priorities = {"abstract": 10, "methodology": 8}
