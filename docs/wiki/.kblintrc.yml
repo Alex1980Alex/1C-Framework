@@ -1,8 +1,9 @@
 # kb-lint configuration for PDF Vector & Graph Framework wiki
 # Docs: https://pypi.org/project/kb-lint/
 #
-# Note: kb-lint reads this file from <wiki_path>/.kblintrc.yml (not project root
-# .kb-lint.toml — that file is unused as of kb-lint 0.1.1; see config.py:60).
+# Note: kb-lint reads config from <wiki_path>/.kblintrc.yml or
+# <wiki_path>/pyproject.toml [tool.kb-lint] — project root configs are NOT
+# read by kb-lint 0.1.1 (see kb_lint/config.py:60-78).
 
 required_frontmatter:
   - unified_id
