@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, architecture]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- architecture
+unified_id: 019e1e2c-a8b5-7113-82cc-d3bdb6de75d8
 ---
 
 # 1.6 Factory

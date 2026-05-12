@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, automation]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- automation
+unified_id: 019e1e2c-a8b2-7dc4-b01d-d2296f7e9696
 ---
 
 # 2.1 BaseHook Protocol

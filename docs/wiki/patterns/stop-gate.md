@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, automation]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- automation
+unified_id: 019e1e2c-a8ba-7c41-8348-642e8919c5a2
 ---
 
 # 2.9 Stop Gate

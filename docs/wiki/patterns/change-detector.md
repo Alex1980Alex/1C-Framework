@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, architecture]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- architecture
+unified_id: 019e1e2c-a8b2-74bd-9647-f66374eaaeda
 ---
 
 # 1.15 Change Detector

@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, automation]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- automation
+unified_id: 019e1e2c-a8b6-7b81-bc1a-62b825de4b2a
 ---
 
 # 2.5 Multi-Level Enforcement

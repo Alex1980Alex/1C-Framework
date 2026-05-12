@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, architecture]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- architecture
+unified_id: 019e1e2c-a8b3-7b0c-973e-0f42275ddb12
 ---
 
 # 1.8 Composite

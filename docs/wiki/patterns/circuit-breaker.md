@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, automation]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- automation
+unified_id: 019e1e2c-a8b3-7209-b594-21bbc7176a5e
 ---
 
 # 2.10 Circuit Breaker

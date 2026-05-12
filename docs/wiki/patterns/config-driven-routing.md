@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, automation]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- automation
+unified_id: 019e1e2c-a8b3-7493-b957-f6b212c45061
 ---
 
 # 2.3 Config-Driven Routing

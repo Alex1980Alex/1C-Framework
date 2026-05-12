@@ -1,7 +1,15 @@
 ---
+confidence: 1.0
+related:
+- '[[overview]]'
+- '[[triad-architecture]]'
+- '[[PATTERNS]]'
 status: active
-tags: [wiki, index, map]
-related: ["[[overview]]", "[[triad-architecture]]", "[[PATTERNS]]"]
+tags:
+- wiki
+- index
+- map
+unified_id: 019e1e30-d82a-79e7-8f03-c9264380ac20
 ---
 
 # Framework Wiki Map

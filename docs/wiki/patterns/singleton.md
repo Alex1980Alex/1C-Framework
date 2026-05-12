@@ -1,8 +1,13 @@
 ---
-status: active
-tags: [pattern, architecture]
-related: ["[[PATTERNS]]"]
+confidence: 0.5
 created: 2026-04-20
+related:
+- '[[PATTERNS]]'
+status: active
+tags:
+- pattern
+- architecture
+unified_id: 019e1e2c-a8ba-799a-9257-9ceaf9c20d35
 ---
 
 # 1.12 Singleton
