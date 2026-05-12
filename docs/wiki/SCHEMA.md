@@ -1,14 +1,21 @@
 ---
-unified_id: 019f8a3b-5c7d-7e2a-9f1b-4d6e8a0c2b4f
-status: active
-tags: [meta, schema, standards, documentation]
-related:
-  - '[[_index]]'
-  - '[[overview]]'
-  - '[[triad-architecture]]'
-created_at: 2026-04-20T10:00:00Z
-updated_at: 2026-04-20T10:00:00Z
 confidence: 1.0
+created: ''
+created_at: 2026-04-20 10:00:00+00:00
+related:
+- '[[_index]]'
+- '[[overview]]'
+- '[[triad-architecture]]'
+sources: []
+status: active
+tags:
+- meta
+- schema
+- standards
+- documentation
+title: Wiki Schema & Standards
+unified_id: 019f8a3b-5c7d-7e2a-9f1b-4d6e8a0c2b4f
+updated_at: 2026-04-20 10:00:00+00:00
 ---
 
 # Wiki Schema & Standards
