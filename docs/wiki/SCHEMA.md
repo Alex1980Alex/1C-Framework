@@ -18,6 +18,12 @@ unified_id: 019f8a3b-5c7d-7e2a-9f1b-4d6e8a0c2b4f
 updated_at: 2026-04-20 10:00:00+00:00
 ---
 
+<!-- kb-lint-disable-file links -->
+<!-- This file contains template/example wiki-links inside code blocks
+     (e.g. [[wiki-link]], [[page-name]], [[wiki-links]]) that are syntax
+     demonstrations, not real links. kb-lint's link checker doesn't strip
+     code-block contents, so we disable the `links` check at file level. -->
+
 # Wiki Schema & Standards
 
 Canonical structure, naming conventions, cross-referencing syntax, and lifecycle rules for the PDF Vector & Graph Framework Knowledge Base.
