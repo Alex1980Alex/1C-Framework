@@ -35,6 +35,62 @@ WIDTH = 120
 FENCE_RE = re.compile(r"^\s*```")
 
 
+_LIST_RE = re.compile(r"^\s*(?:[-*+]\s|\d+\.\s)")
+
+
+def _is_list_item(line: str) -> bool:
+    return bool(_LIST_RE.match(line))
+
+
+def add_blanks_around_blocks(text: str) -> str:
+    """Insert blank lines around fenced code blocks and lists (MD031/MD032).
+
+    Idempotent: doesn't duplicate existing blanks. Runs OUTSIDE frontmatter.
+    """
+    lines = text.split("\n")
+    out: list[str] = []
+    in_frontmatter = False
+    in_fence = False
+    for i, line in enumerate(lines):
+        if i == 0 and line.strip() == "---":
+            in_frontmatter = True
+            out.append(line)
+            continue
+        if in_frontmatter:
+            out.append(line)
+            if line.strip() == "---":
+                in_frontmatter = False
+            continue
+
+        is_fence = bool(FENCE_RE.match(line))
+        is_list = _is_list_item(line)
+
+        # Blank BEFORE: when current is fence-open / first-list-item AND
+        # previous non-blank was something else.
+        if (is_fence and not in_fence) or is_list:
+            prev = out[-1] if out else ""
+            prev_is_list = _is_list_item(prev)
+            prev_blank = (prev.strip() == "")
+            if not prev_blank:
+                # For fences: always need blank before.
+                # For lists: need blank before only if previous wasn't a list item.
+                if is_fence or (is_list and not prev_is_list):
+                    out.append("")
+
+        out.append(line)
+
+        if is_fence:
+            in_fence = not in_fence
+
+        # Blank AFTER fence-close: only if next non-blank exists and isn't blank.
+        if is_fence and not in_fence:
+            nxt = lines[i + 1] if i + 1 < len(lines) else ""
+            if nxt.strip() != "":
+                out.append("")
+
+    return "\n".join(out)
+
+
 def wrap_md(text: str, width: int = WIDTH) -> str:
     """Wrap prose lines in a markdown document, preserving structure."""
     lines = text.split("\n")
