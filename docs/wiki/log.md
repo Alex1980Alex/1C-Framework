@@ -2,7 +2,9 @@
 unified_id: 019f8a3b-5c7d-7e2a-9f1b-4d6e8a0c2b50
 status: active
 tags: [meta, chronology, log]
-related: [[_index]], [[SCHEMA]]
+related:
+  - '[[_index]]'
+  - '[[SCHEMA]]'
 created_at: 2026-04-20T10:00:00Z
 updated_at: 2026-04-20T10:00:00Z
 confidence: 1.0
