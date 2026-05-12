@@ -1,6 +1,7 @@
 ---
 confidence: 1.0
 content_type: wiki
+created: ''
 created_at: '2026-04-21T01:05:02.967842'
 importance: 0.5
 memory_type: semantic
@@ -11,7 +12,10 @@ metadata:
     text: 'Адрес Web-сервиса (CONCEPT): url_component=True'
   source_document_id: 7787e37b244e72bc
   source_graph: lightrag_v38
+related: []
 source: memory-ai
+sources: []
+status: active
 tags:
 - entity
 - concept
@@ -19,7 +23,6 @@ title: Адрес Web-сервиса
 unified_id: semantic:memory-ai:3597a716-4068-4247-b230-2f13337f2883
 updated_at: '2026-04-21T01:05:02.967845'
 version: 1
-status: active
 ---
 
 ## What

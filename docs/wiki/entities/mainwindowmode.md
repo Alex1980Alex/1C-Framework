@@ -1,6 +1,7 @@
 ---
 confidence: 1.0
 content_type: wiki
+created: ''
 created_at: '2026-04-21T01:05:02.757516'
 importance: 0.5
 memory_type: semantic
@@ -11,7 +12,10 @@ metadata:
     text: 'MainWindowMode (CONCEPT): type=Command'
   source_document_id: 7787e37b244e72bc
   source_graph: lightrag_v38
+related: []
 source: memory-ai
+sources: []
+status: active
 tags:
 - entity
 - concept
@@ -19,7 +23,6 @@ title: MainWindowMode
 unified_id: semantic:memory-ai:18dd75bc-2a8b-406e-a749-e4c2a4f4cd94
 updated_at: '2026-04-21T01:05:02.757517'
 version: 1
-status: active
 ---
 
 ## What

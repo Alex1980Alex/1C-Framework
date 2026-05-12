@@ -1,6 +1,7 @@
 ---
 confidence: 1.0
 content_type: wiki
+created: ''
 created_at: '2026-04-21T01:05:02.474389'
 importance: 0.5
 memory_type: semantic
@@ -11,7 +12,10 @@ metadata:
     text: 'SSL (CONCEPT): full_name=Secure Sockets Layer, context=Security Protocol'
   source_document_id: 7787e37b244e72bc
   source_graph: lightrag_v38
+related: []
 source: memory-ai
+sources: []
+status: active
 tags:
 - entity
 - concept
@@ -19,7 +23,6 @@ title: SSL
 unified_id: semantic:memory-ai:6878b323-9d05-47f8-80d9-9bb6720f5700
 updated_at: '2026-04-21T01:05:02.474390'
 version: 1
-status: active
 ---
 
 ## What

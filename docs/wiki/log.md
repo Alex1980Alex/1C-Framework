@@ -221,3 +221,11 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Skills: code-verify, 1c-debug-hmr, evaluation-benchmark, learn:pytest-framework, implement-1c-task
 - Files changed: 5
 - Summary: Session 2026-05-12. Skills: code-verify, 1c-debug-hmr, evaluation-benchmark, learn:pytest-framework, implement-1c-task, bsl-development. Changed 5 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, external/1c_mcp, ИБTransportManagementDevelop/docs, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save Module.bsl, 260511_LIVE_VERIFICATION_P1_P2_P3_RESULTS.md. Commit: chore: auto-commit 4 file(s) changed. Commit: fix(GKSTCPLK-2292): add task docs and bump Конфигурация submodule
+
+## 2026-05-13 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: code-verify, 1c-debug-hmr, evaluation-benchmark, learn:pytest-framework, implement-1c-task
+- Files changed: 4
+- Summary: Session 2026-05-13. Skills: code-verify, 1c-debug-hmr, evaluation-benchmark, learn:pytest-framework, implement-1c-task, bsl-development, 1c-doc-research, analyze-1c-task-v2. Changed 4 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, external/1c_mcp, ИБTransportManagementDevelop/docs. Commit: chore(GKSTCPLK-2483): bump Конфигурация + configuration submodule refs
