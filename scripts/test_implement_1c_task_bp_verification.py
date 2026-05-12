@@ -63,10 +63,22 @@ def verify_bp_for_point(
     # Step 1: connect (idempotent — if already connected, debug_client returns same session)
     try:
         seq.append("debug_connect")
-        debug_client.debug_connect()
+        connect_resp = debug_client.debug_connect()
     except Exception as exc:
         result.status = "SKIP"
         result.reason = f"connect failed: {type(exc).__name__}: {exc}"
+        return result
+
+    # Roadmap 260511 §3.1: debug_connect may return a dict with
+    # {"status": "error", "reason": "infobase_alias_not_found", "available": [...]}
+    # for invalid infobase_alias. Surface as SKIP — without this guard, the
+    # orchestrator would proceed to set_breakpoint on an unattached session
+    # and silently fail (RC1 from GKSTCPLK-2468 incident).
+    if isinstance(connect_resp, dict) and connect_resp.get("status") == "error":
+        result.status = "SKIP"
+        reason = connect_resp.get("reason", "unknown")
+        available = connect_resp.get("available", [])
+        result.reason = f"connect error: {reason} (available: {available})"
         return result
 
     # Step 2: set BP
