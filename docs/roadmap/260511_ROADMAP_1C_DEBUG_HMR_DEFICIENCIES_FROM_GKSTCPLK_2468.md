@@ -305,7 +305,7 @@ async def debug_launch_thin_client(
 - [x] SKILL.md §антипаттерны обновлён — §3.8 ✓ 7 new entries (incl. password OS exposure)
 - [~] Re-run GKSTCPLK-2468 R.2 trace → BP fire — **E2E PARTIAL**: tools работают, но actual BP fire blocked post-spawn-attach gap (§7 follow-up P0.4)
 - [x] Existing 199 unit tests passing — ✓ 215 passed (+16 new)
-- [ ] Mock acceptance test расширен «alias validation» — deferred to P0.4 batch
+- [x] Mock acceptance test расширен «alias validation» — ✓ `test_alias_invalid_returns_skip_with_available_list` в `scripts/test_implement_1c_task_bp_verification.py` (6/6 tests pass). Orchestrator extended: dict-form `{"status": "error", "reason": "infobase_alias_not_found", ...}` from `debug_connect` surfaces as `SKIP` без progressing к set_breakpoint
 
 ## §6. Связь с уже-выполненной работой
 
