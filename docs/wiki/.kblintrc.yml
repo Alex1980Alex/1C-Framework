@@ -48,16 +48,18 @@ allowed_confidence_levels:
   # Numeric values: discrete steps 0.0-1.0 + integers (semantic
   # precision retained vs text bucketing). Wiki frontmatter convention
   # is float; text levels kept for legacy entries.
-  - 0
-  - 0.0
-  - 0.1
-  - 0.2
-  - 0.3
-  - 0.4
-  - 0.5
-  - 0.6
-  - 0.7
-  - 0.8
-  - 0.9
-  - 1
-  - 1.0
+  # Quoted as strings — kb-lint 0.1.1 frontmatter.py:99 ", ".join
+  # ожидает str instances, int/float падают TypeError.
+  - '0'
+  - '0.0'
+  - '0.1'
+  - '0.2'
+  - '0.3'
+  - '0.4'
+  - '0.5'
+  - '0.6'
+  - '0.7'
+  - '0.8'
+  - '0.9'
+  - '1'
+  - '1.0'
