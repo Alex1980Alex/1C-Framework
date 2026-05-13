@@ -19,6 +19,8 @@ min_article_words: 50
 ignore_patterns:
   - "_templates/**"
   - "templates/**"
+  - "archive/**"
+  - "entities/archive/**"
   - ".git/**"
   - "node_modules/**"
   - ".claude/**"
