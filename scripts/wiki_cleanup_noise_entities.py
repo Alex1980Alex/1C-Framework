@@ -19,8 +19,10 @@ from pathlib import Path
 
 WIKI_DIR = Path("docs/wiki/entities")
 
+# Sync with src/pdf_framework/indexing/wiki_exporter.py:_NOISE_RE
+# Version strings (8.3.27, v1.2.3) NOT included — valid domain entities.
 _NOISE_RE = re.compile(
-    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|v?\d+\.\d+(?:\.\d+)?|[0-9a-f]{8,}|(?:20|19)\d{2})$"
+    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|[0-9a-f]{16,}|(?:20|19)\d{2})$"
 )
 
 
