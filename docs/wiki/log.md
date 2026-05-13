@@ -231,3 +231,11 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Skills: code-verify, 1c-debug-hmr, evaluation-benchmark, learn:pytest-framework, implement-1c-task
 - Files changed: 4
 - Summary: Session 2026-05-13. Skills: code-verify, 1c-debug-hmr, evaluation-benchmark, learn:pytest-framework, implement-1c-task, bsl-development, 1c-doc-research, analyze-1c-task-v2. Changed 4 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, external/1c_mcp, ИБTransportManagementDevelop/docs. Commit: chore(GKSTCPLK-2483): bump Конфигурация + configuration submodule refs
+
+## 2026-05-14 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop
+- Files changed: 4
+- Summary: Session 2026-05-14. Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop, code-verify, auto-git-save, create-hook. Changed 4 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, external/1c_mcp, tmp/merge-candidates.jsonl. Commit: fix(hooks): posttooluse-auto-git-save respects pause sentinel + add merge tool. Commit: chore: auto-save feedback_auto_git_save_preempt.md, .kblintrc.yml. Commit: chore(wiki): rename leading-dash entity stem -v8i → v8i (kb-lint --fix)
