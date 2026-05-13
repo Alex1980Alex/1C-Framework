@@ -180,10 +180,12 @@ def get_pause_status() -> tuple[bool, str]:
     if not PAUSE_FILE.exists():
         return False, ""
 
-    from datetime import datetime, timedelta
+    from datetime import timedelta
 
     try:
-        content = PAUSE_FILE.read_text(encoding="utf-8").strip()
+        # utf-8-sig strips BOM written by PowerShell 5.1 `Set-Content` (default UTF-16 LE BOM
+        # would otherwise round-trip as "﻿60" and silently fail int() parsing)
+        content = PAUSE_FILE.read_text(encoding="utf-8-sig").strip()
     except OSError:
         content = ""
 
