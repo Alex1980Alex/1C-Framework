@@ -6,3 +6,11 @@
 	path = ИБTransportManagementDevelop/Конфигурация
 	url = https://github.com/Alex1980Alex/IBTransportManagementDevelop-Configuration.git
 	branch = master
+[submodule "configuration/260304_GKSTCPLK-2182"]
+	path = configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС
+	url = https://github.com/Alex1980Alex/Configuration-260304-GKSTCPLK-2182.git
+	branch = master
+[submodule "configuration/260416_GKSTCPLK-2368"]
+	path = configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников
+	url = https://github.com/Alex1980Alex/-Configuration-260416-GKSTCPLK-2368-.git
+	branch = master
