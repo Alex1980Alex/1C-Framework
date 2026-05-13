@@ -556,6 +556,19 @@ class AutoGitSave(BaseHook):
 
         file_count = len(modified_data["files"])
 
+        # --- Pause check: skip threshold sync commit but still track files ---
+        paused, pause_info = get_pause_status()
+        log.debug(f"pause check: paused={paused} info={pause_info!r}")
+        if paused and file_count >= SYNC_COMMIT_THRESHOLD:
+            save_modified_files(modified_data)
+            self._ensure_task(modified_data)
+            return HookOutput().system_message(
+                f"[AUTO-GIT-SAVE PAUSED] {pause_info}. "
+                f"Tracked: {file_count} file(s). "
+                f"Make a structured commit manually, or resume: "
+                f"`rm .claude/cache/auto-git-save.paused`"
+            )
+
         # --- Threshold reached: SYNC COMMIT ---
         log.debug(f"file_count={file_count} threshold={SYNC_COMMIT_THRESHOLD}")
         if file_count >= SYNC_COMMIT_THRESHOLD:
