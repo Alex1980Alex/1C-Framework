@@ -20,7 +20,14 @@ ignore_patterns:
   - "_templates/**"
   - "templates/**"
   - "archive/**"
-  - "entities/archive/**"
+  - "entities/**"           # LightRAG-ingested entity catalog (3000+ auto-
+                            # generated files). Frontmatter is uniform from
+                            # the ingestion pipeline, orphan check is noise
+                            # (no curated [[backlinks]] exist into entities),
+                            # structure check is mostly Cyrillic-stem false
+                            # positives (safety-patch blocks fixes). Treat
+                            # entities/ as data, not curated wiki content.
+                            # Lint focuses on patterns/, drafts/, root pages.
   - ".git/**"
   - "node_modules/**"
   - ".claude/**"
