@@ -18,7 +18,9 @@ Write/Edit файл → auto-git-save.py (PostToolUse)
                   │
                   ├─ should_track_file()? → НЕТ → выход
                   ├─ sync_pending_tasks_with_git()  ← zombie prevention
-                  ├─ порог (1) достигнут? → ВСЕГДА ДА
+                  ├─ get_pause_status() — sentinel + порог? → ДА
+                  │   └─ track + task only → [AUTO-GIT-SAVE PAUSED] Nm left
+                  ├─ порог (1) достигнут? → ДА
                   │   └─ perform_sync_commit()
                   │       ├─ git add -- <файл>
                   │       ├─ git commit -m "chore: auto-commit 1 file(s)"
