@@ -183,10 +183,11 @@ def get_pause_status() -> tuple[bool, str]:
     from datetime import timedelta
 
     try:
-        # utf-8-sig strips BOM written by PowerShell 5.1 `Set-Content` (default UTF-16 LE BOM
-        # would otherwise round-trip as "﻿60" and silently fail int() parsing)
+        # utf-8-sig strips UTF-8 BOM. UTF-16 LE BOM (PS 5.1 `Set-Content` default
+        # without -Encoding utf8) trips UnicodeDecodeError → caught, falls back to
+        # default TTL (still treated as paused).
         content = PAUSE_FILE.read_text(encoding="utf-8-sig").strip()
-    except OSError:
+    except (OSError, UnicodeDecodeError):
         content = ""
 
     try:
