@@ -59,6 +59,16 @@ COOLDOWN_SECONDS = 30
 # State file for cooldown tracking
 STATE_FILE = Path(_HOOK_DIR).parent / "cache" / "auto-git-save-prompt-state.json"
 
+# Shared pause sentinel (same file as auto-git-save.py + posttooluse-auto-git-save.py).
+# When present, this UserPromptSubmit hook skips its auto-commit. Files stay
+# uncommitted; user (or post-pause auto-save) takes responsibility.
+PAUSE_FILE = Path(_HOOK_DIR).parent / "cache" / "auto-git-save.paused"
+
+
+def _is_paused() -> bool:
+    """Return True if the shared pause sentinel exists."""
+    return PAUSE_FILE.is_file()
+
 
 # --- Helpers ---
 
@@ -214,6 +224,16 @@ def main():
         except Exception:
             raw = ""
         _canary_log(f"stdin read ok, len={len(raw)}")
+
+        # Honor shared pause sentinel — same file as the two PostToolUse hooks.
+        # All three auto-save lines (auto-git-save.py, posttooluse-auto-git-save.py,
+        # this one) gate on `.claude/cache/auto-git-save.paused`. Closed the third
+        # leak after the 2026-05-14 incident where fea9ed253 fired through pause.
+        if _is_paused():
+            _canary_log("SKIP paused")
+            if timer:
+                timer.log(outcome="allow")
+            sys.exit(0)
 
         # Check cooldown
         if _is_in_cooldown():
