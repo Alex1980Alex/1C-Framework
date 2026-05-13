@@ -84,6 +84,11 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/observability/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
     ("src/pdf_framework/guardrails/",       "33_GUARDRAILS",           "framework-troubleshooting"),
     ("src/pdf_framework/knowledge_base/",   "34_KNOWLEDGE_BASE",       "framework-config"),
+    # Agent execution sandbox (hermes-llm-wiki Ф5). Skeleton lives at
+    # src/pdf_framework/sandbox/ (ABC + DryRun); LangSmith/E2B backends
+    # land in later Ф5 commits. Docs chapter aligns with research-agents
+    # since the spec routes sandbox into architecture/tech-research agents.
+    ("src/pdf_framework/sandbox/",          "05_RAG_АГЕНТЫ",         "agent-orchestration"),
     ("src/extensions/",                     "35_EXTENSIONS",           "pdf-knowledge"),
     ("src/api/routes/",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
     ("src/api/middleware/",                 "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
