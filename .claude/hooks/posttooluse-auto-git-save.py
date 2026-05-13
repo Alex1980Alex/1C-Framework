@@ -23,8 +23,21 @@ from base import BaseHook, HookInput, HookOutput
 _DEBOUNCE_FILE = os.path.join(
     os.path.dirname(_HOOK_DIR), "cache", "git-save-debounce.json"
 )
+_PAUSE_FILE = os.path.join(
+    os.path.dirname(_HOOK_DIR), "cache", "auto-git-save.paused"
+)
 _DEBOUNCE_SECONDS = 5.0
 _MAX_PENDING = 20
+
+
+def _is_paused() -> bool:
+    """Mirror of auto-git-save.py pause logic — checks sentinel file presence.
+
+    Same sentinel as auto-git-save.py so user has one switch for both hooks.
+    Treats any-existing sentinel as paused (TTL parsing happens in the other
+    hook; here we conservatively pause whenever the file exists).
+    """
+    return os.path.isfile(_PAUSE_FILE)
 
 # Paths that should NOT trigger auto-git-save
 SKIP_PATTERNS = [
@@ -151,6 +164,16 @@ class PostToolUseAutoGitSave(BaseHook):
 
         if elapsed < _DEBOUNCE_SECONDS:
             # Within debounce window — save and wait
+            _save_pending({
+                "files": files,
+                "last_commit": last_commit,
+            })
+            return None
+
+        # Pause sentinel honored: shared with auto-git-save.py; user toggles
+        # both hooks with one `.claude/cache/auto-git-save.paused` file.
+        # We still accumulate files in pending so commit resumes when lifted.
+        if _is_paused():
             _save_pending({
                 "files": files,
                 "last_commit": last_commit,
