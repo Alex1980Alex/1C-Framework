@@ -39,8 +39,40 @@ Write/Edit файл → auto-git-save.py (PostToolUse)
 | `CLAUDE_COMMIT_TIMEOUT_BASE` | `5` | Базовый timeout (сек) |
 | `CLAUDE_COMMIT_TIMEOUT_PER_FILE` | `1` | Timeout за файл (сек) |
 | `CLAUDE_COMMIT_COOLDOWN_BASE` | `2` | Cooldown после коммита (мин) |
+| `CLAUDE_COMMIT_PAUSE_TTL` | `30` | TTL pause-sentinel'а по умолчанию (мин) |
 
 Timeout вычисляется: `max(15, min(base + files * per_file, 120))`.
+
+### Pause sentinel (временная пауза)
+
+Когда нужно подготовить **структурированный коммит** (например, `fix(walker): ...`) и не хочется, чтобы auto-save опередил с `chore: auto-save X.py`:
+
+```powershell
+# Pause на 30 минут (default TTL)
+New-Item -Path .claude/cache/auto-git-save.paused -ItemType File -Force
+
+# Pause на N минут
+Set-Content .claude/cache/auto-git-save.paused -Value "60"
+
+# Pause до ручного резюме
+Set-Content .claude/cache/auto-git-save.paused -Value "forever"
+
+# Resume вручную
+Remove-Item .claude/cache/auto-git-save.paused
+```
+
+**Форматы содержимого sentinel'а:**
+- пусто → TTL = `CLAUDE_COMMIT_PAUSE_TTL` минут от mtime файла (default 30)
+- `<N>` (integer) → TTL = N минут от mtime
+- `forever` / `manual` / `infinite` → без TTL, только ручной resume
+- ISO datetime (`2026-05-13T15:30:00`) → явный момент истечения
+
+**Поведение при паузе:**
+- Файлы продолжают **трекаться** в metadata задачи
+- `_ensure_task()` создаёт mandatory pending задачу — `task-enforcer` всё равно блокирует Stop, пока нет коммита
+- Threshold-триггер **пропускается** → нет `chore: auto-save` коммита
+- В systemMessage: `[AUTO-GIT-SAVE PAUSED] paused 30m left. Tracked: N file(s). ...`
+- TTL истёк → sentinel **автоматически удаляется** при следующем вызове хука, поведение возвращается к обычному
 
 ---
 
