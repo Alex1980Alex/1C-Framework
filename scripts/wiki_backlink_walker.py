@@ -18,7 +18,7 @@ FM_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
 CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 WIKILINK_RE = re.compile(r"\[\[([^\]\|#]+)(?:\|[^\]]*)?\]\]")
 RELATED_BLOCK_RE = re.compile(
-    r"(^related:[ \t]*)\n((?:[ \t]+-[ \t]+.*\n)*)",
+    r"(^related:[ \t]*)\n((?:[ \t]*-[ \t]+.*\n)*)",
     re.MULTILINE,
 )
 RELATED_EMPTY_RE = re.compile(r"^related:[ \t]*\[\][ \t]*$", re.MULTILINE)
