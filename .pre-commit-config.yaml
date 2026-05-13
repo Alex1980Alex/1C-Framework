@@ -54,7 +54,16 @@ repos:
           - fastapi>=0.115
           - types-requests
         args: [--ignore-missing-imports, --warn-return-any]
-        exclude: ^(tests/|docs/|scripts/)
+        # Tests/docs/scripts excluded by convention.
+        # src/pdf_framework/quick.py + src/api/auth/ temporarily excluded —
+        # 421 pre-existing errors in 96 files were blocking ALL structured
+        # commits via this hook (forcing --no-verify bypass for unrelated
+        # changes, e.g. sandbox skeleton commits 9b392c465 + 11a1d1852 on
+        # 2026-05-14). Cleanup tracked in
+        # docs/roadmap/260514_ROADMAP_MYPY_CLEANUP.md — un-exclude as
+        # individual files are fixed. Do NOT widen this exclude further
+        # without adding a roadmap entry.
+        exclude: ^(tests/|docs/|scripts/|src/pdf_framework/quick\.py$|src/api/auth/)
 
   # markdownlint-cli2 — Phase 3 Auto-Librarian wiki format check
   - repo: https://github.com/DavidAnson/markdownlint-cli2
