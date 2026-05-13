@@ -53,11 +53,12 @@ Timeout вычисляется: `max(15, min(base + files * per_file, 120))`.
 # Pause на 30 минут (default TTL)
 New-Item -Path .claude/cache/auto-git-save.paused -ItemType File -Force
 
-# Pause на N минут
-Set-Content .claude/cache/auto-git-save.paused -Value "60"
+# Pause на N минут (-Encoding utf8 обязателен на PS 5.1 — без него Set-Content
+# пишет UTF-16 LE BOM и хук падает в fallback на дефолтный TTL)
+Set-Content .claude/cache/auto-git-save.paused -Value "60" -Encoding utf8
 
 # Pause до ручного резюме
-Set-Content .claude/cache/auto-git-save.paused -Value "forever"
+Set-Content .claude/cache/auto-git-save.paused -Value "forever" -Encoding utf8
 
 # Resume вручную
 Remove-Item .claude/cache/auto-git-save.paused
