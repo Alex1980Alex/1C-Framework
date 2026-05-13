@@ -191,8 +191,8 @@
 - [x] Создать `dry_run_backend.py` для локальной разработки без API key
 - [ ] Интегрировать sandbox в research-скиллы (`architecture-research`, `tech-research`)
 - [x] Timeout 30s, лимит 50 сессий/день
-- [ ] Создать `.claude/skills/sandbox-execution/SKILL.md`
-- [ ] Логирование sandbox-сессий в `docs/wiki/log.md`
+- [x] Создать `.claude/skills/sandbox-execution/SKILL.md`
+- [x] Логирование sandbox-сессий в `docs/wiki/log.md`
 
 **Трудоёмкость:** ~2-3 дня
 
@@ -203,13 +203,13 @@
 **Specs:** `oauth-extraction`
 **Files:** `src/shared/mcp_oauth/` (new), `src/bsl/mcp_server/auth/oauth2.py` (wrapper)
 
-- [ ] Аудит существующего `src/bsl/mcp_server/auth/oauth2.py` (350 LoC), задокументировать API в `docs/wiki/auth/oauth2-service.md`
-- [ ] Экстракция `OAuth2Service` из BSL MCP в `src/shared/mcp_oauth/service.py` — generic component
-- [ ] `src/shared/mcp_oauth/store.py` — `OAuth2Store` с pluggable backends (in-memory, SQLite, Redis)
-- [ ] Backward-compat: `src/bsl/mcp_server/auth/oauth2.py` становится thin wrapper over shared
+- [x] Аудит существующего `src/bsl/mcp_server/auth/oauth2.py` (214 LoC, не 350), задокументировать API в `docs/wiki/auth/oauth2-service.md` ← 2026-05-14, F4
+- [x] Экстракция `OAuth2Service` из BSL MCP в `src/shared/mcp_oauth/service.py` — generic component ← обнаружено в prior phase
+- [x] `src/shared/mcp_oauth/store.py` — `OAuth2Store` с pluggable backends (ABC + InMemoryBackend готовы; SQLite/Redis pending)
+- [ ] Backward-compat: `src/bsl/mcp_server/auth/oauth2.py` становится thin wrapper over shared (БЛОКЕР, ~2-3ч)
 - [ ] Подключить `OAuth2Service` к `pdf-vector-graph` MCP server (опционально, за feature flag `MCP_OAUTH_ENABLED`)
-- [ ] Расширить `tests/unit/api/test_auth.py` на generic Service (≥10 новых тестов)
-- [ ] 288 существующих тестов **НЕ должны сломаться**
+- [x] Расширить `tests/unit/api/test_auth.py` на generic Service (≥10 новых тестов) ← `tests/unit/test_mcp_oauth.py` 16 passing
+- [ ] 288 существующих тестов **НЕ должны сломаться** (unverified — нужен regression run после wrapper)
 - [ ] Security review: audit log через existing `memory_audit_log` tool
 - [ ] Обновить `.mcp.json` с env переменными для OAuth
 - [ ] Создать `docs/wiki/auth/oauth-setup.md`

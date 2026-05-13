@@ -239,3 +239,21 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop
 - Files changed: 4
 - Summary: Session 2026-05-14. Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop, code-verify, auto-git-save, create-hook. Changed 4 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников, external/1c_mcp, tmp/merge-candidates.jsonl. Commit: fix(hooks): posttooluse-auto-git-save respects pause sentinel + add merge tool. Commit: chore: auto-save feedback_auto_git_save_preempt.md, .kblintrc.yml. Commit: chore(wiki): rename leading-dash entity stem -v8i → v8i (kb-lint --fix)
+
+## 2026-05-14 — Sandbox module (hermes Ф5 partial)
+
+**Event:** New module `src/pdf_framework/sandbox/`
+
+Skeleton for agent code-execution sandbox. Closes 3 of 10 Ф5 tasks
+(SandboxBackend ABC, DryRunBackend zero-dep impl, 50-call quota).
+LangSmith and E2B backends pending — need API keys + live testing.
+
+- `src/pdf_framework/sandbox/base.py` — `SandboxBackend` ABC (async),
+  `SandboxResult` dataclass, `SandboxQuotaExceeded`
+- `src/pdf_framework/sandbox/dry_run_backend.py` — fallback for CI /
+  no-API-key dev; records calls, returns `[dry-run]` results
+- `tests/unit/pdf_framework/sandbox/test_dry_run_backend.py` — 13 tests
+- `.claude/skills/sandbox-execution/SKILL.md` — usage guide
+
+Commits: 9b392c465 (skeleton), F3 (skill+log doc).
+Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
