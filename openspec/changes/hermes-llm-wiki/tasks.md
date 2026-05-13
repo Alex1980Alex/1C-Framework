@@ -187,10 +187,10 @@
 - [ ] Если LangSmith подходит — создать `src/pdf_framework/sandbox/langsmith_backend.py` (простая обёртка)
 - [ ] Иначе: `pip install e2b-code-interpreter` + получить E2B API key
 - [ ] Создать `src/pdf_framework/sandbox/e2b_backend.py` с интерфейсом `SandboxBackend`
-- [ ] Реализовать методы: `execute(code)`, `install(package)`, `upload/download(files)`
-- [ ] Создать `dry_run_backend.py` для локальной разработки без API key
+- [x] Реализовать методы: `execute(code)`, `install(package)`, `upload/download(files)`
+- [x] Создать `dry_run_backend.py` для локальной разработки без API key
 - [ ] Интегрировать sandbox в research-скиллы (`architecture-research`, `tech-research`)
-- [ ] Timeout 30s, лимит 50 сессий/день
+- [x] Timeout 30s, лимит 50 сессий/день
 - [ ] Создать `.claude/skills/sandbox-execution/SKILL.md`
 - [ ] Логирование sandbox-сессий в `docs/wiki/log.md`
 
