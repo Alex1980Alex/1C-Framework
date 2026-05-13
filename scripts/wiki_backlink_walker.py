@@ -40,12 +40,15 @@ def extract_wikilinks(body: str) -> set[str]:
 
 
 def has_backlink(frontmatter: str, source_stem: str) -> bool:
-    """True if related: already contains [[source_stem]] in any common quoting."""
-    needle = f"[[{source_stem}]]"
+    """True if related: already contains [[source_stem]] in any common quoting.
+
+    Case-insensitive — wiki convention treats [[X]] and [[x]] as the same target.
+    """
+    needle = f"[[{source_stem.lower()}]]"
     block = RELATED_BLOCK_RE.search(frontmatter)
     if not block:
         return False
-    return needle in block.group(2)
+    return needle in block.group(2).lower()
 
 
 def add_backlink(frontmatter: str, source_stem: str) -> str:
