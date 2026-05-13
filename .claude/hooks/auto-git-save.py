@@ -206,7 +206,7 @@ def get_pause_status() -> tuple[bool, str]:
             expiry = mtime + timedelta(minutes=ttl_min)
         except ValueError:
             try:
-                expiry = datetime.fromisoformat(content)
+                expiry = _dt.fromisoformat(content)
             except ValueError:
                 expiry = None
 
