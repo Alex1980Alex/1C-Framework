@@ -77,6 +77,12 @@ Remove-Item .claude/cache/auto-git-save.paused
 - В systemMessage: `[AUTO-GIT-SAVE PAUSED] paused 30m left. Tracked: N file(s). ...`
 - TTL истёк → sentinel **автоматически удаляется** при следующем вызове хука, поведение возвращается к обычному
 
+**Два хука читают один sentinel (с 96b8f3a24):**
+- `auto-git-save.py` (PostToolUse:Write|Edit|Bash, threshold-based, full TTL parsing)
+- `posttooluse-auto-git-save.py` (PostToolUse:Write|Edit, 5s debounce + `--no-verify`, simple `os.path.isfile` check без TTL)
+
+До commit `96b8f3a24` второй хук игнорировал sentinel и мог авто-коммитить 200+ файлов с шумным сообщением даже при `forever` паузе (инцидент `93fee7b53` 2026-05-13). Теперь оба гейтятся одинаково — пользователь переключает обе линии одним sentinel-файлом.
+
 ---
 
 ## Механизмы
