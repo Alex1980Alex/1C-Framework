@@ -3,6 +3,32 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "kb-entity-resolution-promotion-2026.md",
+      "title": "KB Entity Resolution, Promotion Pipeline & Wiki Lint — Production Patterns 2026",
+      "keywords": [
+        "entity-resolution",
+        "deduplication",
+        "knowledge-graph",
+        "lightrag-entity-merge",
+        "graphrag-entity-disambiguation",
+        "nano-graphrag",
+        "dedupe-splink",
+        "obsidian-orphan-links",
+        "vale-markdownlint",
+        "letta-archival",
+        "mem0-promotion",
+        "langmem-namespace",
+        "bidirectional-backlinks",
+        "wiki-promotion-pipeline",
+        "kb-lint",
+        "russian-padezhi-dedup",
+        "stub-files-cleanup"
+      ],
+      "last_verified": "2026-05-13",
+      "sources_count": 16,
+      "github_repos_count": 16
+    },
+    {
       "file": "bp_propagation_race_patterns.md",
       "title": "BP-Registration vs Worker-Spawn Race — Debugger Patterns (DAP/CDP/GDB/JDWP/RDBG)",
       "keywords": [
