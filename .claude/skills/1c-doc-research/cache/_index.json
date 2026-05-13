@@ -92,6 +92,14 @@
       "keywords": ["RDBG", "DebugTargetType", "setAutoAttachSettings", "HTTPService", "JOB", "JobFileMode", "WEBService", "COMConnector", "OData", "setBreakpoints workspace", "per-attached", "targetStarted", "_reapply_bp_workspace", "yukon39 XSD", "debugAutoAttach.xsd", "debugBaseData.xsd", "1c-debug-hmr", "P0.5", "GKSTCPLK-2468", "rphost JOB execute_code", "BP fire short-lived target", "areaName filter"],
       "sources": ["github.com/yukon39/bsl-debug-server (HTTPDebugClient.java)", "tools/bsl-debug-server/src/test/resources/xsd/debugAutoAttach.xsd", "tools/bsl-debug-server/src/test/resources/xsd/debugBaseData.xsd", "edt.1c.ru/dev/edt/2022.2/apidocs", "yellow-erp.com Chapter 27 Debugging", "github.com/yukon39/vsc-bsl-dap", "docs/roadmap/260511_ROADMAP_1C_DEBUG_HMR_DEFICIENCIES_FROM_GKSTCPLK_2468.md", "live E2E 2026-05-11 ИБTransportManagementDevelop"]
     },
+    "open-form-info-register-fill-values": {
+      "title": "Открытие ФормыЗаписи независимого регистра сведений с предзаполнением измерений (ЗначенияЗаполнения vs Ключ)",
+      "file": "open-form-info-register-fill-values.md",
+      "created": "2026-05-13",
+      "last_verified": "2026-05-13",
+      "keywords": ["ОткрытьФорму", "ФормаЗаписи", "регистр сведений", "независимый регистр", "ЗначенияЗаполнения", "Ключ", "РегистрСведенийКлючЗаписи", "fillFromFillingValue", "ЗаполнятьИзДанныхЗаполнения", "ОбработкаЗаполнения", "новая запись регистра", "предзаполнение измерения", "форма записи РС"],
+      "sources": ["forum.infostart.ru/forum9/topic49943", "forum.infostart.ru/forum9/topic106921", "forum.infostart.ru/forum9/topic196832", "forum.infostart.ru/forum9/topic311008", "forum.infostart.ru/forum9/topic220980", "capitally.ru/kak-otkryt-zapolnennoj-novuyu-zapis-registra-svedenij", "capitally.ru/klyuch-zapisi-registra-svedenij-dlya-otkrytiya-ee-formy", "about1c.ru/how-open-inforeg-form", "its.1c.ru/metod8dev/i8104148", "its.1c.ru/metod8dev/i8102486", "v8.1c.ru/obuchenie-programmistov/primery-razrabotki/forma", "fastcode.im/БСП/ОткрытьФормуЗаписиРегистраСведенийПоОтбору", "github.com/1C-Company/ssl-support", "github.com/Oxotka/TemplatesNewObject1C"]
+    },
     "rdbg-pre-existing-rphost-workarounds": {
       "title": "RDBG pre-existing rphost — three sanctioned workarounds (force-recycle / preflight gate / pre-launch thin client) для mcp_debug_server.py wrapper",
       "file": "rdbg-pre-existing-rphost-workarounds.md",
