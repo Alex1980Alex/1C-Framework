@@ -48,10 +48,12 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Noise filter for false-positive NER output (dates, numbers, hashes, versions).
-# Closes ~500-800 stub entities. Research: 2026-05-13.
+# Noise filter for false-positive NER output (dates, timestamps, bare numbers, hashes).
+# Closes stub entities like 01012009, 13042023-111027, deadbeef00.
+# NOTE: version strings (8.3.27, v1.2.3, Python 3.11) are deliberately allowed —
+# they are valid domain entities for 1C / library versions. Research: 2026-05-13.
 _NOISE_RE = re.compile(
-    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|v?\d+\.\d+(?:\.\d+)?|[0-9a-f]{8,}|(?:20|19)\d{2})$"
+    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|[0-9a-f]{16,}|(?:20|19)\d{2})$"
 )
 
 
