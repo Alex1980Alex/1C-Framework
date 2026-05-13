@@ -48,6 +48,18 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Noise filter for false-positive NER output (dates, numbers, hashes, versions).
+# Closes ~500-800 stub entities. Research: 2026-05-13.
+_NOISE_RE = re.compile(
+    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|v?\d+\.\d+(?:\.\d+)?|[0-9a-f]{8,}|(?:20|19)\d{2})$"
+)
+
+
+def _is_noise_entity_name(name: str) -> bool:
+    """True if entity name is noise (date/number/hash/version) and should be skipped."""
+    return not name or bool(_NOISE_RE.match(name.strip().lower()))
+
+
 # --- Config & Result dataclasses ---
 
 

@@ -10,8 +10,32 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-03",
+  "last_updated": "2026-05-13",
   "topics": {
+    "russian-entity-normalization-pymorphy2": {
+      "file": "russian-entity-normalization-pymorphy2.md",
+      "domain": "ml",
+      "category": "library",
+      "created": "2026-05-13",
+      "last_verified": "2026-05-13",
+      "version": "pymorphy2 0.9.1 / pymorphy3 2.0 / spacy-ru 3.7 / natasha 1.6",
+      "keywords": [
+        "pymorphy2",
+        "pymorphy3",
+        "russian-lemmatization",
+        "cyrillic-normalization",
+        "natasha-ner",
+        "spacy-russian",
+        "entityruler",
+        "padezhi-formy",
+        "opencorpora",
+        "canonicalization",
+        "kb-entity-dedup",
+        "bsl-framework-1c",
+        "wiki-stem-canonical"
+      ],
+      "sources_count": 11
+    },
     "qwen3-embedding-tei-fp16-bug": {
       "file": "qwen3-embedding-tei-fp16-bug.md",
       "domain": "embeddings",
