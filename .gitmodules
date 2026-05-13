@@ -2,3 +2,7 @@
 	path = tools/bsl-debug-server
 	url = https://github.com/Alex1980Alex/bsl-debug-server.git
 	branch = master
+[submodule "ИБTransportManagementDevelop/Конфигурация"]
+	path = ИБTransportManagementDevelop/Конфигурация
+	url = https://github.com/Alex1980Alex/IBTransportManagementDevelop-Configuration.git
+	branch = master
