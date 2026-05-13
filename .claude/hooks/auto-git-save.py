@@ -84,6 +84,16 @@ SYNC_COMMIT_TIMEOUT_PER_FILE = int(os.environ.get("CLAUDE_COMMIT_TIMEOUT_PER_FIL
 # Cooldown: minutes after completion before creating new task
 COOLDOWN_BASE_MINUTES = int(os.environ.get("CLAUDE_COMMIT_COOLDOWN_BASE", "2"))
 
+# Pause sentinel: when this file exists, threshold-triggered sync commits are skipped.
+# Files still get tracked (and task created) so user can do structured commit manually.
+# Content formats:
+#   empty         → TTL = PAUSE_DEFAULT_TTL_MIN from file mtime
+#   "<N>"         → TTL = N minutes from file mtime
+#   "forever"     → no expiry, manual resume required (also: "manual", "infinite")
+#   ISO datetime  → explicit expiry timestamp
+PAUSE_FILE = _LOG_DIR / "auto-git-save.paused"
+PAUSE_DEFAULT_TTL_MIN = int(os.environ.get("CLAUDE_COMMIT_PAUSE_TTL", "30"))
+
 # Gitignore-first approach: git status --porcelain already respects .gitignore.
 # Only these patterns are additionally excluded (hook internal state files
 # that may not be in .gitignore or change too frequently to commit).
