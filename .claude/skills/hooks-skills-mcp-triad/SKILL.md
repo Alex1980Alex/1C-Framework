@@ -119,6 +119,7 @@ description: "Используй этот скилл для понимания �
 | `deployment` | Docker, health checks, monitoring |
 | `agent-orchestration` | 6 типов RAG-агентов |
 | `graph-operations` | LightRAG, GraphRAG, entity extraction |
+| `sandbox-execution` | Изолированное исполнение agent-generated кода (DryRun/LangSmith/E2B backends) |
 
 #### LangChain / LangGraph (10)
 
