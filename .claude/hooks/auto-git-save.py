@@ -170,6 +170,63 @@ def calculate_timeout(file_count: int) -> int:
     return max(15, min(base, 120))  # 15s min, 120s max
 
 
+def get_pause_status() -> tuple[bool, str]:
+    """Check if auto-commit is paused via sentinel file.
+
+    Returns (paused, human_info). When paused=True, threshold sync commit
+    is skipped but file tracking continues. Auto-resumes (deletes sentinel)
+    when TTL/expiry elapses.
+    """
+    if not PAUSE_FILE.exists():
+        return False, ""
+
+    from datetime import datetime, timedelta
+
+    try:
+        content = PAUSE_FILE.read_text(encoding="utf-8").strip()
+    except OSError:
+        content = ""
+
+    try:
+        mtime = _dt.fromtimestamp(PAUSE_FILE.stat().st_mtime)
+    except OSError:
+        mtime = _dt.now()
+
+    expiry = None
+    manual = False
+
+    lowered = content.lower()
+    if lowered in ("forever", "infinite", "manual"):
+        manual = True
+    elif content:
+        try:
+            ttl_min = int(content)
+            expiry = mtime + timedelta(minutes=ttl_min)
+        except ValueError:
+            try:
+                expiry = datetime.fromisoformat(content)
+            except ValueError:
+                expiry = None
+
+    if not manual and expiry is None:
+        expiry = mtime + timedelta(minutes=PAUSE_DEFAULT_TTL_MIN)
+
+    now = _dt.now()
+    if not manual and now >= expiry:
+        try:
+            PAUSE_FILE.unlink()
+            log.info(f"pause expired (was: {content or 'default'}), auto-resumed")
+        except OSError as e:
+            log.debug(f"pause sentinel unlink failed: {e}")
+        return False, ""
+
+    if manual:
+        return True, "paused (manual resume required)"
+
+    remaining_min = max(1, int((expiry - now).total_seconds() / 60) + 1)
+    return True, f"paused {remaining_min}m left"
+
+
 def load_modified_files() -> dict:
     """Load tracked files from task metadata (primary) or empty."""
     task = get_task_with_metadata(HOOK_ID)
