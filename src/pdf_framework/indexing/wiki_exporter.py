@@ -206,6 +206,10 @@ class WikiExporter:
             logger.warning("[WIKI-EXPORT] Entity not found: %s", entity_id)
             return None
 
+        if _is_noise_entity_name(entity.name or ""):
+            logger.debug("[WIKI-EXPORT] Skip noise entity: %r", entity.name)
+            return None
+
         cube = self._entity_to_cube(entity)
 
         # Add relations as wiki-links
