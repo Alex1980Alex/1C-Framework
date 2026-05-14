@@ -487,18 +487,27 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
         return None
 
     try:
+        from qdrant_client.models import FieldCondition, Filter, MatchText
         client = QdrantClient(url="http://localhost:6333", timeout=timeout_s / 2)
+        # Use framework_code_v1 with filter to scope to docs chapters only.
+        # Wiki_pages_v1 indexes Cyrillic entity slugs (no chapter info in payload);
+        # framework_code_v1 has `relative_path` containing
+        # "docs/framework documentation/NN_CHAPTER/..." which we can mine.
         hits = client.query_points(
-            collection_name="wiki_pages_v1",
-            query=emb, limit=3, with_payload=True,
+            collection_name="framework_code_v1",
+            query=emb, limit=5, with_payload=True,
+            query_filter=Filter(must=[FieldCondition(
+                key="relative_path",
+                match=MatchText(text="framework documentation"),
+            )]),
         )
     except Exception:
         return None
 
-    # Extract chapter dir from top hit's file_path payload
-    chapter_re = re.compile(r"(\d{2,3}_[А-ЯA-Z][\w_]+)")
+    # Extract chapter dir from top hit's relative_path payload
+    chapter_re = re.compile(r"(\d{2,3}_[А-ЯA-Za-z][\w_]+)")
     for h in hits.points:
-        fp = (h.payload or {}).get("file_path", "")
+        fp = (h.payload or {}).get("relative_path", "")
         if not isinstance(fp, str):
             continue
         m = chapter_re.search(fp.replace("\\", "/"))
