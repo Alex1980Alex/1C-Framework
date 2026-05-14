@@ -398,6 +398,100 @@ CATEGORY_MAPPING: dict[str, dict[str, Any]] = {
 }
 
 
+def extract_memory_subsystems() -> list[Feature]:
+    """Extract memory subsystem components from src/memory/*/."""
+    features = []
+    memory_dir = PROJECT_ROOT / "src" / "memory"
+    if not memory_dir.exists():
+        return features
+    subdirs = ["orchestrator", "ai_memory", "vector_memory", "librarian", "infrastructure"]
+    for sub in subdirs:
+        sub_path = memory_dir / sub
+        if not sub_path.exists():
+            continue
+        for py_file in sorted(sub_path.glob("*.py")):
+            if py_file.name == "__init__.py":
+                continue
+            text = py_file.read_text(encoding="utf-8", errors="replace")
+            for m in re.finditer(r"^class\s+(\w+)", text, re.MULTILINE):
+                cls = m.group(1)
+                if cls.startswith("_") or cls.endswith("Config") or cls.endswith("Error"):
+                    continue
+                features.append(Feature(
+                    name=cls,
+                    category="memory_subsystem",
+                    source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                    details=f"subsystem={sub}",
+                ))
+    return features
+
+
+def extract_bsl_tools() -> list[Feature]:
+    """Extract BSL tool components from src/bsl/*/."""
+    features = []
+    bsl_dir = PROJECT_ROOT / "src" / "bsl"
+    if not bsl_dir.exists():
+        return features
+    for sub_path in sorted(bsl_dir.iterdir()):
+        if not sub_path.is_dir() or sub_path.name.startswith("_"):
+            continue
+        for py_file in sorted(sub_path.glob("*.py")):
+            if py_file.name == "__init__.py":
+                continue
+            text = py_file.read_text(encoding="utf-8", errors="replace")
+            for m in re.finditer(r"^class\s+(\w+)", text, re.MULTILINE):
+                cls = m.group(1)
+                if cls.startswith("_") or cls.endswith("Error"):
+                    continue
+                features.append(Feature(
+                    name=cls,
+                    category="bsl_tool",
+                    source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                    details=f"subsystem={sub_path.name}",
+                ))
+    return features
+
+
+def extract_hooks() -> list[Feature]:
+    """Extract Claude Code hooks from .claude/hooks/*.py."""
+    features = []
+    hooks_dir = PROJECT_ROOT / ".claude" / "hooks"
+    if not hooks_dir.exists():
+        return features
+    for py_file in sorted(hooks_dir.glob("*.py")):
+        if py_file.name.startswith("_"):
+            continue
+        features.append(Feature(
+            name=py_file.stem,
+            category="hook",
+            source_file=str(py_file.relative_to(PROJECT_ROOT)),
+            details="hook script",
+        ))
+    return features
+
+
+def extract_wiki_components() -> list[Feature]:
+    """Extract wiki pipeline components (5 service classes)."""
+    features = []
+    target = PROJECT_ROOT / "src" / "pdf_framework" / "indexing" / "wiki_exporter.py"
+    if not target.exists():
+        return features
+    text = target.read_text(encoding="utf-8", errors="replace")
+    wiki_classes = [
+        "WikiExporter", "ForwardSyncService", "IncrementalWikiSync",
+        "ReverseSyncService", "WikiSearchIndexer",
+    ]
+    for cls in wiki_classes:
+        if re.search(rf"^class\s+{cls}\b", text, re.MULTILINE):
+            features.append(Feature(
+                name=cls,
+                category="wiki_component",
+                source_file=str(target.relative_to(PROJECT_ROOT)),
+                details="wiki pipeline service",
+            ))
+    return features
+
+
 def _load_doc_text(relative_path: str) -> str:
     """Load documentation file text."""
     full_path = DOCS_DIR / relative_path
