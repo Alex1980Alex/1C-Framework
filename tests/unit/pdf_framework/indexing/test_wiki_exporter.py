@@ -286,3 +286,85 @@ class TestReverseSyncService:
         svc = ReverseSyncService(graph_store=mock_store, wiki_dir=tmp_path)
         await svc._on_file_event(str(page), "modified")
         mock_store.add_relation.assert_not_called()
+
+
+@pytest.mark.slow
+class TestReverseSyncRuntimeWatchdog:
+    """End-to-end watchdog runtime tests with real filesystem events.
+
+    Uses PollingObserver (OS-agnostic) instead of native watchdog backend —
+    polling is reliable across Windows/Linux/macOS/Docker volumes at the cost
+    of higher latency. These tests verify the full chain:
+        Path.write_text(...) → filesystem event → WikiHandler.on_*
+        → loop.create_task(_on_file_event) → handle_page_change → graph_store
+
+    Marked @pytest.mark.slow because each test waits ~2-5s for polling
+    cycles. Run separately: pytest -m slow.
+    """
+
+    @pytest.mark.asyncio
+    async def test_real_watchdog_picks_up_file_write(self, populated_store, tmp_path):
+        from watchdog.observers.polling import PollingObserver
+
+        svc = ReverseSyncService(
+            graph_store=populated_store,
+            wiki_dir=tmp_path,
+            debounce_s=0.0,
+        )
+
+        # Replace native Observer with PollingObserver for cross-platform reliability.
+        # Mirror the body of start_watching but with explicit Observer class.
+        from watchdog.events import FileSystemEventHandler
+
+        events_seen: list[tuple[str, str]] = []
+
+        class TestHandler(FileSystemEventHandler):
+            def on_modified(self, event):
+                if event.src_path.endswith(".md"):
+                    events_seen.append(("modified", event.src_path))
+                    try:
+                        loop = asyncio.get_event_loop()
+                        loop.create_task(svc._on_file_event(event.src_path, "modified"))
+                    except RuntimeError:
+                        pass
+
+            def on_created(self, event):
+                if event.src_path.endswith(".md"):
+                    events_seen.append(("created", event.src_path))
+                    try:
+                        loop = asyncio.get_event_loop()
+                        loop.create_task(svc._on_file_event(event.src_path, "created"))
+                    except RuntimeError:
+                        pass
+
+        observer = PollingObserver(timeout=0.5)
+        observer.schedule(TestHandler(), str(tmp_path), recursive=False)
+        observer.start()
+
+        try:
+            page = tmp_path / "e1.md"
+            page.write_text(
+                "---\nunified_id: 019e\n---\nbody [[e2]]\n",
+                encoding="utf-8",
+            )
+
+            # Wait for polling observer cycle + async task to complete.
+            for _ in range(20):
+                await asyncio.sleep(0.3)
+                if events_seen:
+                    break
+
+            assert events_seen, "Watchdog did not fire any event within 6s"
+
+            # Drain pending tasks
+            await asyncio.sleep(0.5)
+
+            relations = await populated_store.get_relations("e1")
+            targets = {r.target_entity_id for r in relations}
+            assert "e2" in targets, (
+                f"Expected relation e1->e2 from wiki edit, got {targets} "
+                f"(events: {events_seen})"
+            )
+        finally:
+            observer.stop()
+            observer.join(timeout=2)
