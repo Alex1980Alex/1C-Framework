@@ -92,7 +92,7 @@ Remove-Item .claude/cache/auto-git-save.paused
 
 При `file_count >= SYNC_COMMIT_THRESHOLD`:
 1. `git add --` для каждого отслеженного файла
-2. `git commit -m "chore: auto-commit N file(s) changed"`
+2. `git commit -m "chore: auto-save foo.py, bar.py, baz.py +N more"` (basenames первых 3 файлов; `+N more` если файлов > 3 — единый формат всех трёх auto-save хуков с 2026-05-14, до этого `auto-git-save.py` и `auto-git-save-prompt.py` использовали generic `N file(s)` и теряли контекст изменения)
 3. `complete_task_by_hook()` — завершает pending задачу
 4. systemMessage → `[AUTO-GIT-SAVE OK]`
 
