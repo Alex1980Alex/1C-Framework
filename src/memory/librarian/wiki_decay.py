@@ -85,8 +85,13 @@ class WikiDecayService:
 
         decay_rate = payload.get("decay_rate", self.DEFAULT_DECAY_RATE)
 
+        # `decay_applied_at` first: on subsequent runs use the last decay
+        # timestamp so days_idle is incremental, not cumulative from origin.
+        # Otherwise a daily cron would re-apply full elapsed delta every run
+        # and saturate the pattern to `min_confidence` floor in one cycle.
         ts_str = (
-            payload.get("last_applied")
+            payload.get("decay_applied_at")
+            or payload.get("last_applied")
             or payload.get("updated_at")
             or payload.get("created_at")
         )
