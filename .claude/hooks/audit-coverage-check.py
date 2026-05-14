@@ -43,7 +43,12 @@ def _run_audit() -> dict | None:
         )
         if result.returncode not in (0, 1):
             return None
-        return json.loads(result.stdout) if result.stdout.strip() else None
+        # Audit script prints "Scanning codebase..." before JSON; locate `{` start.
+        out = result.stdout or ""
+        brace = out.find("{")
+        if brace < 0:
+            return None
+        return json.loads(out[brace:])
     except (subprocess.TimeoutExpired, OSError, json.JSONDecodeError):
         return None
 
