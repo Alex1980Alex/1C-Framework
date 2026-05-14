@@ -137,16 +137,16 @@ Archive path: `docs/wiki/archive/YYYY-MM/<page-name>.md`
 
 ```yaml
 ---
-unified_id: 
+unified_id:
 status: draft
 tags:
-  - 
+  -
 related:
-  - 
-created_at: 
-updated_at: 
+  -
+created_at:
+updated_at:
 confidence: 0.5
-promoted_from: 
+promoted_from:
 ---
 
 # [Page Title]
