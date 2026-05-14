@@ -77,6 +77,8 @@ def parse_args() -> argparse.Namespace:
                         help="Dedup threshold against existing wiki content (default 0.85)")
     p_prom.add_argument("--drafts-dir", type=Path, default=Path("docs/wiki/drafts"))
     p_prom.add_argument("--qdrant-url", type=str, default="http://localhost:6333")
+    p_prom.add_argument("--qdrant-api-key", type=str, default=None,
+                        help="Qdrant API key (default: $QDRANT__API_KEY env var)")
     p_prom.add_argument("--verbose", "-v", action="store_true")
 
     return parser.parse_args()
