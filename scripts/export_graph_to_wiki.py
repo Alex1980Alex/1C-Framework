@@ -64,6 +64,21 @@ def parse_args() -> argparse.Namespace:
     p_ver.add_argument("--output-dir", type=Path, default=Path("docs/wiki/entities"))
     p_ver.add_argument("--verbose", "-v", action="store_true")
 
+    # promote-patterns (L2 -> L5 drafts via WikiPromoter)
+    p_prom = sub.add_parser(
+        "promote-patterns",
+        help="Scan learned_patterns (L2) and promote high-confidence ones to docs/wiki/drafts/ (L5)",
+    )
+    p_prom.add_argument("--min-confidence", type=float, default=0.8,
+                        help="Minimum confidence for promotion (default 0.8, per spec)")
+    p_prom.add_argument("--min-usage", type=int, default=5,
+                        help="Minimum usage_count for promotion (default 5, per spec)")
+    p_prom.add_argument("--similarity-threshold", type=float, default=0.85,
+                        help="Dedup threshold against existing wiki content (default 0.85)")
+    p_prom.add_argument("--drafts-dir", type=Path, default=Path("docs/wiki/drafts"))
+    p_prom.add_argument("--qdrant-url", type=str, default="http://localhost:6333")
+    p_prom.add_argument("--verbose", "-v", action="store_true")
+
     return parser.parse_args()
 
 
