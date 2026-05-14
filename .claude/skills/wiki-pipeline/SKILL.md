@@ -137,7 +137,7 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 
 ## Тесты
 
-[tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — 16 тестов (WikiExporter, ForwardSync, IncrementalSync, ReverseSync, WikiSearchIndexer). Запуск: `pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q`.
+[tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — 26 тестов (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, **ReverseSyncService 9** — добавлены 2026-05-14: парсинг frontmatter+links, error-handling, debounce, deleted-event short-circuit, resilient add_relation). Запуск: `pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q`.
 
 ## Spec
 
