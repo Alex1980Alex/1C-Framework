@@ -142,7 +142,7 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 
 ## Тесты
 
-[tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — 26 тестов (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, **ReverseSyncService 9** — добавлены 2026-05-14: парсинг frontmatter+links, error-handling, debounce, deleted-event short-circuit, resilient add_relation). Запуск: `pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q`.
+[tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — 27 тестов (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, **ReverseSyncService 9** — добавлены 2026-05-14: парсинг frontmatter+links, error-handling, debounce, deleted-event short-circuit, resilient add_relation; **ReverseSyncRuntimeWatchdog 1 @pytest.mark.slow** — PollingObserver end-to-end Write→graph_store через `pytest.importorskip("watchdog")`). Запуск: `pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q` (skip slow по default; full с `-m "slow or not slow"`).
 
 ## Spec
 

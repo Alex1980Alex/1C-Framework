@@ -314,6 +314,7 @@ class TestReverseSyncRuntimeWatchdog:
             debounce_s=0.0,
         )
 
+        # Replace native Observer with PollingObserver for cross-platform reliability.
         events_seen: list[tuple[str, str]] = []
 
         class TestHandler(FileSystemEventHandler):
