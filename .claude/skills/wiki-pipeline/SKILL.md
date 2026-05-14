@@ -16,6 +16,7 @@ description: PDF → Structured Wiki Pages pipeline (Hermes Phase 4). Экспо
 | `IncrementalWikiSync` | [wiki_exporter.py:392](../../../src/pdf_framework/indexing/wiki_exporter.py#L392) | Event-driven sync (подписка на `graph.*` через EventBus) + DLQ + metrics |
 | `ReverseSyncService` | [wiki_exporter.py:487](../../../src/pdf_framework/indexing/wiki_exporter.py#L487) | Watchdog: Write в `docs/wiki/entities/*.md` → parse frontmatter → update graph |
 | `WikiSearchIndexer` | [wiki_exporter.py:643](../../../src/pdf_framework/indexing/wiki_exporter.py#L643) | Индексация wiki-страниц через `HybridSearchService` (BM25+dense RRF) |
+| `WikiPromoter` | [src/memory/librarian/wiki_promoter.py:21](../../../src/memory/librarian/wiki_promoter.py#L21) | L2→L5: скан `learned_patterns`, дедуп по cosine similarity, создание `docs/wiki/drafts/<slug>.md` через `MemoryCube.to_wiki_page()` + лог в `docs/wiki/log.md` |
 
 ## CLI
 
@@ -36,9 +37,20 @@ python -m scripts.export_graph_to_wiki index-search --wiki-dir docs/wiki/entitie
 
 # Проверка консистентности wiki ↔ граф
 python -m scripts.export_graph_to_wiki verify
+
+# L2 → L5 promotion (learned_patterns → docs/wiki/drafts/)
+python -m scripts.export_graph_to_wiki promote-patterns \
+    [--min-confidence 0.8] [--min-usage 5] [--similarity-threshold 0.85]
 ```
 
-Exit codes: `0` success, `1` partial failure, `2` total failure. Флаг `--dry-run` для проверки без записи.
+Exit codes: `0` success, `1` partial failure (e.g. no eligible patterns), `2` total failure. Флаг `--dry-run` для export-команд (не для `promote-patterns`).
+
+### Состояние L5 drafts/ (2026-05-14)
+
+`docs/wiki/drafts/` сейчас **пуст** — это ожидаемо при текущем состоянии корпуса `learned_patterns` (44 точки, 11 имеют `confidence` = 0.7, `usage_count` поле отсутствует у всех). Spec-defaults `confidence>=0.8 AND usage_count>=5` дают 0 eligible candidates. CLI `promote-patterns` wired up (commit follow-up), но не запускается автоматически — нет hook/cron/daemon, который вызывал бы `WikiPromoter.scan_and_promote()` периодически. Чтобы наполнить drafts:
+
+1. **Лёгкий вариант:** запустить с пониженными порогами под фактический корпус: `--min-confidence 0.6 --min-usage 0` (последний приведёт к фильтру который Qdrant пропускает все точки без `usage_count` поля; проверить эмпирически).
+2. **Правильный вариант:** memory hooks (`session-memory-save.py` + `posttooluse-quality-feedback.py`) должны обновлять `confidence` и `usage_count` в `learned_patterns` при успешных применениях паттернов — тогда корпус естественно дойдёт до spec-thresholds. См. roadmap `260514_ROADMAP_WIKI_PROMOTION_GAP.md` (TBD).
 
 ## Шаблоны wiki-страниц
 
