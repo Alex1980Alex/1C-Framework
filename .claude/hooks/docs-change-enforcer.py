@@ -631,5 +631,20 @@ def main():
         sys.exit(0)
 
 
+def _cli_semantic_suggest() -> int:
+    """CLI entry point for --semantic-suggest <path>."""
+    if len(sys.argv) < 3:
+        print("Usage: docs-change-enforcer.py --semantic-suggest <file_path>", file=sys.stderr)
+        return 2
+    suggestion = semantic_fallback_suggest(sys.argv[2])
+    if suggestion:
+        print(suggestion)
+        return 0
+    print("(no confident match)", file=sys.stderr)
+    return 1
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--semantic-suggest":
+        sys.exit(_cli_semantic_suggest())
     main()
