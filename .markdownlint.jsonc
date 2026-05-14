@@ -2,7 +2,17 @@
   // markdownlint-cli2 configuration
   // https://github.com/DavidAnson/markdownlint
   "default": true,
-  "MD013": { "line_length": 120 },
+  // MD013 line-length: disabled for wiki hub pages (roadmap 260515 §B4
+  // closure 2026-05-15). Hub pages combine dense tables + cross-ref prose
+  // routinely exceeding 200 chars per line — content reflow would be
+  // mechanical work без functional gain. Keep enabled for prose-heavy
+  // chapters (docs/framework documentation/) via separate config if needed.
+  "MD013": false,
+  "MD025": false,  // Multiple H1 — wiki uses frontmatter title + body H1
+  "MD040": false,  // Untyped code fences — ASCII diagrams + shell snippets
+  "MD050": false,  // Strong style (allow both * and _)
+  "MD032": false,  // Blanks around lists (intentional in dense ToCs)
+  "MD060": false,  // Table column style (compact tables in hub pages)
   "MD033": false,  // Allow inline HTML (wiki-link syntax)
   "MD041": false,  // Allow files starting with YAML frontmatter
   "MD036": false,  // Allow emphasis used as heading (status markers)
