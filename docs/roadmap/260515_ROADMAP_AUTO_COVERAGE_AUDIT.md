@@ -100,21 +100,21 @@ Pre-commit hook chain validates `Markdown Lint (wiki)` + `KB Lint (wiki)` + ruff
 - ✅ This roadmap documenting full audit
 - ✅ Note in CLAUDE.md hooks section about session findings
 
-### Phase B (open, medium effort)
+### Phase B (DONE 2026-05-15)
 
-| Item | Effort | Priority |
+| Item | Status | Result |
 |---|---|---|
-| B1: Submodule auto-commit hook | 2-3h | HIGH (data loss risk in 1С workflow) |
-| B2: Extend `audit-docs` to 12+ categories | 3-4h | MEDIUM (improves visibility) |
-| B3: Periodic audit-coverage hook (SessionStart) | 1-2h | MEDIUM (drift detection) |
-| B4: Pre-commit + auto-save alignment | 4-6h | LOW (cosmetic markdown debt) |
+| B1: Submodule detection hook (started smaller scope than auto-commit) | ✅ done | `submodule-status-check.py` SessionStart; detects 101 files в `ИБTransportManagementDevelop/Конфигурация` (84M+16?) и `configuration/260304/` (1?). Opt-in auto-commit via `SUBMODULE_AUTO_COMMIT=1` (default detection-only — 1С BSL workflow needs manual review per session memory `feedback_repo_full_permission.md`) |
+| B2: Extend `audit-docs` 6→10 categories | ✅ done | Added extractors: `memory_subsystems` (orchestrator/ai_memory/vector_memory/librarian/infrastructure), `bsl_tools` (semantic_search/mcp_server/etc.), `hook` (.claude/hooks/*.py), `wiki_component` (5 services in wiki_exporter.py). Audit now finds **592 features** (was 441), surfaces **103 doc gaps + 111 skill gaps** (was 0+0 — invisible before) |
+| B3: SessionStart audit-coverage hook | ✅ done | `audit-coverage-check.py` (timeout 5s, subprocess 4s, opt-out `AUDIT_COVERAGE_NO_CHECK=1`). Parses `audit_docs_skills.py --json --stdout`, emits systemMessage с gap counts. Currently silent (0+0 в default scope; will fire after B2 expansion catches новые gaps) |
+| B4: markdownlint auto-fix | ⚠ partial | `npx markdownlint-cli2 --fix` applied; cosmetic MD060 table-style auto-fixed. **270 structural errors остаются** (MD013 line-length, MD040 fenced-code-language, MD025 multi-h1) — требуют content restructure, не auto-fixable. Deferred как cosmetic infrastructure debt |
 
-### Phase C (open, large refactor)
+### Phase C (deferred — out of scope, low ROI)
 
-| Item | Effort | Priority |
+| Item | Status | Rationale |
 |---|---|---|
-| C1: Consolidate 3 auto-git-save hooks → 1 unified | 1 day | LOW (current redundancy works) |
-| C2: Semantic mapping (use `wiki_pages_v1` Qdrant) instead of mechanical prefix table | 2 days | LOW (current table works for known paths) |
+| C1: Consolidate 3 auto-git-save hooks → 1 unified | ⏸ deferred | LOW priority + current 3-layer redundancy является **намеренной защитой** от Claude Code #6305 (PostToolUse не срабатывает на Windows). Consolidation = 1 день refactor для замены working code. Risk vs benefit unfavorable. Re-evaluate после fix #6305 в upstream |
+| C2: Semantic mapping via `wiki_pages_v1` Qdrant | ⏸ deferred | LOW priority + speculative. Current mechanical prefix table (см. `CODE_TO_DOMAIN` в `docs-change-enforcer.py`) после Phase A fix покрывает все known paths корректно. Semantic mapping добавляет 200-500ms latency на каждый Stop hook + qdrant dependency at session-end critical path. Не оправдывает 2 дня implementation |
 
 ## Связано
 

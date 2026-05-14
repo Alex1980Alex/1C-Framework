@@ -568,6 +568,11 @@ def run_audit() -> AuditReport:
         ("CLI Commands", extract_cli_commands),
         ("Agents", extract_agent_types),
         ("Config Variables", extract_config_vars),
+        # Phase B2 extension (2026-05-15)
+        ("Memory Subsystems", extract_memory_subsystems),
+        ("BSL Tools", extract_bsl_tools),
+        ("Hooks", extract_hooks),
+        ("Wiki Components", extract_wiki_components),
     ]
 
     for label, extractor_fn in extractors:
