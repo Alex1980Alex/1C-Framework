@@ -362,6 +362,39 @@ CATEGORY_MAPPING: dict[str, dict[str, Any]] = {
         ],
         "skills": ["agent-orchestration"],
     },
+    # Phase B2 extension (2026-05-15, roadmap 260515): 4 new categories
+    "memory_subsystem": {
+        "docs": [
+            "27_UNIFIED_MEMORY/27.1_Обзор.md",
+            "27_UNIFIED_MEMORY/27.2_Оркестратор.md",
+            "27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md",
+            "32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md",
+        ],
+        "skills": ["memory-unified", "wiki-pipeline"],
+    },
+    "bsl_tool": {
+        "docs": [
+            "16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md",
+            "17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md",
+            "28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md",
+        ],
+        "skills": ["bsl-development", "1c-mcp-crud"],
+    },
+    "hook": {
+        "docs": [
+            "09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md",
+            "13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md",
+        ],
+        "skills": ["hooks-skills-mcp-triad", "create-hook"],
+    },
+    "wiki_component": {
+        "docs": [
+            "32_WIKI_KNOWLEDGE_LAYER/32.2_Архитектура.md",
+            "32_WIKI_KNOWLEDGE_LAYER/32.4_Forward_Sync.md",
+            "32_WIKI_KNOWLEDGE_LAYER/32.5_Reverse_Sync.md",
+        ],
+        "skills": ["wiki-pipeline"],
+    },
 }
 
 
