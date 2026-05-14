@@ -142,7 +142,14 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 
 ## Тесты
 
-[tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — 27 тестов (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, **ReverseSyncService 9** — добавлены 2026-05-14: парсинг frontmatter+links, error-handling, debounce, deleted-event short-circuit, resilient add_relation; **ReverseSyncRuntimeWatchdog 1 @pytest.mark.slow** — PollingObserver end-to-end Write→graph_store через `pytest.importorskip("watchdog")`). Запуск: `pytest tests/unit/pdf_framework/indexing/test_wiki_exporter.py -q` (skip slow по default; full с `-m "slow or not slow"`).
+**Coverage matrix (53 тестов total, 52 pass + 1 skip; добавлено 26 тестов 2026-05-15):**
+
+- [tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — **27 тестов** (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, ReverseSyncService 9, ReverseSyncRuntimeWatchdog 1 @pytest.mark.slow via `pytest.importorskip("watchdog")`)
+- [tests/unit/memory/librarian/test_wiki_decay.py](../../../tests/unit/memory/librarian/test_wiki_decay.py) — **14 тестов** (TestDecayPoint 11: skip-paths + decay formula + clamps + timezone; TestDecayAll 3: counters aggregation + empty + termination)
+- [tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py](../../../tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py) — **5 тестов** (outgoing only, empty for missing, properties preserve, no incoming)
+- [tests/unit/scripts/test_archive_stale.py](../../../tests/unit/scripts/test_archive_stale.py) — **7 тестов** (qualify, fresh-skip, high-conf-skip, already-archived-skip, missing-frontmatter-skip, collision-suffix, dry-run)
+
+Запуск: `pytest tests/unit/memory/librarian/ tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py tests/unit/pdf_framework/indexing/test_wiki_exporter.py tests/unit/scripts/test_archive_stale.py -q` (slow skipped по default).
 
 ## Spec
 
