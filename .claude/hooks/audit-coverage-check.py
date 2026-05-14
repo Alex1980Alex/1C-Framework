@@ -43,12 +43,18 @@ def _run_audit() -> dict | None:
         )
         if result.returncode not in (0, 1):
             return None
-        # Audit script prints "Scanning codebase..." before JSON; locate `{` start.
+        # Audit script prints "Scanning codebase..." before JSON. Match `{` AT
+        # line start to avoid false-positives if banner ever contains `{}` (e.g.
+        # f-string interpolation like "Scanning {root}..."). Fragility flagged
+        # by code-verify subagent ae0304c17ba3707c7.
         out = result.stdout or ""
-        brace = out.find("{")
+        brace = out.find("\n{")
         if brace < 0:
+            # Fallback: file starts with `{` (no banner)
+            if out.lstrip().startswith("{"):
+                return json.loads(out[out.find("{"):])
             return None
-        return json.loads(out[brace:])
+        return json.loads(out[brace + 1:])
     except (subprocess.TimeoutExpired, OSError, json.JSONDecodeError):
         return None
 
