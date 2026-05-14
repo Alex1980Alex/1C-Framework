@@ -272,6 +272,110 @@ async def cmd_promote_patterns(args: argparse.Namespace) -> int:
     return 0
 
 
+async def cmd_decay_confidence(args: argparse.Namespace) -> int:
+    import os
+
+    from qdrant_client import QdrantClient
+
+    from src.memory.librarian.wiki_decay import WikiDecayService
+
+    api_key = args.qdrant_api_key or os.environ.get("QDRANT__API_KEY")
+    client = QdrantClient(url=args.qdrant_url, api_key=api_key)
+    service = WikiDecayService(
+        qdrant_client=client,
+        min_confidence=args.min_confidence,
+        batch_size=args.batch_size,
+    )
+    result = await service.decay_all(dry_run=args.dry_run)
+    print(
+        f"Decay {'(dry-run) ' if args.dry_run else ''}— "
+        f"total={result['total']}, "
+        f"decayed={result['decayed']}, "
+        f"skipped={result['skipped']}"
+    )
+    return 0
+
+
+async def cmd_archive_stale(args: argparse.Namespace) -> int:
+    import shutil
+    from datetime import datetime, timedelta
+
+    import yaml
+
+    if not args.wiki_dir.exists():
+        print(f"ERROR: wiki_dir not found: {args.wiki_dir}", file=sys.stderr)
+        return 2
+
+    cutoff = datetime.now() - timedelta(days=args.max_age_days)
+    target_dir = args.archive_dir / datetime.now().strftime("%Y-%m")
+    archived = 0
+    skipped = 0
+
+    for page in args.wiki_dir.glob("*.md"):
+        try:
+            content = page.read_text(encoding="utf-8")
+        except OSError:
+            skipped += 1
+            continue
+
+        import re
+        fm_match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
+        if not fm_match:
+            skipped += 1
+            continue
+        try:
+            fm = yaml.safe_load(fm_match.group(1)) or {}
+        except Exception:
+            skipped += 1
+            continue
+
+        if fm.get("status") == "archived":
+            skipped += 1
+            continue
+
+        confidence = fm.get("confidence")
+        if confidence is None or confidence >= args.min_confidence:
+            skipped += 1
+            continue
+
+        updated_at_str = fm.get("updated_at") or fm.get("created_at")
+        if not updated_at_str:
+            skipped += 1
+            continue
+        try:
+            updated_at = datetime.fromisoformat(str(updated_at_str).replace("Z", "+00:00"))
+            if updated_at.tzinfo is not None:
+                updated_at = updated_at.replace(tzinfo=None)
+        except ValueError:
+            skipped += 1
+            continue
+
+        if updated_at >= cutoff:
+            skipped += 1
+            continue
+
+        target = target_dir / page.name
+        if args.dry_run:
+            print(f"  [dry-run] would archive: {page} → {target}")
+            archived += 1
+            continue
+
+        target_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.move(str(page), str(target))
+            archived += 1
+            print(f"  archived: {page.name}")
+        except OSError as exc:
+            print(f"  FAIL: {page.name}: {exc}", file=sys.stderr)
+            skipped += 1
+
+    print(
+        f"Archive {'(dry-run) ' if args.dry_run else ''}— "
+        f"archived={archived}, skipped={skipped}"
+    )
+    return 0 if archived >= 0 else 1
+
+
 async def main() -> int:
     args = parse_args()
 
@@ -285,6 +389,8 @@ async def main() -> int:
         "index-search": cmd_index_search,
         "verify": cmd_verify,
         "promote-patterns": cmd_promote_patterns,
+        "decay-confidence": cmd_decay_confidence,
+        "archive-stale": cmd_archive_stale,
     }
 
     handler = commands.get(args.command)
