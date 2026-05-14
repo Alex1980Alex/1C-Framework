@@ -89,7 +89,7 @@ class QdrantStore(BaseVectorStore):
     """Provider реализация для Qdrant. См. [[provider-pattern]]."""
 ```
 
-В docstring `Source: [[name]]` или `См. [[name]]` — оба ловятся `framework-patterns` skill'ом для cross-reference аудита.
+В docstring указывается источник через double-bracket-обёрнутый pattern slug (например, `Source:` плюс slug в двойных квадратных скобках). Любой из форматов `Source: ...` или `См. ...` ловится `framework-patterns` skill'ом для cross-reference аудита. Конкретный пример см. в [[provider-pattern]] и других страницах [`docs/wiki/patterns/`](patterns/).
 
 ## Развитие
 
