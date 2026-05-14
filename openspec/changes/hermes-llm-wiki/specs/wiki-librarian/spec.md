@@ -255,7 +255,7 @@ class WikiPromoter:
 
 | Event type | Когда | Payload |
 |-----------|-------|---------|
-| `wiki.draft.created` | Draft создан в `docs/wiki/drafts/` | `{pattern_id, draft_path, confidence, usage_count, timestamp}` |
+| `wiki.draft.created` | Draft создан в `docs/wiki/drafts/` | `{pattern_id, draft_path, confidence, application_count, timestamp}` |
 | `wiki.promoted` | Draft смержён в `docs/wiki/` (ручная промоция, отдельный flow) | `{draft_path, final_path, promoted_at}` |
 | `wiki.conflict.detected` | Дубликат найден при промоции | `{pattern_id, existing_wiki_id, similarity, strategy, timestamp}` |
 
