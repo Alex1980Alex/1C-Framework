@@ -310,7 +310,10 @@ def try_promote_patterns() -> None:
             ],
             capture_output=True,
             text=True,
-            timeout=10,
+            # 4s leaves margin under the 5s Stop-hook timeout (per docstring).
+            # If Qdrant scroll + dedup takes longer, promotion is skipped — the
+            # next Stop will retry. Drafts/ is advisory; missing run is fine.
+            timeout=4,
             cwd=str(PROJECT_ROOT),
             encoding="utf-8",
             errors="replace",
