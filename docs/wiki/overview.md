@@ -1,5 +1,5 @@
 ---
-confidence: 0.85
+confidence: 0.9
 created_at: 2026-04-20 10:00:00+00:00
 related:
 - '[[_index]]'
@@ -135,6 +135,7 @@ Self-correction loop — [[ralph-wiggum]] (11 точек интеграции). 
 ## Навигация
 
 **Wiki:**
+
 - [[_index]] — карта всех hub-страниц
 - [[SCHEMA]] — wiki-формат, frontmatter, naming, promotion lifecycle
 - [[triad-architecture]] — Hooks + Skills + MCP детально
@@ -144,6 +145,7 @@ Self-correction loop — [[ralph-wiggum]] (11 точек интеграции). 
 - [[core-framework-separation]] — где живут hooks/skills/code
 
 **Deep docs (вне wiki):**
+
 - [01.1 Введение](../framework%20documentation/01_ОБЗОР/01.1_Введение.md) · [01.2 Архитектура](../framework%20documentation/01_ОБЗОР/01.2_Архитектура.md) · [01.3 Технологический стек](../framework%20documentation/01_ОБЗОР/01.3_Технологический_стек.md)
 - [Chapter 31 — Qwen3 Retrieval Production](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md) (Phase 8+9.1 production state)
 - [CLAUDE.md](../../CLAUDE.md) — project root context для AI-агентов

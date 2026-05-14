@@ -1,5 +1,5 @@
 ---
-confidence: 0.85
+confidence: 0.9
 created_at: 2026-04-20 10:00:00+00:00
 related:
 - '[[_index]]'
@@ -148,6 +148,7 @@ Limit: ≤ 500 lines. Min 3 antipatterns, 5 triggers, 1 non-redirect cross-link.
 Skill-First: [`code-skill-enforcer.py`](../../.claude/hooks/code-skill-enforcer.py) PreToolUse:Write|Edit|Bash блокирует пока `Skill()` не вызван. Конфиг [`shared/code-skill-patterns.json`](../../.claude/hooks/shared/code-skill-patterns.json) — pattern → required skill. Phantom-skill cleanup (2026-05-14, `784e1a57b`) убрал 9 ссылок на несуществующие skills.
 
 Связано:
+
 - [[triad-architecture]] § Skills section
 - [[hooks-reference]] § Skill Router
 - [[patterns]] → [[config-driven-routing]], [[router-classifier]], [[fuzzy-intent-detection]]

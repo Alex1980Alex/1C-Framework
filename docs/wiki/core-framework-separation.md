@@ -1,5 +1,5 @@
 ---
-confidence: 0.85
+confidence: 0.9
 created_at: 2026-04-20 10:00:00+00:00
 related:
 - '[[_index]]'
@@ -52,6 +52,7 @@ src/pdf_framework/
 ```
 
 Правила core:
+
 - **Async-first**: все I/O async
 - **Provider pattern**: каждое хранилище / embedding / loader наследует `*/base.py` ABC
 - **Pydantic v2 schemas**: контракты данных в `schemas/`
@@ -71,6 +72,7 @@ src/pdf_framework/
 | Workers | `src/workers/` | ARQ | Background jobs (длинные индексации, evaluation runs) |
 
 Правила app:
+
 - App импортирует core, **core не импортирует app** (направленность зависимости)
 - Каждый app-слой — отдельный модуль, удаление его не ломает остальные
 - Application configuration (host/port/CORS) живёт в app-слое, не в core
@@ -115,11 +117,13 @@ memory/ ──→ shared/              (allowed)
 ## Расширение
 
 Добавить новый provider (например, Pinecone):
+
 1. Реализовать `BasePineconeStore(BaseVectorStore)` в `vector_store/providers/pinecone.py`
 2. Зарегистрировать в `vector_store/__init__.get_vector_store()` (provider registry)
 3. Никаких изменений в `api/` или `cli/` — switchover через `VECTOR_STORE__PROVIDER=pinecone` в `.env`
 
 Добавить новый CLI subcommand:
+
 1. Добавить функцию в `cli/main.py` (или подмодуль)
 2. **НЕ** трогать `pdf_framework/` — функциональность уже в core, CLI только wrapper
 

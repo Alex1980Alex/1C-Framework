@@ -1,5 +1,5 @@
 ---
-confidence: 0.85
+confidence: 0.9
 created_at: 2026-04-20 10:00:00+00:00
 related:
 - '[[_index]]'
@@ -77,6 +77,7 @@ REPORT.md          модификация        scenarios           упавш�
 ```
 
 Скиллы цепочки:
+
 - [`analyze-1c-task-v2`](../../.claude/skills/analyze-1c-task-v2/SKILL.md) — 5-фазная методология анализа (Требования → Объекты → Алгоритм → План → Верификация); SDD-интеграция (OpenSpec delta-specs, approval gate, brownfield validation)
 - [`implement-1c-task`](../../.claude/skills/implement-1c-task/SKILL.md) — 8-этапный pipeline v2.3.0 (Этап 0 Preflight + EDT-MCP + 1c-mcp-crud + bsl-debug-server). Preflight выбирает один из 4 режимов: Full / Code-only / Read-only verify / Read-only research
 - [`va-bdd-testing`](../../.claude/skills/va-bdd-testing/SKILL.md) — Vanessa Automation BDD test authoring. Stage 4a pre-scenario TestDB check

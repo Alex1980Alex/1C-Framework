@@ -1,5 +1,5 @@
 ---
-confidence: 0.85
+confidence: 0.9
 created_at: 2026-04-20 10:00:00+00:00
 related:
 - '[[_index]]'
@@ -83,6 +83,7 @@ Skill-First Enforcement: `code-skill-enforcer.py` блокирует Write/Edit 
 ## MCP — ЧЕМ (~50 серверов через lazy-mcp)
 
 Model Context Protocol servers — внешние capabilities. Стандарт Anthropic, прозрачный для Claude Code. Профили:
+
 - [`.mcp/pdf.json`](../../.mcp/pdf.json) — PDF Framework серверы
 - [`.mcp/bsl.json`](../../.mcp/bsl.json) — 1С (bsl-semantic-search, 1c-mcp-crud, 1c-debug, 1c-debug-hmr, edt-mcp, mcp-onec-test-runner, auto-documenter, ast-grep-mcp, bsl-semantic-diff)
 - [`.mcp/full.json`](../../.mcp/full.json) — все серверы (heavy)

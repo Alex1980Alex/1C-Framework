@@ -7,7 +7,7 @@ tags:
   - oauth
   - mcp
   - audit
-confidence: 0.95
+confidence: 1.0
 created_at: '2026-05-14T00:00:00'
 updated_at: '2026-05-14T00:00:00'
 related:
@@ -27,7 +27,7 @@ related:
 | | BSL legacy | Generic shared |
 |---|---|---|
 | Путь | [`src/bsl/mcp_server/auth/oauth2.py`](../../../src/bsl/mcp_server/auth/oauth2.py) | [`src/shared/mcp_oauth/`](../../../src/shared/mcp_oauth/) |
-| Размер | 214 LoC, single file | 373 LoC (models 34 + service 165 + store 157 + __init__ 17) |
+| Размер | 214 LoC, single file | 373 LoC (models 34 + service 165 + store 157 + **init** 17) |
 | Tests | нет специфичных | [`tests/unit/test_mcp_oauth.py`](../../../tests/unit/test_mcp_oauth.py) — 16 passing |
 | Пользовательские данные | login + password в каждой структуре | абстрактный `user_data: dict` |
 | Store backends | только in-memory | pluggable через `OAuth2StoreBackend` ABC (in-memory готов, SQLite/Redis — TODO) |
@@ -129,6 +129,7 @@ class AuthCodeData:
 ```
 
 `user_data: dict` позволяет хранить:
+
 - `{"login": "...", "password": "..."}` — BSL pattern (backward-compat)
 - `{"sub": "user-id", "email": "...", "roles": [...]}` — OIDC pattern
 - `{"api_key_id": "...", "tenant": "..."}` — multi-tenant pattern
@@ -149,6 +150,7 @@ class OAuth2StoreBackend(ABC):
 ```
 
 Реализации:
+
 - `InMemoryBackend` — готово, эквивалентно BSL behavior
 - `SQLiteBackend` — TODO (для persistence через рестарт)
 - `RedisBackend` — TODO (для multi-instance MCP servers)
