@@ -23,7 +23,8 @@ Write/Edit файл → auto-git-save.py (PostToolUse)
                   ├─ порог (1) достигнут? → ДА
                   │   └─ perform_sync_commit()
                   │       ├─ git add -- <файл>
-                  │       ├─ git commit -m "chore: auto-commit 1 file(s)"
+                  │       ├─ git commit -m "chore: auto-save foo.py"
+                  │       │   (basenames первых 3 файлов + `+N more`; см. §1)
                   │       └─ → [AUTO-GIT-SAVE OK] hash: abc1234
                   │
                   └─ commit failed?

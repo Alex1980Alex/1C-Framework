@@ -142,7 +142,7 @@ def _auto_commit(files: list[str]) -> dict:
     start = time.time()
     try:
         # Stage files
-        staged = 0
+        staged_files: list[str] = []
         for fp in files:
             try:
                 r = subprocess.run(
@@ -151,15 +151,19 @@ def _auto_commit(files: list[str]) -> dict:
                     cwd=str(PROJECT_ROOT),
                 )
                 if r.returncode == 0:
-                    staged += 1
+                    staged_files.append(fp)
             except subprocess.TimeoutExpired:
                 pass
 
+        staged = len(staged_files)
         if staged == 0:
             return {"success": False, "error": "git add failed"}
 
         # Commit
-        msg = f"chore: auto-commit {staged} file(s) changed"
+        file_list = ", ".join(os.path.basename(f) for f in staged_files[:3])
+        if staged > 3:
+            file_list += f" +{staged-3} more"
+        msg = f"chore: auto-commit {file_list}"
         commit = subprocess.run(
             ["git", "commit", "-m", msg],
             timeout=10, capture_output=True, text=True, encoding="utf-8",
