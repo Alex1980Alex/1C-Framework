@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -14,8 +14,11 @@ from src.pdf_framework.indexing.wiki_exporter import (
     GraphChangeEvent,
     GraphEventType,
     IncrementalWikiSync,
+    ReverseSyncService,
     WikiExportConfig,
     WikiExporter,
+    WikiPageChange,
+    WikiParseError,
     WikiSearchIndexer,
 )
 from src.pdf_framework.schemas.entities import Entity, Relation
