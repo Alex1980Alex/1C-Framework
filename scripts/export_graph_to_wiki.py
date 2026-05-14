@@ -208,6 +208,32 @@ async def cmd_verify(args: argparse.Namespace) -> int:
     return 1
 
 
+async def cmd_promote_patterns(args: argparse.Namespace) -> int:
+    from qdrant_client import QdrantClient
+
+    from src.memory.librarian.wiki_promoter import WikiPromoter
+
+    client = QdrantClient(url=args.qdrant_url)
+    promoter = WikiPromoter(
+        qdrant_client=client,
+        wiki_drafts_dir=args.drafts_dir,
+        confidence_threshold=args.min_confidence,
+        usage_threshold=args.min_usage,
+        similarity_threshold=args.similarity_threshold,
+    )
+    created = await promoter.scan_and_promote()
+    if created:
+        print(f"Promoted {len(created)} pattern(s) to drafts:")
+        for slug in created:
+            print(f"  - {args.drafts_dir / (slug + '.md')}")
+        return 0
+    print(
+        f"No patterns met thresholds (confidence>={args.min_confidence}, "
+        f"usage_count>={args.min_usage}). Drafts dir unchanged."
+    )
+    return 1
+
+
 async def main() -> int:
     args = parse_args()
 
@@ -220,6 +246,7 @@ async def main() -> int:
         "sync-incremental": cmd_sync_incremental,
         "index-search": cmd_index_search,
         "verify": cmd_verify,
+        "promote-patterns": cmd_promote_patterns,
     }
 
     handler = commands.get(args.command)
