@@ -333,7 +333,10 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
 
         # Step 3: Commit
         count = len(modified_files)
-        commit_msg = f"chore: auto-save {count} file(s)"
+        file_list = ", ".join(os.path.basename(f) for f in modified_files[:3])
+        if count > 3:
+            file_list += f" +{count-3} more"
+        commit_msg = f"chore: auto-save {file_list}"
 
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
