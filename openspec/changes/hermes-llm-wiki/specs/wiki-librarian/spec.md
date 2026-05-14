@@ -87,7 +87,12 @@ class WikiPromoter:
         """Single-pattern promotion flow."""
 
     async def _check_readiness(self, pattern: dict) -> bool:
-        """confidence >= threshold AND usage_count >= threshold."""
+        """confidence >= threshold AND application_count >= threshold.
+
+        Field name `application_count` is canonical (written by
+        vector_memory/server.py:handle_apply_pattern). Earlier spec
+        revisions used `usage_count` — see roadmap 260514 §Resolution.
+        """
 
     async def _find_duplicate(self, pattern_text: str) -> Optional[str]:
         """unified_search по wiki для дедуп-проверки."""
@@ -104,7 +109,7 @@ class WikiPromoter:
 
 ### Сценарий 1: Успешная промоция нового паттерна
 
-**Given** pattern `{id: "zai-provider-selection", confidence: 0.92, usage_count: 8}` в `learned_patterns`
+**Given** pattern `{id: "zai-provider-selection", confidence: 0.92, application_count: 8}` в `learned_patterns`
 **And** `UnifiedSearch` не находит duplicates (max cosine < 0.85)
 **When** вызывается `await promoter.try_promote_pattern("zai-provider-selection")`
 **Then** создаётся файл `docs/wiki/drafts/zai-provider-selection.md` через `MemoryCube.to_wiki_page()`
@@ -114,7 +119,7 @@ class WikiPromoter:
 
 ### Сценарий 2: Дедуп-коллизия → pattern superseded
 
-**Given** pattern `{id: "qdrant-query-points", confidence: 0.88, usage_count: 6}`
+**Given** pattern `{id: "qdrant-query-points", confidence: 0.88, application_count: 6}`
 **And** существует `docs/wiki/patterns/qdrant-operations.md` с cosine similarity = 0.91
 **When** вызывается `try_promote_pattern("qdrant-query-points")`
 **Then** `ConflictResolver.resolve(strategy=SOURCE_PRIORITY)` возвращает решение «wiki wins»
