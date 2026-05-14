@@ -211,11 +211,14 @@ async def cmd_verify(args: argparse.Namespace) -> int:
 
 
 async def cmd_promote_patterns(args: argparse.Namespace) -> int:
+    import os
+
     from qdrant_client import QdrantClient
 
     from src.memory.librarian.wiki_promoter import WikiPromoter
 
-    client = QdrantClient(url=args.qdrant_url)
+    api_key = args.qdrant_api_key or os.environ.get("QDRANT__API_KEY")
+    client = QdrantClient(url=args.qdrant_url, api_key=api_key)
     promoter = WikiPromoter(
         qdrant_client=client,
         wiki_drafts_dir=args.drafts_dir,
@@ -231,9 +234,10 @@ async def cmd_promote_patterns(args: argparse.Namespace) -> int:
         return 0
     print(
         f"No patterns met thresholds (confidence>={args.min_confidence}, "
-        f"usage_count>={args.min_usage}). Drafts dir unchanged."
+        f"usage_count>={args.min_usage}). Drafts dir unchanged.",
+        file=sys.stderr,
     )
-    return 1
+    return 0
 
 
 async def main() -> int:
