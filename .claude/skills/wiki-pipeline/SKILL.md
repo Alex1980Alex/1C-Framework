@@ -45,12 +45,17 @@ python -m scripts.export_graph_to_wiki promote-patterns \
 
 Exit codes: `0` success, `1` partial failure (e.g. no eligible patterns), `2` total failure. Флаг `--dry-run` для export-команд (не для `promote-patterns`).
 
-### Состояние L5 drafts/ (2026-05-14)
+### Состояние L5 drafts/ (2026-05-14 после fix)
 
-`docs/wiki/drafts/` сейчас **пуст** — это ожидаемо при текущем состоянии корпуса `learned_patterns` (44 точки, 11 имеют `confidence` = 0.7, `usage_count` поле отсутствует у всех). Spec-defaults `confidence>=0.8 AND usage_count>=5` дают 0 eligible candidates. CLI `promote-patterns` wired up (commit follow-up), но не запускается автоматически — нет hook/cron/daemon, который вызывал бы `WikiPromoter.scan_and_promote()` периодически. Чтобы наполнить drafts:
+Pipeline активен. До closure session оба ингредиента уже существовали, но не стыковались:
 
-1. **Лёгкий вариант:** запустить с пониженными порогами под фактический корпус: `--min-confidence 0.6 --min-usage 0` (последний приведёт к фильтру который Qdrant пропускает все точки без `usage_count` поля; проверить эмпирически).
-2. **Правильный вариант:** memory hooks (`session-memory-save.py` + `posttooluse-quality-feedback.py`) должны обновлять `confidence` и `usage_count` в `learned_patterns` при успешных применениях паттернов — тогда корпус естественно дойдёт до spec-thresholds. См. roadmap `260514_ROADMAP_WIKI_PROMOTION_GAP.md` (TBD).
+- **Update side (работало):** [`src/memory/vector_memory/server.py:391 handle_apply_pattern`](../../../src/memory/vector_memory/server.py#L391) при каждом MCP-вызове `apply_pattern` инкрементирует поле `application_count` и обновляет `confidence` через bayesian-style delta (`+0.02` при success / `-0.01` при fail, clamp `[0,1]`).
+- **Promote side (был сломан):** [`src/memory/librarian/wiki_promoter.py`](../../../src/memory/librarian/wiki_promoter.py) фильтровал `usage_count`, поле которого никто никогда не пишет. Field-name drift — закрыт в session 2026-05-14: WikiPromoter теперь фильтрует канонический `application_count` (constructor arg `usage_threshold` сохранён для back-compat).
+- **Wire (добавлено):** [`session-memory-save.py:try_promote_patterns`](../../../.claude/hooks/session-memory-save.py) на Stop вызывает `python -m scripts.export_graph_to_wiki promote-patterns` (timeout 10s, swallows errors, `SESSION_MEMORY_NO_PROMOTE=1` отключает).
+
+Корпус 2026-05-14: 44 точки в `learned_patterns`, 11 имеют `confidence=0.7` + `application_count=0`. До eligible не дотягивают (нужно одновременно `confidence>=0.8 AND application_count>=5`) — но теперь натурально дотянутся по мере MCP `apply_pattern` вызовов с success=true (через ~15 успешных применений у конкретного паттерна `confidence` пересечёт 0.8).
+
+Smoke-test 2026-05-14 (синтетически бампанутый point с conf=0.85 + ac=5): CLI создал `docs/wiki/drafts/<slug>.md`, лог-entry в `docs/wiki/log.md`. Артефакт почищен после verification. См. roadmap [`260514_ROADMAP_WIKI_PROMOTION_GAP.md`](../../../docs/roadmap/260514_ROADMAP_WIKI_PROMOTION_GAP.md) для closure summary.
 
 ## Шаблоны wiki-страниц
 
