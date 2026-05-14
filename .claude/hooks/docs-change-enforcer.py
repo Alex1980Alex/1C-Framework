@@ -66,6 +66,8 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/callbacks/logging/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
     ("src/pdf_framework/config/observability.py", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),  # Langfuse settings
     ("src/pdf_framework/utils/retry.py",        "09_АДМИНИСТРИРОВАНИЕ",  "tenacity-retry"),  # Retry policy in 09.4
+    # Wiki export pipeline lives in indexing/ but is chapter 32 owned (2026-05-15)
+    ("src/pdf_framework/indexing/wiki_exporter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
     # GENERAL PREFIXES (fallback after specific overrides)
     ("src/pdf_framework/search/",           "04_ПОИСК",              "search-pipeline-debug"),
     ("src/pdf_framework/agents/",           "05_RAG_АГЕНТЫ",         "agent-orchestration"),
