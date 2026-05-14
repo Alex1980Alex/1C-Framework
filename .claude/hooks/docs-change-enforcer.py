@@ -103,7 +103,19 @@ CODE_TO_DOMAIN = [
     ("src/bsl/",                           "06_ИНТЕРФЕЙСЫ",         "bsl-development"),
     ("src/shared/llm_rotation/",           None,                    "llm-rotation"),
     ("src/shared/",                        "01_ОБЗОР",              "pdf-knowledge"),
-    ("src/memory/",                        "01_ОБЗОР",              "pdf-knowledge"),
+    # Wiki pipeline subsystem — Librarian + Decay live here (chapter 32, 2026-05-15)
+    ("src/memory/librarian/wiki_promoter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
+    ("src/memory/librarian/wiki_decay.py",    "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
+    ("src/memory/librarian/",                  "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
+    # Wiki forward/reverse sync pipeline lives in indexing/ but is chapter 32 owned
+    ("src/pdf_framework/indexing/wiki_exporter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
+    # Memory subsystem (general) — chapter 27 Unified Memory
+    ("src/memory/orchestrator/",            "27_UNIFIED_MEMORY",     "memory-unified"),
+    ("src/memory/ai_memory/",               "27_UNIFIED_MEMORY",     "memory-unified"),
+    ("src/memory/vector_memory/",           "27_UNIFIED_MEMORY",     "memory-unified"),
+    ("src/memory/skill_learning/",          "29_XSKILL_CONTINUOUS_LEARNING", "memory-unified"),
+    ("src/memory/infrastructure/",          "27_UNIFIED_MEMORY",     "memory-unified"),
+    ("src/memory/",                        "27_UNIFIED_MEMORY",     "memory-unified"),
     # Framework self-search (Phase 8 §25 / chapter 31)
     ("src/framework_search/",              "31_QWEN3_RETRIEVAL_PRODUCTION", "framework-search"),
 ]
