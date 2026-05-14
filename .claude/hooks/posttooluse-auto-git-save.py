@@ -111,17 +111,10 @@ def _git_commit(files: list[str]) -> bool:
         if not result.stdout.strip():
             return False
         # Commit
-        file_list = ", ".join(
-            os.path.basename(f) for f in files[:3]
-        )
-        if len(files) > 3:
-            file_list += f" +{len(files)-3} more"
+        from shared.auto_save_core import format_commit_message
+        commit_msg = format_commit_message(files, prefix="chore: auto-save")
         subprocess.run(
-            [
-                "git", "commit", "-m",
-                f"chore: auto-save {file_list}",
-                "--no-verify",
-            ],
+            ["git", "commit", "-m", commit_msg, "--no-verify"],
             capture_output=True, timeout=15,
             cwd=project_dir,
         )

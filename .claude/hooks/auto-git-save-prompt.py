@@ -160,10 +160,8 @@ def _auto_commit(files: list[str]) -> dict:
             return {"success": False, "error": "git add failed"}
 
         # Commit
-        file_list = ", ".join(os.path.basename(f) for f in staged_files[:3])
-        if staged > 3:
-            file_list += f" +{staged-3} more"
-        msg = f"chore: auto-commit {file_list}"
+        from shared.auto_save_core import format_commit_message
+        msg = format_commit_message(staged_files, prefix="chore: auto-commit")
         commit = subprocess.run(
             ["git", "commit", "-m", msg],
             timeout=10, capture_output=True, text=True, encoding="utf-8",
