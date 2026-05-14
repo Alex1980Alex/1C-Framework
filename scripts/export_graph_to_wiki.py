@@ -83,6 +83,36 @@ def parse_args() -> argparse.Namespace:
                         help="Qdrant API key (default: $QDRANT__API_KEY env var)")
     p_prom.add_argument("--verbose", "-v", action="store_true")
 
+    # decay-confidence (time-based L3 confidence decay)
+    p_dec = sub.add_parser(
+        "decay-confidence",
+        help="Apply time-based decay to learned_patterns confidence (counter-balance "
+             "asymmetric apply_pattern update so stale patterns don't ossify)",
+    )
+    p_dec.add_argument("--min-confidence", type=float, default=0.0,
+                       help="Floor for decay (default 0.0)")
+    p_dec.add_argument("--batch-size", type=int, default=100)
+    p_dec.add_argument("--qdrant-url", type=str, default="http://localhost:6333")
+    p_dec.add_argument("--qdrant-api-key", type=str, default=None,
+                       help="Qdrant API key (default: $QDRANT__API_KEY env var)")
+    p_dec.add_argument("--dry-run", action="store_true")
+    p_dec.add_argument("--verbose", "-v", action="store_true")
+
+    # archive-stale (move low-confidence/old wiki entities to archive/YYYY-MM/)
+    p_arch = sub.add_parser(
+        "archive-stale",
+        help="Move wiki entities with low confidence or stale updated_at to "
+             "docs/wiki/archive/YYYY-MM/ (manual cadence; no auto-cron yet)",
+    )
+    p_arch.add_argument("--wiki-dir", type=Path, default=Path("docs/wiki/entities"))
+    p_arch.add_argument("--archive-dir", type=Path, default=Path("docs/wiki/archive"))
+    p_arch.add_argument("--max-age-days", type=int, default=365,
+                        help="Archive if updated_at older than N days (default 365)")
+    p_arch.add_argument("--min-confidence", type=float, default=0.3,
+                        help="Archive only if confidence < threshold (default 0.3)")
+    p_arch.add_argument("--dry-run", action="store_true")
+    p_arch.add_argument("--verbose", "-v", action="store_true")
+
     return parser.parse_args()
 
 
