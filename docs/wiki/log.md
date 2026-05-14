@@ -268,3 +268,11 @@ LangSmith and E2B backends pending — need API keys + live testing.
 
 Commits: 9b392c465 (skeleton), F3 (skill+log doc).
 Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
+
+## 2026-05-15 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop
+- Files changed: 3
+- Summary: Session 2026-05-15. Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop, code-verify, auto-git-save, create-hook. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, docs/wiki, ИБTransportManagementDevelop/Конфигурация. Commit: chore(wiki): remove test-stale-example.md after archive verification. Commit: chore: auto-save 32.10_Примеры.md. Commit: chore: auto-save 32.10_Примеры.md
