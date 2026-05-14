@@ -27,7 +27,7 @@ updated_at: 2026-05-14 23:30:00+00:00
 
 # Patterns Index
 
-Wiki-уровневый каталог 28 паттернов фреймворка: 15 архитектурных (`src/pdf_framework/`) + 13 паттернов автоматизации (`.claude/hooks/`). Каждый паттерн вынесен в отдельную страницу в [`docs/wiki/patterns/`](patterns/) для точечной ссылаемости из других wiki-страниц и из BSL/Python кода через `[[wiki-link]]`.
+Wiki-уровневый каталог 28 паттернов фреймворка: 15 архитектурных (`src/pdf_framework/`) + 13 паттернов автоматизации (`.claude/hooks/`). Каждый паттерн вынесен в отдельную страницу в [`docs/wiki/patterns/`](patterns/) для точечной ссылаемости из других wiki-страниц и из BSL/Python кода через double-bracket syntax (Obsidian-совместимый).
 
 Каноническая deep-документация со схемами + кодом — [`docs/architecture/PATTERNS.md`](../architecture/PATTERNS.md). Skill — [`framework-patterns`](../../.claude/skills/framework-patterns/SKILL.md).
 
