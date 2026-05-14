@@ -355,8 +355,15 @@ async def cmd_archive_stale(args: argparse.Namespace) -> int:
             continue
 
         target = target_dir / page.name
+        # Uniqueness suffix: prevent shutil.move from silently overwriting
+        # an existing archived version with the same slug (re-promoted entity
+        # going stale again same month). Append .<timestamp> to disambiguate.
+        if target.exists():
+            ts_suffix = datetime.now().strftime("%H%M%S")
+            target = target.with_name(f"{target.stem}.{ts_suffix}{target.suffix}")
+
         if args.dry_run:
-            print(f"  [dry-run] would archive: {page} → {target}")
+            print(f"  [dry-run] would archive: {page} -> {target}")
             archived += 1
             continue
 
@@ -364,7 +371,7 @@ async def cmd_archive_stale(args: argparse.Namespace) -> int:
         try:
             shutil.move(str(page), str(target))
             archived += 1
-            print(f"  archived: {page.name}")
+            print(f"  archived: {page.name} -> {target.name}")
         except OSError as exc:
             print(f"  FAIL: {page.name}: {exc}", file=sys.stderr)
             skipped += 1
