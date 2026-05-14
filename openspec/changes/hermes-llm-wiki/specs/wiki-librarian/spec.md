@@ -49,6 +49,10 @@ from src.memory.orchestrator.unified_search import UnifiedSearchEngine
 @dataclass
 class PromotionConfig:
     confidence_threshold: float = 0.8
+    # Field on the wire is `application_count` (canonical name, written by
+    # vector_memory/server.py:handle_apply_pattern). Constructor arg retains
+    # `usage_threshold` for back-compat with earlier spec wording; aligned
+    # 2026-05-14 — see docs/roadmap/260514_ROADMAP_WIKI_PROMOTION_GAP.md.
     usage_threshold: int = 5
     dedup_similarity_threshold: float = 0.85
     drafts_dir: Path = Path("docs/wiki/drafts")
