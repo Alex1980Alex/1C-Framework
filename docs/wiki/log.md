@@ -33,6 +33,17 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 ---
 
+## 2026-05-14 — Auto-promoted: Architecture Decision: use SQLite adjacency list i
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `Architecture Decision: use SQLite adjacency list i` (confidence: 0.85)
+- Draft: `docs/wiki/drafts/architecture-decision-use-sqlite-adjacency-list-i.md`
+
+**Status:** Pending review
+
+---
+
 ## Format Template
 
 ```
