@@ -434,6 +434,79 @@ def find_stale_domains(session_files: set) -> list:
     return list(stale.values())
 
 
+def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | None:
+    """Suggest a documentation chapter via wiki_pages_v1 Qdrant similarity.
+
+    Phase C2 closure (2026-05-15, roadmap 260515): additive — used ONLY for
+    ad-hoc CLI lookup of unmapped files. NOT wired into the Stop critical path
+    to avoid adding qdrant dependency + 200-500ms latency to every session end.
+
+    Usage (CLI):
+        python .claude/hooks/docs-change-enforcer.py --semantic-suggest <path>
+
+    Graceful degradation: any error → None (TEI unreachable, Qdrant down,
+    file unreadable, etc.). Best-effort.
+
+    Args:
+        file_path: Relative path to source file (e.g. "src/foo/bar.py").
+        timeout_s: Hard ceiling for combined TEI + Qdrant calls.
+
+    Returns:
+        Suggested chapter directory name (e.g. "32_WIKI_KNOWLEDGE_LAYER"),
+        or None if not confident / not available.
+    """
+    import re
+    from pathlib import Path
+    try:
+        import httpx
+        from qdrant_client import QdrantClient
+    except ImportError:
+        return None
+
+    full_path = Path(file_path)
+    if not full_path.exists():
+        full_path = Path.cwd() / file_path
+        if not full_path.exists():
+            return None
+    try:
+        snippet = full_path.read_text(encoding="utf-8", errors="replace")[:1500]
+    except OSError:
+        return None
+    if not snippet.strip():
+        return None
+
+    try:
+        with httpx.Client(timeout=timeout_s / 2) as http:
+            resp = http.post(
+                "http://localhost:8080/embed",
+                json={"inputs": snippet, "truncate": True},
+            )
+            resp.raise_for_status()
+            emb = resp.json()[0]
+    except Exception:
+        return None
+
+    try:
+        client = QdrantClient(url="http://localhost:6333", timeout=timeout_s / 2)
+        hits = client.query_points(
+            collection_name="wiki_pages_v1",
+            query=emb, limit=3, with_payload=True,
+        )
+    except Exception:
+        return None
+
+    # Extract chapter dir from top hit's file_path payload
+    chapter_re = re.compile(r"(\d{2,3}_[А-ЯA-Z][\w_]+)")
+    for h in hits.points:
+        fp = (h.payload or {}).get("file_path", "")
+        if not isinstance(fp, str):
+            continue
+        m = chapter_re.search(fp.replace("\\", "/"))
+        if m:
+            return m.group(1)
+    return None
+
+
 def main():
     """Check for stale documentation. Block stop if found."""
     # Invocation timer
