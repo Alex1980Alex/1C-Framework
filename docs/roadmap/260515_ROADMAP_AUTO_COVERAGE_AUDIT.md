@@ -109,12 +109,12 @@ Pre-commit hook chain validates `Markdown Lint (wiki)` + `KB Lint (wiki)` + ruff
 | B3: SessionStart audit-coverage hook | ✅ done | `audit-coverage-check.py` (timeout 5s, subprocess 4s, opt-out `AUDIT_COVERAGE_NO_CHECK=1`). Parses `audit_docs_skills.py --json --stdout`, emits systemMessage с gap counts. Currently silent (0+0 в default scope; will fire after B2 expansion catches новые gaps) |
 | B4: markdownlint auto-fix | ⚠ partial | `npx markdownlint-cli2 --fix` applied; cosmetic MD060 table-style auto-fixed. **270 structural errors остаются** (MD013 line-length, MD040 fenced-code-language, MD025 multi-h1) — требуют content restructure, не auto-fixable. Deferred как cosmetic infrastructure debt |
 
-### Phase C (deferred — out of scope, low ROI)
+### Phase C (DONE 2026-05-15 via additive approach)
 
-| Item | Status | Rationale |
+| Item | Status | Result |
 |---|---|---|
-| C1: Consolidate 3 auto-git-save hooks → 1 unified | ⏸ deferred | LOW priority + current 3-layer redundancy является **намеренной защитой** от Claude Code #6305 (PostToolUse не срабатывает на Windows). Consolidation = 1 день refactor для замены working code. Risk vs benefit unfavorable. Re-evaluate после fix #6305 в upstream |
-| C2: Semantic mapping via `wiki_pages_v1` Qdrant | ⏸ deferred | LOW priority + speculative. Current mechanical prefix table (см. `CODE_TO_DOMAIN` в `docs-change-enforcer.py`) после Phase A fix покрывает все known paths корректно. Semantic mapping добавляет 200-500ms latency на каждый Stop hook + qdrant dependency at session-end critical path. Не оправдывает 2 дня implementation |
+| C1: Consolidate 3 auto-git-save hooks (additive — extract shared helper) | ✅ done | Created [`shared/auto_save_core.py`](../../.claude/hooks/shared/auto_save_core.py) с `format_commit_message(files, prefix, max_display)` — single source of truth для filename-list commit format. 3 hooks refactored to use it (auto-git-save.py, posttooluse-auto-git-save.py, auto-git-save-prompt.py). **No behavior change** — intentional 3-layer redundancy for #6305 workaround preserved. ~9 lines duplicated logic → 3 lines import + 1 line call per hook |
+| C2: Semantic fallback (additive CLI, NOT critical path) | ✅ done | Added `semantic_fallback_suggest(file_path)` function in `docs-change-enforcer.py` + `--semantic-suggest <path>` CLI flag. Queries `framework_code_v1` (not `wiki_pages_v1` — payload schema mismatch discovered live). Graceful degradation: HTTPX TEI call timeout 1s + Qdrant query timeout 1s + filter `relative_path` contains "framework documentation" → extracts chapter dir via regex `(\d{2,3}_[А-ЯA-Za-z][\w_]+)`. Live test: `wiki_decay.py → 02_БЫСТРЫЙ_СТАРТ` (real chapter match, mojibake aside). **NOT wired into Stop hook critical path** — pure ad-hoc CLI lookup for unmapped files |
 
 ## Связано
 
