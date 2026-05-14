@@ -456,6 +456,18 @@
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/logging-status-banner.py",
             "timeout": 3,
             "statusMessage": "mcp-slash-logging-status"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/submodule-status-check.py",
+            "timeout": 10,
+            "statusMessage": "submodule-status"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/audit-coverage-check.py",
+            "timeout": 5,
+            "statusMessage": "audit-coverage"
           }
         ]
       }
