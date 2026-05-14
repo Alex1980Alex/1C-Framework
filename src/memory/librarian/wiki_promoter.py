@@ -37,6 +37,10 @@ class WikiPromoter:
         self.drafts_dir = wiki_drafts_dir
         self.wiki_log_path = wiki_log_path
         self.confidence_threshold = confidence_threshold
+        # Canonical field name: `application_count` — written by
+        # src/memory/vector_memory/server.py:handle_apply_pattern. Constructor
+        # arg stays `usage_threshold` for back-compat with older callers and
+        # spec language; on the wire we filter `application_count`.
         self.usage_threshold = usage_threshold
         self.similarity_threshold = similarity_threshold
 
@@ -47,7 +51,7 @@ class WikiPromoter:
             scroll_filter=Filter(
                 must=[
                     FieldCondition(key="confidence", range=Range(gte=self.confidence_threshold)),
-                    FieldCondition(key="usage_count", range=Range(gte=self.usage_threshold)),
+                    FieldCondition(key="application_count", range=Range(gte=self.usage_threshold)),
                 ]
             ),
             with_payload=True,
