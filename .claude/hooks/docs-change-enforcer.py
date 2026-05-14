@@ -166,6 +166,9 @@ SKIP_PATTERNS = [
     # data/eval/golden_v1.json — versioned dataset с CHANGELOG.md рядом).
     ".pre-commit-config.yaml",
     ".kblintrc.yml",
+    ".markdownlint.jsonc",
+    ".markdownlint.yaml",
+    ".markdownlint-cli2.yaml",
     "codecov.yml",
     "data/eval/",
     # MCP configs, tooling, docker, infra (infrastructure, not product code)
