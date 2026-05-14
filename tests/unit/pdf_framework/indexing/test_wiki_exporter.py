@@ -175,3 +175,114 @@ class TestWikiSearchIndexer:
         text = idx._extract_searchable_text(page)
         assert "AsyncIO" in text
         assert "[[" not in text
+
+
+class TestReverseSyncService:
+    """Integration tests for wiki->graph reverse sync (REQ-4)."""
+
+    def _make_service(self, graph_store, tmp_path, debounce_s: float = 0.0):
+        return ReverseSyncService(
+            graph_store=graph_store,
+            wiki_dir=tmp_path,
+            debounce_s=debounce_s,
+        )
+
+    def test_parse_extracts_frontmatter_and_links(self, graph_store, tmp_path):
+        page = tmp_path / "e1.md"
+        page.write_text(
+            "---\nunified_id: 019e\nstatus: active\n---\n\n"
+            "Body referencing [[e2]] and [[e3|Display Three]].\n",
+            encoding="utf-8",
+        )
+        svc = self._make_service(graph_store, tmp_path)
+        change = svc._parse_wiki_page(page)
+        assert change.entity_id == "e1"
+        assert change.change_type == "modified"
+        assert change.frontmatter == {"unified_id": "019e", "status": "active"}
+        assert change.added_links == ["e2", "e3"]
+
+    def test_parse_invalid_frontmatter_raises(self, graph_store, tmp_path):
+        page = tmp_path / "bad.md"
+        page.write_text("---\nkey: : : invalid yaml\n---\nbody\n", encoding="utf-8")
+        svc = self._make_service(graph_store, tmp_path)
+        with pytest.raises(WikiParseError):
+            svc._parse_wiki_page(page)
+
+    def test_parse_no_frontmatter_yields_empty_dict(self, graph_store, tmp_path):
+        page = tmp_path / "plain.md"
+        page.write_text("Just body with [[link]].\n", encoding="utf-8")
+        svc = self._make_service(graph_store, tmp_path)
+        change = svc._parse_wiki_page(page)
+        assert change.frontmatter == {}
+        assert change.added_links == ["link"]
+
+    @pytest.mark.asyncio
+    async def test_handle_page_change_adds_relations(self, populated_store, tmp_path):
+        svc = self._make_service(populated_store, tmp_path)
+        change = WikiPageChange(
+            entity_id="e1",
+            page_path=tmp_path / "e1.md",
+            change_type="modified",
+            frontmatter={},
+            added_links=["e2", "e3"],
+        )
+        await svc.handle_page_change(change)
+        relations = await populated_store.get_relations(entity_id="e1")
+        targets = {r.target_entity_id for r in relations}
+        assert "e2" in targets and "e3" in targets
+
+    @pytest.mark.asyncio
+    async def test_handle_page_change_skips_deleted(self, graph_store, tmp_path):
+        mock_store = AsyncMock()
+        svc = ReverseSyncService(graph_store=mock_store, wiki_dir=tmp_path)
+        change = WikiPageChange(
+            entity_id="gone",
+            page_path=tmp_path / "gone.md",
+            change_type="deleted",
+            frontmatter={},
+            added_links=["other"],
+        )
+        await svc.handle_page_change(change)
+        mock_store.add_relation.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_handle_page_change_resilient_to_failed_add(self, tmp_path):
+        mock_store = AsyncMock()
+        mock_store.add_relation.side_effect = [RuntimeError("boom"), None]
+        svc = ReverseSyncService(graph_store=mock_store, wiki_dir=tmp_path)
+        change = WikiPageChange(
+            entity_id="e1",
+            page_path=tmp_path / "e1.md",
+            change_type="modified",
+            frontmatter={},
+            added_links=["e2", "e3"],
+        )
+        await svc.handle_page_change(change)
+        assert mock_store.add_relation.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_on_file_event_debounces(self, graph_store, tmp_path):
+        page = tmp_path / "e1.md"
+        page.write_text("---\n---\nbody [[e2]]\n", encoding="utf-8")
+        mock_store = AsyncMock()
+        svc = ReverseSyncService(graph_store=mock_store, wiki_dir=tmp_path, debounce_s=5.0)
+        await svc._on_file_event(str(page), "modified")
+        await svc._on_file_event(str(page), "modified")
+        assert mock_store.add_relation.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_on_file_event_deleted_short_circuits_parse(self, graph_store, tmp_path):
+        ghost = tmp_path / "ghost.md"
+        mock_store = AsyncMock()
+        svc = ReverseSyncService(graph_store=mock_store, wiki_dir=tmp_path)
+        await svc._on_file_event(str(ghost), "deleted")
+        mock_store.add_relation.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_on_file_event_parse_error_does_not_crash(self, graph_store, tmp_path):
+        page = tmp_path / "bad.md"
+        page.write_text("---\nbad: : :\n---\n", encoding="utf-8")
+        mock_store = AsyncMock()
+        svc = ReverseSyncService(graph_store=mock_store, wiki_dir=tmp_path)
+        await svc._on_file_event(str(page), "modified")
+        mock_store.add_relation.assert_not_called()
