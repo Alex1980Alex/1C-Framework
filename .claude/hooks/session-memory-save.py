@@ -292,6 +292,37 @@ def save_to_wiki_log(ctx):
         return False
 
 
+def try_promote_patterns() -> None:
+    """L2→L5 promotion: scan learned_patterns, write drafts. Best-effort, non-blocking.
+
+    Uses CLI defaults (confidence>=0.8, application_count>=5). Failures are swallowed —
+    drafts/ is advisory state; missing run is acceptable. Disable with
+    SESSION_MEMORY_NO_PROMOTE=1 (e.g. CI, dev with no Qdrant).
+    """
+    if os.environ.get("SESSION_MEMORY_NO_PROMOTE") == "1":
+        return
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m", "scripts.export_graph_to_wiki",
+                "promote-patterns",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=str(PROJECT_ROOT),
+            encoding="utf-8",
+            errors="replace",
+        )
+        if result.returncode == 0 and "Promoted" in (result.stdout or ""):
+            # Surface successful promotions via wiki log; the CLI itself already
+            # appends per-pattern entries through WikiPromoter._append_log.
+            pass
+    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        pass
+
+
 class SessionMemorySave(BaseHook):
 
     def execute(self, inp: HookInput) -> HookOutput | None:
@@ -305,6 +336,7 @@ class SessionMemorySave(BaseHook):
 
         save_to_sqlite(ctx)
         save_to_wiki_log(ctx)
+        try_promote_patterns()
 
         # Non-blocking: always allow stop
         return None
