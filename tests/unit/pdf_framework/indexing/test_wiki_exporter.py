@@ -227,7 +227,8 @@ class TestReverseSyncService:
             added_links=["e2", "e3"],
         )
         await svc.handle_page_change(change)
-        targets = {t for _, t in populated_store._graph.out_edges("e1")}
+        relations = await populated_store.get_relations("e1")
+        targets = {r.target_entity_id for r in relations}
         assert "e2" in targets and "e3" in targets
 
     @pytest.mark.asyncio
