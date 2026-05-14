@@ -7,6 +7,8 @@ Usage:
     python -m scripts.export_graph_to_wiki index-search [--wiki-dir PATH]
     python -m scripts.export_graph_to_wiki verify [--output-dir PATH]
     python -m scripts.export_graph_to_wiki promote-patterns [--min-confidence F] [--min-usage N] [--drafts-dir PATH]
+    python -m scripts.export_graph_to_wiki decay-confidence [--min-confidence F] [--dry-run]
+    python -m scripts.export_graph_to_wiki archive-stale [--max-age-days N] [--min-confidence F] [--dry-run]
 
 Exit codes: 0 success, 1 partial failure, 2 total failure.
 """
