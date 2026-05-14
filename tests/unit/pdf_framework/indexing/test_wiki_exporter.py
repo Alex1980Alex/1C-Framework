@@ -304,6 +304,8 @@ class TestReverseSyncRuntimeWatchdog:
 
     @pytest.mark.asyncio
     async def test_real_watchdog_picks_up_file_write(self, populated_store, tmp_path):
+        pytest.importorskip("watchdog", reason="watchdog not installed; skipping runtime watchdog test")
+        from watchdog.events import FileSystemEventHandler
         from watchdog.observers.polling import PollingObserver
 
         svc = ReverseSyncService(
@@ -311,10 +313,6 @@ class TestReverseSyncRuntimeWatchdog:
             wiki_dir=tmp_path,
             debounce_s=0.0,
         )
-
-        # Replace native Observer with PollingObserver for cross-platform reliability.
-        # Mirror the body of start_watching but with explicit Observer class.
-        from watchdog.events import FileSystemEventHandler
 
         events_seen: list[tuple[str, str]] = []
 
