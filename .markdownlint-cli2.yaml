@@ -1,0 +1,39 @@
+# markdownlint-cli2 configuration
+# Phase B4 (2026-05-15, roadmap 260515): leniency for docs/wiki/ hub pages.
+# These pages combine prose + dense tables + multi-section docs which violate
+# strict markdown rules but are intentional for hub-page UX.
+
+config:
+  # MD013: line length — disabled for wiki (long URLs, dense tables, prose
+  # paragraphs with cross-refs). markdownlint default 80, common bumped to
+  # 120 but wiki hub-pages routinely exceed 200 for inline tables.
+  MD013: false
+
+  # MD025: multiple top-level headings — wiki hub pages use convention
+  # frontmatter `title:` field as canonical title, then markdown H1 acts
+  # as visual page title. Some pages have multiple sections legitimately
+  # rendered as H1 in published form.
+  MD025: false
+
+  # MD040: fenced code language — wiki uses untyped code blocks for
+  # ASCII-art diagrams and shell output snippets where language tag is
+  # noise. Keep enabled in code-heavy docs but lenient for wiki.
+  MD040: false
+
+  # MD050: strong-style — allow both * and _ for emphasis (no enforcement)
+  MD050: false
+
+  # MD032: blanks around lists — common to have list immediately following
+  # heading or table without blank line in wiki tables-of-contents
+  MD032: false
+
+  # MD041: first-line H1 — wiki uses YAML frontmatter as first content,
+  # H1 follows; markdownlint sees frontmatter end + H1 mismatch
+  MD041: false
+
+# Keep all other rules at default (catches real issues like broken links,
+# invalid HTML, trailing whitespace via separate pre-commit hook).
+
+# Scope: only applied when markdownlint-cli2 is run on docs/wiki/*.md per
+# pre-commit hook in .pre-commit-config.yaml. Other paths (e.g. README.md,
+# framework documentation) follow default rules unchanged.
