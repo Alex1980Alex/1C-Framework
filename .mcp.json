@@ -143,7 +143,7 @@
     },
     "1c-mcp-crud": {
       "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
-      "args": ["C:\\1С-Framework\\external\\1c_mcp\\mcp_stdio.py"],
+      "args": ["C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"],
       "cwd": "C:\\1С-Framework\\external\\1c_mcp",
       "env": {
         "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
