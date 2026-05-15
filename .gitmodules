@@ -14,3 +14,7 @@
 	path = configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников
 	url = https://github.com/Alex1980Alex/-Configuration-260416-GKSTCPLK-2368-.git
 	branch = master
+[submodule "external/1c_mcp"]
+	path = external/1c_mcp
+	url = https://github.com/vladimir-kharin/1c_mcp.git
+	branch = main
