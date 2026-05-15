@@ -488,7 +488,7 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 
 > **Audit 2026-05-15:** spot-check показал — 5c.10 ADR-010 уже существует (proposed), 5c.5 частично сделан (LangfuseCallbackHandler wired в `agents/rag/middleware.py:199` через middleware, остальные spans pending). Остальные 8 subtasks — open.
 
-- [ ] **5c.1 Langfuse Cloud account** — register на cloud.langfuse.com OR self-host через docker-compose. Cloud free tier 50K observations/month → достаточно для hobby/dev.
+- [x] **5c.1 Langfuse Cloud account** — DONE 2026-05-15: account создан на `cloud.langfuse.com` (alexterletskii80@gmail.com). Pending для unblock §5c.2: создать Project в Langfuse UI → получить PUBLIC_KEY + SECRET_KEY → положить в локальный `.env` (НЕ в repo). Free tier 50K observations/month.
 - [ ] **5c.2 Add credentials в `.env`** — `OBSERVABILITY__LANGFUSE_ENABLED=true`, `OBSERVABILITY__LANGFUSE_PUBLIC_KEY=pk-lf-...`, `OBSERVABILITY__LANGFUSE_SECRET_KEY=sk-lf-...`, `OBSERVABILITY__LANGFUSE_HOST=https://cloud.langfuse.com`. **Side gap: добавить также в `.env.example` для onboarding** (см. §3.4-bis).
 - [ ] **5c.3 Smoke test против real Langfuse** — запустить локально query через `python -m src.cli.main search "тест" --strategy hybrid` → verify trace появился в dashboard. Confirms wiring работает.
 - [ ] **5c.4 Wire memory operations** — close §3.3.4 (deferred). Memory hooks (memory-first, memory-sync, session-memory-save) emitить spans через `observability.langfuse_setup.build_langfuse_callback()`.
