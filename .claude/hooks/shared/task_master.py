@@ -100,8 +100,12 @@ class FileLock:
             fcntl.flock(self._lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
     def _platform_unlock(self) -> None:
+        # Same invariant as _platform_lock — __enter__ owns the open. If
+        # __exit__ runs without __enter__ ever having succeeded, callers
+        # already check `if self._lock_file:` before invoking this method,
+        # so reaching this branch means refactor regression.
         if self._lock_file is None:
-            return
+            raise RuntimeError("FileLock._platform_unlock called with no open lock file")
         if sys.platform == "win32":
             import msvcrt
 
