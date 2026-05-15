@@ -124,6 +124,7 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.8",
     "mypy>=1.13",
+    "mypy-baseline>=0.7.4",
     "interrogate>=1.7",
     # Phase 3 Auto-Librarian — wiki KB linting
     "kb-lint>=0.1",
