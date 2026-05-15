@@ -27,6 +27,49 @@ from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
+# Module-level singleton: avoid per-call client construction overhead on
+# hot-path callers (search/manager.py, tools/*). Reset implicitly on process
+# restart, which is sufficient — Langfuse SDK manages its own background
+# queue + flush thread per client instance.
+_LANGFUSE_CLIENT: Any = None
+_LANGFUSE_CLIENT_INIT_FAILED: bool = False
+
+
+def _get_langfuse_client() -> Any | None:
+    """Return memoized Langfuse client or None if disabled/unavailable.
+
+    First call resolves credentials from settings, subsequent calls reuse the
+    cached instance. Failure (ImportError, missing creds, network) is cached
+    via `_LANGFUSE_CLIENT_INIT_FAILED` so we don't retry every request.
+    """
+    global _LANGFUSE_CLIENT, _LANGFUSE_CLIENT_INIT_FAILED
+    if _LANGFUSE_CLIENT is not None:
+        return _LANGFUSE_CLIENT
+    if _LANGFUSE_CLIENT_INIT_FAILED:
+        return None
+    try:
+        from langfuse import Langfuse
+    except ImportError:
+        _LANGFUSE_CLIENT_INIT_FAILED = True
+        logger.debug("[LANGFUSE] package not installed")
+        return None
+    try:
+        from src.pdf_framework.config import get_settings
+        obs = get_settings().observability
+        if not (obs.langfuse_public_key and obs.langfuse_secret_key):
+            _LANGFUSE_CLIENT_INIT_FAILED = True
+            return None
+        _LANGFUSE_CLIENT = Langfuse(
+            public_key=obs.langfuse_public_key,
+            secret_key=obs.langfuse_secret_key,
+            host=obs.langfuse_host or "https://cloud.langfuse.com",
+        )
+        return _LANGFUSE_CLIENT
+    except Exception:
+        _LANGFUSE_CLIENT_INIT_FAILED = True
+        logger.debug("[LANGFUSE] client init failed (suppressed)", exc_info=True)
+        return None
+
 if TYPE_CHECKING:
     from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
 
