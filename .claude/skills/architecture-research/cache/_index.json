@@ -31,6 +31,29 @@
       "github_repos_count": 2
     },
     {
+      "file": "langfuse-cost-baseline-architecture-2026.md",
+      "title": "Architecture: Langfuse как source-of-truth для cost baseline (§5c.7)",
+      "keywords": [
+        "cost-baseline",
+        "langfuse-source-of-truth",
+        "costtracker-vs-langfuse",
+        "metrics-api-vs-observations-api",
+        "cursor-pagination-architecture",
+        "ingestion-lag-handling",
+        "weekly-baseline-refresh",
+        "github-actions-cron",
+        "blob-storage-export",
+        "roadmap-260515-5c7",
+        "production-cost-analysis"
+      ],
+      "last_verified": "2026-05-15",
+      "sources_count": 7,
+      "related": [
+        "langfuse-standalone-spans-2026.md (ingestion side, sibling)",
+        "tech-research/cache/langfuse-cost-api-2026.md (concrete API)"
+      ]
+    },
+    {
       "file": "sandbox-backends-langsmith-e2b-2026.md",
       "title": "Sandbox backends для agent code execution — LangSmith vs E2B (2026)",
       "keywords": [
