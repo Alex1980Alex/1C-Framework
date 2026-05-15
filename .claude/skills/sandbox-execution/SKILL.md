@@ -155,10 +155,12 @@ async def test_agent_invokes_sandbox():
 |---|---|
 | `src/pdf_framework/sandbox/base.py` | ABC + SandboxResult + SandboxQuotaExceeded |
 | `src/pdf_framework/sandbox/dry_run_backend.py` | Zero-dep fallback impl |
-| `src/pdf_framework/sandbox/__init__.py` | Public API re-exports |
+| `src/pdf_framework/sandbox/langsmith_backend.py` | LangSmith microVM (F1, 2026-05-15) |
+| `src/pdf_framework/sandbox/e2b_backend.py` | E2B Code Interpreter (F2, 2026-05-15) |
+| `src/pdf_framework/sandbox/__init__.py` | Public API + `select_backend()` helper |
 | `tests/unit/pdf_framework/sandbox/test_dry_run_backend.py` | 13 contract tests |
-| (TODO) `src/pdf_framework/sandbox/langsmith_backend.py` | Ф5 task 1-2 |
-| (TODO) `src/pdf_framework/sandbox/e2b_backend.py` | Ф5 task 3-4 |
+| `tests/unit/pdf_framework/sandbox/test_langsmith_backend.py` | 13 unit tests (mock-based) |
+| `tests/unit/pdf_framework/sandbox/test_e2b_backend.py` | 12 unit tests + stateful Jupyter |
 
 ## Связано
 
