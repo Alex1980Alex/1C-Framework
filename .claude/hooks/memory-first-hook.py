@@ -42,6 +42,7 @@ from base import BaseHook, HookInput, HookOutput
 # Project paths
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+HOOK_NAME = "memory-first-hook"
 MEMORY_DIR = Path(os.environ.get(
     "CLAUDE_MEMORY_DIR",
     Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
