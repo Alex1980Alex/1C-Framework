@@ -104,8 +104,18 @@ For each file in the Pareto top 15:
   `^(tests/|docs/|scripts/)`.
 - All commits to `src/` go through pre-commit without `--no-verify`.
 
+## Incremental progress
+
+- **2026-05-15, commit `0c9967908`** — closed **~25 errors** across `.claude/hooks/` (NOT `src/`, but same hook ran against transitively-imported infra modules). Files touched:
+  - `.claude/hooks/docs-change-enforcer.py` — 9 errors (set/list/dict generics, doc_subdir None-narrowing, main() return type).
+  - `.claude/hooks/shared/hook_lock.py` — 5 errors (dict[str, Any] generics, Iterator return).
+  - `.claude/hooks/shared/task_master.py` — 11 errors (IO[Any] | None for _lock_file, FileLock dunder return types, None-guard before fileno()).
+  - Ruff auto-applied pyupgrade (typing.Dict → dict, etc.) as side-effect.
+  - Bundled under main commit (session-bounded git window fix) — not standalone, because the typing hardening was blocking the structured commit of that fix.
+
 ## Related
 
 - Commit `9b392c465` — first `--no-verify` workaround documented in body
 - Commit `11a1d1852` — same workaround for hook-fix commit
+- Commit `0c9967908` — first commit to land **without** `--no-verify` after closing transitive errors in hook layer
 - `.pre-commit-config.yaml` lines 50-66 — current state of the exclude
