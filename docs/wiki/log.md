@@ -20,6 +20,31 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 ---
 
+## 2026-05-15 — Hermes Phase 5 + 6 Sprint Complete
+
+**Event:** Hermes Ф5 (Sandbox) и Ф6 (OAuth) closed in two sprints
+
+### Ф5 (Sandbox) — все 4 deliverables
+- F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
+- F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
+- F3 skill `sandbox-execution` + log entry (this one)
+- DryRun zero-dep fallback retained as CI/no-key default
+- 38 unit tests (13 DryRun + 13 LangSmith + 12 E2B), `select_backend()` env-driven helper
+
+### Ф6 (OAuth) — Sprint 1 + 2
+- F4 audit doc [`docs/wiki/auth/oauth2-service.md`](auth/oauth2-service.md)
+- F5.1 BSL wrapper `src/bsl/mcp_server/auth/oauth2.py` 214→78 LoC thin async adapter
+- F5.2 reusable FastAPI router `src/shared/mcp_oauth/fastapi/` (build_oauth_router + require_oauth)
+- F5.3 regression 47/47 OAuth-domain tests pass, zero new fails
+- F5.4 audit logging `AuditedOAuth2Service` + `OAuthAuditEvent` (5 event types)
+- F5.5 `.mcp.json` env vars + [`oauth-setup.md`](auth/oauth-setup.md) (PKCE flow + httpx client + troubleshooting)
+
+**Status:** Hermes-llm-wiki Phase 5 + Phase 6 ready for `/opsx:archive hermes-llm-wiki`.
+
+**Architecture finding:** pdf-vector-graph MCP — stdio-only, OAuth not applicable to local transport. F5.2 retargeted as reusable FastAPI router in `src.shared.mcp_oauth.fastapi` for any future HTTP MCP server (one-line `app.include_router()` to enable).
+
+---
+
 ## 2026-04-20 — Initial Bootstrap
 
 **Event:** Wiki schema and log created (Hermes Phase 2)
