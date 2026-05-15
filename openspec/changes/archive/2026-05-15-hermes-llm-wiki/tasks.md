@@ -246,5 +246,5 @@
   - Broken wiki-links = 0
   - MPF/DSPy compliance = 100% (3 agents)
   - Memory layer coverage = 5 (L0-L4)
-- [ ] Документация обновлена: `CLAUDE.md`, `AGENTS.md`, `memory-unified` skill, новые skills (`obsidian-vault`, `auto-librarian`, `wiki-pipeline`, `sandbox-execution`)
-- [ ] Change готов к архивации через `/opsx:archive hermes-llm-wiki`
+- [x] Документация обновлена: новые skills (`obsidian-vault`, `wiki-pipeline`, `sandbox-execution`), `docs/wiki/auth/oauth2-service.md` + `oauth-setup.md`, chapter `05.6_Sandbox_исполнения.md`, `docs/wiki/log.md`
+- [x] Change готов к архивации через `/opsx:archive hermes-llm-wiki` ← 2026-05-15
