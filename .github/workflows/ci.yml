@@ -79,6 +79,47 @@ jobs:
         run: mypy src/
         continue-on-error: true  # strict mode may have existing violations
 
+  mypy-baseline:
+    name: Type Check (mypy-baseline ratchet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev,qdrant,morphology]"
+
+      # Ratchet gate: fails if mypy total error count grows or if any error
+      # not present in mypy-baseline.txt is introduced. Exclude pattern mirrors
+      # .pre-commit-config.yaml mypy hook (see roadmap 260514). Re-sync the
+      # baseline via:
+      #   mypy src/ --ignore-missing-imports --warn-return-any \
+      #     --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$|src/api/auth/)' \
+      #     | python -m mypy_baseline sync
+      # then commit mypy-baseline.txt with the reduction.
+      - name: mypy-baseline filter
+        run: |
+          set -o pipefail
+          python -m mypy src/ \
+            --ignore-missing-imports --warn-return-any \
+            --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$|src/api/auth/)' \
+            | python -m mypy_baseline filter
+
   docstrings:
     name: Docstring Coverage (interrogate)
     runs-on: ubuntu-latest
