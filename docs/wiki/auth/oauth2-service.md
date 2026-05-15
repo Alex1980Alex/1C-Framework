@@ -27,11 +27,12 @@ related:
 | | BSL legacy | Generic shared |
 |---|---|---|
 | Путь | [`src/bsl/mcp_server/auth/oauth2.py`](../../../src/bsl/mcp_server/auth/oauth2.py) | [`src/shared/mcp_oauth/`](../../../src/shared/mcp_oauth/) |
-| Размер | 214 LoC, single file | 373 LoC (models 34 + service 165 + store 157 + **init** 17) |
-| Tests | нет специфичных | [`tests/unit/test_mcp_oauth.py`](../../../tests/unit/test_mcp_oauth.py) — 16 passing |
-| Пользовательские данные | login + password в каждой структуре | абстрактный `user_data: dict` |
-| Store backends | только in-memory | pluggable через `OAuth2StoreBackend` ABC (in-memory готов, SQLite/Redis — TODO) |
-| Используется в | BSL MCP server | имеется `src.shared.mcp_oauth`, активных потребителей в коде НЕ найдено |
+| Размер | **78 LoC thin wrapper** (после F5.1 2026-05-15, было 214) | ~485 LoC (models 34 + service 165 + store 157 + audit ~110 + **init** ~19) |
+| Tests | [`tests/unit/test_bsl_oauth_wrapper.py`](../../../tests/unit/test_bsl_oauth_wrapper.py) — 9 passing | [`tests/unit/test_mcp_oauth.py`](../../../tests/unit/test_mcp_oauth.py) 16 + [`tests/unit/test_mcp_oauth_audit.py`](../../../tests/unit/test_mcp_oauth_audit.py) 9 = 25 passing |
+| Пользовательские данные | login + password (packed в `user_data` через wrapper) | абстрактный `user_data: dict` |
+| Store backends | inherited from generic | pluggable через `OAuth2StoreBackend` ABC (in-memory готов, SQLite/Redis — TODO) |
+| Audit logging | inherited from generic | `AuditedOAuth2Service` + `OAuthAuditEvent` (5 event types, F5.4 2026-05-15) |
+| Используется в | BSL MCP server (HTTP server middleware + endpoints) | готов к подключению в `pdf-vector-graph` MCP за флагом `MCP_OAUTH_ENABLED` (F5.2 pending) |
 
 `src/bsl/mcp_server/auth/oauth2.py:3-5` уже содержит docstring-предупреждение:
 
