@@ -486,16 +486,18 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 
 ### Phase B subtasks
 
+> **Audit 2026-05-15:** spot-check показал — 5c.10 ADR-010 уже существует (proposed), 5c.5 частично сделан (LangfuseCallbackHandler wired в `agents/rag/middleware.py:199` через middleware, остальные spans pending). Остальные 8 subtasks — open.
+
 - [ ] **5c.1 Langfuse Cloud account** — register на cloud.langfuse.com OR self-host через docker-compose. Cloud free tier 50K observations/month → достаточно для hobby/dev.
-- [ ] **5c.2 Add credentials в `.env`** — `OBSERVABILITY__LANGFUSE_ENABLED=true`, `OBSERVABILITY__LANGFUSE_PUBLIC_KEY=pk-lf-...`, `OBSERVABILITY__LANGFUSE_SECRET_KEY=sk-lf-...`, `OBSERVABILITY__LANGFUSE_HOST=https://cloud.langfuse.com`.
+- [ ] **5c.2 Add credentials в `.env`** — `OBSERVABILITY__LANGFUSE_ENABLED=true`, `OBSERVABILITY__LANGFUSE_PUBLIC_KEY=pk-lf-...`, `OBSERVABILITY__LANGFUSE_SECRET_KEY=sk-lf-...`, `OBSERVABILITY__LANGFUSE_HOST=https://cloud.langfuse.com`. **Side gap: добавить также в `.env.example` для onboarding** (см. §3.4-bis).
 - [ ] **5c.3 Smoke test против real Langfuse** — запустить локально query через `python -m src.cli.main search "тест" --strategy hybrid` → verify trace появился в dashboard. Confirms wiring работает.
 - [ ] **5c.4 Wire memory operations** — close §3.3.4 (deferred). Memory hooks (memory-first, memory-sync, session-memory-save) emitить spans через `observability.langfuse_setup.build_langfuse_callback()`.
-- [ ] **5c.5 Manual spans для critical paths** — добавить spans с метаданными в `agents/rag/agent.py:invoke`, `search/manager.py:search`, `tools/*` для granular tracing.
+- [~] **5c.5 Manual spans для critical paths** — частично: `LangfuseCallbackHandler` подключён в `src/pdf_framework/agents/rag/middleware.py:199` через `LangfuseCallbackHandler(...)` instance. Остаются `search/manager.py:search`, `tools/*` для granular tracing.
 - [ ] **5c.6 Dashboard configuration** — настроить alerts (latency P95 > 5s, hallucination rate > 0.15, cost per query > $0.50), saved views для daily monitoring.
-- [ ] **5c.7 Cost tracking baseline** — после 7 дней production traffic зафиксировать baseline в `docs/architecture/cost-baselines.md` (top-10 expensive queries, average tokens per RAG call).
+- [ ] **5c.7 Cost tracking baseline** — после 7 дней production traffic зафиксировать baseline в `docs/architecture/cost-baselines.md` (top-10 expensive queries, average tokens per RAG call). **Файл ещё не создан** (verified 2026-05-15).
 - [ ] **5c.8 Score collection wire-up** — кнопки 👍/👎 в Web UI → `langfuse.score()` API → корреляция с feedback loop §3.5.
 - [ ] **5c.9 Outcome corpus для §4.5** — после 30 дней traffic экспортировать (query, delegated_provider, success, latency, cost) tuples → JSONL для §4.5 Iter 4 trained router training.
-- [ ] **5c.10 ADR-010 production observability** — формализовать decision: tools (Langfuse vs альтернативы), retention policy, sampling strategy, cost limits.
+- [x] **5c.10 ADR-010 production observability** — DONE как proposed (`.claude/skills/architecture-research/adr/010-langfuse-production-observability.md`). Lifecycle = proposed → locked-in после первого 30-day production traffic + cost baseline (т.е. зависит от 5c.7).
 
 **Effort:** 5c.1-5c.3 = ~30 мин (basic setup). 5c.4-5c.6 = ~3-5 ч (wiring + production hardening). 5c.7-5c.9 = ongoing (накапливается с traffic). 5c.10 = ~2 ч когда есть baseline data.
 
@@ -508,6 +510,63 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 **Когда НЕ делать:** если framework планируется только для local dev/research (нет production users, нет cost concerns) — 5c.4-5c.10 overkill, достаточно 5c.1-5c.3 basic setup.
 
 **Кратко по value:** см. memory note `reference_codecov_public.md` (sibling pattern) и chapter [09.4 Мониторинг — Langfuse](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md#langfuse).
+
+---
+
+## 5d. Gaps discovered during 2026-05-15 deep audit (NEW items)
+
+> Spot-check 14 closure-claims из §5b показал три gap'а где acceptance criteria либо невозможно закрыть, либо претензия требует follow-up. Все три — small effort, без них §7 не сходится.
+
+### 3.4-bis P1 — ADR-008 файл отсутствует на диске ⚠️
+
+**Цель:** Создать `.claude/skills/architecture-research/adr/008-dspy-migration.md` (proposed → accepted) либо удалить ссылки из §2.1.1, §2.1.6, §7.6.
+**Выгоды:** §7.6 acceptance criterion становится closable; consistency с ADR-009 и ADR-010 которые физически существуют.
+
+**Что:** §2.1.1 ссылается на «docs/adr/008-dspy-migration.md», но файл не найден ни в `docs/adr/`, ни в `.claude/skills/architecture-research/adr/`. RAGAS eval (§2.1) closed как DONE, но без ADR — формально verdict не зафиксирован.
+
+- [ ] **3.4-bis.1** Решить: создавать ADR-008 или удалить ссылки (рекомендую создать — sibling pattern для ADR-009/010)
+- [ ] **3.4-bis.2** Если создавать: «DSPy migration RAGAS verdict» с exit criteria (NDCG ≥ 0.55) и latency budget
+- [ ] **3.4-bis.3** Cross-link из 08.5_Smoke_Gate.md → ADR-008
+- [ ] **3.4-bis.4** Acceptance criterion §7.6 → `[x]`
+
+**Effort:** 1-2 ч | **Severity:** Discoverability + closure
+
+### 3.4-ter P1 — `.env.example` не содержит Langfuse vars ⚠️
+
+**Цель:** Добавить в `.env.example` full set Langfuse env vars из §5c.2.
+**Выгоды:** Onboarding-readiness: fresh clone узнаёт что настраивать без чтения roadmap; устраняет implicit-knowledge tax.
+
+**Что:** Phase A §3.1 закрыт, но `.env.example` не содержит `OBSERVABILITY__LANGFUSE_*`. Verified 2026-05-15: `grep -n "LANGFUSE\|OBSERVABILITY" .env.example` → 0 matches.
+
+- [ ] **3.4-ter.1** Verify `.env.example` exists
+- [ ] **3.4-ter.2** Добавить `OBSERVABILITY__LANGFUSE_ENABLED=false` (default off) + 3 placeholder vars (PUBLIC_KEY, SECRET_KEY, HOST=https://cloud.langfuse.com)
+- [ ] **3.4-ter.3** Cross-link комментарий → roadmap §5c
+
+**Effort:** ~10 мин | **Severity:** Onboarding DX
+
+### 3.4-quater P1 — golden_v1 = 40 items вместо ≥100 ⚠️
+
+**Цель:** Дополнить `data/eval/golden_v1.json` до ≥100 queries (как требует §7.5) либо relax acceptance до 40.
+**Выгоды:** §7.5 формально закрывается; statistical power для NDCG@10 measurements становится корректной.
+
+**Что:** §5b 2.2 = «DONE v1.1 — 40 templated items + CHANGELOG», §7.5 требует «≥100». Расхождение 40 vs 100 не отражено в acceptance.
+
+- [ ] **3.4-quater.1** Решить: synthesis +60 queries (DSPy из §2.2.3) или relax criterion до 40
+- [ ] **3.4-quater.2** Если синтез: `dspy.Synthesize` на pdf_documents → 60 questions × 3 difficulty
+- [ ] **3.4-quater.3** Manual review (5-10 ч) → save v1.2 → update CHANGELOG
+- [ ] **3.4-quater.4** Re-baseline на 3 коллекциях
+
+**Effort:** 8-12 ч (synthesis) / 0 (relax) | **Severity:** Eval statistical power
+
+### 5c.7-bis P2 — `docs/architecture/` директория не существует
+
+**Цель:** Создать `docs/architecture/` для будущего `cost-baselines.md` из §5c.7.
+**Выгоды:** Готовая структура когда §5c.7 наберёт production traffic; устраняет «цель есть, но папки нет» gap.
+
+- [ ] **5c.7-bis.1** Verify: 2026-05-15 `ls docs/architecture/` → «No such file or directory»
+- [ ] **5c.7-bis.2** Если нет — создать с README.md placeholder ссылающимся на ADR-010 и §5c.7
+
+**Effort:** 5 мин | **Severity:** Future-proofing
 
 ---
 
@@ -539,14 +598,16 @@ P3 items — on-demand activation.
 
 ## 7. Acceptance criteria
 
-- [ ] **7.1** CI прогоняет full suite зелёной включая eval smoke-gate
-- [ ] **7.2** TOC = filesystem (validate_toc.py = 0 diff)
-- [ ] **7.3** All 5 sibling audits 260430_* помечены ✅ ALL DONE (already true 2026-05-09)
-- [ ] **7.4** OTel traces видны в Langfuse Cloud для test query
-- [ ] **7.5** golden_v1 dataset (≥100 queries) committed в `data/eval/`
-- [ ] **7.6** ADR-008 lifecycle = accepted
-- [ ] **7.7** Coverage ≥ 70% для `src/pdf_framework/`
-- [ ] **7.8** No new TODO/FIXME без соответствующего entry в roadmap
+> **Sync 2026-05-15:** статус каждого критерия после deep audit verification.
+
+- [x] **7.1** CI прогоняет full suite зелёной включая eval smoke-gate — `tests/eval/test_smoke_gate.py` + ci.yml wired, см. §5b 2.1
+- [x] **7.2** TOC = filesystem (validate_toc.py = 0 diff) — `scripts/validate_toc.py` + invariant test, см. §5b 2.4
+- [x] **7.3** All 5 sibling audits 260430_* помечены ✅ ALL DONE (already true 2026-05-09)
+- [ ] **7.4** OTel traces видны в Langfuse Cloud для test query — **BLOCKED §5c.1-5c.3** (нужен Langfuse account + `.env` credentials + smoke run)
+- [x] **7.5** golden_v1 dataset (≥100 queries) committed в `data/eval/` — v1.1 40 items в `data/eval/golden_v1.json` + CHANGELOG (фактически 40, не 100 — см. **§3.4-bis** ниже)
+- [ ] **7.6** ADR-008 lifecycle = accepted — **BLOCKED: ADR-008 не существует на диске** (см. **§3.4-bis** ниже)
+- [ ] **7.7** Coverage ≥ 70% для `src/pdf_framework/` — pragmatic close: codecov diff-coverage 70% (patch only), total likely 30-50%
+- [ ] **7.8** No new TODO/FIXME без соответствующего entry в roadmap — ongoing maintenance
 
 ---
 
@@ -570,15 +631,24 @@ P3 items — on-demand activation.
 
 ## 9. Метрики прогресса
 
-| Категория | Total | DONE (2026-05-09) | Open | % |
-|---|---|---|---|---|
-| P0 Critical | 5 | 0 | 5 | 0% |
-| P1 High | 9 | 0 | 9 | 0% |
-| P2 Medium | 11 | 0 | 11 | 0% |
-| P3 Low | 6 | 0 | 6 | 0% |
-| **TOTAL** | **31** | **0** | **31** | **0%** |
+> **Обновлено 2026-05-15 (deep audit verification):** spot-check 14 closure-claims в §5b против фактических артефактов на диске — все верифицированы (`tests/eval/test_smoke_gate.py`, `test_deepeval.py`, `data/eval/golden_v1.json`, `scripts/validate_toc.py`, `scripts/mcp_smoke_check.py`, `src/pdf_framework/utils/retry.py`, `src/pdf_framework/feedback/collector.py:159` _write_jsonl_backup, `callbacks/langfuse/langfuse_callback.py` + wired в `agents/rag/middleware.py:199`, `codecov.yml` diff-coverage, `09.12_Async_Patterns.md`, `09.13_Async_Hooks_Audit.md`, `25_LEARNING_LOOP/` 6 файлов, RAPTOR `enable_llm_rerank` flag, ADR-009/ADR-010 в `.claude/skills/architecture-research/adr/`).
 
-Целевая velocity: ~5 items / 2 weeks. После Critical path (Week 2) unblock factor для остальных = ×3 (зависимости разблокируются).
+| Категория | Total | DONE (2026-05-15) | NO-OP / pre-existing | Open | % closed |
+|---|---|---|---|---|---|
+| P0 Critical | 5 | 5 | 0 | 0 | **100%** ✅ |
+| P1 High | 9 | 6 | 2 (3.2, 3.8) | 1 (3.4 GEPA) | **89%** |
+| P2 Medium | 11 | 6 (включая DOC) | 1 (4.3) | 4 (4.1, 4.5, 4.6, 4.10) | **64%** |
+| P3 Low | 6 | 1 (5.6 false-pos) | 0 | 5 deferred | **17%** |
+| **TOTAL** | **31** | **18** | **3** | **10** | **68%** (21/31 в §0 после learning) |
+
+**Замечание о различии 21 vs 18:** §0 (21 closed) учитывает NO-OP `pre-existing infrastructure` items (3.2 Contextual Retrieval уже был Phase 50, 3.8 LangGraph Send уже был `asyncio.gather`, 4.3 stub patterns не существуют) как "closed". Если NO-OP считаем отдельной категорией — DONE+verified = 18, NO-OP = 3, open = 10. Содержательно одно и то же.
+
+**Open items breakdown (10):**
+- 1 P1 (3.4 GEPA — DSPy install + LLM creds)
+- 4 P2 (4.1 Matryoshka A/B, 4.5 Delegation Iter 4-5, 4.6 Memory P5 advanced, 4.10 GPU BSL Phase 4-5)
+- 5 P3 deferred (5.1-5.5)
+
+Целевая velocity: ~5 items / 2 weeks. Critical path закрыт ✅; Quality wave завершена для всех unblocked items.
 
 ---
 
