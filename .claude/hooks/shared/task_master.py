@@ -85,8 +85,11 @@ class FileLock:
                 pass
 
     def _platform_lock(self) -> None:
+        # Invariant: __enter__ opens self._lock_file before any _platform_lock
+        # call. None here means refactor regression — fail loud instead of
+        # silently reporting "acquired".
         if self._lock_file is None:
-            return
+            raise RuntimeError("FileLock._platform_lock called before __enter__ opened the lock file")
         if sys.platform == "win32":
             import msvcrt
 
