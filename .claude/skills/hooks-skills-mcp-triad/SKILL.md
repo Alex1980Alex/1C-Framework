@@ -355,6 +355,37 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 ОТВЕТ ПОЛЬЗОВАТЕЛЮ
 ```
 
+### Pipeline 5: Langfuse Observability (roadmap §5c.4, 2026-05-15)
+
+Standalone хуки (без LangChain) могут эмитить Langfuse spans через
+`emit_observation()` helper для production observability:
+
+```
+session-memory-save.py (Stop event)
+            │
+            ▼
+collect_context() → save_to_sqlite() → _emit_langfuse_span(ctx, status)
+                                              │
+                                              ▼
+              src/pdf_framework/observability/langfuse_setup.py
+                          emit_observation(name, input, output,
+                                           session_id, metadata)
+                                              │
+                          [graceful try/except — never raises]
+                                              │
+                                              ▼
+                              langfuse.start_observation() → flush()
+                                              │
+                                              ▼
+                                  cloud.langfuse.com / self-host
+```
+
+**Pattern:** прямой Langfuse SDK API (НЕ LangChain callback handler — хуки
+не используют LangChain runtime). Opt-out: env `MEMORY_HOOK_NO_LANGFUSE=1`.
+Currently wired в `session-memory-save.py`; same pattern доступен для
+`memory-first-hook.py` + `memory-sync.py`. Подробности — [09.4 Мониторинг
+"Через emit_observation()"](../../../docs/framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md).
+
 ### Pipeline 4: Stop Enforcement
 
 ```
