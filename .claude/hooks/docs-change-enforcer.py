@@ -194,6 +194,10 @@ SKIP_PATTERNS = [
     ".markdownlint-cli2.yaml",
     "codecov.yml",
     "data/eval/",
+    # mypy ratchet baseline (auto-generated snapshot, roadmap 260514 Phase 0).
+    # Re-synced opportunistically via `mypy src/ ... | python -m mypy_baseline sync`.
+    # Not product code, no docs to maintain.
+    "mypy-baseline.txt",
     # MCP configs, tooling, docker, infra (infrastructure, not product code)
     ".mcp/",
     ".mcp.json",
