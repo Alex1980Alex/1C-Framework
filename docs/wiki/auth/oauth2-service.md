@@ -45,7 +45,16 @@ New MCP servers should use src.shared.mcp_oauth instead.
 """
 ```
 
-Это значит, что **extraction уже выполнена** (Ф6 §2 spec). Невыполненными остаются: backward-compat wrapper, подключение к `pdf-vector-graph`, security review.
+Это значит, что **extraction уже выполнена** (Ф6 §2 spec).
+
+**Прогресс по Ф6 (2026-05-15):**
+
+- ✅ F4 — audit OAuth2Service (этот документ)
+- ✅ F5.1 — backward-compat wrapper для BSL (`src/bsl/mcp_server/auth/oauth2.py` → 78 LoC thin async adapter)
+- ✅ F5.3 — regression: 43/43 OAuth-domain tests pass, zero new failures
+- ✅ F5.4 — audit logging infrastructure (`AuditedOAuth2Service` + `OAuthAuditEvent`)
+- ✅ F5.5 — `.mcp.json` env vars + [`oauth-setup.md`](oauth-setup.md) (setup guide)
+- 🔲 F5.2 — pdf-vector-graph MCP integration (за feature flag `MCP_OAUTH_ENABLED`)
 
 ---
 
