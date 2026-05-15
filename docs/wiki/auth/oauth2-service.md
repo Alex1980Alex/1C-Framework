@@ -12,6 +12,7 @@ created_at: '2026-05-14T00:00:00'
 updated_at: '2026-05-14T00:00:00'
 related:
   - hermes-llm-wiki-Phase-6
+  - '[[oauth-setup]]'
 ---
 
 # OAuth 2.1 Service — состояние и API
@@ -53,7 +54,7 @@ New MCP servers should use src.shared.mcp_oauth instead.
 - ✅ F5.1 — backward-compat wrapper для BSL (`src/bsl/mcp_server/auth/oauth2.py` → 78 LoC thin async adapter)
 - ✅ F5.3 — regression: 43/43 OAuth-domain tests pass, zero new failures
 - ✅ F5.4 — audit logging infrastructure (`AuditedOAuth2Service` + `OAuthAuditEvent`)
-- ✅ F5.5 — `.mcp.json` env vars + [`oauth-setup.md`](oauth-setup.md) (setup guide)
+- ✅ F5.5 — `.mcp.json` env vars + [`oauth-setup.md`](oauth-setup.md) (setup guide; см. также [[oauth-setup]])
 - 🔲 F5.2 — pdf-vector-graph MCP integration (за feature flag `MCP_OAUTH_ENABLED`)
 
 ---

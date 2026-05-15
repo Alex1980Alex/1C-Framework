@@ -1,6 +1,6 @@
 ---
 confidence: 1.0
-created: ''
+created: '2026-04-20'
 created_at: 2026-04-20 10:00:00+00:00
 related:
 - '[[_index]]'
@@ -19,6 +19,10 @@ updated_at: 2026-04-20 10:00:00+00:00
 ---
 
 <!-- kb-lint-disable-file links -->
+<!-- kb-lint-disable-file structure -->
+<!-- SCHEMA.md (ALLCAPS) — intentional convention for top-level meta-files
+     (cf. README.md, CHANGELOG.md). 7 wiki-links [[SCHEMA]] in overview.md,
+     _index.md, patterns.md, log.md depend on this exact filename. -->
 <!-- This file contains template/example wiki-links inside code blocks
      (e.g. [[wiki-link]], [[page-name]], [[wiki-links]]) that are syntax
      demonstrations, not real links. kb-lint's link checker doesn't strip
