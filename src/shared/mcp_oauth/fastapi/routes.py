@@ -102,7 +102,15 @@ def build_oauth_router() -> APIRouter:
 
 
 def _public_url(request: Request) -> str:
-    """Derive public-facing URL from request, honoring proxy headers."""
+    """Derive public-facing URL from request, honoring proxy headers.
+
+    SECURITY: `x-forwarded-proto` / `x-forwarded-host` are trusted unconditionally.
+    In production, deploy behind a reverse proxy that strips these headers from
+    inbound requests and re-adds them on hop-out (nginx `proxy_set_header`,
+    Envoy `request_headers_to_remove`). Without this, a client can spoof the
+    `issuer` field in PRM (RFC 9728) and ASM (RFC 8414) metadata documents.
+    Pair with FastAPI's `TrustedHostMiddleware` for defense-in-depth.
+    """
     scheme = request.headers.get("x-forwarded-proto") or request.url.scheme
     host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
     return f"{scheme}://{host}".rstrip("/")
