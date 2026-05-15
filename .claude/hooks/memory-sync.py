@@ -98,6 +98,9 @@ def main():
             f"- Verifying MCP servers start correctly: memory-ai, vector-memory, skill-learning\n"
             f"- Running integration tests: pytest tests/integration/test_memory_unified.py"
         )
+        _emit_langfuse_span("changes-detected", change_count=len(changes))
+    else:
+        _emit_langfuse_span("clean")
 
     # Always allow stop (advisory only)
     json.dump(output, sys.stdout)
