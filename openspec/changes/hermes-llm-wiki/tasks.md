@@ -183,13 +183,13 @@
 **Specs:** `agent-sandbox`
 **Files:** `src/pdf_framework/sandbox/` (new)
 
-- [ ] Оценить LangSmith sandbox (уже в `.venv` как транзитивная зависимость) — zero-cost fallback
-- [ ] Если LangSmith подходит — создать `src/pdf_framework/sandbox/langsmith_backend.py` (простая обёртка)
-- [ ] Иначе: `pip install e2b-code-interpreter` + получить E2B API key
-- [ ] Создать `src/pdf_framework/sandbox/e2b_backend.py` с интерфейсом `SandboxBackend`
+- [x] Оценить LangSmith sandbox (GA May 2026) — выбран как primary (зэро-cost free tier, Firecracker isolation) ← F1 2026-05-15
+- [x] LangSmith подошёл — создан `src/pdf_framework/sandbox/langsmith_backend.py` (~155 LoC, 13 mock-based tests) ← F1 2026-05-15
+- [x] `pip install e2b-code-interpreter` — добавлено как optional extra `sandbox-e2b` ← F2 2026-05-15
+- [x] Создан `src/pdf_framework/sandbox/e2b_backend.py` с stateful Jupyter (~140 LoC, 12 tests + persistence test) ← F2 2026-05-15
 - [x] Реализовать методы: `execute(code)`, `install(package)`, `upload/download(files)`
 - [x] Создать `dry_run_backend.py` для локальной разработки без API key
-- [ ] Интегрировать sandbox в research-скиллы (`architecture-research`, `tech-research`)
+- [ ] Интегрировать sandbox в research-скиллы (`architecture-research`, `tech-research`) — deferred polish (отложено до первого реального usage)
 - [x] Timeout 30s, лимит 50 сессий/день
 - [x] Создать `.claude/skills/sandbox-execution/SKILL.md`
 - [x] Логирование sandbox-сессий в `docs/wiki/log.md`
