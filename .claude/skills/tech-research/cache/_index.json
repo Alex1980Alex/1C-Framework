@@ -12,6 +12,29 @@
   ],
   "last_updated": "2026-05-15",
   "topics": {
+    "mypy-baseline-error-budget-tooling": {
+      "file": "mypy-baseline-error-budget-tooling-2026.md",
+      "domain": "tools",
+      "category": "tool",
+      "created": "2026-05-15",
+      "last_verified": "2026-05-15",
+      "version": "mypy-baseline 0.7.3 / mypy-json-report active / basedmypy 2.10",
+      "keywords": [
+        "mypy-baseline",
+        "mypy-json-report",
+        "basedmypy",
+        "error-budget",
+        "ratchet",
+        "type-cleanup",
+        "regression-gate",
+        "gradual-typing",
+        "pre-existing-errors",
+        "ci-baseline",
+        "drift-handling",
+        "orsinium-labs",
+        "memrise"
+      ]
+    },
     "langfuse-cost-api": {
       "file": "langfuse-cost-api-2026.md",
       "domain": "llm",
