@@ -10,8 +10,33 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-13",
+  "last_updated": "2026-05-15",
   "topics": {
+    "langfuse-cost-api": {
+      "file": "langfuse-cost-api-2026.md",
+      "domain": "llm",
+      "category": "observability",
+      "created": "2026-05-15",
+      "last_verified": "2026-05-15",
+      "version": "langfuse-python 3.x current / 4.x March 2026 rewrite",
+      "keywords": [
+        "langfuse-cost-api",
+        "langfuse-metrics-api",
+        "langfuse-daily-metrics",
+        "cost_details",
+        "usage_details",
+        "totalCost",
+        "fetch_traces",
+        "fetch_observations",
+        "cursor-pagination",
+        "python-sdk-v4",
+        "cost-baseline",
+        "export-blob-storage",
+        "5c.7",
+        "cost-baseline-script"
+      ],
+      "summary": "Langfuse Python SDK 3.x/4.x API для извлечения cost/token данных за период. Три уровня: Metrics API (aggregated, рекомендуется для total cost) → fetch_observations с cursor pagination (top-N expensive queries) → Blob Storage Export (для >100K traces). Cost schema: obs.cost_details {input, output, total, cache_*} USD, usage_details {input, output, total, cache_read_input_tokens, reasoning_tokens}. Ingested cost overrides inferred. Ingestion lag 15-30s. Pagination — cursor (v2) рекомендуется, offset (v1 legacy). Antipatterns: CSV UI-export для месячных периодов; N+1 per-trace fetches; treating in-process CostTracker as source-of-truth. Для §5c.7 cost baseline — Metrics API + fetch_observations для top-N. Verified 2026-05-15 via 8 sources (Langfuse official docs + GitHub discussions)."
+    },
     "russian-entity-normalization-pymorphy2": {
       "file": "russian-entity-normalization-pymorphy2.md",
       "domain": "ml",
