@@ -355,36 +355,45 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 ОТВЕТ ПОЛЬЗОВАТЕЛЮ
 ```
 
-### Pipeline 5: Langfuse Observability (roadmap §5c.4, 2026-05-15)
+### Pipeline 5: Langfuse Observability (roadmap §5c.4 + §5c.5, full closure 2026-05-15)
 
-Standalone хуки (без LangChain) могут эмитить Langfuse spans через
+Standalone хуки (без LangChain) эмитят Langfuse spans через
 `emit_observation()` helper для production observability:
 
 ```
-session-memory-save.py (Stop event)
+session-memory-save.py / memory-first-hook.py / memory-sync.py
             │
             ▼
-collect_context() → save_to_sqlite() → _emit_langfuse_span(ctx, status)
-                                              │
-                                              ▼
-              src/pdf_framework/observability/langfuse_setup.py
-                          emit_observation(name, input, output,
-                                           session_id, metadata)
-                                              │
-                          [graceful try/except — never raises]
-                                              │
-                                              ▼
-                              langfuse.start_observation() → flush()
-                                              │
-                                              ▼
-                                  cloud.langfuse.com / self-host
+_emit_langfuse_span(ctx, status)  ← try/except, never raises
+            │
+            ▼
+src/pdf_framework/observability/langfuse_setup.py
+    ├─ _get_langfuse_client()  ← module-level singleton (perf)
+    └─ emit_observation(name, input, output, session_id, metadata, flush)
+            │
+            ▼
+langfuse.start_observation() → optional flush()
+            │
+            ▼
+cloud.langfuse.com / self-host
 ```
 
 **Pattern:** прямой Langfuse SDK API (НЕ LangChain callback handler — хуки
 не используют LangChain runtime). Opt-out: env `MEMORY_HOOK_NO_LANGFUSE=1`.
-Currently wired в `session-memory-save.py`; same pattern доступен для
-`memory-first-hook.py` + `memory-sync.py`. Подробности — [09.4 Мониторинг
-"Через emit_observation()"](../../../docs/framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md).
+
+**Fully wired call sites (§5c.4 + §5c.5 DONE 2026-05-15):**
+
+| Файл | Event | Status enum |
+|---|---|---|
+| `session-memory-save.py` | Stop | skipped-trivial / skipped-duplicate / saved |
+| `memory-first-hook.py` | UserPromptSubmit | skipped-trivial / skipped-cooldown / skipped-no-tokens / no-results / injected |
+| `memory-sync.py` | Stop | changes-detected / clean |
+| `src/pdf_framework/search/manager.py` `SearchManager.search` | async | cache-hit / ok (`flush=False`) |
+| `src/pdf_framework/tools/retrieval/search_tool.py` | @tool | ok / error (`flush=False`) |
+| `src/pdf_framework/tools/graph_query/graph_tool.py` | @tool | ok / error / no-results (`flush=False`) |
+| `src/pdf_framework/tools/document/index_tool.py` | @tool | ok / error (`flush=False`) |
+
+Hooks → `flush=True` (default; one-shot Stop/UPS event'ы). Hot-path framework callers → `flush=False` (SDK background thread обрабатывает queue, не блокирует event loop). Подробности — [09.4 Мониторинг "Wired call sites"](../../../docs/framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md). Cost extraction pipeline (§5c.7 PLANNED) — [260515 roadmap](../../../docs/roadmap/260515_ROADMAP_LANGFUSE_COST_BASELINE.md).
 
 ### Pipeline 4: Stop Enforcement
 
