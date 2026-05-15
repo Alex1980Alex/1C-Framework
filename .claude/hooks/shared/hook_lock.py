@@ -14,9 +14,10 @@ Usage:
 import json
 import os
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
-from pathlib import Path
+from typing import Any
 
 from shared.core_paths import get_cache_dir
 
@@ -28,18 +29,19 @@ LOCK_FILE = CACHE_DIR / "hooks-lock.json"
 STALE_THRESHOLD = 30
 
 
-def _read_lock() -> dict:
+def _read_lock() -> dict[str, Any]:
     """Read current lock state."""
     if not LOCK_FILE.exists():
         return {}
     try:
-        with open(LOCK_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        with open(LOCK_FILE, encoding="utf-8") as f:
+            data: dict[str, Any] = json.load(f)
+            return data
     except (json.JSONDecodeError, OSError):
         return {}
 
 
-def _write_lock(data: dict) -> None:
+def _write_lock(data: dict[str, Any]) -> None:
     """Write lock state."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -49,7 +51,7 @@ def _write_lock(data: dict) -> None:
         pass
 
 
-def _is_stale(lock_data: dict) -> bool:
+def _is_stale(lock_data: dict[str, Any]) -> bool:
     """Check if lock is stale (older than threshold)."""
     acquired_at = lock_data.get("acquired_at", "")
     if not acquired_at:
@@ -71,11 +73,13 @@ def acquire_lock(hook_name: str, timeout: float = 10.0) -> bool:
 
         # Lock free or stale
         if not lock_data.get("holder") or _is_stale(lock_data):
-            _write_lock({
-                "holder": hook_name,
-                "acquired_at": datetime.now().isoformat(),
-                "pid": os.getpid(),
-            })
+            _write_lock(
+                {
+                    "holder": hook_name,
+                    "acquired_at": datetime.now().isoformat(),
+                    "pid": os.getpid(),
+                }
+            )
             return True
 
         # Already held by us
@@ -97,7 +101,7 @@ def release_lock(hook_name: str) -> bool:
 
 
 @contextmanager
-def hook_lock(hook_name: str, timeout: float = 10.0):
+def hook_lock(hook_name: str, timeout: float = 10.0) -> Iterator[bool]:
     """Context manager for hook synchronization.
 
     Usage:

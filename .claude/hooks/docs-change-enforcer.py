@@ -35,7 +35,9 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Core path resolution for shared modules
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,6 +49,15 @@ sys.path.insert(0, _HOOK_DIR)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 COOLDOWN_FILE = PROJECT_ROOT / "data" / "docs-enforcer-last-block.txt"
 COOLDOWN_MINUTES = 30  # After blocking once, allow stop for this duration
+
+# Session-bounded git window (2026-05-15 fix). Reads hook-invocations.jsonl tail
+# to find earliest entry for current session_id, then uses that timestamp as
+# git log --since= boundary instead of fixed 6h calendar window. Eliminates
+# false-positives where auto-save commits from prior sessions get attributed
+# to the current session.
+INVOCATIONS_LOG = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
+SESSION_LOG_TAIL_BYTES = 2_000_000  # 2 MB — covers ~10K recent invocations
+SESSION_FALLBACK_WINDOW = "6 hours ago"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # DOMAIN MAPPING: code prefix → (docs subdirectory, skill name)
@@ -61,63 +72,75 @@ CODE_TO_DOMAIN = [
     # SPECIFIC OVERRIDES (must come before general prefixes — first match wins)
     # Roadmap §3.1/§3.7/§3.3 closure findings: these specific files document
     # to 09_АДМИНИСТРИРОВАНИЕ (observability/monitoring), not generic categories.
-    ("src/pdf_framework/callbacks/langfuse/",   "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),  # Langfuse = observability
-    ("src/pdf_framework/callbacks/metrics/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/callbacks/logging/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/config/observability.py", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),  # Langfuse settings
-    ("src/pdf_framework/utils/retry.py",        "09_АДМИНИСТРИРОВАНИЕ",  "tenacity-retry"),  # Retry policy in 09.4
+    (
+        "src/pdf_framework/callbacks/langfuse/",
+        "09_АДМИНИСТРИРОВАНИЕ",
+        "deployment",
+    ),  # Langfuse = observability
+    ("src/pdf_framework/callbacks/metrics/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/callbacks/logging/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    (
+        "src/pdf_framework/config/observability.py",
+        "09_АДМИНИСТРИРОВАНИЕ",
+        "deployment",
+    ),  # Langfuse settings
+    (
+        "src/pdf_framework/utils/retry.py",
+        "09_АДМИНИСТРИРОВАНИЕ",
+        "tenacity-retry",
+    ),  # Retry policy in 09.4
     # Wiki export pipeline lives in indexing/ but is chapter 32 owned (2026-05-15)
     ("src/pdf_framework/indexing/wiki_exporter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
     # GENERAL PREFIXES (fallback after specific overrides)
-    ("src/pdf_framework/search/",           "04_ПОИСК",              "search-pipeline-debug"),
-    ("src/pdf_framework/agents/",           "05_RAG_АГЕНТЫ",         "agent-orchestration"),
-    ("src/pdf_framework/loaders/",          "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
-    ("src/pdf_framework/processing/",       "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
-    ("src/pdf_framework/indexing/",         "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
-    ("src/pdf_framework/graph_store/",      "03_ИНДЕКСАЦИЯ",         "graph-operations"),
-    ("src/pdf_framework/embeddings/",       "02_БЫСТРЫЙ_СТАРТ",     "embedding-models"),
-    ("src/pdf_framework/vector_store/",     "04_ПОИСК",              "qdrant-operations"),
-    ("src/pdf_framework/config/",           "02_БЫСТРЫЙ_СТАРТ",     "framework-config"),
-    ("src/pdf_framework/evaluation/",       "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
-    ("src/pdf_framework/feedback/",         "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
-    ("src/pdf_framework/optimization/",     "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
-    ("src/pdf_framework/callbacks/",        "07_КЭШИРОВАНИЕ",       "framework-caching"),
-    ("src/pdf_framework/multitenancy/",     "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/observability/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/guardrails/",       "33_GUARDRAILS",           "framework-troubleshooting"),
-    ("src/pdf_framework/knowledge_base/",   "34_KNOWLEDGE_BASE",       "framework-config"),
+    ("src/pdf_framework/search/", "04_ПОИСК", "search-pipeline-debug"),
+    ("src/pdf_framework/agents/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
+    ("src/pdf_framework/loaders/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/processing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/graph_store/", "03_ИНДЕКСАЦИЯ", "graph-operations"),
+    ("src/pdf_framework/embeddings/", "02_БЫСТРЫЙ_СТАРТ", "embedding-models"),
+    ("src/pdf_framework/vector_store/", "04_ПОИСК", "qdrant-operations"),
+    ("src/pdf_framework/config/", "02_БЫСТРЫЙ_СТАРТ", "framework-config"),
+    ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/optimization/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/callbacks/", "07_КЭШИРОВАНИЕ", "framework-caching"),
+    ("src/pdf_framework/multitenancy/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/guardrails/", "33_GUARDRAILS", "framework-troubleshooting"),
+    ("src/pdf_framework/knowledge_base/", "34_KNOWLEDGE_BASE", "framework-config"),
     # Agent execution sandbox (hermes-llm-wiki Ф5). Skeleton lives at
     # src/pdf_framework/sandbox/ (ABC + DryRun); LangSmith/E2B backends
     # land in later Ф5 commits. Docs chapter aligns with research-agents
     # since the spec routes sandbox into architecture/tech-research agents.
-    ("src/pdf_framework/sandbox/",          "05_RAG_АГЕНТЫ",         "agent-orchestration"),
-    ("src/extensions/",                     "35_EXTENSIONS",           "pdf-knowledge"),
-    ("src/api/routes/",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
-    ("src/api/middleware/",                 "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/api/auth/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),  # IDOR in 09.2
-    ("src/api/app.py",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
-    ("src/cli/",                           "06_ИНТЕРФЕЙСЫ",         "framework-cli"),
-    ("src/mcp_server/",                    "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
-    ("src/ui/",                            "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
-    ("src/workers/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/utils/",           "01_ОБЗОР",              "pdf-knowledge"),
+    ("src/pdf_framework/sandbox/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
+    ("src/extensions/", "35_EXTENSIONS", "pdf-knowledge"),
+    ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/api/auth/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),  # IDOR in 09.2
+    ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
+    ("src/mcp_server/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
+    ("src/ui/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
+    ("src/workers/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/utils/", "01_ОБЗОР", "pdf-knowledge"),
     # BSL (1C Enterprise) modules
-    ("src/bsl/",                           "06_ИНТЕРФЕЙСЫ",         "bsl-development"),
-    ("src/shared/llm_rotation/",           None,                    "llm-rotation"),
-    ("src/shared/",                        "01_ОБЗОР",              "pdf-knowledge"),
+    ("src/bsl/", "06_ИНТЕРФЕЙСЫ", "bsl-development"),
+    ("src/shared/llm_rotation/", None, "llm-rotation"),
+    ("src/shared/", "01_ОБЗОР", "pdf-knowledge"),
     # Wiki pipeline subsystem — Librarian lives here (chapter 32, 2026-05-15)
     ("src/memory/librarian/wiki_promoter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
-    ("src/memory/librarian/wiki_decay.py",    "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
-    ("src/memory/librarian/",                  "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
+    ("src/memory/librarian/wiki_decay.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
+    ("src/memory/librarian/", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
     # Memory subsystem (general) — chapter 27 Unified Memory
-    ("src/memory/orchestrator/",            "27_UNIFIED_MEMORY",     "memory-unified"),
-    ("src/memory/ai_memory/",               "27_UNIFIED_MEMORY",     "memory-unified"),
-    ("src/memory/vector_memory/",           "27_UNIFIED_MEMORY",     "memory-unified"),
-    ("src/memory/skill_learning/",          "29_XSKILL_CONTINUOUS_LEARNING", "memory-unified"),
-    ("src/memory/infrastructure/",          "27_UNIFIED_MEMORY",     "memory-unified"),
-    ("src/memory/",                        "27_UNIFIED_MEMORY",     "memory-unified"),
+    ("src/memory/orchestrator/", "27_UNIFIED_MEMORY", "memory-unified"),
+    ("src/memory/ai_memory/", "27_UNIFIED_MEMORY", "memory-unified"),
+    ("src/memory/vector_memory/", "27_UNIFIED_MEMORY", "memory-unified"),
+    ("src/memory/skill_learning/", "29_XSKILL_CONTINUOUS_LEARNING", "memory-unified"),
+    ("src/memory/infrastructure/", "27_UNIFIED_MEMORY", "memory-unified"),
+    ("src/memory/", "27_UNIFIED_MEMORY", "memory-unified"),
     # Framework self-search (Phase 8 §25 / chapter 31)
-    ("src/framework_search/",              "31_QWEN3_RETRIEVAL_PRODUCTION", "framework-search"),
+    ("src/framework_search/", "31_QWEN3_RETRIEVAL_PRODUCTION", "framework-search"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -267,19 +290,82 @@ def _is_skill_file(filepath: str) -> bool:
     return ".claude/skills/" in filepath.replace("\\", "/").lower()
 
 
-def get_session_files() -> set:
+def _get_session_start(session_id: str) -> datetime | None:
+    """Find earliest invocation_logger entry for this session_id.
+
+    Scans the tail of data/hook-invocations.jsonl (bounded by
+    SESSION_LOG_TAIL_BYTES) for the smallest `ts` where `session ==
+    session_id`. That timestamp is the practical start of the current
+    Claude Code session (UserPromptSubmit / SessionStart hooks log
+    very early in the session lifecycle).
+
+    Returns:
+        datetime of earliest match, or None if session_id empty,
+        log missing, or no match (caller falls back to 6h window).
+    """
+    if not session_id or not INVOCATIONS_LOG.exists():
+        return None
+
+    try:
+        with open(INVOCATIONS_LOG, "rb") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            f.seek(max(0, size - SESSION_LOG_TAIL_BYTES))
+            blob = f.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None
+
+    earliest: datetime | None = None
+    for line in blob.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except (ValueError, json.JSONDecodeError):
+            continue  # Corrupt line — skip, don't fail whole scan.
+        if obj.get("session") != session_id:
+            continue
+        ts_str = obj.get("ts", "")
+        if not ts_str:
+            continue
+        try:
+            # invocation_logger writes naive ISO; tolerate both naive and
+            # tz-aware (latter may appear if format ever changes).
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if earliest is None or ts < earliest:
+            earliest = ts
+
+    return earliest
+
+
+def get_session_files(session_id: str = "") -> set[str]:
     """Get all files changed in this session (uncommitted + recent commits).
 
-    Uses 6-hour window to approximate session duration.
-    Combines working tree changes with recently committed files.
+    Combines working tree changes (always current-session) with commits
+    bounded by either:
+      - Session-derived start time (from hook-invocations.jsonl) if
+        session_id provided and log entry found. Eliminates false-positives
+        from auto-save commits made in PRIOR sessions within the past 6h.
+      - Fallback fixed 6-hour calendar window otherwise (backwards-compat
+        for hook invocations without session_id payload).
+
+    Args:
+        session_id: Claude Code session ID from stdin payload. Empty
+            string triggers the 6h fallback path.
     """
     files = set()
 
-    # 1. Uncommitted changes (working tree + staged)
+    # 1. Uncommitted changes (working tree + staged) — always current session
     try:
         r = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, encoding="utf-8", timeout=3,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:
@@ -292,11 +378,20 @@ def get_session_files() -> set:
     except Exception:
         pass
 
-    # 2. Recently committed files (last 6 hours ≈ session window)
+    # 2. Recently committed files — session-bounded if possible
+    session_start = _get_session_start(session_id)
+    if session_start is not None:
+        since_arg = f"--since={session_start.isoformat()}"
+    else:
+        since_arg = f"--since={SESSION_FALLBACK_WINDOW}"
+
     try:
         r = subprocess.run(
-            ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
-            capture_output=True, text=True, encoding="utf-8", timeout=5,
+            ["git", "log", since_arg, "--name-only", "--pretty="],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:
@@ -317,7 +412,7 @@ def get_session_files() -> set:
     return files
 
 
-def find_stale_infra(session_files: set) -> list:
+def find_stale_infra(session_files: set[str]) -> list[dict[str, Any]]:
     """Check if infrastructure changes (hooks/skills/settings) need CLAUDE.md update.
 
     Infrastructure = .claude/hooks/*.py, .claude/settings.json,
@@ -342,15 +437,17 @@ def find_stale_infra(session_files: set) -> list:
             infra_changes.append(fp)
 
     if infra_changes and not claude_md_updated:
-        return [{
-            "subdir": "CLAUDE.md (инфраструктура)",
-            "skill": "hooks-skills-mcp-triad",
-            "files": infra_changes,
-        }]
+        return [
+            {
+                "subdir": "CLAUDE.md (инфраструктура)",
+                "skill": "hooks-skills-mcp-triad",
+                "files": infra_changes,
+            }
+        ]
     return []
 
 
-def find_unmapped_changes(session_files: set) -> list:
+def find_unmapped_changes(session_files: set[str]) -> list[dict[str, Any]]:
     """Catch-all: files that passed skip check but don't match CODE_TO_DOMAIN or infra.
 
     These are files the system can't auto-route (e.g., tests/, scripts/,
@@ -365,23 +462,22 @@ def find_unmapped_changes(session_files: set) -> list:
         if _is_infra_file(fp):
             continue
         fp_lower = fp.replace("\\", "/").lower()
-        matched = any(
-            fp_lower.startswith(prefix.lower())
-            for prefix, _, _ in CODE_TO_DOMAIN
-        )
+        matched = any(fp_lower.startswith(prefix.lower()) for prefix, _, _ in CODE_TO_DOMAIN)
         if not matched:
             unmapped.append(fp)
 
     if unmapped:
-        return [{
-            "subdir": "UNMAPPED (используй /audit-docs)",
-            "skill": "audit-docs",
-            "files": unmapped,
-        }]
+        return [
+            {
+                "subdir": "UNMAPPED (используй /audit-docs)",
+                "skill": "audit-docs",
+                "files": unmapped,
+            }
+        ]
     return []
 
 
-def find_stale_domains(session_files: set) -> list:
+def find_stale_domains(session_files: set[str]) -> list[dict[str, Any]]:
     """Find code domains where docs weren't updated in the same session.
 
     Logic:
@@ -396,7 +492,9 @@ def find_stale_domains(session_files: set) -> list:
     skill_files = {f for f in session_files if _is_skill_file(f)}
 
     # Track stale domains (deduped by doc_subdir)
-    stale = {}  # doc_subdir → {"subdir": str, "skill": str, "files": [str]}
+    stale: dict[
+        str, dict[str, Any]
+    ] = {}  # doc_subdir → {"subdir": str, "skill": str, "files": [str]}
 
     for fp in session_files:
         if _should_skip(fp):
@@ -410,8 +508,7 @@ def find_stale_domains(session_files: set) -> list:
                 if doc_subdir is not None:
                     doc_dir_prefix = f"{DOCS_BASE}/{doc_subdir}/".lower()
                     has_doc_update = any(
-                        d.replace("\\", "/").lower().startswith(doc_dir_prefix)
-                        for d in doc_files
+                        d.replace("\\", "/").lower().startswith(doc_dir_prefix) for d in doc_files
                     )
                 else:
                     has_doc_update = True  # No docs required for this domain
@@ -419,11 +516,10 @@ def find_stale_domains(session_files: set) -> list:
                 # Also check if the matching skill was updated
                 skill_prefix = f".claude/skills/{skill}/".lower()
                 has_skill_update = any(
-                    s.replace("\\", "/").lower().startswith(skill_prefix)
-                    for s in skill_files
+                    s.replace("\\", "/").lower().startswith(skill_prefix) for s in skill_files
                 )
 
-                if not has_doc_update and not has_skill_update:
+                if not has_doc_update and not has_skill_update and doc_subdir is not None:
                     if doc_subdir not in stale:
                         stale[doc_subdir] = {
                             "subdir": doc_subdir,
@@ -460,6 +556,7 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
     """
     import re
     from pathlib import Path
+
     try:
         import httpx
         from qdrant_client import QdrantClient
@@ -491,6 +588,7 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
 
     try:
         from qdrant_client.models import FieldCondition, Filter, MatchText
+
         client = QdrantClient(url="http://localhost:6333", timeout=timeout_s / 2)
         # Use framework_code_v1 with filter to scope to docs chapters only.
         # Wiki_pages_v1 indexes Cyrillic entity slugs (no chapter info in payload);
@@ -498,11 +596,17 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
         # "docs/framework documentation/NN_CHAPTER/..." which we can mine.
         hits = client.query_points(
             collection_name="framework_code_v1",
-            query=emb, limit=5, with_payload=True,
-            query_filter=Filter(must=[FieldCondition(
-                key="relative_path",
-                match=MatchText(text="framework documentation"),
-            )]),
+            query=emb,
+            limit=5,
+            with_payload=True,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="relative_path",
+                        match=MatchText(text="framework documentation"),
+                    )
+                ]
+            ),
         )
     except Exception:
         return None
@@ -519,19 +623,28 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
     return None
 
 
-def main():
+def main() -> None:
     """Check for stale documentation. Block stop if found."""
     # Invocation timer
     try:
         from shared.invocation_logger import InvocationTimer
+
         timer = InvocationTimer("docs-change-enforcer", event="Stop").start()
     except Exception:
         timer = None
 
     try:
-        # Read stdin (required by Claude Code hook protocol)
+        # Read stdin (required by Claude Code hook protocol) and extract
+        # session_id for session-bounded git window. Empty/missing → fallback
+        # to legacy 6h calendar window (backwards-compat).
+        session_id = ""
         try:
-            sys.stdin.buffer.read()
+            raw = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+            if raw.strip():
+                payload = json.loads(raw)
+                sid = payload.get("session_id", "")
+                if isinstance(sid, str):
+                    session_id = sid
         except Exception:
             pass
 
@@ -539,6 +652,7 @@ def main():
         if COOLDOWN_FILE.exists():
             try:
                 import time
+
                 mtime = COOLDOWN_FILE.stat().st_mtime
                 age_min = (time.time() - mtime) / 60
                 if age_min < COOLDOWN_MINUTES:
@@ -548,7 +662,7 @@ def main():
             except Exception:
                 pass
 
-        session_files = get_session_files()
+        session_files = get_session_files(session_id=session_id)
         if not session_files:
             if timer:
                 timer.log(outcome="allow")
@@ -597,9 +711,7 @@ def main():
                 cf_names += f" (+{len(code_files) - 3})"
 
             items.append(
-                f"  📄 {DOCS_BASE}/{doc_subdir}/\n"
-                f"     Skill: {skill}\n"
-                f"     Код: {cf_names}"
+                f"  📄 {DOCS_BASE}/{doc_subdir}/\n" f"     Skill: {skill}\n" f"     Код: {cf_names}"
             )
 
         items_str = "\n".join(items)
