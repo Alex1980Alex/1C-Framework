@@ -74,7 +74,7 @@ class OAuth2BearerMiddleware(BaseHTTPMiddleware):
 
         # 2. OAuth2 формат: через хранилище
         if not creds:
-            creds = self.oauth2_service.validate_access_token(token)
+            creds = await self.oauth2_service.validate_access_token(token)
 
         if not creds:
             return JSONResponse(
