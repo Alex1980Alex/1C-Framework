@@ -268,6 +268,21 @@ class SearchManager:
             except Exception as e:
                 logger.warning("[SEARCH] Semantic cache write failed: %s", e)
 
+        try:
+            emit_observation(
+                name="search.manager.search",
+                input=span_input,
+                output={
+                    "status": "ok",
+                    "results": len(response.results),
+                    "total_found": response.total_found,
+                    "duration_ms": round((time.monotonic() - t_search_start) * 1000, 1),
+                },
+                flush=False,
+            )
+        except Exception:
+            pass
+
         return response
 
     async def search_section_first(
