@@ -3,6 +3,28 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "mypy-baseline-regression-gate-2026.md",
+      "title": "mypy error-count baseline tracking — regression gate patterns (ratchet, error-budget)",
+      "keywords": [
+        "mypy-baseline",
+        "mypy-json-report",
+        "basedmypy",
+        "ratchet-pattern",
+        "error-budget",
+        "regression-gate",
+        "ci-quality-gate",
+        "gradual-typing",
+        "brownfield-cleanup",
+        "pre-existing-errors",
+        "drift-handling",
+        "pre-commit-mypy",
+        "trigger-modes-comparison",
+        "storage-format-tradeoffs"
+      ],
+      "last_verified": "2026-05-15",
+      "sources_count": 6
+    },
+    {
       "file": "langfuse-standalone-spans-2026.md",
       "title": "Langfuse standalone spans для short-lived Python processes (Claude Code hooks)",
       "keywords": [
