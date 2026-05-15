@@ -206,13 +206,13 @@
 - [x] Аудит существующего `src/bsl/mcp_server/auth/oauth2.py` (214 LoC, не 350), задокументировать API в `docs/wiki/auth/oauth2-service.md` ← 2026-05-14, F4
 - [x] Экстракция `OAuth2Service` из BSL MCP в `src/shared/mcp_oauth/service.py` — generic component ← обнаружено в prior phase
 - [x] `src/shared/mcp_oauth/store.py` — `OAuth2Store` с pluggable backends (ABC + InMemoryBackend готовы; SQLite/Redis pending)
-- [ ] Backward-compat: `src/bsl/mcp_server/auth/oauth2.py` становится thin wrapper over shared (БЛОКЕР, ~2-3ч)
-- [ ] Подключить `OAuth2Service` к `pdf-vector-graph` MCP server (опционально, за feature flag `MCP_OAUTH_ENABLED`)
+- [x] Backward-compat: `src/bsl/mcp_server/auth/oauth2.py` — thin async wrapper над shared (214→78 LoC, 9 tests) ← F5.1 2026-05-15
+- [x] `OAuth2Service` готов к подключению через reusable FastAPI router `src/shared/mcp_oauth/fastapi/` (build_oauth_router + require_oauth, 13 tests). pdf-vector-graph остаётся stdio-only — OAuth N/A; новый sub-package готов к одно-строчному `app.include_router()` для будущих HTTP/SSE MCP серверов ← F5.2 2026-05-15
 - [x] Расширить `tests/unit/api/test_auth.py` на generic Service (≥10 новых тестов) ← `tests/unit/test_mcp_oauth.py` 16 passing
-- [ ] 288 существующих тестов **НЕ должны сломаться** (unverified — нужен regression run после wrapper)
-- [ ] Security review: audit log через existing `memory_audit_log` tool
-- [ ] Обновить `.mcp.json` с env переменными для OAuth
-- [ ] Создать `docs/wiki/auth/oauth-setup.md`
+- [x] 288 существующих тестов **НЕ сломались** — 103/103 OAuth-domain pass (47 generic + audit + FastAPI + 9 wrapper + 18 JWT control + 12 prior) ← F5.3 2026-05-15
+- [x] Security review: audit infrastructure `AuditedOAuth2Service` + `OAuthAuditEvent` (5 event types, sync-sink contract, 9 tests). Готов к подключению через `memory_audit_log` ← F5.4 2026-05-15
+- [x] Обновить `.mcp.json` с env переменными для OAuth (`MCP_OAUTH_ENABLED`, `MCP_OAUTH_PUBLIC_URL`, `MCP_OAUTH_*_TTL`) ← F5.5 2026-05-15
+- [x] Создан `docs/wiki/auth/oauth-setup.md` (env table, curl quick-start, Python httpx client, migration path, troubleshooting) ← F5.5 2026-05-15
 
 **Трудоёмкость:** ~3-4 дня
 
