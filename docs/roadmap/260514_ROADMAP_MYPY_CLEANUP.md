@@ -106,6 +106,8 @@ For each file in the Pareto top 15:
 
 ## Incremental progress
 
+- **2026-05-15, Phase 0 — ratchet gate ACTIVE.** `mypy-baseline` added as new CI job `mypy-baseline` in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml). Baseline snapshotted at [`mypy-baseline.txt`](../../mypy-baseline.txt) (root): **1795 errors in 237 files** (real count, supersedes the 421/96 figure quoted earlier — the codebase grew). Gate fails CI when `new > 0`; exit code = number of new errors (capped at 100). Drift-safe (line numbers stripped from comparison per mypy-baseline default). Swap-regression detected (fix 5 + add 5 ≠ zero net change). Re-sync command documented inside workflow file. Local smoke verified: clean tree → EXIT=0, injected `def f(x): ...` → FILTER_EXIT=1 with `new: 1` reported. Research source: [mypy-baseline tooling research cache](../../.claude/skills/tech-research/cache/mypy-baseline-error-budget-tooling-2026.md). pyproject.toml `[project.optional-dependencies] dev` extended with `mypy-baseline>=0.7.4`.
+
 - **2026-05-15, commit `0c9967908`** — closed **~25 errors** across `.claude/hooks/` (NOT `src/`, but same hook ran against transitively-imported infra modules). Files touched:
   - `.claude/hooks/docs-change-enforcer.py` — 9 errors (set/list/dict generics, doc_subdir None-narrowing, main() return type).
   - `.claude/hooks/shared/hook_lock.py` — 5 errors (dict[str, Any] generics, Iterator return).
