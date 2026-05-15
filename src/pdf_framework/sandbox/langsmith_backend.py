@@ -121,8 +121,15 @@ class LangSmithBackend(SandboxBackend):
 
     @staticmethod
     def _build_cmd(code: str, language: str) -> str:
+        """Build shell command for LangSmith sandbox.
+
+        Assumes POSIX shell (sh/bash) receiver — the default for `python-sandbox`
+        template. Escape pattern `'` → `'\\''` is the textbook POSIX safe quote-
+        break-out: close single-quote, escape one literal `'`, reopen. If LangSmith
+        ever ships a cmd.exe-based template, this escape breaks silently — update
+        before switching templates.
+        """
         if language == "python":
-            # Python -c with safe escaping of single quotes
             escaped = code.replace("'", "'\\''")
             return f"python -c '{escaped}'"
         if language == "bash":
