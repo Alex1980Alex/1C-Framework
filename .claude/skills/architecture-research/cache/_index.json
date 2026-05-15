@@ -3,6 +3,61 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "sandbox-backends-langsmith-e2b-2026.md",
+      "title": "Sandbox backends для agent code execution — LangSmith vs E2B (2026)",
+      "keywords": [
+        "sandbox",
+        "code-interpreter",
+        "langsmith-sandbox",
+        "e2b",
+        "firecracker",
+        "microvm",
+        "jupyter-kernel",
+        "snapshots",
+        "copy-on-write-forks",
+        "blueprints",
+        "auth-proxy",
+        "dry-run-backend",
+        "pyodide",
+        "vercel-sandbox",
+        "hermes-phase-5",
+        "agent-code-execution"
+      ],
+      "last_verified": "2026-05-15",
+      "sources_count": 15,
+      "github_repos_count": 6
+    },
+    {
+      "file": "oauth2-pkce-mcp-server-2026.md",
+      "title": "OAuth 2.1 + PKCE для MCP-серверов (FastAPI/Python, 2026)",
+      "keywords": [
+        "oauth2.1",
+        "pkce",
+        "mcp-server",
+        "fastapi",
+        "fastmcp",
+        "rfc-7636",
+        "rfc-8707",
+        "rfc-9728",
+        "rfc-8414",
+        "prm",
+        "protected-resource-metadata",
+        "dynamic-client-registration",
+        "resource-indicators",
+        "refresh-token-rotation",
+        "stateless-middleware",
+        "backward-compat-wrapper",
+        "fastmcp-oauth",
+        "peterlarnholt",
+        "shahrear33",
+        "hermes-phase-6",
+        "bsl-legacy-shim"
+      ],
+      "last_verified": "2026-05-15",
+      "sources_count": 11,
+      "github_repos_count": 5
+    },
+    {
       "file": "kb-entity-resolution-promotion-2026.md",
       "title": "KB Entity Resolution, Promotion Pipeline & Wiki Lint — Production Patterns 2026",
       "keywords": [
