@@ -80,31 +80,51 @@ except SandboxQuotaExceeded:
 - Unit-тесты высокоуровневого кода (mocking sandbox через DryRun)
 - Валидация call-shape перед платным запуском
 
-## Будущие backends (Ф5 pending)
+## Production backends (Hermes Ф5 COMPLETE 2026-05-15)
 
-### LangSmithBackend (default once API key configured)
+### LangSmithBackend (GA May 2026)
 
-Бесплатный (LangSmith free tier), интегрирован в LangChain ecosystem. Требует `LANGSMITH_API_KEY` в env. Запускает код в LangSmith trace-context — побочный профит: trace доступен для debug.
-
-### E2BBackend (paid alternative)
-
-[E2B](https://e2b.dev) — полноценная Firecracker VM. Дороже, но изолирует **полностью** (включая kernel-level). Требует `E2B_API_KEY` + платный план. Используй когда:
-- Код может писать в произвольные пути
-- Код устанавливает arbitrary pip packages
-- Нужна сетевая изоляция (E2B по умолчанию режет outbound)
-
-## Интеграция в агенты (TODO Ф5)
+Firecracker microVM через `langsmith[sandbox]` SDK. Требует `LANGSMITH_API_KEY`.
 
 ```python
-# В будущем (architecture-research / tech-research):
-from src.pdf_framework.sandbox import DryRunBackend, LangSmithBackend
+from src.pdf_framework.sandbox import select_backend
+
+backend = select_backend("langsmith")  # или "auto" если LANGSMITH_API_KEY set
+result = await backend.execute("print('hello')", timeout=30.0)
+await backend.close()
+```
+
+Преимущества: hardware-virtualized microVM (kernel isolation), Auth Proxy (секреты НЕ попадают в runtime), snapshots/copy-on-write forks (10 parallel branches ≈ стоимость одного), blueprints (cold-start reduction).
+
+### E2BBackend (stateful Jupyter)
+
+```python
+from src.pdf_framework.sandbox import E2BBackend
+
+backend = E2BBackend()  # E2B_API_KEY required
+await backend.execute("x = 42")
+result = await backend.execute("print(x * 2)")  # → "84" — variables persist!
+await backend.close()
+```
+
+Уникальная фича — **stateful** Jupyter Kernel: переменные/импорты сохраняются между `execute` вызовами в рамках одного sandbox. Pricing: ~$0.10/час vCPU, pause-resume preserves state до 30 дней.
+
+### Auto-selector
+
+```python
+from src.pdf_framework.sandbox import select_backend
+
+# Order: prefer arg → LANGSMITH_API_KEY → E2B_API_KEY → DryRun fallback
+backend = select_backend("auto")
+```
+
+## Интеграция в research-агенты
+
+```python
+from src.pdf_framework.sandbox import select_backend
 
 async def execute_prototype(code: str) -> SandboxResult:
-    # Select backend by env presence
-    if os.getenv("LANGSMITH_API_KEY"):
-        backend = LangSmithBackend()
-    else:
-        backend = DryRunBackend()  # fallback for CI/local
+    backend = select_backend("auto")  # env-driven
     try:
         return await backend.execute(code, timeout=30.0)
     finally:
