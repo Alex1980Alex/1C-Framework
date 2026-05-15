@@ -146,21 +146,10 @@ def emit_observation(
     """
     if not is_langfuse_enabled():
         return
-    try:
-        from langfuse import Langfuse
-    except ImportError:
-        logger.debug("[LANGFUSE] langfuse package not installed (emit_observation skipped)")
+    client = _get_langfuse_client()
+    if client is None:
         return
     try:
-        from src.pdf_framework.config import get_settings
-        obs = get_settings().observability
-        if not (obs.langfuse_public_key and obs.langfuse_secret_key):
-            return
-        client = Langfuse(
-            public_key=obs.langfuse_public_key,
-            secret_key=obs.langfuse_secret_key,
-            host=obs.langfuse_host or "https://cloud.langfuse.com",
-        )
         meta: dict[str, Any] = {}
         if metadata:
             meta.update(metadata)
