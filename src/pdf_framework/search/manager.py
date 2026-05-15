@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from src.pdf_framework.config import AgentSettings, SearchSettings
+from src.pdf_framework.observability.langfuse_setup import emit_observation
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
 
 if TYPE_CHECKING:
