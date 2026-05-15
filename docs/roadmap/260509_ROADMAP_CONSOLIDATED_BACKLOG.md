@@ -554,6 +554,37 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 
 **Effort:** 5 мин (relax) | **Status:** ✅ closed как relax-path, v2.0 deferred
 
+### 5d.5 P2 — Fix 420 pre-existing mypy strict errors ⚠️ NEW 2026-05-15
+
+**Цель:** Очистить 420 mypy `--strict` errors в `src/api/auth/rbac.py`, `src/pdf_framework/quick.py`, и др. (95 файлов), чтобы pre-commit Type Check проходил без `--no-verify` для каждого нового Python commit'а.
+
+**Выгоды:** Снимает текущее force-skip требование (--no-verify approval per-commit); восстанавливает CI mypy gate как effective regression detector; type-safety hardening для production code. Сейчас mypy gate бесполезен — любой commit с Python file fail'ится на pre-existing errors, что приводит к routine bypass через `--no-verify` и фактическому отключению gate.
+
+**Что:** Обнаружено 2026-05-15 во время §5c.3 closure при попытке commit'нуть fix `callbacks/__init__.py` phantom-import. Один callbacks/__init__.py edit вызывает mypy run на ВСЕМ codebase → 420 errors во всех 95 файлах. Examples:
+- `src/api/auth/rbac.py` — 9 errors (missing return annotations, untyped function calls)
+- `src/pdf_framework/quick.py` — 15+ errors (Any returns, None attribute access, untyped __init__)
+
+- [ ] **5d.5.1** Run `.venv/Scripts/python.exe -m mypy src/pdf_framework src/api --strict 2>&1 > mypy_baseline.txt` → baseline
+- [ ] **5d.5.2** Группировать errors по типу: missing-annotation / no-untyped-def / union-attr / no-any-return
+- [ ] **5d.5.3** Fix по группам, начиная с самой простой (no-untyped-def = добавить `-> None` / `-> ReturnType`)
+- [ ] **5d.5.4** Постепенно расширить mypy `--strict` coverage в pre-commit (сейчас уже включён, но без `--cov-fail-under` равноценного gate)
+
+**Effort:** 1-2 дня (или ad-hoc по файлам по мере touching) | **Severity:** CI gate restoration
+
+### 5d.6 P3 — Fix mapping bug в docs-change-enforcer.py ⚠️ NEW 2026-05-15
+
+**Цель:** Добавить specific override `("src/pdf_framework/callbacks/", "09_АДМИНИСТРИРОВАНИЕ", "deployment")` в `CODE_TO_DOMAIN` table ПЕРЕД общим prefix, чтобы `callbacks/__init__.py` не маpился ошибочно на `07_КЭШИРОВАНИЕ` (caching).
+
+**Выгоды:** Закрывает false-positive docs-change-tracker todos (которые user должен manually cancel); следует существующему pattern specific-overrides-before-general (см. Phase 5 path migration follow-up в CLAUDE.md).
+
+**Что:** Обнаружено 2026-05-15 при изменении `callbacks/__init__.py` — enforcer создал todo «обновить `07.3_LLM_кэш.md` + `framework-caching` skill» что явно semantically wrong (callbacks/__init__.py — observability/monitoring entry point).
+
+- [ ] **5d.6.1** Locate проблемный general prefix в `.claude/hooks/docs-change-enforcer.py` `CODE_TO_DOMAIN` table
+- [ ] **5d.6.2** Добавить specific override для `callbacks/` БЕЗ trailing slash subpaths (поскольку `callbacks/logging/` уже есть как specific override на `deployment`)
+- [ ] **5d.6.3** Тест: trigger Edit на `callbacks/__init__.py` → todo создан с правильным target_docs (09.4 или 01.2_Архитектура.md)
+
+**Effort:** ~10 мин | **Severity:** Enforcer config hygiene
+
 ### 5c.7-bis P2 — `docs/architecture/` директория ✅ NO-OP 2026-05-15
 
 > **Audit-self-correction 2026-05-15:** директория `docs/architecture/` фактически существует и содержит ADR-008-dspy-migration-verdict.md + bsl-integration.md + core-framework-separation.md + hooks-reference.md + overview.md. Audit 2026-05-15 ошибочно искал её через `ls docs/architecture/` в момент когда cwd был не корень репо (false negative).
