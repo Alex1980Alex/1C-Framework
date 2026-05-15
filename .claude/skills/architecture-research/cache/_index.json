@@ -3,6 +3,34 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "langfuse-standalone-spans-2026.md",
+      "title": "Langfuse standalone spans для short-lived Python processes (Claude Code hooks)",
+      "keywords": [
+        "langfuse",
+        "python-sdk-v3",
+        "python-sdk-v4",
+        "standalone-spans",
+        "claude-code-hooks",
+        "short-lived-process",
+        "start_observation",
+        "start_as_current_observation",
+        "flush",
+        "shutdown",
+        "get_client-singleton",
+        "graceful-degradation",
+        "sample_rate",
+        "tracing_enabled",
+        "LangfuseCallbackHandler",
+        "production-observability",
+        "roadmap-260509-5c",
+        "memory-hooks-wire",
+        "observability-phase-b"
+      ],
+      "last_verified": "2026-05-15",
+      "sources_count": 5,
+      "github_repos_count": 2
+    },
+    {
       "file": "sandbox-backends-langsmith-e2b-2026.md",
       "title": "Sandbox backends для agent code execution — LangSmith vs E2B (2026)",
       "keywords": [

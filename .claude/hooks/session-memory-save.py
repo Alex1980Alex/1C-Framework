@@ -326,22 +326,45 @@ def try_promote_patterns() -> None:
         pass
 
 
+def _emit_langfuse_span(ctx: dict, status: str) -> None:
+    """Roadmap §5c.4: эмитит Langfuse observation. Никогда не блокирует hook."""
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from src.pdf_framework.observability.langfuse_setup import emit_observation
+        emit_observation(
+            name="session-memory-save",
+            input={
+                "session_id": ctx.get("session_id"),
+                "files_changed": len(ctx.get("changed_files", [])),
+                "commits": len(ctx.get("commits", [])),
+                "skills": len(ctx.get("skills", [])),
+            },
+            output={"status": status, "category": CATEGORY},
+            session_id=str(ctx.get("session_id", "")) or None,
+            metadata={"hook": "session-memory-save", "event": "Stop"},
+        )
+    except Exception:
+        pass
+
+
 class SessionMemorySave(BaseHook):
 
     def execute(self, inp: HookInput) -> HookOutput | None:
         ctx = collect_context()
 
         if not is_meaningful(ctx):
+            _emit_langfuse_span(ctx, status="skipped-trivial")
             return None
 
         if already_saved(ctx["session_id"]):
+            _emit_langfuse_span(ctx, status="skipped-duplicate")
             return None
 
         save_to_sqlite(ctx)
         save_to_wiki_log(ctx)
         try_promote_patterns()
+        _emit_langfuse_span(ctx, status="saved")
 
-        # Non-blocking: always allow stop
         return None
 
 
