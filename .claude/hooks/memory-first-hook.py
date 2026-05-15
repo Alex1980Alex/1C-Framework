@@ -504,6 +504,36 @@ def format_federated_context(merged: list) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Langfuse observation (roadmap §5c.4) — never blocks hook
+# ---------------------------------------------------------------------------
+def _emit_langfuse_span(
+    status: str,
+    *,
+    prompt_len: int = 0,
+    layer_counts: dict | None = None,
+    merged_count: int = 0,
+    duration_ms: float = 0.0,
+) -> None:
+    """Эмитит Langfuse observation. Никогда не raise — graceful skip on failure."""
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from src.pdf_framework.observability.langfuse_setup import emit_observation
+        emit_observation(
+            name=HOOK_NAME,
+            input={"prompt_len": prompt_len},
+            output={
+                "status": status,
+                "layers": layer_counts or {},
+                "merged": merged_count,
+                "duration_ms": round(duration_ms, 1),
+            },
+            metadata={"hook": HOOK_NAME, "event": "UserPromptSubmit"},
+        )
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
 # Hook class
 # ---------------------------------------------------------------------------
 class MemoryFirstHook(BaseHook):
@@ -511,32 +541,59 @@ class MemoryFirstHook(BaseHook):
 
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt
+        prompt_len = len(prompt or "")
         if should_skip(prompt):
+            _emit_langfuse_span("skipped-trivial", prompt_len=prompt_len)
             return None
         if check_cooldown():
+            _emit_langfuse_span("skipped-cooldown", prompt_len=prompt_len)
             return None
 
         query_tokens = set(tokenize(prompt))
         if not query_tokens:
+            _emit_langfuse_span("skipped-no-tokens", prompt_len=prompt_len)
             return None
 
-        deadline = time.monotonic() + TOTAL_BUDGET
+        t0 = time.monotonic()
+        deadline = t0 + TOTAL_BUDGET
 
         sqlite_results = search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
         qdrant_results = search_qdrant(query_tokens, limit=10, prompt=prompt) if time.monotonic() < deadline else []
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
         wiki_results = search_wiki(query_tokens, limit=10) if time.monotonic() < deadline else []
 
+        layer_counts = {
+            "sqlite": len(sqlite_results),
+            "qdrant": len(qdrant_results),
+            "md": len(md_results),
+            "wiki": len(wiki_results),
+        }
+
         merged = rrf_merge(
             {"sqlite": sqlite_results, "qdrant": qdrant_results, "md": md_results, "wiki": wiki_results},
             LAYER_WEIGHTS,
         )[:MAX_RESULTS]
 
+        duration_ms = (time.monotonic() - t0) * 1000
+
         if not merged:
+            _emit_langfuse_span(
+                "no-results",
+                prompt_len=prompt_len,
+                layer_counts=layer_counts,
+                duration_ms=duration_ms,
+            )
             return None
 
         msg = format_federated_context(merged)
         update_cooldown()
+        _emit_langfuse_span(
+            "injected",
+            prompt_len=prompt_len,
+            layer_counts=layer_counts,
+            merged_count=len(merged),
+            duration_ms=duration_ms,
+        )
         # Output via stdout (100% injection rate vs 55% for systemMessage).
         # For UserPromptSubmit hooks, stdout is added as context Claude sees,
         # while `systemMessage` is a user-facing warning that Claude never reads.
