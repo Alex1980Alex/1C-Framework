@@ -194,11 +194,19 @@ async def _process_item(
     """Single-item pipeline: retrieve + judge. Returns (id, tag, chunk_ids, n_pts, err).
 
     Wrapped in semaphore to cap concurrent LLM judge calls (the slow phase).
-    Retrieval is sync httpx + Qdrant — inline within semaphore window.
+    Retrieval (sync httpx + Qdrant) offloaded to thread via asyncio.to_thread
+    so it doesn't block the event loop — without this, concurrency=N tasks
+    serialize on the retrieve phase (cause of observed 16s/item at conc=3).
+
+    Catches broad Exception to keep batch resilient — Qdrant/TEI/network
+    hiccups → tagged FAIL but other items continue (combined with
+    asyncio.gather(return_exceptions=True) in caller).
     """
     iid = item.get("id", "?")
     try:
-        points = _retrieve(item["query"], http, qclient, collection)
+        points = await asyncio.to_thread(
+            _retrieve, item["query"], http, qclient, collection
+        )
         if not points:
             return iid, "WARN", [], 0, "no Qdrant results"
         async with sem:
@@ -206,7 +214,7 @@ async def _process_item(
         chunk_ids = [str(points[i - 1].id) for i in indices]
         tag = "OK" if chunk_ids else "EMPTY"
         return iid, tag, chunk_ids, len(points), None
-    except (httpx.HTTPError, RuntimeError, ValueError) as e:
+    except Exception as e:  # noqa: BLE001 — intentional batch resilience
         return iid, "FAIL", [], 0, f"{type(e).__name__}: {e}"
 
 
@@ -247,14 +255,27 @@ async def _run(args: argparse.Namespace) -> int:
     )
 
     sem = asyncio.Semaphore(concurrency)
+    save_every = max(1, args.save_every) if args.save_every else 10
+    pending_since_save = 0
     with httpx.Client() as http:
         t_batch = time.time()
         tasks = [
             _process_item(item, collection, http, qclient, sem) for item in work
         ]
-        results = await asyncio.gather(*tasks, return_exceptions=False)
+        # return_exceptions=True: unhandled exceptions become items in the
+        # result list instead of aborting the batch. Combined with broad
+        # except in _process_item, this gives full batch resilience.
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for item, (iid, tag, chunk_ids, n_pts, err) in zip(work, results):
+        for item, result in zip(work, results):
+            if isinstance(result, BaseException):
+                # Should not happen given _process_item's broad except, but
+                # belt-and-suspenders against future changes.
+                print(f"[FAIL] {item.get('id','?')}: "
+                      f"{type(result).__name__}: {result}", flush=True)
+                failed += 1
+                continue
+            iid, tag, chunk_ids, n_pts, err = result
             if err is not None:
                 print(f"[{tag}] {iid}: {err}", flush=True)
                 failed += 1
@@ -269,10 +290,16 @@ async def _run(args: argparse.Namespace) -> int:
             if not args.dry_run:
                 item["expected_chunk_ids"] = chunk_ids
                 item["target_collection"] = collection
+                pending_since_save += 1
+                # Chunked save: persist every N items so a mid-batch crash
+                # doesn't lose all progress (was: single save at end).
+                if pending_since_save >= save_every:
+                    _save(raw, GOLDEN_PATH)
+                    pending_since_save = 0
             grounded += 1
 
-        # Single save after batch — avoids JSON write race condition.
-        if not args.dry_run and grounded:
+        # Final save for any tail items below save_every threshold.
+        if not args.dry_run and pending_since_save:
             _save(raw, GOLDEN_PATH)
 
         elapsed = time.time() - t_batch
@@ -309,6 +336,14 @@ def main() -> int:
              "Roadmap 260516 Phase 3. Increase to 5-10 for faster batch on "
              "stable network; reduce to 1 if hitting rate limits. Adaptive "
              "throttling in LLMRotationService further halves on errors.",
+    )
+    p.add_argument(
+        "--save-every",
+        type=int,
+        default=10,
+        help="Persist golden_v1.json every N successfully-grounded items "
+             "(default 10). Mid-batch crash loses ≤N items of progress. "
+             "Set 1 to save after each item (slower IO).",
     )
     args = p.parse_args()
 
