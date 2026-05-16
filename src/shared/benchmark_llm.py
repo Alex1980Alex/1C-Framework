@@ -1,32 +1,25 @@
 """Eval/benchmark LLM wrapper — isolated from production LLM Rotation.
 
-Roadmap 260509 §2.2 closure (architecture):
+Roadmap 260509 §2.2 + 260516 Phase 1 SDK migration:
 
 `cheap_llm_call` from `src/shared/llm_rotation/adapter.py` is used by
-~10 production callsites (Self-RAG grader, hallucination check, query
-rewriter, adaptive classifier, HyDE, contextual retrieval, entity
-extractor, etc.). Touching its provider chain would silently degrade
-production quality (most providers in DEFAULT_PROVIDERS are broken
-per user audit, only Ollama is reliably live).
+~10 production callsites. This module provides a separate path for
+**eval workloads** (grounding scripts, retrieval benchmarks, NDCG).
 
-This module provides a separate path for **eval workloads** (grounding
-scripts, retrieval benchmarks, NDCG experiments). It uses:
+Architecture (2026-05-16, post Phase 1 SDK migration):
 
-  1. **Primary**: `claude -p` subprocess via current CLI subscription.
-     No API token billing — flat-rate subscription. Quality = top-tier
-     (Sonnet/Opus). Subject to subscription rate limits.
+  1. **Primary**: `claude-agent-sdk` Python package (subscription OAuth).
+     `max_turns=1` actually works through SDK options. Returns typed
+     messages (AssistantMessage, ResultMessage). Force model=Haiku for
+     batch eval (cheaper, faster, less agentic than default Opus).
 
   2. **Fallback**: Ollama `qwen2.5-coder:7b` HTTP (same as production
      ollama-local in LLM Rotation). $0, always-on if Ollama running.
 
 Design choices:
-- Async via `asyncio.create_subprocess_exec` (no thread blocking).
-- No retry inside call — caller decides (eval scripts batch many calls,
-  retry policy belongs at the loop level).
-- Sequential cost: ~3-8s per `claude -p` spawn (process startup +
-  inference). Caller may parallelize via `asyncio.gather` if needed,
-  subject to CLI subscription rate limits.
-- No cross-call state — each invocation is a fresh subprocess.
+- Async-first via SDK `AsyncIterator[Message]` + `asyncio.wait_for` timeout.
+- No retry inside call — caller decides (eval scripts batch many calls).
+- No cross-call state — each `query()` is a fresh session.
 
 Usage (replaces `cheap_llm_call` in eval scripts):
 
@@ -44,50 +37,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import shutil
 from typing import Final
 
 import httpx
 
 logger = logging.getLogger(__name__)
 
-_CLAUDE_BIN: Final[str | None] = shutil.which("claude")
-# Empirically-tuned flags (2026-05-16; see tech-research/cache/
-# claude-code-subprocess-wrappers.md "Gap vs best practices"):
-#
-# WHAT WORKS:
-# - stdin pipe (added 2026-05-16): fixes Windows long-arg edge case (~10%
-#   "Input must be provided" failures observed in grounding pipeline)
-# - graceful terminate→wait→kill on timeout: proper SIGTERM signal escalation
-# - --system-prompt REPLACE (added in _call_claude_cli below): bypasses
-#   default Claude Code agent prompt that returns helpful markdown instead
-#   of strict JSON when user asks for "JSON only"
-# - --max-budget-usd 1.00: notional cost cap (subscription is flat-rate but
-#   CLI tracks notional Anthropic pricing; safety net against agentic runaway)
-#
-# WHAT DOESN'T WORK (tried 2026-05-16, rolled back — see cache):
-# - --max-turns 1..10: Claude Code CLI in -p mode is fundamentally agentic;
-#   even simple "Reply: pong" triggers tool-use turns. For genuine single-
-#   shot inference, migrate to claude-agent-sdk Python package (separate
-#   refactor) or direct Anthropic HTTP API.
-# - --output-format json: errors out with is_error=true + no `result` field
-#   when --max-turns hit, defeating the structured-parsing benefit. Plain
-#   text mode + permissive parsing in caller works for our use case.
-# - --model haiku hardcoded: better leave to caller / provider config to
-#   pick model per workload.
-_CLAUDE_ARGS: Final[list[str]] = [
-    "-p",
-    "--no-session-persistence",
-    "--disable-slash-commands",
-    "--dangerously-skip-permissions",
-    "--max-budget-usd", "1.00",
-    # --model haiku: without explicit model the CLI uses Opus 4.7 1M-context
-    # which (a) consumes more subscription quota and (b) goes more agentic
-    # (reads cwd, tries tool calls) before responding. Haiku stays focused
-    # on simple eval prompts. service.py provider config supplies its own
-    # --model via state.config.default_model.
-    "--model", "haiku",
-]
+# Override via BENCHMARK_CLAUDE_MODEL env (haiku/sonnet/opus alias or full name).
+# Default Haiku for batch eval: cheaper, faster, less agentic than Opus.
+_BENCHMARK_MODEL: Final[str] = os.environ.get(
+    "BENCHMARK_CLAUDE_MODEL", "claude-haiku-4-5"
+)
 _OLLAMA_URL: Final[str] = os.environ.get(
     "BENCHMARK_OLLAMA_URL", "http://localhost:11434"
 )
@@ -98,64 +58,109 @@ _OLLAMA_MODEL: Final[str] = os.environ.get(
 _CLAUDE_DEFAULT_TIMEOUT: Final[int] = 120
 _OLLAMA_DEFAULT_TIMEOUT: Final[int] = 90
 
+_MODEL_ALIASES: Final[dict[str, str]] = {
+    "haiku": "claude-haiku-4-5",
+    "sonnet": "claude-sonnet-4-5",
+    "opus": "claude-opus-4-7",
+}
+
+
+def _resolve_model(name: str) -> str:
+    """Expand short alias to full model name, or pass through if already full."""
+    return _MODEL_ALIASES.get(name.lower(), name)
+
 
 class BenchmarkLLMError(RuntimeError):
     """Raised when both claude CLI and Ollama paths fail."""
 
 
-async def _call_claude_cli(
+async def _call_claude_sdk(
     prompt: str,
     system_prompt: str | None,
     timeout: int,
 ) -> str:
-    """Run `claude -p` subprocess; return stdout text on success."""
-    if _CLAUDE_BIN is None:
-        raise BenchmarkLLMError("claude CLI not found on PATH")
+    """Call Claude via `claude-agent-sdk` Python package.
 
-    # --system-prompt REPLACES the default Claude Code agent system prompt.
-    # Crucial for batch eval: default prompt makes Claude render helpful
-    # markdown answers with file links, ignoring "JSON only" output format
-    # directives in user prompt. Replace mode strips all agent behaviors.
-    args = list(_CLAUDE_ARGS)
-    if system_prompt:
-        args.extend(["--system-prompt", system_prompt])
+    Uses CLI subscription OAuth (flat-rate, no per-token billing).
+    `max_turns=1` actually works through SDK options — direct CLI flag
+    is empirically broken (triggers error_max_turns even on trivial
+    prompts; rollback documented in roadmap 260516 §0).
+
+    Latency ~5-15s. Returns final response text combining ResultMessage
+    content (preferred) + AssistantMessage text blocks (fallback).
+    """
+    try:
+        from claude_agent_sdk import (
+            AssistantMessage,
+            ClaudeAgentOptions,
+            ResultMessage,
+            query,
+        )
+    except ImportError as e:
+        raise BenchmarkLLMError(
+            'claude-agent-sdk not installed. pip install -e ".[llm-rotation]"'
+        ) from e
+
+    # Optional error types — older SDK versions may not export them.
+    try:
+        from claude_agent_sdk import CLINotFoundError, ClaudeSDKError
+    except ImportError:
+        CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment,misc]
+
+    # max_turns=3: gives Claude room to use 1-2 tool-use turns before
+    # responding (CLI is agentic by default). Empirically max_turns=1
+    # fails ~50% of the time with "Reached maximum number of turns"
+    # even via SDK (CLI raises this regardless of API). Higher cap
+    # absorbs agentic overhead while still bounded.
+    options = ClaudeAgentOptions(
+        system_prompt=system_prompt or "",
+        max_turns=3,
+        permission_mode="bypassPermissions",
+        model=_resolve_model(_BENCHMARK_MODEL),
+    )
+
+    text_parts: list[str] = []
+    result_content: str | None = None
+
+    async def _collect() -> None:
+        nonlocal result_content
+        async for msg in query(prompt=prompt, options=options):
+            if isinstance(msg, AssistantMessage):
+                for block in msg.content:
+                    if hasattr(block, "text"):
+                        text_parts.append(block.text)
+            elif isinstance(msg, ResultMessage):
+                candidate = getattr(msg, "result", None)
+                if candidate:
+                    result_content = str(candidate)
 
     try:
-        proc = await asyncio.create_subprocess_exec(
-            _CLAUDE_BIN,
-            *args,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-    except (OSError, FileNotFoundError) as e:
-        raise BenchmarkLLMError(f"claude spawn failed: {e}") from e
-
-    # Prompt via stdin (not CLI arg) avoids Windows long-arg edge case observed
-    # 2026-05-16 where ~10% of multi-KB prompts triggered "Input must be provided"
-    # error. Stdin pipe is the recommended pattern per Anthropic SDK docs.
-    try:
-        stdout_b, stderr_b = await asyncio.wait_for(
-            proc.communicate(input=prompt.encode("utf-8")),
-            timeout=timeout,
-        )
+        await asyncio.wait_for(_collect(), timeout=timeout)
     except asyncio.TimeoutError as e:
-        # Graceful escalation: SIGTERM first → 5s grace → SIGKILL
-        proc.terminate()
-        try:
-            await asyncio.wait_for(proc.wait(), timeout=5.0)
-        except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
-        raise BenchmarkLLMError(f"claude timed out after {timeout}s") from e
+        raise BenchmarkLLMError(
+            f"claude-agent-sdk timed out after {timeout}s"
+        ) from e
+    except CLINotFoundError as e:
+        raise BenchmarkLLMError(f"claude CLI not found: {e}") from e
+    except ClaudeSDKError as e:
+        raise BenchmarkLLMError(f"claude-agent-sdk error: {e}") from e
+    except Exception as e:
+        # SDK surfaces CLI's error_max_turns as plain Exception. If we
+        # already collected partial text from AssistantMessage blocks,
+        # use it. Otherwise propagate as benchmark error.
+        partial = "".join(text_parts).strip()
+        if partial:
+            logger.warning(
+                "[BENCHMARK-LLM] SDK exception after partial text (%d chars): %s",
+                len(partial), e,
+            )
+            return partial
+        raise BenchmarkLLMError(f"claude-agent-sdk error: {e}") from e
 
-    if proc.returncode != 0:
-        err = (stderr_b or b"").decode("utf-8", errors="replace").strip()
-        raise BenchmarkLLMError(f"claude exit {proc.returncode}: {err[:200]}")
+    text = (result_content or "").strip() or "".join(text_parts).strip()
 
-    text = (stdout_b or b"").decode("utf-8", errors="replace").strip()
     if not text:
-        raise BenchmarkLLMError("claude returned empty stdout")
+        raise BenchmarkLLMError("claude-agent-sdk returned empty result")
     return text
 
 
@@ -222,7 +227,7 @@ async def benchmark_llm_call(
 
     if prefer == "claude":
         try:
-            return await _call_claude_cli(
+            return await _call_claude_sdk(
                 prompt=prompt,
                 system_prompt=system_prompt,
                 timeout=timeout or _CLAUDE_DEFAULT_TIMEOUT,

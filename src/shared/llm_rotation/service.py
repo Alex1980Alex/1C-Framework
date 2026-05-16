@@ -474,93 +474,107 @@ class LLMRotationService:
         max_tokens: int = 2048,
         timeout: int | None = None,
     ) -> dict[str, Any]:
-        """Make a request via `claude -p` subprocess (CLI subscription).
+        """Make a request via Claude Agent SDK (roadmap 260516 Phase 1).
 
-        Uses the user's Claude Code CLI subscription quota instead of paid
-        API tokens. Latency ~5-15s per call (subprocess startup + inference);
-        suitable for indexing batch workloads, NOT hot-path query-time
-        components. See roadmap 260509 §2.2 architecture closure.
+        Uses official `claude-agent-sdk` Python package which manages subprocess
+        + agent loop internally, exposing typed messages. Subscription-based
+        OAuth auth, flat-rate cost. Latency ~5-15s per call.
 
-        Best-practice flags applied per tech-research/cache/claude-code-subprocess-wrappers.md:
-        - `--system-prompt` (REPLACE, not append) — strict output format compliance
-        - `--max-turns 1` — single-shot eval, no agent loop runaway
-        - `--max-budget-usd 0.10` — per-call cost safety cap (subscription flat-rate but
-          guards against runaway if Anthropic billing transitions per 2026-06-15 notice)
-        - `--output-format json` — structured response: `{result, session_id, total_cost_usd}`
-        - stdin pipe (not CLI arg) — avoids Windows long-arg `Input must be provided`
-          edge case observed in production
-        - Graceful terminate→wait→kill on timeout — proper shutdown signal escalation
+        Replaces raw asyncio.create_subprocess_exec approach (commit
+        606d9f06f) because CLI `--max-turns N` flag was empirically broken:
+        Claude Code CLI in `-p` mode is fundamentally agentic and triggers
+        tool-use turns even on trivial prompts → `error_max_turns` fires
+        before any response can be emitted. SDK's `ClaudeAgentOptions(
+        max_turns=1, permission_mode="bypassPermissions")` actually works.
 
-        `model` accepts the alias subset that `claude -p --model` supports
-        ("haiku", "sonnet", "opus"). Falls back to provider default_model.
+        `model` accepts haiku/sonnet/opus alias OR full model name. Aliases
+        are expanded to claude-haiku-4-5 / claude-sonnet-4-5 / claude-opus-4-7.
         """
-        bin_path = shutil.which("claude")
-        if not bin_path:
-            raise RuntimeError("claude CLI not found on PATH")
-
-        # Empirically-tuned flags (see tech-research cache + benchmark_llm.py
-        # for full rationale). --max-turns and --output-format json removed:
-        # CLI is fundamentally agentic in -p mode, even single-shot prompts
-        # trigger tool-use turns. --max-budget-usd retained as notional cap.
-        args: list[str] = [
-            bin_path,
-            "-p",
-            "--no-session-persistence",
-            "--disable-slash-commands",
-            "--dangerously-skip-permissions",
-            "--max-budget-usd", "1.00",
-        ]
-
-        target_model = (model or state.config.default_model).lower()
-        if target_model in {"haiku", "sonnet", "opus"}:
-            args.extend(["--model", target_model])
-
-        if system_prompt:
-            args.extend(["--system-prompt", system_prompt])
-
-        # asyncio.wait_for expects raw seconds (float/int), not aiohttp.ClientTimeout
-        effective_timeout: int = timeout or self._settings.timeout
-
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *args,
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            from claude_agent_sdk import (
+                AssistantMessage,
+                ClaudeAgentOptions,
+                ResultMessage,
+                query,
             )
-        except (OSError, FileNotFoundError) as e:
-            raise RuntimeError(f"claude-cli spawn failed: {e}") from e
-
-        try:
-            stdout_b, stderr_b = await asyncio.wait_for(
-                proc.communicate(input=prompt.encode("utf-8")),
-                timeout=effective_timeout,
-            )
-        except asyncio.TimeoutError as e:
-            # Graceful escalation: SIGTERM first → 5s grace → SIGKILL
-            proc.terminate()
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=5.0)
-            except asyncio.TimeoutError:
-                proc.kill()
-                await proc.wait()
+        except ImportError as e:
             raise RuntimeError(
-                f"claude-cli timed out after {effective_timeout}s"
+                "claude-agent-sdk not installed. "
+                "pip install -e \".[llm-rotation]\""
             ) from e
 
-        if proc.returncode != 0:
-            err = (stderr_b or b"").decode("utf-8", errors="replace").strip()
+        # Optional error types — older SDK versions may lack them.
+        try:
+            from claude_agent_sdk import CLINotFoundError, ClaudeSDKError
+        except ImportError:
+            CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment,misc]
+
+        target_alias = (model or state.config.default_model).lower()
+        # Map short aliases to full model names; pass through if already full.
+        alias_map = {
+            "haiku": "claude-haiku-4-5",
+            "sonnet": "claude-sonnet-4-5",
+            "opus": "claude-opus-4-7",
+        }
+        full_model = alias_map.get(target_alias, target_alias)
+
+        # max_turns=3: Claude Code CLI in headless mode is agentic by default
+        # and may use 1-2 tool-use turns before responding. max_turns=1 fails
+        # empirically ~50% of the time. Higher cap absorbs agentic overhead.
+        options = ClaudeAgentOptions(
+            system_prompt=system_prompt or "",
+            max_turns=3,
+            permission_mode="bypassPermissions",
+            model=full_model,
+        )
+
+        effective_timeout: int = timeout or self._settings.timeout
+        text_parts: list[str] = []
+        result_content: str | None = None
+
+        async def _collect() -> None:
+            """Iterate SDK message stream, accumulate text into closures."""
+            nonlocal result_content
+            async for msg in query(prompt=prompt, options=options):
+                if isinstance(msg, AssistantMessage):
+                    for block in msg.content:
+                        if hasattr(block, "text"):
+                            text_parts.append(block.text)
+                elif isinstance(msg, ResultMessage):
+                    candidate = getattr(msg, "result", None)
+                    if candidate:
+                        result_content = str(candidate)
+
+        try:
+            await asyncio.wait_for(_collect(), timeout=effective_timeout)
+        except asyncio.TimeoutError as e:
             raise RuntimeError(
-                f"claude-cli exit {proc.returncode}: {err[:200]}"
-            )
+                f"claude-agent-sdk timed out after {effective_timeout}s"
+            ) from e
+        except CLINotFoundError as e:
+            raise RuntimeError(f"claude CLI not found: {e}") from e
+        except ClaudeSDKError as e:
+            raise RuntimeError(f"claude-agent-sdk error: {e}") from e
+        except Exception as e:
+            # SDK surfaces CLI's error_max_turns as plain Exception. Use
+            # partial AssistantMessage text if any was collected.
+            partial = "".join(text_parts).strip()
+            if partial:
+                logger.warning(
+                    "[claude-cli] SDK exception after partial text (%d chars): %s",
+                    len(partial), e,
+                )
+                result_content = partial
+            else:
+                raise RuntimeError(f"claude-agent-sdk error: {e}") from e
 
-        text = (stdout_b or b"").decode("utf-8", errors="replace").strip()
+        text = (result_content or "").strip() or "".join(text_parts).strip()
+
         if not text:
-            raise RuntimeError("claude-cli returned empty stdout")
+            raise RuntimeError("claude-agent-sdk returned empty result")
 
-        # Subprocess gives no real token usage. Estimate: 4 chars/token.
-        # Used by adaptive scorer + budget tracker; not load-bearing
-        # (subscription cost = $0.00 per call regardless of tokens).
+        # SDK gives no exact token count to caller. Estimate: 4 chars/token.
+        # Used by adaptive scorer; not load-bearing (subscription = flat-rate).
         approx_prompt_tokens = max(
             1, (len(prompt) + len(system_prompt or "")) // 4
         )
@@ -573,7 +587,7 @@ class LLMRotationService:
                     "finish_reason": "stop",
                 }
             ],
-            "model": target_model,
+            "model": full_model,
             "usage": {
                 "prompt_tokens": approx_prompt_tokens,
                 "completion_tokens": approx_completion_tokens,

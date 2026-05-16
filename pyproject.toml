@@ -114,6 +114,12 @@ llm-rotation = [
     "mistralai>=1.0",
     "openai>=1.0",
     "google-generativeai>=0.8",
+    # claude-agent-sdk: official Anthropic Python package for Claude Code CLI
+    # subprocess management. Replaces raw asyncio.create_subprocess_exec in
+    # _make_request_claude_cli (roadmap 260516 Phase 1). Subscription-based
+    # auth via OAuth; flat-rate cost. Required for working max_turns=1 +
+    # typed messages (AssistantMessage/ResultMessage).
+    "claude-agent-sdk>=0.2,<0.3",
 ]
 all-bsl = [
     "pdf-vector-graph-framework[bsl,memory,llm-rotation]",
