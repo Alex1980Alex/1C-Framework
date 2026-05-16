@@ -305,17 +305,20 @@
 **Effort:** 3-5 days estimated → **3h actual** (audit-stale pattern: MRL infrastructure already in `Qwen3STEmbedder`, only harness + bench needed).
 **Closure note:** Methodologically MIGRATE recommended, но production rollout = separate decision (re-bench gating) — поэтому helms `4.1.5` оставлен open как stepstone, а сам §4.1 закрыт по acceptance criterion.
 
-### 4.2 P2 — RAPTOR + LLM rerank (260423 A7)
+### 4.2 P2 — RAPTOR + LLM rerank (260423 A7) 🟡 PARTIAL 2026-05-16 (audit-stale impl + benchmark/cache deferred)
 
 **Цель:** Добавить опциональный LLM-reranker top-20 chunks в `raptor_search.py` через параметр `enable_llm_rerank: bool` с кешированием rerank-decisions.
 **Выгоды:** Improved precision на сложных query (обработка nuance которые embedding-similarity не ловит); latency cost (~1-2s) оправдан для high-stakes use-cases (research, legal); cache минимизирует RPM hit на повторах; opt-in — не ломает default fast path.
 
-- [ ] **4.2.1** `raptor_search.py` — `enable_llm_rerank: bool` parameter
-- [ ] **4.2.2** Reranker: pass top-20 to LLM, sort by relevance score
-- [ ] **4.2.3** Cache rerank decisions
-- [ ] **4.2.4** Benchmark на golden_v1
+- [x] **4.2.1** [`raptor_search.py:36`](../../src/pdf_framework/search/strategies/raptor_search.py#L36) — `enable_llm_rerank: bool = False` (default OFF — opt-in) + `llm_rerank_fetch_k: int = 20` в `RAPTORSearchConfig`. Header file (`Version: 1.5.0 - Phase 13.2 + roadmap §4.2`) явно cite roadmap
+- [x] **4.2.2** Logic в [`raptor_search.py:93-113`](../../src/pdf_framework/search/strategies/raptor_search.py#L93): когда `rerank_active = enable_llm_rerank AND llm_reranker provided` — `fetch_k = max(k, 20)` для широкого pool, после base RAPTOR scoring → `LLMReranker.rerank(query, results, top_k=k)` → truncate to user `k` → `search_type` decorated с `+llm_rerank` suffix. Try/except fallback (log warning + keep base ranking + truncate) — никогда не propagate exception
+- [ ] **4.2.3** Cache rerank decisions → **DEFERRED**: [`LLMReranker`](../../src/pdf_framework/search/reranking/llm_reranker.py) (184 lines) — no caching layer. Rationale defer: (a) §4.2.4 benchmark не запущен → нет evidence о hot-path duplicates, (b) cache key design `(query_hash, sorted_chunk_ids)` нетривиален (chunks могут переупорядочиваться между runs), (c) SQLite vs LRU choice зависит от usage pattern. Design sketch: SQLite-backed `data/rerank_cache.db` со схемой `(query_hash, candidate_ids_hash, scores_json, ts)` + 7-day TTL; estimated ~80 LoC plus tests
+- [ ] **4.2.4** Benchmark на golden_v1 → **BLOCKED by §2.2 grounding**: same blocker как §4.1 Matryoshka / §3.2 Contextual — `expected_chunk_ids: []` для всех 40 items. Можно использовать keyword recall@10 proxy, но эффект rerank на keyword recall искажён (LLM rescore по semantic relevance, а keyword recall по term overlap — orthogonal metrics)
+- [ ] **4.2.5** (new) Test coverage gap для §4.2.2 path — текущие [`tests/test_raptor/test_raptor_search.py`](../../tests/test_raptor/test_raptor_search.py) (18 tests pass + 1 unrelated failure) **не покрывают rerank wiring**. Suggested 4 tests (deferred): (1) `enable_llm_rerank=False → no judge call`, (2) `enable=True + reranker=None → fallback`, (3) `active rerank → top_k truncate + search_type suffix`, (4) `rerank failure → fallback to base ranking, no exception`
 
-**Effort:** 2-3 days
+**Closure note (audit-stale impl + benchmark-blocked)**: 2/5 items DONE (parameter + logic landed как Phase 13.2 batch). 4.2.3 cache — over-engineering pre-benchmark (deferred). 4.2.4 benchmark — same v2.0 grounding blocker как §4.1/§3.2. 4.2.5 test coverage — small followup (~40 LoC, blocked by `code-skill-enforcer` требование learning-loop для pytest skill creation — overkill для extending existing 18-test suite).
+
+**Effort:** 2-3 days estimated → **0h actual audit + 30 мин read-through** | реальный gap = cache (80 LoC) + benchmark (blocked) + tests (40 LoC, ~30 мин)
 
 ### 4.3 P2 — Stub embedding edge-case fix (260423 A5) ✅ DONE 2026-05-16
 
