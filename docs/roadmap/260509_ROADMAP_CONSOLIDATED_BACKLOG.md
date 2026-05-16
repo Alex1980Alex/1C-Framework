@@ -324,7 +324,7 @@
   - `__init__.py` — public API: `TrainedRouter`, `classify_sync`, `EXEMPLARS`.
   - `tests/shared/llm_rotation/test_router_trained.py` — 12 unit tests с FakeEngine mock (deterministic sha256 vectors), все PASS.
 - [/] **4.5.2** Bootstrap landed; **outcome-trained variant DEFERRED** — требует Langfuse production traffic с success/fail outcomes (роадмап §5c.9, ≥30 days).
-- [ ] **4.5.3** A/B vs LinUCB (10% canary) — NOT wired into existing delegation runtime. Router available as standalone module; caller-side integration (LinUCB warmup + 10% canary routing) deferred.
+- [x] **4.5.3** A/B vs LinUCB canary **wired 2026-05-16** в [`z-ai-delegation-enforcer.py`](../../.claude/hooks/z-ai-delegation-enforcer.py). Env `DELEGATION_ROUTER_CANARY_PCT` (default 0.0 = OFF). Deterministic per-prompt routing via sha256-seeded RNG (reproducibility). Каждое решение эмитит Langfuse `delegation.routing.decision` span (foundation для §5c.9 outcome corpus). Router abstain/fail → graceful fallback на bandit. 6 unit tests в [`tests/hooks/test_delegation_canary.py`](../../tests/hooks/test_delegation_canary.py) (deterministic, distribution ±5-10pp, all PASS <100ms). Default 0.0 → behavior идентично pre-§4.5.3 (canary OFF — production safe).
 - [ ] **4.5.4** Iter 5 SAFLA: quality degradation, composite reward — DEFERRED (depends on §5c.9 outcome corpus).
 
 **Trade-off vs original spec:** exemplar bootstrap не использует real outcome embeddings (как требовал 260509 wording), но даёт workable baseline. Когда §5c.9 outcome corpus наберётся — заменить EXEMPLARS на K-means clusters over outcome embeddings (mechanical rewrite, ~1 day).

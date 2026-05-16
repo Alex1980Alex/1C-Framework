@@ -6,14 +6,28 @@ Matcher: (none - fires on every user prompt)
 Purpose: Detects tasks delegatable to Z.AI via LLM Rotation,
          reminds to use delegation protocol for token economy.
 Timeout: 3s
+
+§4.5.3 A/B canary (2026-05-16): when env DELEGATION_ROUTER_CANARY_PCT
+is set to a float in (0.0, 1.0], that fraction of prompts gets routed
+through TrainedRouter (cosine similarity vs exemplar embeddings,
+roadmap 260509 §4.5.1 bootstrap) instead of LinUCB bandit. Both paths
+emit a Langfuse `delegation.routing.decision` span when langfuse is
+enabled — foundation for §5c.9 outcome corpus.
 """
 
+import hashlib
 import os
+import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput
+
+# §4.5.3 canary config — fraction of prompts routed through TrainedRouter
+# instead of LinUCB bandit. Default 0.0 = router OFF (legacy behavior).
+# Set to e.g. 0.1 to enable A/B testing at 10%.
+_ROUTER_CANARY_PCT = float(os.environ.get("DELEGATION_ROUTER_CANARY_PCT", "0.0"))
 
 # --- Delegation signal keywords ---
 
@@ -114,6 +128,90 @@ class ZAIDelegationEnforcer(BaseHook):
             pass
         return None
 
+    def _router_level(self, prompt: str) -> tuple[str | None, float, bool]:
+        """Get delegation level from TrainedRouter (§4.5.3 canary path).
+
+        Returns (level, score, abstained). On any failure returns
+        (None, 0.0, True) — caller falls through to _bandit_level.
+
+        Cost: ~50-200ms per call (singleton pre-warmup amortized across
+        repeated UPS hooks in same process — but each hook is a fresh
+        subprocess, so warmup runs once per fire).
+        """
+        try:
+            # Add repo src/ to path so router package import resolves.
+            from pathlib import Path
+            repo_root = Path(__file__).resolve().parent.parent.parent
+            src_path = str(repo_root)
+            if src_path not in sys.path:
+                sys.path.insert(0, src_path)
+
+            from src.shared.llm_rotation.router.trained import classify_sync
+
+            res = classify_sync(prompt)
+            return res.level, res.score, res.abstained
+        except Exception:
+            return None, 0.0, True
+
+    @staticmethod
+    def _should_canary(prompt: str) -> bool:
+        """Deterministic per-prompt canary selection.
+
+        Uses sha256(prompt)[:8] as RNG seed so the same prompt always
+        routes through the same path within a session — useful for A/B
+        comparison reproducibility. Returns True if this prompt should
+        be routed via TrainedRouter.
+        """
+        if _ROUTER_CANARY_PCT <= 0.0:
+            return False
+        if _ROUTER_CANARY_PCT >= 1.0:
+            return True
+        seed = int(hashlib.sha256(prompt.encode()).hexdigest()[:8], 16)
+        rng = random.Random(seed)
+        return rng.random() < _ROUTER_CANARY_PCT
+
+    def _delegation_level(self, prompt: str, prompt_lower: str) -> tuple[str | None, str]:
+        """A/B routing: returns (level, method_tag).
+
+        method_tag ∈ {"linucb", "router", "router-abstain-fallback"}.
+        Emits Langfuse span for outcome-corpus collection (§5c.9 stepstone).
+        """
+        method = "linucb"
+        level: str | None = None
+        router_score = 0.0
+        router_abstained = False
+
+        if self._should_canary(prompt):
+            level, router_score, router_abstained = self._router_level(prompt)
+            if level is not None and not router_abstained:
+                method = "router"
+            else:
+                # Router abstained or failed — fall back to bandit
+                level = self._bandit_level(prompt_lower)
+                method = "router-abstain-fallback"
+        else:
+            level = self._bandit_level(prompt_lower)
+
+        # Emit decision span (best-effort, never raises).
+        try:
+            from src.pdf_framework.observability.langfuse_setup import emit_observation
+
+            emit_observation(
+                name="delegation.routing.decision",
+                input={"prompt_len": len(prompt), "method": method},
+                output={
+                    "level": level or "abstain",
+                    "router_score": router_score,
+                    "router_abstained": router_abstained,
+                    "canary_pct": _ROUTER_CANARY_PCT,
+                },
+                metadata={"hook": "z-ai-delegation-enforcer"},
+            )
+        except Exception:
+            pass
+
+        return level, method
+
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt.strip()
         if not prompt or len(prompt) < _MIN_PROMPT_LEN:
@@ -126,8 +224,11 @@ class ZAIDelegationEnforcer(BaseHook):
         if never_score >= 1:
             return None
 
-        # Check bandit model first (AUTONOMOUS mode)
-        bandit_level = self._bandit_level(prompt_lower)
+        # §4.5.3 A/B routing: canary % goes through TrainedRouter, rest LinUCB.
+        # method_tag preserved for emitted observation only — downstream
+        # decision logic unchanged (uses bandit_level variable name for
+        # backward compatibility with the rest of execute()).
+        bandit_level, _method = self._delegation_level(prompt, prompt_lower)
 
         # Orchestrator mode: 3+ files or batch signals
         orchestrator_score = sum(1 for s in _ORCHESTRATOR_SIGNALS if s in prompt_lower)
