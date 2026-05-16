@@ -27,7 +27,14 @@ from base import BaseHook, HookInput, HookOutput
 # §4.5.3 canary config — fraction of prompts routed through TrainedRouter
 # instead of LinUCB bandit. Default 0.0 = router OFF (legacy behavior).
 # Set to e.g. 0.1 to enable A/B testing at 10%.
-_ROUTER_CANARY_PCT = float(os.environ.get("DELEGATION_ROUTER_CANARY_PCT", "0.0"))
+# Garbage env (non-float / out-of-range) silently falls back to 0.0
+# so the hook process keeps booting (don't break delegation on misconfig).
+try:
+    _ROUTER_CANARY_PCT = float(os.environ.get("DELEGATION_ROUTER_CANARY_PCT", "0.0"))
+    if not (0.0 <= _ROUTER_CANARY_PCT <= 1.0):
+        _ROUTER_CANARY_PCT = 0.0
+except (TypeError, ValueError):
+    _ROUTER_CANARY_PCT = 0.0
 
 # --- Delegation signal keywords ---
 
