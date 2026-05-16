@@ -352,16 +352,20 @@ Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR p
 
 **Effort:** actual 0 мин 2026-05-16 (pre-existing artefacts, audit-stale roadmap entry) | **Status:** ✅ closed
 
-### 4.8 P2 — Phase 67 External tools (260423 C7)
+### 4.8 P2 — Phase 67 External tools (260423 C7) ✅ DONE 2026-05-09 (verified 2026-05-16)
 
 **Цель:** Inventory + decision matrix для внешних tools (claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server) — keep / replace / remove с обоснованием на каждый.
-**Выгоды:** Сокращение surface area (меньше серверов = меньше maintenance); устранение dead deps; consolidation на проверенный stack; документированное обоснование для будущих переоценок.
 
-- [ ] **4.8.1** Inventory candidates: claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server
-- [ ] **4.8.2** Decision matrix: keep / replace / remove
-- [ ] **4.8.3** Update `.mcp.json`
+**Реализация (closed 2026-05-09, verified 2026-05-16):**
+Decision matrix существует в [`26.7 MCP Servers Decision Matrix`](../framework%20documentation/26_LAZY_MCP/26.7_Decision_Matrix.md). Содержит:
 
-**Effort:** 2-3 days
+- [x] **4.8.1** Inventory: 5 roadmap candidates audited — **0 из 5 landed** в `.mcp.json`. Все остались closed-by-design (claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server) с конкретным обоснованием почему (concept не закрепился / заменён memory-orchestrator / SonarQube heavyweight / tree-sitter approach работает / etc.)
+- [x] **4.8.2** Decision matrix — 20 active servers all **keep** + 27 on-demand lazy-mcp `keep all` (zero startup cost)
+- [x] **4.8.3** `.mcp.json` — no updates required (candidates never landed)
+
+**Bonus content в 26.7:** when-to-revisit triggers + use-rate SQL query для retirement decisions.
+
+**Effort:** original 2-3 days | actual 0 мин 2026-05-16 (pre-existing artefact, verified at audit) | **Status:** ✅ closed
 
 ### 4.9 P2 — Async PostToolUse hooks (260329 step 2.3) ✅ DONE 2026-05-16 (audit-stale + bonus)
 
