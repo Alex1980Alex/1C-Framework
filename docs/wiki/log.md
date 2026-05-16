@@ -32,6 +32,7 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - 38 unit tests (13 DryRun + 13 LangSmith + 12 E2B), `select_backend()` env-driven helper
 
 ### Ф6 (OAuth) — Sprint 1 + 2
+
 - F4 audit doc [`docs/wiki/auth/oauth2-service.md`](auth/oauth2-service.md)
 - F5.1 BSL wrapper `src/bsl/mcp_server/auth/oauth2.py` 214→78 LoC thin async adapter
 - F5.2 reusable FastAPI router `src/shared/mcp_oauth/fastapi/` (build_oauth_router + require_oauth)
@@ -301,3 +302,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop
 - Files changed: 3
 - Summary: Session 2026-05-15. Skills: bsl-development, architecture-research, tech-research, git-commit-message, learning-loop, code-verify, auto-git-save, create-hook. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, docs/wiki, ИБTransportManagementDevelop/Конфигурация. Commit: chore(wiki): remove test-stale-example.md after archive verification. Commit: chore: auto-save 32.10_Примеры.md. Commit: chore: auto-save 32.10_Примеры.md
+
+## 2026-05-16 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: tech-research, create-hook, claude-code-github-actions, code-verify
+- Files changed: 0
+- Summary: Session 2026-05-16. Skills: tech-research, create-hook, claude-code-github-actions, code-verify. Commit: chore: auto-save task_master.py. Commit: chore: auto-save task_master.py. Commit: chore: auto-save CLAUDE.md
