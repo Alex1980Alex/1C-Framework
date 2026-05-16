@@ -97,7 +97,7 @@ def get_all_roles() -> list[str]:
     return sorted(ROLE_LEVELS.keys(), key=lambda r: ROLE_LEVELS[r])
 
 
-def require_role(min_role: str):
+def require_role(min_role: str) -> Callable[[DecoratedAsync], DecoratedAsync]:
     """Decorator: require minimum role level.
 
     Usage:
@@ -107,9 +107,9 @@ def require_role(min_role: str):
     """
     min_level = ROLE_LEVELS.get(min_role, 0)
 
-    def decorator(func):
+    def decorator(func: DecoratedAsync) -> DecoratedAsync:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             from fastapi import HTTPException
 
             payload = kwargs.get("payload")
