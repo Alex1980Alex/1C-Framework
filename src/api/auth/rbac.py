@@ -198,7 +198,7 @@ class Role(BaseModel):
 class RBACManager:
     """Role-Based Access Control manager."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._users: dict[str, User] = {}
         self._roles = {
             "admin": Role(
