@@ -151,7 +151,7 @@ class JWTHandler:
 _jwt_handler: JWTHandler | None = None
 
 
-def get_jwt_handler(**kwargs) -> JWTHandler:
+def get_jwt_handler(**kwargs: Any) -> JWTHandler:
     """Get or create global JWT handler instance."""
     global _jwt_handler
     if _jwt_handler is None:
