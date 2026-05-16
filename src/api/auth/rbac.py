@@ -134,7 +134,7 @@ def require_role(min_role: str) -> Callable[[DecoratedAsync], DecoratedAsync]:
     return decorator
 
 
-def require_permission(permission: str):
+def require_permission(permission: str) -> Callable[[DecoratedAsync], DecoratedAsync]:
     """Decorator: require specific permission.
 
     Usage:
@@ -143,9 +143,9 @@ def require_permission(permission: str):
             ...
     """
 
-    def decorator(func):
+    def decorator(func: DecoratedAsync) -> DecoratedAsync:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             from fastapi import HTTPException
 
             payload = kwargs.get("payload")
