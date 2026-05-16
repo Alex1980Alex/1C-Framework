@@ -309,7 +309,15 @@
 - [x] **4.1.2** Bench метрика — **keyword recall@10** (proxy для NDCG, т.к. `golden_v1.expected_chunk_ids` empty pending §7.5 v2.0 grounding; см. caveat в [04.9](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#caveats-метода)). Результаты: 4096d=0.0563, 1024d=0.0563 (delta=0.0%), 512d=0.0625 (+11% noise); p95 latency 29.2/26.5/22.5ms; report `data/eval/matryoshka_report.json`
 - [x] **4.1.3** Verdict: **1024d MIGRATE** (delta 0.0% strict equality → safe). 512d флагнуто как improvement-noise (n=40 CI ~5%).
 - [x] **4.1.4** Документ — [`04.9 Matryoshka Embeddings`](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md) (концепт MRL + acceptance threshold + результаты + caveats + migration plan)
-- [ ] **4.1.5** (deferred) Production migration `framework_code_v1` + `bsl_code_v4_late` на 1024d требует re-bench с appropriate golden subset (queries про framework code, не про 1С главу 5 PDF). Effort ~30 мин с GPU; tracked в [04.9 § Migration plan](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#migration-plan).
+- [x] **4.1.5** ✅ **DONE 2026-05-16** — production migration test для `framework_code_v1`:
+  - `scripts/matryoshka_migrate.py` (252 LoC) — pure-truncate path БЕЗ GPU re-embed
+  - Truncated 24,481 chunks × 4096d → 1024d + 512d via L2-renormalize
+  - NDCG@10 bench на 46 grounded `framework_code_v1` items из golden_v1 v2.1
+  - **Results**: 4096d baseline=0.5645, 1024d=0.5506 (−2.5%, **MIGRATE**), 512d=0.5034 (−10.8%, REJECT)
+  - Storage win 1024d: 390 MB → 98 MB (−75%); p95 latency 124ms → 111ms (−11%)
+  - Report: [`data/eval/matryoshka_migrate_framework_code_v1.json`](../../data/eval/matryoshka_migrate_framework_code_v1.json)
+  - Updated [04.9 § Production bench results](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#production-bench-results-ndcg10-46-items-2026-05-16) с full numbers + migration plan
+  - **Verdict for production swap**: ✅ READY (manual ~5 мин via Qdrant alias API). Не выполнен в этом commit — отдельный operational step
 
 **Effort:** 3-5 days estimated → **3h actual** (audit-stale pattern: MRL infrastructure already in `Qwen3STEmbedder`, only harness + bench needed).
 **Closure note:** Methodologically MIGRATE recommended, но production rollout = separate decision (re-bench gating) — поэтому helms `4.1.5` оставлен open как stepstone, а сам §4.1 закрыт по acceptance criterion.
