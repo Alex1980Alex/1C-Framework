@@ -149,7 +149,7 @@ async def search_documents(
     )
 
 
-def _sse_event(event_type: str, data: Any, metadata: dict | None = None) -> str:
+def _sse_event(event_type: str, data: Any, metadata: dict[str, Any] | None = None) -> str:
     """Format a single SSE event line."""
     payload = {"type": event_type, "data": data, "metadata": metadata or {}}
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
@@ -160,7 +160,7 @@ async def ask_question(
     request: AskRequest,
     components: Components = Depends(get_components),
     current_user: str | None = Depends(get_current_user),  # F3.2.4: User attribution
-):
+) -> Any:
     """Ask a question and get an LLM-generated answer with context.
 
     With stream=true, returns Server-Sent Events (SSE) stream.

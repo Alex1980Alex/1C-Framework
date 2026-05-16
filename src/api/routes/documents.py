@@ -6,6 +6,7 @@ import logging
 import shutil
 import time
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -68,11 +69,11 @@ async def _remove_existing_document(components: "Components", source_path: str) 
 
 
 async def _enrich_contextual(
-    chunks: list,
-    document,
+    chunks: list[Any],
+    document: Any,
     components: "Components",
     force: bool = False,
-) -> list:
+) -> list[Any]:
     """Apply Contextual Retrieval enrichment if enabled (Phase 50).
 
     Adds LLM-generated context prefix to each chunk's metadata.
@@ -144,7 +145,7 @@ class DocumentInfo(BaseModel):
 
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...)) -> dict[str, Any]:
     """Upload a PDF file to the server."""
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
@@ -164,7 +165,7 @@ async def upload_file(file: UploadFile = File(...)):
 async def index_document(
     request: IndexRequest,
     components: Components = Depends(get_components),
-):
+) -> IndexResponse:
     """Index a PDF document: load, split, embed, store. Optionally build graph.
 
     Loader options:
@@ -309,11 +310,11 @@ async def index_document(
 async def index_document_stream(
     request: IndexRequest,
     components: Components = Depends(get_components),
-):
+) -> StreamingResponse:
     """Stream indexing progress as JSON lines (NDJSON)."""
 
-    async def generate():
-        def send(step: str, detail: str = "", **kwargs):
+    async def generate() -> Any:
+        def send(step: str, detail: str = "", **kwargs: Any) -> str:
             data = {"step": step, "detail": detail, "ts": time.time(), **kwargs}
             return json.dumps(data, ensure_ascii=False) + "\n"
 
@@ -417,7 +418,7 @@ async def index_document_stream(
             batch_queue: asyncio.Queue[str | None] = asyncio.Queue()
             _indexing_exc: list[Exception] = []
 
-            async def _on_batch(batch_idx: int, total: int, stored: int, elapsed: float):
+            async def _on_batch(batch_idx: int, total: int, stored: int, elapsed: float) -> None:
                 pct = (batch_idx + 1) / total * 100 if total > 0 else 100
                 await batch_queue.put(
                     send(
@@ -431,7 +432,7 @@ async def index_document_stream(
                     )
                 )
 
-            async def _run_indexing():
+            async def _run_indexing() -> Any:
                 try:
                     return await components.indexer.index_chunks(
                         chunks,
@@ -548,7 +549,7 @@ async def index_document_stream(
 async def index_batch_stream(
     request: BatchIndexRequest,
     components: Components = Depends(get_components),
-):
+) -> StreamingResponse:
     """Index multiple PDF files sequentially with per-file NDJSON progress.
 
     Processes files one at a time with error isolation — a failure in one file
@@ -557,12 +558,12 @@ async def index_batch_stream(
     Phase 32: Multi-Document KB batch indexing.
     """
 
-    async def generate():
-        def send(step: str, detail: str = "", **kwargs):
+    async def generate() -> Any:
+        def send(step: str, detail: str = "", **kwargs: Any) -> str:
             data = {"step": step, "detail": detail, "ts": time.time(), **kwargs}
             return json.dumps(data, ensure_ascii=False) + "\n"
 
-        file_results: list[dict] = []
+        file_results: list[dict[str, Any]] = []
         total_files = len(request.file_paths)
 
         yield send("batch_start", f"Batch indexing: {total_files} files", total_files=total_files)
@@ -745,7 +746,7 @@ async def index_batch_stream(
 
 
 @router.get("/files")
-async def list_pdf_files():
+async def list_pdf_files() -> dict[str, Any]:
     """List all PDF files in the upload directory (on disk, not in vector store)."""
     try:
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -759,7 +760,7 @@ async def list_pdf_files():
                 for f in UPLOAD_DIR.iterdir()
                 if f.is_file() and f.suffix.lower() == ".pdf"
             ],
-            key=lambda x: x["filename"],
+            key=lambda x: str(x["filename"]),
         )
         return {"files": files, "total": len(files), "directory": str(UPLOAD_DIR.resolve())}
     except Exception as e:
@@ -770,7 +771,7 @@ async def list_pdf_files():
 async def list_document_registry(
     status: str | None = None,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """List documents from the registry with rich metadata (Phase 32).
 
     Returns title, description, tags, chunk_count, page_count, file_size, status.
@@ -794,7 +795,7 @@ async def update_document_metadata(
     description: str | None = None,
     tags: list[str] | None = None,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Update document metadata (title, description, tags) in the registry."""
     doc_registry = getattr(components, "document_registry", None)
     if doc_registry is None:
@@ -809,11 +810,12 @@ async def update_document_metadata(
     if updated is None:
         raise HTTPException(status_code=404, detail="Document not found in registry")
 
-    return updated.model_dump()
+    dumped: dict[str, Any] = updated.model_dump()
+    return dumped
 
 
 @router.get("/")
-async def list_documents(components: Components = Depends(get_components)):
+async def list_documents(components: Components = Depends(get_components)) -> dict[str, Any]:
     """List all indexed documents grouped by document_id.
 
     Uses provider-agnostic scroll() method (works with ChromaDB, Qdrant, etc.).
@@ -830,7 +832,7 @@ async def list_documents(components: Components = Depends(get_components)):
         )
 
         # Group by document_id
-        doc_map: dict[str, dict] = {}
+        doc_map: dict[str, dict[str, Any]] = {}
         for chunk in all_chunks:
             doc_id = chunk.document_id or "unknown"
             if doc_id not in doc_map:
@@ -852,7 +854,7 @@ async def list_documents(components: Components = Depends(get_components)):
 
 
 @router.get("/stats")
-async def get_stats(components: Components = Depends(get_components)):
+async def get_stats(components: Components = Depends(get_components)) -> dict[str, Any]:
     """Get index statistics."""
     vector_count = await components.vector_store.count()
     graph_stats = await components.graph_store.get_statistics()
@@ -865,7 +867,7 @@ async def get_stats(components: Components = Depends(get_components)):
 @router.delete("/clear")
 async def clear_vector_store(
     components: Components = Depends(get_components),
-):
+) -> dict[str, int]:
     """Clear entire vector store (delete collection and recreate).
 
     Works with any provider (ChromaDB, Qdrant, etc.).
@@ -899,7 +901,7 @@ async def clear_vector_store(
 @router.post("/rebuild-sparse")
 async def rebuild_sparse_vectors(
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Rebuild Qdrant sparse BM25 vectors from existing dense vectors.
 
     Re-upserts all points to add/update BM25 sparse vectors.
@@ -933,7 +935,7 @@ async def rebuild_sparse_vectors(
 @router.post("/rebuild-bm25")
 async def rebuild_bm25(
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Rebuild BM25 FTS5 index from current Qdrant data.
 
     Reads all chunks from Qdrant and inserts them into the SQLite FTS5
@@ -1007,7 +1009,7 @@ async def rebuild_bm25(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def _cascade_delete_document(components: "Components", document_id: str) -> dict:
+async def _cascade_delete_document(components: "Components", document_id: str) -> dict[str, Any]:
     """Delete a document from ALL storage layers.
 
     Returns a report dict with per-store deletion counts and errors.
@@ -1105,7 +1107,7 @@ async def _cascade_delete_document(components: "Components", document_id: str) -
 async def delete_document(
     document_id: str,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Delete a document and all its data from every storage layer.
 
     Cascade deletes from: vector store, BM25, parent store, graph store,
@@ -1158,7 +1160,7 @@ class DeltaIndexResponse(BaseModel):
 async def index_delta(
     request: DeltaIndexRequest,
     components: Components = Depends(get_components),
-):
+) -> DeltaIndexResponse:
     """Incremental indexing: only process changed documents.
 
     Uses SHA-256 hashing to detect file changes and only indexes
@@ -1176,7 +1178,7 @@ async def index_delta(
         )
 
         # Detect changes
-        delta = indexer.detect_delta(request.file_paths, force_reindex=request.force_reindex)
+        delta = indexer.detect_delta(list(request.file_paths), force_reindex=request.force_reindex)
 
         if not delta.has_changes:
             return DeltaIndexResponse(
@@ -1191,12 +1193,12 @@ async def index_delta(
         # Process changes
         t0 = time.time()
 
-        async def load_document(file_path: str):
+        async def load_document(file_path: str) -> Any:
             """Load a single document."""
             document = await components.loader.load(file_path)
             return document
 
-        async def process_chunks(document, doc_hash):
+        async def process_chunks(document: Any, doc_hash: str) -> None:
             """Process document chunks into vector store."""
             chunks = components.pipeline.process(document)
 
@@ -1234,7 +1236,7 @@ async def index_delta(
             # Build graph if enabled
             if request.build_graph:
                 try:
-                    await components.graph_builder.build_from_document(document)
+                    await components.graph_builder.build_from_document(document)  # type: ignore[attr-defined]
                 except Exception as e:
                     logger.warning(f"[DELTA] Graph building failed: {e}")
 
@@ -1252,7 +1254,7 @@ async def index_delta(
 @router.get("/index/delta/stats")
 async def get_delta_stats(
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Get delta indexing statistics (hash database info)."""
     try:
         from src.pdf_framework.indexing import DeltaIndexer
@@ -1272,7 +1274,7 @@ async def get_delta_stats(
 @router.post("/index/delta/clear")
 async def clear_delta_cache(
     components: Components = Depends(get_components),
-):
+) -> dict[str, str]:
     """Clear delta indexing hash database (forces full reindex next run)."""
     try:
         from src.pdf_framework.indexing import DeltaIndexer
@@ -1297,7 +1299,7 @@ async def index_document_async(
     components: Components = Depends(get_components),
     _current_tenant: str = Depends(get_current_tenant),
     _role: str = Depends(get_current_role),
-):
+) -> dict[str, Any]:
     """Index a PDF document asynchronously via background queue.
 
     Returns immediately with a job_id. Use GET /jobs/{job_id} to check progress.

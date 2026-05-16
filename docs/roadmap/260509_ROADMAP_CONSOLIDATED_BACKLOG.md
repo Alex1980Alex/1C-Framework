@@ -173,18 +173,22 @@
 
 **Effort:** 2-3 days | **Зависимость:** 3.1
 
-### 3.4 P1 — GEPA replaces MIPROv2 (260423 B2)
+### 3.4 P1 — GEPA replaces MIPROv2 (260423 B2) 🟡 PARTIAL 2026-05-16 (code migrated, compile/bench deferred)
 
 **Цель:** Migrate teleprompted DSPy modules с `dspy.MIPROv2` (deprecated) на `dspy.GEPA` (Generative Evolutionary Prompt Adaptation, DSPy ≥ 2.5), re-compile и сохранить compiled modules в `data/dspy/compiled/`.
-**Выгоды:** Ожидаемый +5% quality lift на golden_v1 при том же compute; современный prompt optimizer с simpler API и более стабильной сходимостью; устранение deprecation warnings и подготовка к будущим DSPy upgrades; одна prompt-engineering система везде.
 
-- [ ] **3.4.1** Audit DSPy usage в `src/pdf_framework/agents/`
-- [ ] **3.4.2** Migrate `dspy.MIPROv2` → `dspy.GEPA`
-- [ ] **3.4.3** Re-compile teleprompted modules → save в `data/dspy/compiled/`
-- [ ] **3.4.4** Benchmark на golden_v1
-- [ ] **3.4.5** Если +5% — default
+**Реализация (2026-05-16):**
+- [x] **3.4.1** Audit complete: 3 файла используют DSPy — [`optimization/dspy_optimizer.py`](../../src/pdf_framework/optimization/dspy_optimizer.py) (runner), [`optimization/dspy_modules.py`](../../src/pdf_framework/optimization/dspy_modules.py) (signatures), [`prompts/signatures.py`](../../src/pdf_framework/prompts/signatures.py) (auxiliary). REST endpoint `POST /optimize` в [`api/routes/optimization.py`](../../src/api/routes/optimization.py). Compiled artefacts (`data/dspy/`) **не существуют** — система dormant до первого `optimize()` call.
+- [x] **3.4.2** `dspy.MIPROv2` → `dspy.GEPA` в [`dspy_optimizer.py:259`](../../src/pdf_framework/optimization/dspy_optimizer.py). Адаптер `_gepa_metric` оборачивает существующий `CompositeMetric` (2-arg callable) в `GEPAFeedbackMetric` Protocol (5-arg). `max_trials` параметр API маппится на `max_full_evals` GEPA. `reflection_lm` переиспользует уже configured `dspy.LM`. Docstrings в 5 файлах обновлены. **Source:** `inspect.signature(dspy.GEPA)` + `inspect.getsource(GEPAFeedbackMetric)` из DSPy 3.2.1 (live API surface).
+- [ ] **3.4.3** Re-compile teleprompted modules — **deferred** (requires Anthropic API credits + actual run). Code-ready: вызов `await optimizer.optimize()` через `POST /optimize` создаст compiled JSON в `data/dspy/optimized/`.
+- [ ] **3.4.4** Benchmark on golden_v1 — **deferred** (requires §3.4.3 first + time).
+- [ ] **3.4.5** Default flip — **deferred** (decision based on §3.4.4 results).
 
-**Effort:** 2-3 days | **Зависимость:** 2.2 + DSPy ≥ 2.5
+**Pre-req installed:** `dspy>=3.2.1` + `gepa>=0.0.27` added via `pip install dspy>=2.5` (gepa pulled as transitive dep). Pyproject `dev` extra recommended update — TBD when needed.
+
+**Effort:** original 2-3 days | actual ~45 мин code migration | remaining 1-2 days for §3.4.3-§3.4.5 (LLM credits + benchmark time)
+**Зависимость:** 2.2 ✅ (golden_v1 done) + DSPy ≥ 2.5 ✅
+**Status:** 🟡 partial — code migration landed, compile/bench await dedicated session with LLM budget
 
 ### 3.5 P1 — Dual-write feedback (260423 A2)
 

@@ -1,7 +1,8 @@
 """DSPy module wrappers for RAG pipeline components (Phase 34).
 
 Each module wraps one LLM call with a DSPy Signature, enabling
-MIPROv2 to automatically optimize prompts and bootstrap few-shot examples.
+GEPA (DSPy ≥3.0, migrated from MIPROv2 per roadmap 260509 §3.4) to
+automatically optimize prompts and bootstrap few-shot examples.
 
 Modules:
 - GraderModule: Document relevance grading (yes/no)
