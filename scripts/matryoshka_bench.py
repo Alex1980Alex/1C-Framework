@@ -273,11 +273,15 @@ def compare_results(results: list[dict[str, Any]]) -> dict[str, Any]:
             if baseline["mean_keyword_recall"] > 0
             else 0.0
         )
-        recommendation = (
-            "MIGRATE" if abs(delta_rel) < 0.05
-            else "OPT_IN" if abs(delta_rel) < 0.10
-            else "REJECT"
-        )
+        # Asymmetric thresholds — only DEGRADATION counts against MRL. An
+        # improvement at smaller dim is suspect (likely noise at small N)
+        # but does not block migration: the swap is still safe to ship.
+        if delta_rel >= -0.05:
+            recommendation = "MIGRATE"
+        elif delta_rel >= -0.10:
+            recommendation = "OPT_IN"
+        else:
+            recommendation = "REJECT"
         comparisons.append({
             "dim": r["dim"],
             "keyword_recall": r["mean_keyword_recall"],
