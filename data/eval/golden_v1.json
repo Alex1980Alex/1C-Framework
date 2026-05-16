@@ -207,7 +207,8 @@
       "expected_answer_summary": "Self-RAG grading is online (during inference) — agent self-checks retrieval relevance + answer hallucination. DeepEval faithfulness is offline (CI) — measures if answer is grounded in context, threshold-based.",
       "difficulty": "hard",
       "category": "comparative",
-      "domain": "rag-framework"
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-011",
@@ -243,7 +244,8 @@
       "expected_answer_summary": "Local: search within a single community (1-3s). Global: map-reduce across all communities (5-15s) — broader thematic queries.",
       "difficulty": "hard",
       "category": "comparative",
-      "domain": "rag-framework"
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-013",
@@ -315,7 +317,8 @@
       "expected_answer_summary": "scripts/replay_feedback_backup.py --target-db data/feedback_restored.db. Опции: --since/--until для date range, --dedupe для idempotent replay.",
       "difficulty": "medium",
       "category": "procedural",
-      "domain": "infra"
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-017",
@@ -461,7 +464,7 @@
       "difficulty": "medium",
       "category": "procedural",
       "domain": "1c",
-      "target_collection": "pdf_documents"
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-025",
@@ -495,7 +498,8 @@
       "expected_answer_summary": "Docker pdf-rag-tei с Qwen/Qwen3-Embedding-8B. MAX_CLIENT_BATCH_SIZE=32 (default), 4096d output. EMBEDDING__PROVIDER=tei.",
       "difficulty": "medium",
       "category": "procedural",
-      "domain": "embeddings"
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-027",
@@ -548,7 +552,8 @@
       "expected_answer_summary": "Builds hierarchical summary tree: chunks → clusters → LLM summaries (recursive). Enables high-level queries via collapsed tree search или top-down traversal.",
       "difficulty": "medium",
       "category": "procedural",
-      "domain": "rag-framework"
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-030",
@@ -563,7 +568,8 @@
       "expected_answer_summary": "with_middleware(llm, *handlers, enable_langfuse=True) принимает LangfuseCallbackHandler + любые BaseCallbackHandler. Поддерживает on_llm_start/end/error.",
       "difficulty": "medium",
       "category": "factual",
-      "domain": "infra"
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-031",
@@ -580,12 +586,15 @@
       "expected_answer_summary": "4 слоя skill-router: keyword match, fuzzy match, TF-IDF similarity, semantic embedding. Bundles + affinities + scoring. Triggers через PreToolUse hooks.",
       "difficulty": "hard",
       "category": "conceptual",
-      "domain": "infra"
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-032",
       "query": "What is contextual retrieval (Anthropic)?",
-      "expected_chunk_ids": [],
+      "expected_chunk_ids": [
+        "77852bb2-a100-5d7c-82d5-ab2cae477212"
+      ],
       "expected_keywords": [
         "contextual",
         "Anthropic",
@@ -596,7 +605,8 @@
       "expected_answer_summary": "Anthropic technique: prepend chunk-level context (~50-100 tokens describing chunk's place in document) before embedding. Reduces retrieval failures by ~67% per their paper.",
       "difficulty": "hard",
       "category": "conceptual",
-      "domain": "embeddings"
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-033",
@@ -633,7 +643,8 @@
       "expected_answer_summary": "SEARCH (existing skill?) → FETCH (knowledge from sources) → EXECUTE (subagent + attribution) → VERIFY (knowledge-compliance) → CREATE (new skill).",
       "difficulty": "easy",
       "category": "factual",
-      "domain": "infra"
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-035",
@@ -725,7 +736,8 @@
       "expected_answer_summary": "run_id — UUID slash-command run, генерится UPS-хуком. Все последующие хуки (включая MCP) подхватывают через .current-runs.json. db.get_run_trace(run_id) даёт full chain.",
       "difficulty": "hard",
       "category": "analytical",
-      "domain": "infra"
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
     },
     {
       "id": "gv1-040",
@@ -746,6 +758,592 @@
       "difficulty": "hard",
       "category": "analytical",
       "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-041",
+      "query": "How does Qdrant ID conversion handle string chunk_ids?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "UUID5",
+        "uuid5",
+        "_to_qdrant_id",
+        "namespace"
+      ],
+      "expected_answer_summary": "QdrantStore._to_qdrant_id uses deterministic uuid5 with a namespace to convert string chunk_ids to UUIDs; original_id preserved in payload.",
+      "expected_chunk_ids": [
+        "fe5757d0-a4d0-5690-930b-922288b36e94",
+        "0ef07994-aec1-5f42-aadc-82e93cf3dc3c",
+        "6599f91e-db9d-5d0a-93b6-e9607f6b70c4"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-042",
+      "query": "How is MMR diversity computed for search results?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "MMR",
+        "lambda",
+        "diversity",
+        "fetch_k"
+      ],
+      "expected_answer_summary": "MMR balances relevance vs diversity using lambda; fetches more candidates than k, iteratively selects with diversity penalty.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-043",
+      "query": "What does rebuild_sparse_vectors do in QdrantStore?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "rebuild_sparse_vectors",
+        "BM25",
+        "scroll",
+        "sparse"
+      ],
+      "expected_answer_summary": "Iterates all points via scroll API, regenerates BM25 sparse vectors from content; idempotent.",
+      "expected_chunk_ids": [
+        "107afbd2-d2ef-5b62-a0e4-aafdf8889dbd"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-044",
+      "query": "How is hybrid search RRF formula implemented?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "RRF",
+        "Reciprocal Rank Fusion",
+        "fuse"
+      ],
+      "expected_answer_summary": "RRF combines two ranked lists by summing 1/(k+rank) per item; default k=60; sorted by fused score.",
+      "expected_chunk_ids": [
+        "f84e181f-1d01-57be-ba58-0a0785d69a67"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-045",
+      "query": "How does smart loader choose between pymupdf and docling?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "smart",
+        "router",
+        "min_text_chars",
+        "docling",
+        "pymupdf"
+      ],
+      "expected_answer_summary": "SmartRouter samples PDF pages: text-sparse OR table-heavy -> docling (full pipeline), else fast loader (pymupdf).",
+      "expected_chunk_ids": [
+        "742ca2a2-1a0d-53b1-8386-6f7d2f0298fe",
+        "a900ded2-d73c-5349-9601-dd9245913ad9"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-046",
+      "query": "How does HybridLoader handle Vision OCR retries?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "vision_max_retries",
+        "attempt",
+        "OCR",
+        "fallback"
+      ],
+      "expected_answer_summary": "HybridLoader retries Claude Vision up to vision_max_retries on transient errors, then falls back to next loader tier.",
+      "expected_chunk_ids": [
+        "540b9d23-37d0-51ac-b389-0a0b69ece280"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-047",
+      "query": "How is incremental indexing implemented?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "incremental",
+        "mtime",
+        "sha1",
+        "skip"
+      ],
+      "expected_answer_summary": "IncrementalIndexer checks mtime + sha1 hash; skips unchanged; re-indexes only modified files.",
+      "expected_chunk_ids": [
+        "03d71735-2ba9-5a4d-94d4-7eaf502677c4",
+        "dd64e01d-b1e8-535d-ae6b-c6c74ec2683b",
+        "48c3fb24-159f-5142-b413-bb4885ff398b"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-048",
+      "query": "Where is the parent-child chunk relationship stored?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "ParentStore",
+        "child_id",
+        "parent_id",
+        "merge"
+      ],
+      "expected_answer_summary": "ParentStore (SQLite) maps child chunk IDs to parent chunks; child retrieved by vector search, parent expanded for context.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-049",
+      "query": "What setting controls the TEI client batch size?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "expected_keywords": [
+        "TEI_CLIENT_BATCH",
+        "batch_size",
+        "tei",
+        "sub-batch"
+      ],
+      "expected_answer_summary": "EMBEDDING__TEI_CLIENT_BATCH (default 32) caps per-request batch; client sub-batches automatically.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-050",
+      "query": "How is JWT secret loaded from environment?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "JWTHandler",
+        "AUTH__JWT_SECRET",
+        "jwt",
+        "HS256"
+      ],
+      "expected_answer_summary": "JWTHandler reads AUTH__JWT_SECRET via pydantic-settings; HS256 algorithm; validates secret length.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-051",
+      "query": "What is the default value of AGENT__RERANKER_TYPE?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "expected_keywords": [
+        "reranker_type",
+        "llm",
+        "AgentSettings",
+        "default"
+      ],
+      "expected_answer_summary": "AgentSettings.reranker_type defaults to llm; alternatives: cross_encoder, flashrank, colbert.",
+      "expected_chunk_ids": [
+        "9f51ca45-79be-5f5f-84e1-55dbaf0f7a75",
+        "625e7b79-daec-54d9-91d5-cd29340632aa"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-052",
+      "query": "How does Self-RAG grader decide if a chunk is relevant?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "grader",
+        "relevance",
+        "yes",
+        "no",
+        "ainvoke"
+      ],
+      "expected_answer_summary": "Self-RAG grader sends query+chunk to small LLM, parses yes/no/да/нет from response; retries with corrective feedback on invalid output.",
+      "expected_chunk_ids": [
+        "024ab852-92b2-52f2-90c1-85fbdd9c3db6",
+        "a4d64413-149f-5510-a517-e80639bd4dfe"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-053",
+      "query": "How does the plan-execute agent decompose queries?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "plan_execute",
+        "decompose",
+        "sub_questions",
+        "planner"
+      ],
+      "expected_answer_summary": "Plan-execute uses planner LLM to decompose complex query into ordered sub-questions, executes each, synthesizes final answer.",
+      "expected_chunk_ids": [
+        "7472e326-000e-5f39-8460-bc366f2dfe11"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-054",
+      "query": "Where is conversation history persisted in Conversational RAG?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "ConversationStore",
+        "SQLite",
+        "session_id",
+        "history"
+      ],
+      "expected_answer_summary": "ConversationStore persists messages to SQLite keyed by session_id; max_history limits window; supports query reformulation.",
+      "expected_chunk_ids": [
+        "2718ee11-e90e-538d-bb72-e2921734cba3",
+        "8a2a35c7-2437-5043-95a4-4e5e65018243"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-055",
+      "query": "How does GraphRAG community detection group entities?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "community",
+        "leiden",
+        "resolution",
+        "hierarchical"
+      ],
+      "expected_answer_summary": "GraphRAG runs Leiden on entity graph; resolution param controls community size; multi-level hierarchy for global search.",
+      "expected_chunk_ids": [
+        "113084d1-fbfa-53d6-b5e9-8581dd8e22fd",
+        "7ebd0ddb-5694-5872-9259-7d98ddeab794",
+        "68e62f5c-7b33-5415-bf5e-7ef2f9f0cab2"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-056",
+      "query": "How is rate limiting enforced on REST endpoints?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "rate_limit",
+        "RateLimit",
+        "requests_per_minute",
+        "burst"
+      ],
+      "expected_answer_summary": "Rate limiting middleware uses token bucket: REQUESTS_PER_MINUTE default 60 with burst capacity, keyed by tenant/IP.",
+      "expected_chunk_ids": [
+        "434e3a21-1ca4-5a9c-baa5-041a7872d0fa",
+        "2488a556-dee4-577a-9f3e-ce591ea88e91",
+        "11174109-60e4-5c55-b23a-0ef4bec5d457"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-057",
+      "query": "What MCP tools does the pdf-vector-graph server expose?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "expected_keywords": [
+        "mcp",
+        "tools",
+        "search_documents",
+        "index_pdf",
+        "ask_question"
+      ],
+      "expected_answer_summary": "MCP server exposes 14 tools including index_pdf, search_documents, ask_question, plan_execute, web_search, visual_search, list_collections, get_stats, graph_query, research, analyze.",
+      "expected_chunk_ids": [
+        "98c8253b-b60f-59bd-a7d8-114dd5c4ecc5"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-058",
+      "query": "How is REST tenant isolation enforced via assert_tenant_access?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "assert_tenant_access",
+        "get_current_tenant",
+        "admin",
+        "tenant_id"
+      ],
+      "expected_answer_summary": "assert_tenant_access guard takes path tenant_id + current_tenant + role; raises 403 unless role=admin or tenants match.",
+      "expected_chunk_ids": [
+        "1a76b192-42be-5a52-98f8-68c80baf40c7",
+        "3808e0f1-9c09-5e17-8baf-993866371d2c",
+        "aab2c771-5a8f-5c96-a9e4-cdb5706ed86b"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-059",
+      "query": "How does LLM reranker score candidate chunks?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "LLMReranker",
+        "rerank",
+        "JSON",
+        "relevance",
+        "Claude"
+      ],
+      "expected_answer_summary": "LLMReranker sends query + numbered candidates to Claude, parses JSON array of index/score; sorts by score; truncates to top_k.",
+      "expected_chunk_ids": [
+        "13bb5b48-158d-5c9b-816a-be8b43c1fe92",
+        "d12adb71-4228-5833-83fd-c4996666b35f"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-060",
+      "query": "What is the FlashRank token budget parameter for?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "flashrank",
+        "token_budget",
+        "caps",
+        "truncate"
+      ],
+      "expected_answer_summary": "FLASHRANK_TOKEN_BUDGET caps total tokens sent to local FlashRank reranker; truncates chunks to stay under context limit.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-061",
+      "query": "How does Qwen3STEmbedder load the model on GPU with bf16?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "embeddings",
+      "expected_keywords": [
+        "Qwen3STEmbedder",
+        "SentenceTransformer",
+        "bfloat16",
+        "cuda"
+      ],
+      "expected_answer_summary": "Qwen3STEmbedder constructs SentenceTransformer with model name, model_kwargs torch_dtype=bfloat16 device=cuda; tokenizer_kwargs padding_side=left for last-token pooling.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-062",
+      "query": "Where is the TEI HTTP embedder client implemented?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "embeddings",
+      "expected_keywords": [
+        "Qwen3TEIEmbedder",
+        "httpx",
+        "embed",
+        "client_batch_size"
+      ],
+      "expected_answer_summary": "Qwen3TEIEmbedder uses httpx.AsyncClient to POST to TEI /embed endpoint; sub-batches to client_batch_size (default 32) to respect server max.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-063",
+      "query": "How does the BSL chunker apply sliding-window splitting?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "bsl_chunker",
+        "window",
+        "overlap",
+        "sliding"
+      ],
+      "expected_answer_summary": "BSL chunker splits XXL symbols via sliding window=1024 overlap=256 to stay under embedding max input length 4096 tokens.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-064",
+      "query": "What does the Late Chunking pooling mode produce?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings",
+      "expected_keywords": [
+        "late_chunking",
+        "full-document",
+        "mean-pool",
+        "per-chunk"
+      ],
+      "expected_answer_summary": "Late Chunking runs full-document forward pass then mean-pools per-chunk token spans; preserves cross-chunk context lost in standard chunking.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-065",
+      "query": "How is the BM25 SQLite fallback FTS5 schema defined?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "fts5",
+        "CREATE VIRTUAL TABLE",
+        "tokenize",
+        "BM25Store"
+      ],
+      "expected_answer_summary": "BM25Store creates FTS5 virtual table with tokenize=unicode61 or custom; columns (chunk_id, content, metadata); searched via MATCH.",
+      "expected_chunk_ids": [
+        "6527b2e8-63d6-5a57-92ee-017c5daeb41b"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-066",
+      "query": "Where is the semantic cache similarity threshold checked?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "SemanticCache",
+        "threshold",
+        "0.95",
+        "embedding"
+      ],
+      "expected_answer_summary": "SemanticCache embeds query, searches own SQLite cache, returns hit if cosine similarity exceeds threshold (default 0.95).",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-067",
+      "query": "How is the LLM rotation service circuit breaker triggered?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "CircuitBreaker",
+        "failure_threshold",
+        "open",
+        "cooldown"
+      ],
+      "expected_answer_summary": "CircuitBreaker counts consecutive failures; opens after failure_threshold; rejects calls during cooldown; half-opens for probe.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-068",
+      "query": "How does the Qdrant payload filter convert Pydantic dict to Qdrant Filter?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "_to_qdrant_filter",
+        "Filter",
+        "FieldCondition",
+        "MatchValue"
+      ],
+      "expected_answer_summary": "_to_qdrant_filter converts dict {key:value} or list filters to Qdrant Filter with FieldCondition + MatchValue per field; supports nested AND/OR.",
+      "expected_chunk_ids": [
+        "37ba3415-7785-55d0-9056-b3b03ff97902"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-069",
+      "query": "Where is the embedding cache backed by SQLite?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "EmbeddingCache",
+        "SQLite",
+        "hash",
+        "ttl"
+      ],
+      "expected_answer_summary": "EmbeddingCache stores text_hash -> vector in SQLite with TTL; lookup before calling embedder; write-through on miss.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-070",
+      "query": "How does the auto-git-save hook detect modified files for commit?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "auto-git-save",
+        "git",
+        "modified",
+        "staged"
+      ],
+      "expected_answer_summary": "auto-git-save hook reads git status, stages modified files, creates structured commit with hook signature.",
+      "expected_chunk_ids": [
+        "4c98199a-5efd-5950-b50f-0a393333a5ea",
+        "afaf28f8-9232-57f8-bc2c-be62d912ada9"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-071",
+      "query": "Where is the HybridSearchStrategy class defined?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "HybridSearchStrategy",
+        "class",
+        "hybrid_search.py"
+      ],
+      "expected_answer_summary": "HybridSearchStrategy class is defined in src/pdf_framework/search/strategies/hybrid_search.py.",
+      "expected_chunk_ids": [
+        "33511f33-2a35-5998-a30f-3feffb55014d"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-072",
+      "query": "Where is the Self-RAG agent graph constructed?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "SelfRAGAgent",
+        "build_graph",
+        "nodes",
+        "grader"
+      ],
+      "expected_answer_summary": "Self-RAG agent wires grader, retriever, rewriter, generator, hallucination_checker nodes in build_graph.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-073",
+      "query": "How does the Adaptive RAG classifier route queries?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "Adaptive",
+        "classifier",
+        "route",
+        "complexity"
+      ],
+      "expected_answer_summary": "Adaptive RAG classifier LLM labels query as simple/moderate/complex/thematic; routes to appropriate strategy.",
+      "expected_chunk_ids": [
+        "d3670929-5cb0-580f-8087-60ceb952a2d6"
+      ],
       "target_collection": "framework_code_v1"
     }
   ],

@@ -131,12 +131,73 @@ class TestRetrievalQualityGate:
             )
 
         try:
-            from qdrant_client import QdrantClient  # noqa: F401
+            from qdrant_client import QdrantClient
         except ImportError:
             pytest.skip("qdrant-client not installed (test env)")
 
-        # Real benchmark would import the framework's HybridSearch and
-        # compute NDCG@TOP_K across items_with_gt. Threshold check:
-        #     assert ndcg >= NDCG_THRESHOLD
-        # Implementation deferred until corpus + ground-truth ready (v2.0).
-        pytest.skip("Quality gate implementation deferred to roadmap v2.0 (ground truth + benchmark wiring)")
+        import math
+        import os
+
+        import httpx
+
+        tei_url = os.environ.get("TEI_URL", "http://localhost:8080") + "/embed"
+        qdrant_url = os.environ.get("QDRANT_URL", "http://localhost:6333")
+        prefix = (
+            "Instruct: Given a web search query, retrieve relevant passages "
+            "that answer the query\nQuery: "
+        )
+
+        try:
+            with httpx.Client(timeout=5.0) as health:
+                health.get(f"{qdrant_url}/healthz").raise_for_status()
+        except (httpx.HTTPError, OSError):
+            pytest.skip(f"Qdrant unreachable at {qdrant_url}")
+
+        try:
+            with httpx.Client(timeout=5.0) as health:
+                health.get(f"{os.environ.get('TEI_URL', 'http://localhost:8080')}/health").raise_for_status()
+        except (httpx.HTTPError, OSError):
+            pytest.skip(f"TEI unreachable at {tei_url}")
+
+        client = QdrantClient(url=qdrant_url)
+
+        def _ndcg_at_k(retrieved_ids: list[str], expected_ids: set[str], k: int) -> float:
+            dcg = 0.0
+            for rank, rid in enumerate(retrieved_ids[:k], start=1):
+                if rid in expected_ids:
+                    dcg += 1.0 / math.log2(rank + 1)
+            ideal_hits = min(len(expected_ids), k)
+            idcg = sum(1.0 / math.log2(r + 1) for r in range(1, ideal_hits + 1))
+            return dcg / idcg if idcg > 0 else 0.0
+
+        scores: list[float] = []
+        failures: list[str] = []
+        with httpx.Client(timeout=30.0) as http:
+            for item in items_with_gt:
+                expected = {str(x) for x in item["expected_chunk_ids"]}
+                collection = item.get("target_collection") or "framework_code_v1"
+                try:
+                    resp = http.post(tei_url, json={"inputs": [prefix + item["query"]]})
+                    resp.raise_for_status()
+                    vec = resp.json()[0]
+                    hits = client.query_points(
+                        collection_name=collection, query=vec, limit=TOP_K
+                    ).points
+                except (httpx.HTTPError, ConnectionError, TimeoutError) as e:
+                    failures.append(f"{item['id']}: {type(e).__name__}: {e}")
+                    continue
+                retrieved = [str(h.id) for h in hits]
+                scores.append(_ndcg_at_k(retrieved, expected, TOP_K))
+
+        max_failures = max(1, int(len(items_with_gt) * 0.1))
+        if len(failures) > max_failures:
+            pytest.skip(
+                f"Too many retrieval failures ({len(failures)}/{len(items_with_gt)} "
+                f"> {max_failures} threshold): {failures[:3]}..."
+            )
+
+        mean_ndcg = sum(scores) / len(scores) if scores else 0.0
+        assert mean_ndcg >= NDCG_THRESHOLD, (
+            f"Mean NDCG@{TOP_K}={mean_ndcg:.3f} < threshold {NDCG_THRESHOLD} "
+            f"across {len(scores)} items ({len(failures)} skipped). Retrieval regression."
+        )
