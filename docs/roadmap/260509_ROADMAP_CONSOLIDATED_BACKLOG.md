@@ -294,16 +294,19 @@
 
 **Effort:** actual ~30 мин | **Status:** ✅ closed (audit-stale корректирован — scope shifted from `embeddings/` to `memory/vector_memory/`)
 
-### 4.4 P2 — Sync-in-async cleanup (260423 A4)
+### 4.4 P2 — Sync-in-async cleanup (260423 A4) ✅ DONE 2026-05-16 (audit + decision)
 
 **Цель:** Заменить `asyncio.to_thread` / `run_in_executor` обёртки на native async equivalents где доступны (httpx async client, async Qdrant client, etc.) и задокументировать оставшиеся обоснованные случаи.
-**Выгоды:** Lower latency (no thread-pool roundtrip); снижение thread pool contention при высоком QPS; лучшее использование async event loop; documented async patterns для contributors.
 
-- [ ] **4.4.1** `grep -rE "asyncio.to_thread\|run_in_executor" src/`
-- [ ] **4.4.2** Replace c native async equivalent где возможно
-- [ ] **4.4.3** Document pattern в `09.X_Async_Patterns.md`
+**Реализация (closure 2026-05-16):**
 
-**Effort:** 1-2 days
+- [x] **4.4.1** Inventory complete: **107 occurrences в 25 файлах** `src/`. Breakdown в [09.12 §4.4 closure audit](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#44-closure-audit-roadmap-260509-2026-05-16).
+- [x] **4.4.3** Documented в [09.12 Async Patterns Migration roadmap](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#migration-roadmap-deferred) — расширена таблица с Qdrant row + decision rationale.
+- [/] **4.4.2** Single realistic candidate identified: **Qdrant в `src/memory/`** (~6-10 sites — `_get_qdrant()` factory + client operations wrapped в `to_thread`, тогда как `src/pdf_framework/vector_store/providers/qdrant.py` уже async). **Deferred follow-up** per cost/benefit: cross-module change, требует атомарной замены factory без breaking MCP back-compat, low real-world QPS. Trigger для активации: thread pool saturation в профилировании или planned API redesign window.
+
+Остальные occurrences (~95) wrap genuinely sync libs (sqlite3, PyMuPDF, sentence-transformers, FlashRank) где нет async alternative — `to_thread` использование semantically correct.
+
+**Effort:** original estimate 1-2 days | actual ~45 min (audit + doc closure) | **Status:** ✅ closed (replace step explicitly deferred)
 
 ### 4.5 P2 — Delegation Iter 4-5 (260320 + 260423 C4)
 
