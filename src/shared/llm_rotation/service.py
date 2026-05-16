@@ -241,6 +241,13 @@ class LLMRotationService:
         if self._settings.rate_limiting_enabled:
             for cfg in configs:
                 self._rate_limiter.register(cfg.name, cfg.rate_limit_rpm)
+        # Adaptive concurrency controller for batch_complete (roadmap 260516 Phase 3)
+        # Multi-signal reduction (CB/429/5xx/slow_call), per-provider state,
+        # persistent across restarts. See adaptive_concurrency.py for full design.
+        from src.shared.llm_rotation.adaptive_concurrency import (
+            AdaptiveConcurrencyController,
+        )
+        self._adaptive_concurrency = AdaptiveConcurrencyController()
         # Load persisted state
         if self._settings.persist_adaptive:
             self._scorer.load(self._settings.adaptive_data_path)
@@ -868,6 +875,113 @@ class LLMRotationService:
             error=f"All failed. Tried: {tried}",
         )
         raise RuntimeError(f"All providers failed after {total_attempts} attempts. Tried: {tried}")
+
+    async def batch_complete(
+        self,
+        prompts: list[str],
+        system_prompt: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        timeout: int | None = None,
+        preferred_provider: str | None = None,
+        return_exceptions: bool = True,
+        concurrency: int | None = None,
+    ) -> list[dict[str, Any] | BaseException]:
+        """Concurrent batch wrapper around `complete()` with adaptive throttling.
+
+        Roadmap 260516 Phase 3. Uses ``AdaptiveConcurrencyController`` to
+        adjust per-provider concurrency cap based on observed signals:
+        429 / 5xx / CB-opens / slow_call all trigger ÷2 reduction; gradual
+        +1 recovery after 30 min clean window. Floor=1, ceiling=10.
+
+        Args:
+            prompts: list of user prompts to send.
+            system_prompt: shared system prompt for all calls.
+            temperature, max_tokens, timeout, component, preferred_provider:
+                same semantics as ``complete()``; broadcast to every call.
+            return_exceptions: if True (default), failed calls are returned
+                as ``Exception`` instances in the result list (preserves
+                positional alignment with ``prompts``). If False, the first
+                exception aborts the whole batch.
+            concurrency: explicit override. If None, reads adaptive value
+                for ``preferred_provider`` (or primary if not specified).
+
+        Returns:
+            List aligned with ``prompts``: each entry is either the
+            ``complete()`` result dict or an ``Exception`` instance
+            (when ``return_exceptions=True``).
+        """
+        if not prompts:
+            return []
+
+        # Resolve concurrency cap. If caller didn't override, ask the adaptive
+        # controller for current value of the resolved target provider.
+        resolved_provider = (
+            preferred_provider or self._settings.primary_provider
+        )
+        effective_concurrency = (
+            concurrency
+            if concurrency is not None
+            else self._adaptive_concurrency.get_concurrency(resolved_provider)
+        )
+        effective_concurrency = max(1, effective_concurrency)
+
+        sem = asyncio.Semaphore(effective_concurrency)
+
+        logger.info(
+            "[BATCH] %d prompts, concurrency=%d, target=%s",
+            len(prompts), effective_concurrency, resolved_provider,
+        )
+
+        async def _one(p: str) -> dict[str, Any]:
+            async with sem:
+                t0 = time.monotonic()
+                try:
+                    result = await self.complete(
+                        prompt=p,
+                        system_prompt=system_prompt,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        timeout=timeout,
+                        preferred_provider=preferred_provider,
+                    )
+                    elapsed = time.monotonic() - t0
+                    # Record latency signal for adaptive throttling.
+                    # Provider name from result (may differ from preferred
+                    # if rotation fell back).
+                    actual = result.get("provider", resolved_provider)
+                    self._adaptive_concurrency.record_latency(actual, elapsed)
+                    return result
+                except Exception as e:
+                    # Classify error → adaptive signal.
+                    err_str = str(e).lower()
+                    if "429" in err_str or "rate limit" in err_str:
+                        self._adaptive_concurrency.record_event(
+                            resolved_provider, "http_429"
+                        )
+                    elif "529" in err_str or "5xx" in err_str or "500" in err_str:
+                        self._adaptive_concurrency.record_event(
+                            resolved_provider, "http_5xx"
+                        )
+                    # CB-open signal handled at error-recording site in
+                    # ProviderState.record_error; not double-counted here.
+                    raise
+
+        results = await asyncio.gather(
+            *(_one(p) for p in prompts),
+            return_exceptions=return_exceptions,
+        )
+
+        # Diagnostics: log per-provider success rate after batch.
+        n_ok = sum(1 for r in results if not isinstance(r, BaseException))
+        n_fail = len(results) - n_ok
+        logger.info(
+            "[BATCH] done: %d/%d ok (%.0f%%), %d failed, concurrency now=%d",
+            n_ok, len(prompts), (n_ok / len(prompts)) * 100 if prompts else 0,
+            n_fail,
+            self._adaptive_concurrency.get_concurrency(resolved_provider),
+        )
+        return results  # type: ignore[return-value]
 
     def get_stats(self) -> dict[str, Any]:
         """Return statistics for all providers."""

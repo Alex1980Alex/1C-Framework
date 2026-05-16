@@ -184,6 +184,32 @@ def _save(data: Any, path: Path) -> None:
     tmp.replace(path)
 
 
+async def _process_item(
+    item: dict,
+    collection: str,
+    http: httpx.Client,
+    qclient: QdrantClient,
+    sem: asyncio.Semaphore,
+) -> tuple[str, str, list[str], int, str | None]:
+    """Single-item pipeline: retrieve + judge. Returns (id, tag, chunk_ids, n_pts, err).
+
+    Wrapped in semaphore to cap concurrent LLM judge calls (the slow phase).
+    Retrieval is sync httpx + Qdrant — inline within semaphore window.
+    """
+    iid = item.get("id", "?")
+    try:
+        points = _retrieve(item["query"], http, qclient, collection)
+        if not points:
+            return iid, "WARN", [], 0, "no Qdrant results"
+        async with sem:
+            indices = await _judge(item, points)
+        chunk_ids = [str(points[i - 1].id) for i in indices]
+        tag = "OK" if chunk_ids else "EMPTY"
+        return iid, tag, chunk_ids, len(points), None
+    except (httpx.HTTPError, RuntimeError, ValueError) as e:
+        return iid, "FAIL", [], 0, f"{type(e).__name__}: {e}"
+
+
 async def _run(args: argparse.Namespace) -> int:
     raw = json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
     is_wrapped = isinstance(raw, dict) and "items" in raw
@@ -196,44 +222,65 @@ async def _run(args: argparse.Namespace) -> int:
     skipped = 0
     failed = 0
     no_relevant = 0
+    collection = args.collection or DEFAULT_COLLECTION
 
+    # Filter items first — no point spawning tasks for skipped ones.
+    work: list[dict] = []
+    for item in items:
+        iid = item.get("id", "?")
+        if id_filter and iid not in id_filter:
+            continue
+        if domain_filter and item.get("domain") not in domain_filter:
+            continue
+        if not args.force and item.get("expected_chunk_ids"):
+            skipped += 1
+            continue
+        work.append(item)
+
+    # Concurrency: CLI --concurrency overrides env. Conservative default=3
+    # respects subscription rate limits (roadmap 260516 Phase 3).
+    concurrency = max(1, args.concurrency or 3)
+    print(
+        f"[BATCH] {len(work)} items to ground via {collection} "
+        f"(concurrency={concurrency}, skipped={skipped})",
+        flush=True,
+    )
+
+    sem = asyncio.Semaphore(concurrency)
     with httpx.Client() as http:
-        for item in items:
-            iid = item.get("id", "?")
-            if id_filter and iid not in id_filter:
-                continue
-            if domain_filter and item.get("domain") not in domain_filter:
-                continue
-            if not args.force and item.get("expected_chunk_ids"):
-                skipped += 1
-                continue
-            try:
-                t0 = time.time()
-                collection = args.collection or DEFAULT_COLLECTION
-                points = _retrieve(item["query"], http, qclient, collection)
-                if not points:
-                    print(f"[WARN] {iid}: no Qdrant results, skipping", flush=True)
-                    failed += 1
-                    continue
-                indices = await _judge(item, points)
-                chunk_ids = [str(points[i - 1].id) for i in indices]
-                tag = "OK" if chunk_ids else "EMPTY"
-                if not chunk_ids:
-                    no_relevant += 1
-                print(
-                    f"[{tag}] {iid} ({time.time() - t0:.1f}s): "
-                    f"{len(chunk_ids)}/{len(points)} relevant → "
-                    f"{[c[:8] for c in chunk_ids]}",
-                    flush=True,
-                )
-                if not args.dry_run:
-                    item["expected_chunk_ids"] = chunk_ids
-                    item["target_collection"] = collection
-                    _save(raw, GOLDEN_PATH)
-                grounded += 1
-            except (httpx.HTTPError, RuntimeError, ValueError) as e:
-                print(f"[FAIL] {iid}: {type(e).__name__}: {e}", flush=True)
+        t_batch = time.time()
+        tasks = [
+            _process_item(item, collection, http, qclient, sem) for item in work
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=False)
+
+        for item, (iid, tag, chunk_ids, n_pts, err) in zip(work, results):
+            if err is not None:
+                print(f"[{tag}] {iid}: {err}", flush=True)
                 failed += 1
+                continue
+            if tag == "EMPTY":
+                no_relevant += 1
+            print(
+                f"[{tag}] {iid}: {len(chunk_ids)}/{n_pts} relevant -> "
+                f"{[c[:8] for c in chunk_ids]}",
+                flush=True,
+            )
+            if not args.dry_run:
+                item["expected_chunk_ids"] = chunk_ids
+                item["target_collection"] = collection
+            grounded += 1
+
+        # Single save after batch — avoids JSON write race condition.
+        if not args.dry_run and grounded:
+            _save(raw, GOLDEN_PATH)
+
+        elapsed = time.time() - t_batch
+        avg = elapsed / max(1, len(work))
+        print(
+            f"\n[BATCH] {len(work)} items in {elapsed:.1f}s ({avg:.1f}s avg/item)",
+            flush=True,
+        )
 
     print(
         f"\nDone. grounded={grounded} (of which {no_relevant} empty), "
@@ -254,6 +301,15 @@ def main() -> int:
         help=f"Qdrant collection (default: {DEFAULT_COLLECTION}). Tested: framework_code_v1, bsl_code_v4_late",
     )
     p.add_argument("--dry-run", action="store_true", help="Print verdicts, don't save")
+    p.add_argument(
+        "--concurrency",
+        type=int,
+        default=3,
+        help="Parallel LLM judge calls (default 3 — conservative). "
+             "Roadmap 260516 Phase 3. Increase to 5-10 for faster batch on "
+             "stable network; reduce to 1 if hitting rate limits. Adaptive "
+             "throttling in LLMRotationService further halves on errors.",
+    )
     args = p.parse_args()
 
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":

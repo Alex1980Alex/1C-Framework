@@ -52,12 +52,22 @@ ZAIProxy (HTTP server, port 8000)
 - 3+ consecutive errors -> 5min cooldown
 - Success resets consecutive errors -> HEALTHY
 
+## Installation
+
+```bash
+pip install -e ".[llm-rotation]"
+```
+
+Pulls (per `pyproject.toml`):
+- `mistralai>=1.0`, `openai>=1.0`, `google-generativeai>=0.8` — provider SDKs
+- **`claude-agent-sdk>=0.2,<0.3`** — Anthropic Python package for `claude-cli-*` providers (roadmap 260516 Phase 1, commit `8742cb090`). Manages CLI subprocess + agent loop internally, exposes typed messages (`AssistantMessage`, `ResultMessage`). Required for `format="claude-cli"` providers; HTTP providers (anthropic-sonnet, ollama-local) don't need it.
+
 ## Configuration
 
 ```env
-LLM_ROTATION_PRIMARY_PROVIDER=zai-glm5
+LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-haiku
 LLM_ROTATION_MAX_RETRIES=3
-LLM_ROTATION_TIMEOUT=30
+LLM_ROTATION_TIMEOUT=90
 LLM_ROTATION_COOLDOWN_SECONDS=300
 LLM_ROTATION_RATE_LIMIT_COOLDOWN=60
 ```
