@@ -6,7 +6,7 @@ Version: 1.3.0 - Phase 12.3: JWT Authentication
 
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Literal
+from typing import Any, Literal
 
 import jwt
 from pydantic import BaseModel, ValidationError
