@@ -2,6 +2,44 @@
 
 Tracking versioned curated evaluation datasets for retrieval / RAG / smoke-gate benchmarks.
 
+## golden_v1.json v2.0 — 2026-05-16 (LLM-assisted grounding pass)
+
+**Status:** roadmap [260509 §2.2 v2.0 grounding](../../docs/roadmap/260509_ROADMAP_CONSOLIDATED_BACKLOG.md#22-p0--golden-eval-dataset-260423-c2--unblocker-для-b1b2b7) DONE. `expected_chunk_ids` populated через LLM-assisted relevance judgment в [`scripts/ground_golden_v1.py`](../../scripts/ground_golden_v1.py).
+
+**Coverage:** **29/40 populated** (72.5%), **56 total chunk_ids**, distribution:
+- `framework_code_v1`: 25 items (core RAG/agents/infra code)
+- `bsl_code_v4_late`: 2 items (1C platform queries about specific BSL implementations)
+- `pdf_documents`: 2 items (1C concept queries — регистр накопления, план обмена)
+- empty (no relevant chunks in any tested corpus): 11 items (conceptual/cross-domain questions that don't map to single chunks — e.g., «5 phases of Learning Loop», «Self-RAG vs DeepEval» comparisons)
+
+**Pipeline (replicable):**
+1. TEI embed query (Qwen3 instruction prefix) → top-15 candidates from target Qdrant collection
+2. LLM judge (Z.AI/zai-glm5 via `cheap_llm_call`, component=`grounding_judge`, temp=0.0, max_tokens=200) — strict prompt: imports/re-exports DON'T qualify, return JSON `relevant_indices` (0-3 indices)
+3. Map indices → chunk IDs, write to `expected_chunk_ids`. Also added new field `target_collection: str` per item — eval pipeline uses to route query к правильной коллекции.
+
+**Schema changes:**
+- **NEW field**: `target_collection` (string) — Qdrant collection where ground-truth chunks live. Set when grounding populates `expected_chunk_ids`. Allows multi-corpus eval.
+- `expected_chunk_ids: []` теперь имеет semantic meaning «no ground truth — skip in quality gate» (раньше означало «pending grounding»).
+
+**Tests verify:** 12/12 schema gates PASS (9 smoke + 3 DeepEval). Quality gates still SKIP (need ≥50 items per `MIN_QUALITY_GATE_SIZE`, мы имеем 40 total / 29 grounded). Раскрытие quality gate требует expansion 40→50+ items с дополнительным grounding pass.
+
+**Pipeline cost:** 40 queries × ~1.5s avg LLM call = ~60s total (zai-glm5 через rotation service).
+
+**Tooling:**
+- `python scripts/ground_golden_v1.py` — ground all unfilled (resumable, atomic per-item save)
+- `python scripts/ground_golden_v1.py --force` — re-ground all
+- `python scripts/ground_golden_v1.py --domains 1c --collection bsl_code_v4_late` — domain-specific corpus routing
+- `python scripts/ground_golden_v1.py --dry-run --ids gv1-001,gv1-002` — preview without saving
+
+**Unblocks (downstream items per roadmap):**
+- §2.1 NDCG quality gate — auto-activates когда items ≥50
+- §3.2.5 Contextual Retrieval benchmark — может measure NDCG@10 lift на 25 framework_code_v1 items
+- §3.9 DeepEval quality gates — `faithfulness/hallucination` thresholds могут measure
+- §4.1.5 Production Matryoshka migration — rank-sensitive NDCG comparison 4096d vs 1024d
+- §4.2.4 RAPTOR + LLM rerank benchmark — measure rerank lift
+
+**Known limitation:** 11 items remain empty (mostly conceptual/comparison queries). Future v2.1 expansion could either (a) re-craft these queries to be more code-specific, (b) add ground truth via manual annotation, (c) accept as "out-of-scope для retrieval benchmark — covered by RAG triad eval instead".
+
 ## golden_v1.json v1.1 — 2026-05-09 (templated expansion)
 
 **Status:** seed expanded (40 items: 10 manual v1.0 + 30 templated). Schema gates ZELENЫ. Quality gates всё ещё skip (требует ≥50 items с populated `expected_chunk_ids`).
