@@ -363,16 +363,22 @@ Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR p
 
 **Effort:** 2-3 days
 
-### 4.9 P2 — Async PostToolUse hooks (260329 step 2.3)
+### 4.9 P2 — Async PostToolUse hooks (260329 step 2.3) ✅ DONE 2026-05-16 (audit-stale + bonus)
 
 **Цель:** Refactor PostToolUse-хуков с >2s typical latency на sync entrypoint + fire-and-forget tail (или `"async": true` flag если поддерживается).
-**Выгоды:** Снижение wait-time после каждого tool call (UX gain в interactive sessions); меньше блокировок agent loop; не ломает текущие хуки (post-fact обработка не критична).
 
-- [ ] **4.9.1** Identify hooks с >2s typical latency
-- [ ] **4.9.2** Refactor: sync entrypoint + fire-and-forget tail
-- [ ] **4.9.3** Settings.json `"async": true` flag (если supported)
+**Реализация (2026-05-16):**
 
-**Effort:** 1 day
+- [x] **4.9.1** Audit `data/hook-invocations.jsonl` tail 2 MB → **0 PostToolUse hooks с p95 > 2s**. Самый медленный `PostToolUseAutoGitSave` p95=978ms, max=1830ms — под порогом. Roadmap audit-stale в strict PostToolUse-scope.
+- [x] **4.9.3** Confirmed: Claude Code v2.x supports `"async": true` для `type: "command"` hooks ([docs](../../documentation/Claude_Code_Hooks_Reference_RU.md#L1414)). Trade-off: фоновый запуск, но `decision`/`continue`/`systemMessage` игнорируются.
+- [x] **4.9.2 (bonus, outside PostToolUse scope)** Wider audit нашёл 3 slow hooks в других events:
+  - `UserPromptSubmit::auto-git-save-prompt` (p95=3900ms) → ✅ `async: true` применён (header: «Always exit 0, never block»)
+  - `Stop::session-memory-save` (p95=3187ms) → ✅ `async: true` применён (header: «advisory, non-blocking»)
+  - `UserPromptSubmit::memory-first-hook` (p95=3332ms) → ❌ нельзя async — purpose инжектит `systemMessage` (потеряется в async режиме)
+
+Documentation: [09.12 Async hooks](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#async-hooks-claude-code-async-true-flag-roadmap-260509-49).
+
+**Effort:** original 1 day | actual ~30 мин (audit-stale strict scope; bonus 2 hooks applied) | **Status:** ✅ closed
 
 ### 4.10 P2 — GPU BSL Phase 4-5 (260326)
 
