@@ -9,9 +9,13 @@ Version: 2.0.0 - Consolidated functional + class-based RBAC
 
 import functools
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
+
+DecoratedAsync = Callable[..., Awaitable[Any]]
 
 logger = logging.getLogger(__name__)
 
