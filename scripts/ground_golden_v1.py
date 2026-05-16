@@ -50,11 +50,12 @@ QUERY_PREFIX = (
 )
 
 _RELEVANCE_SYSTEM = (
-    "You are a strict relevance judge for code documentation retrieval. "
-    "Given a question and N numbered candidate chunks from a codebase, "
-    "decide which candidates contain the actual answer (implementation, "
-    "definition, or substantive explanation). Imports, re-exports, and "
-    "marginal mentions are NOT relevant. Return JSON only."
+    "Output JSON only. No markdown. No prose. No code fences. No file links. "
+    "No explanations. Just literal JSON matching the schema in the user prompt.\n\n"
+    "Role: strict relevance judge for code retrieval. Given a question and N "
+    "numbered candidate chunks from a codebase, decide which contain the "
+    "actual answer (implementation, definition, substantive explanation). "
+    "Imports, re-exports, and marginal mentions do NOT qualify."
 )
 
 _RELEVANCE_USER_TPL = """Question:
@@ -149,8 +150,13 @@ def _parse_indices(raw: str, max_idx: int) -> list[int]:
 
 
 async def _judge(item: dict, points: list[Any]) -> list[int]:
-    """Ask the LLM which candidates truly answer the query. Returns 1-based indices."""
-    from src.shared.llm_rotation.adapter import cheap_llm_call
+    """Ask the LLM which candidates truly answer the query. Returns 1-based indices.
+
+    Uses `benchmark_llm_call` (isolated eval path, see src/shared/benchmark_llm.py):
+    claude -p subscription primary, Ollama fallback. No mixing with production
+    LLM Rotation used by Self-RAG/Adaptive/etc. — roadmap 260509 §2.2 architecture.
+    """
+    from src.shared.benchmark_llm import benchmark_llm_call
 
     candidates_block = "\n\n".join(
         _format_candidate(i + 1, pt) for i, pt in enumerate(points)
@@ -162,10 +168,9 @@ async def _judge(item: dict, points: list[Any]) -> list[int]:
         k=len(points),
         candidates=candidates_block,
     )
-    raw = await cheap_llm_call(
+    raw = await benchmark_llm_call(
         prompt=user,
         system_prompt=_RELEVANCE_SYSTEM,
-        component="grounding_judge",
         max_tokens=200,
         temperature=0.0,
     )
