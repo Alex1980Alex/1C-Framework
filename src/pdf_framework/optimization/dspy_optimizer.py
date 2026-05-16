@@ -52,7 +52,7 @@ class DSPyOptimizer:
 
     Provides:
     - Dataset management (load, add, export)
-    - Module optimization via MIPROv2
+    - Module optimization via GEPA (migrated from MIPROv2 per roadmap 260509 §3.4)
     - Optimized module persistence
     - Before/after metric comparison
     """

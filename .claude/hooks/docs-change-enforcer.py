@@ -104,6 +104,9 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/optimization/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    # DSPy signatures used by RAG agent nodes (grader/rewriter/hallucination-check).
+    # Routes to chapter 05 since signatures define agent contracts.
+    ("src/pdf_framework/prompts/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
     # General callbacks/ — all subdirs are observability (langfuse/logging/metrics)
     # already covered by specific overrides above. Fallback for new sibling files
     # (callbacks/__init__.py, callbacks/base.py, etc.) should match 09
