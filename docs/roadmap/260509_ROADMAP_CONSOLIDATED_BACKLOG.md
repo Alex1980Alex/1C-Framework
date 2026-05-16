@@ -312,17 +312,25 @@
 
 **Effort:** original estimate 1-2 days | actual ~45 min (audit + doc closure) | **Status:** ✅ closed (replace step explicitly deferred)
 
-### 4.5 P2 — Delegation Iter 4-5 (260320 + 260423 C4)
+### 4.5 P2 — Delegation Iter 4-5 (260320 + 260423 C4) 🟡 PARTIAL 2026-05-16 (bootstrap landed)
 
 **Цель:** Iter 4 — trained router (vector similarity over outcome embeddings) с A/B vs LinUCB на 10% canary; Iter 5 — SAFLA (composite reward с quality degradation penalty).
-**Выгоды:** Smarter LLM provider selection (учитывает task-similarity к прошлым успехам, а не только availability); quality-aware delegation вместо greedy «free first»; measurable cost savings + maintained quality; foundation для future RL-based routing.
 
-- [ ] **4.5.1** Iter 4 design: trained router (vector similarity over outcome embeddings)
-- [ ] **4.5.2** `src/shared/llm_rotation/router/trained.py`
-- [ ] **4.5.3** A/B vs LinUCB (10% canary)
-- [ ] **4.5.4** Iter 5 SAFLA: quality degradation, composite reward
+**Реализация (2026-05-16, bootstrap variant):**
 
-**Effort:** 2-3 days each | **Зависимость:** 3.1 (observability для measurement)
+- [x] **4.5.1** Iter 4 design landed как **exemplar-based bootstrap** ([`src/shared/llm_rotation/router/`](../../src/shared/llm_rotation/router/)):
+  - `trained.py` (250 lines) — `TrainedRouter` async class с cosine similarity vs cached level means, `ABSTAIN_THRESHOLD=0.30`, default fallback "Medium", graceful degradation (engine init fail / embed errors / empty input → abstain).
+  - `exemplars.py` — 28 hand-curated exemplars (7 per level: Soft/Medium/Hard/Never).
+  - `__init__.py` — public API: `TrainedRouter`, `classify_sync`, `EXEMPLARS`.
+  - `tests/shared/llm_rotation/test_router_trained.py` — 12 unit tests с FakeEngine mock (deterministic sha256 vectors), все PASS.
+- [/] **4.5.2** Bootstrap landed; **outcome-trained variant DEFERRED** — требует Langfuse production traffic с success/fail outcomes (роадмап §5c.9, ≥30 days).
+- [ ] **4.5.3** A/B vs LinUCB (10% canary) — NOT wired into existing delegation runtime. Router available as standalone module; caller-side integration (LinUCB warmup + 10% canary routing) deferred.
+- [ ] **4.5.4** Iter 5 SAFLA: quality degradation, composite reward — DEFERRED (depends on §5c.9 outcome corpus).
+
+**Trade-off vs original spec:** exemplar bootstrap не использует real outcome embeddings (как требовал 260509 wording), но даёт workable baseline. Когда §5c.9 outcome corpus наберётся — заменить EXEMPLARS на K-means clusters over outcome embeddings (mechanical rewrite, ~1 day).
+
+**Effort:** original 2-3 days each | actual ~1.5 ч (4.5.1 bootstrap) | **Зависимость:** 3.1 (observability) ✅ + Langfuse outcome traffic для §4.5.2 trained variant
+**Status:** 🟡 partial — bootstrap available + tested, production wiring/canary still open
 
 ### 4.6 P2 — Memory P5 advanced (260403 Phase 8)
 
