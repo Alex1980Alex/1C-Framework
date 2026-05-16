@@ -112,19 +112,21 @@
 
 **Effort:** ~3 ч | **Severity:** Discoverability
 
-### 2.5 P0 — Pytest job в CI verification
+### 2.5 P0 — Pytest job в CI verification ✅ DONE 2026-05-16 (audit-stale; 2.5.3 deferred to §3.6)
 
 **Цель:** Подтвердить, что `test` job в `.github/workflows/ci.yml` действительно прогоняет unit tests на каждый PR без `continue-on-error` для core, и поднять coverage gate до 70% с upload в Codecov.
 **Выгоды:** Автоматическая защита от regressions на каждом PR (без CI gate большая часть тестов фактически декоративна); видимость покрытия через Codecov; уверенность при будущих рефакторингах (3.7 retry, 3.8 Send API); снятие риска ложно-зелёного main.
 
 **Что:** Audit 260430_DEPS_AND_CI.md помечает D.7 DONE, но Track A6 (test coverage) от 260423 говорит unit tests не runs systematically. Verify.
 
-- [ ] **2.5.1** Inspect `.github/workflows/ci.yml` test job (continue-on-error, Qdrant service)
-- [ ] **2.5.2** Если test job не runs на каждый PR — переписать (убрать `continue-on-error` для unit, оставить для integration)
-- [ ] **2.5.3** Coverage gate: `pytest --cov-fail-under=70` для core
-- [ ] **2.5.4** Codecov upload: verify CODECOV_TOKEN
+- [x] **2.5.1** Inspect `.github/workflows/ci.yml` test job → **job `test-unit` существует** (lines 179-239), runs на push+PR matrix py3.11/3.12. Комментарий `# Unit tests gate merges. No external services required. (roadmap 260509 §2.5)` явно указывает закрытие
+- [x] **2.5.2** Unit tests **БЕЗ** `continue-on-error` (line 209 — `pytest tests/ -v -m unit ...` запускается строго). Integration job (line 241-303) **сохраняет** `continue-on-error: true` намеренно (внешний Qdrant service может flake) — комментарий line 245 «best-effort: external services may flake»
+- [ ] **2.5.3** Coverage gate `--cov-fail-under=70` **deferred → §3.6** (отдельный P1 «Test coverage to 70%»). Ставить gate ДО подъёма coverage = CI break; правильный порядок — сначала 3.6 поднимает покрытие, потом активируется fail-under. Currently: `--cov-report=term --cov-report=xml` без threshold enforcement, отчёт идёт в Codecov для observability.
+- [x] **2.5.4** Codecov upload активен (lines 222-229): `codecov/codecov-action@v4`, `flags=unit`, `fail_ci_if_error=false`. Token через `${{ secrets.CODECOV_TOKEN }}`. Per memory `reference_codecov_public.md` — репо public → tokenless OIDC тоже работает (token не нужен), но оставлен для backwards-compat. Belt-and-suspenders artifact upload (lines 231-239) гарантирует coverage.xml доступен даже при Codecov rate-limit.
 
-**Effort:** ~2 ч | **Severity:** Regression detection
+**Closure note (audit-stale)**: 3/4 items уже выполнены при предыдущей работе над CI (commit ref в ci.yml line 181 + 245); §2.5.3 — separate work item из §3.6 (raise coverage first, THEN add gate). Severity снижена с «Regression detection» до «Observability» — gate enforcement не критичен пока coverage не поднят.
+
+**Effort:** ~2 ч estimated → **20 мин actual** (только audit + roadmap update; 0 code changes).
 
 ---
 
