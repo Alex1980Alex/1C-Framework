@@ -117,7 +117,7 @@ jobs:
           set -o pipefail
           python -m mypy src/ \
             --ignore-missing-imports --warn-return-any \
-            --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$|src/api/auth/)' \
+            --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$)' \
             | python -m mypy_baseline filter
 
   docstrings:
