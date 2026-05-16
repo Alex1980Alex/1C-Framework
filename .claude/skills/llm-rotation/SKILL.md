@@ -26,18 +26,18 @@ ZAIProxy (HTTP server, port 8000)
   └── SSE streaming support
 ```
 
-## Providers (priority order)
+## Providers (priority order — post-cleanup 2026-05-16, roadmap 260509 §2.2)
 
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
-| 0 | **zai-glm5** | **glm-5.1** | **anthropic** | Yes (ZAI_API_KEY) |
-| 1 | **anthropic-sonnet** | **claude-sonnet-4-6** | **anthropic** | Yes (ANTHROPIC_API_KEY) |
-| 1 | zhipu | glm-4-flash | openai | Yes |
-| 2 | gemini | gemini-2.5-flash | openai | Yes |
-| 3 | openrouter | google/gemma-3-27b-it:free | openai | Yes |
-| 4 | mistral | mistral-small-latest | openai | Yes |
-| 5 | ollama-local | qwen2.5-coder:7b | ollama | No |
-| 6 | ollama-cloud | qwen2.5:7b | ollama | No |
+| 0 | **claude-cli-haiku** | **haiku** | **claude-cli** | No (CLI subscription) |
+| 1 | **claude-cli-sonnet** | **sonnet** | **claude-cli** | No (CLI subscription) |
+| 2 | ollama-local | qwen2.5-coder:7b | ollama | No |
+| 3 | anthropic-sonnet | claude-sonnet-4-6 | anthropic | **Yes** (ANTHROPIC_API_KEY — silent skip if unset) |
+
+**claude-cli-** providers use `claude -p` subprocess via the user's Claude Code CLI subscription quota (flat-rate, not token-billed). Latency 5-15s per spawn — acceptable for batch/indexing, **not for hot-path** (Self-RAG grader, hallucination check). For hot-path, set `ANTHROPIC_API_KEY` to enable anthropic-sonnet HTTP escape hatch.
+
+**Removed** (broken / misconfigured per audit): zai-glm5, zhipu, gemini, openrouter, mistral, ollama-cloud. Re-add via custom `providers=` arg to `LLMRotationService` if needed.
 
 ## Health States
 

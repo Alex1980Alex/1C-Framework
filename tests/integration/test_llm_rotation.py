@@ -29,13 +29,15 @@ from src.shared.llm_rotation.service import (
 
 class TestProviderConfig:
     def test_default_providers_exist(self):
-        assert len(DEFAULT_PROVIDERS) == 7
+        # Post-cleanup 2026-05-16 (roadmap 260509 §2.2): claude-cli subscription
+        # primary + ollama-local fallback + anthropic-sonnet escape hatch.
+        # Old HTTP providers (zai-glm5, zhipu, gemini, openrouter, mistral,
+        # ollama-cloud) removed as per user audit — all broken/misconfigured.
+        assert len(DEFAULT_PROVIDERS) >= 3
         names = [p.name for p in DEFAULT_PROVIDERS]
-        assert "zai-glm5" in names
-        assert "zhipu" in names
-        assert "gemini" in names
-        assert "mistral" in names
-        assert "ollama-cloud" in names
+        assert "claude-cli-haiku" in names
+        assert "claude-cli-sonnet" in names
+        assert "ollama-local" in names
 
     def test_provider_priority_order(self):
         priorities = [p.priority for p in DEFAULT_PROVIDERS]
@@ -43,7 +45,7 @@ class TestProviderConfig:
 
     def test_provider_formats(self):
         for p in DEFAULT_PROVIDERS:
-            assert p.format in ("openai", "ollama", "anthropic")
+            assert p.format in ("openai", "ollama", "anthropic", "claude-cli")
 
     def test_ollama_no_key_required(self):
         ollama = [p for p in DEFAULT_PROVIDERS if p.format == "ollama"]
@@ -132,7 +134,11 @@ class TestProviderState:
 class TestLLMRotationService:
     def test_create_with_defaults(self):
         service = LLMRotationService()
-        assert len(service._providers) == 7
+        # Post-cleanup 2026-05-16: 3 always-on + 1 paid-API escape hatch
+        # (anthropic-sonnet, requires ANTHROPIC_API_KEY). See DEFAULT_PROVIDERS.
+        assert len(service._providers) == len(DEFAULT_PROVIDERS)
+        assert "claude-cli-haiku" in service._providers
+        assert "ollama-local" in service._providers
 
     def test_create_with_custom_providers(self):
         configs = [
@@ -310,9 +316,18 @@ class TestLLMRotationService:
 class TestSettings:
     def test_defaults(self):
         settings = LLMRotationSettings()
-        assert settings.primary_provider == "zai-glm5"
+        # Default per roadmap 260509 §2.2 cleanup. May be overridden via .env
+        # (LLM_ROTATION_PRIMARY_PROVIDER) — accept either canonical default or
+        # an override pointing at a still-configured provider.
+        assert settings.primary_provider in (
+            "claude-cli-haiku",
+            "claude-cli-sonnet",
+            "ollama-local",
+        )
         assert settings.max_retries == 3
-        assert settings.timeout in (30, 60)  # 30 default, 60 from .env override
+        # Default 90s (bumped 2026-05-16 for subprocess overhead). Accept
+        # 30/60 (legacy) and 90 (post-cleanup); .env override may force any.
+        assert settings.timeout in (30, 60, 90)
 
     def test_custom_values(self):
         settings = LLMRotationSettings(max_retries=5, timeout=60)

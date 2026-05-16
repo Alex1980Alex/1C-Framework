@@ -9,6 +9,7 @@ import asyncio
 import json as _json
 import logging
 import os
+import shutil
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -68,7 +69,7 @@ class ProviderConfig:
     api_key_env: str
     default_model: str
     models: list[str] = field(default_factory=list)
-    format: str = "openai"  # "openai" | "ollama" | "anthropic"
+    format: str = "openai"  # "openai" | "ollama" | "anthropic" | "claude-cli"
     requires_key: bool = True
     daily_limit: int | None = None
     rate_limit_rpm: int | None = None
@@ -145,68 +146,37 @@ class ProviderState:
 
 
 # Default provider configurations
+# Roadmap 260509 §2.2 closure (2026-05-16): cleanup of dead HTTP providers
+# (zai-glm5, zhipu, gemini, openrouter, mistral, ollama-cloud — all broken or
+# misconfigured per user audit) + addition of claude-cli-* providers that
+# tap the user's Claude Code CLI subscription quota (flat-rate, no per-token
+# billing). Latency 5-15s per subprocess spawn — acceptable for indexing
+# batch workloads, NOT for query-time hot-path (grader/hallucination/etc.).
+#
+# For hot-path that needs <2s latency, set ANTHROPIC_API_KEY and switch
+# primary_provider to "anthropic-sonnet" (add via custom providers= arg).
 DEFAULT_PROVIDERS: list[ProviderConfig] = [
     ProviderConfig(
-        name="zai-glm5",
-        base_url="https://api.z.ai/api/anthropic",
-        api_key_env="ZAI_API_KEY",
-        default_model="glm-5.1",
-        models=["glm-5.1", "glm-5", "glm-4.6", "glm-4.5-air"],
-        format="anthropic",
+        name="claude-cli-haiku",
+        base_url="",  # subprocess, no HTTP
+        api_key_env="",
+        default_model="haiku",
+        models=["haiku", "sonnet", "opus"],
+        format="claude-cli",
+        requires_key=False,
         priority=0,
-        rate_limit_rpm=30,
+        rate_limit_rpm=None,  # subscription quota, not RPM-capped
     ),
     ProviderConfig(
-        name="anthropic-sonnet",
-        base_url="https://api.anthropic.com",
-        api_key_env="ANTHROPIC_API_KEY",
-        default_model="claude-sonnet-4-6",
-        models=["claude-sonnet-4-6", "claude-haiku-4-5", "claude-opus-4-7"],
-        format="anthropic",
+        name="claude-cli-sonnet",
+        base_url="",
+        api_key_env="",
+        default_model="sonnet",
+        models=["sonnet", "haiku", "opus"],
+        format="claude-cli",
+        requires_key=False,
         priority=1,
-        rate_limit_rpm=50,
-    ),
-    ProviderConfig(
-        name="zhipu",
-        base_url="https://open.bigmodel.cn/api/paas/v4",
-        api_key_env="ZHIPU_API_KEY",
-        default_model="glm-4-flash",
-        models=["glm-4-flash", "glm-4-plus"],
-        priority=1,
-        rate_limit_rpm=60,
-    ),
-    ProviderConfig(
-        name="gemini",
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai",
-        api_key_env="GEMINI_API_KEY",
-        default_model="gemini-2.5-flash",
-        models=["gemini-2.5-flash", "gemini-2.5-flash-lite"],
-        priority=2,
-        rate_limit_rpm=10,
-        daily_limit=250,
-    ),
-    ProviderConfig(
-        name="openrouter",
-        base_url="https://openrouter.ai/api/v1",
-        api_key_env="OPENROUTER_API_KEY",
-        default_model="google/gemma-3-27b-it:free",
-        models=[
-            "google/gemma-3-27b-it:free",
-            "meta-llama/llama-3.3-70b-instruct:free",
-            "mistralai/mistral-small-3.1-24b-instruct:free",
-        ],
-        priority=3,
-        rate_limit_rpm=20,
-        daily_limit=200,
-    ),
-    ProviderConfig(
-        name="mistral",
-        base_url="https://api.mistral.ai/v1",
-        api_key_env="MISTRAL_API_KEY",
-        default_model="mistral-small-latest",
-        models=["mistral-small-latest"],
-        priority=4,
-        rate_limit_rpm=60,
+        rate_limit_rpm=None,
     ),
     ProviderConfig(
         name="ollama-local",
@@ -216,17 +186,21 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         models=["qwen2.5-coder:7b", "qwen2.5:7b", "llama3.1:8b"],
         format="ollama",
         requires_key=False,
-        priority=5,
+        priority=2,
     ),
+    # Paid-API escape hatch — silently skipped by `get_available_providers`
+    # when ANTHROPIC_API_KEY is unset (default for dev). Set the env var to
+    # enable fast hot-path routing without losing subscription quota for
+    # batch jobs.
     ProviderConfig(
-        name="ollama-cloud",
-        base_url="http://localhost:11434",
-        api_key_env="",
-        default_model="qwen2.5:7b",
-        models=["qwen2.5:7b"],
-        format="ollama",
-        requires_key=False,
-        priority=6,
+        name="anthropic-sonnet",
+        base_url="https://api.anthropic.com",
+        api_key_env="ANTHROPIC_API_KEY",
+        default_model="claude-sonnet-4-6",
+        models=["claude-sonnet-4-6", "claude-haiku-4-5", "claude-opus-4-7"],
+        format="anthropic",
+        priority=3,
+        rate_limit_rpm=50,
     ),
 ]
 
@@ -490,6 +464,106 @@ class LLMRotationService:
             },
         }
 
+    async def _make_request_claude_cli(
+        self,
+        state: ProviderState,
+        prompt: str,
+        system_prompt: str | None = None,
+        model: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
+        """Make a request via `claude -p` subprocess (CLI subscription).
+
+        Uses the user's Claude Code CLI subscription quota instead of paid
+        API tokens. Latency ~5-15s per call (subprocess startup + inference);
+        suitable for indexing batch workloads, NOT hot-path query-time
+        components. See roadmap 260509 §2.2 architecture closure.
+
+        `model` accepts the alias subset that `claude -p --model` supports
+        ("haiku", "sonnet", "opus"). Falls back to provider default_model.
+
+        Crucial: uses `--system-prompt` (REPLACE) — NOT `--append-system-prompt`.
+        Append leaves Claude Code's default agent prompt which produces helpful
+        markdown rather than honoring "JSON only" directives in user prompts.
+        Documented in detail in src/shared/benchmark_llm.py.
+        """
+        bin_path = shutil.which("claude")
+        if not bin_path:
+            raise RuntimeError("claude CLI not found on PATH")
+
+        args: list[str] = [
+            bin_path,
+            "-p",
+            "--no-session-persistence",
+            "--disable-slash-commands",
+            "--dangerously-skip-permissions",
+        ]
+
+        target_model = (model or state.config.default_model).lower()
+        if target_model in {"haiku", "sonnet", "opus"}:
+            args.extend(["--model", target_model])
+
+        if system_prompt:
+            args.extend(["--system-prompt", system_prompt])
+
+        args.append(prompt)
+
+        # asyncio.wait_for expects raw seconds (float/int), not aiohttp.ClientTimeout
+        effective_timeout: int = timeout or self._settings.timeout
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+        except (OSError, FileNotFoundError) as e:
+            raise RuntimeError(f"claude-cli spawn failed: {e}") from e
+
+        try:
+            stdout_b, stderr_b = await asyncio.wait_for(
+                proc.communicate(), timeout=effective_timeout
+            )
+        except asyncio.TimeoutError as e:
+            proc.kill()
+            await proc.wait()
+            raise RuntimeError(
+                f"claude-cli timed out after {effective_timeout}s"
+            ) from e
+
+        if proc.returncode != 0:
+            err = (stderr_b or b"").decode("utf-8", errors="replace").strip()
+            raise RuntimeError(
+                f"claude-cli exit {proc.returncode}: {err[:200]}"
+            )
+
+        text = (stdout_b or b"").decode("utf-8", errors="replace").strip()
+        if not text:
+            raise RuntimeError("claude-cli returned empty stdout")
+
+        # Subprocess gives no token usage. Estimate roughly: 4 chars/token.
+        # Used only by adaptive scorer + budget tracker; not load-bearing.
+        approx_completion_tokens = max(1, len(text) // 4)
+        approx_prompt_tokens = max(
+            1, (len(prompt) + len(system_prompt or "")) // 4
+        )
+
+        return {
+            "choices": [
+                {
+                    "message": {"content": text},
+                    "finish_reason": "stop",
+                }
+            ],
+            "model": target_model,
+            "usage": {
+                "prompt_tokens": approx_prompt_tokens,
+                "completion_tokens": approx_completion_tokens,
+            },
+        }
+
     async def _call_provider(
         self,
         state: ProviderState,
@@ -509,6 +583,10 @@ class LLMRotationService:
             )
         elif state.config.format == "ollama":
             data = await self._make_request_ollama(
+                state, prompt, system_prompt, model, temperature, max_tokens, timeout
+            )
+        elif state.config.format == "claude-cli":
+            data = await self._make_request_claude_cli(
                 state, prompt, system_prompt, model, temperature, max_tokens, timeout
             )
         else:
