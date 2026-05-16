@@ -10,8 +10,36 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-15",
+  "last_updated": "2026-05-16",
   "topics": {
+    "claude-code-subprocess-wrappers": {
+      "file": "claude-code-subprocess-wrappers.md",
+      "domain": "tools",
+      "category": "tool",
+      "created": "2026-05-16",
+      "last_verified": "2026-05-16",
+      "version": "claude-code-2.x",
+      "keywords": [
+        "claude-code",
+        "claude -p",
+        "headless",
+        "subprocess",
+        "agent-sdk",
+        "batch",
+        "eval",
+        "llm-rotation",
+        "automation",
+        "async",
+        "asyncio.create_subprocess_exec",
+        "max-turns",
+        "max-budget-usd",
+        "output-format json",
+        "system-prompt replace",
+        "stdin pipe",
+        "litellm",
+        "agent-sdk python"
+      ]
+    },
     "mypy-baseline-error-budget-tooling": {
       "file": "mypy-baseline-error-budget-tooling-2026.md",
       "domain": "tools",

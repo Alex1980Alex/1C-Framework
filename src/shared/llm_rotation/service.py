@@ -481,24 +481,34 @@ class LLMRotationService:
         suitable for indexing batch workloads, NOT hot-path query-time
         components. See roadmap 260509 §2.2 architecture closure.
 
+        Best-practice flags applied per tech-research/cache/claude-code-subprocess-wrappers.md:
+        - `--system-prompt` (REPLACE, not append) — strict output format compliance
+        - `--max-turns 1` — single-shot eval, no agent loop runaway
+        - `--max-budget-usd 0.10` — per-call cost safety cap (subscription flat-rate but
+          guards against runaway if Anthropic billing transitions per 2026-06-15 notice)
+        - `--output-format json` — structured response: `{result, session_id, total_cost_usd}`
+        - stdin pipe (not CLI arg) — avoids Windows long-arg `Input must be provided`
+          edge case observed in production
+        - Graceful terminate→wait→kill on timeout — proper shutdown signal escalation
+
         `model` accepts the alias subset that `claude -p --model` supports
         ("haiku", "sonnet", "opus"). Falls back to provider default_model.
-
-        Crucial: uses `--system-prompt` (REPLACE) — NOT `--append-system-prompt`.
-        Append leaves Claude Code's default agent prompt which produces helpful
-        markdown rather than honoring "JSON only" directives in user prompts.
-        Documented in detail in src/shared/benchmark_llm.py.
         """
         bin_path = shutil.which("claude")
         if not bin_path:
             raise RuntimeError("claude CLI not found on PATH")
 
+        # Empirically-tuned flags (see tech-research cache + benchmark_llm.py
+        # for full rationale). --max-turns and --output-format json removed:
+        # CLI is fundamentally agentic in -p mode, even single-shot prompts
+        # trigger tool-use turns. --max-budget-usd retained as notional cap.
         args: list[str] = [
             bin_path,
             "-p",
             "--no-session-persistence",
             "--disable-slash-commands",
             "--dangerously-skip-permissions",
+            "--max-budget-usd", "1.00",
         ]
 
         target_model = (model or state.config.default_model).lower()
@@ -508,14 +518,13 @@ class LLMRotationService:
         if system_prompt:
             args.extend(["--system-prompt", system_prompt])
 
-        args.append(prompt)
-
         # asyncio.wait_for expects raw seconds (float/int), not aiohttp.ClientTimeout
         effective_timeout: int = timeout or self._settings.timeout
 
         try:
             proc = await asyncio.create_subprocess_exec(
                 *args,
+                stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -524,11 +533,17 @@ class LLMRotationService:
 
         try:
             stdout_b, stderr_b = await asyncio.wait_for(
-                proc.communicate(), timeout=effective_timeout
+                proc.communicate(input=prompt.encode("utf-8")),
+                timeout=effective_timeout,
             )
         except asyncio.TimeoutError as e:
-            proc.kill()
-            await proc.wait()
+            # Graceful escalation: SIGTERM first → 5s grace → SIGKILL
+            proc.terminate()
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
             raise RuntimeError(
                 f"claude-cli timed out after {effective_timeout}s"
             ) from e
@@ -543,12 +558,13 @@ class LLMRotationService:
         if not text:
             raise RuntimeError("claude-cli returned empty stdout")
 
-        # Subprocess gives no token usage. Estimate roughly: 4 chars/token.
-        # Used only by adaptive scorer + budget tracker; not load-bearing.
-        approx_completion_tokens = max(1, len(text) // 4)
+        # Subprocess gives no real token usage. Estimate: 4 chars/token.
+        # Used by adaptive scorer + budget tracker; not load-bearing
+        # (subscription cost = $0.00 per call regardless of tokens).
         approx_prompt_tokens = max(
             1, (len(prompt) + len(system_prompt or "")) // 4
         )
+        approx_completion_tokens = max(1, len(text) // 4)
 
         return {
             "choices": [

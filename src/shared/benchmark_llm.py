@@ -52,11 +52,41 @@ import httpx
 logger = logging.getLogger(__name__)
 
 _CLAUDE_BIN: Final[str | None] = shutil.which("claude")
+# Empirically-tuned flags (2026-05-16; see tech-research/cache/
+# claude-code-subprocess-wrappers.md "Gap vs best practices"):
+#
+# WHAT WORKS:
+# - stdin pipe (added 2026-05-16): fixes Windows long-arg edge case (~10%
+#   "Input must be provided" failures observed in grounding pipeline)
+# - graceful terminate→wait→kill on timeout: proper SIGTERM signal escalation
+# - --system-prompt REPLACE (added in _call_claude_cli below): bypasses
+#   default Claude Code agent prompt that returns helpful markdown instead
+#   of strict JSON when user asks for "JSON only"
+# - --max-budget-usd 1.00: notional cost cap (subscription is flat-rate but
+#   CLI tracks notional Anthropic pricing; safety net against agentic runaway)
+#
+# WHAT DOESN'T WORK (tried 2026-05-16, rolled back — see cache):
+# - --max-turns 1..10: Claude Code CLI in -p mode is fundamentally agentic;
+#   even simple "Reply: pong" triggers tool-use turns. For genuine single-
+#   shot inference, migrate to claude-agent-sdk Python package (separate
+#   refactor) or direct Anthropic HTTP API.
+# - --output-format json: errors out with is_error=true + no `result` field
+#   when --max-turns hit, defeating the structured-parsing benefit. Plain
+#   text mode + permissive parsing in caller works for our use case.
+# - --model haiku hardcoded: better leave to caller / provider config to
+#   pick model per workload.
 _CLAUDE_ARGS: Final[list[str]] = [
     "-p",
     "--no-session-persistence",
     "--disable-slash-commands",
     "--dangerously-skip-permissions",
+    "--max-budget-usd", "1.00",
+    # --model haiku: without explicit model the CLI uses Opus 4.7 1M-context
+    # which (a) consumes more subscription quota and (b) goes more agentic
+    # (reads cwd, tries tool calls) before responding. Haiku stays focused
+    # on simple eval prompts. service.py provider config supplies its own
+    # --model via state.config.default_model.
+    "--model", "haiku",
 ]
 _OLLAMA_URL: Final[str] = os.environ.get(
     "BENCHMARK_OLLAMA_URL", "http://localhost:11434"
@@ -89,25 +119,34 @@ async def _call_claude_cli(
     args = list(_CLAUDE_ARGS)
     if system_prompt:
         args.extend(["--system-prompt", system_prompt])
-    args.append(prompt)
 
     try:
         proc = await asyncio.create_subprocess_exec(
             _CLAUDE_BIN,
             *args,
+            stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
     except (OSError, FileNotFoundError) as e:
         raise BenchmarkLLMError(f"claude spawn failed: {e}") from e
 
+    # Prompt via stdin (not CLI arg) avoids Windows long-arg edge case observed
+    # 2026-05-16 where ~10% of multi-KB prompts triggered "Input must be provided"
+    # error. Stdin pipe is the recommended pattern per Anthropic SDK docs.
     try:
         stdout_b, stderr_b = await asyncio.wait_for(
-            proc.communicate(), timeout=timeout
+            proc.communicate(input=prompt.encode("utf-8")),
+            timeout=timeout,
         )
     except asyncio.TimeoutError as e:
-        proc.kill()
-        await proc.wait()
+        # Graceful escalation: SIGTERM first → 5s grace → SIGKILL
+        proc.terminate()
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=5.0)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
         raise BenchmarkLLMError(f"claude timed out after {timeout}s") from e
 
     if proc.returncode != 0:
