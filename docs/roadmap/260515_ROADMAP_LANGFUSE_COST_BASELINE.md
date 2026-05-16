@@ -195,7 +195,7 @@
 > **Acceptance:** Скрипт документирован, weekly auto-refresh настроен, §5c.7 закрыт в parent.
 
 - [ ] **D.1** README блок:
-  - Опция A: новая секция в [`09.4 Мониторинг`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md#cost-baseline) — usage examples, common flags, troubleshooting.
+  - Опция A: новая секция в [`09.4.1 Langfuse`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md#cost-baseline) — usage examples, common flags, troubleshooting (выделена в подглаву 2026-05-16).
   - Опция B: `scripts/README.md` (если уже существует) — там же отдельная подсекция.
   - Решение: Опция A — concentrated с остальной observability.
 

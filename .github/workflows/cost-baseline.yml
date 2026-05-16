@@ -4,7 +4,7 @@ name: Cost Baseline (weekly)
 # docs/architecture/cost-baselines.md via Langfuse Cloud aggregation.
 #
 # Pre-req (one-time): repo secrets LANGFUSE_PUBLIC_KEY + LANGFUSE_SECRET_KEY.
-# See docs/framework documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md#cost-baseline.
+# See docs/framework documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md#cost-baseline.
 
 on:
   schedule:
