@@ -104,7 +104,13 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/optimization/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
-    ("src/pdf_framework/callbacks/", "07_КЭШИРОВАНИЕ", "framework-caching"),
+    # General callbacks/ — all subdirs are observability (langfuse/logging/metrics)
+    # already covered by specific overrides above. Fallback for new sibling files
+    # (callbacks/__init__.py, callbacks/base.py, etc.) should match 09
+    # observability, NOT caching (roadmap 260509 §5d.6 fix, 2026-05-16).
+    # Historical mismapping to 07_КЭШИРОВАНИЕ produced false-positive
+    # docs-change-tracker todos demanding caching docs for observability code.
+    ("src/pdf_framework/callbacks/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/multitenancy/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/guardrails/", "33_GUARDRAILS", "framework-troubleshooting"),

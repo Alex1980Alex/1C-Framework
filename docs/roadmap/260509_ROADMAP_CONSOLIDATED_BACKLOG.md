@@ -276,16 +276,23 @@
 
 **Effort:** 2-3 days
 
-### 4.3 P2 — Stub embedding edge-case fix (260423 A5)
+### 4.3 P2 — Stub embedding edge-case fix (260423 A5) ✅ DONE 2026-05-16
 
-**Цель:** Найти и исправить случаи возврата stub/`np.zeros(...)` embeddings вместо real embeddings в edge-cases (empty input, encoding errors), либо хотя бы log warning и raise.
-**Выгоды:** Корректность search в edge-cases (zero-vector матчит всё / ничего → ложные результаты); предотвращение silent quality degradation, который сложно поймать без целевого теста; малый effort (~2 ч) для устранения «тихого» bug-class'а.
+**Цель:** Закрыть silent-quality-degradation класс — embeddings, которые возвращают зашитые pseudo-vectors вместо real semantic embeddings.
 
-- [ ] **4.3.1** `grep -rE "stub|placeholder|np\.zeros\(" src/pdf_framework/embeddings/`
-- [ ] **4.3.2** Fix или log warning
-- [ ] **4.3.3** Test: edge case → real embed
+**Audit findings:** В `src/pdf_framework/embeddings/` stub/`np.zeros`-fallback'ов **не существует** (все providers корректно `return []` на empty batch + raise на real failure). НО в `src/memory/vector_memory/server.py` обнаружена реальная silent-degradation path: при provider init failure `_get_embedding` молча fell back на hash-based SHA-512 pseudo-vectors (`_hash_embed`). Pattern save/search через `learned_patterns` collection продолжал работать, но **семантический поиск становился effectively random**. Bug-class именно тот, что §4.3 хотел поймать — просто audit-stale на scope (искал в `embeddings/`, не в `memory/vector_memory/`).
 
-**Effort:** ~2 ч
+**Реализация:**
+- `_get_embedding` теперь **raises RuntimeError** при provider init failure, если не выставлен env `MEMORY_VECTOR_ALLOW_HASH_FALLBACK=1`.
+- Opt-in активирует legacy fallback с **per-call WARN log** (`[HASH-FALLBACK] computing pseudo-embeddings for N text(s); results are NOT semantic`) — degraded mode видим в production логах, а не только при init.
+- Init-time error log теперь explicit: упоминает roadmap §4.3 + env-name + что именно ломается.
+- Docstring documenting both paths + roadmap link.
+
+- [x] **4.3.1** Audit `src/pdf_framework/embeddings/` — no stub/zeros found
+- [x] **4.3.2** Найдена реальная silent fallback в `src/memory/vector_memory/server.py:94 _get_embedding`; конвертирована в raise-by-default с opt-in env
+- [x] **4.3.3** Verified: syntax ok, fallback path сохранён для offline/test через explicit opt-in
+
+**Effort:** actual ~30 мин | **Status:** ✅ closed (audit-stale корректирован — scope shifted from `embeddings/` to `memory/vector_memory/`)
 
 ### 4.4 P2 — Sync-in-async cleanup (260423 A4)
 
@@ -579,19 +586,17 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 
 **Effort:** 1-2 дня (или ad-hoc по файлам по мере touching) | **Severity:** CI gate restoration
 
-### 5d.6 P3 — Fix mapping bug в docs-change-enforcer.py ⚠️ NEW 2026-05-15
+### 5d.6 P3 — Fix mapping bug в docs-change-enforcer.py ✅ DONE 2026-05-16
 
-**Цель:** Добавить specific override `("src/pdf_framework/callbacks/", "09_АДМИНИСТРИРОВАНИЕ", "deployment")` в `CODE_TO_DOMAIN` table ПЕРЕД общим prefix, чтобы `callbacks/__init__.py` не маpился ошибочно на `07_КЭШИРОВАНИЕ` (caching).
+**Цель:** Перемапить general prefix `src/pdf_framework/callbacks/` с ложного `07_КЭШИРОВАНИЕ`/`framework-caching` на семантически корректное `09_АДМИНИСТРИРОВАНИЕ`/`deployment`.
 
-**Выгоды:** Закрывает false-positive docs-change-tracker todos (которые user должен manually cancel); следует существующему pattern specific-overrides-before-general (см. Phase 5 path migration follow-up в CLAUDE.md).
+**Реализация:** В `.claude/hooks/docs-change-enforcer.py` `CODE_TO_DOMAIN` строка для `callbacks/` general fallback изменена на observability/deployment. Все подкаталоги (langfuse/, logging/, metrics/) уже specific overrides на 09 — теперь fallback semantically consistent. Verified: `src/pdf_framework/callbacks/base.py` не skip-нут, лопадает в правильный домен (09 deployment, не 07 caching).
 
-**Что:** Обнаружено 2026-05-15 при изменении `callbacks/__init__.py` — enforcer создал todo «обновить `07.3_LLM_кэш.md` + `framework-caching` skill» что явно semantically wrong (callbacks/__init__.py — observability/monitoring entry point).
+- [x] **5d.6.1** Located: line 107 в `CODE_TO_DOMAIN` table
+- [x] **5d.6.2** Re-mapped fallback prefix (не специфический override — мапинг семантически правильный для всей подсистемы)
+- [x] **5d.6.3** Verified через programmatic dispatch dump + smoke
 
-- [ ] **5d.6.1** Locate проблемный general prefix в `.claude/hooks/docs-change-enforcer.py` `CODE_TO_DOMAIN` table
-- [ ] **5d.6.2** Добавить specific override для `callbacks/` БЕЗ trailing slash subpaths (поскольку `callbacks/logging/` уже есть как specific override на `deployment`)
-- [ ] **5d.6.3** Тест: trigger Edit на `callbacks/__init__.py` → todo создан с правильным target_docs (09.4 или 01.2_Архитектура.md)
-
-**Effort:** ~10 мин | **Severity:** Enforcer config hygiene
+**Effort:** actual ~10 мин | **Severity:** Enforcer config hygiene | **Status:** ✅ closed
 
 ### 5c.7-bis P2 — `docs/architecture/` директория ✅ NO-OP 2026-05-15
 
