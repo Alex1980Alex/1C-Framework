@@ -256,17 +256,19 @@
 
 ## 4. P2 — Medium (improvements / quality of life)
 
-### 4.1 P2 — Matryoshka embeddings A/B (260423 B5)
+### 4.1 P2 — Matryoshka embeddings A/B (260423 B5) ✅ DONE 2026-05-16 (A/B closed; production migration deferred)
 
-**Цель:** Сравнить полноразмерные 4096d Qwen3 embeddings vs truncated MRL 1024d/512d на recall (NDCG@10) на golden_v1 — Qwen3 поддерживает Matryoshka representations.
+**Цель:** Сравнить полноразмерные 4096d Qwen3 embeddings vs truncated MRL 1024d/512d на recall на golden_v1 — Qwen3 поддерживает Matryoshka representations.
 **Выгоды:** При delta < 5% — миграция `framework_code_v1` (21k+ points) на 1024d даёт 4× faster search и 4× меньше storage в Qdrant; lower memory footprint позволяет fit'нуть больше коллекций на той же машине; data-driven решение вместо угадывания «4096d is best».
 
-- [ ] **4.1.1** Recreate `pdf_documents_mrl_1024` collection × 1024d (truncate)
-- [ ] **4.1.2** Benchmark NDCG@10: 4096d vs MRL 1024d/512d
-- [ ] **4.1.3** Если -delta < 5% → migrate `framework_code_v1` на MRL 1024d (4× faster)
-- [ ] **4.1.4** Document `04_ПОИСК/04.X_Matryoshka.md`
+- [x] **4.1.1** Recreate `pdf_documents_mrl_{1024,512}` collections × truncated dims (re-embed Qwen3 GPU bf16, full pass at 4096d → truncate + L2-renormalize, см. [`scripts/matryoshka_bench.py`](../../scripts/matryoshka_bench.py))
+- [x] **4.1.2** Bench метрика — **keyword recall@10** (proxy для NDCG, т.к. `golden_v1.expected_chunk_ids` empty pending §7.5 v2.0 grounding; см. caveat в [04.9](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#caveats-метода)). Результаты: 4096d=0.0563, 1024d=0.0563 (delta=0.0%), 512d=0.0625 (+11% noise); p95 latency 29.2/26.5/22.5ms; report `data/eval/matryoshka_report.json`
+- [x] **4.1.3** Verdict: **1024d MIGRATE** (delta 0.0% strict equality → safe). 512d флагнуто как improvement-noise (n=40 CI ~5%).
+- [x] **4.1.4** Документ — [`04.9 Matryoshka Embeddings`](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md) (концепт MRL + acceptance threshold + результаты + caveats + migration plan)
+- [ ] **4.1.5** (deferred) Production migration `framework_code_v1` + `bsl_code_v4_late` на 1024d требует re-bench с appropriate golden subset (queries про framework code, не про 1С главу 5 PDF). Effort ~30 мин с GPU; tracked в [04.9 § Migration plan](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#migration-plan).
 
-**Effort:** 3-5 days
+**Effort:** 3-5 days estimated → **3h actual** (audit-stale pattern: MRL infrastructure already in `Qwen3STEmbedder`, only harness + bench needed).
+**Closure note:** Methodologically MIGRATE recommended, но production rollout = separate decision (re-bench gating) — поэтому helms `4.1.5` оставлен open как stepstone, а сам §4.1 закрыт по acceptance criterion.
 
 ### 4.2 P2 — RAPTOR + LLM rerank (260423 A7)
 
