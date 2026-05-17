@@ -464,7 +464,7 @@
       "difficulty": "medium",
       "category": "procedural",
       "domain": "1c",
-      "target_collection": "framework_code_v1"
+      "target_collection": "bsl_code_v4_late"
     },
     {
       "id": "gv1-025",
@@ -1174,7 +1174,7 @@
       ],
       "expected_answer_summary": "BSL chunker splits XXL symbols via sliding window=1024 overlap=256 to stay under embedding max input length 4096 tokens.",
       "expected_chunk_ids": [],
-      "target_collection": "framework_code_v1"
+      "target_collection": "bsl_code_v4_late"
     },
     {
       "id": "gv1-064",
@@ -1380,7 +1380,11 @@
       ],
       "expected_answer_summary": "СписокЗначений.Добавить(значение, представление); НайтиПоЗначению; обход через Для Каждого Элемент Из Список.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "dcf64fbe-619c-59ad-ab0c-35c7528621a2",
+        "7a60c0ac-d2a4-58d0-b149-36c63d6baeef",
+        "d0d5760e-34a9-5a1f-90b3-558174b0595c"
+      ]
     },
     {
       "id": "gv1-076",
@@ -1428,7 +1432,9 @@
       ],
       "expected_answer_summary": "В модуле менеджера: Функция МойМетод(Параметр) Экспорт … КонецФункции — доступна через Документы.<имя>.МойМетод.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "b2db3ac1-9e1b-5097-ba5c-10050128eaf7"
+      ]
     },
     {
       "id": "gv1-079",
@@ -1460,7 +1466,9 @@
       ],
       "expected_answer_summary": "Документы.<имя>.СоздатьДокумент(); установить реквизиты; .Записать(РежимЗаписиДокумента.Запись).",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "76194423-8cb8-570a-9075-16a2ffb55b3c"
+      ]
     },
     {
       "id": "gv1-081",
@@ -1476,7 +1484,11 @@
       ],
       "expected_answer_summary": "В ПередЗаписью или ОбработкаПроверкиЗаполнения; СпрОбъект.Записать() триггерит проверку.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "7c7e9012-55ef-53d5-b8ad-30fd058e5b94",
+        "51c89ee5-0d9f-55d9-b9e8-49e107a876a9",
+        "90c8ad5d-8bae-56da-ae4a-f5dcadbf6541"
+      ]
     },
     {
       "id": "gv1-082",
@@ -1523,7 +1535,10 @@
       ],
       "expected_answer_summary": "БлокировкаДанных().Добавить(пространство); .Заблокировать() — даёт явную семантику и предотвращает race.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "5f977fe9-3491-565f-82a5-58f01c7920cc",
+        "23a6ccc5-6065-59e7-99a8-565106c6805e"
+      ]
     },
     {
       "id": "gv1-085",
@@ -1539,7 +1554,11 @@
       ],
       "expected_answer_summary": "ФоновыеЗадания.Выполнить(имяМетода, параметры); потом ОжидатьЗавершения() или периодически проверять Состояние.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "4dc312b3-16f5-59d4-b3d3-44ea1cebe69b",
+        "d56db9e8-e0ee-58ba-9d73-4b4b9b44fe69",
+        "c02d539d-ba7a-5d68-9034-4626a9797118"
+      ]
     },
     {
       "id": "gv1-086",
@@ -1555,7 +1574,11 @@
       ],
       "expected_answer_summary": "РегистрыСведений.<имя>.СоздатьНаборЗаписей(); Отбор; Прочитать/Записать; периодический — измерение Период.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "3aa87e68-e64d-5572-801b-369f26414431",
+        "dbf4ea80-6786-5880-ae45-269ba8c4e524",
+        "b21a7b64-0cef-5db0-b8a6-56c3498eb98a"
+      ]
     },
     {
       "id": "gv1-087",
@@ -1588,7 +1611,11 @@
       ],
       "expected_answer_summary": "БСП-подсистема: ГруппыДоступа → ВидыДоступа → значения; RLS использует регистры УправленияДоступом.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "21d4f395-d9bc-5df1-ba1b-4cfb43edfd7b",
+        "c340d09b-a243-5111-bb3a-4ebe87b18251",
+        "5a650e99-fe76-519a-8524-5bc1e4006cd3"
+      ]
     },
     {
       "id": "gv1-089",
@@ -1604,7 +1631,10 @@
       ],
       "expected_answer_summary": "Объект метаданных Регламентное задание; Расписание периодов; вызывает указанный метод общего модуля.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "af586572-ad66-54fd-bc16-f7f69aacfe8c",
+        "679155a4-e2b4-50b3-81d0-478d3bcdd016"
+      ]
     },
     {
       "id": "gv1-090",
@@ -1636,7 +1666,9 @@
       ],
       "expected_answer_summary": "ЗаписьЖурналаРегистрации(событие, УровеньЖурналаРегистрации.Ошибка, метаданные, данные, комментарий).",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "fd0fdbb2-c157-5284-a770-c0bbc3dd0886"
+      ]
     },
     {
       "id": "gv1-092",
@@ -1652,7 +1684,10 @@
       ],
       "expected_answer_summary": "1С использует savepoint-семантику; внутренняя ОтменитьТранзакцию помечает внешнюю как отменённую — Попытка-Исключение обязательно.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "309f5767-068e-55f9-87d8-2fa004304fff",
+        "49f28781-0e1e-5789-85a1-48e052c95e05"
+      ]
     },
     {
       "id": "gv1-093",
@@ -1668,7 +1703,11 @@
       ],
       "expected_answer_summary": "Параметр Отказ в обработчиках клиента; ОповеститьОВыборе с Отказ; для длительных операций — флаг отмены.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "6ea81cd1-aa79-567c-a87f-87d541c57acf",
+        "1195e7ac-9d28-5883-888b-40ecbcfda1f8",
+        "ffd8fa70-9c07-50e8-8df1-6f80d748fc43"
+      ]
     }
   ],
   "stats": {
