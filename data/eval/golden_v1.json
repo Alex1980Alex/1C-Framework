@@ -2094,7 +2094,10 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "c859146b-1f8b-5ae6-be83-be848257d9f9",
+        "20dc417a-ca96-50e2-8fc5-5ff35b1fa38a"
+      ]
     },
     {
       "id": "gv1-116",
@@ -2141,7 +2144,9 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "71fd9c37-2a40-590b-9c40-912929e70edc"
+      ]
     },
     {
       "id": "gv1-119",
@@ -2171,7 +2176,10 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "ea092b10-05bb-5667-8b80-6c8bb9e395b3",
+        "9232f3a6-a087-5873-9bdb-4337f15b1e0b"
+      ]
     },
     {
       "id": "gv1-121",
@@ -2186,7 +2194,9 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "a6207eac-cb27-5712-a880-31e76fe34a28"
+      ]
     },
     {
       "id": "gv1-122",
@@ -2231,7 +2241,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "1d366a8f-2b44-500d-b3c2-cfc9dbe487ea",
+        "6d5e96a3-020d-57a0-a483-1792112ffd2d",
+        "8ee88b07-1ade-504b-8b57-055434aaa344"
+      ]
     },
     {
       "id": "gv1-125",
@@ -2261,7 +2275,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "c8ff3433-2e4c-5e4a-aa5a-d8088d36839d",
+        "25329284-1c34-5760-b7e3-3a81bf6c1d66",
+        "44007ce9-01ff-5377-ab0e-997739de09d0"
+      ]
     },
     {
       "id": "gv1-127",
@@ -2276,7 +2294,9 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "bc47f200-10b9-5d24-8733-f9cdbea1f863"
+      ]
     },
     {
       "id": "gv1-128",
@@ -2306,7 +2326,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "c334db9b-72b0-52e6-9057-0f40c7d6087b",
+        "4b8ed619-199e-558f-9e5b-297baac6a863",
+        "9f95d584-6494-57dd-8071-1e0352a93254"
+      ]
     },
     {
       "id": "gv1-130",
@@ -2321,7 +2345,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "d430ad04-4ec8-5d78-b6b5-c4d9c333c072",
+        "156b22af-7995-5ef5-98cf-d7acd9c0b64b",
+        "9e2fbf24-9374-5db9-a6e6-f6e3affb22c0"
+      ]
     },
     {
       "id": "gv1-131",
@@ -2335,7 +2363,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "30d282e3-5911-5011-89d9-e0825883ea1e",
+        "d67b8b0d-d0f1-5475-84d4-ae52d6152415",
+        "9e7d0da0-4fd4-533f-93f7-2625f6d43ca3"
+      ]
     },
     {
       "id": "gv1-132",
@@ -2350,7 +2382,9 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "868e3332-8c7f-5c9e-801a-1e94214fdd20"
+      ]
     },
     {
       "id": "gv1-133",
@@ -2365,7 +2399,9 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "bsl_code_v4",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "895255fb-8260-5fca-9821-bf7a83e00420"
+      ]
     },
     {
       "id": "gv1-134",
