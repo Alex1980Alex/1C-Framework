@@ -32,6 +32,11 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.framework_search.embedder import FrameworkTEIEmbedder  # noqa: E402
+from src.framework_search.indexer import (  # noqa: E402
+    maybe_truncate_vectors,
+    resolve_collection_dim,
+    resolve_physical_collection,
+)
 
 logger = logging.getLogger("reindex-pdf")
 
