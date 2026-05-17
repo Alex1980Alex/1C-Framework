@@ -1,9 +1,9 @@
 {
-  "version": "v2.3",
+  "version": "v2.4",
   "created": "2026-05-09",
   "updated": "2026-05-17",
   "schema_version": 1,
-  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass). v2.2 — +20 BSL-domain queries for §4.1.7 re-bench (2026-05-17). v2.3 — +20 PDF-domain queries for §4.1.8 (2026-05-17).",
+  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass). v2.2 — +20 BSL-domain queries for §4.1.7 re-bench (2026-05-17). v2.3 — +20 PDF-domain queries for §4.1.8 (2026-05-17). v2.4 — +60 items (20 bsl_code_v4 std, 20 wiki, 20 graph) for §4.1.9/10/11.",
   "description": "Golden evaluation dataset for hybrid retrieval + RAG quality benchmarks. Each item has a query, expected ground-truth chunk_ids (in pdf_documents collection), expected answer keywords (loose check), and difficulty label.",
   "fields": {
     "id": "stable identifier (gv1-NNN)",
@@ -2064,6 +2064,907 @@
         "9d88a63a-2295-5a81-bb57-d94cbc713857"
       ],
       "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-114",
+      "query": "Что такое РегистрНакопления в 1С и как читать движения документа?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрНакопления",
+        "Движения",
+        "Регистратор",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-115",
+      "query": "Как работать со СписокЗначений в BSL — добавление, поиск, итерация?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "СписокЗначений",
+        "Добавить",
+        "НайтиПоЗначению"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-116",
+      "query": "Когда использовать Структура vs Соответствие в BSL?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Структура",
+        "Соответствие",
+        "Вставить",
+        "Ключ"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-117",
+      "query": "Чем процедура отличается от функции в 1С?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Процедура",
+        "Функция",
+        "Возврат",
+        "Экспорт"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-118",
+      "query": "Как объявить экспортную функцию модуля менеджера?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "МодульМенеджера",
+        "Экспорт",
+        "Функция"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-119",
+      "query": "Что такое ХранилищеЗначения в 1С?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ХранилищеЗначения",
+        "Новый",
+        "Получить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-120",
+      "query": "Как создать новый документ через менеджер документов?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Документы",
+        "СоздатьДокумент",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-121",
+      "query": "Как записать справочник с проверкой реквизитов?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Справочники",
+        "ПередЗаписью",
+        "ПроверкаЗаполнения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-122",
+      "query": "Чем ПолучитьСсылку отличается от НайтиПоНаименованию?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьСсылку",
+        "НайтиПоНаименованию",
+        "УникальныйИдентификатор"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-123",
+      "query": "Как использовать ОбщегоНазначения для серверного вызова?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбщегоНазначения",
+        "ВызовСервера",
+        "&НаСервере"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-124",
+      "query": "Как обработать БлокировкаДанных в транзакции?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "БлокировкаДанных",
+        "Заблокировать",
+        "НачатьТранзакцию"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-125",
+      "query": "Как реализуется ФоновоеЗадание.Выполнить?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФоновоеЗадание",
+        "Выполнить",
+        "ОжидатьЗавершения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-126",
+      "query": "Как организован обмен данными через РегистрСведений?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "Набор",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-127",
+      "query": "Как настраивается роль с правами доступа?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Роль",
+        "Права",
+        "RLS"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-128",
+      "query": "Как работает УправлениеДоступом БСП?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "УправлениеДоступом",
+        "ГруппыДоступа",
+        "ВидДоступа"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-129",
+      "query": "Как реализованы регламентные задания?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегламентноеЗадание",
+        "Расписание",
+        "Выполнить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-130",
+      "query": "Как правильно использовать Попытка-Исключение?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Попытка",
+        "Исключение",
+        "ОписаниеОшибки"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-131",
+      "query": "Как записать ошибку в журнал регистрации?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписьЖурналаРегистрации",
+        "УровеньЖурналаРегистрации"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-132",
+      "query": "Как обработать ОтменаТранзакции внутри вложенной транзакции?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "НачатьТранзакцию",
+        "ОтменитьТранзакцию",
+        "ЗафиксироватьТранзакцию"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-133",
+      "query": "Как обрабатывается отмена пользователем (Прервано)?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Прервано",
+        "ОтменаПользователем",
+        "Cancel"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-134",
+      "query": "Что такое предопределённые данные в плане обмена?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "предопределённые",
+        "ПланОбмена",
+        "ИмяПредопределенныхДанных"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-135",
+      "query": "Как работает стандартное окно выбора картинки?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "окно",
+        "выбор",
+        "картинка",
+        "стандартное"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-136",
+      "query": "Что такое набор вариантов отчёта?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "набор",
+        "варианты",
+        "отчёт",
+        "Включить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-137",
+      "query": "Как работает дерево связей?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "дерево",
+        "связей",
+        "иерархия"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-138",
+      "query": "Что такое журнал регистрации в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЖурналРегистрации",
+        "событие",
+        "запись"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-139",
+      "query": "Что такое план обмена в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланОбмена",
+        "узел",
+        "регистрация изменений"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-140",
+      "query": "Как работает обработка проведения документа?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбработкаПроведения",
+        "движение",
+        "регистратор"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-141",
+      "query": "Что такое периодический регистр сведений?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "периодический",
+        "Период",
+        "СрезПоследних"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-142",
+      "query": "Как реализуется сложная иерархия в справочнике?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Иерархия",
+        "ЭтоГруппа",
+        "Родитель"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-143",
+      "query": "Что такое подсистема в конфигурации 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Подсистема",
+        "Метаданные",
+        "интерфейс"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-144",
+      "query": "Как работает критерий отбора в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "КритерийОтбора",
+        "Отбор",
+        "состав"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-145",
+      "query": "Что такое константа в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Константа",
+        "значение",
+        "глобальная"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-146",
+      "query": "Как работает определяемый тип?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОпределяемыйТип",
+        "ТипЗначения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-147",
+      "query": "Что такое HTTP сервис в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "HTTPСервис",
+        "URL",
+        "Метод"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-148",
+      "query": "Как работает WEB сервис в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "WEBСервис",
+        "Операция",
+        "WSDL"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-149",
+      "query": "Что такое внешний источник данных?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ВнешнийИсточникДанных",
+        "Соединение"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-150",
+      "query": "Как реализуется внешняя обработка в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ВнешняяОбработка",
+        "Подключить",
+        ".epf"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-151",
+      "query": "Что такое функциональная опция?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФункциональнаяОпция",
+        "значение",
+        "видимость"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-152",
+      "query": "Как работает критерий присутствия?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "критерий",
+        "присутствие"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-153",
+      "query": "Что такое менеджер расчёта?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "МенеджерРасчета",
+        "Запись",
+        "движение"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-154",
+      "query": "Найди процедуру для проверки существования ссылки на объект",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПроверитьСуществованиеСсылки",
+        "Ссылка",
+        "Проверить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-155",
+      "query": "Покажи функцию получения внешних модулей",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьВнешниеМодули",
+        "Внешние",
+        "Модули"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-156",
+      "query": "Найди код помещения данных обработчика в хранилище",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПоместитьДанные",
+        "Хранилище",
+        "Обработчик"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-157",
+      "query": "Какие процедуры работают с регистром накопления?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрНакопления",
+        "Движение",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-158",
+      "query": "Найди функции обработки ошибок и исключений",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбработкаОшибки",
+        "Исключение",
+        "Попытка"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-159",
+      "query": "Покажи методы работы с журналом регистрации",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписатьВЖурнал",
+        "ЖурналРегистрации",
+        "Событие"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-160",
+      "query": "Найди процедуры создания нового документа",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "СоздатьДокумент",
+        "Документ",
+        "Новый"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-161",
+      "query": "Какие функции возвращают ссылку по идентификатору?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьСсылку",
+        "Идентификатор",
+        "Возврат"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-162",
+      "query": "Найди код блокировки данных перед записью",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "БлокировкаДанных",
+        "Заблокировать",
+        "Установить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-163",
+      "query": "Покажи процедуры обработки проведения документа",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбработкаПроведения",
+        "Проведение",
+        "Движения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-164",
+      "query": "Найди функции работы с фоновыми заданиями",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФоновоеЗадание",
+        "Выполнить",
+        "ОжидатьЗавершения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-165",
+      "query": "Какие методы работают с табличной частью?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ТабличнаяЧасть",
+        "Добавить",
+        "Очистить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-166",
+      "query": "Найди процедуры обмена данными между узлами",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланОбмена",
+        "Узел",
+        "ЗарегистрироватьИзменения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-167",
+      "query": "Покажи функции работы с XML",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписатьXML",
+        "ПрочитатьXML",
+        "XDTO"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-168",
+      "query": "Найди код работы с HTTP запросами",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "HTTPЗапрос",
+        "HTTPСоединение",
+        "Отправить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-169",
+      "query": "Какие процедуры начинают и завершают транзакции?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "НачатьТранзакцию",
+        "ЗафиксироватьТранзакцию",
+        "ОтменитьТранзакцию"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-170",
+      "query": "Найди функции работы с регистром сведений",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "СоздатьНаборЗаписей",
+        "Прочитать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-171",
+      "query": "Покажи методы работы с пользовательскими настройками",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ХранилищеНастроек",
+        "Сохранить",
+        "Загрузить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-172",
+      "query": "Найди процедуры обработки формы при открытии",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПриОткрытии",
+        "Форма",
+        "Инициализация"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-173",
+      "query": "Какие функции работают с метаданными конфигурации?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Метаданные",
+        "Объект",
+        "ПолучитьОбщийМодуль"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
     }
   ],
   "stats": {
