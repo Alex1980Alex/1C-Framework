@@ -114,8 +114,11 @@ def ensure_collection(
     """Create collection if missing; drop+create if recreate=True."""
     exists = client.collection_exists(collection)
     if exists and recreate:
-        logger.info("indexer: dropping collection %s for recreation", collection)
-        client.delete_collection(collection)
+        physical = resolve_physical_collection(client, collection)
+        if physical != collection:
+            logger.info("indexer: '%s' alias->'%s'; recreating physical", collection, physical)
+        logger.info("indexer: dropping collection %s for recreation", physical)
+        client.delete_collection(physical)
         exists = False
     if not exists:
         logger.info("indexer: creating collection %s (dims=%d cosine)", collection, dims)
