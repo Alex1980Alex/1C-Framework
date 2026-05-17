@@ -1,9 +1,9 @@
 {
-  "version": "v1.1",
+  "version": "v2.2",
   "created": "2026-05-09",
-  "updated": "2026-05-09",
+  "updated": "2026-05-17",
   "schema_version": 1,
-  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass).",
+  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass). v2.2 — +20 BSL-domain queries for §4.1.7 re-bench (2026-05-17).",
   "description": "Golden evaluation dataset for hybrid retrieval + RAG quality benchmarks. Each item has a query, expected ground-truth chunk_ids (in pdf_documents collection), expected answer keywords (loose check), and difficulty label.",
   "fields": {
     "id": "stable identifier (gv1-NNN)",
@@ -1345,6 +1345,326 @@
         "d3670929-5cb0-580f-8087-60ceb952a2d6"
       ],
       "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-074",
+      "query": "Что такое РегистрНакопления в 1С и как читать движения документа?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрНакопления",
+        "Движения",
+        "Регистратор",
+        "Записать"
+      ],
+      "expected_answer_summary": "РегистрНакопления хранит обороты/остатки; Документ.Движения.РегистрНакопления.<имя> читает/пишет движения.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-075",
+      "query": "Как работать со СписокЗначений в BSL — добавление, поиск, итерация?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "СписокЗначений",
+        "Добавить",
+        "НайтиПоЗначению",
+        "Для Каждого"
+      ],
+      "expected_answer_summary": "СписокЗначений.Добавить(значение, представление); НайтиПоЗначению; обход через Для Каждого Элемент Из Список.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-076",
+      "query": "Когда использовать Структура vs Соответствие в BSL и в чём разница?",
+      "difficulty": "medium",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "Структура",
+        "Соответствие",
+        "Вставить",
+        "Ключ"
+      ],
+      "expected_answer_summary": "Структура — ключи строковые идентификаторы; Соответствие — ключи произвольные. Обе — Вставить/Получить.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-077",
+      "query": "В чём отличие Процедура от Функция в 1С при разработке общих модулей?",
+      "difficulty": "easy",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "Процедура",
+        "Функция",
+        "Возврат",
+        "Экспорт"
+      ],
+      "expected_answer_summary": "Процедура — без возврата; Функция — с Возврат. Обе могут быть Экспорт для серверного вызова.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-078",
+      "query": "Как объявить экспортную функцию модуля менеджера документа?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "МодульМенеджера",
+        "ManagerModule",
+        "Экспорт",
+        "Функция"
+      ],
+      "expected_answer_summary": "В модуле менеджера: Функция МойМетод(Параметр) Экспорт … КонецФункции — доступна через Документы.<имя>.МойМетод.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-079",
+      "query": "Что такое ХранилищеЗначения и когда хранить структуру там вместо реквизита?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ХранилищеЗначения",
+        "Новый",
+        "Получить",
+        "DeflateCompression"
+      ],
+      "expected_answer_summary": "ХранилищеЗначения — сериализованное хранение произвольного объекта. Полезно для неструктурированных payload, картинок, кеша.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-080",
+      "query": "Как создать новый документ программно через менеджер документов?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Документы",
+        "СоздатьДокумент",
+        "Записать",
+        "ПолучитьОбъект"
+      ],
+      "expected_answer_summary": "Документы.<имя>.СоздатьДокумент(); установить реквизиты; .Записать(РежимЗаписиДокумента.Запись).",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-081",
+      "query": "Как записать справочник с проверкой реквизитов перед записью?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Справочники",
+        "ПередЗаписью",
+        "ПроверкаЗаполнения",
+        "Записать"
+      ],
+      "expected_answer_summary": "В ПередЗаписью или ОбработкаПроверкиЗаполнения; СпрОбъект.Записать() триггерит проверку.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-082",
+      "query": "Чем отличается ПолучитьСсылку от НайтиПоНаименованию для справочников?",
+      "difficulty": "medium",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьСсылку",
+        "НайтиПоНаименованию",
+        "УникальныйИдентификатор"
+      ],
+      "expected_answer_summary": "ПолучитьСсылку(UUID) — детерминированная ссылка по идентификатору; НайтиПоНаименованию — поиск по строке.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-083",
+      "query": "Как использовать общий модуль ОбщегоНазначения для серверного вызова с клиента?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбщегоНазначения",
+        "ОбщегоНазначенияВызовСервера",
+        "ВызовСервера",
+        "&НаСервере"
+      ],
+      "expected_answer_summary": "Общие модули с галкой 'Вызов сервера' доступны с клиента; функции должны быть Экспорт.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-084",
+      "query": "Как обработать БлокировкаДанных внутри транзакции для предотвращения deadlock?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "БлокировкаДанных",
+        "Заблокировать",
+        "НачатьТранзакцию",
+        "Исключение"
+      ],
+      "expected_answer_summary": "БлокировкаДанных().Добавить(пространство); .Заблокировать() — даёт явную семантику и предотвращает race.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-085",
+      "query": "Как реализуется ФоновоеЗадание.Выполнить и контроль завершения?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФоновоеЗадание",
+        "Выполнить",
+        "ОжидатьЗавершения",
+        "ПолучитьСостояние"
+      ],
+      "expected_answer_summary": "ФоновыеЗадания.Выполнить(имяМетода, параметры); потом ОжидатьЗавершения() или периодически проверять Состояние.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-086",
+      "query": "Как организован обмен данными через РегистрСведений в УТ?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "Набор",
+        "Записать",
+        "Отбор"
+      ],
+      "expected_answer_summary": "РегистрыСведений.<имя>.СоздатьНаборЗаписей(); Отбор; Прочитать/Записать; периодический — измерение Период.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-087",
+      "query": "Как настраивается роль с правами доступа к объектам конфигурации?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Роль",
+        "Права",
+        "Чтение",
+        "Изменение",
+        "RLS"
+      ],
+      "expected_answer_summary": "Роль определяется в Дерево метаданных; права на объекты + RLS через шаблоны ограничения доступа.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-088",
+      "query": "Как работает подсистема УправлениеДоступом для разграничения видимости?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "УправлениеДоступом",
+        "ГруппыДоступа",
+        "ВидДоступа",
+        "Профиль"
+      ],
+      "expected_answer_summary": "БСП-подсистема: ГруппыДоступа → ВидыДоступа → значения; RLS использует регистры УправленияДоступом.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-089",
+      "query": "Как реализованы регламентные задания (РегламентноеЗадание) и их расписание?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегламентноеЗадание",
+        "Расписание",
+        "Метаданные",
+        "Выполнить"
+      ],
+      "expected_answer_summary": "Объект метаданных Регламентное задание; Расписание периодов; вызывает указанный метод общего модуля.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-090",
+      "query": "Как правильно использовать Попытка-Исключение для обработки ошибок?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Попытка",
+        "Исключение",
+        "ОписаниеОшибки",
+        "ВызватьИсключение"
+      ],
+      "expected_answer_summary": "Попытка … Исключение Сообщение(ОписаниеОшибки()); КонецПопытки; ВызватьИсключение для перевыброса.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-091",
+      "query": "Как записать ошибку в журнал регистрации через ЗаписьЖурналаРегистрации?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписьЖурналаРегистрации",
+        "УровеньЖурналаРегистрации",
+        "Ошибка",
+        "Метаданные"
+      ],
+      "expected_answer_summary": "ЗаписьЖурналаРегистрации(событие, УровеньЖурналаРегистрации.Ошибка, метаданные, данные, комментарий).",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-092",
+      "query": "Как корректно обработать ОтменаТранзакции внутри вложенной транзакции?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "НачатьТранзакцию",
+        "ОтменитьТранзакцию",
+        "ЗафиксироватьТранзакцию",
+        "вложенн"
+      ],
+      "expected_answer_summary": "1С использует savepoint-семантику; внутренняя ОтменитьТранзакцию помечает внешнюю как отменённую — Попытка-Исключение обязательно.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-093",
+      "query": "Как обрабатывается отмена пользователем (Прервано) в коде клиента?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Прервано",
+        "ОтменаПользователем",
+        "Cancel",
+        "Возврат"
+      ],
+      "expected_answer_summary": "Параметр Отказ в обработчиках клиента; ОповеститьОВыборе с Отказ; для длительных операций — флаг отмены.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
     }
   ],
   "stats": {
