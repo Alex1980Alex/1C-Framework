@@ -151,6 +151,47 @@ Current `QUALITY_CRITERIA` в [`src/shared/llm_rotation/adapter.py`](../../src/s
 
 ---
 
+## Phase 6 — §3.2 Contextual Retrieval enable
+
+**Цель:** Enable Anthropic-style chunk context generation (Phase 50, [`src/pdf_framework/processing/context_generator.py`](../../src/pdf_framework/processing/context_generator.py)) на production collections.
+
+### 6.1 Current state (2026-05-17)
+
+- **Implementation: FULL** — 354 lines с LLM context gen + SQLite cache + batch concurrency + Ralph Wiggum retry
+- **Config:** `CONTEXTUAL_RETRIEVAL__ENABLED=False` (default off)
+- **Model required:** `claude-haiku-4-5-20251001` via `langchain_anthropic.ChatAnthropic` → требует `ANTHROPIC_API_KEY`
+- **Fallback:** `cheap_llm_call` через llm_rotation adapter (subscription tier, claude-cli) — works, но slow
+
+### 6.2 Why deferred
+
+**Cost analysis:**
+- Per-chunk: 1 LLM call generates 1-2 sentence context summary
+- Subscription tier (claude-cli): ~15s per call serialized → 830 chunks × 15s = **~3.5h wall-clock per indexing run**
+- Paid Haiku API: ~500ms per call × $0.001 = $0.83 total per indexing of pdf_documents (830 chunks)
+- Re-indexing на каждом auto-reindex trigger → cumulative cost grows
+
+**Cache helps:** SQLite cache `data/context_cache.db` keyed by chunk_id — repeat runs skip already-generated contexts. Only NEW/CHANGED chunks pay LLM cost.
+
+**Expected lift:** +20-35% NDCG@10 per Anthropic 2024 blog (mixed corpus). On highly technical corpus (BSL Cyrillic) impact may be lower.
+
+### 6.3 Execution plan (when unblocked)
+
+1. Set `CONTEXTUAL_RETRIEVAL__ENABLED=true` + ensure `ANTHROPIC_API_KEY` provisioned
+2. Re-index test sample (50 chunks, $0.05 cost) → verify cache + retry logic works end-to-end
+3. Full re-index pdf_documents (830 chunks, ~$0.85, ~5 min on paid API)
+4. NDCG bench via golden_v1 v2.3 (18 grounded PDF queries) vs current dense-only
+5. If MIGRATE (lift ≥ +5%): enable globally + re-index framework_code_v1 + wiki_pages_v1
+6. Auto-reindex hook: ensure incremental chunks get context (already handled by SQLite cache key)
+
+### 6.4 Acceptance gates
+
+- [ ] Sample (50 chunks) bench shows NDCG@10 lift ≥ +10% vs dense-only
+- [ ] Full pdf_documents indexing completes in < 10 min on paid API
+- [ ] Cost per re-indexing < $5 (cache hit rate makes incremental cheap)
+- [ ] No regression on PDF p95 latency (context only affects index time, not retrieval)
+
+---
+
 ## Cost estimates
 
 | Phase | Setup time | Monthly API cost (estimated) |
