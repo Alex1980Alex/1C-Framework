@@ -133,6 +133,13 @@ def _mrl_truncate(v: list[float], target_dim: int) -> list[float]:
     return (arr / norm).tolist() if norm > 0 else arr.tolist()
 
 
+def maybe_truncate_vectors(
+    vectors: list[list[float]], target_dim: int
+) -> list[list[float]]:
+    """MRL-truncate batch; no-op if vectors already <= target_dim."""
+    return [v if len(v) <= target_dim else _mrl_truncate(v, target_dim) for v in vectors]
+
+
 def upsert_chunks(
     client: QdrantClient,
     collection: str,
