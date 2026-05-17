@@ -111,6 +111,9 @@ VECTOR_STORE__QDRANT_BM25_B=0.75
 | `client.search` AttributeError | qdrant-client ≥1.13 убрал `search()` | Использовать `client.query_points(query=vec, ...).points` |
 | TEI 413 Payload Too Large | Сервер enforce `MAX_CLIENT_BATCH_SIZE` (default 32) | Слайсить буфер на стороне клиента (см. `Qwen3TEIEmbedder.client_batch_size` в `scripts/reindex_bsl_qwen3.py`) |
 | Dimension mismatch | .env override E5 model | Проверить `EMBEDDING__MODEL` (1024d, не 384d) |
+| `Vector dimension error: expected 1024, got 4096` | Query вектор не truncated для MRL alias | После §4.1.6/8/10: использовать `maybe_truncate_vectors([qv], target_dim)` (см. [`indexer.py`](../../../src/framework_search/indexer.py)) |
+| `delete_collection` 404 on alias | Qdrant 1.7+ требует physical name | `resolve_physical_collection(client, name)` → underlying name → delete |
+| Tracker alert: search_code returns 400 после swap | Cached `_state["target_dim"]` stale в MCP | Restart MCP process; cache rebuilds на первом query |
 
 ## Docker
 
