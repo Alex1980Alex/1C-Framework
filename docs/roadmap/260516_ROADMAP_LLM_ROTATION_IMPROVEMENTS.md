@@ -4,7 +4,11 @@
 >
 > **Research cache:** [`architecture-research/cache/llm-rotation-production-improvements-2026.md`](../../.claude/skills/architecture-research/cache/llm-rotation-production-improvements-2026.md) — full analysis, code patterns, 11 sources.
 >
-> **Status as of 2026-05-16:** Phases 1-5 planned. **Phase 2 immediately actionable** (config-only, 30 min).
+> **Status as of 2026-05-17 (post §3 + §4.1 closures):**
+> - ✅ Phase 1 closed (commit `8742cb090`) — claude-agent-sdk migration
+> - ✅ Phase 3 closed (commit `7dd1fbea8`) — concurrent batch + adaptive concurrency
+> - ⏸️ **Phase 2 / 4 / 5 DEFERRED** — requires `ANTHROPIC_API_KEY` ($20-100/month budget)
+> - **Master deferral plan:** [`260517_ROADMAP_API_KEY_DEFERRED.md`](260517_ROADMAP_API_KEY_DEFERRED.md) — consolidates все paid-API tasks с decision tree
 
 ## §0 — Контекст
 
