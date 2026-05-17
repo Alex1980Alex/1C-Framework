@@ -138,27 +138,53 @@ def main() -> int:
     client = QdrantClient(url=args.qdrant_url)
 
     if args.recreate:
+        physical = COLLECTION
+        was_alias = False
         if client.collection_exists(COLLECTION):
             physical = resolve_physical_collection(client, COLLECTION)
-            if physical != COLLECTION:
+            was_alias = physical != COLLECTION
+            if was_alias:
                 logger.info("'%s' alias->'%s'; recreating physical", COLLECTION, physical)
             logger.info("Dropping existing collection %s", physical)
             client.delete_collection(physical)
-        logger.info("Creating collection %s (4096d cosine)", COLLECTION)
+        logger.info("Creating collection %s (4096d cosine)", physical)
         client.create_collection(
-            collection_name=COLLECTION,
+            collection_name=physical,
             vectors_config=models.VectorParams(size=4096, distance=models.Distance.COSINE),
         )
+        if was_alias:
+            logger.info("restoring alias '%s' -> '%s'", COLLECTION, physical)
+            client.update_collection_aliases(
+                change_aliases_operations=[
+                    models.CreateAliasOperation(
+                        create_alias=models.CreateAlias(
+                            collection_name=physical,
+                            alias_name=COLLECTION,
+                        ),
+                    ),
+                ],
+            )
     elif not client.collection_exists(COLLECTION):
         logger.error("Collection %s missing and --recreate not given", COLLECTION)
         return 1
 
     t0 = time.time()
     target_dim = resolve_collection_dim(client, COLLECTION)
-    truncate = target_dim is not None and target_dim < 4096
-    if truncate:
-        logger.info("MRL truncation 4096d -> %dd active", target_dim)
     with FrameworkTEIEmbedder(base_url=args.tei_url) as embedder:
+        # Pre-flight: probe embedder dim, verify it can satisfy collection target.
+        probe = embedder.embed_batch([chunks[0]["content"]], is_query=False)
+        embed_dim = len(probe[0])
+        if target_dim is not None and target_dim > embed_dim:
+            logger.error(
+                "Embedder dim %d cannot satisfy collection target dim %d; aborting "
+                "(check TEI model — should be Qwen3-Embedding-8B at 4096d).",
+                embed_dim,
+                target_dim,
+            )
+            return 1
+        truncate = target_dim is not None and target_dim < embed_dim
+        if truncate:
+            logger.info("MRL truncation %dd -> %dd active", embed_dim, target_dim)
         for s in range(0, len(chunks), args.batch_size):
             batch = chunks[s : s + args.batch_size]
             texts = [c["content"] for c in batch]

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
+from typing import Any
 
 import numpy as np
 from qdrant_client import QdrantClient
@@ -14,8 +15,6 @@ from .chunker_base import Chunk
 from .config import (
     DEFAULT_BATCH_SIZE,
     DEFAULT_COLLECTION,
-    DEFAULT_INDEX_FILES,
-    DEFAULT_INDEX_ROOTS,
     DEFAULT_QDRANT_URL,
     DEFAULT_TEI_URL,
     REPO_ROOT,
@@ -97,11 +96,12 @@ def resolve_physical_collection(client: QdrantClient, name: str) -> str:
     """If `name` is an alias, return underlying physical collection name."""
     try:
         aliases = client.get_aliases().aliases
-    except Exception:
+    except Exception as e:
+        logger.debug("resolve_physical_collection: get_aliases failed: %s", e)
         return name
     for a in aliases:
         if a.alias_name == name:
-            return a.collection_name
+            return str(a.collection_name)
     return name
 
 
@@ -111,21 +111,45 @@ def ensure_collection(
     dims: int,
     recreate: bool = False,
 ) -> None:
-    """Create collection if missing; drop+create if recreate=True."""
+    """Create collection if missing; drop+create if recreate=True.
+
+    Alias-aware: if `collection` is an alias, recreate operates on the
+    underlying physical collection and re-establishes the alias afterwards
+    (qdrant_client.delete_collection wipes the alias along with the data).
+    """
     exists = client.collection_exists(collection)
+    alias_name: str | None = None
+    physical_name = collection
+
     if exists and recreate:
-        physical = resolve_physical_collection(client, collection)
-        if physical != collection:
-            logger.info("indexer: '%s' alias->'%s'; recreating physical", collection, physical)
-        logger.info("indexer: dropping collection %s for recreation", physical)
-        client.delete_collection(physical)
+        physical_name = resolve_physical_collection(client, collection)
+        if physical_name != collection:
+            alias_name = collection
+            logger.info(
+                "indexer: '%s' is alias -> '%s'; recreating physical", alias_name, physical_name
+            )
+        logger.info("indexer: dropping collection %s for recreation", physical_name)
+        client.delete_collection(physical_name)
         exists = False
+
     if not exists:
-        logger.info("indexer: creating collection %s (dims=%d cosine)", collection, dims)
+        logger.info("indexer: creating collection %s (dims=%d cosine)", physical_name, dims)
         client.create_collection(
-            collection_name=collection,
+            collection_name=physical_name,
             vectors_config=models.VectorParams(size=dims, distance=models.Distance.COSINE),
         )
+        if alias_name:
+            logger.info("indexer: restoring alias '%s' -> '%s'", alias_name, physical_name)
+            client.update_collection_aliases(
+                change_aliases_operations=[
+                    models.CreateAliasOperation(
+                        create_alias=models.CreateAlias(
+                            collection_name=physical_name,
+                            alias_name=alias_name,
+                        ),
+                    ),
+                ],
+            )
 
 
 def resolve_collection_dim(client: QdrantClient, collection: str) -> int | None:
@@ -138,20 +162,23 @@ def resolve_collection_dim(client: QdrantClient, collection: str) -> int | None:
     cfg = info.config.params.vectors
     if cfg is None or isinstance(cfg, dict):
         return None
-    return cfg.size
+    return int(cfg.size)
 
 
 def _mrl_truncate(v: list[float], target_dim: int) -> list[float]:
     """Truncate + L2-renorm one vector (helper for maybe_truncate_vectors)."""
     arr = np.asarray(v[:target_dim], dtype=np.float32)
     norm = float(np.linalg.norm(arr))
-    return (arr / norm).tolist() if norm > 0 else arr.tolist()
+    out = (arr / norm).tolist() if norm > 0 else arr.tolist()
+    return list(out)
 
 
-def maybe_truncate_vectors(
-    vectors: list[list[float]], target_dim: int
-) -> list[list[float]]:
-    """MRL-truncate batch; no-op if vectors already <= target_dim."""
+def maybe_truncate_vectors(vectors: list[list[float]], target_dim: int) -> list[list[float]]:
+    """MRL-truncate batch; no-op if vectors already <= target_dim.
+
+    Assumes already-short vectors are normalized (TEI returns L2-normalized
+    embeddings via normalize=True). We only renorm after truncation.
+    """
     return [v if len(v) <= target_dim else _mrl_truncate(v, target_dim) for v in vectors]
 
 
@@ -189,18 +216,22 @@ def delete_stale_paths(
     paths = list(paths)
     if not paths:
         return 0
-    must_clauses: list = [
+    must_clauses: list[Any] = [
         models.FieldCondition(key="relative_path", match=models.MatchAny(any=paths)),
     ]
-    must_not_clauses: list = []
+    must_not_clauses: list[Any] = []
     if keep_ids:
         must_not_clauses.append(models.HasIdCondition(has_id=list(keep_ids)))
     flt = models.Filter(must=must_clauses, must_not=must_not_clauses or None)
-    res = client.delete(collection_name=collection,
-                        points_selector=models.FilterSelector(filter=flt),
-                        wait=True)
-    logger.info("indexer: delete by paths status=%s (paths=%d, kept=%d)",
-                getattr(res, "status", "?"), len(paths), len(keep_ids or ()))
+    res = client.delete(
+        collection_name=collection, points_selector=models.FilterSelector(filter=flt), wait=True
+    )
+    logger.info(
+        "indexer: delete by paths status=%s (paths=%d, kept=%d)",
+        getattr(res, "status", "?"),
+        len(paths),
+        len(keep_ids or ()),
+    )
     return len(paths)
 
 
@@ -216,7 +247,7 @@ def run_index(
     recreate: bool = False,
     dry_run: bool = False,
     limit: int = 0,
-) -> dict:
+) -> dict[str, Any]:
     """Top-level pipeline.
 
     Returns stats dict with files_indexed, chunks, by_language, embeddings_done.
@@ -228,7 +259,9 @@ def run_index(
 
     logger.info(
         "indexer: collected %d chunks from %d files (by_language=%s)",
-        stats["chunks"], stats["files_indexed"], stats.get("by_language"),
+        stats["chunks"],
+        stats["files_indexed"],
+        stats.get("by_language"),
     )
 
     if dry_run or not chunks:
@@ -262,7 +295,6 @@ def run_index(
     # delete and upsert if anything fails mid-flight.
     upsert_chunks(client, collection, chunks, all_vectors)
     if only_paths is not None and only_paths:
-        delete_stale_paths(client, collection, only_paths,
-                           keep_ids={c.chunk_id for c in chunks})
+        delete_stale_paths(client, collection, only_paths, keep_ids={c.chunk_id for c in chunks})
     stats["embeddings_done"] = len(all_vectors)
     return stats

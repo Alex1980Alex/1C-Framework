@@ -132,23 +132,20 @@ def main() -> int:
     # after §4.1.10 swap), resolve to underlying physical name and preserve
     # its existing dim instead of forcing args.target_dim.
     physical = resolve_physical_collection(client, args.collection)
+    was_alias = physical != args.collection
+    if was_alias:
+        logger.info("'%s' is alias -> '%s'; will recreate physical", args.collection, physical)
+
     existing_dim = resolve_collection_dim(client, physical)
     effective_dim = existing_dim if existing_dim is not None else args.target_dim
-    if effective_dim != args.target_dim:
+    if existing_dim is not None and effective_dim != args.target_dim:
         logger.warning(
-            "Overriding --target-dim=%d with existing collection dim=%d "
-            "(alias '%s' -> physical '%s')",
-            args.target_dim,
+            "Coercing dim to existing collection's %dd (--target-dim=%d ignored to preserve alias contract)",
             effective_dim,
-            args.collection,
-            physical,
+            args.target_dim,
         )
-    if physical != args.collection:
-        logger.info(
-            "'%s' alias->'%s'; recreating physical at %dd", args.collection, physical, effective_dim
-        )
-    else:
-        logger.info("Dropping %s and recreating at %dd cosine", physical, effective_dim)
+
+    logger.info("Dropping %s and recreating at %dd cosine", physical, effective_dim)
     client.delete_collection(physical)
     client.create_collection(
         collection_name=physical,
@@ -157,6 +154,19 @@ def main() -> int:
             distance=models.Distance.COSINE,
         ),
     )
+    if was_alias:
+        # delete_collection wiped the alias along with the data — restore it.
+        logger.info("restoring alias '%s' -> '%s'", args.collection, physical)
+        client.update_collection_aliases(
+            change_aliases_operations=[
+                models.CreateAliasOperation(
+                    create_alias=models.CreateAlias(
+                        collection_name=physical,
+                        alias_name=args.collection,
+                    ),
+                ),
+            ],
+        )
 
     # Truncate long texts before embedding (TEI MAX_INPUT_LENGTH=4096 tokens ≈ 16k chars).
     for r in rows:
