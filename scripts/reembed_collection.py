@@ -34,6 +34,11 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.framework_search.embedder import FrameworkTEIEmbedder  # noqa: E402
+from src.framework_search.indexer import (  # noqa: E402
+    maybe_truncate_vectors,
+    resolve_collection_dim,
+    resolve_physical_collection,
+)
 
 logger = logging.getLogger("reembed")
 
@@ -67,24 +72,29 @@ def scroll_all(
             out.append({"id": r.id, "payload": p, "text": text})
         if next_offset is None:
             break
-    logger.info("scrolled %d points (skipped %d without %r)",
-                len(out), skipped, text_field)
+    logger.info("scrolled %d points (skipped %d without %r)", len(out), skipped, text_field)
     return out
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Re-embed Qdrant collection via TEI")
     ap.add_argument("--collection", required=True)
-    ap.add_argument("--text-field", default="text",
-                    help="Payload key containing the text (default: 'text')")
+    ap.add_argument(
+        "--text-field", default="text", help="Payload key containing the text (default: 'text')"
+    )
     ap.add_argument("--qdrant-url", default="http://localhost:6333")
     ap.add_argument("--tei-url", default="http://localhost:8080")
     ap.add_argument("--target-dim", type=int, default=4096)
     ap.add_argument("--batch-size", type=int, default=16)
-    ap.add_argument("--dry-run", action="store_true",
-                    help="Scroll + count only, no recreate/embed/upsert")
-    ap.add_argument("--max-text-chars", type=int, default=8000,
-                    help="Truncate texts longer than this (TEI MAX_INPUT_LENGTH protection)")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="Scroll + count only, no recreate/embed/upsert"
+    )
+    ap.add_argument(
+        "--max-text-chars",
+        type=int,
+        default=8000,
+        help="Truncate texts longer than this (TEI MAX_INPUT_LENGTH protection)",
+    )
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
 
@@ -107,20 +117,44 @@ def main() -> int:
 
     # Stats
     text_lens = [len(r["text"]) for r in rows]
-    logger.info("text length: min=%d p50=%d p99=%d max=%d",
-                min(text_lens), sorted(text_lens)[len(text_lens)//2],
-                sorted(text_lens)[int(len(text_lens)*0.99)], max(text_lens))
+    logger.info(
+        "text length: min=%d p50=%d p99=%d max=%d",
+        min(text_lens),
+        sorted(text_lens)[len(text_lens) // 2],
+        sorted(text_lens)[int(len(text_lens) * 0.99)],
+        max(text_lens),
+    )
 
     if args.dry_run:
         return 0
 
-    # Recreate at target dim
-    logger.info("Dropping %s and recreating at %dd cosine", args.collection, args.target_dim)
-    client.delete_collection(args.collection)
+    # Recreate at target dim. If collection is an alias (e.g. wiki_pages_v1
+    # after §4.1.10 swap), resolve to underlying physical name and preserve
+    # its existing dim instead of forcing args.target_dim.
+    physical = resolve_physical_collection(client, args.collection)
+    existing_dim = resolve_collection_dim(client, physical)
+    effective_dim = existing_dim if existing_dim is not None else args.target_dim
+    if effective_dim != args.target_dim:
+        logger.warning(
+            "Overriding --target-dim=%d with existing collection dim=%d "
+            "(alias '%s' -> physical '%s')",
+            args.target_dim,
+            effective_dim,
+            args.collection,
+            physical,
+        )
+    if physical != args.collection:
+        logger.info(
+            "'%s' alias->'%s'; recreating physical at %dd", args.collection, physical, effective_dim
+        )
+    else:
+        logger.info("Dropping %s and recreating at %dd cosine", physical, effective_dim)
+    client.delete_collection(physical)
     client.create_collection(
-        collection_name=args.collection,
+        collection_name=physical,
         vectors_config=models.VectorParams(
-            size=args.target_dim, distance=models.Distance.COSINE,
+            size=effective_dim,
+            distance=models.Distance.COSINE,
         ),
     )
 
@@ -136,6 +170,8 @@ def main() -> int:
             batch = rows[s : s + args.batch_size]
             texts = [r["text"] for r in batch]
             vectors = embedder.embed_batch(texts, is_query=False)
+            if effective_dim < 4096:
+                vectors = maybe_truncate_vectors(vectors, effective_dim)
             points = [
                 models.PointStruct(id=r["id"], vector=v, payload=r["payload"])
                 for r, v in zip(batch, vectors)
@@ -147,8 +183,13 @@ def main() -> int:
 
     dt = time.time() - t0
     info = client.get_collection(args.collection)
-    logger.info("Done. %d -> %d points × %dd in %.1fs",
-                len(rows), info.points_count, info.config.params.vectors.size, dt)
+    logger.info(
+        "Done. %d -> %d points × %dd in %.1fs",
+        len(rows),
+        info.points_count,
+        info.config.params.vectors.size,
+        dt,
+    )
     return 0
 
 
