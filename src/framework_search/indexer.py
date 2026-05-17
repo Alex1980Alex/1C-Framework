@@ -114,7 +114,11 @@ def ensure_collection(
 
 
 def resolve_collection_dim(client: QdrantClient, collection: str) -> int | None:
-    """Return target dim of existing collection or None for multi-vector."""
+    """Return target dim of existing collection or None for multi-vector.
+
+    Used to detect MRL-truncated collections (§4.1.6: framework_code_v1 aliased
+    to framework_code_v1_mrl_1024 at 1024d).
+    """
     info = client.get_collection(collection)
     cfg = info.config.params.vectors
     if cfg is None or isinstance(cfg, dict):
