@@ -237,6 +237,8 @@ def run_index(
             batch = chunks[s : s + batch_size]
             texts = [c.content for c in batch]
             vectors = embedder.embed_batch(texts)
+            if truncate:
+                vectors = maybe_truncate_vectors(vectors, target_dim)  # type: ignore[arg-type]
             all_vectors.extend(vectors)
             logger.info("indexer: embedded %d/%d", s + len(batch), len(chunks))
 
