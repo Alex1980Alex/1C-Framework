@@ -180,10 +180,11 @@ def ensure_collection(
 
     if not exists:
         physical = resolve_physical_collection(client, collection)
-        logger.info("indexer: creating collection %s (dims=%d cosine)", physical, dims)
+        distance = models.Distance.COSINE
+        logger.info("indexer: creating collection %s (dims=%d %s)", physical, dims, distance.value)
         client.create_collection(
             collection_name=physical,
-            vectors_config=models.VectorParams(size=dims, distance=models.Distance.COSINE),
+            vectors_config=models.VectorParams(size=dims, distance=distance),
         )
 
 

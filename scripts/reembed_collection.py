@@ -38,7 +38,6 @@ from src.framework_search.indexer import (  # noqa: E402
     maybe_truncate_vectors,
     recreate_collection_preserving_alias,
     resolve_collection_dim,
-    resolve_physical_collection,
 )
 
 logger = logging.getLogger("reembed")
@@ -130,10 +129,10 @@ def main() -> int:
         return 0
 
     # Recreate at target dim. If `args.collection` is an alias (e.g.
-    # wiki_pages_v1 after §4.1.10 swap), resolve to physical and preserve its
-    # existing dim instead of forcing args.target_dim.
-    physical_pre = resolve_physical_collection(client, args.collection)
-    existing_dim = resolve_collection_dim(client, physical_pre)
+    # wiki_pages_v1 after §4.1.10 swap), Qdrant resolves the alias transparently
+    # in get_collection, so we read the existing dim through the alias name and
+    # preserve it instead of forcing args.target_dim.
+    existing_dim = resolve_collection_dim(client, args.collection)
     effective_dim = existing_dim if existing_dim is not None else args.target_dim
     if existing_dim is not None and effective_dim != args.target_dim:
         logger.warning(
