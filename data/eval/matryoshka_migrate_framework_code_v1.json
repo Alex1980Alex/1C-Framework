@@ -1,51 +1,9 @@
 {
   "source": "framework_code_v1",
   "stages": {
-    "evaluate": {
-      "4096": {
-        "dim": 4096,
-        "collection": "framework_code_v1",
-        "n_items": 46,
-        "n_scored": 46,
-        "success_ratio": 1.0,
-        "mean_ndcg": 0.5645371453082517,
-        "p50_ms": 105.93219997826964,
-        "p95_ms": 114.04200000106357
-      },
-      "1024": {
-        "dim": 1024,
-        "collection": "framework_code_v1_mrl_1024",
-        "n_items": 46,
-        "n_scored": 46,
-        "success_ratio": 1.0,
-        "mean_ndcg": 0.5505998194492419,
-        "p50_ms": 92.86740000243299,
-        "p95_ms": 110.01530001522042
-      },
-      "512": {
-        "dim": 512,
-        "collection": "framework_code_v1_mrl_512",
-        "n_items": 46,
-        "n_scored": 46,
-        "success_ratio": 1.0,
-        "mean_ndcg": 0.5034169921712702,
-        "p50_ms": 87.90079999016598,
-        "p95_ms": 110.17530001117848
-      }
-    }
-  },
-  "verdicts": {
-    "1024": {
-      "delta_rel": -0.02468805812839778,
-      "verdict": "MIGRATE",
-      "ndcg": 0.5505998194492419,
-      "baseline": 0.5645371453082517
-    },
-    "512": {
-      "delta_rel": -0.10826595494191675,
-      "verdict": "REJECT",
-      "ndcg": 0.5034169921712702,
-      "baseline": 0.5645371453082517
+    "truncate": {
+      "1024": 24527,
+      "512": 24527
     }
   }
 }
