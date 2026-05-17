@@ -11,6 +11,7 @@
 - [Phase 2 — Paid HTTP hot-path для grader/hallucination_checker](#phase-2--paid-http-hot-path)
 - [Phase 4 — LiteLLM unified gateway](#phase-4--litellm-unified-gateway)
 - [Phase 5 — Eval framework + regression gates](#phase-5--eval-framework--regression-gates)
+- [Phase 6 — §3.2 Contextual Retrieval enable](#phase-6--32-contextual-retrieval-enable)
 - [Cost estimates](#cost-estimates)
 - [Decision tree: когда запустить](#decision-tree-когда-запустить)
 - [Acceptance criteria](#acceptance-criteria)
