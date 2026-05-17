@@ -55,14 +55,16 @@ class FrameworkTEIEmbedder:
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self) -> "FrameworkTEIEmbedder":
+    def __enter__(self) -> FrameworkTEIEmbedder:
         return self
 
-    def __exit__(self, *_exc_info) -> None:
+    def __exit__(self, *_exc_info: object) -> None:
         self.close()
 
     def embed_batch(
-        self, texts: list[str], is_query: bool = False,
+        self,
+        texts: list[str],
+        is_query: bool = False,
     ) -> list[list[float]]:
         if not texts:
             return []
@@ -82,7 +84,7 @@ class FrameworkTEIEmbedder:
             logger.info("FrameworkTEIEmbedder dims=%d", self._dims)
         return out
 
-    @retry(
+    @retry(  # type: ignore[misc]
         stop=stop_after_attempt(4),
         wait=wait_exponential_jitter(initial=2.0, max=30.0, jitter=2.0),
         retry=retry_if_exception_type(
