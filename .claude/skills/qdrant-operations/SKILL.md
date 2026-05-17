@@ -26,9 +26,22 @@ description: "Qdrant Operations — управление коллекциями 
 | `skill_library` | — | 4096d | 80 | Phase 9.1 memory subsystem |
 | `*_4096_backup` (×3) | — | 4096d | varies | rollback snapshots (framework/pdf/wiki) |
 
+**MRL aliases** (post §4.1.6/8/10): `framework_code_v1`, `pdf_documents`, `wiki_pages_v1` — **alias-only**, физический collection с suffix `_mrl_1024`. Client читает имя alias, Qdrant resolve transparently. **CAVEAT:** `delete_collection(alias)` НЕ работает в Qdrant 1.7+ — нужен `resolve_physical_collection()` helper (см. [src/framework_search/indexer.py](../../../src/framework_search/indexer.py)).
+
+**SQ int8 quantization** (post §4.1.12/15): применён ко ВСЕМ 7 production коллекциям. Search default использует int8 + rescore (zero quality loss, 3× speedup). Reverse: `PATCH /collections/{name} {"quantization_config": null}`.
+
+**MRL truncation pattern** для новых индексеров:
+```python
+from src.framework_search.indexer import resolve_collection_dim, maybe_truncate_vectors
+
+target_dim = resolve_collection_dim(client, collection)
+if target_dim and target_dim < embed_dim:  # alias resolved to 1024d collection
+    vectors = maybe_truncate_vectors(vectors, target_dim)  # truncate + L2-renorm
+```
+
 **Не на Qwen3 (исключения):**
-- `visual_grounding` (5 pts × 768d nomic) — defer (low ROI миграция)
-- `skill_library`, `conversation_memory`, `experience_embeddings` (0 pts × 1024d) — Phase 9 candidate (memory hooks на Ollama nomic 768d, требуется alignment всей подсистемы)
+- `visual_grounding` (5 pts × 768d nomic) — defer
+- `conversation_memory`, `experience_embeddings` (0 pts × 1024d legacy E5) — Phase 9 candidate
 
 **Dropped 2026-04-30** (§27 cleanup): `bsl_code_v3` (E5 1024d legacy), `experience_embeddings_e5_legacy`, `learned_patterns_e5_legacy`.
 
