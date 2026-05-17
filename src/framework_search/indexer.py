@@ -113,6 +113,15 @@ def ensure_collection(
         )
 
 
+def resolve_collection_dim(client: QdrantClient, collection: str) -> int | None:
+    """Return target dim of existing collection or None for multi-vector."""
+    info = client.get_collection(collection)
+    cfg = info.config.params.vectors
+    if cfg is None or isinstance(cfg, dict):
+        return None
+    return cfg.size
+
+
 def upsert_chunks(
     client: QdrantClient,
     collection: str,
