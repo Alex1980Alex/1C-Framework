@@ -135,8 +135,11 @@ def main() -> int:
 
     if args.recreate:
         if client.collection_exists(COLLECTION):
-            logger.info("Dropping existing collection %s", COLLECTION)
-            client.delete_collection(COLLECTION)
+            physical = resolve_physical_collection(client, COLLECTION)
+            if physical != COLLECTION:
+                logger.info("'%s' alias->'%s'; recreating physical", COLLECTION, physical)
+            logger.info("Dropping existing collection %s", physical)
+            client.delete_collection(physical)
         logger.info("Creating collection %s (4096d cosine)", COLLECTION)
         client.create_collection(
             collection_name=COLLECTION,
