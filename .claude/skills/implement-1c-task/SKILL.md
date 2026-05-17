@@ -11,7 +11,7 @@ triggers:
   - реализация по ANALYSIS-REPORT
 ---
 
-# Реализация задачи 1С — 8-этапный pipeline (v2)
+# Реализация задачи 1С — 8-этапный pipeline (v2.7)
 
 > **История версий:**
 > - **v2.7.0 (2026-05-11):** интеграция `1c-debug-hmr` в Этап 0 (preflight через `debug_health_check`) и Этап 5 (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки, regression diff через `debug_session_diff` против baseline `prev_session_id` из footer'а IMPLEMENTATION-PROGRESS.md). Capability matrix расширена осью `1c-debug-hmr` с новым режимом **Full (no-BP)** — pipeline работает при отсутствии debug-hmr, BP-verification SKIP. Шаблон IMPLEMENTATION-PROGRESS.md получил блок «Debug session» и footer-маркер `<!-- debug_session_id: <UUID> -->`. Этап 4 актуализирован: переход с `1c-debug` (plain) на `1c-debug-hmr` (default), plain оставлен через `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` для CI. Pre-existing rphost gap покрыт через `force_recycle_rphost=True` (Solution A) для dev и опциональный thin client `/Debug` (Solution C) для shared base. Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 (§3.1+§3.2+§3.3).
@@ -113,7 +113,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 | `debug_session_diff` | Этап 5.y: regression diff против baseline `prev_session_id` из footer'а PROGRESS |
 | `debug_disconnect` | Этап 5.x: clean teardown (опционально — HMR session переживает reload) |
 
-**Когда применять:** в режиме **Full** — по умолчанию для BP-verification всех `[ADDED]`/`[MODIFIED]` точек (Этап 5.x). В режиме **Full (no-BP)** — SKIP с пометкой. См. [16.7 Autonomous Debug Workflow](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) §16.7.10 для setup и [36.7 HMR Subprocess Wrapper](../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md) для HMR-специфики. Skill: [1c-debug-hmr](../1c-debug-hmr/SKILL.md).
+**Когда применять:** в режиме **Full** — по умолчанию для BP-verification всех `[ADDED]`/`[MODIFIED]` точек (Этап 5.x). В режиме **Full (no-BP)** — SKIP с пометкой. См. [16.7 Autonomous Debug Workflow](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) §16.7.10 для setup и [36.7 HMR Subprocess Wrapper](../../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md) для HMR-специфики. Skill: [1c-debug-hmr](../1c-debug-hmr/SKILL.md).
 
 ### Вспомогательные
 
@@ -525,6 +525,8 @@ a. `mcp__1c-debug-hmr__debug_break_on_next` → повторить тригге�
 b. Если и `break_on_next` не сработал — **pre-existing rphost gap** (см. roadmap 260508 §10/§11). В dev-среде: `force_recycle_rphost=True` в `debug_connect` — перезапустит rphost, новый процесс получит BP на свежем cold-start (Solution A). В shared base: НЕ recycle (другие пользователи), вместо этого использовать thin client `/Debug` (Solution C, см. 36.7) — оператор открывает Конфигуратор, начинает отладку, BP fire'нет на следующем сценарии.
 c. Если оба fallback'а не сработали — BP-verification помечается SKIP в IMPLEMENTATION-PROGRESS с описанием попыток; **pipeline блокируется** перед переходом на Этап 6, требуется ручная диагностика через `scripts/smoke_test_debug_pipeline.py --probe-only --json`.
 
+**Timeout для user-in-the-loop ветки (Solution C, shared base):** если выбран путь «оператор открывает Конфигуратор и запускает отладку вручную», пipelin'у нужен явный таймаут ожидания (default **15 минут** от начала Solution C wait'а). По истечении — BP-verification помечается `SKIP (user-action timeout, N minutes)` в IMPLEMENTATION-PROGRESS, pipeline продолжает на Этап 6 с warning'ом, что fix не валидирован live-trace'ом. Без таймаута pipeline зависает индефинитно при недоступном операторе. Cleanup: при abort'е/timeout'е Этапа 5.x — **обязательно** вызвать `debug_step(action="Continue")` для всех pending BP, иначе rphost остаётся в pause-state и блокирует следующие сессии (try/finally pattern).
+
 **Success criterion Этапа 5:** ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (либо SKIP с обоснованной причиной). Если хотя бы одна точка не покрыта без причины — **блокировать переход на Этап 6** с error «BP coverage incomplete: N of M MODIFIED points unverified».
 
 **Логирование в IMPLEMENTATION-PROGRESS.md** (для каждой точки):
@@ -577,6 +579,14 @@ EDT-MCP `write_module_source` правит **исходники** проекта
      → инкрементальное обновление; полное (fullUpdate=true) — если меняется структура хранения
    ```
    Примечание: `update_database` модифицирует live-инфобазу — это **shared-state action** (CLAUDE.md). Если в инфобазе работают другие пользователи или это production — ОСТАНОВИТЬСЯ и спросить у пользователя.
+
+   **Программный gate (вместо LLM-judgment):** перед `update_database` обязательно проверить число активных подключений:
+   ```
+   EDT-MCP: get_applications(projectName)
+     → если len(applications) > 1 (есть подключения помимо текущей сессии Claude) —
+       HARD-STOP, явно показать список подключений и запросить подтверждение пользователя.
+   ```
+   Это убирает зависимость от того, «вспомнит» ли LLM о shared-state риске. Без программного gate можно случайно ребилднуть БД при работающих коллегах.
 
    **Ручной путь (когда `update_database` отсутствует или нужна ручная проверка):**
    - Сообщить пользователю: «Обнови конфигурацию БД через EDT (Project → Update Database) или через Конфигуратор (F7 → Обновить конфигурацию базы данных). После обновления скажи 'готово'.»
@@ -769,6 +779,15 @@ test -d "configuration/.git" && echo "АНОМАЛИЯ: level 2 имеет св�
 
 Шаг 3 — `git status` в main: типичный `m configuration/<TaskFolder>` или `m ИБTransportManagementDevelop/Конфигурация` (lowercase `m` = submodule modified content) — **нормально**, ожидается перед bump'ом gitlink'а. А вот `M ИБTransportManagementDevelop` (uppercase, без `/Конфигурация`) — **аномалия**: значит внутри level-2 директории появились трекаемые main'ом файлы вне зарегистрированного submodule. Не bump'ить, разобраться сначала.
 
+**⚠ Windows + Cyrillic submodule paths (`ИБTransportManagementDevelop/Конфигурация`):** по умолчанию `core.quotepath=true`, и git выводит кириллицу как octal-escape (`"\320\230\320\221..."`). Это ломает парсинг `git status --porcelain` в скриптах и затрудняет визуальную проверку. CLAUDE.md запрещает `git config` (включая локальный), поэтому решение — **per-command override**:
+
+```bash
+git -c core.quotepath=false status --short
+git -c core.quotepath=false ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
+```
+
+Эти `-c core.quotepath=false` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Без флага кириллические пути нечитаемы. См. memory `git-porcelain-parsing` для деталей парсинга.
+
 ---
 
 ## ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА
@@ -912,6 +931,14 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 ```
 
 Альтернатива — обернуть код в локальную функцию через `Выполнить()`-обёртку, но это усложняет отладку. По умолчанию использовать `Если/Иначе`.
+
+**⚠ Caveat: side-effects между early-exit точками.** Workaround `Если/Иначе` корректен **только для чистых early returns** (вычислили значение и вышли). Если между точками возможного `Возврат` есть side-effects (`Сообщить()`, `Лог()`, INSERT в базу, изменение глобального состояния) — переписывание ломает порядок исполнения: оригинал делал `Возврат` ДО side-effect'а нижних веток, а `Если/Иначе` исполнит side-effect'ы в неправильной ветке или не исполнит вовсе. В таком случае — НЕ применять `Если/Иначе`-workaround, а:
+
+1. **Извлечь логику в named procedure** конфигурации (с настоящим `Возврат`)
+2. Из `execute_code` вызвать эту процедуру (`Результат = ИмяОбщегоМодуля.ИмяПроцедуры(Параметры);`)
+3. Side-effects сохраняют порядок, отладка через стандартные средства 1С
+
+Это чище, чем `Выполнить()`-обёртка, и не страдает от parser limitation `execute_code`.
 
 ### Когда workaround'ы недостаточны
 

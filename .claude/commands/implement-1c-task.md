@@ -1,6 +1,67 @@
+---
+description: Реализация задачи 1С по готовому ANALYSIS-REPORT.md через 8-этапный pipeline (EDT-MCP + 1c-mcp-crud + bsl-debug-server + 1c-debug-hmr). Запускать ПОСЛЕ /analyze-1c-task. Вариант W (write-heavy bounded scope).
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - mcp__edt-mcp__list_projects
+  - mcp__edt-mcp__list_modules
+  - mcp__edt-mcp__get_module_structure
+  - mcp__edt-mcp__read_method_source
+  - mcp__edt-mcp__read_module_source
+  - mcp__edt-mcp__write_module_source
+  - mcp__edt-mcp__validate_query
+  - mcp__edt-mcp__get_project_errors
+  - mcp__edt-mcp__find_references
+  - mcp__edt-mcp__get_content_assist
+  - mcp__edt-mcp__search_in_code
+  - mcp__edt-mcp__get_symbol_info
+  - mcp__edt-mcp__get_applications
+  - mcp__edt-mcp__update_database
+  - mcp__edt-mcp__get_metadata_details
+  - mcp__1c-mcp-crud__get_metadata
+  - mcp__1c-mcp-crud__execute_query
+  - mcp__1c-mcp-crud__execute_code
+  - mcp__1c-mcp-crud__get_object_by_link
+  - mcp__1c-mcp-crud__find_references_to_object
+  - mcp__bsl-debugger__bsl_analyze
+  - mcp__bsl-debugger__bsl_execute
+  - mcp__bsl-debugger__bsl_debug_start
+  - mcp__bsl-debugger__bsl_debug_step
+  - mcp__bsl-debugger__bsl_debug_variables
+  - mcp__bsl-debugger__bsl_debug_stop
+  - mcp__bsl-semantic-search__bsl_search
+  - mcp__bsl-semantic-search__bsl_hybrid_search
+  - mcp__bsl-semantic-search__bsl_call_graph
+  - mcp__bsl-semantic-search__bsl_object_info
+  - mcp__bsl-semantic-search__bsl_coding_context
+  - mcp__bsl-semantic-search__bsl_rename_symbol
+  - mcp__bsl-code-search__find_callers
+  - mcp__bsl-code-search__get_module_ast
+  - mcp__bsl-platform-context__search
+  - mcp__bsl-platform-context__getMember
+  - mcp__bsl-platform-context__getMembers
+  - mcp__1c-debug-hmr__debug_health_check
+  - mcp__1c-debug-hmr__debug_connect
+  - mcp__1c-debug-hmr__debug_disconnect
+  - mcp__1c-debug-hmr__debug_set_breakpoint
+  - mcp__1c-debug-hmr__debug_get_breakpoints
+  - mcp__1c-debug-hmr__debug_break_on_next
+  - mcp__1c-debug-hmr__debug_ping
+  - mcp__1c-debug-hmr__debug_stack_trace
+  - mcp__1c-debug-hmr__debug_variables
+  - mcp__1c-debug-hmr__debug_evaluate
+  - mcp__1c-debug-hmr__debug_step
+  - mcp__1c-debug-hmr__debug_session_summary
+  - mcp__1c-debug-hmr__debug_session_diff
+---
+
 # Реализация задачи 1С
 
-Выполни реализацию задачи по конфигурации 1С, используя **skill implement-1c-task** (8-этапный pipeline v2).
+Выполни реализацию задачи по конфигурации 1С, используя **skill implement-1c-task** (8-этапный pipeline v2.7).
 
 ## Задача от пользователя:
 $ARGUMENTS
@@ -20,7 +81,7 @@ Skill определяет:
 
 > **История версий скилла:** v2.7.0 (2026-05-11) — интеграция `1c-debug-hmr` в Этап 0 (`debug_health_check`) и Этап 5.x (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки + regression diff Этапа 5.y через `debug_session_diff`). Footer IMPLEMENTATION-PROGRESS.md получил маркер `<!-- debug_session_id: <UUID> -->` для baseline. Источник: [roadmap 260510](../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md). v2.3.0 (2026-05-05) — Этап 0 Preflight + fallback Этапа 1 через `bsl-semantic-search` / `bsl-code-search` / `Read` когда `edt-mcp` отсутствует. v2.1.1 (2026-04-14) — откат Этапа 0 «Активация Serena» после [углублённого аудита](../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md).
 
-### 3 MCP-сервера — обязательное использование
+### Основные MCP-серверы — обязательное использование (4 шт.)
 
 #### EDT-MCP — чтение и запись кода
 - `list_projects` → имя проекта (ПЕРВЫМ)
