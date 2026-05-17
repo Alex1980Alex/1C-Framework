@@ -2765,7 +2765,10 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "2d77a490-2f71-55f7-9e34-5379991ab1e7",
+        "1e436882-1e41-55e4-93b4-ef2dc6d5512e"
+      ]
     },
     {
       "id": "gv1-155",
@@ -2795,7 +2798,9 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "0002a2cf-24c1-5207-a1cb-55260d058fd3"
+      ]
     },
     {
       "id": "gv1-157",
@@ -2810,7 +2815,10 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "dae158dc-7975-5da7-98ba-3e8f7f3268ad",
+        "394c6152-f46c-54a2-84d5-b02c5d836386"
+      ]
     },
     {
       "id": "gv1-158",
@@ -2825,7 +2833,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "f58c3cef-ac24-5575-b456-b7f63faeaddb",
+        "78ecb150-c1ae-5aa7-9c1f-9a352dbdda1d",
+        "ae4ff42d-12dc-5861-a7e9-fa3f316cd711"
+      ]
     },
     {
       "id": "gv1-159",
@@ -2840,7 +2852,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "207587f5-b01c-5dc9-8dbb-134283b51c6f",
+        "497818cb-f2c1-5dbe-a2d0-c6732f153148",
+        "50d630b6-11bc-54d2-9d3c-81efcba7c58c"
+      ]
     },
     {
       "id": "gv1-160",
@@ -2885,7 +2901,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "6b693fd4-2f0e-5b1c-9dad-14b8fd955047",
+        "870a969d-4e4a-5631-9fa9-8dd09a2c25b6",
+        "9769e632-4e51-518f-8060-8363febfec87"
+      ]
     },
     {
       "id": "gv1-163",
@@ -2900,7 +2920,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "b35bda71-d9ea-5478-b796-38a5048f7a25",
+        "5ae96f6d-a773-5ab4-921c-fc8829e3533f",
+        "22c8fa82-a048-5323-8dc4-b0b8f5aef98a"
+      ]
     },
     {
       "id": "gv1-164",
@@ -2915,7 +2939,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "9d2ef9cf-23d3-5533-87cc-a1ded0302cea",
+        "9847e935-1d71-5e21-a195-687c35f61f3c",
+        "a1dd824b-36e8-59ca-aa77-83ef0c668ae4"
+      ]
     },
     {
       "id": "gv1-165",
@@ -2930,7 +2958,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "d72e9731-ac82-52dc-b563-a13aee68e3f9",
+        "1a149fd7-ff0e-57ef-8a69-c70a62f086c8",
+        "888a824d-28b6-5257-8a61-108b88d37099"
+      ]
     },
     {
       "id": "gv1-166",
@@ -2945,7 +2977,10 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "d07fb051-e081-5859-8737-1191c9346ee8",
+        "198173c6-13e4-5dcf-b652-5cf7e476f08c"
+      ]
     },
     {
       "id": "gv1-167",
@@ -2960,7 +2995,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "49373938-d0a7-5333-95a8-6841a1fa41a4",
+        "5e349d77-c3d2-5a27-8f70-dd5c1f259de4",
+        "949f3dc1-fb3a-5ccc-8b71-439a3430227f"
+      ]
     },
     {
       "id": "gv1-168",
@@ -2975,7 +3014,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "68c0658b-47d1-5198-8e81-81bfeb6bb337",
+        "b23dba27-e393-55c5-b5a5-448eb58dd253",
+        "871a42d2-9781-516c-b1e4-b6653bc5e5cf"
+      ]
     },
     {
       "id": "gv1-169",
@@ -2990,7 +3033,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "89feeadd-3f42-5602-a879-9416865ed204",
+        "4fc49e76-3dac-504d-8c97-1f0044e884c2",
+        "ad8b43b1-b79d-580a-b297-7c2531f67a77"
+      ]
     },
     {
       "id": "gv1-170",
@@ -3005,7 +3052,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "f15fdb91-47de-50dc-9b19-a080a5bdd835",
+        "b5a42c67-f60d-586f-8f1b-3178ec7ae667",
+        "df73870c-c997-5870-9cbb-ce40d8cf3d1f"
+      ]
     },
     {
       "id": "gv1-171",
@@ -3020,7 +3071,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "8d57d3f0-3b86-5204-8e01-c431bcdcf4a7",
+        "c9d3e82c-3443-5cca-91db-32598bbb4bd7",
+        "ce04134e-5bea-576e-9b1b-c0f9a25c67ee"
+      ]
     },
     {
       "id": "gv1-172",
@@ -3035,7 +3090,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "a7a84ee7-2450-5f94-8ef0-4e5cfb3d37fb",
+        "df3ea477-577e-54d1-b152-83526f0f0481",
+        "1582d791-7e30-5e1d-a4aa-4f6f8f7dabfb"
+      ]
     },
     {
       "id": "gv1-173",
@@ -3050,7 +3109,11 @@
       ],
       "expected_answer_summary": "",
       "target_collection": "graph_embeddings",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "28846f1d-5b4b-5cca-a6de-e7e48c8606c5",
+        "2421d4cd-81c2-58bf-b784-8132783eb793",
+        "21183569-6244-5a9f-9c6f-df8a5a9f68ca"
+      ]
     }
   ],
   "stats": {

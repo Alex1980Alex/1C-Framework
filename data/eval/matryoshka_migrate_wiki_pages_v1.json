@@ -1,0 +1,51 @@
+{
+  "source": "wiki_pages_v1",
+  "stages": {
+    "evaluate": {
+      "4096": {
+        "dim": 4096,
+        "collection": "wiki_pages_v1",
+        "n_items": 16,
+        "n_scored": 16,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.7166841865848061,
+        "p50_ms": 62.00360000366345,
+        "p95_ms": 78.76440000836737
+      },
+      "1024": {
+        "dim": 1024,
+        "collection": "wiki_pages_v1_mrl_1024",
+        "n_items": 16,
+        "n_scored": 16,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.7141554231715065,
+        "p50_ms": 68.06379999034107,
+        "p95_ms": 102.16380000929348
+      },
+      "512": {
+        "dim": 512,
+        "collection": "wiki_pages_v1_mrl_512",
+        "n_items": 16,
+        "n_scored": 16,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.7595055798462292,
+        "p50_ms": 93.92320000915788,
+        "p95_ms": 106.30910002510063
+      }
+    }
+  },
+  "verdicts": {
+    "1024": {
+      "delta_rel": -0.003528420831147263,
+      "verdict": "MIGRATE",
+      "ndcg": 0.7141554231715065,
+      "baseline": 0.7166841865848061
+    },
+    "512": {
+      "delta_rel": 0.059749320639372,
+      "verdict": "MIGRATE",
+      "ndcg": 0.7595055798462292,
+      "baseline": 0.7166841865848061
+    }
+  }
+}
