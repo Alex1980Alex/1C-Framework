@@ -9,11 +9,10 @@ updated: 2026-05-11
 tags: [1c, analysis, bsl, configuration, methodology, semantic-search, autoresearch, three-agent, 1c-debug-hmr]
 ultrathink: true
 commands:
-  - /analyze-1c-task-v2
-  - /analyze-1c-task:research
+  - /analyze-1c-task
 ---
 
-# Анализ задачи 1С — 5-фазная методология (v3.0)
+# Анализ задачи 1С — 5-фазная методология (v4.2)
 
 ## Overview
 
@@ -21,7 +20,7 @@ Skill для комплексного анализа задачи по конф�
 На входе — ТЗ (описание задачи). На выходе — ANALYSIS-REPORT.md с пронумерованными
 точками модификации, готовый для передачи в implement-1c-task.
 
-**Улучшения v2 (D:С-Framework):**
+**Улучшения v2 (C:\1С-Framework):**
 - Семантический поиск по 3,900+ BSL-модулям (bsl-semantic-search)
 - Поиск в индексированной документации 1С:8.3.27 (pdf-vector-graph)
 - API платформы 1С (bsl-platform-context) — типы, методы, свойства
@@ -50,6 +49,27 @@ Skill для комплексного анализа задачи по конф�
 - Output: новая секция «3.Y Runtime Trace» в ANALYSIS-REPORT.md с Entry / Stack-JSON / Variables snapshot / Branch evaluation / **Discrepancies** (static vs runtime — load-bearing для Фазы 4)
 - Без флага `--trace` и без self-decision триггера — фаза SKIP, время не растёт
 - Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 2 (§4.1+§4.2)
+
+## Permission scope (Вариант C — read-only анализатор)
+
+**Skill оперирует в режиме read-only + единичный write выходного отчёта.**
+
+Разрешено:
+
+- MCP-инструменты для чтения (`bsl_search`, `bsl_hybrid_search`, `bsl_call_graph`, `bsl_impact_analysis`, `bsl_object_info`, `get_metadata`, `validate_query`, `find_references_to_object`, `pdf-vector-graph`, `bsl-platform-context`)
+- `Read` / `Glob` / `Grep` — чтение исходников конфигурации и поиск по файлам
+- `Write` — **исключительно для `ANALYSIS-REPORT.md`** (других файлов не создавать)
+- `1c-debug-hmr` инструменты для опциональной Фазы 2.5
+- `execute_query` (1c-mcp-crud) — read-only SELECT для верификации данных
+- `memory-orchestrator__route_and_save` — сохранение анализа в память
+
+Запрещено по дизайну (не входит в `allowed-tools`):
+
+- `Edit` — модификация существующих файлов конфигурации. Если выявлены правки кода — фиксируются в `ANALYSIS-REPORT.md` как точки модификации, применяются через `/implement-1c-task`.
+- `Bash` — исполнение shell-команд. Вся исполняемая логика — через MCP. Если нужен fallback для GraphRAG — использовать MCP `bsl_search`/`bsl_hybrid_search` (см. таблицу типов запросов ниже).
+- `execute_code` (1c-mcp-crud INSERT/UPDATE/DELETE) — никаких побочных эффектов в живой базе.
+
+Цель: предотвратить scope-creep от «опиши изменения» к «внеси изменения». Применение правок — отдельная фаза (`/implement-1c-task`), которая запрашивает свои права явно.
 
 ## ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА АНАЛИЗА
 
@@ -123,7 +143,7 @@ Skill для комплексного анализа задачи по конф�
 7. **Step через критические ветвления** — `debug_step(action="Step")` на КАЖДОЙ runtime-развилке (если), capture state ДО и ПОСЛЕ перехода. Цель — построить actual control flow graph без догадок.
 8. `mcp__1c-debug-hmr__debug_step(action="Continue")` — release rphost, дать сценарию завершиться. ОБЯЗАТЕЛЬНО даже при abort'е trace'а (иначе rphost висит в pause-state).
 
-**Output:** новая секция «3.x Runtime Trace» в ANALYSIS-REPORT.md (см. шаблон ниже).
+**Output:** новая секция «3.Y Runtime Trace» в ANALYSIS-REPORT.md (см. шаблон ниже; `3.Y` — плейсхолдер для следующего свободного подраздела после `3.X Найденные паттерны`).
 
 **Discrepancies — главная ценность фазы.** Если runtime показал branch, который static reading предсказал по-другому — это load-bearing finding для Фазы 3. Каждый discrepancy:
 - ссылка на строку BSL (модуль:строка)
@@ -234,17 +254,9 @@ Skill для комплексного анализа задачи по конф�
 - **bsl-platform-context** — API платформы 1С
 - **Grep/Glob** — поиск файлов и паттернов
 
-### GraphRAG router (fallback)
+### GraphRAG query taxonomy (через MCP)
 
-Если `bsl-semantic-search` MCP недоступен или нужны типы запросов вне его покрытия — используй встроенный GraphRAG router (`src/bsl/semantic_search/hybrid_router.py` + `scripts/bench_graphrag_e2e.py`). 8 типов запросов с auto-classification, P50 82ms, 12/12 (100%) на max-complexity тестах.
-
-**Вызов** (прямой Python из Bash):
-
-```python
-from src.bsl.semantic_search.hybrid_router import hybrid_search
-from scripts.bench_graphrag_e2e import make_vector_fn, make_graph_fn, make_community_fn, embed_query
-# wire backends (Qdrant + Neo4j) и hybrid_search(query, k=10) → результаты с метаданными
-```
+Под капотом `bsl-semantic-search` MCP стоит GraphRAG router (`src/bsl/semantic_search/hybrid_router.py`, 8 типов запросов, auto-classification, P50 82ms, 12/12 на max-complexity тестах). Skill этот router НЕ дёргает напрямую (`Bash`/Python из тела skill'а запрещены — см. Permission scope), но таксономия типов полезна для понимания, **какой MCP-вызов делать для какой задачи**:
 
 **8 типов и куда применять в фазах анализа:**
 
@@ -261,10 +273,11 @@ from scripts.bench_graphrag_e2e import make_vector_fn, make_graph_fn, make_commu
 
 **Module disambiguation** — extract_target автоматически отделяет module_hint (`гкс_Взвешивание`) от symbol (`СформироватьДвижения`). Для запросов про конкретный документ это даёт laser-focused результаты вместо ambiguous match.
 
-**Когда использовать GraphRAG router vs MCP-tools:**
-- MCP `bsl_search` / `bsl_hybrid_search` — стандартный путь, доступен в production
-- GraphRAG router — когда MCP падает, или нужны типы `topology` / `negative_pattern` / `community` overview, не покрытые MCP
-- Оба используют одни бэкенды (Qdrant `bsl_code_v4_late` + Neo4j) — результаты совместимы
+**Стандартный путь — только MCP:**
+
+- `bsl_search` / `bsl_hybrid_search` покрывает большинство типов запросов из таблицы выше.
+- Для `topology` / `negative_pattern` / `community` overview, не покрытых MCP напрямую — построить запрос как комбинацию `bsl_search` + `bsl_call_graph` + `bsl_impact_analysis`, а не лезть в hybrid_router из Bash.
+- Если действительно нужен прямой Python-вызов router'а (вне `/analyze-1c-task` scope) — выйти из skill'а, запустить в режиме с расширенными правами, вернуться с результатом.
 
 Подробности: [`docs/roadmap/260502_ROADMAP_GRAPHRAG_BSL_COMPLEX_QUERIES.md`](../../../docs/roadmap/260502_ROADMAP_GRAPHRAG_BSL_COMPLEX_QUERIES.md), benchmark — [`tmp/phase6_e2e_results.json`](../../../tmp/phase6_e2e_results.json).
 

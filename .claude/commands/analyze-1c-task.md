@@ -1,6 +1,10 @@
 ---
 description: Комплексный 5-фазный анализ задачи 1С:Предприятие через skill `analyze-1c-task-v2`. Создаёт ANALYSIS-REPORT.md с пронумерованными точками модификации для последующего /implement-1c-task. Поддерживает флаг `--trace` для опциональной Фазы 2.5 Runtime Trace (live BP-trace через 1c-debug-hmr).
 allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Write
   - mcp__bsl-semantic-search__bsl_search
   - mcp__bsl-semantic-search__bsl_hybrid_search
   - mcp__bsl-semantic-search__bsl_call_graph
