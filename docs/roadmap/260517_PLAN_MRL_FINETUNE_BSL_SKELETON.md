@@ -1,6 +1,8 @@
 # §4.1.13 — MRL Fine-tune Qwen3 на BSL (Plan, Research-Only Skeleton)
 
-> **Статус:** SKELETON ONLY (2026-05-17). Scripts написаны как skeleton без actual training. Real implementation требует существенного compute investment.
+> **Статус:** SKELETON ONLY (2026-05-17), **DEFERRED** под master roadmap
+> **Master plan:** [`260517_ROADMAP_GPU_TRAINING_DEFERRED.md`](260517_ROADMAP_GPU_TRAINING_DEFERRED.md) — consolidates all GPU-training tasks с decision tree
+> Scripts написаны как skeleton без actual training. Real implementation требует существенного compute investment.
 
 ## Why
 
