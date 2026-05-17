@@ -126,6 +126,13 @@ def resolve_collection_dim(client: QdrantClient, collection: str) -> int | None:
     return cfg.size
 
 
+def _mrl_truncate(v: list[float], target_dim: int) -> list[float]:
+    """Truncate + L2-renorm one vector (helper for maybe_truncate_vectors)."""
+    arr = np.asarray(v[:target_dim], dtype=np.float32)
+    norm = float(np.linalg.norm(arr))
+    return (arr / norm).tolist() if norm > 0 else arr.tolist()
+
+
 def upsert_chunks(
     client: QdrantClient,
     collection: str,
