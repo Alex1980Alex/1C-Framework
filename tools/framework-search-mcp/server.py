@@ -62,6 +62,7 @@ _state: dict = {
     "collection": DEFAULT_COLLECTION,
     "qdrant_url": DEFAULT_QDRANT_URL,
     "tei_url": DEFAULT_TEI_URL,
+    "target_dim": None,  # cached: collection's vector dim (1024 for MRL alias)
 }
 
 
