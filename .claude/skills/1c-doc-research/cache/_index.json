@@ -100,6 +100,14 @@
       "keywords": ["ОткрытьФорму", "ФормаЗаписи", "регистр сведений", "независимый регистр", "ЗначенияЗаполнения", "Ключ", "РегистрСведенийКлючЗаписи", "fillFromFillingValue", "ЗаполнятьИзДанныхЗаполнения", "ОбработкаЗаполнения", "новая запись регистра", "предзаполнение измерения", "форма записи РС"],
       "sources": ["forum.infostart.ru/forum9/topic49943", "forum.infostart.ru/forum9/topic106921", "forum.infostart.ru/forum9/topic196832", "forum.infostart.ru/forum9/topic311008", "forum.infostart.ru/forum9/topic220980", "capitally.ru/kak-otkryt-zapolnennoj-novuyu-zapis-registra-svedenij", "capitally.ru/klyuch-zapisi-registra-svedenij-dlya-otkrytiya-ee-formy", "about1c.ru/how-open-inforeg-form", "its.1c.ru/metod8dev/i8104148", "its.1c.ru/metod8dev/i8102486", "v8.1c.ru/obuchenie-programmistov/primery-razrabotki/forma", "fastcode.im/БСП/ОткрытьФормуЗаписиРегистраСведенийПоОтбору", "github.com/1C-Company/ssl-support", "github.com/Oxotka/TemplatesNewObject1C"]
     },
+    "webinst-supported-web-servers": {
+      "title": "webinst — публикация ИБ на веб-сервере: поддерживаемые web-серверы (IIS / Apache), отсутствие встроенного",
+      "file": "webinst-supported-web-servers.md",
+      "created": "2026-05-18",
+      "last_verified": "2026-05-18",
+      "keywords": ["webinst", "webinst.exe", "публикация информационной базы", "веб-сервер 1С", "встроенный веб-сервер 1С", "IIS", "Apache", "apache2", "apache22", "apache24", "wsdir", "VirtualDir", "vrd", "default.vrd", "веб-клиент", "HTTP-сервис", "Web-сервис", "osauth", "ragent http", "DebuggerURL"],
+      "sources": ["платформа 8.3.27.1936 локальный webinst.exe", "its.1c.ru/db/v8316doc TI000000194", "its.1c.ru/db/v838doc TI000000194", "master1c8.ru gl-17", "dmosk.ru apache-windows-1c", "interface31.ru 2023/05 apache windows ssl", "efsol.ru/manuals/web-1c", "forum.mista.ru topic 786848", "1chelp.net razvertyvanie-iis", "maxiplace.ru veb-publikaciya-1s", "interface31.livejournal.com/80469"]
+    },
     "rdbg-pre-existing-rphost-workarounds": {
       "title": "RDBG pre-existing rphost — three sanctioned workarounds (force-recycle / preflight gate / pre-launch thin client) для mcp_debug_server.py wrapper",
       "file": "rdbg-pre-existing-rphost-workarounds.md",
