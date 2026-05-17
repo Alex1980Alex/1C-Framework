@@ -310,3 +310,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: tech-research, create-hook, claude-code-github-actions, code-verify
 - Files changed: 0
 - Summary: Session 2026-05-16. Skills: tech-research, create-hook, claude-code-github-actions, code-verify. Commit: chore: auto-save task_master.py. Commit: chore: auto-save task_master.py. Commit: chore: auto-save CLAUDE.md
+
+## 2026-05-17 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: qdrant-operations, evaluation-benchmark
+- Files changed: 6
+- Summary: Session 2026-05-17. Skills: qdrant-operations, evaluation-benchmark. Changed 6 files in data/eval, scripts/_eval_common.py, scripts/ground_golden_v1.py, scripts/matryoshka_migrate.py, src/shared. Commit: feat(eval): close §4.1.5 — Matryoshka MIGRATE verdict for framework_code_v1. Commit: chore: auto-commit mcp-server.log.2026-05-10.0.gz, Конфигурация. Commit: fix(ground): Phase 3 review fixes — async retrieval + batch resilience
+

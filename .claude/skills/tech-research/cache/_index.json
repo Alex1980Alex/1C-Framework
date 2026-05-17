@@ -12,6 +12,30 @@
   ],
   "last_updated": "2026-05-16",
   "topics": {
+    "multi-vector-detection-and-failure-gates-2026": {
+      "file": "multi-vector-detection-and-failure-gates-2026.md",
+      "domain": "tools",
+      "category": "tool",
+      "created": "2026-05-17",
+      "last_verified": "2026-05-17",
+      "version": "qdrant-client 1.13+, pytest 8.4+, Python 3.11+",
+      "keywords": [
+        "qdrant",
+        "multi-vector",
+        "named-vectors",
+        "vectors_config",
+        "isinstance-dict",
+        "failure-ratio-gate",
+        "eval-abort-threshold",
+        "shared-constants",
+        "_common-module",
+        "DRY",
+        "dict-deterministic-key",
+        "alphabetical-sort",
+        "type-hints",
+        "log-cadence"
+      ]
+    },
     "claude-code-subprocess-wrappers": {
       "file": "claude-code-subprocess-wrappers.md",
       "domain": "tools",

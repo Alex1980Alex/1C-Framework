@@ -40,14 +40,10 @@ if str(_REPO_ROOT) not in sys.path:
 from qdrant_client import QdrantClient  # noqa: E402
 
 GOLDEN_PATH = _REPO_ROOT / "data" / "eval" / "golden_v1.json"
-TEI_URL = "http://localhost:8080/embed"
-QDRANT_URL = "http://localhost:6333"
 DEFAULT_COLLECTION = "framework_code_v1"
 TOP_K = 15
-QUERY_PREFIX = (
-    "Instruct: Given a web search query, retrieve relevant passages that "
-    "answer the query\nQuery: "
-)
+# Shared constants — see scripts/_eval_common.py (roadmap 260516 review fix)
+from _eval_common import QDRANT_URL, QUERY_PREFIX, TEI_URL  # noqa: E402,F401
 
 _RELEVANCE_SYSTEM = (
     "Output JSON only. No markdown. No prose. No code fences. No file links. "
@@ -102,12 +98,7 @@ def _format_candidate(idx: int, point: Any) -> str:
     # bsl_code_v4* uses module_path / name / line_start.
     path = p.get("relative_path") or p.get("module_path") or "?"
     line = p.get("line_start", "?")
-    name = (
-        p.get("symbol_name")
-        or p.get("name")
-        or p.get("chunk_type")
-        or "module"
-    )
+    name = p.get("symbol_name") or p.get("name") or p.get("chunk_type") or "module"
     content = (p.get("content") or "").strip().replace("\n", " ")
     if len(content) > 240:
         content = content[:240] + "…"
@@ -158,9 +149,7 @@ async def _judge(item: dict, points: list[Any]) -> list[int]:
     """
     from src.shared.benchmark_llm import benchmark_llm_call
 
-    candidates_block = "\n\n".join(
-        _format_candidate(i + 1, pt) for i, pt in enumerate(points)
-    )
+    candidates_block = "\n\n".join(_format_candidate(i + 1, pt) for i, pt in enumerate(points))
     user = _RELEVANCE_USER_TPL.format(
         query=item["query"],
         keywords=", ".join(item.get("expected_keywords") or []),
@@ -204,9 +193,7 @@ async def _process_item(
     """
     iid = item.get("id", "?")
     try:
-        points = await asyncio.to_thread(
-            _retrieve, item["query"], http, qclient, collection
-        )
+        points = await asyncio.to_thread(_retrieve, item["query"], http, qclient, collection)
         if not points:
             return iid, "WARN", [], 0, "no Qdrant results"
         async with sem:
@@ -259,9 +246,7 @@ async def _run(args: argparse.Namespace) -> int:
     pending_since_save = 0
     with httpx.Client() as http:
         t_batch = time.time()
-        tasks = [
-            _process_item(item, collection, http, qclient, sem) for item in work
-        ]
+        tasks = [_process_item(item, collection, http, qclient, sem) for item in work]
         # return_exceptions=True: unhandled exceptions become items in the
         # result list instead of aborting the batch. Combined with broad
         # except in _process_item, this gives full batch resilience.
@@ -271,8 +256,10 @@ async def _run(args: argparse.Namespace) -> int:
             if isinstance(result, BaseException):
                 # Should not happen given _process_item's broad except, but
                 # belt-and-suspenders against future changes.
-                print(f"[FAIL] {item.get('id','?')}: "
-                      f"{type(result).__name__}: {result}", flush=True)
+                print(
+                    f"[FAIL] {item.get('id','?')}: " f"{type(result).__name__}: {result}",
+                    flush=True,
+                )
                 failed += 1
                 continue
             iid, tag, chunk_ids, n_pts, err = result
@@ -333,17 +320,17 @@ def main() -> int:
         type=int,
         default=3,
         help="Parallel LLM judge calls (default 3 — conservative). "
-             "Roadmap 260516 Phase 3. Increase to 5-10 for faster batch on "
-             "stable network; reduce to 1 if hitting rate limits. Adaptive "
-             "throttling in LLMRotationService further halves on errors.",
+        "Roadmap 260516 Phase 3. Increase to 5-10 for faster batch on "
+        "stable network; reduce to 1 if hitting rate limits. Adaptive "
+        "throttling in LLMRotationService further halves on errors.",
     )
     p.add_argument(
         "--save-every",
         type=int,
         default=10,
         help="Persist golden_v1.json every N successfully-grounded items "
-             "(default 10). Mid-batch crash loses ≤N items of progress. "
-             "Set 1 to save after each item (slower IO).",
+        "(default 10). Mid-batch crash loses ≤N items of progress. "
+        "Set 1 to save after each item (slower IO).",
     )
     args = p.parse_args()
 

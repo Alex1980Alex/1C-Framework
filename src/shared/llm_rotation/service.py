@@ -9,7 +9,6 @@ import asyncio
 import json as _json
 import logging
 import os
-import shutil
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -247,6 +246,7 @@ class LLMRotationService:
         from src.shared.llm_rotation.adaptive_concurrency import (
             AdaptiveConcurrencyController,
         )
+
         self._adaptive_concurrency = AdaptiveConcurrencyController()
         # Load persisted state
         if self._settings.persist_adaptive:
@@ -506,13 +506,12 @@ class LLMRotationService:
             )
         except ImportError as e:
             raise RuntimeError(
-                "claude-agent-sdk not installed. "
-                "pip install -e \".[llm-rotation]\""
+                "claude-agent-sdk not installed. " 'pip install -e ".[llm-rotation]"'
             ) from e
 
         # Optional error types — older SDK versions may lack them.
         try:
-            from claude_agent_sdk import CLINotFoundError, ClaudeSDKError
+            from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
         except ImportError:
             CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment,misc]
 
@@ -554,10 +553,8 @@ class LLMRotationService:
 
         try:
             await asyncio.wait_for(_collect(), timeout=effective_timeout)
-        except asyncio.TimeoutError as e:
-            raise RuntimeError(
-                f"claude-agent-sdk timed out after {effective_timeout}s"
-            ) from e
+        except TimeoutError as e:
+            raise RuntimeError(f"claude-agent-sdk timed out after {effective_timeout}s") from e
         except CLINotFoundError as e:
             raise RuntimeError(f"claude CLI not found: {e}") from e
         except ClaudeSDKError as e:
@@ -569,7 +566,8 @@ class LLMRotationService:
             if partial:
                 logger.warning(
                     "[claude-cli] SDK exception after partial text (%d chars): %s",
-                    len(partial), e,
+                    len(partial),
+                    e,
                 )
                 result_content = partial
             else:
@@ -582,9 +580,7 @@ class LLMRotationService:
 
         # SDK gives no exact token count to caller. Estimate: 4 chars/token.
         # Used by adaptive scorer; not load-bearing (subscription = flat-rate).
-        approx_prompt_tokens = max(
-            1, (len(prompt) + len(system_prompt or "")) // 4
-        )
+        approx_prompt_tokens = max(1, (len(prompt) + len(system_prompt or "")) // 4)
         approx_completion_tokens = max(1, len(text) // 4)
 
         return {
@@ -876,6 +872,25 @@ class LLMRotationService:
         )
         raise RuntimeError(f"All providers failed after {total_attempts} attempts. Tried: {tried}")
 
+    def _record_error_with_signal(
+        self,
+        state: "ProviderState",
+        error_msg: str,
+        cooldown_seconds: int,
+        rate_limit_cooldown: int,
+    ) -> None:
+        """Wrap ProviderState.record_error + emit adaptive signal if CB just opened.
+
+        Phase 3 hardening (roadmap 260516): EventType Literal declared cb_opened
+        but it was never recorded. Now: detect CB transition CLOSED/HALF_OPEN -> OPEN
+        and emit signal to AdaptiveConcurrencyController for ÷2 reduction.
+        """
+        cb_was_open = state.circuit_breaker.state == CircuitState.OPEN
+        state.record_error(error_msg, cooldown_seconds, rate_limit_cooldown)
+        cb_now_open = state.circuit_breaker.state == CircuitState.OPEN
+        if cb_now_open and not cb_was_open:
+            self._adaptive_concurrency.record_event(state.config.name, "cb_opened")
+
     async def batch_complete(
         self,
         prompts: list[str],
@@ -916,9 +931,7 @@ class LLMRotationService:
 
         # Resolve concurrency cap. If caller didn't override, ask the adaptive
         # controller for current value of the resolved target provider.
-        resolved_provider = (
-            preferred_provider or self._settings.primary_provider
-        )
+        resolved_provider = preferred_provider or self._settings.primary_provider
         effective_concurrency = (
             concurrency
             if concurrency is not None
@@ -930,7 +943,9 @@ class LLMRotationService:
 
         logger.info(
             "[BATCH] %d prompts, concurrency=%d, target=%s",
-            len(prompts), effective_concurrency, resolved_provider,
+            len(prompts),
+            effective_concurrency,
+            resolved_provider,
         )
 
         async def _one(p: str) -> dict[str, Any]:
@@ -956,13 +971,9 @@ class LLMRotationService:
                     # Classify error → adaptive signal.
                     err_str = str(e).lower()
                     if "429" in err_str or "rate limit" in err_str:
-                        self._adaptive_concurrency.record_event(
-                            resolved_provider, "http_429"
-                        )
+                        self._adaptive_concurrency.record_event(resolved_provider, "http_429")
                     elif "529" in err_str or "5xx" in err_str or "500" in err_str:
-                        self._adaptive_concurrency.record_event(
-                            resolved_provider, "http_5xx"
-                        )
+                        self._adaptive_concurrency.record_event(resolved_provider, "http_5xx")
                     # CB-open signal handled at error-recording site in
                     # ProviderState.record_error; not double-counted here.
                     raise
@@ -977,7 +988,9 @@ class LLMRotationService:
         n_fail = len(results) - n_ok
         logger.info(
             "[BATCH] done: %d/%d ok (%.0f%%), %d failed, concurrency now=%d",
-            n_ok, len(prompts), (n_ok / len(prompts)) * 100 if prompts else 0,
+            n_ok,
+            len(prompts),
+            (n_ok / len(prompts)) * 100 if prompts else 0,
             n_fail,
             self._adaptive_concurrency.get_concurrency(resolved_provider),
         )
