@@ -1,9 +1,9 @@
 {
-  "version": "v2.2",
+  "version": "v2.3",
   "created": "2026-05-09",
   "updated": "2026-05-17",
   "schema_version": 1,
-  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass). v2.2 — +20 BSL-domain queries for §4.1.7 re-bench (2026-05-17).",
+  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass). v2.2 — +20 BSL-domain queries for §4.1.7 re-bench (2026-05-17). v2.3 — +20 PDF-domain queries for §4.1.8 (2026-05-17).",
   "description": "Golden evaluation dataset for hybrid retrieval + RAG quality benchmarks. Each item has a query, expected ground-truth chunk_ids (in pdf_documents collection), expected answer keywords (loose check), and difficulty label.",
   "fields": {
     "id": "stable identifier (gv1-NNN)",
@@ -1708,6 +1708,315 @@
         "1195e7ac-9d28-5883-888b-40ecbcfda1f8",
         "ffd8fa70-9c07-50e8-8df1-6f80d748fc43"
       ]
+    },
+    {
+      "id": "gv1-094",
+      "query": "Что такое справочник в 1С Предприятие?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Справочник",
+        "элемент",
+        "наименование",
+        "код"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-095",
+      "query": "Какие виды документов бывают в 1С и как они проводятся?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Документ",
+        "проведение",
+        "регистратор",
+        "Дата"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-096",
+      "query": "Чем регистр сведений отличается от регистра накопления?",
+      "difficulty": "easy",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "РегистрНакопления",
+        "Период",
+        "Оборот"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-097",
+      "query": "Для чего используются перечисления (Enumerations) в 1С?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Перечисление",
+        "значение",
+        "статус"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-098",
+      "query": "Что такое обработка (Data Processor) в 1С?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Обработка",
+        "форма",
+        "функция"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-099",
+      "query": "Что такое отчёт в 1С и как он строится?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Отчёт",
+        "СхемаКомпоновкиДанных",
+        "ВыводОтчета"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-100",
+      "query": "Что такое общий модуль и для чего он нужен?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбщийМодуль",
+        "Экспорт",
+        "ВызовСервера"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-101",
+      "query": "Какие виды форм существуют в 1С 8.3?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Форма",
+        "УправляемаяФорма",
+        "ФормаЭлемента",
+        "ФормаСписка"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-102",
+      "query": "Как работают периодические регистры сведений?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Периодический",
+        "Период",
+        "СрезПоследних",
+        "СрезПервых"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-103",
+      "query": "Что такое подчинённый справочник и какие у него ограничения?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Подчинённый",
+        "Владелец",
+        "иерархия"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-104",
+      "query": "Чем план счетов отличается от плана видов характеристик?",
+      "difficulty": "medium",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланСчетов",
+        "ПланВидовХарактеристик",
+        "Субконто"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-105",
+      "query": "Как используются бизнес-процессы и задачи в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "БизнесПроцесс",
+        "Задача",
+        "ТочкаМаршрута",
+        "адресация"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-106",
+      "query": "Что такое регламентное задание и как настроить расписание?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегламентноеЗадание",
+        "Расписание",
+        "ОбщийМодуль"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-107",
+      "query": "Как работают команды на управляемой форме?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Команда",
+        "форма",
+        "обработчик"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-108",
+      "query": "Какие свойства имеет реквизит документа?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Реквизит",
+        "ТипЗначения",
+        "Длина",
+        "Точность"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-109",
+      "query": "Что такое подписка на событие и когда её использовать?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПодпискаНаСобытие",
+        "Источник",
+        "Обработчик"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-110",
+      "query": "В чём принципиальная разница между регистром бухгалтерии и регистром расчёта?",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрБухгалтерии",
+        "РегистрРасчёта",
+        "проводка",
+        "вытеснение"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-111",
+      "query": "Когда нужен план видов расчёта и как он связан с регистром расчёта?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланВидовРасчёта",
+        "ВытесняющиеВидыРасчёта",
+        "БазовыеВидыРасчёта"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-112",
+      "query": "Какие табличные части могут быть у справочника и зачем?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ТабличнаяЧасть",
+        "Справочник",
+        "Реквизит"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-113",
+      "query": "Как реализуется иерархия групп и элементов у справочника?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Иерархия",
+        "ЭтоГруппа",
+        "Родитель",
+        "ИерархияГруппИЭлементов"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
     }
   ],
   "stats": {
