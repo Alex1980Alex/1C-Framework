@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Iterable
 
+import numpy as np
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
