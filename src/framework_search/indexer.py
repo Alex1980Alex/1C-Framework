@@ -105,6 +105,59 @@ def resolve_physical_collection(client: QdrantClient, name: str) -> str:
     return name
 
 
+def recreate_collection_preserving_alias(
+    client: QdrantClient,
+    name: str,
+    dims: int,
+    *,
+    distance: models.Distance = models.Distance.COSINE,
+) -> str:
+    """Atomically recreate a collection while preserving its alias.
+
+    Performs four steps:
+      1. Resolve physical collection name (detect if `name` is an alias).
+      2. Drop the physical collection (this also wipes the alias mapping).
+      3. Create a new collection with the specified dimensions and distance.
+      4. If `name` was an alias, restore the alias mapping to the new physical.
+
+    Returns the physical collection name (== `name` for non-aliased collections).
+
+    Precondition: collection or alias must exist (caller verifies via
+    `client.collection_exists(name)`). For a dangling alias (alias mapping
+    pointing to a deleted physical), step 2 will raise — use `ensure_collection`
+    instead, which falls through to creation when `collection_exists` is False.
+    """
+    physical = resolve_physical_collection(client, name)
+    was_alias = physical != name
+
+    if was_alias:
+        logger.info("indexer: '%s' is alias -> '%s'; recreating physical", name, physical)
+
+    logger.info("indexer: dropping collection %s for recreation", physical)
+    client.delete_collection(physical)
+
+    logger.info("indexer: creating collection %s (dims=%d %s)", physical, dims, distance.value)
+    client.create_collection(
+        collection_name=physical,
+        vectors_config=models.VectorParams(size=dims, distance=distance),
+    )
+
+    if was_alias:
+        logger.info("indexer: restoring alias '%s' -> '%s'", name, physical)
+        client.update_collection_aliases(
+            change_aliases_operations=[
+                models.CreateAliasOperation(
+                    create_alias=models.CreateAlias(
+                        collection_name=physical,
+                        alias_name=name,
+                    ),
+                ),
+            ],
+        )
+
+    return physical
+
+
 def ensure_collection(
     client: QdrantClient,
     collection: str,
@@ -113,43 +166,25 @@ def ensure_collection(
 ) -> None:
     """Create collection if missing; drop+create if recreate=True.
 
-    Alias-aware: if `collection` is an alias, recreate operates on the
-    underlying physical collection and re-establishes the alias afterwards
-    (qdrant_client.delete_collection wipes the alias along with the data).
+    Alias-aware via `recreate_collection_preserving_alias`: if `collection`
+    is an alias, recreate operates on the underlying physical and restores
+    the alias afterwards. For a dangling alias (alias listed in get_aliases
+    but physical missing), `collection_exists` returns False and the fresh
+    create path is taken under the resolved physical name.
     """
     exists = client.collection_exists(collection)
-    alias_name: str | None = None
-    physical_name = collection
 
     if exists and recreate:
-        physical_name = resolve_physical_collection(client, collection)
-        if physical_name != collection:
-            alias_name = collection
-            logger.info(
-                "indexer: '%s' is alias -> '%s'; recreating physical", alias_name, physical_name
-            )
-        logger.info("indexer: dropping collection %s for recreation", physical_name)
-        client.delete_collection(physical_name)
-        exists = False
+        recreate_collection_preserving_alias(client, collection, dims)
+        return
 
     if not exists:
-        logger.info("indexer: creating collection %s (dims=%d cosine)", physical_name, dims)
+        physical = resolve_physical_collection(client, collection)
+        logger.info("indexer: creating collection %s (dims=%d cosine)", physical, dims)
         client.create_collection(
-            collection_name=physical_name,
+            collection_name=physical,
             vectors_config=models.VectorParams(size=dims, distance=models.Distance.COSINE),
         )
-        if alias_name:
-            logger.info("indexer: restoring alias '%s' -> '%s'", alias_name, physical_name)
-            client.update_collection_aliases(
-                change_aliases_operations=[
-                    models.CreateAliasOperation(
-                        create_alias=models.CreateAlias(
-                            collection_name=physical_name,
-                            alias_name=alias_name,
-                        ),
-                    ),
-                ],
-            )
 
 
 def resolve_collection_dim(client: QdrantClient, collection: str) -> int | None:

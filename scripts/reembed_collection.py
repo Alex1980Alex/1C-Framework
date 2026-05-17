@@ -36,6 +36,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.framework_search.embedder import FrameworkTEIEmbedder  # noqa: E402
 from src.framework_search.indexer import (  # noqa: E402
     maybe_truncate_vectors,
+    recreate_collection_preserving_alias,
     resolve_collection_dim,
     resolve_physical_collection,
 )
@@ -128,15 +129,11 @@ def main() -> int:
     if args.dry_run:
         return 0
 
-    # Recreate at target dim. If collection is an alias (e.g. wiki_pages_v1
-    # after §4.1.10 swap), resolve to underlying physical name and preserve
-    # its existing dim instead of forcing args.target_dim.
-    physical = resolve_physical_collection(client, args.collection)
-    was_alias = physical != args.collection
-    if was_alias:
-        logger.info("'%s' is alias -> '%s'; will recreate physical", args.collection, physical)
-
-    existing_dim = resolve_collection_dim(client, physical)
+    # Recreate at target dim. If `args.collection` is an alias (e.g.
+    # wiki_pages_v1 after §4.1.10 swap), resolve to physical and preserve its
+    # existing dim instead of forcing args.target_dim.
+    physical_pre = resolve_physical_collection(client, args.collection)
+    existing_dim = resolve_collection_dim(client, physical_pre)
     effective_dim = existing_dim if existing_dim is not None else args.target_dim
     if existing_dim is not None and effective_dim != args.target_dim:
         logger.warning(
@@ -145,28 +142,8 @@ def main() -> int:
             args.target_dim,
         )
 
-    logger.info("Dropping %s and recreating at %dd cosine", physical, effective_dim)
-    client.delete_collection(physical)
-    client.create_collection(
-        collection_name=physical,
-        vectors_config=models.VectorParams(
-            size=effective_dim,
-            distance=models.Distance.COSINE,
-        ),
-    )
-    if was_alias:
-        # delete_collection wiped the alias along with the data — restore it.
-        logger.info("restoring alias '%s' -> '%s'", args.collection, physical)
-        client.update_collection_aliases(
-            change_aliases_operations=[
-                models.CreateAliasOperation(
-                    create_alias=models.CreateAlias(
-                        collection_name=physical,
-                        alias_name=args.collection,
-                    ),
-                ),
-            ],
-        )
+    # Delegate the 4-step alias-aware recreate (resolve → drop → create → restore alias).
+    recreate_collection_preserving_alias(client, args.collection, effective_dim)
 
     # Truncate long texts before embedding (TEI MAX_INPUT_LENGTH=4096 tokens ≈ 16k chars).
     for r in rows:

@@ -34,6 +34,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.framework_search.embedder import FrameworkTEIEmbedder  # noqa: E402
 from src.framework_search.indexer import (  # noqa: E402
     maybe_truncate_vectors,
+    recreate_collection_preserving_alias,
     resolve_collection_dim,
     resolve_physical_collection,
 )
@@ -138,31 +139,16 @@ def main() -> int:
     client = QdrantClient(url=args.qdrant_url)
 
     if args.recreate:
-        physical = COLLECTION
-        was_alias = False
         if client.collection_exists(COLLECTION):
+            # Atomic 4-step alias-aware recreate (resolve → drop → create → restore alias).
+            recreate_collection_preserving_alias(client, COLLECTION, 4096)
+        else:
+            # Fresh create: resolve to handle dangling-alias edge case.
             physical = resolve_physical_collection(client, COLLECTION)
-            was_alias = physical != COLLECTION
-            if was_alias:
-                logger.info("'%s' alias->'%s'; recreating physical", COLLECTION, physical)
-            logger.info("Dropping existing collection %s", physical)
-            client.delete_collection(physical)
-        logger.info("Creating collection %s (4096d cosine)", physical)
-        client.create_collection(
-            collection_name=physical,
-            vectors_config=models.VectorParams(size=4096, distance=models.Distance.COSINE),
-        )
-        if was_alias:
-            logger.info("restoring alias '%s' -> '%s'", COLLECTION, physical)
-            client.update_collection_aliases(
-                change_aliases_operations=[
-                    models.CreateAliasOperation(
-                        create_alias=models.CreateAlias(
-                            collection_name=physical,
-                            alias_name=COLLECTION,
-                        ),
-                    ),
-                ],
+            logger.info("Creating collection %s (4096d cosine)", physical)
+            client.create_collection(
+                collection_name=physical,
+                vectors_config=models.VectorParams(size=4096, distance=models.Distance.COSINE),
             )
     elif not client.collection_exists(COLLECTION):
         logger.error("Collection %s missing and --recreate not given", COLLECTION)

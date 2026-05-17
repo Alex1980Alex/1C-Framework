@@ -84,7 +84,7 @@ class FrameworkTEIEmbedder:
             logger.info("FrameworkTEIEmbedder dims=%d", self._dims)
         return out
 
-    @retry(  # type: ignore[misc]
+    @retry(  # type: ignore[misc,unused-ignore]
         stop=stop_after_attempt(4),
         wait=wait_exponential_jitter(initial=2.0, max=30.0, jitter=2.0),
         retry=retry_if_exception_type(
