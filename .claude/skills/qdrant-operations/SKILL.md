@@ -12,19 +12,19 @@ description: "Qdrant Operations — управление коллекциями 
 
 ## Архитектура коллекции
 
-**Phase 8 production layout (после switchover 2026-04-30, см. roadmap §26-§28):**
+**Phase 8 production layout (после MRL/SQ optimization 2026-05-17 §4.1.6-15):**
 
-7 коллекций на **Qwen3-Embedding-8B 4096d cosine**, single dense vector (no sparse), через TEI Docker:
-
-| Коллекция | Points | Назначение |
-|-----------|--------|------------|
-| `bsl_code_v4_late` | 24 455 | **Production BSL retrieval** (Late Chunking pooling) |
-| `bsl_code_v4` | 24 455 | Research baseline (std pooling) |
-| `framework_code_v1` | 21 242 | Self-search фреймворка (см. §25) |
-| `pdf_documents` | 830 | PDF RAG (Глава 5 1С Документация) |
-| `wiki_pages_v1` | 3 073 | Wiki entities |
-| `graph_embeddings` | 6 694 | KG entities |
-| `learned_patterns` | 44 | Learning hooks |
+| Имя (alias-aware) | Physical | Dim | Points | Optimization |
+|---|---|---|---|---|
+| `framework_code_v1` | `*_mrl_1024` | **1024d** | 25 147 | MRL + SQ int8 (16× RAM compression) |
+| `pdf_documents` | `*_mrl_1024` | **1024d** | 830 | MRL + SQ int8 |
+| `wiki_pages_v1` | `*_mrl_1024` | **1024d** | 3 073 | MRL + SQ int8 |
+| `bsl_code_v4_late` | — | 4096d | **54 800** | SQ int8 only (MRL REJECT) |
+| `bsl_code_v4` | — | 4096d | 24 455 | SQ int8 only |
+| `graph_embeddings` | — | 4096d | **36 590** | SQ int8 only |
+| `learned_patterns` | — | 4096d | 44 | none (too small) |
+| `skill_library` | — | 4096d | 80 | Phase 9.1 memory subsystem |
+| `*_4096_backup` (×3) | — | 4096d | varies | rollback snapshots (framework/pdf/wiki) |
 
 **Не на Qwen3 (исключения):**
 - `visual_grounding` (5 pts × 768d nomic) — defer (low ROI миграция)
