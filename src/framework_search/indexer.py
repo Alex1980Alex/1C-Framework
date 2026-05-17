@@ -227,9 +227,11 @@ def run_index(
         first = embedder.embed_batch([chunks[0].content])
         dims = len(first[0])
         ensure_collection(client, collection, dims=dims, recreate=recreate)
+        target_dim = resolve_collection_dim(client, collection)
+        truncate = target_dim is not None and target_dim < dims
+        if truncate:
+            logger.info("indexer: MRL truncation %dd -> %dd active", dims, target_dim)
 
-        # Re-index the first chunk together with the rest in batches; we keep `first`
-        # for the very first point only when batch_size==1; otherwise re-embed.
         all_vectors: list[list[float]] = []
         for s in range(0, len(chunks), batch_size):
             batch = chunks[s : s + batch_size]
