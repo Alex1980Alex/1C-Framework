@@ -93,6 +93,18 @@ def collect_chunks(
     return chunks, stats
 
 
+def resolve_physical_collection(client: QdrantClient, name: str) -> str:
+    """If `name` is an alias, return underlying physical collection name."""
+    try:
+        aliases = client.get_aliases().aliases
+    except Exception:
+        return name
+    for a in aliases:
+        if a.alias_name == name:
+            return a.collection_name
+    return name
+
+
 def ensure_collection(
     client: QdrantClient,
     collection: str,
