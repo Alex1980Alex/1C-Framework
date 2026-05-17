@@ -41,7 +41,11 @@ from src.framework_search.config import (  # noqa: E402
 )
 from src.framework_search.embedder import FrameworkTEIEmbedder  # noqa: E402
 from src.framework_search.file_walker import iter_indexable_files  # noqa: E402
-from src.framework_search.indexer import run_index  # noqa: E402
+from src.framework_search.indexer import (  # noqa: E402
+    maybe_truncate_vectors,
+    resolve_collection_dim,
+    run_index,
+)
 
 logger = logging.getLogger("framework-search-mcp")
 
