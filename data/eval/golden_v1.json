@@ -1360,7 +1360,11 @@
       ],
       "expected_answer_summary": "РегистрНакопления хранит обороты/остатки; Документ.Движения.РегистрНакопления.<имя> читает/пишет движения.",
       "target_collection": "bsl_code_v4_late",
-      "expected_chunk_ids": []
+      "expected_chunk_ids": [
+        "cdd8c138-3d33-5c28-86c4-01dc43327bb8",
+        "ed5ef153-cc2a-597c-8d13-c12b49f16551",
+        "d364e007-615c-5a29-8788-682bbd6d688d"
+      ]
     },
     {
       "id": "gv1-075",
