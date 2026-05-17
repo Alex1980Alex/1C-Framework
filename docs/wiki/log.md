@@ -25,6 +25,7 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 **Event:** Hermes Ф5 (Sandbox) и Ф6 (OAuth) closed in two sprints
 
 ### Ф5 (Sandbox) — все 4 deliverables
+
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
 - F3 skill `sandbox-execution` + log entry (this one)
@@ -319,3 +320,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 6
 - Summary: Session 2026-05-17. Skills: qdrant-operations, evaluation-benchmark. Changed 6 files in data/eval, scripts/_eval_common.py, scripts/ground_golden_v1.py, scripts/matryoshka_migrate.py, src/shared. Commit: feat(eval): close §4.1.5 — Matryoshka MIGRATE verdict for framework_code_v1. Commit: chore: auto-commit mcp-server.log.2026-05-10.0.gz, Конфигурация. Commit: fix(ground): Phase 3 review fixes — async retrieval + batch resilience
 
+
+## 2026-05-18 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: qdrant-operations, framework-search, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-05-18. Skills: qdrant-operations, framework-search, evaluation-benchmark, code-verify. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: chore(framework-search): cosmetic cleanup from reviewer recommendations. Commit: refactor(framework-search): extract recreate_collection_preserving_alias helper. Commit: docs(31.4 + 03.2): note M1+M2 alias-aware ensure_collection + RAPTOR embedder cache
