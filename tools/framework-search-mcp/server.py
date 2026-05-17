@@ -239,7 +239,7 @@ def find_similar(file_path: str, k: int = 5) -> dict:
     if not content.strip():
         return {"error": "file is empty", "results": []}
 
-    qv = _embedder().embed_batch([content], is_query=False)[0]
+    qv = _query_vec(content, is_query=False)
 
     points = _client().query_points(
         collection_name=_state["collection"],
