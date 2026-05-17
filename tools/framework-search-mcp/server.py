@@ -78,6 +78,20 @@ def _embedder() -> FrameworkTEIEmbedder:
     return _state["embedder"]
 
 
+def _query_vec(text: str, is_query: bool = True) -> list[float]:
+    """Embed + truncate to collection dim (handles MRL-truncated aliases)."""
+    qv = _embedder().embed_batch([text], is_query=is_query)[0]
+    if _state["target_dim"] is None:
+        try:
+            _state["target_dim"] = resolve_collection_dim(_client(), _state["collection"])
+        except Exception:
+            _state["target_dim"] = len(qv)
+    td = _state["target_dim"]
+    if td and td < len(qv):
+        qv = maybe_truncate_vectors([qv], td)[0]
+    return qv
+
+
 def _scan_stale_files() -> list[str]:
     """Return repo-relative paths whose on-disk mtime > indexed mtime.
 
@@ -170,7 +184,7 @@ def search_code(
     k = max(1, min(int(k), 20))
     reindexed = _maybe_lazy_check()
 
-    qv = _embedder().embed_batch([query], is_query=True)[0]
+    qv = _query_vec(query, is_query=True)
 
     must: list = []
     if language:
