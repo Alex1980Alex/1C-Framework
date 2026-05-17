@@ -86,10 +86,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Reindex pdf_documents to Qwen3 4096d")
     ap.add_argument("--qdrant-url", default="http://localhost:6333")
     ap.add_argument("--tei-url", default="http://localhost:8080")
-    ap.add_argument("--recreate", action="store_true",
-                    help="Drop and recreate collection (REQUIRED for dim change E5 1024d -> Qwen3 4096d)")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="Extract+chunk only, no embed/upsert")
+    ap.add_argument(
+        "--recreate",
+        action="store_true",
+        help="Drop and recreate collection (REQUIRED for dim change E5 1024d -> Qwen3 4096d)",
+    )
+    ap.add_argument("--dry-run", action="store_true", help="Extract+chunk only, no embed/upsert")
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
@@ -115,17 +117,19 @@ def main() -> int:
         for page_num, text in pages:
             for ci, piece in enumerate(chunk_page(text)):
                 sha1 = hashlib.sha1(piece.encode("utf-8", errors="ignore")).hexdigest()
-                chunks.append({
-                    "id": make_point_id(rel, page_num, ci, sha1),
-                    "content": piece,
-                    "payload": {
-                        "source": rel,
-                        "page": page_num,
-                        "chunk_index": ci,
-                        "sha1": sha1,
+                chunks.append(
+                    {
+                        "id": make_point_id(rel, page_num, ci, sha1),
                         "content": piece,
-                    },
-                })
+                        "payload": {
+                            "source": rel,
+                            "page": page_num,
+                            "chunk_index": ci,
+                            "sha1": sha1,
+                            "content": piece,
+                        },
+                    }
+                )
 
     logger.info("Total chunks: %d", len(chunks))
     if args.dry_run or not chunks:
@@ -150,11 +154,17 @@ def main() -> int:
         return 1
 
     t0 = time.time()
+    target_dim = resolve_collection_dim(client, COLLECTION)
+    truncate = target_dim is not None and target_dim < 4096
+    if truncate:
+        logger.info("MRL truncation 4096d -> %dd active", target_dim)
     with FrameworkTEIEmbedder(base_url=args.tei_url) as embedder:
         for s in range(0, len(chunks), args.batch_size):
             batch = chunks[s : s + args.batch_size]
             texts = [c["content"] for c in batch]
             vectors = embedder.embed_batch(texts, is_query=False)
+            if truncate:
+                vectors = maybe_truncate_vectors(vectors, target_dim)  # type: ignore[arg-type]
             points = [
                 models.PointStruct(id=c["id"], vector=v, payload=c["payload"])
                 for c, v in zip(batch, vectors)
@@ -165,7 +175,9 @@ def main() -> int:
     dt = time.time() - t0
     logger.info("Done. %d chunks in %.1fs", len(chunks), dt)
     info = client.get_collection(COLLECTION)
-    logger.info("Final collection: %d points × %dd", info.points_count, info.config.params.vectors.size)
+    logger.info(
+        "Final collection: %d points × %dd", info.points_count, info.config.params.vectors.size
+    )
     return 0
 
 
