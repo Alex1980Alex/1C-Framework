@@ -487,3 +487,31 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 | Блокировка без причины | Claude не понимает что делать | Всегда указывать `reason` в `block()` |
 | Относительные пути в settings.json | Не находит python.exe | Абсолютные: `D:\\1С-Framework\\.venv\\Scripts\\python.exe` |
 | Тяжёлые вычисления в хуке | Timeout (3-5s) | Хуки должны быть лёгкими (keyword matching, file read) |
+
+
+## Незадокументированные hook
+
+- `audit-coverage-check` (.claude\hooks\audit-coverage-check.py)
+- `auto-git-save-prompt` (.claude\hooks\auto-git-save-prompt.py)
+- `bsl-tool-router` (.claude\hooks\bsl-tool-router.py)
+- `code-review-enforcer` (.claude\hooks\code-review-enforcer.py)
+- `delegation-outcome-stop` (.claude\hooks\delegation-outcome-stop.py)
+- `delegation-outcome-tracker` (.claude\hooks\delegation-outcome-tracker.py)
+- `implement-1c-task-smoke-stop-alert` (.claude\hooks\implement-1c-task-smoke-stop-alert.py)
+- `logging-status-banner` (.claude\hooks\logging-status-banner.py)
+- `mcp-invocation-logger` (.claude\hooks\mcp-invocation-logger.py)
+- `posttooluse-auto-git-save` (.claude\hooks\posttooluse-auto-git-save.py)
+- `posttooluse-bash-errors` (.claude\hooks\posttooluse-bash-errors.py)
+- `posttooluse-skill-metrics` (.claude\hooks\posttooluse-skill-metrics.py)
+- `session-context-enforcer` (.claude\hooks\session-context-enforcer.py)
+- `session-mypy-banner` (.claude\hooks\session-mypy-banner.py)
+- `skill-eval-enforcer-shell` (.claude\hooks\skill-eval-enforcer-shell.py)
+- `skill-eval-enforcer` (.claude\hooks\skill-eval-enforcer.py)
+- `skill-quality-monitor` (.claude\hooks\skill-quality-monitor.py)
+- `slash-command-tracker` (.claude\hooks\slash-command-tracker.py)
+- `submodule-status-check` (.claude\hooks\submodule-status-check.py)
+- `task-protocol-enforcer` (.claude\hooks\task-protocol-enforcer.py)
+- `task-protocol-observer` (.claude\hooks\task-protocol-observer.py)
+- `todo-sync` (.claude\hooks\todo-sync.py)
+- `z-ai-delegation-enforcer` (.claude\hooks\z-ai-delegation-enforcer.py)
+- `z-ai-write-guard` (.claude\hooks\z-ai-write-guard.py)
