@@ -133,6 +133,8 @@ class RAPTORTreeBuilder:
         self._summarization_model = summarization_model
         self._api_key = api_key
         self._base_url = base_url
+        # Lazy-init shared TEI embedder; one HTTP client across many cluster summaries.
+        self._embedder: "FrameworkTEIEmbedder | None" = None
 
     async def build(
         self,
@@ -350,16 +352,27 @@ Summary:"""
 
         Fixed 2026-05-17 §4.2: previously SHA256 hash stub (384d random vector
         → KMeans clusters were noise). Now uses real semantic space.
+        Embedder is cached on the builder to avoid per-call HTTP client setup.
         """
         import asyncio
 
         from src.framework_search.embedder import FrameworkTEIEmbedder
 
-        def _embed_sync():
-            with FrameworkTEIEmbedder() as e:
-                return e.embed_batch([text], is_query=False)[0]
+        if self._embedder is None:
+            self._embedder = FrameworkTEIEmbedder()
+
+        embedder = self._embedder
+
+        def _embed_sync() -> list[float]:
+            return embedder.embed_batch([text], is_query=False)[0]
 
         return await asyncio.to_thread(_embed_sync)
+
+    def close(self) -> None:
+        """Release cached embedder's HTTP client. Safe to call multiple times."""
+        if self._embedder is not None:
+            self._embedder.close()
+            self._embedder = None
 
 
 # Global RAPTOR tree builder instance
