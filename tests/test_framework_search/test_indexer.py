@@ -39,11 +39,15 @@ def _make_chunk(rel: str = "src/foo.py", content: str = "x = 1") -> Chunk:
     )
 
 
-def _make_client(exists: bool = False) -> MagicMock:
+def _make_client(exists: bool = False, collection_dim: int = 4096) -> MagicMock:
     c = MagicMock()
     c.collection_exists.return_value = exists
     c.upsert.return_value = MagicMock(status="completed")
     c.delete.return_value = MagicMock(status="completed")
+    info = MagicMock()
+    info.config.params.vectors = MagicMock(size=collection_dim)
+    c.get_collection.return_value = info
+    c.get_aliases.return_value = MagicMock(aliases=[])
     return c
 
 
