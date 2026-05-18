@@ -89,7 +89,8 @@ class QdrantVectorStore(BaseVectorStore):
             try:
                 aliases = await self._client.get_aliases()
                 alias_names = {a.alias_name for a in aliases.aliases}
-            except Exception as exc:  # старые клиенты/серверы без get_aliases
+            except AttributeError as exc:
+                # старые qdrant-client без get_aliases() — деградируем тихо
                 logger.debug("[QDRANT] get_aliases() unavailable: %s", exc)
                 alias_names = set()
 
