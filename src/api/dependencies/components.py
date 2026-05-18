@@ -1,5 +1,8 @@
 """FastAPI dependency injection for framework components."""
 
+import logging
+import time
+
 from src.pdf_framework.agents.memory.conversation import ConversationMemory
 from src.pdf_framework.config import Settings, get_settings
 from src.pdf_framework.embeddings import get_embedding_engine
