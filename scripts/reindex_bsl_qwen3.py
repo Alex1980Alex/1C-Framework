@@ -938,6 +938,7 @@ def flush_batch(
     chunks: list[BSLChunk],
     dual_vector: bool = False,
     pooling_mode: str = "standard",
+    region_aware: bool = True,
 ) -> int:
     """Embed and upsert a batch. Returns count of successfully upserted points.
 
@@ -950,11 +951,14 @@ def flush_batch(
     passage embedding through `_embed_chunks_late` (full-document forward
     + per-chunk mean-pool). Module-path embeddings stay on `embed_batch`
     because they're standalone strings without a parent context.
+
+    Phase 3 of roadmap 260518: `region_aware` toggles `(module_path, region)`
+    grouping vs the legacy `module_path` grouping in `_embed_chunks_late`.
     """
     texts = [c.content for c in chunks]
     try:
         if pooling_mode == "late-chunking":
-            vectors = _embed_chunks_late(embedder, chunks)
+            vectors = _embed_chunks_late(embedder, chunks, region_aware=region_aware)
         else:
             vectors = embedder.embed_batch(texts, is_query=False)
 
