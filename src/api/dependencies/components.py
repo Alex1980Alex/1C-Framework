@@ -275,6 +275,7 @@ class Components:
                 settings=self.settings.two_stage,
             )
             self.search_manager.register_strategy("two_stage", two_stage)
+            _step("TwoStagePipeline (+CrossEncoder/FlashRank)")
 
         # Phase 34: DSPy Optimizer
         self.dspy_optimizer = None
