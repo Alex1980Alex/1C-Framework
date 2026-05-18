@@ -44,6 +44,10 @@ def _configure_logging() -> None:
     logger.addHandler(file_handler)
     logger.addHandler(stderr_handler)
     logger.propagate = False
+    root = logging.getLogger()
+    if root.level == logging.WARNING or root.level == 0:
+        root.setLevel(logging.INFO)
+    root.addHandler(file_handler)
 
 
 async def _get_components() -> Components:
