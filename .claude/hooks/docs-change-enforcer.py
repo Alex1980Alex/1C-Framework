@@ -127,6 +127,9 @@ CODE_TO_DOMAIN = [
     ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/api/auth/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),  # IDOR in 09.2
+    # Dependency injection bundle (shared by REST API, MCP server, CLI).
+    # Components() lifecycle + lazy-init lives here; documented alongside API.
+    ("src/api/dependencies/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
     ("src/mcp_server/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
