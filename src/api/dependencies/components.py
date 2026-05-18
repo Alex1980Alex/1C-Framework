@@ -157,6 +157,7 @@ class Components:
         self.search_manager.register_strategy("graph", graph_strategy)
         self.search_manager.register_strategy("hybrid", hybrid_strategy)
         self.search_manager.register_strategy("mmr", mmr_strategy)
+        _step("strategies: vector/graph/hybrid/mmr/bm25")
 
         # Phase 6: GraphRAG strategies
         graphrag_local = GraphRAGLocalStrategy(
