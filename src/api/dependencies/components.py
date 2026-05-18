@@ -177,6 +177,7 @@ class Components:
         )
         self.search_manager.register_strategy("graphrag_local", graphrag_local)
         self.search_manager.register_strategy("graphrag_global", graphrag_global)
+        _step("strategies: graphrag_local/global")
 
         # Phase 38: LightRAG entity embeddings + strategy
         self.entity_embeddings = None
