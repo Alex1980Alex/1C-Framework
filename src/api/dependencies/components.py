@@ -293,6 +293,7 @@ class Components:
                 base_url=self.settings.agent.base_url,
                 model=self.settings.optimization.model,
             )
+            _step("DSPyOptimizer (Phase 34)")
 
         # Phase 32: Collection Store + Document Registry
         from src.pdf_framework.knowledge_base.collection_store import CollectionStore
@@ -304,6 +305,7 @@ class Components:
         self.document_registry: DocumentRegistry = DocumentRegistry(
             db_path=self.settings.data_dir / "document_registry.db",
         )
+        _step("CollectionStore+DocumentRegistry (Phase 32)")
 
         # Phase 37: Web Search + Source Fusion
         self.web_search_strategy = None
