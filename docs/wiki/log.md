@@ -328,3 +328,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: qdrant-operations, framework-search, evaluation-benchmark, code-verify
 - Files changed: 2
 - Summary: Session 2026-05-18. Skills: qdrant-operations, framework-search, evaluation-benchmark, code-verify. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: chore(framework-search): cosmetic cleanup from reviewer recommendations. Commit: refactor(framework-search): extract recreate_collection_preserving_alias helper. Commit: docs(31.4 + 03.2): note M1+M2 alias-aware ensure_collection + RAPTOR embedder cache
+
+## 2026-05-19 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: tech-research, z-ai-delegation, analyze-1c-task-v2, bsl-development, task-protocol
+- Files changed: 2
+- Summary: Session 2026-05-19. Skills: tech-research, z-ai-delegation, analyze-1c-task-v2, bsl-development, task-protocol, qdrant-operations, code-verify, indexing-pipeline. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-commit 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация, mcp-server.log.2026-05-18.0.gz +1 more. Commit: chore: auto-save probe_phase12_vram.py. Commit: chore: auto-save smoke_test_phase3_grouping.py
