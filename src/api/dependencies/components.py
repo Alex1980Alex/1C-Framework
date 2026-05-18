@@ -87,6 +87,7 @@ class Components:
             min_size=self.settings.layout.min_image_size,
             base_url=self.settings.agent.base_url,
         )
+        _step("ImageExtractor()")
 
         # Phase 17: Semantic Search Cache
         self.semantic_cache: SemanticSearchCache | None = None
