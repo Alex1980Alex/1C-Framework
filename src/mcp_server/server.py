@@ -28,6 +28,7 @@ logger = logging.getLogger("pdf-vector-graph")
 
 server = Server("pdf-vector-graph")
 _components: Components | None = None
+_components_lock: asyncio.Lock | None = None
 
 
 def _configure_logging() -> None:
