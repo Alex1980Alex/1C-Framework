@@ -66,13 +66,18 @@ for s, t in w:
 assert covered == set(range(250)), f"coverage gap: {set(range(250)) - covered}"
 print(f"  full coverage [0, 250) verified, offsets={[(s, len(t)) for s,t in w]}")
 
-# Test 4: line snapping — windows should end on newlines when possible
-text4 = ("a" * 80 + "\n") * 5  # 405 chars total
-w = T._make_char_windows(text4, 100, 20)
+# Test 4: line snapping at production-realistic scale.
+# snap_zone = window_chars // 10, so for snap to find a newline the gap
+# between ideal_end and the previous \n must be <= snap_zone.
+# Production Phase 2 uses window ~24K chars / snap_zone ~2400, well above
+# typical BSL line length (~50-150 chars). Use 1000-char window so snap
+# (zone=100) can reach back across 60-char lines.
+text4 = ("a" * 60 + "\n") * 30  # 1830 chars total, lines of 61 chars
+w = T._make_char_windows(text4, 1000, 200)
 print(f"Test 4: line-snapped text -> {len(w)} windows")
 for s, t in w[:3]:
     print(f"  offset={s} len={len(t)} ends_with_newline={t.endswith(chr(10))}")
-# at least one window should end on newline thanks to snap
+# at least one non-final window should end on newline thanks to snap
 assert any(t.endswith("\n") for _, t in w[:-1]), "no snap-to-newline happened"
 
 # Test 5: overlap >= window
