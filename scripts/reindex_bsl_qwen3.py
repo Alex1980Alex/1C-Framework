@@ -382,6 +382,14 @@ class Qwen3STEmbedder:
         assert all(r is not None for r in results), "bucket grouping missed an index"
         return results  # type: ignore[return-value]
 
+    # Phase 2 of roadmap 260518: sliding window overlap fraction. 15% keeps
+    # border chunks covered by ≥1 adjacent window — overlap of full
+    # `max_seq_length=8192` ≈ 1230 tokens ≈ 3-4 KB BSL code, more than
+    # enough for a single BSL symbol body (capped to ~2K tokens by
+    # `BSLChunker.split_threshold_chars`). Raise to 0.25 if cross-window
+    # symbol bodies start showing recall regression.
+    DEFAULT_SLIDING_OVERLAP_RATIO = 0.15
+
     def embed_late_chunked(
         self,
         parent_text: str,
@@ -389,28 +397,67 @@ class Qwen3STEmbedder:
     ) -> list[list[float] | None]:
         """Phase 8.12.9 (A2-alt) — Late Chunking pooling.
 
-        ONE forward pass over `parent_text` → mean-pool the contextualized
-        token embeddings within each chunk's [char_start, char_end) span →
-        L2-normalize. Each chunk vector retains document-level context
-        (Jina, arXiv:2409.04701).
+        ONE forward pass over `parent_text` (or N forward passes over
+        overlapping windows for oversized `parent_text` — Phase 2 of
+        roadmap 260518) → mean-pool the contextualized token embeddings
+        within each chunk's [char_start, char_end) span → L2-normalize.
+        Each chunk vector retains document-level context (Jina,
+        arXiv:2409.04701).
 
         Returns one vector per `chunk_char_spans` entry; `None` when the
-        span maps to no real tokens (truncated past `self.max_seq_length`
-        or zero-width). Caller falls back to `embed_batch` for `None` slots.
+        span maps to no real tokens (e.g. zero-width input, or chunk
+        that straddles every window boundary). Caller falls back to
+        `embed_batch` for `None` slots.
 
         Passages only — query-side prompt-prepending shifts char offsets,
         so route queries through `embed_batch(..., is_query=True)`.
 
         Reference impl: github.com/jina-ai/late-chunking.
         """
-        import torch
-
         tokenizer = self.model.tokenizer
         if not getattr(tokenizer, "is_fast", False):
             raise RuntimeError(
                 "embed_late_chunked requires a fast tokenizer "
                 "(needs return_offsets_mapping). Got slow tokenizer."
             )
+
+        # Phase 2 of roadmap 260518 — probe untruncated token count to
+        # decide single-pass vs sliding window. Probe is CPU-only
+        # tokenization (no GPU/VRAM cost) so it's cheap even on 1 MB
+        # god-object modules. Without this probe, oversized modules
+        # silently lose context past max_seq_length → up to 99% chunks
+        # fall back to `embed_batch` (std pooling, no Late Chunking
+        # benefit). See roadmap §1.2 empirics.
+        probe = tokenizer(
+            parent_text,
+            add_special_tokens=True,
+            truncation=False,
+            return_offsets_mapping=False,
+            return_tensors=None,
+        )
+        total_tokens = len(probe["input_ids"])
+        if total_tokens <= self.max_seq_length:
+            return self._embed_late_chunked_single_pass(parent_text, chunk_char_spans)
+        return self._embed_late_chunked_sliding(
+            parent_text, chunk_char_spans, total_tokens
+        )
+
+    def _embed_late_chunked_single_pass(
+        self,
+        parent_text: str,
+        chunk_char_spans: list[tuple[int, int]],
+    ) -> list[list[float] | None]:
+        """Single-pass Late Chunking — assumes parent fits in max_seq_length.
+
+        Extracted from `embed_late_chunked` to enable reuse by the sliding
+        path (Phase 2 of roadmap 260518). Truncation=True is kept as a
+        safety net: the caller probes total token count and routes here
+        only when it fits, but if a window construction is ever off-by-one
+        we'd rather drop the tail tokens than blow VRAM.
+        """
+        import torch
+
+        tokenizer = self.model.tokenizer
         enc = tokenizer(
             parent_text,
             return_tensors="pt",
@@ -440,6 +487,153 @@ class Qwen3STEmbedder:
             pooled = torch.nn.functional.normalize(pooled, p=2, dim=0)
             out.append(pooled.float().cpu().tolist())
         return out
+
+    @staticmethod
+    def _make_char_windows(
+        text: str,
+        window_chars: int,
+        overlap_chars: int,
+    ) -> list[tuple[int, str]]:
+        """Phase 2 of roadmap 260518 — split `text` into overlapping char
+        windows of approximately `window_chars` length, snapping breaks to
+        newline boundaries when possible.
+
+        Returns `[(char_offset, window_text), ...]`. Last window may be
+        shorter than `window_chars`. If `text` fits in one window, returns
+        a single tuple `[(0, text)]`.
+
+        Line-snapping rationale: BSL is line-oriented, so cutting mid-token
+        loses readability inside the window AND may split an identifier
+        across the boundary (the tokenizer would then produce different
+        subword boundaries on either side, breaking offset alignment).
+        Snap to the nearest preceding `\\n` within `window_chars // 10` of
+        the ideal cut so the snap doesn't shrink windows too aggressively.
+        """
+        n = len(text)
+        if n <= window_chars:
+            return [(0, text)]
+        if overlap_chars >= window_chars:
+            raise ValueError(
+                f"overlap_chars ({overlap_chars}) must be < window_chars "
+                f"({window_chars}) — sliding would loop forever otherwise."
+            )
+
+        windows: list[tuple[int, str]] = []
+        step = window_chars - overlap_chars
+        snap_zone = max(1, window_chars // 10)
+        start = 0
+        while start < n:
+            ideal_end = min(start + window_chars, n)
+            if ideal_end < n:
+                # Snap backward to nearest \n within snap_zone for line
+                # alignment. rfind() returns -1 if absent → fall back to
+                # ideal_end (mid-line cut).
+                snap_min = max(start + 1, ideal_end - snap_zone)
+                nl = text.rfind("\n", snap_min, ideal_end)
+                end = nl + 1 if nl != -1 else ideal_end
+            else:
+                end = ideal_end
+            windows.append((start, text[start:end]))
+            if end >= n:
+                break
+            # Next window starts `step` chars before previous end, but
+            # also snap to \n so the start is a clean line boundary.
+            next_start = max(start + 1, end - overlap_chars)
+            if next_start < n:
+                snap_max = min(n, next_start + snap_zone)
+                nl = text.find("\n", next_start, snap_max)
+                if nl != -1:
+                    next_start = nl + 1
+            start = next_start
+        return windows
+
+    def _embed_late_chunked_sliding(
+        self,
+        parent_text: str,
+        chunk_char_spans: list[tuple[int, int]],
+        total_tokens: int,
+        overlap_ratio: float | None = None,
+    ) -> list[list[float] | None]:
+        """Phase 2 of roadmap 260518 — sliding-window Late Chunking for
+        modules that exceed `max_seq_length` in token count.
+
+        Approach:
+          1. Estimate chars-per-token from the untruncated probe.
+          2. Build overlapping char windows whose token count fits
+             `max_seq_length - special_tokens_budget`.
+          3. For each window, embed via `_embed_late_chunked_single_pass`
+             with chunk spans re-based to window coordinates.
+          4. Each chunk is embedded by the FIRST window that fully
+             contains it (deterministic, avoids merging vectors from
+             two windows which would skew L2 norm).
+          5. Chunks crossing every window boundary stay `None` →
+             caller falls back to `embed_batch`. With 15% overlap of
+             8192 tokens (~1200 tokens / ~3.5 KB), this only triggers
+             for chunks longer than the overlap — well above
+             `BSLChunker.window_chars` (3000 chars).
+
+        Trade-off vs single forward over all tokens:
+          - Quality: chunks near window edges lose context from "the
+            other side". Mitigated by overlap (15% default).
+          - Wall-clock: O(N_windows × forward_pass) per module instead
+            of one. For a 30K-token module ≈ 4 windows ≈ +4s/module.
+
+        Why char windows rather than token windows: re-tokenizing a
+        char slice keeps offset_mapping in the slice's own coordinate
+        system, so we can reuse `_char_span_to_token_span` and the
+        single-pass code path without a special "global token index"
+        machinery. Cost of re-tokenization on CPU is negligible vs
+        the forward pass.
+        """
+        if overlap_ratio is None:
+            overlap_ratio = self.DEFAULT_SLIDING_OVERLAP_RATIO
+
+        # Reserve 4 tokens for BOS/EOS/padding budget (Qwen3 adds 1-2,
+        # safety margin). 0.95 multiplier accounts for char-to-token
+        # ratio variance across windows — same module may have BSL code
+        # (4 chars/token) mixed with comment paragraphs (3 chars/token).
+        chars_per_token = max(1.0, len(parent_text) / total_tokens)
+        safe_window_tokens = max(64, self.max_seq_length - 4)
+        window_chars = max(64, int(safe_window_tokens * chars_per_token * 0.95))
+        overlap_chars = max(1, int(window_chars * overlap_ratio))
+
+        char_windows = self._make_char_windows(parent_text, window_chars, overlap_chars)
+
+        # Telemetry — observability on sliding behaviour. Helps tune
+        # overlap_ratio if benchmark shows recall drop at boundaries.
+        print(
+            f"  [late-chunking sliding] {total_tokens} tokens / {len(parent_text)} chars "
+            f"→ {len(char_windows)} windows × ~{window_chars} chars "
+            f"(overlap {overlap_chars} chars, ratio {overlap_ratio:.0%})"
+        )
+
+        results: list[list[float] | None] = [None] * len(chunk_char_spans)
+        for win_char_start, win_text in char_windows:
+            win_char_end = win_char_start + len(win_text)
+            # Collect chunks fully contained in this window that haven't
+            # been embedded yet. "Fully contained" avoids vector merging
+            # across windows — partial chunks fall through to next window
+            # where overlap should cover them.
+            relevant: list[int] = []
+            for i, (cs, ce) in enumerate(chunk_char_spans):
+                if results[i] is not None:
+                    continue
+                if cs >= win_char_start and ce <= win_char_end:
+                    relevant.append(i)
+            if not relevant:
+                continue
+            local_spans = [
+                (
+                    chunk_char_spans[i][0] - win_char_start,
+                    chunk_char_spans[i][1] - win_char_start,
+                )
+                for i in relevant
+            ]
+            win_vectors = self._embed_late_chunked_single_pass(win_text, local_spans)
+            for orig_idx, vec in zip(relevant, win_vectors):
+                if vec is not None:
+                    results[orig_idx] = vec
+        return results
 
     def close(self) -> None:
         import gc
