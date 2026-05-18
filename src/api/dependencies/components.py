@@ -254,6 +254,7 @@ class Components:
             max_history=self.settings.conversation.max_history,
             auto_cleanup_days=self.settings.conversation.auto_cleanup_days,
         )
+        _step("ConversationMemory()")
 
         # Phase 3.3: Two-stage pipeline
         if self.settings.two_stage.enabled:
