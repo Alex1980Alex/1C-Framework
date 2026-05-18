@@ -10,6 +10,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
+import sys
+import time
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from mcp.server import Server
@@ -19,17 +24,38 @@ from mcp.types import TextContent, Tool
 if TYPE_CHECKING:
     from src.api.dependencies.components import Components
 
+logger = logging.getLogger("pdf-vector-graph")
+
 server = Server("pdf-vector-graph")
 _components: Components | None = None
+
+
+def _configure_logging() -> None:
+    if logger.handlers:
+        return
+    log_path = Path(__file__).resolve().parents[2] / "data" / "mcp-pdf-vector-graph.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s — %(message)s")
+    file_handler = RotatingFileHandler(log_path, maxBytes=2_000_000, backupCount=3, encoding="utf-8")
+    file_handler.setFormatter(fmt)
+    stderr_handler = logging.StreamHandler(stream=sys.stderr)
+    stderr_handler.setFormatter(fmt)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(file_handler)
+    logger.addHandler(stderr_handler)
+    logger.propagate = False
 
 
 async def _get_components() -> Components:
     global _components
     if _components is None:
+        logger.info("Lazy-init Components: starting")
+        t0 = time.monotonic()
         from src.api.dependencies.components import Components
 
         _components = Components()
         await _components.initialize()
+        logger.info("Lazy-init Components: ready in %.2fs", time.monotonic() - t0)
     return _components
 
 
