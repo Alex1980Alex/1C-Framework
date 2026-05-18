@@ -428,34 +428,60 @@ class Components:
             )
             self.search_manager.register_strategy("raptor", raptor_strategy)
 
+        _step("__init__ tail (DSPy/Collection/Web/Research/Analytics/RAPTOR)")
+        logger.info(
+            "[Components] __init__ DONE in %.2fs", time.monotonic() - _t0
+        )
+
     async def initialize(self) -> None:
         """Initialize async components (stores)."""
-        await self.vector_store.initialize()
-        await self.graph_store.initialize()
+        _t0 = time.monotonic()
+        _t = [_t0]
+
+        async def _astep(name: str, coro) -> None:
+            t1 = time.monotonic()
+            await coro
+            now = time.monotonic()
+            logger.info(
+                "[Components.init] %-32s %6.2fs (cum %6.2fs)",
+                name,
+                now - t1,
+                now - _t0,
+            )
+            _t[0] = now
+
+        await _astep("vector_store.initialize", self.vector_store.initialize())
+        await _astep("graph_store.initialize", self.graph_store.initialize())
         if self.parent_store is not None:
-            await self.parent_store.initialize()
+            await _astep("parent_store.initialize", self.parent_store.initialize())
         if self.bm25_store is not None:
-            await self.bm25_store.initialize()
+            await _astep("bm25_store.initialize", self.bm25_store.initialize())
         if self.semantic_cache is not None:
-            await self.semantic_cache.initialize()
+            await _astep("semantic_cache.initialize", self.semantic_cache.initialize())
         # Phase 18
         if self.version_manager is not None:
-            await self.version_manager.initialize()
+            await _astep("version_manager.initialize", self.version_manager.initialize())
         # Phase 22
         if self.feedback_store is not None:
-            await self.feedback_store.initialize()
+            await _astep("feedback_store.initialize", self.feedback_store.initialize())
         # Phase 30
         if self.section_summary is not None:
-            await self.section_summary.initialize()
+            await _astep("section_summary.initialize", self.section_summary.initialize())
         # Phase 32
-        await self.collection_store.initialize()
-        await self.document_registry.initialize()
+        await _astep("collection_store.initialize", self.collection_store.initialize())
+        await _astep("document_registry.initialize", self.document_registry.initialize())
         # Phase 36
         if self.research_session_store is not None:
-            await self.research_session_store.initialize()
+            await _astep(
+                "research_session_store.initialize",
+                self.research_session_store.initialize(),
+            )
         # Phase 40
-        await self.query_tracker.initialize()
-        await self.audit_logger.initialize()
+        await _astep("query_tracker.initialize", self.query_tracker.initialize())
+        await _astep("audit_logger.initialize", self.audit_logger.initialize())
+        logger.info(
+            "[Components.init] DONE in %.2fs", time.monotonic() - _t0
+        )
 
 
 _components: Components | None = None
