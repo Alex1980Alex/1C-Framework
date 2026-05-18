@@ -1219,6 +1219,17 @@ def main() -> None:
         # context) and the current orchestrator only handles the content side.
         print("ERROR: --pooling-mode late-chunking is incompatible with --dual-vector")
         sys.exit(1)
+    if args.no_region_aware and args.pooling_mode != "late-chunking":
+        # Phase 3 of roadmap 260518 — region grouping only affects the
+        # late-chunking orchestrator. Silently ignoring the flag would
+        # mislead callers into thinking they had opted out of something
+        # that was never on. Refuse the combination explicitly.
+        print(
+            "ERROR: --no-region-aware requires --pooling-mode late-chunking "
+            "(region-aware grouping only applies to the late-chunking "
+            "orchestrator — Phase 3 of roadmap 260518)."
+        )
+        sys.exit(1)
     embedder = make_embedder(
         args.embedder,
         batch_size=args.batch_size,
