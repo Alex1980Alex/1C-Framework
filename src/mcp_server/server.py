@@ -52,16 +52,34 @@ def _configure_logging() -> None:
 
 
 async def _get_components() -> Components:
-    global _components
-    if _components is None:
+    global _components, _components_lock
+    if _components_lock is None:
+        _components_lock = asyncio.Lock()
+    async with _components_lock:
+        if _components is not None:
+            return _components
         logger.info("Lazy-init Components: starting")
         t0 = time.monotonic()
         from src.api.dependencies.components import Components
 
-        _components = Components()
-        await _components.initialize()
+        instance = Components()
+        try:
+            await instance.initialize()
+        except asyncio.CancelledError:
+            logger.warning(
+                "Lazy-init Components: cancelled at %.2fs, leaving _components=None for retry",
+                time.monotonic() - t0,
+            )
+            raise
+        except Exception:
+            logger.exception(
+                "Lazy-init Components: failed at %.2fs, leaving _components=None for retry",
+                time.monotonic() - t0,
+            )
+            raise
+        _components = instance
         logger.info("Lazy-init Components: ready in %.2fs", time.monotonic() - t0)
-    return _components
+        return _components
 
 
 @server.list_tools()
