@@ -221,6 +221,7 @@ class Components:
                     settings=self.settings.light_rag,
                 )
                 self.search_manager.register_strategy("graphrag_auto", graphrag_auto)
+            _step("LightRAG (+EntityEmbeddingBuilder, +auto-select)")
 
         # Phase 7: Parent-Child Auto-Merge strategy
         if self.settings.parent_child.enabled:
