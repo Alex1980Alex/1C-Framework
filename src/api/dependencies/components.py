@@ -120,6 +120,7 @@ class Components:
                 bm25_store=self.bm25_store,
                 search_manager=self.search_manager,
             )
+            _step("SectionFirstPipeline (Phase 30)")
 
         # Register search strategies
         vector_strategy = VectorSearchStrategy(self.embedding_engine, self.vector_store)
