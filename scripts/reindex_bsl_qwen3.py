@@ -1252,7 +1252,16 @@ def main() -> None:
     print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size}, "
           f"flush every {buffer_size} chunks)")
     if args.pooling_mode != "standard":
-        print(f"Pooling mode: {args.pooling_mode} (Phase 8.12.9 A2-alt)")
+        # Phases 1-3 of roadmap 260518 apply only to late-chunking on qwen3-st.
+        # Surface them in the run banner so log readers can correlate
+        # fallback-rate changes with which phases were active.
+        msl = getattr(embedder, "max_seq_length", "?")
+        region_state = "off" if args.no_region_aware else "on"
+        print(
+            f"Pooling mode: {args.pooling_mode} (Phase 8.12.9 A2-alt + "
+            f"roadmap 260518 P1 max_seq={msl} + P2 sliding-on-overflow + "
+            f"P3 region-aware={region_state})"
+        )
 
     # Phase 63: Context enrichment
     enricher = None
