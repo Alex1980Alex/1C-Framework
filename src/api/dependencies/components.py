@@ -326,6 +326,7 @@ class Components:
                 web_strategy=self.web_search_strategy,
                 confidence_threshold=self.settings.external.confidence_threshold,
             )
+            _step("WebSearch+SourceFusion (Phase 37)")
 
         # Phase 36: Research Session Store
         self.research_session_store = None
@@ -339,6 +340,7 @@ class Components:
             )
         except ImportError:
             pass
+        _step("ResearchSessionStore (Phase 36)")
 
         # Phase 40: Enterprise Analytics
         from src.pdf_framework.analytics import AuditLogger, CostTracker, QueryTracker
@@ -350,6 +352,7 @@ class Components:
         self.audit_logger: AuditLogger = AuditLogger(
             db_path=self.settings.data_dir / "audit.db",
         )
+        _step("Analytics: Query+Cost+Audit (Phase 40)")
 
         # Phase 18: Document Version Manager
         self.version_manager = None
@@ -361,6 +364,7 @@ class Components:
             )
         except ImportError:
             pass
+        _step("DocumentVersionManager (Phase 18)")
 
         # Phase 19: Deep Research Planner
         self.research_planner = None
@@ -370,6 +374,7 @@ class Components:
             self.research_planner = ResearchPlanner()
         except ImportError:
             pass
+        _step("ResearchPlanner (Phase 19)")
 
         # Phase 22: Async Feedback Store + FewShot + Boost
         self.feedback_store = None
