@@ -1124,6 +1124,19 @@ def main() -> None:
              "the model's max_seq_length truncation fall back to standard "
              "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
     )
+    ap.add_argument(
+        "--no-region-aware",
+        action="store_true",
+        help="late-chunking only (Phase 3 of roadmap 260518). Disable "
+             "`(module_path, region)` grouping in late-chunking orchestrator "
+             "and revert to the legacy `module_path` grouping (Phase 8.12.9 "
+             "behaviour). Region-aware grouping is ON by default — it splits "
+             "BSL `#Область` sections into independent forward passes, "
+             "reducing single-pass length and therefore fallback rate, at "
+             "the price of losing cross-region context inside one module. "
+             "Toggle off if benchmark recall on cross-region queries "
+             "regresses.",
+    )
     args = ap.parse_args()
 
     # Validate --project / --paths combination.
