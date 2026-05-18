@@ -37,16 +37,25 @@ for char_start, char_end in chunk_char_spans:
         out.append(None)  # → caller fallback на embed_batch (std pooling)
 ```
 
-### 1.2 Эмпирические замеры (из лога текущего reindex, 2026-05-18 ~04:30)
+### 1.2 Эмпирические замеры (из завершённого reindex, 2026-05-18, run 8256.5 секунд / ~2ч 17мин)
+
+**Итоговая статистика:**
+- Files: 2098, Symbols: 33 829, Chunks: 37 639, Errors: 0
+- **Модулей, попавших в late-chunking процесс: 489** (24% от всех files; остальные были меньше max_seq_length и обработались без fallback)
+- **В этих 489 модулях fallback chunks: 24 752 из 27 881 = 88.8%** — почти весь content больших модулей теряет module-level context
+- **Fallback от ВСЕХ 37 639 chunks коллекции: 65.8%** (24 752 chunks)
+
+Примеры из лога (наиболее заметные):
 
 | Модуль | parent_chars | fallback chunks | % fallback |
 |---|---|---|---|
 | Большой Общий модуль | 942 370 | 506 / 512 | **99%** |
 | Большая Форма | 545 981 | 338 / 344 | **98%** |
-| Average Общий модуль | ~150 000 | 70-100 / 100 | **70-90%** |
+| Большая ObjectModule (Обработка) | 377 534 | 163 / 164 | **99%** |
+| Медиум Общий модуль | ~150 000 | 70-100 / 100 | **70-90%** |
 | Small Обработка | <50 000 | 0-5 / 20 | **0-25%** |
 
-Средневзвешенный fallback по всему `ИБTransportManagementDevelop`: **~5-10% all chunks** (но **70-99% chunks больших модулей** — это серьёзный quality hit для god-objects).
+**Вывод:** реальный fallback **значительно выше** консервативной оценки 5-10%. Production коллекция `bsl_code_v4_late` фактически содержит ~2/3 chunks со standard pooling (без Late Chunking преимущества) для крупных конфигураций типа `ИБTransportManagementDevelop`. Это даёт **сильное обоснование** для Phases 1-3 этого roadmap'а.
 
 ### 1.3 Почему `max_seq_length=4096`
 
