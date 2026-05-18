@@ -957,6 +957,38 @@
       "last_verified": "2026-05-10",
       "sources_count": 11,
       "github_repos_count": 5
+    },
+    {
+      "file": "bsl-late-chunking-improvements-2026.md",
+      "title": "BSL Late Chunking improvements — снижение fallback % (max_seq_length bump, sliding window, region-based)",
+      "keywords": [
+        "late-chunking",
+        "jinaai-late-chunking",
+        "max-seq-length",
+        "sliding-window-embedding",
+        "region-based-chunking",
+        "ast-chunking",
+        "bsl-qwen3",
+        "bsl-code-v4-late",
+        "long-context-embedding",
+        "voyage-code-3",
+        "bge-m3",
+        "openai-text-embedding-3",
+        "sentence-transformers",
+        "vram-constraint",
+        "rtx-3090-24gb",
+        "flashattention-2",
+        "mtem-multilingual",
+        "chunking-strategy-rag",
+        "context-window-32k",
+        "module-size-limit",
+        "qwen3-embedding-8b"
+      ],
+      "created": "2026-05-18",
+      "last_verified": "2026-05-18",
+      "sources_count": 12,
+      "github_repos_count": 4,
+      "cross_ref": "docs/roadmap/260518_ROADMAP_BSL_LATE_CHUNKING_IMPROVEMENTS.md"
     }
   ]
 }
