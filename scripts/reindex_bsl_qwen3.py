@@ -215,7 +215,14 @@ class Qwen3STEmbedder:
         ≤1024   → 16   (M, 19.5%)
         ≤2048   → 8    (L, 7.9%)
         ≤4096   → 4    (XL, 2.6%)
-        4097+   → 1    (XXL, 0.7% — includes outliers up to 16854 tokens)
+        ≤8192   → 2    (XXL_8K, ~1% — Phase 1 of roadmap 260518; activations ~1.5 GB)
+        8193+   → 1    (XXXL, 0.3% — outliers up to 16854 tokens; truncated at max_seq_length)
+
+    Phase 1 of roadmap 260518 (BSL Late Chunking improvements):
+        - `max_seq_length` default bumped 4096 → 8192 to cut single-pass fallback%.
+        - VRAM math on RTX 3090 24GB: model 16 GB FP16 + 8192-token activations
+          ~1.5 GB (no FA2) → ~17.5 GB peak, 6.5 GB headroom. Safe by ~2 GB margin
+          required in §3.4 success criteria.
     """
 
     MODEL_ID = "Qwen/Qwen3-Embedding-8B"
@@ -227,6 +234,7 @@ class Qwen3STEmbedder:
         (1024, 16),
         (2048, 8),
         (4096, 4),
+        (8192, 2),
         (None, 1),
     )
 
@@ -236,7 +244,7 @@ class Qwen3STEmbedder:
         batch_size: int = 32,
         buckets: tuple[tuple[int | None, int], ...] | None = None,
         enable_fa2: bool = False,
-        max_seq_length: int = 4096,
+        max_seq_length: int = 8192,
     ) -> None:
         # Phase 8.12 C4 (defense-in-depth — also set at module top in case
         # this class is imported and instantiated from a context that
