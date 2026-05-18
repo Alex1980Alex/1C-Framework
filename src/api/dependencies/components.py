@@ -110,6 +110,7 @@ class Components:
             embedding_engine=self.embedding_engine,
             semantic_cache=self.semantic_cache,
         )
+        _step("SearchManager()")
 
         # Phase 30: Section-first pipeline (requires BM25)
         if self.bm25_store is not None:
