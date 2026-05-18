@@ -236,6 +236,7 @@ class Components:
                 fetch_multiplier=self.settings.parent_child.fetch_multiplier,
             )
             self.search_manager.register_strategy("auto_merge", auto_merge)
+            _step("AutoMerge (Phase 7 parent-child)")
         else:
             self.parent_store = None  # type: ignore[assignment]
 
@@ -248,6 +249,7 @@ class Components:
                 base_url=self.settings.agent.base_url,
             )
             self.search_manager.register_strategy("adaptive", adaptive_strategy)
+            _step("AdaptiveSearchStrategy (Phase 8)")
 
         # Phase 9: Conversation Memory
         self.conversation_memory: ConversationMemory = ConversationMemory(
