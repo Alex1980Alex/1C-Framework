@@ -819,24 +819,65 @@ def make_embedder(
 _LATE_CHUNK_SEP = "\n\n"
 
 
-def _embed_chunks_late(embedder: Any, chunks: list[BSLChunk]) -> list[list[float]]:
+def _group_chunks_for_late(
+    chunks: list[BSLChunk],
+    region_aware: bool,
+) -> list[list[int]]:
+    """Phase 3 of roadmap 260518 — group chunk indices for Late Chunking.
+
+    `region_aware=False` (Phase 8.12.9 original behaviour): one group per
+    `module_path`. Whole module forwards through the embedder in one pass
+    (or sliding windows if oversized — Phase 2 of roadmap 260518).
+
+    `region_aware=True` (Phase 3 of roadmap 260518): one group per
+    `(module_path, region)`. BSL's `#Область … #КонецОбласти` markers
+    are natural semantic boundaries (typically `ОбработчикиСобытийФормы`
+    vs `ПрограммныйИнтерфейс` vs `СлужебныеПроцедуры`) — splitting on
+    them keeps each forward pass scoped to one semantic concern, which
+    matters more than cross-region context. Chunks with empty `region`
+    metadata (legacy modules without `#Область`, or symbols outside any
+    region) form a separate "<no region>" group per module so they stay
+    together and still receive Late Chunking — they just don't share
+    context with annotated regions in the same file.
+
+    Group ordering preserves chunk order via `dict` insertion order so
+    that the synthesized parent text per group concatenates symbols in
+    source order, matching the original Phase 8.12.9 behaviour.
+    """
+    groups: dict[tuple[str, str], list[int]] = {}
+    for idx, c in enumerate(chunks):
+        module_path = c.metadata.get("module_path", "")
+        region = c.metadata.get("region", "") if region_aware else ""
+        groups.setdefault((module_path, region), []).append(idx)
+    return list(groups.values())
+
+
+def _embed_chunks_late(
+    embedder: Any,
+    chunks: list[BSLChunk],
+    region_aware: bool = True,
+) -> list[list[float]]:
     """Phase 8.12.9 (A2-alt) — Late Chunking orchestrator.
 
-    Group chunks by `module_path`, build one parent text per group with a
-    fixed separator, run `embed_late_chunked` once per group, then fall
-    back to `embed_batch` for any spans that landed past truncation.
+    Group chunks by `module_path` (Phase 8.12.9) or by
+    `(module_path, region)` (Phase 3 of roadmap 260518, `region_aware=True`,
+    default), build one parent text per group with a fixed separator, run
+    `embed_late_chunked` once per group, then fall back to `embed_batch`
+    for any spans that landed past truncation.
 
-    Single pass per module: assumes A2 already capped per-symbol body to
-    ~1024 tokens, so a typical BSL module (5–15 symbols) fits in 4096-token
-    forward. Modules that overflow get the fallback path for tail chunks —
-    they lose Late Chunking benefit but retain correctness.
+    Two-tier fallback chain (after Phase 2 + 3 of roadmap 260518):
+      1. Region-aware grouping shrinks parent text → fewer regions hit
+         `max_seq_length` at all.
+      2. Oversize regions cascade into `embed_late_chunked_sliding`
+         (Phase 2) inside the embedder.
+      3. Spans that still come back `None` (e.g. chunk longer than one
+         window — unusual after Phase 8.12.5 chunk splitting at 6000 chars)
+         fall back to `embed_batch` standard pooling.
     """
-    groups: dict[str, list[int]] = {}
-    for idx, c in enumerate(chunks):
-        groups.setdefault(c.metadata.get("module_path", ""), []).append(idx)
+    groups = _group_chunks_for_late(chunks, region_aware=region_aware)
 
     out: list[list[float] | None] = [None] * len(chunks)
-    for indices in groups.values():
+    for indices in groups:
         spans: list[tuple[int, int]] = []
         parts: list[str] = []
         cursor = 0
@@ -854,15 +895,17 @@ def _embed_chunks_late(embedder: Any, chunks: list[BSLChunk]) -> list[list[float
 
         fallback_local = [j for j, v in enumerate(vectors) if v is None]
         if fallback_local:
-            # 8.12.8 observability: warn when ≥ half of a module's chunks
-            # missed Late Chunking (overflowed max_seq_length) — they fall
-            # back to standard pooling and lose document context.
+            # 8.12.8 observability: warn when ≥ half of a group's chunks
+            # missed Late Chunking (overflowed max_seq_length even after
+            # Phase 2 sliding windows + Phase 3 region grouping) — they
+            # fall back to standard pooling and lose document context.
             if len(fallback_local) * 2 >= len(indices):
                 first_path = chunks[indices[0]].metadata.get("module_path", "?")
+                first_region = chunks[indices[0]].metadata.get("region", "") or "<no region>"
                 print(
                     f"  [late-chunking] fallback {len(fallback_local)}/{len(indices)} "
                     f"chunks (parent {len(parent_text)} chars) — "
-                    f"module_path={first_path}"
+                    f"module_path={first_path} region={first_region}"
                 )
             fb_texts = [chunks[indices[j]].content for j in fallback_local]
             fb_vecs = embedder.embed_batch(fb_texts, is_query=False)
