@@ -34,17 +34,42 @@ from src.pdf_framework.vector_store.base import BaseVectorStore
 from src.pdf_framework.vector_store.indexing.indexer import DocumentIndexer
 from src.pdf_framework.vector_store.parent_store import ParentDocumentStore
 
+logger = logging.getLogger(__name__)
+
 
 class Components:
     """Holds all initialized framework components."""
 
     def __init__(self) -> None:
+        # Granular timing for Lazy-init diagnostics. В изолированном тесте этот
+        # конструктор отрабатывает за ~0.4с, в production через MCP stdio видели
+        # затяжки до 4+ минут — без пошагового лога невозможно локализовать
+        # виновника (см. roadmap / память feedback_pdf_mcp_init_duration).
+        _t0 = time.monotonic()
+        _t = [_t0]
+
+        def _step(name: str) -> None:
+            now = time.monotonic()
+            logger.info(
+                "[Components] %-32s %6.2fs (cum %6.2fs)",
+                name,
+                now - _t[0],
+                now - _t0,
+            )
+            _t[0] = now
+
         self.settings: Settings = get_settings()
+        _step("get_settings()")
         self.loader: BaseLoader = get_loader(self.settings.pdf)
+        _step("get_loader()")
         self.pipeline: ProcessingPipeline = ProcessingPipeline(self.settings.pdf)
+        _step("ProcessingPipeline()")
         self.embedding_engine: BaseEmbeddingEngine = get_embedding_engine(self.settings.embedding)
+        _step("get_embedding_engine()")
         self.vector_store: BaseVectorStore = get_vector_store(self.settings.vector_store)
+        _step("get_vector_store()")
         self.graph_store: BaseGraphStore = get_graph_store(self.settings.graph_store)
+        _step("get_graph_store()")
 
         # Phase 16: BM25 Store (SQLite FTS5)
         self.bm25_store: BM25Store | None = None
