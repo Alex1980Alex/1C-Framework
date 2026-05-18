@@ -77,13 +77,30 @@ class QdrantVectorStore(BaseVectorStore):
                 api_key=api_key if api_key else None,
             )
 
-            # Check if collection exists, create if not
+            # Check if collection exists, create if not.
+            # Также резолвим aliases — после MRL/MIGRATE-3 (§4.1.6-15) имя из
+            # конфига часто указывает на alias (`pdf_documents` → физический
+            # `pdf_documents_mrl_1024`). `get_collections()` возвращает только
+            # физические коллекции, поэтому без `get_aliases()` мы уходим в
+            # create_collection и получаем 400 "Alias with the same name already
+            # exists".
             collections = await self._client.get_collections()
-            collection_names = [c.name for c in collections.collections]
+            collection_names = {c.name for c in collections.collections}
+            try:
+                aliases = await self._client.get_aliases()
+                alias_names = {a.alias_name for a in aliases.aliases}
+            except Exception as exc:  # старые клиенты/серверы без get_aliases
+                logger.debug("[QDRANT] get_aliases() unavailable: %s", exc)
+                alias_names = set()
+
+            exists = (
+                self._collection_name in collection_names
+                or self._collection_name in alias_names
+            )
 
             bm25_enabled = getattr(self._settings, "qdrant_bm25_enabled", False)
 
-            if self._collection_name not in collection_names:
+            if not exists:
                 logger.info(
                     f"[QDRANT] Creating collection: {self._collection_name} (dims={self._settings.dimensions}, bm25={bm25_enabled})"
                 )
