@@ -123,31 +123,66 @@ mcp__bsl-debugger__get_variables()
 - **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — когда Qdrant недоступен
 - **Legacy collections:** `bsl_code_v3` (E5 1024d, drop pending Phase 8.11.3), `bsl_code_v2` (nomic 768d, deprecated), `bsl_code_v4` (Qwen3+std 4096d, research-baseline only — std pooling даёт -64% recall vs Late)
 
-## Auto-reindex BSL при git commit (2026-04-30)
+## Индексация BSL — варианты и decision flowchart
 
-При активном `git config core.hooksPath scripts/git_hooks` автоматически срабатывает incremental reindex `bsl_code_v4_late` для изменённых `.bsl` файлов в `configuration/<X>/`.
+> **Полная справка:** [chapter 31.6 Варианты индексации и типичные ошибки](../../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md)
 
-**Команда incremental BSL reindex (используется хуком, можно вызвать вручную):**
+### Decision flowchart — какой backend выбрать
 
-```bash
-python scripts/reindex_bsl_qwen3.py \
-    --paths "<path-to-file1.bsl>" "<path-to-file2.bsl>" \
-    --embedder qwen3-tei \
-    --collection bsl_code_v4_late \
-    --batch-size 32
+```
+Что делаешь?
+├── Изменил 1-N .bsl файлов в существующем проекте (commit/PR)
+│   → INCREMENTAL: --paths <files> --embedder qwen3-tei --batch-size 32
+│     TEI остаётся up; ~секунды; std pooling (mixed quality acceptable)
+│
+├── Добавил новый 1С-проект целиком (или раз в N недель re-alignment)
+│   → FULL: --project <root> --embedder qwen3-st --pooling-mode late-chunking
+│           --batch-size 50 --buffer-size 512 (БЕЗ --enable-fa2)
+│     ОБЯЗАТЕЛЬНО `docker stop pdf-rag-tei` ПЕРЕД! ~60-90 мин на 2000+ файлов
+│
+└── BREAKING change (новая модель / payload schema)
+    → FULL + --recreate (дропает ВСЮ коллекцию всех проектов!)
 ```
 
-**Особенности `--paths` режима:**
-- Auto-detect project root из path (walk до `configuration/<X>/`)
-- Все файлы должны быть в одном project root (иначе ERROR)
-- `--recreate` запрещён (нельзя дропнуть production-коллекцию для incremental)
-- Контекст-обогащение работает (если есть `cache/bsl_call_graph.db`)
-- **Delete-stale**: после upsert удаляет chunks с тем же `module_path` но другими `chunk_id` — ловит удалённые/переименованные функции в файле
-- Idempotent: повторный запуск на неизменном файле = same point_ids → overwrite, no-op
+### Матрица backend × pooling
 
-**Backend caveat:** `qwen3-tei` (std pooling) вместо `qwen3-st` (Late Chunking) — избегает GPU contention с TEI Docker (две копии Qwen3-8B FP16 = 32 GB на 24 GB RTX 3090). Trade-off: incremental chunks приземляются с std pooling, остальная коллекция — Late. Quality drop ~5-10% на свежих символах. Рекомендуется periodic full reindex по §23 roadmap для re-alignment.
+| Backend | Pooling | Late Chunking | GPU | Скорость | Когда |
+|---|---|---|---|---|---|
+| `qwen3-st` | last_token | **✓ да** | 16 GB FP16 | медленная (warmup ~30c) | **Full reindex** в `bsl_code_v4_late` |
+| `qwen3-tei` | last_token (TEI) | ✗ нет | 16 GB (постоянно) | быстрая | **Incremental** + online queries |
+| `e5` | mean | ✗ нет | 0 (CPU OK) | средняя | legacy, DEPRECATED |
 
-**Лог:** `cache/bsl_reindex.log`
+**Ключевое:** `qwen3-st late-chunking` и `qwen3-tei` дают **разные** embedding-векторы. На BSL benchmark разница = **+64% recall@10** в пользу Late.
+
+### Auto-reindex BSL при git commit
+
+При активном `git config core.hooksPath scripts/git_hooks` автоматически запускается incremental reindex `bsl_code_v4_late` для изменённых `.bsl` файлов (через `qwen3-tei`, std pooling). Auto-detect project root через walk до `configuration/<X>/`. Delete-stale: удаляет chunks с тем же `module_path` но другим `chunk_id` (ловит удалённые/переименованные функции). Лог: `cache/bsl_reindex.log`.
+
+### Типичные ошибки (помни всегда!)
+
+1. **`qwen3-tei` для FULL reindex** → mixed-pooling коллекция, gradual recall drop. → Для `--project` ВСЕГДА `qwen3-st --pooling-mode late-chunking`.
+2. **`qwen3-st` БЕЗ остановки TEI** → CUDA OOM (две копии 8B FP16 = 32 GB на 24GB GPU). → `docker stop pdf-rag-tei` ПЕРЕД, потом `start`.
+3. **`--enable-fa2` на `ИБTransportManagementDevelop`** → OOM на XXL chunks. → `--batch-size 50 --buffer-size 512` БЕЗ `--enable-fa2`. Memory `feedback_bsl_reindex_fallback`.
+4. **Не делать `build_call_graph.py` ПЕРЕД reindex** → пустые `calls`/`caller_count` в payload. → `python scripts/build_call_graph.py --project <root> --db cache/bsl_call_graph.db` (16 сек) ПЕРЕД.
+5. **Matryoshka truncation на BSL** → -12% до -20% recall (Cyrillic identifiers не сжимаются). → SQ int8 — да, MRL — нет. Memory `feedback_mrl_content_matters`.
+6. **`--recreate` для добавления проекта** → дроп всей коллекции (все конфигурации). → Без `--recreate`, новые chunks доupsert'ятся.
+7. **`qwen3-st` БЕЗ `--pooling-mode late-chunking`** → std pooling (default), но запишет в `_late` коллекцию. → Для `bsl_code_v4_late` ОБЯЗАТЕЛЬНО `--pooling-mode late-chunking`.
+
+### Pre-flight checklist (перед любым reindex)
+
+```bash
+# 1. TEI healthy (для qwen3-tei или верификация перед stop)
+curl -s http://localhost:8080/info | python -m json.tool | head -3
+
+# 2. Qdrant healthy
+curl -s http://localhost:6333/collections/bsl_code_v4_late | grep points_count
+
+# 3. GPU свободен (для qwen3-st use case)
+nvidia-smi --query-gpu=memory.used,memory.free --format=csv | head -2
+
+# 4. Call graph актуален (для context-enrichment)
+ls -lh cache/bsl_call_graph.db
+```
 
 ## Зависимости
 
