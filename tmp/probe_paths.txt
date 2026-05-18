@@ -1,0 +1,3 @@
+3164916	C:\1С-Framework\ИБTransportManagementDevelop\Конфигурация\src\CommonModules\УправлениеДоступомСлужебный\Module.bsl
+1044665	C:\1С-Framework\ИБTransportManagementDevelop\Конфигурация\src\CommonModules\ОбменДаннымиСервер\Module.bsl
+1035778	C:\1С-Framework\ИБTransportManagementDevelop\Конфигурация\src\DataProcessors\КонвертацияОбъектовИнформационныхБаз\ObjectModule.bsl
