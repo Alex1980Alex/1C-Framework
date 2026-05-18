@@ -1331,7 +1331,7 @@ def main() -> None:
 
     # Flush remaining
     if batch:
-        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode)
+        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode, region_aware=not args.no_region_aware)
         total_chunks += n
 
     # Delete stale chunks for files we just reindexed (--paths mode).
