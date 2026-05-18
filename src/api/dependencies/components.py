@@ -407,6 +407,7 @@ class Components:
                 )
             except ImportError:
                 pass
+            _step("Feedback bundle (Store+Collector+FewShot+Boost, Phase 22)")
 
         # Phase 30: Section Summary Service
         self.section_summary = None
@@ -419,6 +420,7 @@ class Components:
                 model=self.settings.hierarchical.summary_model,
                 db_path=self.settings.hierarchical.summary_db_path,
             )
+            _step("SectionSummaryService (Phase 30)")
 
         # Phase 13.2: RAPTOR Search Strategy
         if self.settings.raptor.enabled:
@@ -438,8 +440,8 @@ class Components:
                 config=raptor_config,
             )
             self.search_manager.register_strategy("raptor", raptor_strategy)
+            _step("RAPTORSearchStrategy (Phase 13.2)")
 
-        _step("__init__ tail (DSPy/Collection/Web/Research/Analytics/RAPTOR)")
         logger.info(
             "[Components] __init__ DONE in %.2fs", time.monotonic() - _t0
         )
