@@ -6,14 +6,18 @@ collections, ToC, web search, source fusion, documents, stats.
 Transport: stdio (default) or SSE.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
+from typing import TYPE_CHECKING
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-from src.api.dependencies.components import Components
+if TYPE_CHECKING:
+    from src.api.dependencies.components import Components
 
 server = Server("pdf-vector-graph")
 _components: Components | None = None
@@ -22,6 +26,8 @@ _components: Components | None = None
 async def _get_components() -> Components:
     global _components
     if _components is None:
+        from src.api.dependencies.components import Components
+
         _components = Components()
         await _components.initialize()
     return _components
