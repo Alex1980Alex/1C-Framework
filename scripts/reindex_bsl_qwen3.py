@@ -1310,7 +1310,7 @@ def main() -> None:
                     # the previous batch around to grow unbounded — the
                     # zombie-loop bug that ate ~75% of the 28.04 reindex.
                     try:
-                        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode)
+                        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode, region_aware=not args.no_region_aware)
                         total_chunks += n
                     finally:
                         batch.clear()
