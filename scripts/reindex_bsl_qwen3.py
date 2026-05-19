@@ -1420,12 +1420,15 @@ def main() -> None:
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
 
-    if args.paths:
-        bsl_files = sorted(path_objs)
-        print(f"[--paths] processing {len(bsl_files)} file(s)")
-    else:
-        bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
-        print(f"Found {len(bsl_files)} BSL files")
+    with _stage("file_scan", project=str(project), paths_mode=bool(args.paths)):
+        if args.paths:
+            bsl_files = sorted(path_objs)
+            print(f"[--paths] processing {len(bsl_files)} file(s)")
+        else:
+            bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
+            print(f"Found {len(bsl_files)} BSL files")
+    _evt("file_scan_done", count=len(bsl_files))
+    _state(total_files=len(bsl_files), file_idx=0, chunks_done=0)
 
     # In --paths mode we track which point_ids we upsert per file, then delete
     # any older chunks at those module_paths that we did NOT touch (stale: removed
