@@ -1,7 +1,7 @@
 # Roadmap 260519 — Иерархичная code-anchored документация PDF Framework
 
-**Дата:** 2026-05-19
-**Статус:** proposed
+**Дата:** 2026-05-19 (создан) → 2026-05-19 (intermediate update §11-12)
+**Статус:** proposed → **paused for review** (см. §11 интермейт findings, §12 открытые вопросы)
 **Cross-ref research:** [hierarchical-code-anchored-docs-2026.md](../../.claude/skills/architecture-research/cache/hierarchical-code-anchored-docs-2026.md)
 **Связано:**
 - [docs-change-enforcer.py](../../.claude/hooks/docs-change-enforcer.py) `CODE_TO_DOMAIN` (строки 70-156)
