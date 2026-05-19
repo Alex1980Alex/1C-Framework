@@ -139,6 +139,29 @@ for char_start, char_end in chunk_char_spans:
 - Phase 4 retrieval-quality benchmark (golden set готов scaffold-уровне, генератор написан, blocked на LLM API auth — см. session log 2026-05-20).
 - После Phase 4 PASS — alias swap `bsl_code_v4_late` → `bsl_phase123_bench` (или новый full reindex production-scale).
 
+### 1.2.5 Phase 4 quality benchmark (2026-05-20) — **ВАЖНО: reverses §1.2.4 default**
+
+Запустили `pytest tests/benchmarks/test_bsl_retrieval_quality.py -v -s` против 3 коллекций (baseline = production `bsl_code_v4_late`, `phase12_bench` без region-aware, `phase123_bench` с region-aware) на manually-crafted 12-query golden set из CommonModules (8 small/medium, 1 god_object, mix). Search через прямой `client.query_points` + Qwen3 query prompt — без reranking, чистый dense retrieval.
+
+| variant | small | medium | god_object | **overall** | NDCG@10 | MRR |
+|---|---|---|---|---|---|---|
+| baseline (current production, no FA2) | 0.200 | 0.750 | 1.000 | 0.583 | 0.334 | 0.253 |
+| **phase12 (P1+P2 only + FA2 + overlap=0.25)** | **0.800** ⭐ | 0.750 | 1.000 | **0.833** ⭐ | **0.512** | **0.413** |
+| phase123 (P1+P2+P3 region-aware + FA2 + overlap=0.25) | 0.800 | **0.500** ❌ | 1.000 | 0.750 | 0.430 | 0.331 |
+
+**Acceptance gate result:** phase12 PASSES (no regression, +25pp overall). **phase123 FAILS** at medium slice: recall@10 0.750 → 0.500 = -25pp regression (fail threshold = -3pp per §6.4 spec).
+
+**Driving findings:**
+
+1. **Phase 1+2 (sliding + FA2 + overlap=0.25) — production-ready, big quality win.** +25pp overall recall@10, +60pp on small modules. Most of the gain is from FA2 (which forced full Late Chunking on every chunk rather than fallback to std pooling without FA2 — see §1.2.2/3 confirmation).
+2. **Phase 3 region-aware hurts retrieval on medium modules.** The §4.5 quality risk warning («chunks на границе окна теряют context») materialized at scale: region grouping shrinks parent_text per forward pass, defeats Late Chunking's module-context advantage on multi-region medium modules. -25pp medium recall is unacceptable for production.
+3. **§1.2.4 conclusion REVERSED:** 27% GPU forward-time savings from region-aware ≠ free lunch. Quality cost on medium slice outweighs wall-clock benefit.
+4. **§4.4 success criteria — Phase 4 final check:** ✅ for phase12 (no regression vs baseline). ❌ for phase123 (medium-slice regression).
+
+**Updated Phase 5 rollout target: `phase12` configuration** — `--pooling-mode late-chunking --enable-fa2 --sliding-overlap 0.25 --no-region-aware`. Default in `scripts/reindex_bsl_qwen3.py` should KEEP `region_aware=True` for backwards compat but production reindex commands MUST add `--no-region-aware` until Phase 3 issue is diagnosed.
+
+**Open question for next session:** why region-aware degrades quality only on medium slice (not small or god_object)? Hypotheses: (a) god_objects need sliding anyway, so region splitting doesn't matter; (b) small modules are 1-region, no split happens; (c) medium modules have 3-10 regions of similar size, splitting creates fragmented embeddings. Investigation: per-query analysis of top-10 retrieved chunks comparing phase12 vs phase123 on the failing queries.
+
 ### 1.3 Почему `max_seq_length=4096`
 
 Phase 8.12 C5 — защита от OOM на 24 GB RTX 3090 (Qwen3-8B FP16 = 16 GB; activations O(n²) для standard attention → быстро blow VRAM на XXL модулях). Но **искусственно занижено в 8× от native** (Qwen3 supports 32K context OOTB; TEI Docker setup использует max_input_length=40960).
