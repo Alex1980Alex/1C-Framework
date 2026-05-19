@@ -1091,8 +1091,15 @@ def flush_batch(
                 f"largest='{name}' ({len(largest.content)} chars). "
                 f"Continuing past OOM."
             )
+            _evt(
+                "oom_recovery",
+                batch=len(chunks),
+                largest_chars=len(largest.content),
+                largest_name=name,
+            )
         else:
             print("  [OOM] flush_batch: dropped empty batch (should not happen).")
+            _evt("oom_recovery", batch=0)
         return 0
 
     points = []
