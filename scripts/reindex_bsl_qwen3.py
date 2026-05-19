@@ -1363,12 +1363,13 @@ def main() -> None:
             "orchestrator — Phase 3 of roadmap 260518)."
         )
         sys.exit(1)
-    embedder = make_embedder(
-        args.embedder,
-        batch_size=args.batch_size,
-        enable_fa2=args.enable_fa2,
-        tei_base_url=args.tei_url,
-    )
+    with _stage("model_load", embedder=args.embedder, fa2=bool(args.enable_fa2)):
+        embedder = make_embedder(
+            args.embedder,
+            batch_size=args.batch_size,
+            enable_fa2=args.enable_fa2,
+            tei_base_url=args.tei_url,
+        )
     vector_dims = embedder.dims
 
     # Auto-pick buffer for length bucketing: qwen3-st benefits from a fuller
