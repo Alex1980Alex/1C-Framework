@@ -70,17 +70,36 @@ def main() -> int:
 
     only_paths = set(args.paths) if args.paths else None
 
-    t0 = time.time()
-    stats = run_index(
-        only_paths=only_paths,
+    # roadmap 260518 follow-up — observability for long-running indexer
+    # so callers see heartbeat/[evt] output even when run_index() sits
+    # inside a single TEI batch for 20-60s. run_index itself doesn't
+    # take a tracker arg (lives in src/), so we wrap only the outer call;
+    # finer-grain wiring requires touching src/framework_search/indexer.py.
+    tracker = make_tracker("index_framework").start()
+    tracker.event(
+        "startup",
         collection=args.collection,
         qdrant_url=args.qdrant_url,
         tei_url=args.tei_url,
         batch_size=args.batch_size,
-        recreate=args.recreate,
-        dry_run=args.dry_run,
-        limit=args.limit,
+        recreate=bool(args.recreate),
+        dry_run=bool(args.dry_run),
+        limit=int(args.limit),
+        only_paths=len(only_paths) if only_paths else None,
     )
+
+    t0 = time.time()
+    with tracker.stage("run_index"):
+        stats = run_index(
+            only_paths=only_paths,
+            collection=args.collection,
+            qdrant_url=args.qdrant_url,
+            tei_url=args.tei_url,
+            batch_size=args.batch_size,
+            recreate=args.recreate,
+            dry_run=args.dry_run,
+            limit=args.limit,
+        )
     dt = time.time() - t0
 
     print()
