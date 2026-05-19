@@ -392,4 +392,186 @@ last_verified: 2026-05-19
 
 ---
 
+## §11. Intermediate findings (2026-05-19, code audit ревизия §4)
+
+> **Контекст обновления.** §4 первоначально предложил 4 новые главы (38-41) на базе `CODE_TO_DOMAIN` mapping. После прямого аудита `src/`, `tools/`, `infra/`, `scripts/` выяснилось: mapping консервативен (создавался для drift-detection, не subsystem-discovery) — gap'ов больше.
+
+### 11.1 Что аудитировал
+
+Прямой `ls`/`find` по:
+- `src/` (10 top-level subfolders) + `src/pdf_framework/` (24 subfolders)
+- `src/bsl/` (11 framework-subsystems помимо 1С metadata-папок)
+- `tools/` (15+ инструментов помимо node_modules)
+- `infra/` (4 верхних: docker-mcp, lazy-mcp, pipeline, task-master)
+- `scripts/` (~120 скриптов)
+- `migrations/` (2 SQL)
+
+### 11.2 Карта gap'ов (после аудита)
+
+🔴 **Zero coverage — требуют отдельной главы**:
+
+| Подсистема | Файлов | Размер | Diátaxis verdict |
+|---|---|---|---|
+| `src/bsl/finetuning/` (Colab notebooks + train scripts) | 5+ | substantial | **YES** — standalone read-path "как обучить embedding на BSL" |
+| `tools/sonar-*.jar` + `src/bsl/sonar/` + `sonar-project.properties` | ~10 | substantial | **YES** — standalone "как настроить SonarQube для BSL" |
+| `infra/task-master/` + task-master-ai MCP | ? | TBD (требуется измерить) | **PENDING** |
+
+🟡 **Группировочные главы — связные tools без единой обзорной точки**:
+
+| Группа | Tools | Текущее покрытие |
+|---|---|---|
+| **BSL Toolchain Ecosystem** | bsl-ls (LSP), ast-grep-mcp, multilspy-fork, auto-documenter, bsl-semantic-diff, mcp-reasoner, 1c-docs-rag, coverage41c, serena | scattered mentions в 28, 17, 36 — нет обзорной главы |
+
+🟢 **Малые подсистемы — sub-разделы существующих глав**:
+
+| Подсистема | LOC/файлов | Куда |
+|---|---|---|
+| `src/pdf_framework/analytics/` (audit/cost/tracker) | 3 файла | sub 09 (новый 09.15_Analytics.md) |
+| `src/pdf_framework/chains/qa/` | small | sub 05 |
+| `src/pdf_framework/tools/` (document/graph_query/retrieval) | small | sub 05 |
+| `src/pdf_framework/quick.py` (QuickRAG API) | 226 LOC | sub 06 (новый 06.X_QuickRAG.md) |
+| `src/bsl/call_graph/` (2) + `src/bsl/knowledge_graph/` (2) + `src/bsl/parser/` (5) + `coding_assistant/` (2) + `evaluation/` (2) | mostly 2-5 files | sub 28 |
+
+### 11.3 Почему §4 был консервативен
+
+`CODE_TO_DOMAIN` в `docs-change-enforcer.py` — это **drift-detection mapping**, не **subsystem catalog**. Его SKIP_PATTERNS исключают целиком:
+- `src/bsl/` (как «not framework code») → пропускает framework-функционал `finetuning/`
+- `tools/` (как «infrastructure») → пропускает 9 user-facing tools
+- `scripts/` (как «utility») → пропускает группу `bench_*`, `finetune_*`, `matryoshka_*`
+
+Lesson: при следующем audit использовать **прямой `ls src/ tools/ infra/`**, не полагаться на existing mapping.
+
+### 11.4 Diátaxis 2-of-3 методология (новая)
+
+Главу выделяем если ответ «да» на **2 из 3**:
+1. **Standalone read-path** — пользователь приходит читать ТОЛЬКО эту главу с конкретной задачей? (Diátaxis: discoverability)
+2. **Owner boundary** — единый owner или skill? (Diátaxis: maintainability)
+3. **Internal structure** — минимум 3 подраздела (.1, .2, .3)? (Diátaxis: depth)
+
+Прогон кандидатов:
+
+| Глава | Standalone? | Owner? | ≥3 sub? | Verdict |
+|---|---|---|---|---|
+| 38_INFRA_PIPELINE | ✓ | ✓ deployment | ✓ docker/CI/git-hooks | **YES** |
+| 39_MATRYOSHKA | ✓ | ✓ framework-search | ✓ MRL/SQ/alias-swap | **YES** |
+| 40_BENCHMARKING | ✓ | ✓ evaluation-benchmark | ✓ bench/eval/golden | **YES** |
+| 41_SCHEMAS_CONTRACTS | ✓ | ✓ framework-config | ✓ pydantic/migrations/registry | **YES** |
+| **42_BSL_FINETUNING** | ✓ | ✓ embedding-models | ✓ dataset/train/eval | **YES** |
+| **43_SONAR_QUALITY_GATE** | ✓ | ✓ | ✓ config/scan/rules | **YES** |
+| **45_BSL_TOOLCHAIN_ECOSYSTEM** | ✓ | shared | ✓ LSP/AST/semantic-diff | **YES** (обзорная) |
+| 44_TASK_MASTER (cand.) | ? | ? | ? | **PENDING** size check |
+| 46_CALL_GRAPH | ✗ часть 28 | ✗ | ✗ | **NO** → sub 28 |
+| 47_ANALYTICS | ✗ часть 09 | ✗ | ✗ | **NO** → sub 09.15 |
+
+### 11.5 Обновлённая декомпозиция (replaces §4)
+
+Три варианта:
+
+| Вариант | Новые главы | Trade-off |
+|---|---|---|
+| **A. Консервативный (4)** | 38, 39, 40, 41 | Закрывает только zero-coverage в коде; finetuning + sonar + tools остаются сиротами |
+| **B. Балансный (7)** ← **рекомендую** | 38, 39, 40, 41, **42_BSL_FINETUNING**, **43_SONAR_QUALITY_GATE**, **45_BSL_TOOLCHAIN_ECOSYSTEM** | Закрывает все 🔴 + единая точка для 9 BSL-tools |
+| **C. Балансный + TaskMaster (8)** | B + **44_TASK_MASTER_AUTOMATION** | Решение после size-check `infra/task-master/` |
+| **D. Максималистский (11+)** | C + 46_CALL_GRAPH + 47_ANALYTICS + 48_COVERAGE_QUALITY | Над-фрагментация — нарушает Diátaxis principle |
+
+### 11.6 Stub-формат для глав 42-45 (расширяет §4)
+
+42_BSL_FINETUNING:
+```markdown
+---
+title: "42 Fine-tuning Qwen3 на BSL"
+diataxis: how-to
+status: stub
+code_refs:
+  - src/bsl/finetuning/
+  - scripts/finetune_qwen3_bsl_mrl.py
+  - scripts/collect_bsl_finetune_pairs.py
+related_skills: [embedding-models, bsl-semantic-search]
+last_verified: 2026-05-19
+---
+
+# 42. Fine-tuning Qwen3 на BSL
+
+## 42.1 Dataset preparation (collect_bsl_finetune_pairs.py)
+## 42.2 Training (notebooks/BSL_Finetuning_Colab.ipynb)
+## 42.3 MRL-aware fine-tune (finetune_qwen3_bsl_mrl.py)
+## 42.4 Eval против baseline (см. главу 40)
+```
+
+43_SONAR_QUALITY_GATE:
+```markdown
+---
+title: "43 SonarQube Quality Gate (BSL + Python)"
+diataxis: how-to
+code_refs:
+  - tools/sonar-bsl-plugin.jar
+  - tools/sonar-scanner-6.2.1.4610-windows-x64/
+  - src/bsl/sonar/
+  - sonar-project.properties
+related_skills: [deployment]
+---
+
+# 43. SonarQube Quality Gate
+
+## 43.1 Установка sonar-bsl-plugin
+## 43.2 sonar-project.properties и CLI запуск
+## 43.3 Custom rules для BSL (rules_manager.py)
+## 43.4 CI integration (.github/workflows)
+```
+
+45_BSL_TOOLCHAIN_ECOSYSTEM (обзорная):
+```markdown
+---
+title: "45 BSL Toolchain Ecosystem"
+diataxis: reference
+code_refs:
+  - tools/bsl-ls/
+  - tools/ast-grep-mcp/
+  - tools/multilspy-fork/
+  - tools/auto-documenter/
+  - tools/bsl-semantic-diff/
+  - tools/mcp-reasoner/
+  - tools/1c-docs-rag/
+  - tools/coverage41c/
+  - tools/serena/
+related_skills: [bsl-development, bsl-refactoring-workflow]
+---
+
+# 45. BSL Toolchain Ecosystem
+
+## 45.1 Decision Matrix — какой tool для какой задачи
+## 45.2 LSP layer (bsl-ls, multilspy-fork)
+## 45.3 AST tools (ast-grep-mcp, bsl-semantic-diff)
+## 45.4 Code documentation (auto-documenter)
+## 45.5 Coverage (coverage41c)
+## 45.6 Reasoning (mcp-reasoner, serena)
+## 45.7 1C-specific docs (1c-docs-rag)
+```
+
+## §12. Открытые вопросы для возврата
+
+При продолжении (когда вернёмся):
+
+1. **Approval варианта B / C / D.** Сейчас рекомендую B (7 глав). Если task-master объёмный — C (8 глав).
+2. **Size check `infra/task-master/`** — нужно измерить, прежде чем коммитить 44.
+3. **Расщеплять ли 28_BSL_SEMANTIC_SEARCH?** В нём уже 5 подразделов; добавление sub-глав для call_graph/parser/coding_assistant даст 8+ — может быть пересмотрено как 28 + 28a + 28b или просто оставить как есть.
+4. **Расщеплять ли 09_АДМИНИСТРИРОВАНИЕ?** Сейчас 14 подразделов (09.1-09.14); добавление 09.15_Analytics приведёт к 15. Возможный split: 09_DEPLOYMENT (docker/rate-limit/auth) + 09a_OBSERVABILITY (langfuse/prometheus/monitoring) + 09b_HOOKS_AUTOMATION (auto-git-save, skill-enforcement).
+5. **stub-главы — placeholder теперь или заполнять сразу?** Текущий план §4 → создать stub, наполнять в Phase 1. Альтернатива — наполнять сразу при создании.
+6. **`docs/wiki/` подсистема** (3 121 файлов auto-generated) — отдельный sub-site `wiki.example.local` (§8 q1) — нужно решение прежде чем стартует Phase 0.
+7. **Когда стартует Phase 0?** Зависит от решения по варианту глав + другие приоритеты (PR review, debug-hmr Phase 2, etc.).
+
+### Триггеры возврата к roadmap
+
+Вернуться к этому roadmap если:
+- User says "продолжаем roadmap 260519" / "пора делать docs site"
+- Завершён PR review (260519 disjoint master) — освобождает context для tooling work
+- Появится новая подсистема в коде без главы (audit-via-`docs-change-enforcer` UNMAPPED)
+- Phase 8 Qwen3 будет полностью stable (не нужно частить documentation pages)
+
+---
+
 **Подпись:** Claude Opus 4.7 + research cache [hierarchical-code-anchored-docs-2026.md](../../.claude/skills/architecture-research/cache/hierarchical-code-anchored-docs-2026.md)
+
+**Changelog:**
+- 2026-05-19 initial proposal (§1-10): MkDocs stack + 4 новые главы (38-41) + 6-фазный план
+- 2026-05-19 intermediate update (§11-12): direct code audit ревизия — обнаружены 3 zero-coverage gap'а (finetuning, sonar, BSL toolchain) + Diátaxis 2-of-3 методология + 7 open questions для следующей сессии
