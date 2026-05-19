@@ -1309,6 +1309,24 @@ def main() -> None:
         sys.exit(1)
 
     t0 = time.time()
+    # roadmap 260518 follow-up — initialize module-level tracker so embedder
+    # methods (_embed_chunks_late, _embed_late_chunked_sliding, flush_batch)
+    # can emit events via the `_evt`/`_state` helpers without threading a
+    # tracker handle through every signature. start() launches the daemon
+    # heartbeat thread; atexit guarantees run_end on uncaught exception.
+    global _tracker
+    _tracker = make_tracker("reindex_bsl_qwen3").start()
+    _evt(
+        "startup",
+        embedder=args.embedder,
+        project=str(project),
+        paths_mode=bool(args.paths),
+        pooling_mode=args.pooling_mode,
+        region_aware=(not args.no_region_aware),
+        collection=args.collection,
+        batch_size=args.batch_size,
+        recreate=bool(args.recreate),
+    )
     parser = BSLASTParser()
     chunker = BSLChunker()
     if args.enable_fa2 and args.embedder != "qwen3-st":
