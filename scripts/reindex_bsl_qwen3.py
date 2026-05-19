@@ -69,6 +69,35 @@ from src.bsl.parser.bsl_chunker import BSLChunk
 SKIP_PATTERNS = ["node_modules", "bin/", "build/"]
 UUID_NAMESPACE = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+# Roadmap 260518 follow-up — module-level progress tracker. main() replaces
+# this with a real `ProgressTracker` after CLI parsing; embedder/flush_batch
+# reach for it via the `_tracker` global. Default None means "no-op" so
+# importing this module from tests/REPL doesn't spawn heartbeat threads or
+# touch the filesystem.
+_tracker: ProgressTracker | None = None
+
+
+def _evt(name: str, **payload: Any) -> None:
+    """Emit a tracker event if a tracker is initialized; else no-op."""
+    if _tracker is not None:
+        _tracker.event(name, **payload)
+
+
+def _state(**kw: Any) -> None:
+    """Update tracker heartbeat state if a tracker is initialized; else no-op."""
+    if _tracker is not None:
+        _tracker.set_state(**kw)
+
+
+@contextmanager
+def _stage(name: str, **start_payload: Any) -> Iterator[None]:
+    """Open a tracker stage if a tracker is initialized; else pass-through."""
+    if _tracker is not None:
+        with _tracker.stage(name, **start_payload):
+            yield
+    else:
+        yield
+
 # Cap each Qdrant upsert payload. 4096-dim float32 vectors × 64 points ≈ 1 MB —
 # well under proxy/keepalive limits and survives WinError 10053 mid-stream resets.
 # Embedding bucket pool (--buffer-size) stays large for throughput; only the
