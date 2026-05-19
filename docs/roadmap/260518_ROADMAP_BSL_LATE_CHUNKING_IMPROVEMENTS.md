@@ -86,6 +86,27 @@ for char_start, char_end in chunk_char_spans:
 4. **Fallback% 1.9%** — близко к §4.4 target `<1%`. Phase 3 region-aware grouping (ON by default) уже даёт основной выигрыш. Остаётся tuning на edge cases.
 5. **§4.4 success criteria требует обновления** — добавить «FA2 mandatory для Phase 2/3 на Cyrillic BSL».
 
+### 1.2.3 Overlap tuning A/B (2026-05-19, FA2 baseline)
+
+После §1.2.2 — отдельный замер влияния `--sliding-overlap` (новый CLI флаг, добавлен 2026-05-19 в [scripts/reindex_bsl_qwen3.py](../../scripts/reindex_bsl_qwen3.py)) на тот же god-object `УправлениеДоступомСлужебный/Module.bsl`. Цель — снизить fallback% с 1.9% до <1% (§4.4 criterion).
+
+| Метрика | overlap=0.15 (default) | overlap=0.25 | Δ |
+|---|---|---|---|
+| Wall-clock total | 381.5s | **414.4s** | +8.6% |
+| Total sliding windows | 147 | 167 | +13.6% (доп. окна из увеличенного overlap) |
+| forward_s median (FA2) | 2.10s | 2.12s | ≈ identical |
+| forward_s mean | 2.06s | 2.05s | ≈ identical |
+| Regions with any fallback | 10 | **3** | -70% |
+| Fallback chunks (count) | 19 | **3** | -84% |
+| **Fallback vs total chunks** | 19/1114 = **1.7%** | 3/1114 = **0.27%** | **HIT <1% target** |
+| Chunks indexed | 1114 | 1114 | identical (deterministic) |
+
+**Run IDs:** `phase12-fa2-260519` (overlap=0.15), `phase12-overlap25-260519` (overlap=0.25).
+
+**Вывод:** `--sliding-overlap 0.25` рекомендуется как **новый default для production** Phase 2/3 на Cyrillic BSL. Закрывает §4.4 criterion `average fallback% < 1%`. Стоимость 8.6% wall-clock — приемлема (на 50 god-objects: ~5min → ~5.4min на самый большой модуль).
+
+**Следующий шаг:** изменить `Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = 0.15` → `0.25` после Phase 4 benchmark (нельзя поднимать default без подтверждения что recall не падает; overlap-zone имеет потенциальное влияние на boundary chunks).
+
 ### 1.3 Почему `max_seq_length=4096`
 
 Phase 8.12 C5 — защита от OOM на 24 GB RTX 3090 (Qwen3-8B FP16 = 16 GB; activations O(n²) для standard attention → быстро blow VRAM на XXL модулях). Но **искусственно занижено в 8× от native** (Qwen3 supports 32K context OOTB; TEI Docker setup использует max_input_length=40960).
