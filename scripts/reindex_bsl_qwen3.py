@@ -1373,6 +1373,28 @@ def main() -> None:
             "orchestrator — Phase 3 of roadmap 260518)."
         )
         sys.exit(1)
+    if (
+        args.pooling_mode == "late-chunking"
+        and args.embedder == "qwen3-st"
+        and not args.enable_fa2
+        and _looks_like_cyrillic_project(project)
+    ):
+        # roadmap 260518 §1.2.2 A/B (2026-05-19) showed Phase 2 sliding
+        # forward_s is 191-437s without FA2 vs 2.1s with FA2 on Cyrillic
+        # BSL — ~91-208× slower, with per-window degradation. Production
+        # rollout requires FA2; without it, reindex never finishes in a
+        # reasonable wall-clock. Allow override via env to keep a debug
+        # escape hatch for benchmarking the no-FA2 path itself.
+        if not os.environ.get("BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2"):
+            print(
+                "ERROR: --pooling-mode late-chunking on Cyrillic project "
+                "requires --enable-fa2 (see roadmap 260518 §1.2.2). Without "
+                "FA2, per-window forward is 191-437s vs 2.1s with FA2 (91-208× "
+                "slower) and degrades between windows due to VRAM pressure. "
+                "Either add --enable-fa2 OR set "
+                "BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2=1 for benchmark mode."
+            )
+            sys.exit(1)
     with _stage("model_load", embedder=args.embedder, fa2=bool(args.enable_fa2)):
         embedder = make_embedder(
             args.embedder,
