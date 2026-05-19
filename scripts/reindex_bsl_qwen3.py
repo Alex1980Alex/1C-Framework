@@ -996,14 +996,25 @@ def _embed_chunks_late(
             # missed Late Chunking (overflowed max_seq_length even after
             # Phase 2 sliding windows + Phase 3 region grouping) — they
             # fall back to standard pooling and lose document context.
+            first_path = chunks[indices[0]].metadata.get("module_path", "?")
+            first_region = chunks[indices[0]].metadata.get("region", "") or "<no region>"
             if len(fallback_local) * 2 >= len(indices):
-                first_path = chunks[indices[0]].metadata.get("module_path", "?")
-                first_region = chunks[indices[0]].metadata.get("region", "") or "<no region>"
                 print(
                     f"  [late-chunking] fallback {len(fallback_local)}/{len(indices)} "
                     f"chunks (parent {len(parent_text)} chars) — "
                     f"module_path={first_path} region={first_region}"
                 )
+            # roadmap 260518 follow-up — always record fallback events
+            # (not just severe ones) so post-mortem can compute average
+            # fallback% across the full run without scraping noisy stdout.
+            _evt(
+                "late_chunk_fallback",
+                fallback=len(fallback_local),
+                group=len(indices),
+                parent_chars=len(parent_text),
+                module_path=first_path,
+                region=first_region,
+            )
             fb_texts = [chunks[indices[j]].content for j in fallback_local]
             fb_vecs = embedder.embed_batch(fb_texts, is_query=False)
             for j, fv in zip(fallback_local, fb_vecs):
