@@ -1273,15 +1273,14 @@ def main() -> None:
     ap.add_argument(
         "--no-region-aware",
         action="store_true",
-        help="late-chunking only (Phase 3 of roadmap 260518). Disable "
+        help="late-chunking only (Phase 3 of roadmap 260518). RECOMMENDED "
+             "for Cyrillic BSL production after section 1.2.5 quality "
+             "benchmark (2026-05-20) showed region-aware grouping causes "
+             "-25pp recall@10 regression on medium-sized modules. Disables "
              "`(module_path, region)` grouping in late-chunking orchestrator "
-             "and revert to the legacy `module_path` grouping (Phase 8.12.9 "
-             "behaviour). Region-aware grouping is ON by default — it splits "
-             "BSL `#Область` sections into independent forward passes, "
-             "reducing single-pass length and therefore fallback rate, at "
-             "the price of losing cross-region context inside one module. "
-             "Toggle off if benchmark recall on cross-region queries "
-             "regresses.",
+             "and reverts to the legacy `module_path` grouping (Phase 8.12.9 "
+             "behaviour). Region-aware grouping is ON by default (kept for "
+             "backwards compat); production reindex MUST add this flag.",
     )
     args = ap.parse_args()
 
