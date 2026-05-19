@@ -487,7 +487,13 @@ class Qwen3STEmbedder:
         )
         total_tokens = len(probe["input_ids"])
         if total_tokens <= self.max_seq_length:
-            return self._embed_late_chunked_single_pass(parent_text, chunk_char_spans)
+            t_sp = time.perf_counter()
+            result = self._embed_late_chunked_single_pass(parent_text, chunk_char_spans)
+            forward_s = time.perf_counter() - t_sp
+            if forward_s >= self.SINGLE_PASS_LOG_THRESHOLD_S:
+                _evt("single_pass", tokens=total_tokens, parent_chars=len(parent_text),
+                     chunks=len(chunk_char_spans), forward_s=round(forward_s, 3))
+            return result
         return self._embed_late_chunked_sliding(
             parent_text, chunk_char_spans, total_tokens
         )
