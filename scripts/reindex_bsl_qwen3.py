@@ -254,10 +254,14 @@ class Qwen3STEmbedder:
         enable_fa2: bool = False,
         max_seq_length: int = 8192,
     ) -> None:
-        # Phase 8.12 C4 (defense-in-depth — also set at module top in case
-        # this class is imported and instantiated from a context that
-        # imported torch before our module).
-        os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+        # Phase 8.12 C4 + roadmap 260518 Phase 2 fix (defense-in-depth — also
+        # set at module top in case this class is imported and instantiated
+        # from a context that imported torch before our module). See module
+        # top for full rationale on switch away from expandable_segments.
+        os.environ.setdefault(
+            "PYTORCH_CUDA_ALLOC_CONF",
+            "garbage_collection_threshold:0.6,max_split_size_mb:512",
+        )
 
         import torch
         from sentence_transformers import SentenceTransformer
