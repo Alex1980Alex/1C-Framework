@@ -111,56 +111,84 @@ def main():
     args = ap.parse_args()
     if not args.db.exists():
         print(f"ERROR: {args.db} missing"); sys.exit(1)
+    tracker = make_tracker("build_graph_embeddings").start()
+    tracker.event("startup", db=str(args.db), recreate=bool(args.recreate),
+                  fa2=bool(args.enable_fa2), batch_size=args.batch_size, limit=int(args.limit))
     t0 = time.time()
     print(f"=== Reading nodes from {args.db} ===")
-    nodes = collect_nodes(args.db, limit=args.limit or None)
+    with tracker.stage("collect_nodes", db=str(args.db)):
+        nodes = collect_nodes(args.db, limit=args.limit or None)
     print(f"Collected {len(nodes)} nodes")
     by_kind = {}
     for n in nodes: by_kind[n["kind"]] = by_kind.get(n["kind"], 0) + 1
     print(f"  By kind: {by_kind}")
-    if not nodes: sys.exit(1)
+    tracker.event("nodes_collected", count=len(nodes), by_kind=by_kind)
+    if not nodes:
+        tracker.stop(summary={"nodes": 0, "abort": "empty"}); sys.exit(1)
     print(f"\n=== Loading Qwen3-Embedding-8B {'+ FA2' if args.enable_fa2 else '(no FA2)'} ===")
-    from sentence_transformers import SentenceTransformer
-    import torch
-    model_kwargs = {"device_map": "auto"}
-    tokenizer_kwargs = {"padding_side": "left"}
-    if args.enable_fa2:
-        try:
-            import flash_attn  # noqa
-            model_kwargs["attn_implementation"] = "flash_attention_2"
-            print("  FA2 import OK")
-        except ImportError:
-            print("  WARN: flash_attn missing")
-    model = SentenceTransformer("Qwen/Qwen3-Embedding-8B",
-        model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
-    if torch.cuda.is_available(): model = model.to("cuda")
+    with tracker.stage("model_load", fa2=bool(args.enable_fa2)):
+        from sentence_transformers import SentenceTransformer
+        import torch
+        model_kwargs = {"device_map": "auto"}
+        tokenizer_kwargs = {"padding_side": "left"}
+        if args.enable_fa2:
+            try:
+                import flash_attn  # noqa
+                model_kwargs["attn_implementation"] = "flash_attention_2"
+                print("  FA2 import OK")
+            except ImportError:
+                print("  WARN: flash_attn missing")
+                tracker.event("fa2_missing")
+        model = SentenceTransformer("Qwen/Qwen3-Embedding-8B",
+            model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
+        if torch.cuda.is_available(): model = model.to("cuda")
     print(f"Model loaded ({time.time() - t0:.1f}s)")
     qdrant = QdrantClient(host="localhost", port=6333, grpc_port=6334, prefer_grpc=True, timeout=300)
-    ensure_collection(qdrant, recreate=args.recreate)
+    with tracker.stage("ensure_collection", recreate=bool(args.recreate)):
+        ensure_collection(qdrant, recreate=args.recreate)
     print(f"\n=== Embedding+upsert {len(nodes)} nodes ===")
     BATCH = max(1, args.batch_size); UPSERT_CHUNK = 200
     buf = []; total = 0
-    for i in range(0, len(nodes), BATCH):
-        batch = nodes[i:i+BATCH]
-        texts = [n["text"] for n in batch]
-        embs = model.encode(texts, batch_size=BATCH, show_progress_bar=False, convert_to_numpy=True)
-        for n, emb in zip(batch, embs):
-            payload = {k: v for k, v in n.items() if k not in ("id", "text")}
-            payload["text"] = n["text"][:2000]
-            buf.append(qm.PointStruct(id=n["id"], vector=emb.tolist(), payload=payload))
-        if len(buf) >= UPSERT_CHUNK:
-            qdrant.upsert(collection_name=COLLECTION, points=buf, wait=False)
+    tracker.set_state(total_nodes=len(nodes), nodes_done=0)
+    with tracker.stage("embed_upsert", batch=BATCH, upsert_chunk=UPSERT_CHUNK):
+        for i in range(0, len(nodes), BATCH):
+            batch = nodes[i:i+BATCH]
+            texts = [n["text"] for n in batch]
+            t_enc = time.perf_counter()
+            embs = model.encode(texts, batch_size=BATCH, show_progress_bar=False, convert_to_numpy=True)
+            encode_s = time.perf_counter() - t_enc
+            for n, emb in zip(batch, embs):
+                payload = {k: v for k, v in n.items() if k not in ("id", "text")}
+                payload["text"] = n["text"][:2000]
+                buf.append(qm.PointStruct(id=n["id"], vector=emb.tolist(), payload=payload))
+            tracker.set_state(nodes_done=min(i + BATCH, len(nodes)),
+                              buf=len(buf), batch_idx=i // BATCH + 1)
+            tracker.event("encode_batch", i=i, n=len(batch), encode_s=round(encode_s, 3))
+            if len(buf) >= UPSERT_CHUNK:
+                t_up = time.perf_counter()
+                qdrant.upsert(collection_name=COLLECTION, points=buf, wait=False)
+                upsert_s = time.perf_counter() - t_up
+                total += len(buf); buf.clear()
+                print(f"  [{total}/{len(nodes)}] upserted, {time.time()-t0:.0f}s")
+                tracker.event("upsert_chunk", total=total, of=len(nodes), upsert_s=round(upsert_s, 3))
+        if buf:
+            t_up = time.perf_counter()
+            qdrant.upsert(collection_name=COLLECTION, points=buf, wait=True)
+            upsert_s = time.perf_counter() - t_up
             total += len(buf); buf.clear()
-            print(f"  [{total}/{len(nodes)}] upserted, {time.time()-t0:.0f}s")
-    if buf:
-        qdrant.upsert(collection_name=COLLECTION, points=buf, wait=True)
-        total += len(buf); buf.clear()
+            tracker.event("upsert_tail", total=total, upsert_s=round(upsert_s, 3))
     elapsed = time.time() - t0
     final = qdrant.get_collection(COLLECTION)
     print(f"\n{'=' * 50}\nGRAPH EMBEDDINGS BUILD COMPLETE\n{'=' * 50}")
     print(f"  Nodes:   {len(nodes)}")
     print(f"  Points:  {final.points_count}")
     print(f"  Time:    {elapsed:.1f}s ({elapsed/max(1,len(nodes)):.2f}s/node)")
+    tracker.stop(summary={
+        "nodes": len(nodes),
+        "points": final.points_count,
+        "elapsed_s": round(elapsed, 1),
+        "by_kind": by_kind,
+    })
 
 
 if __name__ == "__main__":
