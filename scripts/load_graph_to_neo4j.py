@@ -56,6 +56,10 @@ def load_modules_and_objects(session, conn, tracker=None):
                 m.object_name = row.object_name
         """, rows=[{"path": r[0], "module_type": r[1] or "", "subsystem": r[2] or "",
                     "object_type": r[3] or "", "object_name": r[4] or ""} for r in batch])
+        batch_idx += 1
+        if tracker:
+            tracker.set_state(modules_done=min(batch_idx * 1000, len(rows)))
+            tracker.event("modules_batch", batch=batch_idx, rows=len(batch))
     objects = {(r[3], r[4]) for r in rows if r[3] and r[4]}
     print(f"  Objects: {len(objects)}")
     obj_rows = [{"id": f"{ot}/{on}", "object_type": ot, "name": on} for ot, on in objects]
