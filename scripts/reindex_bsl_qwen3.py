@@ -625,6 +625,13 @@ class Qwen3STEmbedder:
             f"(overlap {overlap_chars} chars, ratio {overlap_ratio:.0%})"
         )
 
+        # roadmap 260518 Phase 2 fix: import здесь, чтобы не зависеть от
+        # порядка инициализации модуля; gc нужен для дробления generational
+        # ссылок на token_embeddings, которые иначе живут до возврата метода.
+        import gc
+
+        import torch
+
         results: list[list[float] | None] = [None] * len(chunk_char_spans)
         for win_char_start, win_text in char_windows:
             win_char_end = win_char_start + len(win_text)
@@ -651,6 +658,14 @@ class Qwen3STEmbedder:
             for orig_idx, vec in zip(relevant, win_vectors):
                 if vec is not None:
                     results[orig_idx] = vec
+            # roadmap 260518 Phase 2 fix: между окнами явно дробим reserved-
+            # сегменты PyTorch'а. Без этого на 39 окнах × ~150 MB token
+            # embeddings reserved уходил до 49 GB (RTX 3090 24 GB) и драйвер
+            # падал в shared system memory → BSOD/reboot. gc.collect()
+            # подбирает Python-уровень ссылки на features dict, empty_cache()
+            # возвращает аллокаторные сегменты обратно в CUDA driver.
+            gc.collect()
+            torch.cuda.empty_cache()
         return results
 
     def close(self) -> None:
