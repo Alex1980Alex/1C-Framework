@@ -90,7 +90,7 @@ class TestQdrantAliasAwareInitialize:
             collection_name="pdf_documents",
             dimensions=4096,
             qdrant_url="http://localhost:6333",
-            qdrant_api_key=None,
+            qdrant_api_key="",
         )
         store = QdrantVectorStore(settings)
 
@@ -116,7 +116,7 @@ class TestQdrantAliasAwareInitialize:
             collection_name="fresh_collection",
             dimensions=4096,
             qdrant_url="http://localhost:6333",
-            qdrant_api_key=None,
+            qdrant_api_key="",
         )
         store = QdrantVectorStore(settings)
 
@@ -140,7 +140,7 @@ class TestQdrantAliasAwareInitialize:
             collection_name="pdf_documents_mrl_1024",
             dimensions=1024,
             qdrant_url="http://localhost:6333",
-            qdrant_api_key=None,
+            qdrant_api_key="",
         )
         store = QdrantVectorStore(settings)
 
@@ -165,7 +165,7 @@ class TestQdrantAliasAwareInitialize:
             collection_name="bsl_code_v4",
             dimensions=4096,
             qdrant_url="http://localhost:6333",
-            qdrant_api_key=None,
+            qdrant_api_key="",
         )
         store = QdrantVectorStore(settings)
 
