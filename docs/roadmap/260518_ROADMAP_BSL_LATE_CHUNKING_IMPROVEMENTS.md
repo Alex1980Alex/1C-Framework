@@ -10,9 +10,9 @@
 |---|---|---|---|---|---|
 | **Phase 1** | Bump `max_seq_length` 4096 → 8192 (1-line) | ✅ **DONE** | — | [scripts/reindex_bsl_qwen3.py:255](../../scripts/reindex_bsl_qwen3.py) | LOW (только VRAM check) |
 | **Phase 2** | Sliding window Late Chunking для модулей > max_seq_length | ✅ **DONE** (требует `--enable-fa2`, см. §1.2.2) | — | [scripts/reindex_bsl_qwen3.py:568-680](../../scripts/reindex_bsl_qwen3.py) | MEDIUM → **HIGH без FA2** (per-window forward 191-437s vs 2.1s; новая строка в §8) |
-| **Phase 3** | Region-based Late Chunking (на основе `#Область` границ) | ✅ **DONE** (`--region-aware` ON by default) | — | reindex + [src/bsl/parser/bsl_chunker.py](../../src/bsl/parser/bsl_chunker.py) | LOW (естественные границы BSL) |
-| **Phase 4** | Benchmark suite + decision на основе recall@10 | ☐ TODO | 2 day | `tests/benchmarks/` (TBD) | LOW |
-| **Phase 5** | Production rollout (alias swap + full reindex 10 коллекций) | ☐ BLOCKED by Phase 4 + FA2 mandatory | 1 day | [chapter 31.3](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md) | MEDIUM (downtime) |
+| **Phase 3** | Region-based Late Chunking (на основе `#Область` границ) | ⚠️ **IMPLEMENTED but FAILS QUALITY GATE** (medium recall -25pp vs baseline; §1.2.5) — use `--no-region-aware` in production | — | reindex + [src/bsl/parser/bsl_chunker.py](../../src/bsl/parser/bsl_chunker.py) | **HIGH** (quality regression confirmed Phase 4) |
+| **Phase 4** | Benchmark suite + decision на основе recall@10 | ✅ **DONE** (§1.2.5; phase12 PASS, phase123 FAIL) | — | [tests/benchmarks/test_bsl_retrieval_quality.py](../../tests/benchmarks/test_bsl_retrieval_quality.py), [data/bsl_golden_set.json](../../data/bsl_golden_set.json) | LOW |
+| **Phase 5** | Production rollout (alias swap + full reindex 10 коллекций) | ☐ READY (target = `phase12` config: `--no-region-aware`); requires user "go" | 1 day | [chapter 31.3](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md) | MEDIUM (downtime) |
 
 **Триггер:** [chapter 31.6 §1](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) указал что 5-10% chunks падают в standard pooling fallback на god-object модулях `ИБTransportManagementDevelop` (>500K chars). Пользователь запросил roadmap для исключения этого fallback'а (session 2026-05-18).
 
