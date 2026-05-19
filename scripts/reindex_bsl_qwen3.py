@@ -498,6 +498,12 @@ class Qwen3STEmbedder:
             pooled = token_embeddings[tok_start:tok_end].mean(dim=0)
             pooled = torch.nn.functional.normalize(pooled, p=2, dim=0)
             out.append(pooled.float().cpu().tolist())
+        # roadmap 260518 Phase 2 fix: освободить GPU-resident tensor'ы до выхода
+        # из метода. Без явного del аллокатор PyTorch держит full token_embeddings
+        # (≈18K tok × 4096 dim × bf16 ≈ 150 MB) и features в reserved-сегменте
+        # пока caller (sliding loop) не вернётся в Python. На 39 окнах накопление
+        # выталкивало reserved за 24 GB физ. VRAM → BSOD/reboot.
+        del token_embeddings, features
         return out
 
     @staticmethod
