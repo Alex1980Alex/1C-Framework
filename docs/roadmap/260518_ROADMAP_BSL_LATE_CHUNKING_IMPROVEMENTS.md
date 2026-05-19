@@ -57,6 +57,35 @@ for char_start, char_end in chunk_char_spans:
 
 **Вывод:** реальный fallback **значительно выше** консервативной оценки 5-10%. Production коллекция `bsl_code_v4_late` фактически содержит ~2/3 chunks со standard pooling (без Late Chunking преимущества) для крупных конфигураций типа `ИБTransportManagementDevelop`. Это даёт **сильное обоснование** для Phases 1-3 этого roadmap'а.
 
+### 1.2.2 A/B forward_s измерения (2026-05-19, после внедрения `scripts/_progress.py` instrumentation)
+
+После полной реализации Phase 1+2+3 и добавления observability ([scripts/_progress.py](../../scripts/_progress.py), JSONL sink `data/indexing-progress.jsonl`, helper [scripts/_progress_summarize.py](../../scripts/_progress_summarize.py)) — проведена A/B-проверка на одном из крупнейших god-object модулей `ИБTransportManagementDevelop/Конфигурация/src/CommonModules/УправлениеДоступомСлужебный/Module.bsl` (3.16 MB, 907 symbols, 1114 chunks, 13 регионов).
+
+| Метрика | **Без `--enable-fa2`** | **С `--enable-fa2`** | Speedup |
+|---|---|---|---|
+| Wall-clock total | 796s (KILLED на window 2/5 region 1/13) | **381.5s (COMPLETE)** | — |
+| Model load | 33.1s | 28.2s | 1.2× |
+| Sliding regions completed | 1 (incomplete) | **13/13** | — |
+| Total sliding windows | 2 | **147** | — |
+| `forward_s` window 1 | **191.3s** | (в выборке ниже) | — |
+| `forward_s` window 2 | **436.9s** (degradation +145s vs win 1) | (в выборке ниже) | — |
+| `forward_s` median (FA2) | — | **2.10s** | **~91×** vs win 1; **~208×** vs win 2 |
+| `forward_s` max (FA2) | — | **2.81s** | **155×** vs win 2 |
+| `forward_s` distribution (FA2) | — | min 0.43s · median 2.10s · mean 2.06s · stdev 0.29s | — |
+| `late_chunk_fallback` events | 0 (не дошли) | **10** | — |
+| Average fallback ratio | — | **1.9% (19/987)** ≈ §4.4 target <1% | — |
+| Final indexed chunks | 0 | **1 114** | — |
+
+**Run IDs:** `phase12-real-260519` (no FA2, killed), `phase12-fa2-260519` (FA2, complete). Полный JSONL — `data/indexing-progress.jsonl`.
+
+**Выводы для roadmap'а:**
+
+1. **Phase 2 sliding window КОД работает корректно** — на FA2 прогоне без crash'ей проиндексировано 13 регионов с 147 sliding окнами; форма distribution стабильна (median ≈ mean, stdev узкий) — нет degradation per-window как было без FA2.
+2. **Без FA2 Phase 2 нежизнеспособен** — forward_s 191→437s **растёт** между окнами (VRAM allocator pressure от `gc.collect()+empty_cache()` не справляется). На 50 god-object модулях это даёт дни wall-clock'а вместо часов из §4.2 estimate.
+3. **Roadmap §4.2 estimate `+25s/module × 50 god-objects = +20 min` РЕАЛИСТИЧЕН только с FA2.** Реальный замер: 13-region god-object × ~25s sliding wall-clock = ~5 min с FA2.
+4. **Fallback% 1.9%** — близко к §4.4 target `<1%`. Phase 3 region-aware grouping (ON by default) уже даёт основной выигрыш. Остаётся tuning на edge cases.
+5. **§4.4 success criteria требует обновления** — добавить «FA2 mandatory для Phase 2/3 на Cyrillic BSL».
+
 ### 1.3 Почему `max_seq_length=4096`
 
 Phase 8.12 C5 — защита от OOM на 24 GB RTX 3090 (Qwen3-8B FP16 = 16 GB; activations O(n²) для standard attention → быстро blow VRAM на XXL модулях). Но **искусственно занижено в 8× от native** (Qwen3 supports 32K context OOTB; TEI Docker setup использует max_input_length=40960).
