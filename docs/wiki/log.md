@@ -336,3 +336,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: tech-research, z-ai-delegation, analyze-1c-task-v2, bsl-development, task-protocol
 - Files changed: 2
 - Summary: Session 2026-05-19. Skills: tech-research, z-ai-delegation, analyze-1c-task-v2, bsl-development, task-protocol, qdrant-operations, code-verify, indexing-pipeline. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-commit 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация, mcp-server.log.2026-05-18.0.gz +1 more. Commit: chore: auto-save probe_phase12_vram.py. Commit: chore: auto-save smoke_test_phase3_grouping.py
+
+## 2026-05-20 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: indexing-pipeline, qdrant-operations, learn:pytest-framework, learning-loop, evaluation-benchmark
+- Files changed: 2
+- Summary: Session 2026-05-20. Skills: indexing-pipeline, qdrant-operations, learn:pytest-framework, learning-loop, evaluation-benchmark, code-verify, git-commit-message, claude-api. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save generate_bsl_golden_set.py. Commit: chore: auto-save generate_bsl_golden_set.py. Commit: chore: auto-save IMPLEMENTATION-PROGRESS.md, test_bsl_retrieval_quality.py
