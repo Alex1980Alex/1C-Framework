@@ -1398,12 +1398,16 @@ def main() -> None:
         # reasonable wall-clock. Allow override via env to keep a debug
         # escape hatch for benchmarking the no-FA2 path itself.
         if not os.environ.get("BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2"):
+            # Note: keep message strictly ASCII — Windows cp1251 console
+            # cannot encode `x` (multiplication sign) nor many Cyrillic
+            # path glyphs, and `print()` raises UnicodeEncodeError before
+            # sys.exit() can fire. Numbers come from roadmap 260518 §1.2.2.
             print(
                 "ERROR: --pooling-mode late-chunking on Cyrillic project "
-                "requires --enable-fa2 (see roadmap 260518 §1.2.2). Without "
-                "FA2, per-window forward is 191-437s vs 2.1s with FA2 (91-208× "
-                "slower) and degrades between windows due to VRAM pressure. "
-                "Either add --enable-fa2 OR set "
+                "requires --enable-fa2 (see roadmap 260518 section 1.2.2). "
+                "Without FA2, per-window forward is 191-437s vs 2.1s with FA2 "
+                "(91-208 times slower) and degrades between windows due to "
+                "VRAM pressure. Either add --enable-fa2 OR set "
                 "BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2=1 for benchmark mode."
             )
             sys.exit(1)
