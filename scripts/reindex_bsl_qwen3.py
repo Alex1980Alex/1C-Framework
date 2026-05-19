@@ -1517,6 +1517,17 @@ def main() -> None:
     print(f"{'='*50}")
 
     embedder.close()
+    # roadmap 260518 follow-up — final summary lands in JSONL run_end record;
+    # makes it possible to script "compare last 3 runs" without parsing
+    # the per-line `[evt]` stdout.
+    _tracker.stop(summary={
+        "files": len(bsl_files),
+        "symbols": total_symbols,
+        "chunks": total_chunks,
+        "errors": errors,
+        "elapsed_s": round(elapsed, 1),
+        "collection": args.collection,
+    })
 
 
 if __name__ == "__main__":
