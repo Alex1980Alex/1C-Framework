@@ -238,6 +238,13 @@ def _latest_run(path: Path) -> str | None:
 
 
 def main() -> int:
+    # Windows default cp1251 stdout can't print BSL paths (Cyrillic) or
+    # the ×/→ glyphs used in output. Force UTF-8 first thing.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
     ap = argparse.ArgumentParser(description="Summarize an indexing-progress.jsonl run")
     ap.add_argument("--log", type=Path, default=DEFAULT_LOG,
                     help=f"Path to JSONL log (default: {DEFAULT_LOG.name})")
