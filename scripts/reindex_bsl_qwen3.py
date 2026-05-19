@@ -1444,6 +1444,10 @@ def main() -> None:
     batch: list[BSLChunk] = []
 
     for i, fp in enumerate(bsl_files, 1):
+        # roadmap 260518 follow-up — push per-file state so heartbeat
+        # (10s daemon thread) prints `current=<file>` even when the
+        # current file's flush_batch sits in a multi-window GPU forward.
+        _state(file_idx=i, current=fp.name, chunks_done=total_chunks)
         try:
             module = parser.parse_file(str(fp))
             chunks = chunker.chunk_module(module)
