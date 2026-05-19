@@ -603,7 +603,7 @@ class Qwen3STEmbedder:
         # overlap_ratio if benchmark shows recall drop at boundaries.
         print(
             f"  [late-chunking sliding] {total_tokens} tokens / {len(parent_text)} chars "
-            f"→ {len(char_windows)} windows × ~{window_chars} chars "
+            f"-> {len(char_windows)} windows x ~{window_chars} chars "
             f"(overlap {overlap_chars} chars, ratio {overlap_ratio:.0%})"
         )
 
