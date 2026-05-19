@@ -144,33 +144,46 @@ def main():
     args = ap.parse_args()
     if not args.db.exists():
         print(f"ERROR: {args.db} missing"); sys.exit(1)
+    tracker = make_tracker("load_graph_to_neo4j").start()
+    tracker.event("startup", db=str(args.db), neo4j_uri=NEO4J_URI, clear=bool(args.clear))
     t0 = time.time()
     conn = sqlite3.connect(str(args.db))
-    driver = GraphDatabase.driver(NEO4J_URI, auth=NEO4J_AUTH)
+    with tracker.stage("neo4j_connect", uri=NEO4J_URI):
+        driver = GraphDatabase.driver(NEO4J_URI, auth=NEO4J_AUTH)
     print(f"=== Connected to {NEO4J_URI} ===")
+    stats: dict[str, int] = {}
     with driver.session() as session:
         if args.clear:
-            print("Clearing graph...")
-            session.run("MATCH (n) DETACH DELETE n")
-        print("Setting up schema...")
-        for cypher in SCHEMA: session.run(cypher)
+            with tracker.stage("clear_graph"):
+                print("Clearing graph...")
+                session.run("MATCH (n) DETACH DELETE n")
+        with tracker.stage("schema"):
+            print("Setting up schema...")
+            for cypher in SCHEMA: session.run(cypher)
         print("\n=== Loading modules + objects ===")
-        load_modules_and_objects(session, conn)
+        with tracker.stage("load_modules_objects"):
+            load_modules_and_objects(session, conn, tracker=tracker)
         print("\n=== Loading symbols + DECLARES edges ===")
-        load_symbols(session, conn)
+        with tracker.stage("load_symbols"):
+            load_symbols(session, conn, tracker=tracker)
         print("\n=== Loading CALLS edges (this is the long part) ===")
-        load_calls(session, conn)
+        with tracker.stage("load_calls"):
+            load_calls(session, conn, tracker=tracker)
         print("\n=== Final stats ===")
-        for label in ("Module", "Symbol", "Object"):
-            r = session.run(f"MATCH (n:{label}) RETURN count(n) AS c").single()
-            print(f"  {label}: {r['c']}")
-        for rel in ("CONTAINS", "DECLARES", "CALLS"):
-            r = session.run(f"MATCH ()-[r:{rel}]->() RETURN count(r) AS c").single()
-            print(f"  {rel}: {r['c']}")
+        with tracker.stage("final_stats"):
+            for label in ("Module", "Symbol", "Object"):
+                r = session.run(f"MATCH (n:{label}) RETURN count(n) AS c").single()
+                print(f"  {label}: {r['c']}")
+                stats[label] = int(r["c"])
+            for rel in ("CONTAINS", "DECLARES", "CALLS"):
+                r = session.run(f"MATCH ()-[r:{rel}]->() RETURN count(r) AS c").single()
+                print(f"  {rel}: {r['c']}")
+                stats[rel] = int(r["c"])
     driver.close()
     conn.close()
     elapsed = time.time() - t0
     print(f"\nTotal time: {elapsed:.1f}s")
+    tracker.stop(summary={**stats, "elapsed_s": round(elapsed, 1)})
 
 
 if __name__ == "__main__":
