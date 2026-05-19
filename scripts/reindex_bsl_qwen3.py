@@ -128,6 +128,18 @@ def should_skip(path: Path) -> bool:
     return any(p in path_str for p in SKIP_PATTERNS)
 
 
+def _looks_like_cyrillic_project(project: Path) -> bool:
+    """Heuristic: does the project root path contain Cyrillic characters?
+
+    Used by the late-chunking-requires-FA2 guard. Cyrillic in the path is
+    a strong signal that BSL files inside also contain Cyrillic identifiers
+    (and therefore trigger the slow-without-FA2 path documented in roadmap
+    260518 §1.2.2). False positives (Latin project path containing Cyrillic
+    files) are escape-hatched via BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2=1.
+    """
+    return any("Ѐ" <= ch <= "ӿ" for ch in str(project))
+
+
 def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False) -> None:
     if recreate:
         try:
