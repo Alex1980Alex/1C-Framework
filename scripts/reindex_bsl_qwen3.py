@@ -702,10 +702,23 @@ class Qwen3STEmbedder:
                 )
                 for i in relevant
             ]
+            t_win = time.perf_counter()
             win_vectors = self._embed_late_chunked_single_pass(win_text, local_spans)
+            forward_s = time.perf_counter() - t_win
             for orig_idx, vec in zip(relevant, win_vectors):
                 if vec is not None:
                     results[orig_idx] = vec
+            # roadmap 260518 follow-up — emit per-window event AFTER forward.
+            # Heartbeat state already updated above with the window index so
+            # `[hb]` lines show progress even if forward stalls > 10s.
+            _state(windows_done=win_idx)
+            _evt(
+                "sliding_window",
+                win=win_idx,
+                of=len(char_windows),
+                relevant=len(relevant),
+                forward_s=round(forward_s, 3),
+            )
             # roadmap 260518 Phase 2 fix: между окнами явно дробим reserved-
             # сегменты PyTorch'а. Без этого на 39 окнах × ~150 MB token
             # embeddings reserved уходил до 49 GB (RTX 3090 24 GB) и драйвер
@@ -714,6 +727,9 @@ class Qwen3STEmbedder:
             # возвращает аллокаторные сегменты обратно в CUDA driver.
             gc.collect()
             torch.cuda.empty_cache()
+        # Clear sliding-specific heartbeat keys so the next file's hb line
+        # doesn't show stale windows_done from the previous god-object.
+        _state(windows_total=None, windows_done=None)
         return results
 
     def close(self) -> None:
