@@ -76,11 +76,14 @@ def load_modules_and_objects(session, conn, tracker=None):
         """)
 
 
-def load_symbols(session, conn):
+def load_symbols(session, conn, tracker=None):
     c = conn.cursor()
     c.execute("SELECT id, name, type, module_path, line_start, line_end, is_export FROM symbols")
     rows = c.fetchall()
     print(f"  Symbols: {len(rows)}")
+    if tracker:
+        tracker.set_state(symbols_total=len(rows), symbols_done=0)
+    batch_idx = 0
     for batch in chunked(rows, 2000):
         session.run("""
             UNWIND $rows AS row
@@ -90,18 +93,27 @@ def load_symbols(session, conn):
                 s.line_end = row.line_end, s.is_export = row.is_export
         """, rows=[{"id": r[0], "name": r[1], "symbol_type": r[2], "module_path": r[3],
                     "line_start": r[4] or 0, "line_end": r[5] or 0, "is_export": bool(r[6])} for r in batch])
+        batch_idx += 1
+        if tracker:
+            tracker.set_state(symbols_done=min(batch_idx * 2000, len(rows)))
+            tracker.event("symbols_batch", batch=batch_idx, rows=len(batch))
     session.run("""
         MATCH (s:Symbol), (m:Module {id: s.module_path})
         MERGE (m)-[:DECLARES]->(s)
     """)
 
 
-def load_calls(session, conn):
+def load_calls(session, conn, tracker=None):
     c = conn.cursor()
     c.execute("SELECT caller_id, callee_name, callee_module, line_number, call_type FROM calls")
     rows = c.fetchall()
     print(f"  Calls: {len(rows)}")
+    if tracker:
+        tracker.set_state(calls_total=len(rows), calls_done=0)
+    batch_idx = 0
     for batch in chunked(rows, 5000):
+        import time as _t
+        t_b = _t.perf_counter()
         session.run("""
             UNWIND $rows AS row
             MATCH (caller:Symbol {id: row.caller_id})
@@ -111,6 +123,18 @@ def load_calls(session, conn):
                 ON CREATE SET r.call_type = row.call_type, r.line = row.line_number)
         """, rows=[{"caller_id": r[0], "callee_name": r[1], "callee_module": r[2] or "",
                     "line_number": r[3] or 0, "call_type": r[4]} for r in batch])
+        batch_idx += 1
+        if tracker:
+            done = min(batch_idx * 5000, len(rows))
+            tracker.set_state(calls_done=done)
+            tracker.event(
+                "calls_batch",
+                batch=batch_idx,
+                rows=len(batch),
+                done=done,
+                total=len(rows),
+                batch_s=round(_t.perf_counter() - t_b, 3),
+            )
 
 
 def main():
