@@ -30,10 +30,18 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-# Phase 8.12 C4: enable expandable_segments to fight VRAM fragmentation
-# from mixed-length BSL chunks (p99/max can be 50× p50). Must precede
-# `import torch` to take effect (CUDA caching allocator reads it once).
-os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+# Phase 8.12 C4 + roadmap 260518 Phase 2 fix: на Windows WDDM
+# `expandable_segments:True` позволяет аллокатору расти за пределы физ. VRAM
+# в shared system memory (наблюдалось reserved=49 GB на RTX 3090 24 GB →
+# illegal memory access → driver crash → BSOD/reboot). Profile
+# `garbage_collection_threshold:0.6,max_split_size_mb:512` форсит ранний
+# GC при росте occupancy и ограничивает размер сегмента — оставляет работу
+# в пределах физ. VRAM или поднимает явный CUDA OOM до драйвер-краша.
+# Must precede `import torch` (CUDA caching allocator reads env once).
+os.environ.setdefault(
+    "PYTORCH_CUDA_ALLOC_CONF",
+    "garbage_collection_threshold:0.6,max_split_size_mb:512",
+)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
