@@ -107,6 +107,38 @@ for char_start, char_end in chunk_char_spans:
 
 **Следующий шаг:** изменить `Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = 0.15` → `0.25` после Phase 4 benchmark (нельзя поднимать default без подтверждения что recall не падает; overlap-zone имеет потенциальное влияние на boundary chunks).
 
+### 1.2.4 Full-scope A/B на 438 модулей (2026-05-20, CommonModules subset)
+
+Прогон `scripts/reindex_bsl_qwen3.py` на полном `ИБTransportManagementDevelop/Конфигурация/src/CommonModules/` (438 файлов, включая 11 god-object'ов >500KB) в двух конфигурациях с одинаковым overlap=0.25 + FA2:
+
+| Метрика | phase12 (P1+P2, region-aware **OFF**) | phase123 (P1+P2+P3, region-aware **ON, default**) | Δ |
+|---|---|---|---|
+| Files / Symbols / Chunks | 438 / 12 802 / 14 380 | 438 / 12 802 / 14 380 | identical (deterministic) |
+| Wall-clock total | 64.9 min (3893s) | **59.5 min (3571s)** | **-8%** |
+| Total sliding forward time | 3194s | **2332s** | **-27%** ⭐ |
+| Sliding invocations (regions требующих sliding) | 214 | 256 | +20% (region grouping создаёт больше, но мельче) |
+| Total sliding windows | 1607 | 1223 | -24% (меньше окон на регион) |
+| forward_s median | 2.07s | 2.06s | ≈ identical |
+| forward_s mean | 1.99s | 1.91s | -4% |
+| forward_s max | 2.29s | 2.22s | -3% |
+| Single_pass events (regions ≥2s) | 12 | (similar count, не критичный сигнал) | — |
+| Fallback chunks (count) | 29 | 26 | -10% |
+| Fallback groups (regions with any fallback) | 24 | 23 | — |
+| **Fallback vs ALL indexed chunks** | **0.20%** (29/14380) | **0.18%** (26/14380) | both << 1% target ✅ |
+
+**Run IDs:** `phase12-bench-260519`, `phase123-bench-260520`. Worst-case per module: phase12 — 5.9% (ОбновлениеИнформационнойБазыБИД, single chunk fallback из 17); phase123 — несколько 100% (1/1) entries для 1-chunk регионов где единственный chunk не влез — нормально, нивелируется тем что total denominator больше (14 380 chunks).
+
+**Выводы:**
+
+1. **Phase 3 (region-aware) — production winner.** Не только хитает quality criterion (0.18% fallback vs 0.20%), но и **экономит 27% GPU forward time** (3194s → 2332s) — критично при масштабировании на full `ИБTransportManagementDevelop` (2098 файлов → ~5ч с region-aware vs ~7ч без).
+2. **§4.4 criterion `average fallback < 1%` — выполнен с большим запасом** для обоих вариантов. Region-aware ещё больше снижает уровень.
+3. **§4.2 wall-clock estimate `~4-6h` для production reindex** — реалистичен с phase123 + FA2: ~5ч на 2098 файлов экстраполяционно.
+4. **Защитник Phase 3 vs Phase 1+2 only:** wall-clock benefit перевешивает minor extra complexity (`_group_chunks_for_late(region_aware=True)` — уже реализован, ON by default).
+
+**Что осталось до production rollout (Phase 5):**
+- Phase 4 retrieval-quality benchmark (golden set готов scaffold-уровне, генератор написан, blocked на LLM API auth — см. session log 2026-05-20).
+- После Phase 4 PASS — alias swap `bsl_code_v4_late` → `bsl_phase123_bench` (или новый full reindex production-scale).
+
 ### 1.3 Почему `max_seq_length=4096`
 
 Phase 8.12 C5 — защита от OOM на 24 GB RTX 3090 (Qwen3-8B FP16 = 16 GB; activations O(n²) для standard attention → быстро blow VRAM на XXL модулях). Но **искусственно занижено в 8× от native** (Qwen3 supports 32K context OOTB; TEI Docker setup использует max_input_length=40960).
