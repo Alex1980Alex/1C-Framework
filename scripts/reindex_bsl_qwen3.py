@@ -1420,6 +1420,21 @@ def main() -> None:
                 "BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2=1 for benchmark mode."
             )
             sys.exit(1)
+    if args.sliding_overlap is not None:
+        # Override class-level default before instantiation so the new ratio
+        # propagates to `_embed_late_chunked_sliding`'s None-fallback. Emit
+        # an event so post-mortem analysis can correlate fallback% with the
+        # ratio active during the run. Range guard mirrors the ValueError
+        # in `_make_char_windows` (overlap must be < window).
+        if not 0.0 <= args.sliding_overlap < 1.0:
+            print(
+                f"ERROR: --sliding-overlap must be in [0.0, 1.0), got "
+                f"{args.sliding_overlap}"
+            )
+            sys.exit(1)
+        Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = args.sliding_overlap
+        _evt("sliding_overlap_override", ratio=args.sliding_overlap)
+
     with _stage("model_load", embedder=args.embedder, fa2=bool(args.enable_fa2)):
         embedder = make_embedder(
             args.embedder,
