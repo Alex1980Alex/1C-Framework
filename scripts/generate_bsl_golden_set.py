@@ -86,27 +86,27 @@ def _build_prompt(payload: dict[str, Any]) -> str:
 
 
 def _call_llm(prompt: str) -> str | None:
-    """Call llm-rotation MCP; return generated text or None on failure.
+    """Call project's LLMRotationService — uses configured fallback providers.
 
-    Uses the same `mcp__llm-rotation__llm_complete` tool the rest of the
-    project standardizes on. We call it via the Python helper if available,
-    else fallback to subprocess that pipes to the MCP server. For
-    simplicity in this script — call OpenAI-style HTTP API directly to
-    Anthropic if ANTHROPIC_API_KEY is set, otherwise rely on environment
-    having llm-rotation accessible via a CLI.
+    Direct Anthropic API access via ANTHROPIC_API_KEY may be invalid in
+    this venv (workspace-scoped keys, dev-mode auth). LLMRotationService
+    abstracts over Zhipu/Gemini/OpenRouter/Mistral/Ollama with health
+    tracking — robust for bulk batch generation.
     """
-    # Strategy: try Anthropic SDK directly (most reliable in this venv).
+    # Lazy import to avoid forcing the heavy llm_rotation dependency at
+    # module-load time (e.g. if someone imports this script for testing).
     try:
-        import anthropic  # noqa: PLC0415
+        from src.shared.llm_rotation import get_service  # noqa: PLC0415
+        import asyncio  # noqa: PLC0415
 
-        client = anthropic.Anthropic()
-        resp = client.messages.create(
-            model="claude-haiku-4-5",
-            max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = resp.content[0].text if resp.content else ""
-        return text.strip()
+        async def _ainvoke() -> str | None:
+            service = get_service()
+            result = await service.complete(prompt=prompt, max_tokens=200)
+            return (result.get("text") or "").strip() or None
+
+        # Each call gets its own event loop — simpler than threading
+        # asyncio.run() through a sync caller. ~5s/call dominates anyway.
+        return asyncio.run(_ainvoke())
     except Exception as e:  # noqa: BLE001
         print(f"  [WARN] LLM call failed: {type(e).__name__}: {e}", flush=True)
         return None
