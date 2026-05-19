@@ -658,6 +658,20 @@ class Qwen3STEmbedder:
             f"-> {len(char_windows)} windows x ~{window_chars} chars "
             f"(overlap {overlap_chars} chars, ratio {overlap_ratio:.0%})"
         )
+        # roadmap 260518 follow-up — emit structured event + push window
+        # progress into heartbeat state. Critical for god-object modules
+        # where GPU forward on a 30+-window sequence runs ~5-15s/window
+        # with no other stdout output between windows.
+        _evt(
+            "sliding_start",
+            total_tokens=total_tokens,
+            parent_chars=len(parent_text),
+            windows=len(char_windows),
+            window_chars=window_chars,
+            overlap_chars=overlap_chars,
+            chunks=len(chunk_char_spans),
+        )
+        _state(windows_total=len(char_windows), windows_done=0)
 
         # roadmap 260518 Phase 2 fix: import здесь, чтобы не зависеть от
         # порядка инициализации модуля; gc нужен для дробления generational
@@ -667,7 +681,7 @@ class Qwen3STEmbedder:
         import torch
 
         results: list[list[float] | None] = [None] * len(chunk_char_spans)
-        for win_char_start, win_text in char_windows:
+        for win_idx, (win_char_start, win_text) in enumerate(char_windows, 1):
             win_char_end = win_char_start + len(win_text)
             # Collect chunks fully contained in this window that haven't
             # been embedded yet. "Fully contained" avoids vector merging
