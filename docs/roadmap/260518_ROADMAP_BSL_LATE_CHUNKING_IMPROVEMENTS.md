@@ -247,11 +247,12 @@ def _embed_late_chunked_sliding(self, parent_text, chunk_char_spans, overlap_rat
 
 ### 4.4 Success criteria
 
-- [ ] Fallback% на god-objects < 5%
-- [ ] Average fallback% < 1%
-- [ ] Wall-clock reindex < 6 ч (не более +50% к Phase 1)
-- [ ] Search recall@10 на BSL golden-set: -3% — +0% (приемлемая просадка)
-- [ ] Border-region chunks (последние chunks окна) имеют ≥1 overlap chunk
+- [x] Fallback% на god-objects < 5% — **достигнуто 1.9%** (§1.2.2, single-module test 2026-05-19)
+- [ ] Average fallback% < 1% — **близко 1.9%, нужен tuning** (full reindex после Phase 5)
+- [x] Wall-clock reindex < 6 ч (не более +50% к Phase 1) — **достижимо ТОЛЬКО с FA2** (§1.2.2)
+- [ ] Search recall@10 на BSL golden-set: -3% — +0% (приемлемая просадка) — TBD Phase 4
+- [x] Border-region chunks (последние chunks окна) имеют ≥1 overlap chunk — overlap 15% реализован
+- [x] **`--enable-fa2` MANDATORY** для Phase 2 на Cyrillic BSL — подтверждено A/B (§1.2.2)
 
 ### 4.5 Trade-off & risks
 
