@@ -39,11 +39,14 @@ def chunked(items, size):
     if buf: yield buf
 
 
-def load_modules_and_objects(session, conn):
+def load_modules_and_objects(session, conn, tracker=None):
     c = conn.cursor()
     c.execute("SELECT path, module_type, subsystem, object_type, object_name FROM module_metadata")
     rows = c.fetchall()
     print(f"  Modules: {len(rows)}")
+    if tracker:
+        tracker.set_state(modules_total=len(rows), modules_done=0)
+    batch_idx = 0
     for batch in chunked(rows, 1000):
         session.run("""
             UNWIND $rows AS row
