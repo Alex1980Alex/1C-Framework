@@ -436,6 +436,10 @@ class Qwen3STEmbedder:
     # symbol bodies start showing recall regression.
     DEFAULT_SLIDING_OVERLAP_RATIO = 0.15
 
+    # roadmap 260518 follow-up — only emit `single_pass` events for forward
+    # passes >= 2s. Small regions are sub-second and would flood the JSONL.
+    SINGLE_PASS_LOG_THRESHOLD_S: float = 2.0
+
     def embed_late_chunked(
         self,
         parent_text: str,
