@@ -27,8 +27,9 @@ import os
 import sys
 import time
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 # Phase 8.12 C4 + roadmap 260518 Phase 2 fix: на Windows WDDM
 # `expandable_segments:True` позволяет аллокатору расти за пределы физ. VRAM
