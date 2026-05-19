@@ -1262,6 +1262,15 @@ def main() -> None:
              "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
     )
     ap.add_argument(
+        "--sliding-overlap",
+        type=float,
+        default=None,
+        help="Phase 2 of roadmap 260518: override sliding-window overlap "
+             "ratio (default 0.15). Raise to 0.25 to chase fallback%% below "
+             "<1%% on god-object modules at the cost of ~10%% more wall-clock "
+             "from extra overlap windows. See roadmap section 4.5.",
+    )
+    ap.add_argument(
         "--no-region-aware",
         action="store_true",
         help="late-chunking only (Phase 3 of roadmap 260518). Disable "
