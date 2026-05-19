@@ -118,6 +118,16 @@ def main() -> int:
     print(f"  collection:       {args.collection}")
     if args.dry_run:
         print("  (dry-run — nothing was written)")
+
+    tracker.stop(summary={
+        "files_seen": stats.get("files_seen", 0),
+        "files_indexed": stats.get("files_indexed", 0),
+        "chunks": stats.get("chunks", 0),
+        "embeddings_done": stats.get("embeddings_done", 0),
+        "elapsed_s": round(dt, 1),
+        "collection": args.collection,
+        "dry_run": bool(args.dry_run),
+    })
     return 0
 
 
