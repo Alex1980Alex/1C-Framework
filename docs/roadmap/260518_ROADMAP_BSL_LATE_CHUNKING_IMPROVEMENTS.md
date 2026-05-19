@@ -227,14 +227,15 @@ def _embed_late_chunked_sliding(self, parent_text, chunk_char_spans, overlap_rat
     return results
 ```
 
-### 4.2 Estimated impact
+### 4.2 Estimated impact (+ замеренный результат)
 
-| Метрика | После Phase 1 | После Phase 2 |
-|---|---|---|
-| Fallback % (god-object >500K) | 90-97% | **<5%** |
-| Average fallback% | 3-5% | **<1%** |
-| Wall-clock reindex | ~3-4 ч | **~4-6 ч** (windows processed серийно) |
-| Quality на cross-window chunks | N/A | -10-20% recall (vs single pass) |
+| Метрика | После Phase 1 (estimate) | После Phase 2 (estimate) | **Реальность 2026-05-19 (FA2)** |
+|---|---|---|---|
+| Fallback % (god-object >500K) | 90-97% | **<5%** | **1.9%** (см. §1.2.2) |
+| Average fallback% | 3-5% | **<1%** | **1.9%** (близко, ещё tuning) |
+| Wall-clock reindex | ~3-4 ч | **~4-6 ч** (windows processed серийно) | **~5 мин на самый большой god-object** с FA2 → 50 god-objects ≈ 4 ч (попадает в estimate) |
+| Quality на cross-window chunks | N/A | -10-20% recall (vs single pass) | TBD (Phase 4 benchmark) |
+| Forward_s per window | ~1s estimate | ~1s estimate | **2.1s median c FA2** / **191-437s без FA2** (см. §1.2.2) |
 
 ### 4.3 Implementation steps
 
