@@ -97,6 +97,15 @@ def main() -> None:
     print(f"  DB:         {args.db}")
     print(f"{'='*50}")
 
+    tracker.stop(summary={
+        "files": len(bsl_files),
+        "symbols": stats.get("symbols", 0),
+        "calls": stats.get("calls", 0),
+        "modules": stats.get("modules", 0),
+        "errors": errors,
+        "elapsed_s": round(elapsed, 1),
+    })
+
 
 if __name__ == "__main__":
     main()
