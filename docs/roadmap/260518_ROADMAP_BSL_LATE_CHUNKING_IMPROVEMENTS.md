@@ -362,6 +362,24 @@ def embed_late_chunked_region_aware(self, parent_text, chunk_char_spans, regions
 - **Phase 3 (region):** если quality vs Phase 2 не хуже И wall-clock не выше → MERGE
 - **Fallback:** если оба Phase 2/3 ломают recall — оставить Phase 1 only
 
+### 6.4 Open questions (blocking Phase 4 implementation)
+
+Scaffold создан 2026-05-19 в [tests/benchmarks/test_bsl_retrieval_quality.py](../../tests/benchmarks/test_bsl_retrieval_quality.py). Чтобы превратить его в работающий бенчмарк, нужны решения:
+
+| # | Вопрос | Опции | Recommended |
+|---|---|---|---|
+| **a** | Откуда взять 50 golden queries? | (1) Manual curation 3-5 ч человеко-времени · (2) Chroma generative-benchmarking синтез через LLM · (3) Reuse Phase 8 golden set если он сохранён | (3) если есть, иначе (2) с human review |
+| **b** | Какие variant-коллекции существуют как snapshots? | (1) Только текущая `bsl_code_v4_late` (production) · (2) Создать `bsl_phase12_test` + `bsl_phase123_test` через `--recreate` на полном проекте | (2) обязательно — без отдельных snapshot'ов A/B невозможен |
+| **c** | Через какой entry point делать `search_variant()`? | (i) Direct `client.query_points()` — изолирует Phase 2/3 эффект · (ii) Через `hybrid_router.route()` — production routing | (i) для чистого A/B; (ii) после merge для regression-теста на production-пути |
+| **d** | Какой baseline для acceptance gate? | (1) Текущая `bsl_code_v4_late` recall@10 = 0.567 (из Phase 8) · (2) Phase 8.12.8 A2 (std pooling) · (3) E5 1024d legacy | (1) — самый свежий production |
+| **e** | Threshold для regression? | (1) Hard fail если recall@10 -3pp · (2) Warning если -1pp, fail если -5pp · (3) Per-slice threshold (god-object более lenient) | (3) — god-object slice имеет другую базу, fixed pp threshold нечестен |
+
+**Зависимости от других задач:**
+- (a) + (b) можно делать параллельно — оба независимы
+- (c) + (d) + (e) — code-only, делать после (a)+(b)
+
+**Объём работ после ответов на a-e:** ~1-2 дня (golden set гениρация + reindex 2-3 variant collections + wiring `search_variant()` + first benchmark run + tuning thresholds).
+
 ---
 
 ## §7 Phase 5 — Production rollout
