@@ -9,6 +9,7 @@ sliding-window Late Chunking relies on:
   - overlap >= window must raise (would loop forever otherwise)
 """
 
+
 class T:
     @staticmethod
     def _make_char_windows(text, window_chars, overlap_chars):

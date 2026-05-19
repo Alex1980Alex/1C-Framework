@@ -84,6 +84,9 @@ temp_*.txt
 *.mcp-server.log
 mcp_debug.log
 bsl-semantic-diff-mcp.log
+# Rotated MCP logs (RotatingFileHandler produces mcp-server.log.<date>.<N>.gz)
+mcp-server.log.*
+*.log.*.gz
 
 # Build artifacts
 tools/*/build/

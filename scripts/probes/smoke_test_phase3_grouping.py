@@ -23,10 +23,10 @@ def _group_chunks_for_late(chunks, region_aware):
 chunks = [
     FakeChunk({"module_path": "ModuleA.bsl", "region": "ОбработчикиСобытийФормы"}),  # 0
     FakeChunk({"module_path": "ModuleA.bsl", "region": "ОбработчикиСобытийФормы"}),  # 1
-    FakeChunk({"module_path": "ModuleA.bsl", "region": "ПрограммныйИнтерфейс"}),     # 2
-    FakeChunk({"module_path": "ModuleA.bsl", "region": ""}),                          # 3 (no region)
+    FakeChunk({"module_path": "ModuleA.bsl", "region": "ПрограммныйИнтерфейс"}),  # 2
+    FakeChunk({"module_path": "ModuleA.bsl", "region": ""}),  # 3 (no region)
     FakeChunk({"module_path": "ModuleB.bsl", "region": "ОбработчикиСобытийФормы"}),  # 4
-    FakeChunk({"module_path": "ModuleB.bsl", "region": ""}),                          # 5
+    FakeChunk({"module_path": "ModuleB.bsl", "region": ""}),  # 5
 ]
 
 # Phase 3 ON: 5 groups

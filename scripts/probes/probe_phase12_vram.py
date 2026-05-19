@@ -14,6 +14,7 @@ Success criterion (roadmap §3.4 / §4.4):
   - 0 CUDA OOM errors
   - sliding branch should be exercised for a 1 MB module
 """
+
 from __future__ import annotations
 
 import sys
@@ -80,17 +81,21 @@ def main() -> int:
 
     print("\nLoading Qwen3STEmbedder (max_seq_length=8192, Phase 1 default) ...")
     import torch
+
     torch.cuda.reset_peak_memory_stats()
     t_load_0 = time.time()
 
     from scripts.reindex_bsl_qwen3 import Qwen3STEmbedder
+
     embedder = Qwen3STEmbedder(dtype="bfloat16", batch_size=32)
     print(f"Embedder loaded in {time.time() - t_load_0:.1f}s")
     print(f"  max_seq_length={embedder.max_seq_length}")
     print(f"  buckets={embedder.buckets}")
     after_load_alloc = torch.cuda.memory_allocated() / 1024**3
     after_load_reserved = torch.cuda.memory_reserved() / 1024**3
-    print(f"  VRAM after load: alloc={after_load_alloc:.2f} GB, reserved={after_load_reserved:.2f} GB")
+    print(
+        f"  VRAM after load: alloc={after_load_alloc:.2f} GB, reserved={after_load_reserved:.2f} GB"
+    )
 
     tokenizer = embedder.model.tokenizer
     probe = tokenizer(text, add_special_tokens=True, truncation=False)
@@ -119,14 +124,16 @@ def main() -> int:
     print(f"  vectors returned: {len(vectors)} (expected {len(spans)})")
     print(f"  fallback (None) chunks: {fallback}/{len(spans)} = {100*fallback/len(spans):.1f}%")
     print(f"  Peak VRAM: alloc={peak_alloc:.2f} GB, reserved={peak_reserved:.2f} GB")
-    print(f"  Headroom vs 24 GB: alloc={24 - peak_alloc:.2f} GB, reserved={24 - peak_reserved:.2f} GB")
+    print(
+        f"  Headroom vs 24 GB: alloc={24 - peak_alloc:.2f} GB, reserved={24 - peak_reserved:.2f} GB"
+    )
 
     print("\n=== Success criteria ===")
     crit_vram = peak_reserved < 22.0
     if total_tokens > 8192:
-        crit_branch = (branch == "sliding")
+        crit_branch = branch == "sliding"
     else:
-        crit_branch = (branch == "single-pass")
+        crit_branch = branch == "single-pass"
     print(f"  [{'OK' if crit_vram else 'FAIL'}] Peak reserved VRAM < 22 GB: {peak_reserved:.2f} GB")
     print(f"  [{'OK' if crit_branch else 'FAIL'}] Correct branch fired: {branch}")
     print(
