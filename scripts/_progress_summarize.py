@@ -99,7 +99,8 @@ def _summarize_one(recs: list[dict[str, Any]]) -> None:
     script = recs[0].get("script", "?")
     run_start = next((r for r in recs if r.get("category") == "run_start"), None)
     run_end = next((r for r in recs if r.get("category") == "run_end"), None)
-    total_s = run_end.get("elapsed_s") if run_end else (recs[-1].get("elapsed_s") or 0.0)
+    # `or 0.0` covers both: missing key AND explicit `null` value in JSONL.
+    total_s = (run_end.get("elapsed_s") if run_end else recs[-1].get("elapsed_s")) or 0.0
 
     print("=" * 72)
     print(f"run_id : {run_id}")
