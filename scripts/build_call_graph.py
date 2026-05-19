@@ -40,32 +40,44 @@ def main() -> None:
         print(f"ERROR: {project} is not a directory")
         sys.exit(1)
 
+    tracker = make_tracker("build_call_graph").start()
+    tracker.event("startup", project=str(project), db=str(args.db), clear=bool(args.clear))
+
     t0 = time.time()
-    parser = BSLASTParser()
-    store = CallGraphStore(args.db)
+    with tracker.stage("init"):
+        parser = BSLASTParser()
+        store = CallGraphStore(args.db)
+        if args.clear:
+            store.clear()
+            print("Cleared existing call graph")
 
-    if args.clear:
-        store.clear()
-        print("Cleared existing call graph")
-
-    bsl_files = sorted(
-        f for f in project.rglob("*.bsl")
-        if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
-    )
+    with tracker.stage("file_scan"):
+        bsl_files = sorted(
+            f for f in project.rglob("*.bsl")
+            if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
+        )
     print(f"Found {len(bsl_files)} BSL files")
+    tracker.event("file_scan_done", count=len(bsl_files))
+    tracker.set_state(total_files=len(bsl_files), file_idx=0, errors=0)
 
     errors = 0
-    for i, fp in enumerate(bsl_files, 1):
-        try:
-            module = parser.parse_file(str(fp))
-            store.add_module(module)
-        except Exception as e:
-            errors += 1
-            if errors <= 10:
-                print(f"[ERROR] {fp.name}: {e}")
+    with tracker.stage("parse_and_store"):
+        for i, fp in enumerate(bsl_files, 1):
+            # Heartbeat picks up file_idx + current; per-200-file print stays
+            # as a coarse pulse so terminal log readers see something even
+            # if heartbeat is disabled by env.
+            tracker.set_state(file_idx=i, current=fp.name, errors=errors)
+            try:
+                module = parser.parse_file(str(fp))
+                store.add_module(module)
+            except Exception as e:
+                errors += 1
+                if errors <= 10:
+                    print(f"[ERROR] {fp.name}: {e}")
+                tracker.event("parse_error", path=str(fp), err=str(e)[:200])
 
-        if i % 200 == 0:
-            print(f"[{i}/{len(bsl_files)}] processed...")
+            if i % 200 == 0:
+                print(f"[{i}/{len(bsl_files)}] processed...")
 
     elapsed = time.time() - t0
     stats = store.stats()
