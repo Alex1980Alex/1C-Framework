@@ -51,6 +51,25 @@ def pick(pool, n):
     return picks
 
 picks = pick(small, 5) + pick(medium, 4) + pick(god, 3)
+# Dump full metadata for downstream golden-set crafting
+import json
+dump = []
+for i, (p, sz) in enumerate(picks):
+    pl = p.payload
+    kb = sz // 1024
+    slc = "small" if kb < 50 else "medium" if kb < 300 else "god_object"
+    dump.append({
+        "idx": i,
+        "name": pl.get("name"),
+        "module_path": pl.get("module_path"),
+        "line_start": int(pl.get("line_start") or 0),
+        "line_end": int(pl.get("line_end") or 0),
+        "size_kb": kb,
+        "slice": slc,
+        "content_preview": (pl.get("content") or "")[:500],
+    })
+Path("data/_golden_candidates.json").write_text(json.dumps(dump, ensure_ascii=False, indent=2), encoding="utf-8")
+print(f"Dumped {len(dump)} candidates to data/_golden_candidates.json")
 print(f"\nSelected {len(picks)} symbols:")
 for i, (p, sz) in enumerate(picks):
     pl = p.payload
