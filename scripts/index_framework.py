@@ -33,7 +33,10 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
+from _progress import make_tracker  # noqa: E402
 from src.framework_search.config import (  # noqa: E402
     DEFAULT_BATCH_SIZE,
     DEFAULT_COLLECTION,
