@@ -408,6 +408,7 @@ def embed_late_chunked_region_aware(self, parent_text, chunk_char_spans, regions
 | Phase 3 region parsing bugs | MEDIUM | Robust fallback на Phase 2 sliding для модулей без regions / с malformed regions |
 | Phase 5 downtime / regression | MEDIUM | Alias swap + Qdrant snapshot backup |
 | Wall-clock regression | LOW | Bucket batching + length-aware processing keep throughput |
+| **Phase 2 нежизнеспособен без FA2 на Cyrillic BSL** | **HIGH** | A/B 2026-05-19 (§1.2.2): forward_s 191-437s без FA2 vs 2.1s с FA2 (91-208× speedup). FA2 mandatory во всех production командах; добавить guard в [scripts/reindex_bsl_qwen3.py](../../scripts/reindex_bsl_qwen3.py) — отказывать reindex с `--pooling-mode late-chunking` без `--enable-fa2` для Cyrillic projects. Verified: FA2 уже установлен в проектном venv (flash_attn 2.8.3) |
 
 **Зависимости:**
 
