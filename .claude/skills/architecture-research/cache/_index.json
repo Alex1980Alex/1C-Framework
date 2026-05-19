@@ -989,6 +989,46 @@
       "sources_count": 12,
       "github_repos_count": 4,
       "cross_ref": "docs/roadmap/260518_ROADMAP_BSL_LATE_CHUNKING_IMPROVEMENTS.md"
+    },
+    {
+      "file": "hierarchical-code-anchored-docs-2026.md",
+      "title": "Hierarchical code-anchored documentation tooling — MkDocs Material, mkdocstrings, Structurizr, Swimm, Diátaxis (2026 survey)",
+      "keywords": [
+        "mkdocs",
+        "mkdocs-material",
+        "mkdocstrings",
+        "mkdocstrings-python",
+        "sphinx-autoapi",
+        "pdoc",
+        "structurizr",
+        "c4-model",
+        "pystructurizr",
+        "diagrams-mingrammer",
+        "mermaid-c4",
+        "plantuml",
+        "d2",
+        "swimm",
+        "vale",
+        "markdown-link-check",
+        "doctest",
+        "diataxis",
+        "arc42",
+        "adr",
+        "backstage-techdocs",
+        "docusaurus",
+        "astro-starlight",
+        "doctave",
+        "antora",
+        "code-anchored-docs",
+        "doc-drift-detection",
+        "hierarchical-docs",
+        "subsystem-decomposition"
+      ],
+      "created": "2026-05-19",
+      "last_verified": "2026-05-19",
+      "sources_count": 13,
+      "github_repos_count": 12,
+      "cross_ref": "docs/roadmap/260519_ROADMAP_HIERARCHICAL_DOC_TOOLING.md"
     }
   ]
 }
