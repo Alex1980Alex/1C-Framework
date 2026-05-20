@@ -65,3 +65,9 @@ def main() -> int:
     fatal = bool(top_issues)
     warn = bool(change_issues) or lint_code != 0
     report["mode"] = "Fatal" if fatal else ("Warn" if warn else "OK")
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 2 if fatal else (1 if warn else 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
