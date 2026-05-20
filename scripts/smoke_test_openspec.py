@@ -6,4 +6,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-# implementation appended via edits
+ROOT = Path("openspec")
+REQUIRED_TOP = ("AGENTS.md", "project.md", "config.yaml")
+REQUIRED_DIRS = ("changes", "profiles")
+REQUIRED_CHANGE_FILES = ("proposal.md", "tasks.md", ".openspec.yaml")
+
+
+def check_top() -> list[str]:
+    issues: list[str] = []
+    if not ROOT.exists():
+        return ["openspec/ root missing — run openspec init or create manually"]
+    for fname in REQUIRED_TOP:
+        if not (ROOT / fname).exists():
+            issues.append(f"openspec/{fname} missing")
