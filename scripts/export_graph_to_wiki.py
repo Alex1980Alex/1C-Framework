@@ -113,6 +113,17 @@ def parse_args() -> argparse.Namespace:
     p_arch.add_argument("--dry-run", action="store_true")
     p_arch.add_argument("--verbose", "-v", action="store_true")
 
+    # promote-openspec (archived OpenSpec changes -> docs/wiki/openspec/)
+    p_ops = sub.add_parser(
+        "promote-openspec",
+        help="Copy archived openspec changes to docs/wiki/openspec/ (roadmap 260520 §I)",
+    )
+    p_ops.add_argument("--archive-src", type=Path,
+                       default=Path("openspec/changes/archive"))
+    p_ops.add_argument("--wiki-dest", type=Path, default=Path("docs/wiki/openspec"))
+    p_ops.add_argument("--dry-run", action="store_true")
+    p_ops.add_argument("--verbose", "-v", action="store_true")
+
     return parser.parse_args()
 
 
