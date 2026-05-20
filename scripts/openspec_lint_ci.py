@@ -96,3 +96,14 @@ def coverage_check(base: str, head: str) -> tuple[list[str], list[str]]:
         matched = any(_change_mentions(ch, jira) for ch in active)
         (with_change if matched else no_change).append(jira)
     return no_change, with_change
+
+
+def render_report(structural, missing, ok_list) -> str:
+    lines = ["# OpenSpec lint report", ""]
+    for r in structural:
+        st = "OK" if r.ok else "FAIL"
+        lines.append(f"### [{st}] `{r.name}`")
+        for e in r.errors:
+            lines.append(f"- error: {e}")
+        for w in r.warnings:
+            lines.append(f"- warn: {w}")
