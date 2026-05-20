@@ -162,6 +162,39 @@ for char_start, char_end in chunk_char_spans:
 
 **Open question for next session:** why region-aware degrades quality only on medium slice (not small or god_object)? Hypotheses: (a) god_objects need sliding anyway, so region splitting doesn't matter; (b) small modules are 1-region, no split happens; (c) medium modules have 3-10 regions of similar size, splitting creates fragmented embeddings. Investigation: per-query analysis of top-10 retrieved chunks comparing phase12 vs phase123 on the failing queries.
 
+### 1.2.6 Phase 4 reproduction на 50 queries (2026-05-20 evening) — **CRITICAL REVERSAL of §1.2.5**
+
+Расширенный golden set (50 queries вместо 12, ручная курация из CommonModules, 20 small / 20 medium / 10 god_object) переиграл бенчмарк с радикально иным результатом:
+
+| variant | small | medium | god_object | overall |
+|---|---|---|---|---|
+| baseline (production `bsl_code_v4_late`, no FA2) | 0.400 | 0.700 | 0.700 | 0.580 |
+| **phase12** (P1+P2+FA2+overlap=0.25, no region-aware) | **0.650** (+25pp) | **0.600** (-10pp ❌) | **0.500** (-20pp ❌❌) | 0.600 (+2pp) |
+| phase123 (P1+P2+P3+FA2+overlap=0.25, region-aware ON) | **0.700** (+30pp) | 0.600 (-10pp ❌) | **0.400** (-30pp ❌❌❌) | 0.600 |
+
+**Acceptance gate result — BOTH variants FAIL multiple slices:**
+- phase12: medium FAIL (+10pp regression > 3pp threshold), god_object FAIL (+20pp > 5pp threshold)
+- phase123: medium FAIL (+10pp), god_object FAIL (+30pp >> 5pp)
+
+**Honest reading:**
+1. **§1.2.5 (12 queries) was statistically underpowered.** Sample variance dominated the signal. phase12 looked +25pp overall, reality at 50 queries is +2pp.
+2. **Phase 1/2/3 changes are NOT a clear win.** The big wins on small slice (likely from FA2 properly enabling Late Chunking vs baseline's std-pooling fallback) come at cost of medium/god_object regression.
+3. **Phase 5 rollout BLOCKED.** Cannot swap production `bsl_code_v4_late` for phase12/phase123 — quality regression on the majority of real-world queries (medium+god_object > 60% of corpus).
+
+**Confounding factors that need investigation before any rollout:**
+- **Scope mismatch**: baseline has full `ИБTransportManagementDevelop` (54 800 chunks), variants have CommonModules-only (14 380). Even though queries target CommonModules, baseline competes against more chunks yet wins on medium/god_object → suggests variant embeddings ARE worse, not just unfair comparison.
+- **FA2 numerical drift**: variants use FA2, baseline did not. Possible accumulated FP differences on long sequences.
+- **Sliding window context fragmentation**: large modules get split into windows → boundary chunks lose "other-side" context.
+- **`max_seq_length=8192` vs old 4096**: even chunks that fit in 4096 get different attention patterns at higher max length.
+
+**Required follow-up (separate session, ~2-3 days):**
+1. Reindex baseline scope (CommonModules ONLY) with **old config** (no FA2, max_seq_length=4096, no overlap override) → fair A/B against same scope
+2. Per-query analysis on the 20-30 failing queries: what does phase12 retrieve vs baseline? Is it relevant-but-wrong-line, or irrelevant?
+3. Test Phase 1 alone (max_seq_length=8192 only, no overlap change, no region-aware) — isolate which change causes which delta
+4. Consider whether the fallback% improvement (0.20% vs 5-10%) is worth the recall regression — maybe NOT for production retrieval workloads
+
+**Updated Phase 5 status: BLOCKED indefinitely** until §1.2.6 questions resolved. Do not alias-swap based on §1.2.4 wall-clock or §1.2.5 quality data — both were validated only at small scale.
+
 ### 1.3 Почему `max_seq_length=4096`
 
 Phase 8.12 C5 — защита от OOM на 24 GB RTX 3090 (Qwen3-8B FP16 = 16 GB; activations O(n²) для standard attention → быстро blow VRAM на XXL модулях). Но **искусственно занижено в 8× от native** (Qwen3 supports 32K context OOTB; TEI Docker setup использует max_input_length=40960).
