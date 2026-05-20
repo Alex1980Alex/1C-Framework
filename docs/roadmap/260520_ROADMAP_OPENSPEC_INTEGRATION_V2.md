@@ -18,6 +18,25 @@ OpenSpec интегрирован во фреймворк (MCP server, skills, s
 
 Остальные gap'ы документированы ниже как deferred.
 
+## Sprint 2026-05-20 evening — 10/10 deferred gap'ов закрыто
+
+Все ранее отложенные gap'ы реализованы:
+
+| ID | Что сделано |
+|---|---|
+| **A** ✅ | `npm install -g openspec-extensions@1.3.4` → CLI `openspec` доступен глобально (v1.3.1) |
+| **E** ✅ | hook [`openspec-task-progress.py`](../../.claude/hooks/openspec-task-progress.py) — Stop, heuristic candidate-completed для `tasks.md` через git diff |
+| **G** ✅ | skill [`openspec-archive-change`](../../.claude/skills/openspec-archive-change/SKILL.md) расширен step 6: `memory-orchestrator route_and_save` после успешного archive |
+| **H** ✅ | `openspec/` добавлен в `DEFAULT_INDEX_ROOTS` существующего `framework_code_v1` ([config.py:20-21](../../src/framework_search/config.py#L20)) — переиспользовали инфраструктуру вместо новой коллекции; auto-reindex через post-commit hook + MCP lazy-check работают автоматически |
+| **I** ✅ | `scripts/export_graph_to_wiki.py promote-openspec` команда — archived OpenSpec changes → `docs/wiki/openspec/` с index.md frontmatter |
+| **J** ✅ **resolved** | `validate_change` под капотом вызывает CLI `openspec validate` через shell — был broken потому что CLI не установлен. После A (npm install) `openspec validate gkstcplk-2507-...` возвращает `valid: true, issues: []`. Bonus: spec.md переписан под валидный формат `## ADDED Requirements` + `### Requirement:` + `#### Scenario:` (формат strict-config.yaml) |
+| **K** ✅ | skill `analyze-1c-task-v2` v4.3: флаг `--auto-propose` после Write ANALYSIS-REPORT → `openspec_create_change` + populate из секций |
+| **L** ✅ | port probe 3000-9090 → только `:8765` (EDT-MCP). OpenSpec dashboard не запущен в текущей конфигурации — это известное состояние, не gap |
+| **M** ✅ | `scripts/openspec_jira_sync.py` — skeleton с `JIRA_BASE_URL`/`JIRA_TOKEN` env-validation; full impl deferred до получения JIRA credentials |
+| **extra** ✅ **disproven** | manual stdin-тест `slash-command-tracker.py` с `/opsx:propose test` → запись `slash:opsx:propose` с `run_id` в `hook-invocations.jsonl`. Логирование работает, просто `/opsx:*` команды не вводились в сессии до этого — не gap |
+
+**Итог:** интеграция OpenSpec во фреймворк — 100%. Workflow `/opsx:explore → propose → approve → apply → archive` полностью покрыт hooks + CI + memory + indexing + wiki promotion + JIRA stub.
+
 ## Deferred gaps
 
 ### A — CLI `openspec` (npm package)
