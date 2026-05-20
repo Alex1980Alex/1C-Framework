@@ -11,4 +11,17 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# skeleton — implementation appended below via edits
+CHANGES_ROOT = Path("openspec/changes")
+JIRA_RE = re.compile(r"(GKSTCPLK-\d{3,5})", re.IGNORECASE)
+REPORT_PATH = Path("openspec-lint-report.md")
+
+
+@dataclass
+class ChangeReport:
+    name: str
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+    @property
+    def ok(self) -> bool:
+        return not self.errors
