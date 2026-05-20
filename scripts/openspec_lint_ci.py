@@ -39,3 +39,15 @@ def check_change_structure(change_dir: Path) -> ChangeReport:
     for fname in ("proposal.md", "tasks.md", ".openspec.yaml"):
         if not (change_dir / fname).exists():
             rep.errors.append(f"missing {fname}")
+    if not (change_dir / "design.md").exists():
+        rep.warnings.append("missing design.md (recommended)")
+    specs_dir = change_dir / "specs"
+    if not specs_dir.exists() or not any(specs_dir.iterdir()):
+        rep.warnings.append("missing specs/<capability>/spec.md (recommended)")
+    proposal = change_dir / "proposal.md"
+    if proposal.exists():
+        text = proposal.read_text(encoding="utf-8", errors="replace")
+        for sec in ("## Summary", "## Motivation", "## Impact"):
+            if sec not in text:
+                rep.warnings.append(f"proposal.md missing section: {sec}")
+    return rep
