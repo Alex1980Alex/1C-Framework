@@ -80,3 +80,15 @@ def _change_mentions(change_dir: Path, jira: str) -> bool:
         if jira.lower() in body:
             return True
     return False
+
+
+def coverage_check(base: str, head: str) -> tuple[list[str], list[str]]:
+    files = changed_files(base, head)
+    if not any("ИБTransportManagementDevelop/Конфигурация/src/" in f
+               for f in files):
+        return [], []
+    jiras = {j.upper() for j in JIRA_RE.findall(commit_messages(base, head))}
+    if not jiras:
+        return [], []
+    active = list_active_changes()
+    no_change, with_change = [], []
