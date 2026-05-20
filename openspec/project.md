@@ -39,3 +39,36 @@ OpenSpec используется **только** для 1С-задач (биз
 | `1c-debug-hmr` | live BP-trace через RDBG (default since 2026-05-10, HMR wrapper) |
 
 Preflight для любой 1С-задачи: `python scripts/smoke_test_implement_1c_task.py --json` (exit 0 = Full mode).
+
+## Структура репозиториев (3-уровневая, важно для git)
+
+```
+1С-Framework/                                       ← MAIN repo (level 1, единственный .git/)
+├── configuration/                                  ← level 2: обычная папка main
+│   └── <task-folder>/                              ← level 3: SUBMODULE (gitlink)
+│       └── docs/<sub-task>/ANALYSIS-REPORT.md + IMPLEMENTATION-PROGRESS.md
+├── ИБTransportManagementDevelop/                   ← level 2: обычная папка main
+│   └── Конфигурация/                               ← level 3: SUBMODULE (gitlink) — BSL src/
+└── openspec/changes/<change-id>/                   ← в main repo
+```
+
+Одна 1С-задача = **3 коммита** (BSL submodule, docs submodule, main repo gitlinks bump). Подробности см. в skill `implement-1c-task` v2.7 → Этап 8.
+
+## Ключевые конвенции
+
+- **JIRA-теги в BSL-коде**: `// GKSTCPLK-NNNN` либо `// GKSTCPLK-NNNN Начало` / `// GKSTCPLK-NNNN Конец` для блоков.
+- **Имена объектов 1С** имеют префикс `гкс_` (например `гкс_РегистрацияНаПЛК`, `гкс_СтатусыДопускаВагоновКВскрытию`).
+- **kebab-case ASCII** для openspec change-id (не cyrillic). Pre-existing исключений нет.
+- **Шаблоны процедур**: «зелёный коридор» (`гкс_НастройкиОтключенияВходногоКонтроляКачества`) и «усиленный контроль» (`гкс_НастройкиУсиленногоКонтроляКачества`) — образцы для регистров-настроек.
+- **RLS-паттерн**: `РазрешитьЧтениеИзменение ГДЕ ЗначениеРазрешено(<главное измерение>)`.
+- **Periodicity**: настройки не периодические (mainTable=true, измерение `ДатаНачала` как часть PK для эмуляции истории).
+
+## Ограничения
+
+- Кириллические пути в git → требуют `git -c core.quotepath=false` для читаемости status (CLAUDE.md запрещает менять `git config` глобально).
+- EDT-MCP `write_module_source` правит **только** исходники проекта; для применения к live-инфобазе обязателен `mcp__edt-mcp__update_database` (см. Этап 6 в skill implement-1c-task).
+- `1c-mcp-crud:execute_code` запрещает `Возврат` вне процедуры/функции (top-level wrap'ит код анонимно). Workaround: `Если/Иначе` ветки с `Результат =` (см. skill implement-1c-task Известные ограничения).
+
+## Source of truth
+
+При любых противоречиях между OpenSpec change'ом и [CLAUDE.md](../CLAUDE.md) — побеждает CLAUDE.md (живой документ с актуальными ограничениями и архитектурными решениями).
