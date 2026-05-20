@@ -31,3 +31,11 @@ def check_changes() -> tuple[list[str], list[str]]:
     changes_dir = ROOT / "changes"
     if not changes_dir.exists():
         return ["openspec/changes/ missing"], []
+    for ch in changes_dir.iterdir():
+        if not ch.is_dir() or ch.name == "archive":
+            continue
+        found.append(ch.name)
+        for fname in REQUIRED_CHANGE_FILES:
+            if not (ch / fname).exists():
+                issues.append(f"{ch.name}/{fname} missing")
+    return issues, found
