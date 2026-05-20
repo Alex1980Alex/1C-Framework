@@ -29,3 +29,18 @@ OpenSpec интегрирован во фреймворк (MCP server, skills, s
 
 - **Зачем**: diff git → `openspec_batch_update_tasks` с completed-метками.
 - **Что делать**: hook `openspec-task-progress.py` (Stop). Маппинг file → task через heuristic (jira-token + keywords из задачи).
+
+### G — Memory `route_and_save` в `/opsx:archive`
+
+- **Зачем**: archived change → vector-memory для семантического поиска аналогов.
+- **Что делать**: extend skill `openspec-archive-change` шагом `route_and_save` с metadata `{category: openspec-archived, change_id, jira}`.
+
+### H — PDF-vector-graph индексация `openspec/changes/**`
+
+- **Зачем**: Qdrant коллекция `openspec_changes_v1` (1024d MRL) для semantic-search «есть ли change про X».
+- **Что делать**: `scripts/index_openspec.py` + auto-reindex в `git_hooks/post-commit`.
+
+### I — Obsidian/Wiki export openspec → markdown wiki
+
+- **Зачем**: archived change'ы как canonical knowledge в `docs/wiki/openspec/`.
+- **Что делать**: extend `scripts/export_graph_to_wiki.py` команду `promote-openspec`. Зависит от H.
