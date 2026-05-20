@@ -136,3 +136,16 @@ def main() -> int:
         structural = [check_change_structure(c) for c in list_active_changes()]
     if args.mode in ("coverage", "all") and args.base and args.head:
         coverage_missing, coverage_ok = coverage_check(args.base, args.head)
+
+    report = render_report(structural, coverage_missing, coverage_ok)
+    REPORT_PATH.write_text(report, encoding="utf-8")
+    print(report)
+
+    has_errors = any(not r.ok for r in structural)
+    if args.warn_only:
+        return 0
+    return 1 if (args.fail_on_error and has_errors) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
