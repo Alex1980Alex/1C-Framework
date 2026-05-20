@@ -50,6 +50,12 @@ Skill для комплексного анализа задачи по конф�
 - Без флага `--trace` и без self-decision триггера — фаза SKIP, время не растёт
 - Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 2 (§4.1+§4.2)
 
+**Улучшения v4.3 (2026-05-20, OpenSpec auto-propose):**
+- Опциональный флаг `--auto-propose` к команде `/analyze-1c-task` — после Write ANALYSIS-REPORT.md skill дополнительно создаёт OpenSpec change через `mcp__openspec-mcp__openspec_create_change` (template=feature, changeId=<jira>-<краткое-описание-kebab>), затем populate `proposal.md`/`tasks.md`/`design.md`/`specs/<cap>/spec.md` из соответствующих секций ANALYSIS-REPORT.
+- Триггер: явный `--auto-propose` в аргументах. Без него — skill только пишет ANALYSIS-REPORT (как v4.2), рекомендует `/opsx:propose` в Секции 11.
+- Post-conditions: change создан, `openspec validate <changeId>` возвращает `valid: true`. При fail — skill stop'ит с warning и not run `/opsx:propose` автоматически.
+- Источник: [roadmap 260520 §K](../../../docs/roadmap/260520_ROADMAP_OPENSPEC_INTEGRATION_V2.md)
+
 ## Permission scope (Вариант C — read-only анализатор)
 
 **Skill оперирует в режиме read-only + единичный write выходного отчёта.**
