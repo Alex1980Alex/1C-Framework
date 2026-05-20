@@ -25,3 +25,10 @@ class ChangeReport:
     @property
     def ok(self) -> bool:
         return not self.errors
+
+
+def list_active_changes() -> list[Path]:
+    if not CHANGES_ROOT.exists():
+        return []
+    return [p for p in CHANGES_ROOT.iterdir()
+            if p.is_dir() and p.name != "archive"]
