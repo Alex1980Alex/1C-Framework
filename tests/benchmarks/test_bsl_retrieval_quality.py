@@ -135,13 +135,30 @@ def search_variant(
     query: str,
     k: int = 10,
 ) -> list[str]:
-    """Embed query → Qdrant top-k → list of `module_path:line_start` IDs."""
+    """Embed query → Qdrant top-k → list of `module_path:line_start` IDs.
+
+    Fair-scope filter (added 2026-05-20 evening, §1.2.6 follow-up): all
+    variants are CommonModules-only (14k chunks), but baseline has full
+    `ИБTransportManagementDevelop` (54k chunks). To make the A/B fair we
+    restrict baseline search to module_path containing "CommonModules" —
+    same effective corpus as variants. Filter is a no-op on phase12/123
+    collections since they already only contain CommonModules chunks.
+    """
+    from qdrant_client.http import models as qm
+
     qvec = embedder.embed_batch([query], is_query=True)[0]
+    scope_filter = qm.Filter(
+        must=[qm.FieldCondition(
+            key="module_path",
+            match=qm.MatchText(text="CommonModules"),
+        )]
+    )
     res = qdrant_client.query_points(
         collection_name=collection,
         query=qvec,
         limit=k,
         with_payload=True,
+        query_filter=scope_filter,
     )
     return [_id_from_qdrant_point(pt) for pt in res.points]
 
