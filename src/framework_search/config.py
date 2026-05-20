@@ -18,6 +18,11 @@ DEFAULT_INDEX_ROOTS: list[str] = [
     "docs/framework documentation",
     "docs/roadmap",
     ".mcp",
+    "openspec",  # OpenSpec changes/archive/specs — semantic search через
+                 # framework_code_v1, фильтр path_glob='openspec/changes/**' либо
+                 # 'openspec/changes/archive/**'. Альтернатива отдельной коллекции
+                 # openspec_changes_v1 (см. roadmap 260520 §H — закрыт через
+                 # переиспользование framework_code_v1).
 ]
 
 # Single-file roots at repo root.
