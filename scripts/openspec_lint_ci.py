@@ -69,3 +69,14 @@ def changed_files(base: str, head: str) -> list[str]:
 
 def commit_messages(base: str, head: str) -> str:
     return _git_run(["log", "--format=%B", f"{base}..{head}"])
+
+
+def _change_mentions(change_dir: Path, jira: str) -> bool:
+    for fname in (".openspec.yaml", "proposal.md", "tasks.md"):
+        p = change_dir / fname
+        if not p.exists():
+            continue
+        body = p.read_text(encoding="utf-8", errors="replace").lower()
+        if jira.lower() in body:
+            return True
+    return False
