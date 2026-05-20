@@ -55,3 +55,29 @@ openspec/changes/<change-id>/
 **specs/<cap>/spec.md** обязательные секции:
 - `## ADDED` / `## MODIFIED` / `## REMOVED` (любая комбинация)
 - `## Requirements` с `### REQ-N: title` + bullet points.
+
+## MCP-tools (openspec-mcp server)
+
+| Tool | Назначение |
+|---|---|
+| `openspec_create_change` | scaffold нового change'а (proposal.md + tasks.md) |
+| `openspec_save_proposal` | первичная запись proposal/tasks (НЕ перезапишет existing) |
+| `openspec_show_change` | summary + структура change'а |
+| `openspec_list_changes` | все active+archived change'ы |
+| `openspec_validate_change` | валидация (требует AGENTS.md + project.md) |
+| `openspec_critique_proposal` | feedback по содержанию |
+| `openspec_request_approval` / `openspec_approve_change` / `openspec_archive_change` | управление жизненным циклом |
+| `openspec_get_tasks` / `openspec_update_task` / `openspec_batch_update_tasks` | управление прогрессом задач |
+
+## Связь с другими skills
+
+- **analyze-1c-task-v2** → готовит ANALYSIS-REPORT → служит входом для `/opsx:propose`.
+- **implement-1c-task v2.7** → запускается из `/opsx:apply` для реализации tasks.md.
+- **brownfield-validate** → запускается после apply (Gap + Design + Impl проверки).
+
+## Запрещено
+
+- Перезаписывать архивированные change'ы (`openspec/changes/archive/`).
+- Менять `change-id` после создания (id используется как ключ в гитлогах и UI).
+- Создавать `proposal.md` без обязательных секций (см. шаблон выше) — `validate` упадёт.
+- Использовать кириллицу в `change-id` или именах capability — ломает Windows/Git path handling.
