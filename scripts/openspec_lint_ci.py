@@ -51,3 +51,12 @@ def check_change_structure(change_dir: Path) -> ChangeReport:
             if sec not in text:
                 rep.warnings.append(f"proposal.md missing section: {sec}")
     return rep
+
+
+def _git_run(args: list[str]) -> str:
+    try:
+        out = subprocess.run(["git", "-c", "core.quotepath=false", *args],
+                             capture_output=True, text=True, check=True)
+        return out.stdout
+    except subprocess.CalledProcessError:
+        return ""
