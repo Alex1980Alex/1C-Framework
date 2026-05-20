@@ -409,6 +409,7 @@ async def main() -> int:
         "promote-patterns": cmd_promote_patterns,
         "decay-confidence": cmd_decay_confidence,
         "archive-stale": cmd_archive_stale,
+        "promote-openspec": cmd_promote_openspec,
     }
 
     handler = commands.get(args.command)
