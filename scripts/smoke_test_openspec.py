@@ -23,3 +23,11 @@ def check_top() -> list[str]:
         if not (ROOT / dname).is_dir():
             issues.append(f"openspec/{dname}/ missing")
     return issues
+
+
+def check_changes() -> tuple[list[str], list[str]]:
+    issues: list[str] = []
+    found: list[str] = []
+    changes_dir = ROOT / "changes"
+    if not changes_dir.exists():
+        return ["openspec/changes/ missing"], []
