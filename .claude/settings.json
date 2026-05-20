@@ -407,6 +407,11 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/opsx-apply-postvalidate.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/git-commit-enforcer.py",
             "timeout": 5
           },
