@@ -24,3 +24,7 @@ def main() -> int:
         return 1
     print(f"[SKELETON] action={args.action} change={args.change_id} jira={base}")
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
