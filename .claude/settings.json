@@ -357,6 +357,11 @@
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/code-verify-reminder.py",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/openspec-change-coverage.py",
+            "timeout": 5
           }
         ]
       },
