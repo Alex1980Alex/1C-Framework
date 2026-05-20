@@ -224,6 +224,59 @@ After §1.2.6 the obvious next question was: is the regression real, or is it a 
 
 **Phase 5 status: still BLOCKED**, but root cause is now narrower — context fragmentation in sliding window, not scope artifact.
 
+### 1.2.8 std_pool isolation — Phase 5 UNBLOCKED (2026-05-20 night)
+
+Запустили std-pool reindex CommonModules (same scope as variants) с `--pooling-mode standard --enable-fa2` (без Late Chunking совсем). Wall-clock 39.9 min (`std_pool-isolation-260520`, 14 380 chunks, identical to phase12/123). Final 4-way benchmark:
+
+| variant | small | medium | god_object | overall |
+|---|---|---|---|---|
+| baseline `bsl_code_v4_late` (production now, old config) | 0.350 | 0.700 | 0.800 | 0.580 |
+| **std_pool `bsl_std_pool_bench`** (std pooling + FA2) | **0.850** 🚀 | **0.900** 🚀 | **0.900** 🚀 | **0.880** 🚀 |
+| phase12 (P1+P2+FA2+overlap=0.25+no-region-aware) | 0.650 | 0.600 | 0.500 | 0.600 |
+| phase123 (P1+P2+P3 region-aware ON) | 0.700 | 0.600 | 0.400 | 0.600 |
+
+**std_pool DOMINATES every metric on every slice:**
+- Δ vs production baseline: **+30pp overall**, +50pp small, +20pp medium, +10pp god_object
+- Δ vs phase12 (current best LC variant): **+28pp overall**, +40pp god_object, +30pp medium, +20pp small
+
+**This INVERTS the roadmap's foundational assumption.** Phase 8.12.9 introduction of Late Chunking was based on the «Jina arXiv:2409.04701 +64% recall» claim. That paper measured on long-document English/markdown corpora where parent context matters. **For BSL retrieval (Cyrillic identifiers + procedural code), std pooling per-chunk is dramatically better than sliding-window Late Chunking.**
+
+**Root cause synthesis (combining §1.2.6 + §1.2.7 + §1.2.8):**
+
+1. BSL chunks are SHORT and SELF-CONTAINED (typical procedure = 20-100 lines). They DON'T benefit from module-wide context the way English paragraph chunks benefit from document-wide context.
+2. Late Chunking pools hidden states OVER a window of context. For a short BSL chunk, that pooling DILUTES the chunk's specific signal with surrounding noise. The chunk embedding becomes a generic "this is BSL code in this area" rather than "this procedure does X".
+3. Sliding window splits this further on long modules — fragments the already-diluted context across multiple passes, each with different neighbours.
+4. Standard pooling embeds each chunk INDEPENDENTLY with the model's full attention focused on just that chunk → cleaner, more discriminative embedding per chunk.
+
+**This finding obsoletes §1.2.1-§1.2.7 production conclusions.** Phase 1/2/3 entire approach (extending max_seq_length to enable more Late Chunking) was solving the wrong problem.
+
+### Phase 5 (production rollout) — UNBLOCKED, new target
+
+**Decision: roll out std_pool, drop Late Chunking entirely.** Target config:
+
+```bash
+python scripts/reindex_bsl_qwen3.py \
+    --project "ИБTransportManagementDevelop/Конфигурация/src" \
+    --embedder qwen3-st \
+    --pooling-mode standard \
+    --enable-fa2 \
+    --collection bsl_code_v4_late_v2 --recreate \
+    --batch-size 32 --buffer-size 256
+```
+
+ETA: ~3-5h on full ИБTransport (2098 files) — std pooling without sliding is significantly faster than phase12/123 runs.
+
+**Alias swap protocol** (per memory `reference_qdrant_collection_aliases`):
+1. Snapshot `bsl_code_v4_late` (Qdrant snapshot API) — rollback insurance
+2. Reindex full scope → `bsl_code_v4_late_v2`
+3. Verify with benchmark (run on full ИБTransport scope, not just CommonModules — re-craft golden set or use existing)
+4. Alias swap: `bsl_code_v4_late` → `bsl_code_v4_late_v2`
+5. Drop old `bsl_code_v4_late_v1` after 7-14 days grace
+
+**Need from user before Phase 5 launch:** explicit "go" on production swap + confirmation timing (5h GPU contention).
+
+### 1.3 Почему `max_seq_length=4096`
+
 ### 1.3 Почему `max_seq_length=4096`
 
 Phase 8.12 C5 — защита от OOM на 24 GB RTX 3090 (Qwen3-8B FP16 = 16 GB; activations O(n²) для standard attention → быстро blow VRAM на XXL модулях). Но **искусственно занижено в 8× от native** (Qwen3 supports 32K context OOTB; TEI Docker setup использует max_input_length=40960).
