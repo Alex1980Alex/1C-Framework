@@ -188,12 +188,41 @@ for char_start, char_end in chunk_char_spans:
 - **`max_seq_length=8192` vs old 4096**: even chunks that fit in 4096 get different attention patterns at higher max length.
 
 **Required follow-up (separate session, ~2-3 days):**
-1. Reindex baseline scope (CommonModules ONLY) with **old config** (no FA2, max_seq_length=4096, no overlap override) → fair A/B against same scope
+1. ~~Reindex baseline scope (CommonModules ONLY)~~ — addressed via cheap-path scope filter (see §1.2.7), confounder ruled out
 2. Per-query analysis on the 20-30 failing queries: what does phase12 retrieve vs baseline? Is it relevant-but-wrong-line, or irrelevant?
 3. Test Phase 1 alone (max_seq_length=8192 only, no overlap change, no region-aware) — isolate which change causes which delta
 4. Consider whether the fallback% improvement (0.20% vs 5-10%) is worth the recall regression — maybe NOT for production retrieval workloads
 
 **Updated Phase 5 status: BLOCKED indefinitely** until §1.2.6 questions resolved. Do not alias-swap based on §1.2.4 wall-clock or §1.2.5 quality data — both were validated only at small scale.
+
+### 1.2.7 Cheap-path investigation (2026-05-20 night, same session) — scope confounder RULED OUT
+
+After §1.2.6 the obvious next question was: is the regression real, or is it a scope artifact? baseline `bsl_code_v4_late` has 54 800 chunks (full `ИБTransportManagementDevelop`), variants have 14 380 (CommonModules only). Different corpora can't be compared directly.
+
+**Cheap-path fix** (no GPU, ~5 min): patched `search_variant()` in [tests/benchmarks/test_bsl_retrieval_quality.py](../../tests/benchmarks/test_bsl_retrieval_quality.py) to apply a `module_path~"CommonModules"` Qdrant filter on every query. Filter is no-op on phase12/phase123 (already only CommonModules) but restricts baseline to the same effective scope.
+
+| variant | small | medium | god_object | overall |
+|---|---|---|---|---|
+| baseline **WITH filter** | 0.350 (was 0.400 unfiltered) | 0.700 (same) | **0.800** (was 0.700) | 0.580 (same) |
+| phase12 | 0.650 (+30pp) | 0.600 (-10pp) | 0.500 (**-30pp** worse with fair baseline) | 0.600 (+2pp) |
+| phase123 | 0.700 (+35pp) | 0.600 (-10pp) | **0.400** (**-40pp** ❌❌❌) | 0.600 (+2pp) |
+
+**Result:** filtering baseline to CommonModules INCREASED its god_object score (0.700 → 0.800) — i.e. removing non-CommonModules competing chunks made baseline EASIER to win for god_object queries. The variant regression vs fair baseline is therefore even WIDER than §1.2.6 reported. Variants are objectively worse for medium/god_object, NOT a scope artifact.
+
+**Honest interpretation of why variants help small but hurt larger slices:**
+
+1. **Small modules (1 chunk groups)**: FA2 + Late Chunking properly applied → chunk gets full module context → +30pp. Baseline often fell back to std pooling here (no FA2 means Late Chunking probe might overflow max_seq_length, no overlap means tighter sliding) → worse small-module embeddings.
+2. **Medium modules (multi-region, multi-window)**: variant sliding window splits parent_text → each chunk loses "other-side" context. Baseline without sliding processes the whole thing in one truncated pass — for medium modules that *just barely fit*, baseline gets MORE context per chunk. -10pp regression.
+3. **God-objects (many windows + region-aware = many groups)**: variants split the parent into 30+ windows; the chunk embedding accumulates over a few thousand tokens of contextual neighbours but loses the long-range structure. Baseline truncates to max_seq_length=4096 — fewer tokens but more cohesive context. -20-40pp.
+
+**Implication for production**: the Phase 2 sliding window FIXES the «fallback to std pooling» quality issue (good — small slice +30pp confirms it), but introduces a NEW quality issue (context fragmentation in sliding). The §4.4 success criteria treated «fallback%» and «recall@10» as proxies for the same thing — they're NOT.
+
+**Next-session investigation (still required):**
+1. Per-query analysis: for the failing medium/god_object queries, what does variant retrieve at rank 1-5? Is the expected chunk at rank 11+ (silently dropped) or completely off-grid?
+2. Phase 1 isolation reindex: max_seq_length=8192 alone (no FA2, no overlap, no region-aware) → does Phase 1 alone cause the regression, or only when combined with sliding/overlap/FA2?
+3. Decision: roll back Phase 2 sliding (keep Phase 1 max_seq_length bump only), or accept quality regression as cost of fallback% reduction?
+
+**Phase 5 status: still BLOCKED**, but root cause is now narrower — context fragmentation in sliding window, not scope artifact.
 
 ### 1.3 Почему `max_seq_length=4096`
 
