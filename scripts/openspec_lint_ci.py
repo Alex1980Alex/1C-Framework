@@ -127,3 +127,12 @@ def main() -> int:
     ap.add_argument("--fail-on-error", action="store_true")
     ap.add_argument("--warn-only", action="store_true")
     args = ap.parse_args()
+
+    structural: list[ChangeReport] = []
+    coverage_missing: list[str] = []
+    coverage_ok: list[str] = []
+
+    if args.mode in ("structural", "all"):
+        structural = [check_change_structure(c) for c in list_active_changes()]
+    if args.mode in ("coverage", "all") and args.base and args.head:
+        coverage_missing, coverage_ok = coverage_check(args.base, args.head)
