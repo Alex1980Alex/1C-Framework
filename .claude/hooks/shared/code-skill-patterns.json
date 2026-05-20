@@ -42,6 +42,12 @@
         "domain": "framework"
       },
       {
+        "pattern": "openspec/changes/.+\\.(md|yaml)$|## ADDED REQ-|## MODIFIED REQ-|## ADDED Requirements|delta-spec",
+        "skill": "openspec-explore",
+        "label": "OpenSpec change artifact",
+        "domain": "framework"
+      },
+      {
         "pattern": "СправочникМенеджер\\.|ДокументыМенеджер\\.|РегистрыНакопления\\.|РегистрыСведений\\.",
         "skill": "1c-doc-research",
         "label": "1C Objects API",
