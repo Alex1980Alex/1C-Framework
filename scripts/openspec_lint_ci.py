@@ -60,3 +60,12 @@ def _git_run(args: list[str]) -> str:
         return out.stdout
     except subprocess.CalledProcessError:
         return ""
+
+
+def changed_files(base: str, head: str) -> list[str]:
+    out = _git_run(["diff", "--name-only", f"{base}..{head}"])
+    return [line.strip() for line in out.splitlines() if line.strip()]
+
+
+def commit_messages(base: str, head: str) -> str:
+    return _git_run(["log", "--format=%B", f"{base}..{head}"])
