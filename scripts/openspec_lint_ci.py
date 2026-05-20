@@ -92,3 +92,7 @@ def coverage_check(base: str, head: str) -> tuple[list[str], list[str]]:
         return [], []
     active = list_active_changes()
     no_change, with_change = [], []
+    for jira in sorted(jiras):
+        matched = any(_change_mentions(ch, jira) for ch in active)
+        (with_change if matched else no_change).append(jira)
+    return no_change, with_change
