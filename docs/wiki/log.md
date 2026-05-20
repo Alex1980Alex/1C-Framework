@@ -344,3 +344,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: indexing-pipeline, qdrant-operations, learn:pytest-framework, learning-loop, evaluation-benchmark
 - Files changed: 2
 - Summary: Session 2026-05-20. Skills: indexing-pipeline, qdrant-operations, learn:pytest-framework, learning-loop, evaluation-benchmark, code-verify, git-commit-message, claude-api. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save generate_bsl_golden_set.py. Commit: chore: auto-save generate_bsl_golden_set.py. Commit: chore: auto-save IMPLEMENTATION-PROGRESS.md, test_bsl_retrieval_quality.py
+
+## 2026-05-21 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: code-verify, git-commit-message
+- Files changed: 2
+- Summary: Session 2026-05-21. Skills: code-verify, git-commit-message. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: chore(GKSTCPLK-2507): bump docs submodule — раздел Git commits в PROGRESS. Commit: chore(GKSTCPLK-2507): bump Конфигурация submodule — fix runtime error в форме АРМ. Commit: chore(GKSTCPLK-2507): bump Конфигурация submodule — UI вкладка АРМ
