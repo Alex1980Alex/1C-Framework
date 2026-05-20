@@ -49,3 +49,16 @@ def check_lint() -> tuple[int, str]:
         return out.returncode, out.stdout[-200:]
     except Exception as e:
         return 2, f"lint failed: {e}"
+
+
+def main() -> int:
+    top_issues = check_top()
+    change_issues, change_names = check_changes()
+    lint_code, lint_tail = check_lint()
+    report = {
+        "top_issues": top_issues,
+        "change_issues": change_issues,
+        "active_changes": change_names,
+        "lint_exit": lint_code,
+        "lint_tail": lint_tail.strip(),
+    }
