@@ -1,0 +1,12 @@
+schema: spec-driven
+profile: python-framework
+created: 2026-05-20
+title: "GKSTCPLK-2507 — Автоматическая установка вида допуска в РМ Приёмка/отгрузка по номенклатуре"
+scope: "1С configuration: новый РегистрСведений-настройка + SQL-overlay в проведении гкс_РегистрацияНаПЛК + UI-вкладка в АРМ Приёмки По Качеству + ФО + Роль"
+source_analysis_report: "configuration/260304_GKSTCPLK-2182…/docs/260519_GKSTCPLK-2501 Дополнить АРМ детали. Блок лаб анали/ANALYSIS-REPORT.md"
+jira_task_id: "GKSTCPLK-2507"
+approval:
+  status: pending
+  reviewed_by: null
+  reviewed_at: null
+  comment: null
