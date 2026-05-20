@@ -147,7 +147,13 @@ class OpenspecChangeCoverage(BaseHook):
         jira = _extract_jira(target)
         active = _list_active_changes()
 
-        if jira and active:
+        # Если в пути нет JIRA-токена — связь определить нельзя, не шумим.
+        # Warning эмитим только когда JIRA в пути есть, но соответствующий
+        # change в openspec/changes/ отсутствует.
+        if not jira:
+            return None
+
+        if active:
             for ch in active:
                 if _change_matches_jira(ch, jira):
                     return None  # покрытие есть, всё ок
