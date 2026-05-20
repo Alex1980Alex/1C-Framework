@@ -44,3 +44,29 @@ OpenSpec интегрирован во фреймворк (MCP server, skills, s
 
 - **Зачем**: archived change'ы как canonical knowledge в `docs/wiki/openspec/`.
 - **Что делать**: extend `scripts/export_graph_to_wiki.py` команду `promote-openspec`. Зависит от H.
+
+### J — Debug `openspec_validate_change` (всегда Invalid)
+
+- **Зачем**: `validate_change` возвращает `Invalid` для всех change'ов с `0 errors`. Hidden constraint.
+- **Что делать**: clone openspec-mcp source, debug validator logic, либо upstream issue.
+- **Workaround текущий**: `critique_proposal` (`score ≥ 8.0`) как proxy для CI gate.
+
+### K — `/analyze-1c-task --auto-propose`
+
+- **Зачем**: автосоздание change'а после анализа.
+- **Что делать**: extend skill `analyze-1c-task-v2` — flag `--auto-propose` → `openspec_create_change` + populate.
+
+### L — MCP dashboard + WebSocket probe
+
+- **Зачем**: openspec-mcp v0.4.2 упоминает дашборд, порт нигде не задокументирован.
+- **Что делать**: `netstat -ano | findstr LISTENING` поиск порта, документировать в `16.6 EDT-MCP setup`.
+
+### M — JIRA bridge
+
+- **Зачем**: двусторонняя связь change ↔ JIRA тикет.
+- **Что делать (опц.)**: `scripts/openspec_jira_sync.py` с JIRA API token.
+- **Альтернатива**: ручная ссылка через `.openspec.yaml: jira_task_id`.
+
+### Extra — slash-detect для `/opsx:*`
+
+В `data/hook-invocations.jsonl` 0 записей `slash:opsx-*`. Возможные причины: `/opsx:*` команды из `.claude/commands/opsx/*.md` обрабатываются Claude Code иначе чем raw CLI, не эмитят UPS hook. Нужна диагностика при следующем `/opsx:apply`.
