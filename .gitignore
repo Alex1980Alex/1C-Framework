@@ -127,3 +127,6 @@ tmp/dev_creds_*.txt
 # 3rd-party tool distributions — should not live in source tree.
 # Use installers / package managers / LFS instead.
 tools/sonar-scanner-*/
+
+# OpenSpec lint report — генерируется scripts/openspec_lint_ci.py.
+openspec-lint-report.md
