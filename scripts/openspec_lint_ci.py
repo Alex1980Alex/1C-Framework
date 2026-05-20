@@ -32,3 +32,10 @@ def list_active_changes() -> list[Path]:
         return []
     return [p for p in CHANGES_ROOT.iterdir()
             if p.is_dir() and p.name != "archive"]
+
+
+def check_change_structure(change_dir: Path) -> ChangeReport:
+    rep = ChangeReport(name=change_dir.name)
+    for fname in ("proposal.md", "tasks.md", ".openspec.yaml"):
+        if not (change_dir / fname).exists():
+            rep.errors.append(f"missing {fname}")
