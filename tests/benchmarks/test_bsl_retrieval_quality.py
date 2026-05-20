@@ -45,6 +45,7 @@ VARIANTS: dict[str, str] = {
     "std_pool": "bsl_std_pool_bench",
     "phase12": "bsl_phase12_bench",
     "phase123": "bsl_phase123_bench",
+    "phase5_prod": "bsl_code_v4_late_v2",
 }
 
 # Per-slice acceptance thresholds (roadmap §6.4 question e, recommended).
