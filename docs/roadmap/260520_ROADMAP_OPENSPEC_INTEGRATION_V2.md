@@ -17,3 +17,15 @@ OpenSpec интегрирован во фреймворк (MCP server, skills, s
 - **Регистрация** F+D в `.claude/settings.json`
 
 Остальные gap'ы документированы ниже как deferred.
+
+## Deferred gaps
+
+### A — CLI `openspec` (npm package)
+
+- **Зачем**: команды `openspec init / diff / list / archive` вне MCP.
+- **Что делать**: `npm install -g @fission-codes/openspec` (имя пакета — reverse engineer из openspec-mcp deps). Добавить в `tools/install_dev.ps1`.
+
+### E — Stop-hook auto-update `tasks.md`
+
+- **Зачем**: diff git → `openspec_batch_update_tasks` с completed-метками.
+- **Что делать**: hook `openspec-task-progress.py` (Stop). Маппинг file → task через heuristic (jira-token + keywords из задачи).
