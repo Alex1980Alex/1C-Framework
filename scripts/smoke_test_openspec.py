@@ -39,3 +39,13 @@ def check_changes() -> tuple[list[str], list[str]]:
             if not (ch / fname).exists():
                 issues.append(f"{ch.name}/{fname} missing")
     return issues, found
+
+
+def check_lint() -> tuple[int, str]:
+    try:
+        out = subprocess.run(
+            [sys.executable, "scripts/openspec_lint_ci.py", "--mode",
+             "structural"], capture_output=True, text=True, timeout=30)
+        return out.returncode, out.stdout[-200:]
+    except Exception as e:
+        return 2, f"lint failed: {e}"
