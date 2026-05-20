@@ -1,13 +1,18 @@
-## ADDED
+## ADDED Requirements
 
-## Requirements
+### Requirement: HTTP-сервис принимает MCP JSON-RPC запросы
 
-### REQ-1: HTTP-сервис принимает MCP JSON-RPC запросы
-- HTTP-сервис `гкс_MCP` с корневым URL `/mcp`
+HTTP-сервис `гкс_MCP` MUST принимать MCP JSON-RPC запросы с корневым URL `/mcp`.
+
 - Шаблон URL: `/endpoint` (полный путь: `/hs/mcp/endpoint`)
 - Метод: POST
 - Content-Type: application/json
 - Accept: application/json, text/event-stream
+
+#### Scenario: валидный MCP запрос
+
+- **WHEN** клиент шлёт POST `/hs/mcp/endpoint` с `Content-Type: application/json` и валидным JSON-RPC payload
+- **THEN** сервис принимает запрос и передаёт его в маршрутизатор методов
 
 ### REQ-2: Маршрутизация по MCP-протоколу
 - `method: "initialize"` → возвращает capabilities сервера
