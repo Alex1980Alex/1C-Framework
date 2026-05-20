@@ -50,7 +50,7 @@ def pick(pool, n):
         if len(picks) >= n: break
     return picks
 
-picks = pick(small, 5) + pick(medium, 4) + pick(god, 3)
+picks = pick(small, 20) + pick(medium, 20) + pick(god, 10)
 # Dump full metadata for downstream golden-set crafting
 import json
 dump = []
