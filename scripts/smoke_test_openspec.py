@@ -19,3 +19,7 @@ def check_top() -> list[str]:
     for fname in REQUIRED_TOP:
         if not (ROOT / fname).exists():
             issues.append(f"openspec/{fname} missing")
+    for dname in REQUIRED_DIRS:
+        if not (ROOT / dname).is_dir():
+            issues.append(f"openspec/{dname}/ missing")
+    return issues
