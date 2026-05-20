@@ -6,7 +6,7 @@ scope: "1С configuration: новый РегистрСведений-настр�
 source_analysis_report: "configuration/260304_GKSTCPLK-2182…/docs/260519_GKSTCPLK-2501 Дополнить АРМ детали. Блок лаб анали/ANALYSIS-REPORT.md"
 jira_task_id: "GKSTCPLK-2507"
 approval:
-  status: pending
-  reviewed_by: null
-  reviewed_at: null
-  comment: null
+  status: approved
+  reviewed_by: human
+  reviewed_at: 2026-05-20T15:30:00
+  comment: "Approved 2026-05-20. Open Q: retroactive (default, no date-range JOIN), synonym 'вагонов' kept as universal (option a from design.md §2)."
