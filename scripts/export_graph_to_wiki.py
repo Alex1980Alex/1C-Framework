@@ -403,6 +403,18 @@ async def cmd_promote_openspec(args: argparse.Namespace) -> int:
         logger.warning("archive src not found: %s", src)
         return 0
     dst.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for change_dir in sorted(src.iterdir()):
+        if not change_dir.is_dir():
+            continue
+        target = dst / change_dir.name
+        if target.exists():
+            continue
+        if args.dry_run:
+            logger.info("[dry-run] would copy %s -> %s", change_dir.name, target)
+        else:
+            shutil.copytree(change_dir, target)
+        count += 1
 
     if getattr(args, "verbose", False):
         logging.getLogger().setLevel(logging.DEBUG)
