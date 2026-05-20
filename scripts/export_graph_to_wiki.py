@@ -414,7 +414,16 @@ async def cmd_promote_openspec(args: argparse.Namespace) -> int:
             logger.info("[dry-run] would copy %s -> %s", change_dir.name, target)
         else:
             shutil.copytree(change_dir, target)
+            (target / "index.md").write_text(
+                f"---\nsource: openspec-archived\nchange_id: {change_dir.name}\n"
+                f"---\n\n# {change_dir.name}\n\nArchived OpenSpec change.\n",
+                encoding="utf-8")
         count += 1
+    logger.info("promote-openspec: %d processed (dry=%s)", count, args.dry_run)
+    return 0
+
+
+
 
     if getattr(args, "verbose", False):
         logging.getLogger().setLevel(logging.DEBUG)
