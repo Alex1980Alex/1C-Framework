@@ -87,7 +87,7 @@ nvidia-smi --query-gpu=memory.used,memory.free --format=csv
 
 ## Scope (что индексируется)
 
-**Включено:** `src/`, `scripts/`, `.claude/hooks/`, `.claude/skills/`, `tools/`, `tests/`, `docs/{architecture,framework documentation,roadmap}/`, `.mcp/`, root configs (`CLAUDE.md`, `AGENTS.md`, `.mcp.json`, `pyproject.toml`)
+**Включено:** `src/`, `scripts/`, `.claude/hooks/`, `.claude/skills/`, `tools/`, `tests/`, `docs/{architecture,framework documentation,roadmap}/`, `.mcp/`, **`openspec/`** (добавлено 2026-05-20 §H roadmap_openspec_v2 — OpenSpec changes/archive/specs индексируются в ту же коллекцию для semantic-search через `mcp__framework-search__search_code(query, path_glob='openspec/changes/**')` без отдельной коллекции `openspec_changes_v1`), root configs (`CLAUDE.md`, `AGENTS.md`, `.mcp.json`, `pyproject.toml`)
 
 **Исключено** (`SKIP_PATTERNS` в `config.py`):
 - `__pycache__/`, `.venv/`, `node_modules/`, `.git/`, `dist/`, `build/`, кэши
