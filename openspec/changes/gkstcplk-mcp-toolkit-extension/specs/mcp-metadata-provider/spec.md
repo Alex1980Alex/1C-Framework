@@ -46,3 +46,27 @@
 
 - **WHEN** ссылка указывает на несуществующий объект
 - **THEN** возвращается ошибка с типом `ObjectNotFound`
+
+### Requirement: get_link_of_object — навигационная ссылка
+
+Инструмент `get_link_of_object` MUST формировать ссылку для объекта.
+
+- Параметр: `object_description` с `_objectRef: true`
+- Возвращает: ссылку `e1cib/data/...?ref=...`
+
+#### Scenario: ссылка справочника
+
+- **WHEN** `object_description = {_objectRef: true, type: "Справочник.Контрагенты", id: "..."}`
+- **THEN** возвращается строка `e1cib/data/Справочник.Контрагенты?ref=<hex>`
+
+### Requirement: find_references_to_object — ссылки на объект
+
+Инструмент `find_references_to_object` MUST находить ссылки на объект.
+
+- Параметры: `target_object_description`, `search_scope`
+- Лимиты: `limit_hits` (200), `limit_per_meta` (20), `timeout_budget_sec` (30)
+
+#### Scenario: поиск ссылок на контрагента
+
+- **WHEN** `target = <Контрагент>`, `search_scope = ["Documents", "Catalogs"]`
+- **THEN** возвращаются объекты из Documents/Catalogs со ссылками, не более 200 итого и не более 20 на тип
