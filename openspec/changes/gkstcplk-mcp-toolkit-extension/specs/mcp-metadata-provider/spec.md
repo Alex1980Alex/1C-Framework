@@ -17,3 +17,15 @@
 
 - **WHEN** `metadata_type="Справочник"`, `name_filter="Конт*"`, `limit=10`
 - **THEN** возвращается ≤ 10 справочников с именем, начинающимся на «Конт»
+
+### Requirement: get_event_log — журнал регистрации
+
+Инструмент `get_event_log` MUST возвращать записи журнала.
+
+- Параметры: `count` (default 20, max 100), `start_date`, `end_date`, `level`
+- Возвращает: `date, level, event, comment, user, metadata, session`
+
+#### Scenario: фильтр по уровню Error
+
+- **WHEN** `get_event_log(level="Error", count=50)`
+- **THEN** возвращаются ≤ 50 записей с `level = "Error"`, отсортированные по `date DESC`
