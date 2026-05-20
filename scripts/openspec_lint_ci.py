@@ -107,3 +107,12 @@ def render_report(structural, missing, ok_list) -> str:
             lines.append(f"- error: {e}")
         for w in r.warnings:
             lines.append(f"- warn: {w}")
+        lines.append("")
+    if missing or ok_list:
+        lines.append("## PR ↔ change coverage\n")
+        for j in ok_list:
+            lines.append(f"- OK: {j} (active change found)")
+        for j in missing:
+            lines.append(f"- WARN: {j} (no active change in openspec/changes/)")
+        lines.append("")
+    return "\n".join(lines)
