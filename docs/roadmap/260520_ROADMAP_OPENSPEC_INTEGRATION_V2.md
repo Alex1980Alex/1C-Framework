@@ -70,3 +70,20 @@ OpenSpec интегрирован во фреймворк (MCP server, skills, s
 ### Extra — slash-detect для `/opsx:*`
 
 В `data/hook-invocations.jsonl` 0 записей `slash:opsx-*`. Возможные причины: `/opsx:*` команды из `.claude/commands/opsx/*.md` обрабатываются Claude Code иначе чем raw CLI, не эмитят UPS hook. Нужна диагностика при следующем `/opsx:apply`.
+
+## Резюме
+
+| ID | Описание | Статус | Затраты |
+|---|---|---|---|
+| A | CLI install | deferred | 15м |
+| E | task-progress auto-sync | deferred | 2-3ч |
+| G | memory integration | deferred | 30м |
+| H | pdf-vector-graph indexing | deferred | 4-6ч |
+| I | wiki export | deferred | 2ч |
+| J | validate debug | deferred | 1-3ч |
+| K | --auto-propose | deferred | 1ч |
+| L | dashboard probe | deferred | 30м |
+| M | JIRA bridge | deferred | 4-8ч |
+| extra | slash-detect opsx | deferred | 30м |
+
+Все deferred — nice-to-have, не блокеры. Workflow `/opsx:explore → propose → approve → apply → archive` работает.
