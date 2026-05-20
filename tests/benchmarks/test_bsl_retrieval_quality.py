@@ -42,7 +42,7 @@ DEFAULT_GOLDEN_SET = REPO_ROOT / "data" / "bsl_golden_set.json"
 # `phase123` = Phase 1+2+3 region-aware (proposed new default).
 VARIANTS: dict[str, str] = {
     "baseline": "bsl_code_v4_late",
-    "std_pool": "bsl_code_v4",
+    "std_pool": "bsl_std_pool_bench",
     "phase12": "bsl_phase12_bench",
     "phase123": "bsl_phase123_bench",
 }
