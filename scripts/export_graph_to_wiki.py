@@ -394,8 +394,15 @@ async def cmd_archive_stale(args: argparse.Namespace) -> int:
     return 0 if archived >= 0 else 1
 
 
-async def main() -> int:
-    args = parse_args()
+async def cmd_promote_openspec(args: argparse.Namespace) -> int:
+    """Copy archived OpenSpec changes to docs/wiki/openspec/."""
+    import shutil
+    src: Path = args.archive_src
+    dst: Path = args.wiki_dest
+    if not src.exists():
+        logger.warning("archive src not found: %s", src)
+        return 0
+    dst.mkdir(parents=True, exist_ok=True)
 
     if getattr(args, "verbose", False):
         logging.getLogger().setLevel(logging.DEBUG)
