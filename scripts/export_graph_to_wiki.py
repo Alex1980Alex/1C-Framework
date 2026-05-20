@@ -423,7 +423,8 @@ async def cmd_promote_openspec(args: argparse.Namespace) -> int:
     return 0
 
 
-
+async def main() -> int:
+    args = parse_args()
 
     if getattr(args, "verbose", False):
         logging.getLogger().setLevel(logging.DEBUG)
