@@ -45,6 +45,7 @@ def _git(args: list[str]) -> str:
         out = subprocess.run(
             ["git", "-c", "core.quotepath=false", *args],
             capture_output=True, text=True, check=True, timeout=5,
+            encoding="utf-8", errors="replace",
         )
         return out.stdout
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
