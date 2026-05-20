@@ -62,3 +62,6 @@ def main() -> int:
         "lint_exit": lint_code,
         "lint_tail": lint_tail.strip(),
     }
+    fatal = bool(top_issues)
+    warn = bool(change_issues) or lint_code != 0
+    report["mode"] = "Fatal" if fatal else ("Warn" if warn else "OK")
