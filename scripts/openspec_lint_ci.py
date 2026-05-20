@@ -116,3 +116,14 @@ def render_report(structural, missing, ok_list) -> str:
             lines.append(f"- WARN: {j} (no active change in openspec/changes/)")
         lines.append("")
     return "\n".join(lines)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--mode", choices=("structural", "coverage", "all"),
+                    default="structural")
+    ap.add_argument("--base")
+    ap.add_argument("--head")
+    ap.add_argument("--fail-on-error", action="store_true")
+    ap.add_argument("--warn-only", action="store_true")
+    args = ap.parse_args()
