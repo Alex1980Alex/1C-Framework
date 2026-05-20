@@ -1,28 +1,19 @@
-## ADDED
+## ADDED Requirements
 
-## Requirements
+### Requirement: get_metadata — структура конфигурации
 
-### REQ-8: get_metadata — структура конфигурации
-- Без параметров: возвращает типы объектов + количество + свойства конфигурации
-- С фильтрами: metadata_type, name_filter, limit, offset
+Инструмент `get_metadata` MUST возвращать структуру конфигурации 1С.
+
+- Без параметров: типы объектов + количество + свойства конфигурации
+- С фильтрами: `metadata_type`, `name_filter`, `limit`, `offset`
 - Поддержка расширений конфигурации
 
-### REQ-9: get_event_log — журнал регистрации
-- Параметры: count (default 20, max 100), start_date, end_date, level
-- Возвращает: date, level, event, comment, user, metadata, session
+#### Scenario: пустой запрос
 
-### REQ-10: get_object_by_link — объект по навигационной ссылке
-- Параметр: `link` (формат `e1cib/data/Тип.Имя?ref=hex`)
-- Возвращает все реквизиты объекта в TOON-формате
+- **WHEN** клиент вызывает `get_metadata()` без параметров
+- **THEN** возвращается сводка по всем типам метаданных с количествами
 
-### REQ-11: get_link_of_object — навигационная ссылка
-- Параметр: `object_description` с `_objectRef: true`
-- Возвращает: навигационную ссылку `e1cib/data/...?ref=...`
+#### Scenario: фильтр по типу
 
-### REQ-12: find_references_to_object — ссылки на объект
-- Параметры: `target_object_description`, `search_scope` (английские имена типов)
-- Лимиты: limit_hits (200), limit_per_meta (20), timeout_budget_sec (30)
-
-### REQ-13: get_access_rights — права доступа
-- Параметр: `metadata_object` (формат `Справочник.ИмяСправочника`)
-- Возвращает: список прав, роли и их настройки
+- **WHEN** `metadata_type="Справочник"`, `name_filter="Конт*"`, `limit=10`
+- **THEN** возвращается ≤ 10 справочников с именем, начинающимся на «Конт»
