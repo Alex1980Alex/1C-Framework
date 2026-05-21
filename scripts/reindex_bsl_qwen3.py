@@ -1501,13 +1501,15 @@ def main() -> None:
     _evt("file_scan_done", count=len(bsl_files))
     _state(total_files=len(bsl_files), file_idx=0, chunks_done=0)
 
-    # In --paths mode we track which point_ids we upsert per file, then delete
-    # any older chunks at those module_paths that we did NOT touch (stale: removed
-    # or renamed BSL symbols).
+    # Track point_ids upserted per file → enables delete-stale at end of run.
+    # Stale = chunks at the same module_path that we did NOT touch this run
+    # (= removed/renamed BSL symbols, or duplicates from prior runs with
+    # different chunk_id schema, e.g. switching pooling mode).
+    # Fix #6 (2026-05-21): enable delete-stale in --project mode too — previously
+    # only --paths mode cleaned stale chunks, allowing 30k+ duplicates to
+    # accumulate across pooling-mode changes (Late Chunking → Standard).
     upserted_ids_per_file: dict[str, set[str]] = {}
-    paths_to_clean: list[str] = (
-        [str(p) for p in bsl_files] if args.paths else []
-    )
+    paths_to_clean: list[str] = [str(p) for p in bsl_files]
 
     total_symbols = 0
     total_chunks = 0
