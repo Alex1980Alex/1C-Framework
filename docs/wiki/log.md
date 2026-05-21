@@ -352,3 +352,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: code-verify, git-commit-message
 - Files changed: 2
 - Summary: Session 2026-05-21. Skills: code-verify, git-commit-message. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: chore(GKSTCPLK-2507): bump docs submodule — раздел Git commits в PROGRESS. Commit: chore(GKSTCPLK-2507): bump Конфигурация submodule — fix runtime error в форме АРМ. Commit: chore(GKSTCPLK-2507): bump Конфигурация submodule — UI вкладка АРМ
+
+## 2026-05-22 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, code-verify, 1c-doc-research
+- Files changed: 2
+- Summary: Session 2026-05-22. Skills: bsl-development, code-verify, 1c-doc-research. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация
+
