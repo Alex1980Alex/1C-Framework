@@ -289,7 +289,16 @@ class BSLChunker:
 
 
 def _safe_id(s: str) -> str:
-    """Convert string to a safe ID component."""
-    import re as _re
+    """Convert string to a safe ID component.
 
-    return _re.sub(r"[^\w]", "_", s).strip("_")[:80]
+    Fix #3 (2026-05-21): For strings > 80 chars, append SHA1 hash suffix to
+    avoid chunk_id collisions on long similar paths (e.g. multiple
+    Commands/X/CommandModule.bsl under same Catalog truncated to same prefix).
+    """
+    import re as _re
+    import hashlib
+    cleaned = _re.sub(r"[^\w]", "_", s).strip("_")
+    if len(cleaned) <= 80:
+        return cleaned
+    # Length-stable, collision-free: 60-char prefix + 16-char SHA1 hash
+    return cleaned[:60] + "_" + hashlib.sha1(cleaned.encode("utf-8")).hexdigest()[:16]
