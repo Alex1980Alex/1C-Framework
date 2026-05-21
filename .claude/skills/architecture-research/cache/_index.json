@@ -3,6 +3,35 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "qdrant-dedup-stable-chunk-id-bsl-2026.md",
+      "title": "Qdrant дедупликация + stable chunk_id для BSL semantic search reindex pipeline",
+      "keywords": [
+        "qdrant",
+        "deduplication",
+        "stable-uuid",
+        "uuid5",
+        "composite-key",
+        "chunk-id",
+        "upsert",
+        "delete-stale",
+        "bsl-code-v4-late",
+        "reindex_bsl_qwen3",
+        "bsl-chunker",
+        "module-type",
+        "from-path",
+        "ObjectModule",
+        "ManagerModule",
+        "FormModule",
+        "coverage-gap",
+        "file-walker",
+        "surgical-delete",
+        "external-uuid-registry"
+      ],
+      "created": "2026-05-21",
+      "last_verified": "2026-05-21",
+      "version": "2026"
+    },
+    {
       "file": "llm-rotation-production-improvements-2026.md",
       "title": "LLM Rotation production improvements — Agent SDK, LiteLLM, parallel batch, hot-path roadmap",
       "keywords": [
