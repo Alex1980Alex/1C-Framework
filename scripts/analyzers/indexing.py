@@ -31,10 +31,12 @@ from .base import AnalyzerBase, ReportSpec
 
 try:
     from qdrant_client import QdrantClient
+    from qdrant_client.http import models as qmodels
 
     _QDRANT_AVAILABLE = True
 except ImportError:
     _QDRANT_AVAILABLE = False
+    qmodels = None  # type: ignore[assignment]
 
 
 HEARTBEAT_GAP_WARN_S = 60.0
@@ -511,6 +513,16 @@ class IndexingAnalyzer(AnalyzerBase):
                     if len(vectors) > probe_n
                     else list(range(probe_n))
                 )
+                # SQ-quantized collections (e.g. framework_code_v1_mrl_1024) need
+                # explicit rescore=True — otherwise self-query may search in int8
+                # space while scroll returns the exact stored fp32 vector,
+                # producing false-negative top-1 misses. Skill `qdrant-operations`
+                # §"Диагностика" notes the rescore policy.
+                search_params = None
+                if info.get("quantization") and qmodels is not None:
+                    search_params = qmodels.SearchParams(
+                        quantization=qmodels.QuantizationSearchParams(rescore=True, ignore=False)
+                    )
                 for idx in indices:
                     pt_id = ids[idx]
                     query_vec = vectors[idx]
@@ -523,6 +535,8 @@ class IndexingAnalyzer(AnalyzerBase):
                         }
                         if vector_name:
                             kwargs["using"] = vector_name
+                        if search_params is not None:
+                            kwargs["search_params"] = search_params
                         response = client.query_points(**kwargs)
                         result = getattr(response, "points", response)
                     except Exception:

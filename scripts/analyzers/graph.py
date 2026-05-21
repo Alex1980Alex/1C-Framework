@@ -56,6 +56,172 @@ DEFAULT_NEO4J_AUTH = (
     os.environ.get("NEO4J_PASSWORD", "bsl-graph-2026"),
 )
 
+# BSL platform stdlib — globals that have no symbol declaration in user code.
+# Calls to these are reported as "dangling" by the naive symbols-table join,
+# but are NOT actionable (they're not typos, they're 1C built-ins). Used to
+# split dangling-call anomaly into "expected stdlib" vs "true user-defined
+# dangling". Curated from top dangling list + skill `bsl-development` /
+# `1c-doc-research` — extend as new stdlib calls surface.
+BSL_STDLIB_NAMES: frozenset[str] = frozenset(
+    {
+        # Collections — Массив / ТаблицаЗначений / Структура / Соответствие
+        "Добавить",
+        "Вставить",
+        "Удалить",
+        "Очистить",
+        "Количество",
+        "Найти",
+        "НайтиПоИдентификатору",
+        "НайтиПоНаименованию",
+        "НайтиПоКоду",
+        "Получить",
+        "Установить",
+        "Свойство",
+        "Скопировать",
+        "Сортировать",
+        "ВыгрузитьКолонку",
+        "ЗагрузитьКолонку",
+        "ЗаполнитьЗначения",
+        "Итог",
+        "ИндексПоНаименованию",
+        "Колонки",
+        "Строки",
+        "Индекс",
+        # Iteration
+        "Следующий",
+        "Сбросить",
+        # String functions
+        "ПодставитьПараметрыВСтроку",
+        "СтрНайти",
+        "СтрРазделить",
+        "СтрСоединить",
+        "СтрЗаменить",
+        "СтрЧислоВхождений",
+        "СтрСравнить",
+        "СтрНачинаетсяС",
+        "СтрЗаканчиваетсяНа",
+        "ВРег",
+        "НРег",
+        "ТРег",
+        "Лев",
+        "Прав",
+        "Сред",
+        "СтрДлина",
+        "СокрЛП",
+        "СокрП",
+        "СокрЛ",
+        "Символ",
+        "КодСимвола",
+        "Формат",
+        "Строка",
+        "Число",
+        "Дата",
+        "Булево",
+        "ТипЗнч",
+        # Query / IB
+        "Выполнить",
+        "УстановитьПараметр",
+        "Записать",
+        "Прочитать",
+        "Заблокировать",
+        "Разблокировать",
+        "ВыполнитьПакет",
+        "ВыполнитьЗапрос",
+        # Module ops
+        "ОбщийМодуль",
+        "ПолучитьОбщийМодуль",
+        "ПодсистемаСуществует",
+        "ОбработчикиСобытий",
+        "ВызватьИсключение",
+        # Date/time
+        "ТекущаяДатаСеанса",
+        "ТекущаяУниверсальнаяДата",
+        "ТекущаяДата",
+        "НачалоДня",
+        "КонецДня",
+        "НачалоМесяца",
+        "КонецМесяца",
+        "НачалоГода",
+        "КонецГода",
+        "Год",
+        "Месяц",
+        "День",
+        "Час",
+        "Минута",
+        "Секунда",
+        # System / global
+        "Сообщить",
+        "ПолучитьИмяВременногоФайла",
+        "СоздатьКаталог",
+        "УдалитьФайлы",
+        "КопироватьФайл",
+        "ПереместитьФайл",
+        "ЗначениеЗаполнено",
+        "ВыполнитьПроверкуЗаполнения",
+        "ПолучитьСтруктуруОбъектов",
+        "ПолучитьФункциональнуюОпцию",
+        # XDTO / serialization
+        "ЗаписатьXML",
+        "ПрочитатьXML",
+        "СоздатьФабрикуXDTO",
+        # Common methods on objects
+        "ПолучитьСсылку",
+        "ПолучитьОбъект",
+        "ЭтоНовый",
+        "ЗаписатьПриЗаписи",
+        "ОбработкаПроведения",
+        "ОбработкаПроверкиЗаполнения",
+        "ПередЗаписью",
+        "ПриЗаписи",
+        "ПередУдалением",
+        "ПриКопировании",
+        # Extended (surfaced by analyzer second pass 2026-05-22)
+        "НайтиСтроки",
+        "Метаданные",
+        "ПодробноеПредставлениеОшибки",
+        "КраткоеПредставлениеОшибки",
+        "Выгрузить",
+        "Загрузить",
+        "УстановитьЗначение",
+        "ПолучитьЗначение",
+        "Пустой",
+        "Содержит",
+        "Закрыть",
+        "Открыть",
+        "НайтиПоТипу",
+        "СоздатьНаборЗаписей",
+        "ВГраница",
+        "НГраница",
+        "НайтиПоЗначению",
+        "ТипВсеСсылки",
+        "Типы",
+        "ДобавитьСтроку",
+        "Свернуть",
+        "СгруппироватьПо",
+        "Колонка",
+        "ПолучитьМенеджер",
+        "ВыборкаИзРезультата",
+        "Выбрать",
+        "ПолучитьМакет",
+        "СоздатьОбработкуРасшифровки",
+        "ТекущаяСтрока",
+        "ТекущиеДанные",
+        "ТекущийЭлемент",
+        "Идентификатор",
+        "Представление",
+        "Наименование",
+        "Код",
+        "Ссылка",
+        "ПометкаУдаления",
+        "Проведен",
+        "СообщениеПользователю",
+        "ДобавитьСообщение",
+        "ПолучитьЭлементы",
+        "ПолучитьРодителя",
+        "ПолучитьВладельца",
+    }
+)
+
 
 def _load_run_events(jsonl_path: Path, run_id: str) -> list[dict[str, Any]]:
     if not jsonl_path.exists():
@@ -256,12 +422,23 @@ class GraphAnalyzer(AnalyzerBase):
                 ("Top-15 modules by symbol count", self._render_top(module_density))
             )
 
-            orphan_count, dangling = self._sqlite_orphans_and_dangling(conn, tables, anomalies)
+            orphan_count, dangling, dangling_stdlib, dangling_user, top_user = (
+                self._sqlite_orphans_and_dangling(conn, tables, anomalies)
+            )
             sec = [
                 f"- **modules с 0 symbols:** {orphan_count}",
-                f"- **calls с broken endpoints:** {dangling}",
+                f"- **calls с broken endpoints (total):** {dangling:,}",
+                f"  - expected BSL stdlib (`Добавить`, `Найти`, etc): {dangling_stdlib:,}",
+                f"  - **user-defined dangling (typos/deleted):** {dangling_user:,}",
             ]
             spec.sections.append(("Schema integrity", "\n".join(sec)))
+            if top_user:
+                spec.sections.append(
+                    (
+                        "Top-15 user-defined dangling callees (likely typos)",
+                        self._render_top(top_user),
+                    )
+                )
 
             spec.raw.update(
                 {
@@ -271,6 +448,9 @@ class GraphAnalyzer(AnalyzerBase):
                     "top_modules": module_density,
                     "orphan_modules": orphan_count,
                     "dangling_calls": dangling,
+                    "dangling_stdlib": dangling_stdlib,
+                    "dangling_user": dangling_user,
+                    "top_user_dangling": top_user,
                 }
             )
         except sqlite3.Error as exc:
@@ -337,9 +517,13 @@ class GraphAnalyzer(AnalyzerBase):
 
     def _sqlite_orphans_and_dangling(
         self, conn: sqlite3.Connection, tables: set[str], anomalies: list[str]
-    ) -> tuple[int, int]:
+    ) -> tuple[int, int, int, int, list[tuple[str, int]]]:
+        """Returns (orphan_modules, dangling_total, dangling_stdlib, dangling_user, top_user_dangling)."""
         orphan = 0
         dangling = 0
+        dangling_stdlib = 0
+        dangling_user = 0
+        top_user: list[tuple[str, int]] = []
         if "module_metadata" in tables and "symbols" in tables:
             try:
                 cols = {r[1] for r in conn.execute("PRAGMA table_info(symbols)")}
@@ -362,20 +546,33 @@ class GraphAnalyzer(AnalyzerBase):
                 )
                 sym_name = "name" if "name" in cols_s else None
                 if callee_col and sym_name:
-                    dangling = int(
-                        conn.execute(
-                            f"SELECT COUNT(*) FROM calls c "
-                            f"WHERE c.{callee_col} IS NOT NULL "
-                            f"AND NOT EXISTS (SELECT 1 FROM symbols s WHERE s.{sym_name} = c.{callee_col})"
-                        ).fetchone()[0]
-                    )
+                    # Aggregate dangling callees with frequency for stdlib split + top-N.
+                    rows = conn.execute(
+                        f"SELECT c.{callee_col} AS name, COUNT(*) AS n FROM calls c "
+                        f"WHERE c.{callee_col} IS NOT NULL "
+                        f"AND NOT EXISTS (SELECT 1 FROM symbols s WHERE s.{sym_name} = c.{callee_col}) "
+                        f"GROUP BY c.{callee_col}"
+                    ).fetchall()
+                    user_aggregate: list[tuple[str, int]] = []
+                    for r in rows:
+                        name, n = r["name"], int(r["n"])
+                        dangling += n
+                        if name in BSL_STDLIB_NAMES:
+                            dangling_stdlib += n
+                        else:
+                            dangling_user += n
+                            user_aggregate.append((name, n))
+                    user_aggregate.sort(key=lambda x: x[1], reverse=True)
+                    top_user = user_aggregate[:15]
             except sqlite3.Error:
                 pass
-        if dangling > 0:
+        # Anomaly thresholds: tolerate stdlib dangling silently; warn on user-defined.
+        if dangling_user > 0:
             anomalies.append(
-                f"{dangling:,} calls без matching symbol — dangling endpoints (внешние API или typo)."
+                f"{dangling_user:,} calls к несуществующим символам (после фильтра BSL stdlib) — "
+                f"вероятные typos или удалённые методы. Top-15 в Schema integrity section."
             )
-        return orphan, dangling
+        return orphan, dangling, dangling_stdlib, dangling_user, top_user
 
     # ---- Neo4j source -------------------------------------------------
 
@@ -420,12 +617,22 @@ class GraphAnalyzer(AnalyzerBase):
                     n = session.run(f"MATCH ()-[r:`{rt}`]->() RETURN count(r) AS c").single()["c"]
                     rel_counts[rt] = int(n)
 
+                # Include module_path to disambiguate per-module shadows —
+                # BSL legitimately allows the same procedure name in different
+                # modules (e.g. `Добавить` appears as separate nodes per module).
+                # Without module the top-degree list looks like erroneous duplicates.
                 top_q = (
                     "MATCH (n) WITH n, size([(n)--() | 1]) AS deg "
                     "ORDER BY deg DESC LIMIT 15 "
-                    "RETURN coalesce(n.name, n.path, elementId(n)) AS label, deg"
+                    "RETURN coalesce(n.name, n.path, elementId(n)) AS label, "
+                    "       coalesce(n.module_path, n.module, '') AS module, deg"
                 )
-                top_nodes = [(r["label"], int(r["deg"])) for r in session.run(top_q)]
+                top_nodes = []
+                for r in session.run(top_q):
+                    label = r["label"]
+                    module = r["module"]
+                    display = f"{label} @ {module}" if module else label
+                    top_nodes.append((display, int(r["deg"])))
 
                 orphan = session.run("MATCH (n) WHERE NOT (n)--() RETURN count(n) AS c").single()[
                     "c"
@@ -535,7 +742,16 @@ class GraphAnalyzer(AnalyzerBase):
         norms: list[float] = []
         for p in points:
             payload = getattr(p, "payload", None) or {}
-            etype = payload.get("entity_type") or payload.get("type") or "<unknown>"
+            # GraphBuilder writes `kind`/`symbol_type` per BSL Phase 8 payload
+            # contract (see skill `qdrant-operations`). `entity_type` is the
+            # canonical GraphRAG field but optional — fall back gracefully.
+            etype = (
+                payload.get("entity_type")
+                or payload.get("type")
+                or payload.get("kind")
+                or payload.get("symbol_type")
+                or "<unknown>"
+            )
             entity_types[etype] += 1
             src = payload.get("source") or payload.get("source_doc") or "<unknown>"
             sources[src] += 1
