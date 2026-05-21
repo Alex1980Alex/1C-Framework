@@ -33,6 +33,7 @@ Design constraints:
   * **Non-TTY friendly** — все вывод через `print(..., flush=True)`,
     без ANSI carriage returns, чтобы nohup/redirect не ломали output.
 """
+
 from __future__ import annotations
 
 import atexit
@@ -42,9 +43,10 @@ import sys
 import threading
 import time
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 DEFAULT_HEARTBEAT_SECONDS = 10.0
 DEFAULT_LOG_PATH = Path(__file__).resolve().parent.parent / "data" / "indexing-progress.jsonl"
@@ -75,6 +77,26 @@ def _short(v: Any, limit: int = 80) -> str:
     if len(s) <= limit:
         return s
     return s[: limit - 1] + "…"
+
+
+def _sample_gpu_vram_mb() -> float | None:
+    """Best-effort nvidia-smi parse for GPU VRAM (MB). Returns None if unavailable."""
+    try:
+        import subprocess as _sp
+
+        out = _sp.run(
+            ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            first = out.stdout.strip().splitlines()[0].strip()
+            return float(first)
+    except (FileNotFoundError, OSError, ValueError, TimeoutError):
+        pass
+    return None
 
 
 class ProgressTracker:
@@ -122,7 +144,7 @@ class ProgressTracker:
 
     # ---- Lifecycle -----------------------------------------------------
 
-    def start(self) -> "ProgressTracker":
+    def start(self) -> ProgressTracker:
         if self._hb_thread is not None:
             return self
         self._write_jsonl(category="run_start", payload={"pid": os.getpid()})
@@ -133,9 +155,22 @@ class ProgressTracker:
                 flush=True,
             )
         self._hb_thread = threading.Thread(
-            target=self._heartbeat_loop, name=f"hb-{self.script}", daemon=True,
+            target=self._heartbeat_loop,
+            name=f"hb-{self.script}",
+            daemon=True,
         )
         self._hb_thread.start()
+        # Optional telemetry daemon (RSS / VRAM sampling). Opt-out via
+        # INDEXING_NO_TELEMETRY=1. Gracefully skip if psutil missing.
+        if not os.environ.get("INDEXING_NO_TELEMETRY"):
+            self._telemetry_thread = threading.Thread(
+                target=self._telemetry_loop,
+                name=f"tele-{self.script}",
+                daemon=True,
+            )
+            self._telemetry_thread.start()
+        else:
+            self._telemetry_thread = None
         atexit.register(self._atexit_stop)
         return self
 
@@ -146,6 +181,8 @@ class ProgressTracker:
         self._stop_event.set()
         if self._hb_thread is not None:
             self._hb_thread.join(timeout=self.heartbeat_interval + 2.0)
+        if getattr(self, "_telemetry_thread", None) is not None:
+            self._telemetry_thread.join(timeout=self.heartbeat_interval + 2.0)
         elapsed = time.perf_counter() - self._t0
         payload: dict[str, Any] = {"elapsed_s": round(elapsed, 3)}
         if summary:
@@ -210,7 +247,12 @@ class ProgressTracker:
             dur = t_out - t_in
             self._write_jsonl(
                 category="stage_end",
-                payload={"name": name, "elapsed_s": round(dur, 3), "ok": ok, "err": err_msg or None},
+                payload={
+                    "name": name,
+                    "elapsed_s": round(dur, 3),
+                    "ok": ok,
+                    "err": err_msg or None,
+                },
             )
             if self.stdout:
                 tag = "DONE" if ok else "FAIL"
@@ -229,6 +271,36 @@ class ProgressTracker:
                 self._emit_heartbeat()
             except Exception:
                 # Heartbeat must never crash the worker. Swallow.
+                pass
+
+    def _telemetry_loop(self) -> None:
+        """Sample RSS / VRAM every 5s, emit as category=telemetry events.
+
+        Opt-out via INDEXING_NO_TELEMETRY env. psutil is the only optional
+        dep; nvidia-smi parsing is best-effort (GPU sample on Windows requires
+        nvidia-smi.exe in PATH).
+        """
+        try:
+            import psutil
+        except ImportError:
+            return
+        proc = psutil.Process(os.getpid())
+        interval = max(5.0, self.heartbeat_interval * 0.5)
+        while not self._stop_event.wait(interval):
+            try:
+                rss_mb = proc.memory_info().rss / (1024 * 1024)
+                cpu_pct = proc.cpu_percent(interval=None)
+                payload: dict[str, Any] = {
+                    "rss_mb": round(rss_mb, 1),
+                    "cpu_pct": round(cpu_pct, 1),
+                }
+                # GPU sample (best-effort via nvidia-smi).
+                gpu = _sample_gpu_vram_mb()
+                if gpu is not None:
+                    payload["gpu_vram_mb"] = gpu
+                self._write_jsonl(category="telemetry", payload=payload)
+            except Exception:
+                # Telemetry must never crash the worker.
                 pass
 
     def _emit_heartbeat(self) -> None:
@@ -295,7 +367,7 @@ class _NoopTracker(ProgressTracker):
         # tracker.log_path doesn't NPE.
         self.log_path = DEFAULT_LOG_PATH
 
-    def start(self) -> "ProgressTracker":
+    def start(self) -> ProgressTracker:
         return self
 
     def stop(self, summary: dict[str, Any] | None = None) -> None:

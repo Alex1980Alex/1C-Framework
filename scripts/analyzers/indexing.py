@@ -136,14 +136,30 @@ class IndexingAnalyzer(AnalyzerBase):
         spec.sections.append(("Stages & timing", self._section_stages(events, anomalies)))
         spec.sections.append(("Discrete events", self._section_events(events)))
         spec.sections.append(("Heartbeat gaps", self._section_heartbeat(events, anomalies)))
+        spec.sections.append(("Resource telemetry", self._section_telemetry(events, anomalies)))
 
         coll_info = self._fetch_collection_info(collection, anomalies)
         spec.sections.append(("Collection state", self._section_collection(coll_info, anomalies)))
 
         probes: dict[str, Any] = {}
+        chunk_stats: dict[str, Any] = {}
         if _QDRANT_AVAILABLE and coll_info.get("ok"):
             probes = self._run_quality_probes(collection, coll_info, anomalies)
             spec.sections.append(("Quality probes", self._section_probes(probes)))
+            chunk_stats = self._run_chunk_metrics(collection, coll_info, anomalies)
+            if chunk_stats:
+                from .charts import histogram
+                from .chunk_metrics import render_chunk_section
+
+                spec.sections.append(("Chunk-level metrics", render_chunk_section(chunk_stats)))
+                char_lens = chunk_stats.get("char_length_distribution") or []
+                if char_lens and len(char_lens) >= 10:
+                    spec.sections.append(
+                        (
+                            "Chunk char-length histogram",
+                            histogram(char_lens, bins=10, label="Char length distribution"),
+                        )
+                    )
         else:
             spec.sections.append(
                 (
@@ -165,8 +181,25 @@ class IndexingAnalyzer(AnalyzerBase):
                 )
             )
 
+        # Persist anomalies to registry (closed-loop foundation)
+        from .anomaly_tracker import AnomalyTracker
+
+        tracker = AnomalyTracker(self.reports_dir)
+        anomaly_stats = tracker.record(collection, anomalies, self.run_id)
+        spec.sections.append(("Anomaly history", tracker.summary_section(collection)))
+
         spec.anomalies = anomalies
         spec.summary = self._build_summary(run_end, coll_info, duration, anomalies)
+
+        # Verdict gauge + auto action items (rendered as a pre-TL;DR section)
+        from .verdict import compute_verdict, extract_wins, render_verdict_section
+
+        verdict = compute_verdict(anomalies)
+        verdict.wins = extract_wins(spec.summary, probes)
+        spec.sections.insert(
+            0, ("Verdict & action items", render_verdict_section(verdict, anomaly_stats))
+        )
+
         spec.raw.update(
             {
                 "run_id": self.run_id,
@@ -178,10 +211,60 @@ class IndexingAnalyzer(AnalyzerBase):
                 "startup": startup,
                 "collection_info": coll_info,
                 "probes": probes,
+                "chunk_metrics": {
+                    k: v for k, v in chunk_stats.items() if k != "char_length_distribution"
+                },
                 "anomalies": anomalies,
+                "anomaly_stats": {k: v for k, v in anomaly_stats.items() if k != "chronic"},
+                "verdict": {
+                    "gauge": verdict.gauge,
+                    "fails": verdict.fails,
+                    "warns": verdict.warns,
+                    "infos": verdict.infos,
+                    "wins": verdict.wins,
+                    "action_items": verdict.action_items,
+                },
             }
         )
         return spec
+
+    def _run_chunk_metrics(
+        self, collection: str, info: dict, anomalies: list[str]
+    ) -> dict[str, Any]:
+        """Scroll with_payload=True, compute chunk metrics from text fields."""
+        if not _QDRANT_AVAILABLE:
+            return {}
+        try:
+            from .chunk_metrics import analyze_chunks
+
+            client = QdrantClient(url=self.qdrant_url, timeout=30)
+            physical = info["physical_name"]
+            points_total = int(info.get("points_count") or 0)
+            sample_n = min(self.sample_size, points_total) if points_total else self.sample_size
+            if sample_n <= 0:
+                return {}
+            scroll = client.scroll(
+                collection_name=physical,
+                limit=sample_n,
+                with_payload=True,
+                with_vectors=False,
+            )
+            points = scroll[0] if isinstance(scroll, tuple) else getattr(scroll, "points", [])
+            payloads = [getattr(p, "payload", None) for p in points]
+            metrics = analyze_chunks(payloads)
+            empty = metrics.get("empty_chunks") or 0
+            if empty > metrics.get("total_sampled", 1) * 0.1:
+                anomalies.append(
+                    f"Empty chunks rate {empty}/{metrics['total_sampled']} > 10% — chunker/parser bug suspected."
+                )
+            nd = metrics.get("near_duplicates") or {}
+            if nd.get("rate_pct", 0) > 5.0:
+                anomalies.append(
+                    f"Near-duplicate chunks rate {nd['rate_pct']}% — chunker dedup gap."
+                )
+            return metrics
+        except Exception:
+            return {}
 
     # ---- detection ----------------------------------------------------
 
@@ -256,10 +339,17 @@ class IndexingAnalyzer(AnalyzerBase):
                     anomalies.append(f"Stage `{name}` завершился с ошибкой: {err}")
         if not ends:
             return "_Нет stage-событий._"
+        from .charts import waterfall
+
         ends_sorted = sorted(ends, key=lambda x: x[1], reverse=True)
         lines = ["| Stage | Duration | OK | Err |", "|-------|---------:|:--:|-----|"]
         for name, dur, ok, err in ends_sorted:
             lines.append(f"| `{name}` | {dur:.2f}s | {'+' if ok else 'x'} | {err or ''} |")
+        # Chronological waterfall (preserves original event order, not sorted)
+        chrono = [(name, dur) for name, dur, ok, _ in ends if ok]
+        if chrono:
+            lines.append("")
+            lines.append(waterfall(chrono))
         return "\n".join(lines)
 
     def _section_events(self, events: list[dict]) -> str:
@@ -275,6 +365,29 @@ class IndexingAnalyzer(AnalyzerBase):
             }
             payload_str = ", ".join(f"`{k}`=`{v}`" for k, v in payload.items())
             lines.append(f"| {e.get('ts', '')} | `{e.get('name', '')}` | {payload_str} |")
+        return "\n".join(lines)
+
+    def _section_telemetry(self, events: list[dict], anomalies: list[str]) -> str:
+        tels = [e for e in events if e.get("category") == "telemetry"]
+        if not tels:
+            return "_Нет telemetry events (psutil не установлен или INDEXING_NO_TELEMETRY=1)._"
+        rss = [float(e.get("rss_mb") or 0) for e in tels if e.get("rss_mb") is not None]
+        gpu = [float(e.get("gpu_vram_mb") or 0) for e in tels if e.get("gpu_vram_mb") is not None]
+        cpu = [float(e.get("cpu_pct") or 0) for e in tels if e.get("cpu_pct") is not None]
+        lines = [f"- **samples:** {len(tels)}"]
+        if rss:
+            peak = max(rss)
+            lines.append(f"- **RSS (MB):** peak=`{peak:.0f}`, mean=`{statistics.fmean(rss):.0f}`")
+            if peak > 8000:
+                anomalies.append(
+                    f"Peak RSS = {peak:.0f} MB > 8 GB — high memory pressure, consider streaming."
+                )
+        if gpu:
+            lines.append(
+                f"- **GPU VRAM (MB):** peak=`{max(gpu):.0f}`, mean=`{statistics.fmean(gpu):.0f}`"
+            )
+        if cpu:
+            lines.append(f"- **CPU %:** peak=`{max(cpu):.1f}`, mean=`{statistics.fmean(cpu):.1f}`")
         return "\n".join(lines)
 
     def _section_heartbeat(self, events: list[dict], anomalies: list[str]) -> str:
@@ -326,14 +439,18 @@ class IndexingAnalyzer(AnalyzerBase):
         return "\n".join(lines)
 
     def _section_probes(self, probes: dict) -> str:
-        lines = []
+        lines: list[str] = []
         sample = probes.get("sample_size", 0)
         lines.append(f"- **sample_size:** `{sample}`")
         norm = probes.get("norm")
         if norm:
+            extras = []
+            if "outliers_3sigma" in norm:
+                extras.append(f"outliers_3σ=`{norm['outliers_3sigma']}`")
+            extra_str = (", " + ", ".join(extras)) if extras else ""
             lines.append(
                 f"- **L2 norm:** mean=`{norm['mean']:.4f}`, std=`{norm['std']:.4f}`, "
-                f"min=`{norm['min']:.4f}`, max=`{norm['max']:.4f}`"
+                f"min=`{norm['min']:.4f}`, max=`{norm['max']:.4f}`{extra_str}"
             )
         zero = probes.get("zero_vectors")
         if zero is not None:
@@ -347,6 +464,21 @@ class IndexingAnalyzer(AnalyzerBase):
         dim_check = probes.get("dimension_check")
         if dim_check is not None:
             lines.append(f"- **dimension check:** {'match' if dim_check else 'MISMATCH'}")
+        eff_rank = probes.get("effective_rank")
+        if eff_rank is not None:
+            ratio = probes.get("effective_rank_ratio", 0)
+            cap = probes.get("effective_rank_max")
+            lines.append(
+                f"- **effective rank:** `{eff_rank}/{cap}` (ratio={ratio:.2%}, "
+                f"<30% = collapse risk)"
+            )
+        aniso = probes.get("anisotropy_mean")
+        if aniso is not None:
+            tag = " !" if aniso > 0.5 else ""
+            lines.append(
+                f"- **anisotropy mean cos:** `{aniso:.4f}` "
+                f"(>0.5 = collapsed cone, ideal ≈ 0){tag}"
+            )
         if probes.get("error"):
             lines.append(f"- **probe error:** `{probes['error']}`")
         return "\n".join(lines) if lines else "_(пусто)_"
@@ -449,6 +581,85 @@ class IndexingAnalyzer(AnalyzerBase):
             pass
         return collection
 
+    def _embedding_quality_metrics(
+        self, vectors: list[list[float]], anomalies: list[str]
+    ) -> dict[str, Any]:
+        """Effective rank + anisotropy on a vector sample.
+
+        - **Effective rank** (Roy & Vetterli 2007): exp(entropy(σ)) of normalized
+          singular values. High = dimensions used uniformly; low = collapse.
+          Fully sane sample → close to min(N, D).
+        - **Anisotropy**: average pairwise cosine of N random pairs. High (>0.5)
+          = embeddings collapsed into narrow cone (typical failure mode of
+          contrastive models without negatives). 0 = perfectly isotropic.
+        """
+        out: dict[str, Any] = {}
+        try:
+            import numpy as np  # type: ignore[import-not-found]
+        except ImportError:
+            return out
+        if len(vectors) < 3:
+            return out
+        # Cap heavy compute — SVD on huge matrices is expensive.
+        cap = min(len(vectors), 500)
+        m = np.asarray(vectors[:cap], dtype=np.float32)
+        try:
+            # Singular values directly (no covariance step — same eigenvalue spectrum
+            # for L2-normalized inputs).
+            sv = np.linalg.svd(m, compute_uv=False)
+            sv2 = sv**2
+            total = float(sv2.sum())
+            if total > 0:
+                p = sv2 / total
+                # Shannon entropy of singular value distribution → exp gives
+                # effective participation count (≈ "effective rank").
+                p_safe = np.where(p > 0, p, 1.0)
+                entropy = float(-(p * np.log(p_safe)).sum())
+                eff_rank = int(round(float(np.exp(entropy))))
+                out["effective_rank"] = eff_rank
+                out["effective_rank_max"] = int(min(m.shape))
+                ratio = eff_rank / min(m.shape) if min(m.shape) else 0.0
+                out["effective_rank_ratio"] = round(ratio, 3)
+                if ratio < 0.3 and min(m.shape) > 50:
+                    anomalies.append(
+                        f"Effective rank ratio {ratio:.2%} (rank={eff_rank}/{min(m.shape)}) — "
+                        f"возможный embedding collapse."
+                    )
+        except Exception as exc:
+            out["svd_error"] = f"{type(exc).__name__}: {exc}"
+
+        try:
+            import numpy as np
+
+            # Anisotropy: average pairwise cosine of random distinct pairs.
+            rng = np.random.default_rng(42)
+            n_pairs = min(1000, cap * (cap - 1) // 2)
+            if n_pairs >= 10:
+                idx1 = rng.integers(0, cap, size=n_pairs)
+                idx2 = rng.integers(0, cap, size=n_pairs)
+                # Filter self-pairs
+                mask = idx1 != idx2
+                idx1, idx2 = idx1[mask], idx2[mask]
+                if len(idx1) >= 10:
+                    a = m[idx1]
+                    b = m[idx2]
+                    norms_a = np.linalg.norm(a, axis=1)
+                    norms_b = np.linalg.norm(b, axis=1)
+                    denom = norms_a * norms_b
+                    denom = np.where(denom > 0, denom, 1.0)
+                    cos = (a * b).sum(axis=1) / denom
+                    aniso_mean = float(np.mean(cos))
+                    aniso_p95 = float(np.percentile(cos, 95))
+                    out["anisotropy_mean"] = round(aniso_mean, 4)
+                    out["anisotropy_p95"] = round(aniso_p95, 4)
+                    if aniso_mean > 0.5:
+                        anomalies.append(
+                            f"Anisotropy mean cos = {aniso_mean:.3f} > 0.5 — vectors collapsed into narrow cone."
+                        )
+        except Exception as exc:
+            out["anisotropy_error"] = f"{type(exc).__name__}: {exc}"
+        return out
+
     def _run_quality_probes(
         self, collection: str, info: dict, anomalies: list[str]
     ) -> dict[str, Any]:
@@ -487,13 +698,19 @@ class IndexingAnalyzer(AnalyzerBase):
                 return out
 
             norms = [math.sqrt(sum(x * x for x in v)) for v in vectors]
+            norm_mean = statistics.fmean(norms)
+            norm_std = statistics.pstdev(norms) if len(norms) > 1 else 0.0
             out["norm"] = {
-                "mean": statistics.fmean(norms),
-                "std": statistics.pstdev(norms) if len(norms) > 1 else 0.0,
+                "mean": norm_mean,
+                "std": norm_std,
                 "min": min(norms),
                 "max": max(norms),
+                "outliers_3sigma": sum(1 for n in norms if abs(n - norm_mean) > 3 * norm_std)
+                if norm_std > 0
+                else 0,
             }
             out["zero_vectors"] = sum(1 for n in norms if n < 1e-9)
+            out.update(self._embedding_quality_metrics(vectors, anomalies))
 
             cur_dim = info.get("dimension")
             if cur_dim and len(vectors[0]) != cur_dim:

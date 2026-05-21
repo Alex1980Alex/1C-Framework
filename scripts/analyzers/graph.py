@@ -341,11 +341,36 @@ class GraphAnalyzer(AnalyzerBase):
                 )
             )
 
+        # Persist anomalies to registry (closed-loop foundation)
+        from .anomaly_tracker import AnomalyTracker
+        from .verdict import compute_verdict, extract_wins, render_verdict_section
+
+        tracker = AnomalyTracker(self.reports_dir)
+        anomaly_stats = tracker.record(subject, anomalies, self.run_id)
+        spec.sections.append(("Anomaly history", tracker.summary_section(subject)))
+
         spec.anomalies = anomalies
         spec.summary = self._build_summary(spec.raw, anomalies)
+
+        # Verdict gauge + auto action items
+        verdict = compute_verdict(anomalies)
+        verdict.wins = extract_wins(spec.summary, None)
+        spec.sections.insert(
+            0, ("Verdict & action items", render_verdict_section(verdict, anomaly_stats))
+        )
+
         spec.raw.setdefault("source", self.source)
         spec.raw.setdefault("subject", subject)
         spec.raw.setdefault("run_id", self.run_id)
+        spec.raw["anomaly_stats"] = {k: v for k, v in anomaly_stats.items() if k != "chronic"}
+        spec.raw["verdict"] = {
+            "gauge": verdict.gauge,
+            "fails": verdict.fails,
+            "warns": verdict.warns,
+            "infos": verdict.infos,
+            "wins": verdict.wins,
+            "action_items": verdict.action_items,
+        }
         return spec
 
     # ---- subject naming -----------------------------------------------
@@ -602,6 +627,9 @@ class GraphAnalyzer(AnalyzerBase):
         rel_counts: dict[str, int] = {}
         top_nodes: list[tuple[str, int]] = []
         orphan_count = 0
+        degree_sample: list[int] = []
+        clustering_coef: float | None = None
+        modularity_proxy: float | None = None
 
         try:
             with driver.session() as session:
@@ -638,6 +666,54 @@ class GraphAnalyzer(AnalyzerBase):
                     "c"
                 ]
                 orphan_count = int(orphan)
+
+                # Degree sample for power-law fit (1000 random Symbol nodes).
+                deg_q = (
+                    "MATCH (n:Symbol) WITH n, rand() AS r "
+                    "ORDER BY r LIMIT 1000 "
+                    "RETURN size([(n)--() | 1]) AS deg"
+                )
+                try:
+                    degree_sample = [int(r["deg"]) for r in session.run(deg_q)]
+                except Exception:
+                    degree_sample = []
+
+                # Local clustering coefficient on a 50-node sample.
+                cluster_q = (
+                    "MATCH (n) WHERE size([(n)--() | 1]) >= 2 "
+                    "WITH n, rand() AS r ORDER BY r LIMIT 50 "
+                    "WITH n, size([(n)--() | 1]) AS deg "
+                    "MATCH (n)-[:CALLS]->(m1), (n)-[:CALLS]->(m2) "
+                    "WHERE elementId(m1) < elementId(m2) "
+                    "OPTIONAL MATCH (m1)-[t:CALLS]-(m2) "
+                    "WITH n, deg, count(DISTINCT t) AS triangles "
+                    "WHERE deg > 1 "
+                    "RETURN avg(2.0 * triangles / (deg * (deg-1))) AS c"
+                )
+                try:
+                    res = session.run(cluster_q).single()
+                    if res and res["c"] is not None:
+                        clustering_coef = float(res["c"])
+                except Exception:
+                    pass
+
+                # Modularity proxy via existing Community membership.
+                mod_q = (
+                    "MATCH (s:Symbol)-[:BELONGS_TO]->(:Module)<-[:CONTAINS]-(c:Community) "
+                    "WITH s, c "
+                    "MATCH (s)-[:CALLS]->(t:Symbol) "
+                    "MATCH (t)-[:BELONGS_TO]->(:Module)<-[:CONTAINS]-(c2:Community) "
+                    "RETURN sum(CASE WHEN c = c2 THEN 1 ELSE 0 END) AS intra, "
+                    "       count(*) AS total"
+                )
+                try:
+                    res = session.run(mod_q).single()
+                    if res and res["total"]:
+                        intra = int(res["intra"])
+                        total = int(res["total"])
+                        modularity_proxy = intra / total if total else None
+                except Exception:
+                    pass
         except Exception as exc:
             spec.sections.append(("Neo4j graph", f"_Cypher error: {exc}_"))
             anomalies.append(f"Neo4j query error: {exc}")
@@ -671,12 +747,55 @@ class GraphAnalyzer(AnalyzerBase):
         spec.sections.append(("Relationships by type", self._render_distribution(rel_counts)))
         spec.sections.append(("Top-15 nodes by degree", self._render_top(top_nodes)))
 
+        # Topology metrics — power-law / clustering / modularity proxy
+        topology_lines: list[str] = []
+        power_law: dict[str, Any] = {}
+        if degree_sample:
+            from .charts import degree_distribution_loglog
+
+            power_law = degree_distribution_loglog(degree_sample, bins=10)
+            gamma = power_law.get("gamma")
+            r_sq = power_law.get("r_squared")
+            if gamma is not None and r_sq is not None:
+                fit_quality = "good" if r_sq >= 0.7 else "weak"
+                tag = ""
+                if gamma < 1.5 or gamma > 3.5:
+                    tag = " !"
+                    anomalies.append(
+                        f"Degree distribution exponent γ={gamma} вне scale-free диапазона [1.5, 3.5]."
+                    )
+                topology_lines.append(
+                    f"- **power-law γ:** `{gamma}` (fit R²=`{r_sq}`, {fit_quality} fit){tag}"
+                )
+                topology_lines.append(
+                    "  - γ ∈ [2, 3] — scale-free network (типично для software call graph)"
+                )
+        if clustering_coef is not None:
+            topology_lines.append(
+                f"- **avg local clustering coefficient:** `{clustering_coef:.4f}` (50-node sample)"
+            )
+            topology_lines.append(
+                "  - high (>0.3) = strong triadic closure; low (<0.05) = star-shaped hubs"
+            )
+        if modularity_proxy is not None:
+            topology_lines.append(
+                f"- **modularity proxy (intra-community CALLS):** `{modularity_proxy:.2%}`"
+            )
+            topology_lines.append(
+                "  - high (>70%) = communities cleanly partition call graph; low = noisy partitioning"
+            )
+        if topology_lines:
+            spec.sections.append(("Graph topology", "\n".join(topology_lines)))
+
         if orphan_count > 0:
             anomalies.append(f"{orphan_count:,} orphan nodes — изолированные модули/символы.")
 
         spec.raw.update(
             {
                 "neo4j_node_counts": node_counts,
+                "neo4j_power_law": power_law,
+                "neo4j_clustering_coef": clustering_coef,
+                "neo4j_modularity_proxy": modularity_proxy,
                 "neo4j_rel_counts": rel_counts,
                 "neo4j_top_nodes": top_nodes,
                 "neo4j_orphan_count": orphan_count,
