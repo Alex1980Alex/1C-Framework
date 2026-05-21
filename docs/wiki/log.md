@@ -360,4 +360,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: bsl-development, code-verify, 1c-doc-research
 - Files changed: 2
 - Summary: Session 2026-05-22. Skills: bsl-development, code-verify, 1c-doc-research. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация
-
