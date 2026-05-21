@@ -130,7 +130,7 @@ description: Автоматический пост-анализ результа
 - Reports: `data/reports/{indexing,graph}/`
 - State: `.claude/cache/post-indexing-analyzer-state.json`
 - Source events: `data/indexing-progress.jsonl` (генерится `_progress.py`)
-- Doc chapter: [`docs/framework documentation/38_AUTO_REPORTS/`](../../../docs/framework%20documentation/38_AUTO_REPORTS/)
+- Doc chapter: [`docs/framework documentation/28_1_AUTO_REPORTS/`](../../../docs/framework%20documentation/28_1_AUTO_REPORTS/)
 
 ## Related skills
 - [`indexing-pipeline`](../indexing-pipeline/SKILL.md) — pipeline upstream
