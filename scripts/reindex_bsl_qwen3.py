@@ -1528,13 +1528,13 @@ def main() -> None:
                 enricher.enrich(chunks)
             total_symbols += len(module.symbols)
 
-            # In --paths mode, pre-record point_ids for every chunk produced
-            # for this file so we can compute the keep-set for delete-stale.
-            if args.paths:
-                fp_str = str(fp)
-                ids = upserted_ids_per_file.setdefault(fp_str, set())
-                for ch in chunks:
-                    ids.add(point_id(args.collection, ch.chunk_id))
+            # Pre-record point_ids for every chunk produced for this file so
+            # we can compute the keep-set for delete-stale (always, not just
+            # --paths mode — see Fix #6 above).
+            fp_str = str(fp)
+            ids = upserted_ids_per_file.setdefault(fp_str, set())
+            for ch in chunks:
+                ids.add(point_id(args.collection, ch.chunk_id))
 
             for chunk in chunks:
                 batch.append(chunk)
@@ -1568,14 +1568,19 @@ def main() -> None:
         n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode, region_aware=not args.no_region_aware)
         total_chunks += n
 
-    # Delete stale chunks for files we just reindexed (--paths mode).
+    # Delete stale chunks for files we just reindexed (--paths AND --project).
     # Any chunk at the same module_path whose point_id we did NOT upsert
-    # is from a removed/renamed BSL symbol and must go.
-    if args.paths and paths_to_clean:
+    # is from a removed/renamed BSL symbol OR a previous run with different
+    # chunk_id schema (e.g. pooling-mode change) and must go.
+    # Fix #6 (2026-05-21): unconditional on paths_to_clean — was previously
+    # `args.paths and paths_to_clean`, which left --project mode accumulating
+    # 30k+ duplicates.
+    if paths_to_clean:
         cleaned = _delete_stale_for_paths(
             qdrant, args.collection, paths_to_clean, upserted_ids_per_file,
         )
-        print(f"[--paths] delete-stale: {cleaned} files cleaned")
+        mode = "--paths" if args.paths else "--project"
+        print(f"[{mode}] delete-stale: {cleaned} files cleaned")
 
     elapsed = time.time() - t0
     print(f"\n{'='*50}")
