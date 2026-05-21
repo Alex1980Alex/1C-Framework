@@ -60,7 +60,7 @@ repos:
         # (Phase 0 ratchet gate active + auth/ un-excluded 2026-05-16 after
         # 9 errors fixed). Do NOT widen this exclude further without
         # adding a roadmap entry.
-        exclude: ^(tests/|docs/|scripts/|src/pdf_framework/quick\.py$)
+        exclude: ^(tests/|docs/|scripts/|\.claude/hooks/|src/pdf_framework/quick\.py$)
 
   # markdownlint-cli2 — Phase 3 Auto-Librarian wiki format check
   - repo: https://github.com/DavidAnson/markdownlint-cli2

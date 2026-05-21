@@ -15,6 +15,7 @@ Compatibility notes:
     own vector, expects top-1 == self. Catches HNSW corruption or wrong
     ``using=`` parameter on named-vector collections.
 """
+
 from __future__ import annotations
 
 import json
@@ -65,7 +66,9 @@ def _load_run_events(jsonl_path: Path, run_id: str) -> list[dict[str, Any]]:
     return events
 
 
-def _find_previous_report(reports_dir: Path, subject: str, current_run_id: str) -> dict[str, Any] | None:
+def _find_previous_report(
+    reports_dir: Path, subject: str, current_run_id: str
+) -> dict[str, Any] | None:
     indexing_dir = reports_dir / "indexing"
     if not indexing_dir.exists():
         return None
@@ -109,7 +112,9 @@ class IndexingAnalyzer(AnalyzerBase):
         run_start = next((e for e in events if e.get("category") == "run_start"), None)
         run_end = next((e for e in reversed(events) if e.get("category") == "run_end"), None)
         script = (events[0] if events else {}).get("script", "unknown")
-        duration = (run_end or {}).get("elapsed_s") or (events[-1] if events else {}).get("elapsed_s")
+        duration = (run_end or {}).get("elapsed_s") or (events[-1] if events else {}).get(
+            "elapsed_s"
+        )
 
         collection = self._detect_collection(events, run_end)
         anomalies: list[str] = []
@@ -152,7 +157,10 @@ class IndexingAnalyzer(AnalyzerBase):
             )
         else:
             spec.sections.append(
-                ("Diff vs previous run", f"_Нет предыдущего отчёта для `{collection}` — это первый ран._")
+                (
+                    "Diff vs previous run",
+                    f"_Нет предыдущего отчёта для `{collection}` — это первый ран._",
+                )
             )
 
         spec.anomalies = anomalies
@@ -229,7 +237,7 @@ class IndexingAnalyzer(AnalyzerBase):
                 continue
             lines.append(f"- **{k}:** `{v}`")
         errors = run_end.get("errors")
-        if isinstance(errors, (int, float)) and errors > 0:
+        if isinstance(errors, int | float) and errors > 0:
             anomalies.append(f"`run_end.errors={errors}` — были ошибки в pipeline.")
         return "\n".join(lines) or "_(пусто)_"
 
@@ -284,7 +292,9 @@ class IndexingAnalyzer(AnalyzerBase):
         lines.append(
             "- **последний снимок:** "
             + ", ".join(
-                f"`{k}={v}`" for k, v in last.items() if k not in ("ts", "run_id", "script", "category")
+                f"`{k}={v}`"
+                for k, v in last.items()
+                if k not in ("ts", "run_id", "script", "category")
             )
         )
         return "\n".join(lines)
@@ -308,7 +318,9 @@ class IndexingAnalyzer(AnalyzerBase):
         if named:
             lines.append("- **named vectors:**")
             for vname, vmeta in named.items():
-                lines.append(f"  - `{vname}` → size={vmeta.get('size')}, distance={vmeta.get('distance')}")
+                lines.append(
+                    f"  - `{vname}` → size={vmeta.get('size')}, distance={vmeta.get('distance')}"
+                )
         return "\n".join(lines)
 
     def _section_probes(self, probes: dict) -> str:
@@ -327,7 +339,9 @@ class IndexingAnalyzer(AnalyzerBase):
         recall = probes.get("self_recall_at_1")
         if recall is not None:
             ok_tag = "OK" if recall >= SELF_RECALL_TARGET else "FAIL"
-            lines.append(f"- **self recall@1:** `{recall:.3f}` ({ok_tag}, target ≥ {SELF_RECALL_TARGET})")
+            lines.append(
+                f"- **self recall@1:** `{recall:.3f}` ({ok_tag}, target ≥ {SELF_RECALL_TARGET})"
+            )
         dim_check = probes.get("dimension_check")
         if dim_check is not None:
             lines.append(f"- **dimension check:** {'match' if dim_check else 'MISMATCH'}")
@@ -352,7 +366,7 @@ class IndexingAnalyzer(AnalyzerBase):
                 f"- **points:** `{prev_points}` -> `{cur_points}` (Δ {delta:+d}, {pct:+.1f}%)"
             )
         prev_dur = prev.get("duration_sec")
-        if isinstance(prev_dur, (int, float)) and isinstance(duration, (int, float)):
+        if isinstance(prev_dur, int | float) and isinstance(duration, int | float):
             d = duration - prev_dur
             lines.append(f"- **duration:** `{prev_dur:.1f}s` -> `{duration:.1f}s` (Δ {d:+.1f}s)")
         prev_norm = ((prev.get("probes") or {}).get("norm") or {}).get("mean")
@@ -433,7 +447,9 @@ class IndexingAnalyzer(AnalyzerBase):
             pass
         return collection
 
-    def _run_quality_probes(self, collection: str, info: dict, anomalies: list[str]) -> dict[str, Any]:
+    def _run_quality_probes(
+        self, collection: str, info: dict, anomalies: list[str]
+    ) -> dict[str, Any]:
         out: dict[str, Any] = {"sample_size": 0}
         try:
             client = QdrantClient(url=self.qdrant_url, timeout=30)

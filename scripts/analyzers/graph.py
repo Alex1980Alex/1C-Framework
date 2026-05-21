@@ -19,6 +19,7 @@ All three emit a ReportSpec with the same shape (TL;DR + sections +
 anomalies + diff vs previous). Different sub-sources are mutually
 exclusive within one run.
 """
+
 from __future__ import annotations
 
 import json
@@ -35,20 +36,25 @@ from .base import AnalyzerBase, ReportSpec
 
 try:
     from qdrant_client import QdrantClient
+
     _QDRANT_AVAILABLE = True
 except ImportError:
     _QDRANT_AVAILABLE = False
 
 try:
     from neo4j import GraphDatabase
+
     _NEO4J_AVAILABLE = True
 except ImportError:
     _NEO4J_AVAILABLE = False
 
 
 TAIL_BYTES = 4 * 1024 * 1024
-DEFAULT_NEO4J_URI = "bolt://localhost:7687"
-DEFAULT_NEO4J_AUTH = ("neo4j", "bsl-graph-2026")
+DEFAULT_NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+DEFAULT_NEO4J_AUTH = (
+    os.environ.get("NEO4J_USER", "neo4j"),
+    os.environ.get("NEO4J_PASSWORD", "bsl-graph-2026"),
+)
 
 
 def _load_run_events(jsonl_path: Path, run_id: str) -> list[dict[str, Any]]:
@@ -74,7 +80,9 @@ def _load_run_events(jsonl_path: Path, run_id: str) -> list[dict[str, Any]]:
     return events
 
 
-def _find_previous_report(reports_dir: Path, subject: str, current_run_id: str) -> dict[str, Any] | None:
+def _find_previous_report(
+    reports_dir: Path, subject: str, current_run_id: str
+) -> dict[str, Any] | None:
     graph_dir = reports_dir / "graph"
     if not graph_dir.exists():
         return None
@@ -124,7 +132,7 @@ class GraphAnalyzer(AnalyzerBase):
         events = _load_run_events(self.progress_jsonl, self.run_id) if self.run_id else []
         run_start = next((e for e in events if e.get("category") == "run_start"), None)
         run_end = next((e for e in reversed(events) if e.get("category") == "run_end"), None)
-        script = (events[0].get("script") if events else f"manual:{self.source}")
+        script = events[0].get("script") if events else f"manual:{self.source}"
         duration = (run_end or {}).get("elapsed_s")
 
         subject = self._subject_for_source()
@@ -140,7 +148,12 @@ class GraphAnalyzer(AnalyzerBase):
         )
 
         if events:
-            spec.sections.append(("Run identity (from progress JSONL)", self._section_run(events, run_start, run_end, anomalies)))
+            spec.sections.append(
+                (
+                    "Run identity (from progress JSONL)",
+                    self._section_run(events, run_start, run_end, anomalies),
+                )
+            )
 
         if self.source == "sqlite":
             self._analyze_sqlite(spec, anomalies)
@@ -151,9 +164,16 @@ class GraphAnalyzer(AnalyzerBase):
 
         prev = _find_previous_report(self.reports_dir, subject, self.run_id)
         if prev:
-            spec.sections.append(("Diff vs previous run", self._section_diff(prev, spec.raw, anomalies)))
+            spec.sections.append(
+                ("Diff vs previous run", self._section_diff(prev, spec.raw, anomalies))
+            )
         else:
-            spec.sections.append(("Diff vs previous run", f"_Нет предыдущего отчёта для `{subject}` — это первый ран._"))
+            spec.sections.append(
+                (
+                    "Diff vs previous run",
+                    f"_Нет предыдущего отчёта для `{subject}` — это первый ран._",
+                )
+            )
 
         spec.anomalies = anomalies
         spec.summary = self._build_summary(spec.raw, anomalies)
@@ -173,7 +193,9 @@ class GraphAnalyzer(AnalyzerBase):
 
     # ---- common run section -------------------------------------------
 
-    def _section_run(self, events: list[dict], run_start: dict | None, run_end: dict | None, anomalies: list[str]) -> str:
+    def _section_run(
+        self, events: list[dict], run_start: dict | None, run_end: dict | None, anomalies: list[str]
+    ) -> str:
         lines = []
         pid = (run_start or {}).get("pid", "?")
         lines.append(f"- **PID:** `{pid}`")
@@ -183,7 +205,7 @@ class GraphAnalyzer(AnalyzerBase):
                     continue
                 lines.append(f"- **run_end.{k}:** `{v}`")
             errors = run_end.get("errors")
-            if isinstance(errors, (int, float)) and errors > 0:
+            if isinstance(errors, int | float) and errors > 0:
                 anomalies.append(f"`run_end.errors={errors}` — parse errors в pipeline.")
         else:
             anomalies.append("Нет `run_end` события — build_call_graph мог упасть до atexit.")
@@ -194,9 +216,7 @@ class GraphAnalyzer(AnalyzerBase):
     def _analyze_sqlite(self, spec: ReportSpec, anomalies: list[str]) -> None:
         db_path = self.db_path
         if not db_path or not db_path.exists():
-            spec.sections.append(
-                ("SQLite call graph", f"_DB not found: {db_path}_")
-            )
+            spec.sections.append(("SQLite call graph", f"_DB not found: {db_path}_"))
             anomalies.append(f"SQLite DB не найден: {db_path}")
             return
         try:
@@ -208,7 +228,9 @@ class GraphAnalyzer(AnalyzerBase):
             return
 
         try:
-            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            tables = {
+                r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
             counts: dict[str, int] = {}
             for t in ("modules", "module_metadata", "symbols", "calls"):
                 if t in tables:
@@ -220,13 +242,19 @@ class GraphAnalyzer(AnalyzerBase):
             spec.sections.append(("SQLite tables", "\n".join(lines)))
 
             symbols_by_type = self._sqlite_symbols_by_type(conn, tables)
-            spec.sections.append(("Symbols by symbol_type", self._render_distribution(symbols_by_type)))
+            spec.sections.append(
+                ("Symbols by symbol_type", self._render_distribution(symbols_by_type))
+            )
 
             top_callers = self._sqlite_top_callees(conn, tables, limit=15)
-            spec.sections.append(("Top-15 symbols by incoming call count (callees)", self._render_top(top_callers)))
+            spec.sections.append(
+                ("Top-15 symbols by incoming call count (callees)", self._render_top(top_callers))
+            )
 
             module_density = self._sqlite_module_density(conn, tables, limit=15)
-            spec.sections.append(("Top-15 modules by symbol count", self._render_top(module_density)))
+            spec.sections.append(
+                ("Top-15 modules by symbol count", self._render_top(module_density))
+            )
 
             orphan_count, dangling = self._sqlite_orphans_and_dangling(conn, tables, anomalies)
             sec = [
@@ -266,7 +294,9 @@ class GraphAnalyzer(AnalyzerBase):
         ).fetchall()
         return {(r["k"] or "<null>"): int(r["n"]) for r in rows}
 
-    def _sqlite_top_callees(self, conn: sqlite3.Connection, tables: set[str], limit: int) -> list[tuple[str, int]]:
+    def _sqlite_top_callees(
+        self, conn: sqlite3.Connection, tables: set[str], limit: int
+    ) -> list[tuple[str, int]]:
         if "calls" not in tables:
             return []
         try:
@@ -287,7 +317,9 @@ class GraphAnalyzer(AnalyzerBase):
         ).fetchall()
         return [(r["name"], int(r["n"])) for r in rows]
 
-    def _sqlite_module_density(self, conn: sqlite3.Connection, tables: set[str], limit: int) -> list[tuple[str, int]]:
+    def _sqlite_module_density(
+        self, conn: sqlite3.Connection, tables: set[str], limit: int
+    ) -> list[tuple[str, int]]:
         if "symbols" not in tables:
             return []
         try:
@@ -324,7 +356,10 @@ class GraphAnalyzer(AnalyzerBase):
             try:
                 cols_c = {r[1] for r in conn.execute("PRAGMA table_info(calls)")}
                 cols_s = {r[1] for r in conn.execute("PRAGMA table_info(symbols)")}
-                callee_col = next((c for c in ("callee_name", "callee", "target_name", "target") if c in cols_c), None)
+                callee_col = next(
+                    (c for c in ("callee_name", "callee", "target_name", "target") if c in cols_c),
+                    None,
+                )
                 sym_name = "name" if "name" in cols_s else None
                 if callee_col and sym_name:
                     dangling = int(
@@ -337,7 +372,9 @@ class GraphAnalyzer(AnalyzerBase):
             except sqlite3.Error:
                 pass
         if dangling > 0:
-            anomalies.append(f"{dangling:,} calls без matching symbol — dangling endpoints (внешние API или typo).")
+            anomalies.append(
+                f"{dangling:,} calls без matching symbol — dangling endpoints (внешние API или typo)."
+            )
         return orphan, dangling
 
     # ---- Neo4j source -------------------------------------------------
@@ -346,12 +383,22 @@ class GraphAnalyzer(AnalyzerBase):
         if not _NEO4J_AVAILABLE:
             spec.sections.append(("Neo4j graph", "_Skipped — пакет `neo4j` не установлен._"))
             return
+        driver = None
         try:
-            driver = GraphDatabase.driver(self.neo4j_uri, auth=(self.neo4j_user, self.neo4j_password))
+            driver = GraphDatabase.driver(
+                self.neo4j_uri, auth=(self.neo4j_user, self.neo4j_password)
+            )
             driver.verify_connectivity()
         except Exception as exc:
-            spec.sections.append(("Neo4j graph", f"_Connectivity failed: {type(exc).__name__}: {exc}_"))
+            spec.sections.append(
+                ("Neo4j graph", f"_Connectivity failed: {type(exc).__name__}: {exc}_")
+            )
             anomalies.append(f"Neo4j connect error: {exc}")
+            if driver is not None:
+                try:
+                    driver.close()
+                except Exception:
+                    pass
             return
 
         node_counts: dict[str, int] = {}
@@ -366,7 +413,9 @@ class GraphAnalyzer(AnalyzerBase):
                     n = session.run(f"MATCH (n:`{lab}`) RETURN count(n) AS c").single()["c"]
                     node_counts[lab] = int(n)
 
-                rel_types = session.run("CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType").value()
+                rel_types = session.run(
+                    "CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType"
+                ).value()
                 for rt in rel_types:
                     n = session.run(f"MATCH ()-[r:`{rt}`]->() RETURN count(r) AS c").single()["c"]
                     rel_counts[rt] = int(n)
@@ -378,18 +427,20 @@ class GraphAnalyzer(AnalyzerBase):
                 )
                 top_nodes = [(r["label"], int(r["deg"])) for r in session.run(top_q)]
 
-                orphan = session.run("MATCH (n) WHERE NOT (n)--() RETURN count(n) AS c").single()["c"]
+                orphan = session.run("MATCH (n) WHERE NOT (n)--() RETURN count(n) AS c").single()[
+                    "c"
+                ]
                 orphan_count = int(orphan)
         except Exception as exc:
             spec.sections.append(("Neo4j graph", f"_Cypher error: {exc}_"))
             anomalies.append(f"Neo4j query error: {exc}")
-            driver.close()
             return
         finally:
-            try:
-                driver.close()
-            except Exception:
-                pass
+            if driver is not None:
+                try:
+                    driver.close()
+                except Exception:
+                    pass
 
         total_nodes = sum(node_counts.values())
         total_rels = sum(rel_counts.values())
@@ -431,14 +482,18 @@ class GraphAnalyzer(AnalyzerBase):
 
     def _analyze_qdrant_graph(self, spec: ReportSpec, anomalies: list[str]) -> None:
         if not _QDRANT_AVAILABLE:
-            spec.sections.append(("Qdrant graph_embeddings", "_Skipped — qdrant_client не установлен._"))
+            spec.sections.append(
+                ("Qdrant graph_embeddings", "_Skipped — qdrant_client не установлен._")
+            )
             return
         try:
             client = QdrantClient(url=self.qdrant_url, timeout=30)
             physical = self._resolve_alias(client, self.qdrant_collection)
             info = client.get_collection(physical)
         except Exception as exc:
-            spec.sections.append(("Qdrant graph_embeddings", f"_Connectivity failed: {type(exc).__name__}: {exc}_"))
+            spec.sections.append(
+                ("Qdrant graph_embeddings", f"_Connectivity failed: {type(exc).__name__}: {exc}_")
+            )
             anomalies.append(f"Qdrant connect error: {exc}")
             return
 
@@ -492,9 +547,15 @@ class GraphAnalyzer(AnalyzerBase):
             if isinstance(v, list):
                 norms.append(math.sqrt(sum(x * x for x in v)))
 
-        spec.sections.append(("Entity types (sample)", self._render_distribution(dict(entity_types.most_common(20)))))
-        spec.sections.append(("Entity vs relation split (sample)", self._render_distribution(dict(kinds))))
-        spec.sections.append(("Top sources (sample)", self._render_distribution(dict(sources.most_common(15)))))
+        spec.sections.append(
+            ("Entity types (sample)", self._render_distribution(dict(entity_types.most_common(20))))
+        )
+        spec.sections.append(
+            ("Entity vs relation split (sample)", self._render_distribution(dict(kinds)))
+        )
+        spec.sections.append(
+            ("Top sources (sample)", self._render_distribution(dict(sources.most_common(15))))
+        )
 
         norm_summary: dict[str, float] = {}
         if norms:
@@ -548,7 +609,9 @@ class GraphAnalyzer(AnalyzerBase):
                 if isinstance(prev_v, int) and isinstance(cur_v, int):
                     d = cur_v - prev_v
                     pct = (d / prev_v * 100) if prev_v else float("inf")
-                    lines.append(f"- **{key}:** `{prev_v:,}` -> `{cur_v:,}` (Δ {d:+,}, {pct:+.1f}%)")
+                    lines.append(
+                        f"- **{key}:** `{prev_v:,}` -> `{cur_v:,}` (Δ {d:+,}, {pct:+.1f}%)"
+                    )
         # Neo4j diff
         if "neo4j_total_nodes" in cur and "neo4j_total_nodes" in prev:
             for key in ("neo4j_total_nodes", "neo4j_total_rels", "neo4j_orphan_count"):

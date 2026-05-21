@@ -32,6 +32,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,7 +50,7 @@ MAX_PROCESSED = 500
 MAX_FIRE_PER_INVOCATION = 5
 
 
-def _read_jsonl_tail(path: Path, max_bytes: int) -> list[dict]:
+def _read_jsonl_tail(path: Path, max_bytes: int) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     try:
@@ -61,7 +62,7 @@ def _read_jsonl_tail(path: Path, max_bytes: int) -> list[dict]:
             raw = fh.read().decode("utf-8", errors="replace")
     except OSError:
         return []
-    out = []
+    out: list[dict[str, Any]] = []
     for line in raw.splitlines():
         line = line.strip()
         if not line:
@@ -73,22 +74,25 @@ def _read_jsonl_tail(path: Path, max_bytes: int) -> list[dict]:
     return out
 
 
-def _load_state() -> dict:
+def _load_state() -> dict[str, Any]:
     if not STATE_FILE.exists():
         return {}
     try:
-        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        data: dict[str, Any] = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        return data
     except (OSError, json.JSONDecodeError):
         return {}
 
 
-def _save_state(state: dict) -> None:
+def _save_state(state: dict[str, Any]) -> None:
     try:
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(
+        tmp = STATE_FILE.with_suffix(STATE_FILE.suffix + ".tmp")
+        tmp.write_text(
             json.dumps(state, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+        os.replace(tmp, STATE_FILE)
     except OSError:
         pass
 
@@ -114,21 +118,24 @@ def _spawn_analyzer(run_id: str) -> bool:
         log_path = REPORTS_DIR / "_analyzer.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_fh = log_path.open("a", encoding="utf-8")
-        subprocess.Popen(
-            cmd,
-            stdout=log_fh,
-            stderr=log_fh,
-            cwd=str(PROJECT_ROOT),
-            creationflags=creationflags,
-            close_fds=True,
-        )
+        try:
+            subprocess.Popen(
+                cmd,
+                stdout=log_fh,
+                stderr=log_fh,
+                cwd=str(PROJECT_ROOT),
+                creationflags=creationflags,
+                close_fds=True,
+            )
+        finally:
+            # Child inherits its own duplicated FD; release the parent's copy.
+            log_fh.close()
         return True
     except OSError:
         return False
 
 
 class PostIndexingAnalyzer(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
             return None
@@ -154,7 +161,7 @@ class PostIndexingAnalyzer(BaseHook):
                 "last_fire": datetime.now().isoformat(timespec="seconds"),
             }
             _save_state(state)
-            return HookOutput().system_message(
+            return HookOutput().system_message(  # type: ignore[no-untyped-call]
                 f"[POST-INDEXING-ANALYZER] Init: seeded {len(seed_ids)} existing run_ids "
                 f"({PROGRESS_JSONL.name}). Future indexing/graph runs will auto-generate "
                 f"reports in data/reports/."
@@ -201,9 +208,11 @@ class PostIndexingAnalyzer(BaseHook):
             + "\n".join(bits)
         )
         if failed:
-            summary += f"\nFAIL причина: python.exe или analyze_run.py не найдены ({len(failed)} run_ids)."
-        return HookOutput().system_message(summary)
+            summary += (
+                f"\nFAIL причина: python.exe или analyze_run.py не найдены ({len(failed)} run_ids)."
+            )
+        return HookOutput().system_message(summary)  # type: ignore[no-untyped-call]
 
 
 if __name__ == "__main__":
-    PostIndexingAnalyzer().run()
+    PostIndexingAnalyzer().run()  # type: ignore[no-untyped-call]
