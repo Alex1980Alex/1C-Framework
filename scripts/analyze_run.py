@@ -20,11 +20,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
+from analyzers.graph import GraphAnalyzer  # noqa: E402
 from analyzers.indexing import IndexingAnalyzer  # noqa: E402
 from analyzers.report_writer import write_report  # noqa: E402
 
 PROGRESS_JSONL = REPO_ROOT / "data" / "indexing-progress.jsonl"
 REPORTS_DIR = REPO_ROOT / "data" / "reports"
+DEFAULT_BSL_DB = REPO_ROOT / "cache" / "bsl_call_graph.db"
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -35,9 +37,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--source",
         required=False,
-        choices=["networkx", "neo4j", "qdrant_graph"],
-        help="graph source (mode=graph only) — Phase 2",
+        choices=["sqlite", "neo4j", "qdrant_graph"],
+        help="graph source (mode=graph only)",
     )
+    p.add_argument("--db-path", default=str(DEFAULT_BSL_DB), help="SQLite call graph DB (mode=graph, source=sqlite)")
+    p.add_argument("--neo4j-uri", default="bolt://localhost:7687")
+    p.add_argument("--neo4j-user", default="neo4j")
+    p.add_argument("--neo4j-password", default="bsl-graph-2026")
+    p.add_argument("--qdrant-collection", default="graph_embeddings")
     p.add_argument("--verbosity", default="medium", choices=["short", "medium", "full"])
     p.add_argument("--sample-size", type=int, default=200)
     p.add_argument("--qdrant-url", default=None)

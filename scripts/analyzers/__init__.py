@@ -8,7 +8,8 @@ Neo4j / NetworkX artefacts to produce a Markdown + JSON report under
 """
 
 from .base import AnalyzerBase, ReportSpec
+from .graph import GraphAnalyzer
 from .indexing import IndexingAnalyzer
 from .report_writer import write_report
 
-__all__ = ["AnalyzerBase", "ReportSpec", "IndexingAnalyzer", "write_report"]
+__all__ = ["AnalyzerBase", "ReportSpec", "IndexingAnalyzer", "GraphAnalyzer", "write_report"]
