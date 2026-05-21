@@ -42,6 +42,7 @@ Safety:
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 from datetime import datetime
@@ -112,19 +113,31 @@ def _save_state(state: dict) -> None:
 
 
 def _run_pre_push_tests() -> tuple[bool, str]:
-    """Returns (ok, message). Skipped if AUTO_PR_NO_TESTS=1."""
+    """Returns (ok, message). Skipped if AUTO_PR_NO_TESTS=1.
+
+    Security: tokenizes via shlex + uses shell=False to avoid command
+    injection. AUTO_PR_TEST_CMD is operator-controlled, but defence-in-depth
+    insists on shell-less execution.
+    """
     if _env("AUTO_PR_NO_TESTS") == "1":
         return True, "tests skipped (AUTO_PR_NO_TESTS=1)"
-    cmd = _env("AUTO_PR_TEST_CMD") or (
-        ".venv/Scripts/python.exe -m pytest tests/integration/test_analyze_run.py -q --timeout=30 -x"
+    cmd_str = _env("AUTO_PR_TEST_CMD") or (
+        ".venv/Scripts/python.exe -m pytest tests/integration/test_analyze_run.py "
+        "-q --timeout=30 -x"
     )
     try:
+        cmd_argv = shlex.split(cmd_str, posix=False)
+    except ValueError as exc:
+        return False, f"AUTO_PR_TEST_CMD parse error: {exc}"
+    if not cmd_argv:
+        return False, "AUTO_PR_TEST_CMD is empty after tokenization"
+    try:
         r = subprocess.run(
-            cmd,
+            cmd_argv,
             capture_output=True,
             text=True,
             timeout=60,
-            shell=True,
+            shell=False,
             check=False,
             cwd=str(PROJECT_ROOT),
         )
@@ -134,6 +147,14 @@ def _run_pre_push_tests() -> tuple[bool, str]:
         return False, f"tests failed (exit={r.returncode}): {tail}"
     except (subprocess.TimeoutExpired, OSError) as exc:
         return False, f"test run error: {type(exc).__name__}: {exc}"
+
+
+def _safe_int(value: str, default: int) -> int:
+    """Parse int with fallback — prevents hook crash on malformed env."""
+    try:
+        return int((value or "").strip() or default)
+    except (ValueError, TypeError):
+        return default
 
 
 def _gh_available() -> bool:
@@ -211,19 +232,16 @@ class PostTaskPushPR(BaseHook):
             return None
 
         task_id = str(ti.get("taskId") or "unknown")
-        # Fetch subject from result if available, else fallback to taskId
+        # Subject best-effort: TaskUpdate's tool_response is usually a status
+        # string like "Updated task #N status", not the task subject. We use
+        # taskId in the branch slug if subject can't be recovered.
         subject = ""
         result = inp.tool_result
         if isinstance(result, dict):
             subject = str(result.get("subject", ""))
-        elif isinstance(result, str):
-            # tool_result is sometimes a status string from TaskUpdate
-            m = re.search(r"Updated task #\d+ status", result)
-            if m:
-                subject = ""
 
         base = _env("AUTO_PR_BASE", "master")
-        min_commits = int(_env("AUTO_PR_MIN_COMMITS", "3") or "3")
+        min_commits = _safe_int(_env("AUTO_PR_MIN_COMMITS"), 3)
 
         # Verify base branch exists locally
         code, _, _ = _run_git("rev-parse", "--verify", base)
