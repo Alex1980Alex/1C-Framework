@@ -1124,9 +1124,15 @@ def flush_batch(
             _evt("oom_recovery", batch=0)
         return 0
 
+    # Fix #3 (2026-05-21): collect None vectors for retry instead of silent skip.
+    # TEI HTTP can race-fail on large batches (returns None for some chunks
+    # without raising), causing coverage gap on incremental reindexes.
     points = []
+    none_chunks: list[tuple[int, BSLChunk]] = []  # (idx, chunk) for retry
+
     for i, (chunk, vec) in enumerate(zip(chunks, vectors)):
         if vec is None:
+            none_chunks.append((i, chunk))
             continue
         vec_list = vec if isinstance(vec, list) else vec.tolist()
 
@@ -1143,6 +1149,44 @@ def flush_batch(
                 payload=chunk_payload(chunk),
             )
         )
+
+    # Retry None chunks one-by-one (single-element batches typically don't race)
+    permanent_drops = 0
+    if none_chunks:
+        recovered = 0
+        for idx, chunk in none_chunks:
+            try:
+                retry_vecs = embedder.embed_batch([chunk.content], is_query=False)
+                if retry_vecs and retry_vecs[0] is not None:
+                    vec = retry_vecs[0]
+                    vec_list = vec if isinstance(vec, list) else vec.tolist()
+
+                    if dual_vector and mp_vectors and mp_vectors[idx] is not None:
+                        mp_vec = mp_vectors[idx] if isinstance(mp_vectors[idx], list) else mp_vectors[idx].tolist()
+                        vector_data = {"content": vec_list, "module_path": mp_vec}
+                    else:
+                        vector_data = vec_list
+
+                    points.append(
+                        models.PointStruct(
+                            id=point_id(collection, chunk.chunk_id),
+                            vector=vector_data,
+                            payload=chunk_payload(chunk),
+                        )
+                    )
+                    recovered += 1
+                else:
+                    permanent_drops += 1
+                    module_path_tail = chunk.module_path[-50:] if chunk.module_path else "unknown"
+                    print(f"[DROP] {chunk.chunk_id} @ {module_path_tail}")
+                    _evt("chunk_dropped", reason="retry_returned_none", name=chunk.chunk_id, module_path=chunk.module_path)
+            except Exception as e:
+                permanent_drops += 1
+                module_path_tail = chunk.module_path[-50:] if chunk.module_path else "unknown"
+                print(f"[DROP] {chunk.chunk_id} @ {module_path_tail} (error: {type(e).__name__})")
+                _evt("chunk_dropped", reason="retry_exception", name=chunk.chunk_id, module_path=chunk.module_path, error=str(e))
+
+        print(f"[RETRY] flush_batch: {len(none_chunks)} None vectors, recovered={recovered}, dropped={permanent_drops}")
 
     for start in range(0, len(points), UPSERT_SUB_BATCH):
         _upsert_with_retry(client, collection, points[start:start + UPSERT_SUB_BATCH])
