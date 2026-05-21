@@ -72,8 +72,23 @@ def main(argv: list[str] | None = None) -> int:
             sample_size=args.sample_size,
         )
     else:
-        print("ERROR: mode=graph not implemented yet (Phase 2 of roadmap).", file=sys.stderr)
-        return 2
+        if not args.source:
+            print("ERROR: --source required for --mode=graph (sqlite|neo4j|qdrant_graph)", file=sys.stderr)
+            return 2
+        analyzer = GraphAnalyzer(
+            source=args.source,
+            run_id=args.run_id,
+            progress_jsonl=Path(args.progress_jsonl),
+            reports_dir=reports_dir,
+            db_path=Path(args.db_path) if args.db_path else None,
+            neo4j_uri=args.neo4j_uri,
+            neo4j_user=args.neo4j_user,
+            neo4j_password=args.neo4j_password,
+            qdrant_url=args.qdrant_url,
+            qdrant_collection=args.qdrant_collection,
+            verbosity=args.verbosity,
+            sample_size=args.sample_size,
+        )
 
     try:
         spec = analyzer.analyze()

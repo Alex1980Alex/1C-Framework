@@ -374,7 +374,7 @@ class GraphAnalyzer(AnalyzerBase):
                 top_q = (
                     "MATCH (n) WITH n, size([(n)--() | 1]) AS deg "
                     "ORDER BY deg DESC LIMIT 15 "
-                    "RETURN coalesce(n.name, n.path, toString(id(n))) AS label, deg"
+                    "RETURN coalesce(n.name, n.path, elementId(n)) AS label, deg"
                 )
                 top_nodes = [(r["label"], int(r["deg"])) for r in session.run(top_q)]
 
