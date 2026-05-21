@@ -486,7 +486,7 @@ class IndexingAnalyzer(AnalyzerBase):
             else:
                 out["dimension_check"] = cur_dim is None or len(vectors[0]) == cur_dim
 
-            probe_n = min(5, len(vectors))
+            probe_n = min(10, len(vectors))
             if probe_n > 0:
                 hits_ok = 0
                 tested = 0
