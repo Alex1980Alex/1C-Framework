@@ -1058,6 +1058,53 @@
       "sources_count": 13,
       "github_repos_count": 12,
       "cross_ref": "docs/roadmap/260519_ROADMAP_HIERARCHICAL_DOC_TOOLING.md"
+    },
+    {
+      "file": "langfuse-llm-observability-2026.md",
+      "title": "Langfuse — LLM observability platform (research cache)",
+      "keywords": [
+        "langfuse",
+        "observability",
+        "llm",
+        "tracing",
+        "langchain",
+        "callback",
+        "phase-46",
+        "build_langfuse_callback",
+        "emit_observation",
+        "ragas-scoring",
+        "prompt-versioning",
+        "self-host"
+      ],
+      "created": "2026-05-22",
+      "last_verified": "2026-05-22",
+      "domain": "llm-observability",
+      "description": "Langfuse YC W23 OSS LLM engineering platform. 16 GitHub repos analyzed. v4 SDK (March 2026). LangChain integration via CallbackHandler. Singleton client pattern. Credentials resolution chain."
+    },
+    {
+      "file": "github-pr-automation-2026.md",
+      "title": "GitHub PR automation patterns (research cache)",
+      "keywords": [
+        "github",
+        "pr",
+        "automerge",
+        "automation",
+        "mergify",
+        "kodiak",
+        "bulldozer",
+        "dependabot",
+        "renovate",
+        "branch-protection",
+        "pre-commit",
+        "pascalgn",
+        "peter-evans",
+        "workflow",
+        "squash"
+      ],
+      "created": "2026-05-22",
+      "last_verified": "2026-05-22",
+      "domain": "devops-git-workflow",
+      "description": "17 GitHub projects analyzed. Native auto-merge / Actions / OSS bots / SaaS comparison. 15 best practices. Mapping to PDF Framework auto-git-save + post-task-push-pr hooks."
     }
   ]
 }
