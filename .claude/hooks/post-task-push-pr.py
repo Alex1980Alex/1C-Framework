@@ -461,8 +461,9 @@ class PostTaskPushPR(BaseHook):
         msg = (
             f"[POST-TASK-PUSH-PR] Task #{task_id} OK\n"
             f"- {pr_action}: {pr_url or '(local-only)'}\n"
-            f"- branch: `{branch}` ({ahead} commits in {scope_note})\n"
+            f"- branch: `{branch}` ({ahead} commits in {scope_note}, mode={branch_mode})\n"
             f"- push: {push_mode}"
+            + (f"\n- {cherry_note}" if cherry_note else "")
             + (f"\n- {reviewer_note}" if reviewer_note else "")
             + (f"\n- drift: {rebase_note}" if rebase_note else "")
             + merge_note
