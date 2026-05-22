@@ -97,6 +97,10 @@ class BSLSearchService:
         # Ленивая инициализация embedding service
         self._embedding_service = None
         self._qdrant_client = None
+        # Lazy-init Neo4j driver (2026-05-22: closes architecture gap —
+        # mcp.py:131 hardcodes neo4j_service=None, ранее граф фактически
+        # не использовался в production search).
+        self._neo4j_driver = None
 
         logger.info("BSLSearchService инициализирован")
         logger.info(f"  Qdrant: {'✓' if qdrant_service else '✗'}")
