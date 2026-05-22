@@ -49,13 +49,17 @@ def embed_query_tei(text: str, base_url: str) -> list[float]:
     return r.json()[0]
 
 
-def _id_from_expected(e: dict[str, Any]) -> str:
-    return f"{e['module_path']}:{e['line_start']}"
-
-
 def _id_from_point(p: Any) -> str:
-    pl = getattr(p, "payload", {}) or {}
-    return f"{pl.get('module_path','?')}:{pl.get('line_start',0)}"
+    # golden_v1.expected_chunk_ids = list[str(UUID)]; Qdrant point.id is UUID too.
+    return str(p.id)
+
+
+def _mrl_truncate(vec: list[float], target_dim: int) -> list[float]:
+    """MRL truncation + L2 renorm for query vectors going into 1024d collection."""
+    import math
+    v = vec[:target_dim]
+    norm = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / norm for x in v]
 
 
 def recall_at_k(retr: list[str], exp: list[str], k: int = 10) -> float:
