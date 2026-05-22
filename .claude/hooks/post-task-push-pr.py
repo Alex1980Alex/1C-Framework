@@ -441,9 +441,7 @@ class PostTaskPushPR(BaseHook):
                     open_pr = True  # don't merge
             if not merge_note:
                 queue_mode = pr.env_flag("AUTO_PR_MERGE_QUEUE")
-                ok_m, mmsg = pr.gh_pr_merge(
-                    pr_url, cwd=PROJECT_ROOT, queue=queue_mode
-                )
+                ok_m, mmsg = pr.gh_pr_merge(pr_url, cwd=PROJECT_ROOT, queue=queue_mode)
                 verb = "merge-queue" if queue_mode else "auto-merge"
                 merge_note = f"\n- {verb}: {'OK' if ok_m else 'FAIL'} — {mmsg}"
                 if ok_m:
