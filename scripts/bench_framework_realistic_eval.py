@@ -227,8 +227,10 @@ def main() -> int:
         }
         averaged[mode] = per_slice
 
-    all_slices = ["small", "medium", "god_object", "overall"]
-    print(f"\n=== Realistic BSL eval -- {len(items)} queries, {elapsed:.1f}s ===\n")
+    # Collect slice keys observed in raw + always include "overall"
+    observed_slices = sorted({slc for mode in modes for slc in raw[mode].keys()})
+    all_slices = observed_slices + ["overall"]
+    print(f"\n=== Realistic framework_code_v1 eval -- {len(items)} queries, {elapsed:.1f}s ===\n")
     print("| mode        | slice       | recall@10 | NDCG@10 | MRR    | p@5   |")
     print("|-------------|-------------|-----------|---------|--------|-------|")
     for mode in modes:
