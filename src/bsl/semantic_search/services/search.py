@@ -380,10 +380,80 @@ class BSLSearchService:
 
         return semantic_results[: request.limit]
 
+    def _detect_collection_layout(self, collection_name: str) -> str:
+        """Detect collection layout: 'hybrid' (named dense + sparse BM25) or 'dense_only'.
+
+        Cached on first call. Falls back to 'dense_only' on probe error so
+        a transient Qdrant hiccup doesn't break search — the dense-only path
+        works on any layout (single-vector OR named-vector via `using='dense'`).
+        """
+        if self._collection_layout is not None:
+            return self._collection_layout
+        try:
+            info = self._qdrant_client.get_collection(collection_name)
+            vec_cfg = info.config.params.vectors
+            sparse_cfg = info.config.params.sparse_vectors
+            has_named_dense = isinstance(vec_cfg, dict) and "dense" in vec_cfg
+            has_sparse_bm25 = bool(sparse_cfg and "bm25" in sparse_cfg)
+            self._collection_layout = "hybrid" if (has_named_dense and has_sparse_bm25) else "dense_only"
+            logger.info(
+                f"[QDRANT] Collection '{collection_name}' layout: {self._collection_layout}"
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[QDRANT] Layout probe failed for '{collection_name}': {exc}; "
+                f"falling back to dense_only"
+            )
+            self._collection_layout = "dense_only"
+        return self._collection_layout
+
+    def _get_bm25_sparse(self):
+        """Lazy-init FastEmbed Qdrant/bm25 sparse encoder.
+
+        Returns None if FastEmbed is unavailable — caller falls back to
+        dense-only search. First call loads the model (~2-3s); kept in memory.
+        """
+        if self._bm25_sparse is not None:
+            return self._bm25_sparse
+        try:
+            from fastembed import SparseTextEmbedding
+            self._bm25_sparse = SparseTextEmbedding(model_name="Qdrant/bm25")
+            logger.info("[BM25] FastEmbed Qdrant/bm25 loaded for hybrid search")
+            return self._bm25_sparse
+        except Exception as exc:
+            logger.warning(
+                f"[BM25] FastEmbed unavailable, hybrid search will degrade to dense-only: {exc}"
+            )
+            return None
+
+    @staticmethod
+    def _normalize_camelcase_for_bm25(text: str) -> str:
+        """Split BSL CamelCase identifiers into space-separated tokens.
+
+        `ОбработкаПроведения` -> `обработка проведения`. Required for BM25 to
+        match natural-language queries against identifier-heavy BSL code.
+        Mirrors normalize_camelcase() in scripts/migrate_bsl_to_hybrid.py —
+        the indexed sparse vectors were tokenized with the same function, so
+        queries must use the same one.
+        """
+        import re
+        parts = re.findall(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+", text)
+        return " ".join(parts).lower() if parts else text.lower()
+
     async def _call_qdrant_search(self, query: str, limit: int, filters: Any) -> list[dict]:
-        """Вызов Qdrant search с генерацией embedding"""
+        """Vector search via Qdrant.
+
+        Auto-detects collection layout on first call:
+          * `hybrid` (named dense + sparse BM25) -> Prefetch(dense) +
+            Prefetch(bm25) -> FusionQuery(RRF). Anchor bench on bsl_code_v4_late
+            showed dense Hit@10 ~16% vs hybrid ~90% (content-specific win:
+            Cyrillic identifiers + repetitive BSL syntax).
+          * `dense_only` (single-vector OR named without sparse) -> plain
+            dense `query_points`. Backwards-compat for non-migrated collections.
+        """
         try:
             from qdrant_client import QdrantClient
+            from qdrant_client import models as qm
 
             from ..config import get_bsl_settings
 
@@ -413,14 +483,56 @@ class BSLSearchService:
                 logger.error("TEI вернул пустой embedding для запроса")
                 return []
 
-            # Поиск в Qdrant (query_points — search() removed in qdrant-client ≥1.13)
             collection_name = getattr(self.qdrant, "collection_name", settings.collection_name)
-            search_results = self._qdrant_client.query_points(
-                collection_name=collection_name,
-                query=query_embedding,
-                limit=limit,
-                query_filter=filters,
-            ).points
+            layout = self._detect_collection_layout(collection_name)
+
+            if layout == "hybrid":
+                bm25 = self._get_bm25_sparse()
+                if bm25 is not None:
+                    norm_query = self._normalize_camelcase_for_bm25(query)
+                    sparse_emb = next(iter(bm25.embed([norm_query])))
+                    # Prefetch limit > final limit: gives RRF room to rerank.
+                    # 50 matches the smoke benchmark setup.
+                    prefetch_limit = max(limit * 5, 50)
+                    search_results = self._qdrant_client.query_points(
+                        collection_name=collection_name,
+                        prefetch=[
+                            qm.Prefetch(
+                                query=query_embedding,
+                                using="dense",
+                                limit=prefetch_limit,
+                                filter=filters,
+                            ),
+                            qm.Prefetch(
+                                query=qm.SparseVector(
+                                    indices=sparse_emb.indices.tolist(),
+                                    values=sparse_emb.values.tolist(),
+                                ),
+                                using="bm25",
+                                limit=prefetch_limit,
+                                filter=filters,
+                            ),
+                        ],
+                        query=qm.FusionQuery(fusion=qm.Fusion.RRF),
+                        limit=limit,
+                    ).points
+                else:
+                    # FastEmbed missing — query as plain dense via named vector.
+                    search_results = self._qdrant_client.query_points(
+                        collection_name=collection_name,
+                        query=query_embedding,
+                        using="dense",
+                        limit=limit,
+                        query_filter=filters,
+                    ).points
+            else:
+                # Legacy single-vector path (Phase 8.12 BSL collections, others).
+                search_results = self._qdrant_client.query_points(
+                    collection_name=collection_name,
+                    query=query_embedding,
+                    limit=limit,
+                    query_filter=filters,
+                ).points
 
             # Преобразование результатов
             results = []
