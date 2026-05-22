@@ -401,9 +401,24 @@ def get_session_files(session_id: str = "") -> set[str]:
     else:
         since_arg = f"--since={SESSION_FALLBACK_WINDOW}"
 
+    # Commits whose subject matches one of these patterns are skipped:
+    # they represent automated formatter / per-file auto-save runs that
+    # by definition do NOT carry semantic API changes worth documenting.
+    # Without this filter, a one-time rollup of 12k auto-format files
+    # (commit b5ff6e9d3, 2026-05-22) keeps re-triggering the enforcer for
+    # the entire `--since` window.
+    excluded_subject_patterns = (
+        "^chore: auto-save",
+        "^chore: rollup auto-format",
+        "^chore: rollup auto-formatter",
+    )
+    grep_args: list[str] = ["--invert-grep"]
+    for pat in excluded_subject_patterns:
+        grep_args.extend(["--grep", pat])
+
     try:
         r = subprocess.run(
-            ["git", "log", since_arg, "--name-only", "--pretty="],
+            ["git", "log", since_arg, "--name-only", "--pretty=", *grep_args],
             capture_output=True,
             text=True,
             encoding="utf-8",
