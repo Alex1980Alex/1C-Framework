@@ -476,7 +476,7 @@ class BSLSearchService:
                         using="bm25",
                         limit=limit,
                         query_filter=filters,
-                    ).points
+                    )).points
                 else:
                     # FastEmbed missing — fall back to dense via named vector.
                     # This is worse than BM25 (golden eval: dense ~18% recall@10
