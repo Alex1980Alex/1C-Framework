@@ -1,0 +1,76 @@
+# Mergify config — auto-merge with merge queue.
+# Roadmap: 40_PR_AUTOMATION/40.4 P3.3.
+#
+# Status: TEMPLATE — not active until you enable the Mergify app on this
+# repo (https://docs.mergify.com/installation/). Once enabled, this file
+# orchestrates queueing + auto-merge in parallel with — or as a
+# replacement for — the AUTO_PR_AUTO_MERGE path in post-task-push-pr.py.
+#
+# Compatibility with post-task-push-pr.py
+#   - Auto-PR hook always creates `task/<id>-<slug>` branches; the rules
+#     below target that prefix.
+#   - When Mergify is active, set `AUTO_PR_AUTO_MERGE=0` so the hook
+#     leaves merging to Mergify (avoids double-merge race).
+#   - Use the label `auto-merge` (or `auto-pr` per P0.1 if you reused it)
+#     to opt PRs into the queue.
+#
+# Queue rules
+#   - default: standard speed, requires CI green + 0 review-changes
+#   - hotfix:  bypass approvals, requires CI green only (manual flag)
+
+queue_rules:
+  - name: default
+    queue_conditions:
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+    merge_conditions:
+      - "check-success=ci"
+      - "check-success=pre-commit"
+    merge_method: squash
+    batch_size: 1
+
+  - name: hotfix
+    queue_conditions:
+      - "label=hotfix"
+    merge_conditions:
+      - "check-success=ci"
+    merge_method: squash
+
+pull_request_rules:
+  # Auto-PR opt-in via label `auto-merge`
+  - name: enqueue auto-PR branches with auto-merge label
+    conditions:
+      - "head~=^task/"
+      - "label=auto-merge"
+      - "-draft"
+    actions:
+      queue:
+        name: default
+
+  # Hotfix lane — explicit
+  - name: enqueue hotfix PRs
+    conditions:
+      - "label=hotfix"
+      - "-draft"
+    actions:
+      queue:
+        name: hotfix
+
+  # Delete branch after merge (gh CLI already deletes when --delete-branch
+  # used, but Mergify merge bypasses that path).
+  - name: delete head branch after merge
+    conditions:
+      - "merged"
+      - "head~=^task/"
+    actions:
+      delete_head_branch: {}
+
+  # Auto-rebase if base advances during queueing (saves a CI cycle).
+  - name: keep auto-PRs in sync with base
+    conditions:
+      - "head~=^task/"
+      - "label=auto-merge"
+      - "-conflict"
+      - "base=master"
+    actions:
+      update: {}
