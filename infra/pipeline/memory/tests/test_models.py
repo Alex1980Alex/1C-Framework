@@ -1,18 +1,17 @@
 """Tests for memory models."""
 
-import pytest
 from datetime import datetime
 
 from models import (
-    MemoryEntry,
-    MemoryType,
-    PatternType,
-    Pattern,
     ErrorRecord,
     ErrorSeverity,
+    LearningContext,
+    MemoryEntry,
+    MemoryType,
+    Pattern,
+    PatternType,
     Recommendation,
     RecommendationType,
-    LearningContext,
 )
 
 

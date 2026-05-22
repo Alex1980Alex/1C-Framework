@@ -4,4 +4,3 @@
 <pre>
 Portions Copyright Eastman Kodak Company 1991-2003
 </pre>
-

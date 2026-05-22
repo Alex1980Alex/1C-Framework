@@ -85,7 +85,10 @@ class RefactorOrchestrator:
 
         try:
             result = self._rename_inner(
-                uri, line, character, new_name,
+                uri,
+                line,
+                character,
+                new_name,
                 dry_run=dry_run,
                 confirm_token=confirm_token,
                 content=content,
@@ -146,18 +149,14 @@ class RefactorOrchestrator:
         if not primary_skipped_by_denylist:
             try:
                 if primary_backend.can_handle(uri):
-                    edit = primary_backend.plan_rename(
-                        uri, line, character, new_name
-                    )
+                    edit = primary_backend.plan_rename(uri, line, character, new_name)
                     backend_used = primary_name
                     active_backend = primary_backend
             except BackendError:
                 edit = None
 
         fallback_used = False
-        fallback_skipped_by_denylist = (
-            name_denied and decision.fallback == "ast-grep"
-        )
+        fallback_skipped_by_denylist = name_denied and decision.fallback == "ast-grep"
         if (
             (edit is None or not edit.file_edits)
             and decision.fallback is not None
@@ -168,9 +167,7 @@ class RefactorOrchestrator:
             if fallback_backend is not None:
                 try:
                     if fallback_backend.can_handle(uri):
-                        fallback_edit = fallback_backend.plan_rename(
-                            uri, line, character, new_name
-                        )
+                        fallback_edit = fallback_backend.plan_rename(uri, line, character, new_name)
                         if fallback_edit.file_edits:
                             edit = fallback_edit
                             backend_used = fallback_name
@@ -179,17 +176,11 @@ class RefactorOrchestrator:
                 except BackendError:
                     pass
 
-        ctx["prefilter_used"] = bool(
-            getattr(active_backend, "last_prefilter_used", False)
-        )
-        ctx["prefilter_dropped"] = int(
-            getattr(active_backend, "last_prefilter_dropped", 0)
-        )
+        ctx["prefilter_used"] = bool(getattr(active_backend, "last_prefilter_used", False))
+        ctx["prefilter_dropped"] = int(getattr(active_backend, "last_prefilter_dropped", 0))
 
         if edit is None or not edit.file_edits:
-            denied_chain = (
-                primary_skipped_by_denylist or fallback_skipped_by_denylist
-            )
+            denied_chain = primary_skipped_by_denylist or fallback_skipped_by_denylist
             if decision.manual_fallback or denied_chain:
                 return OrchestratorResult(
                     applied=False,
@@ -199,7 +190,10 @@ class RefactorOrchestrator:
                     confidence=decision.confidence,
                     reason="manual_required",
                     manual_instruction=self._build_manual_instruction(
-                        uri, kind, new_name, decision,
+                        uri,
+                        kind,
+                        new_name,
+                        decision,
                         old_name=old_name,
                         denied=denied_chain,
                     ),

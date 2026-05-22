@@ -14,7 +14,7 @@ function to_lowercase() {
 function trim_whitespace() {
     local var="$1"
     var="${var#"${var%%[![:space:]]*}"}"
-    var="${var%"${var##*[![:space:]]}"}"   
+    var="${var%"${var##*[![:space:]]}"}"
     echo "$var"
 }
 
@@ -22,12 +22,12 @@ function trim_whitespace() {
 function backup_file() {
     local file="$1"
     local backup_dir="${2:-./backups}"
-    
+
     if [[ ! -f "$file" ]]; then
         echo "Error: File '$file' does not exist" >&2
         return 1
     fi
-    
+
     mkdir -p "$backup_dir"
     cp "$file" "${backup_dir}/$(basename "$file").$(date +%Y%m%d_%H%M%S).bak"
     echo "Backup created for $file"
@@ -38,7 +38,7 @@ function contains_element() {
     local element="$1"
     shift
     local array=("$@")
-    
+
     for item in "${array[@]}"; do
         if [[ "$item" == "$element" ]]; then
             return 0
@@ -52,7 +52,7 @@ function log_message() {
     local level="$1"
     local message="$2"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     case "$level" in
         "ERROR")
             echo "[$timestamp] ERROR: $message" >&2

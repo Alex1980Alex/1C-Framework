@@ -108,6 +108,7 @@ def run_hook(hook_script: str, stdin_data: dict, timeout: int = 15) -> TestResul
 def _get_env():
     """Get environment with CLAUDE_PROJECT_DIR set."""
     import os
+
     env = os.environ.copy()
     env["CLAUDE_PROJECT_DIR"] = str(PROJECT_ROOT)
     return env
@@ -116,6 +117,7 @@ def _get_env():
 # ═══════════════════════════════════════════════════════════════════════
 # Test Definitions
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def test_post_tool_use_auto_git_save(verbose: bool) -> TestResult:
     """PostToolUse Write|Edit → auto-git-save.py"""
@@ -450,7 +452,9 @@ def test_invocation_log_event_types(verbose: bool) -> TestResult:
             continue
 
     if verbose:
-        print(f"       Recent entries: {len(recent)}, PostToolUse: {len(post_events)}, PreToolUse: {len(pre_events)}")
+        print(
+            f"       Recent entries: {len(recent)}, PostToolUse: {len(post_events)}, PreToolUse: {len(pre_events)}"
+        )
 
     # After running the tests above, there should be PostToolUse entries
     # (from auto-git-save.py, docs-change-tracker.py which use BaseHook)
@@ -476,47 +480,57 @@ def test_protocol_detected_event(verbose: bool) -> TestResult:
         from base.protocol import HookInput
 
         # Test 1: PostToolUse with empty string (was broken before fix)
-        inp = HookInput({
-            "tool_name": "Edit",
-            "tool_input": {"file_path": "test.py"},
-            "tool_result": "",  # empty string
-        })
+        inp = HookInput(
+            {
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "test.py"},
+                "tool_result": "",  # empty string
+            }
+        )
         if inp.detected_event != "PostToolUse":
             result.error = f"Empty tool_result: expected PostToolUse, got {inp.detected_event}"
             return result
 
         # Test 2: PostToolUse with content
-        inp2 = HookInput({
-            "tool_name": "Edit",
-            "tool_input": {"file_path": "test.py"},
-            "tool_result": "File edited",
-        })
+        inp2 = HookInput(
+            {
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "test.py"},
+                "tool_result": "File edited",
+            }
+        )
         if inp2.detected_event != "PostToolUse":
             result.error = f"Non-empty tool_result: expected PostToolUse, got {inp2.detected_event}"
             return result
 
         # Test 3: PreToolUse (no tool_result key)
-        inp3 = HookInput({
-            "tool_name": "Edit",
-            "tool_input": {"file_path": "test.py"},
-        })
+        inp3 = HookInput(
+            {
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "test.py"},
+            }
+        )
         if inp3.detected_event != "PreToolUse":
             result.error = f"No tool_result key: expected PreToolUse, got {inp3.detected_event}"
             return result
 
         # Test 4: Stop event
-        inp4 = HookInput({
-            "transcript": "test",
-            "reason": "end_turn",
-        })
+        inp4 = HookInput(
+            {
+                "transcript": "test",
+                "reason": "end_turn",
+            }
+        )
         if inp4.detected_event != "Stop":
             result.error = f"Stop: expected Stop, got {inp4.detected_event}"
             return result
 
         # Test 5: UserPromptSubmit
-        inp5 = HookInput({
-            "prompt": "hello",
-        })
+        inp5 = HookInput(
+            {
+                "prompt": "hello",
+            }
+        )
         if inp5.detected_event != "UserPromptSubmit":
             result.error = f"Prompt: expected UserPromptSubmit, got {inp5.detected_event}"
             return result
@@ -611,8 +625,12 @@ def run_tests(filter_suite: str = None, verbose: bool = False) -> int:
 
 def main():
     parser = argparse.ArgumentParser(description="Hook E2E Tests")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Show stdout/stderr from hooks")
-    parser.add_argument("--filter", "-f", type=str, default=None, help="Filter by suite name substring")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show stdout/stderr from hooks"
+    )
+    parser.add_argument(
+        "--filter", "-f", type=str, default=None, help="Filter by suite name substring"
+    )
     parser.add_argument("--list", action="store_true", help="List available test suites")
     args = parser.parse_args()
 

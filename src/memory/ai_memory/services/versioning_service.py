@@ -136,7 +136,9 @@ class VersioningService:
 
             logger.debug(
                 "Created version %d for entity %s: %s",
-                version_number, entity_id, change_type.value,
+                version_number,
+                entity_id,
+                change_type.value,
             )
             return version
 
@@ -159,9 +161,14 @@ class VersioningService:
         if not include_content:
             versions = [
                 EntityVersion(
-                    id=v.id, entity_id=v.entity_id, version=v.version,
-                    content={}, change_type=v.change_type, created_at=v.created_at,
-                    created_by=v.created_by, change_summary=v.change_summary,
+                    id=v.id,
+                    entity_id=v.entity_id,
+                    version=v.version,
+                    content={},
+                    change_type=v.change_type,
+                    created_at=v.created_at,
+                    created_by=v.created_by,
+                    change_summary=v.change_summary,
                     metadata=v.metadata,
                 )
                 for v in versions
@@ -195,7 +202,8 @@ class VersioningService:
         if target is None:
             logger.warning(
                 "Cannot rollback: version %d not found for entity %s",
-                target_version, entity_id,
+                target_version,
+                entity_id,
             )
             return None
 
@@ -236,16 +244,16 @@ class VersioningService:
             val_a = v_a.content.get(key)
             val_b = v_b.content.get(key)
             if val_a != val_b:
-                diff["changes"].append({
-                    "key": key,
-                    "old": val_a,
-                    "new": val_b,
-                    "type": (
-                        "added" if val_a is None else
-                        "removed" if val_b is None else
-                        "modified"
-                    ),
-                })
+                diff["changes"].append(
+                    {
+                        "key": key,
+                        "old": val_a,
+                        "new": val_b,
+                        "type": (
+                            "added" if val_a is None else "removed" if val_b is None else "modified"
+                        ),
+                    }
+                )
 
         return diff
 
@@ -262,7 +270,9 @@ class VersioningService:
         return {
             "total_entities": total_entities,
             "total_versions": total_versions,
-            "avg_versions_per_entity": round(total_versions / total_entities, 2) if total_entities > 0 else 0,
+            "avg_versions_per_entity": round(total_versions / total_entities, 2)
+            if total_entities > 0
+            else 0,
             "max_versions_setting": self.max_versions,
             "by_change_type": by_type,
         }
@@ -292,7 +302,7 @@ class VersioningService:
             return versions
 
         try:
-            with open(self.storage_path, "r", encoding="utf-8") as f:
+            with open(self.storage_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -328,7 +338,7 @@ class VersioningService:
 
         count = 0
         try:
-            with open(self.storage_path, "r", encoding="utf-8") as f:
+            with open(self.storage_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:

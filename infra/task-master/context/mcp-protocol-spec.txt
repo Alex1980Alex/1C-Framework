@@ -2294,7 +2294,7 @@ N�M�#k�v���3�ſ��/��n��tE�)w��E��+n\��
 ��Q�-Ǖ�Df$��]L�E���� �Ԩ7%�7�Q��⢠S�uʥx&<ٴ�����������LxT����]n�W̥zf�sjct��X�$�������ǤaA�X�x|�Kn
 6�9r�d/7�>.{B'�r�?��t	�֐|�
 0��.�C Hqګ��99'-^�^e6ӂ�xTF&<f����r���MR�,Ƥ2��7�>��x���&�ѹ89>DyŅb>�
-9�IWk�?����JJ�0�G�L:�f�/ Q	b�R���M�Dlؠ0���R�&�h����
+9�IWk�?����JJ�0�G�L:�f�/ Q	b�R���M�Dlؠ0���R�&�h����
 ���ܛ���?�h��+'������[�����渐e���KPbA�JCnB����$��J�x,��a�09.7:���L@�����E����������<!+T�!'�����ar\g|�8�@6x�sS��9�~�|o��GWKh�T�ɵ�!#׾O�vy�qu�`�xW�H�.�B��,Y,:�0d�Ԩ� 0}<2��/�H�%���+2�4a���������,z��JMCF�Nh����L��q3���"���3Xx�	=����ͳ
 ���Gs7Vр�������!˲3-?E��(=���uţ�d�o�9���B� �8~�e�
 ��Hן΍/�ƺڼLJG}:�dt��������D�\��g�Q�-�o���g�,Nׯ�{n�B8�Q$O::�O�8_�}W�N���Ul���&��Qv��g��__B�^r)-�����/�I�C�2��3�I�GT���'��B�y��;�ivXr���[L���gM�E?˖-������aGC��?��A:�p��Œ�z��ҥK%£%.�uN^}��E���}\���8t1���|�!���y�v�9s���e���l�Q7����
@@ -2784,7 +2784,7 @@ q���]'��8EV�<n۾����~��}�EE4�/�����
 �gϞ%h�gyHf� �132NImZ���7|`�u��ʚG;��͂cԹ��3'ӨQw�l�o��&NW����3'��������}�ḹ����j�h'�D�@^Z��lHC�W6<q"]vt�m�DG+RJMM�)���Xe�o�|BJz�\��y؇!�a~Re����G
 �f$駶�"�ή]�����ȇn G��YBC�n�K�����w��ټY.޷o��؝y��.�\.D�9�9��]6�Ő	?{)5}ZƄ��(n�6C��a��֭+=0c��x=ݠ)�"-YW��y��Vy`�:}��;�Â��x!���;��9
 �rrlh6�x��5f��!n)9�5���,��_�g;�!͚6S�M_�Ց�����a��u�
-St�����!|d���rq�r�R9��p#�5�ر����F��`���aaG�� ;�GK��K/>��
+St�����!|d���rq�r�R9��p#�5�ر����F��`���aaG�� ;�GK��K/>��
 *�\e{]U��6W�,�����
 B¹0M ��L
 jA?���Wu�'�BJz7З_~K��4{��l轪.�6<�0{EZkIYY���u�	���f����k��|X�ah5�'��f�!��4Mp&�[8���0CΞ=Ǟ�<��C�޽z���X��]۶��0��1��1�����G���T^br�'�Lʆ]pZ�����ϯ�	�����H��ç��N���<�3�ڨQc6�S	���B�KULkH�������W�/�s����q!%=�':l ��K?7<m� �~�]#x(v�ᒃb��W��{�V�={����,8p�Z
@@ -6013,7 +6013,7 @@ N�M�#k�v���3�ſ��/��n��tE�)w��E��+n\��
 ��Q�-Ǖ�Df$��]L�E���� �Ԩ7%�7�Q��⢠S�uʥx&<ٴ�����������LxT����]n�W̥zf�sjct��X�$�������ǤaA�X�x|�Kn
 6�9r�d/7�>.{B'�r�?��t	�֐|�
 0��.�C Hqګ��99'-^�^e6ӂ�xTF&<f����r���MR�,Ƥ2��7�>��x���&�ѹ89>DyŅb>�
-9�IWk�?����JJ�0�G�L:�f�/ Q	b�R���M�Dlؠ0���R�&�h����
+9�IWk�?����JJ�0�G�L:�f�/ Q	b�R���M�Dlؠ0���R�&�h����
 ���ܛ���?�h��+'������[�����渐e���KPbA�JCnB����$��J�x,��a�09.7:���L@�����E����������<!+T�!'�����ar\g|�8�@6x�sS��9�~�|o��GWKh�T�ɵ�!#׾O�vy�qu�`�xW�H�.�B��,Y,:�0d�Ԩ� 0}<2��/�H�%���+2�4a���������,z��JMCF�Nh����L��q3���"���3Xx�	=����ͳ
 ���Gs7Vр�������!˲3-?E��(=���uţ�d�o�9���B� �8~�e�
 ��Hן΍/�ƺڼLJG}:�dt��������D�\��g�Q�-�o���g�,Nׯ�{n�B8�Q$O::�O�8_�}W�N���Ul���&��Qv��g��__B�^r)-�����/�I�C�2��3�I�GT���'��B�y��;�ivXr���[L���gM�E?˖-������aGC��?��A:�p��Œ�z��ҥK%£%.�uN^}��E���}\���8t1���|�!���y�v�9s���e���l�Q7����
@@ -6502,7 +6502,7 @@ q���]'��8EV�<n۾����~��}�EE4�/�����
 �gϞ%h�gyHf� �132NImZ���7|`�u��ʚG;��͂cԹ��3'ӨQw�l�o��&NW����3'��������}�ḹ����j�h'�D�@^Z��lHC�W6<q"]vt�m�DG+RJMM�)���Xe�o�|BJz�\��y؇!�a~Re����G
 �f$駶�"�ή]�����ȇn G��YBC�n�K�����w��ټY.޷o��؝y��.�\.D�9�9��]6�Ő	?{)5}ZƄ��(n�6C��a��֭+=0c��x=ݠ)�"-YW��y��Vy`�:}��;�Â��x!���;��9
 �rrlh6�x��5f��!n)9�5���,��_�g;�!͚6S�M_�Ց�����a��u�
-St�����!|d���rq�r�R9��p#�5�ر����F��`���aaG�� ;�GK��K/>��
+St�����!|d���rq�r�R9��p#�5�ر����F��`���aaG�� ;�GK��K/>��
 *�\e{]U��6W�,�����
 B¹0M ��L
 jA?���Wu�'�BJz7З_~K��4{��l轪.�6<�0{EZkIYY���u�	���f����k��|X�ah5�'��f�!��4Mp&�[8���0CΞ=Ǟ�<��C�޽z���X��]۶��0��1��1�����G���T^br�'�Lʆ]pZ�����ϯ�	�����H��ç��N���<�3�ڨQc6�S	���B�KULkH�������W�/�s����q!%=�':l ��K?7<m� �~�]#x(v�ᒃb��W��{�V�={����,8p�Z
@@ -7917,14 +7917,14 @@ export interface Annotated {
   annotations?: {
     /**
      * Describes who the intended customer of this object or data is.
-     * 
+     *
      * It can include multiple entries to indicate content useful for multiple audiences (e.g., `["user", "assistant"]`).
      */
     audience?: Role[];
 
     /**
      * Describes how important this data is for operating the server.
-     * 
+     *
      * A value of 1 means "most important," and indicates that the data is
      * effectively required, while 0 means "least important," and indicates that
      * the data is entirely optional.
@@ -8943,11 +8943,11 @@ export interface ToolListChangedNotification extends Notification {
 
 /**
  * Additional properties describing a Tool to clients.
- * 
- * NOTE: all properties in ToolAnnotations are **hints**. 
- * They are not guaranteed to provide a faithful description of 
+ *
+ * NOTE: all properties in ToolAnnotations are **hints**.
+ * They are not guaranteed to provide a faithful description of
  * tool behavior (including descriptive properties like `title`).
- * 
+ *
  * Clients should never make tool use decisions based on ToolAnnotations
  * received from untrusted servers.
  */
@@ -8959,7 +8959,7 @@ export interface ToolAnnotations {
 
   /**
    * If true, the tool does not modify its environment.
-   * 
+   *
    * Default: false
    */
   readOnlyHint?: boolean;
@@ -8967,19 +8967,19 @@ export interface ToolAnnotations {
   /**
    * If true, the tool may perform destructive updates to its environment.
    * If false, the tool performs only additive updates.
-   * 
+   *
    * (This property is meaningful only when `readOnlyHint == false`)
-   * 
+   *
    * Default: true
    */
   destructiveHint?: boolean;
 
   /**
-   * If true, calling the tool repeatedly with the same arguments 
+   * If true, calling the tool repeatedly with the same arguments
    * will have no additional effect on the its environment.
-   * 
+   *
    * (This property is meaningful only when `readOnlyHint == false`)
-   * 
+   *
    * Default: false
    */
   idempotentHint?: boolean;
@@ -8989,7 +8989,7 @@ export interface ToolAnnotations {
    * entities. If false, the tool's domain of interaction is closed.
    * For example, the world of a web search tool is open, whereas that
    * of a memory tool is not.
-   * 
+   *
    * Default: true
    */
   openWorldHint?: boolean;
@@ -9586,4 +9586,3 @@ project.
 
 This project is licensed under the MIT License—see the [LICENSE](LICENSE) file for
 details.
-

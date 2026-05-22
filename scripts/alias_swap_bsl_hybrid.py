@@ -243,17 +243,19 @@ def main() -> int:
     sparse_cfg = resolved.config.params.sparse_vectors
     has_sparse = bool(sparse_cfg and "bm25" in sparse_cfg)
     if not has_sparse:
-        print(f"WARN: resolved collection does not advertise sparse 'bm25' — check layout")
+        print("WARN: resolved collection does not advertise sparse 'bm25' — check layout")
     else:
-        print(f"[verify] alias points to hybrid layout (dense + bm25 sparse)")
+        print("[verify] alias points to hybrid layout (dense + bm25 sparse)")
 
-    tracker.stop(summary={
-        "status": "ok",
-        "source": args.source,
-        "hybrid": args.hybrid,
-        "backup": args.backup if not args.skip_backup else None,
-        "resolved_count": resolved.points_count,
-    })
+    tracker.stop(
+        summary={
+            "status": "ok",
+            "source": args.source,
+            "hybrid": args.hybrid,
+            "backup": args.backup if not args.skip_backup else None,
+            "resolved_count": resolved.points_count,
+        }
+    )
     return 0
 
 

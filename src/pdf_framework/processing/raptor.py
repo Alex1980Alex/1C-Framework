@@ -134,7 +134,7 @@ class RAPTORTreeBuilder:
         self._api_key = api_key
         self._base_url = base_url
         # Lazy-init shared TEI embedder; one HTTP client across many cluster summaries.
-        self._embedder: "FrameworkTEIEmbedder | None" = None
+        self._embedder: FrameworkTEIEmbedder | None = None
 
     async def build(
         self,

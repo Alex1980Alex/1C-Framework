@@ -24,7 +24,7 @@ def run_cli_command(args: list[str]) -> tuple[int, str, str]:
         [sys.executable, "-m", "shared.pipeline.cli"] + args,
         capture_output=True,
         text=True,
-        cwd=Path(__file__).parents[4]  # Корень проекта
+        cwd=Path(__file__).parents[4],  # Корень проекта
     )
     return result.returncode, result.stdout, result.stderr
 
@@ -77,12 +77,9 @@ def example_dry_run():
     print("Example: Dry Run")
     print("=" * 60)
 
-    code, stdout, stderr = run_cli_command([
-        "run",
-        "--project", "GKSTCPLK-1872",
-        "--task", "Тестовая задача",
-        "--dry-run"
-    ])
+    code, stdout, stderr = run_cli_command(
+        ["run", "--project", "GKSTCPLK-1872", "--task", "Тестовая задача", "--dry-run"]
+    )
     print(stdout)
     if stderr:
         print(f"Errors: {stderr}")
@@ -94,10 +91,7 @@ def example_json_output():
     print("Example: JSON Output")
     print("=" * 60)
 
-    code, stdout, stderr = run_cli_command([
-        "list", "projects",
-        "--format", "json"
-    ])
+    code, stdout, stderr = run_cli_command(["list", "projects", "--format", "json"])
     print(stdout)
 
 

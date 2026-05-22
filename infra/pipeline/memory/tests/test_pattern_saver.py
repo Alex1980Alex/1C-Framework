@@ -1,26 +1,24 @@
 """Tests for Pattern Saver module."""
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
-from datetime import datetime
+from unittest.mock import AsyncMock
 
-from .pattern_saver import (
-    PatternSaver,
-    PatternMatcher,
-    PatternCandidate,
-    MatchResult,
-    PatternExtractionStrategy,
-)
+import pytest
 from models import (
     Pattern,
     PatternType,
-    MemoryType,
+)
+
+from .pattern_saver import (
+    MatchResult,
+    PatternCandidate,
+    PatternExtractionStrategy,
+    PatternMatcher,
+    PatternSaver,
 )
 from .unified_memory_client import (
-    UnifiedMemoryClient,
-    MemoryConfig,
     SaveResult,
     SearchResult,
+    UnifiedMemoryClient,
 )
 
 

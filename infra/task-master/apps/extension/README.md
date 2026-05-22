@@ -180,11 +180,11 @@ Access settings via **File → Preferences → Settings** and search for "Taskma
 
 ## 🏆 Why Taskmaster Kanban?
 
-✅ **Visual workflow management** for your Taskmaster projects  
-✅ **AI-powered task enhancement** built right in  
-✅ **Real-time synchronization** keeps everything in sync  
-✅ **Native VS Code integration** feels like part of the editor  
-✅ **Free and open source** with active development  
+✅ **Visual workflow management** for your Taskmaster projects
+✅ **AI-powered task enhancement** built right in
+✅ **Real-time synchronization** keeps everything in sync
+✅ **Native VS Code integration** feels like part of the editor
+✅ **Free and open source** with active development
 
 **Transform your development workflow today!** 🚀
 

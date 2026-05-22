@@ -2,12 +2,11 @@
 
 Run: pytest scripts/test_autonomous_debug_test.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-
-import pytest
 
 # scripts/ is sibling of tools/; add to path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -21,9 +20,7 @@ def _valid_scenario() -> dict:
     return {
         "alias": "ИБTransportManagementDevelop",
         "bsl_trigger": "Результат = 1;",
-        "breakpoints": [
-            {"object_id": "uuid1", "line": 141, "module_type": "ObjectModule"}
-        ],
+        "breakpoints": [{"object_id": "uuid1", "line": 141, "module_type": "ObjectModule"}],
     }
 
 
@@ -34,13 +31,18 @@ class TestScenarioValidator:
 
     def test_valid_with_all_optional_fields(self):
         scenario = _valid_scenario()
-        scenario.update({
-            "iis": {"url": "http://localhost/transport/hs/mcp/rpc",
-                    "auth_user_env": "U", "auth_pwd_env": "P"},
-            "force_recycle": True,
-            "stop_timeout_sec": 20,
-            "pre_trigger_wait_sec": 5,
-        })
+        scenario.update(
+            {
+                "iis": {
+                    "url": "http://localhost/transport/hs/mcp/rpc",
+                    "auth_user_env": "U",
+                    "auth_pwd_env": "P",
+                },
+                "force_recycle": True,
+                "stop_timeout_sec": 20,
+                "pre_trigger_wait_sec": 5,
+            }
+        )
         scenario["breakpoints"][0]["inspections"] = [
             {"expr": "ТипЗнч(X)", "expect_substring": "Тип"}
         ]

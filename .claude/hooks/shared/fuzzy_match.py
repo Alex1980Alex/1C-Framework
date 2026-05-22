@@ -13,7 +13,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 # Lazy-loaded to keep import fast (hooks have 3s timeout)
 _morph = None
@@ -24,6 +24,7 @@ def _get_morph():
     global _morph
     if _morph is None:
         from pymorphy3 import MorphAnalyzer
+
         _morph = MorphAnalyzer()
     return _morph
 
@@ -33,6 +34,7 @@ def _get_tokenize():
     if _tokenize is None:
         try:
             from razdel import tokenize as _tok
+
             _tokenize = _tok
         except ImportError:
             # Fallback: simple split
@@ -101,17 +103,14 @@ class FuzzyMatcher:
 
         # Step 3: Fuzzy match on original token (handles typos)
         from rapidfuzz import fuzz, process
-        result = process.extractOne(
-            token, self.keywords, scorer=fuzz.ratio
-        )
+
+        result = process.extractOne(token, self.keywords, scorer=fuzz.ratio)
         if result and result[1] >= self.fuzzy_threshold:
             return (result[0], result[1])
 
         # Step 4: Fuzzy match on lemma (handles typo+inflection)
         if token_lemma != token:
-            result = process.extractOne(
-                token_lemma, self.keywords, scorer=fuzz.ratio
-            )
+            result = process.extractOne(token_lemma, self.keywords, scorer=fuzz.ratio)
             if result and result[1] >= self.fuzzy_threshold:
                 return (result[0], result[1])
 

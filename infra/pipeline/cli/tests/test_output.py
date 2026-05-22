@@ -8,14 +8,14 @@ Tests for CLI output formatting module.
 """
 
 import json
-import pytest
 from io import StringIO
-from unittest.mock import patch
+
+import pytest
 
 from cli.output import (
-    OutputFormatter,
-    OutputFormat,
     Color,
+    OutputFormat,
+    OutputFormatter,
     Symbol,
     TableColumn,
 )
@@ -330,12 +330,7 @@ class TestOutputFormatter:
         output = StringIO()
         formatter = OutputFormatter(output_stream=output, color_enabled=False)
 
-        data = {
-            "root": {
-                "child1": "value1",
-                "child2": "value2"
-            }
-        }
+        data = {"root": {"child1": "value1", "child2": "value2"}}
 
         formatter.tree(data)
 

@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from shared.core_paths import get_state_dir
@@ -67,7 +67,7 @@ def activate(
 
     data = {
         "task_type": task_type,
-        "activated_at": datetime.now(timezone.utc).isoformat(),
+        "activated_at": datetime.now(UTC).isoformat(),
         "prompt_excerpt": prompt_excerpt[:200],
         "completion_criteria": criteria,
         "max_iterations": max_iterations,
@@ -128,7 +128,7 @@ def is_stale() -> bool:
         return False
     try:
         activated = datetime.fromisoformat(criteria["activated_at"])
-        elapsed = datetime.now(timezone.utc) - activated
+        elapsed = datetime.now(UTC) - activated
         return elapsed.total_seconds() > STALE_HOURS * 3600
     except (KeyError, ValueError):
         return False
@@ -136,6 +136,7 @@ def is_stale() -> bool:
 
 # ── Stop-lock: prevent cascade where ralph_wiggum_stop triggers
 #    auto-git-save → git-commit-enforcer → block → commit → ralph again ──
+
 
 def _stop_lock_file() -> Path:
     return _get_state_dir() / ".ralph_stop_lock"
@@ -148,6 +149,7 @@ def is_stop_running() -> bool:
         return False
     try:
         import time
+
         age = time.time() - lock.stat().st_mtime
         return age < 30  # Stale after 30s
     except OSError:
@@ -170,9 +172,7 @@ def clear_stop_running() -> None:
 def _atomic_write_json(path: Path, data: dict) -> None:
     """Write JSON atomically via temp file + rename."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(
-        dir=str(path.parent), suffix=".tmp", prefix=".ralph_"
-    )
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix=".ralph_")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)

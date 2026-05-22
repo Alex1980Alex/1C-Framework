@@ -71,11 +71,11 @@ abstract class CalculatorInterface {
 class AdvancedCalculator extends Calculator
     with LoggerMixin
     implements CalculatorInterface {
-  
+
   /// Performs scientific calculation with logging
   double scientificOperation(Operation operation) {
     log('Performing ${operation.type} operation');
-    
+
     switch (operation.type) {
       case OperationType.addition:
         return operation.operand1 + operation.operand2;
@@ -105,11 +105,11 @@ class Program {
     final result1 = calc.add(5, 3); // Reference to add method
     final result2 = calc.performSubtract(10, 4); // Reference to performSubtract method
     final result3 = calc.performMultiply(2.5, 4.0); // Reference to performMultiply method
-    
+
     print('Addition result: $result1');
     print('Subtraction result: $result2');
     print('Multiplication result: $result3');
-    
+
     // Using advanced calculator
     final advancedCalc = AdvancedCalculator.withLogger();
     final operation = (
@@ -117,10 +117,10 @@ class Program {
       operand1: 3.14,
       operand2: 2.0
     );
-    
+
     final scientificResult = advancedCalc.scientificOperation(operation);
     print('Scientific result: $scientificResult');
-    
+
     // Display calculation history
     print('Calculation History:');
     for (final entry in calc.history) {

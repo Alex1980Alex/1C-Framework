@@ -16,17 +16,16 @@ Version: 2.0.0 (P3 Enhancement)
 from __future__ import annotations
 
 import asyncio
+import json
+import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Callable
-import uuid
-import json
+from typing import Any
 
 from constants import (
-    AgentRole,
-    AgentMode,
     PipelinePhase,
 )
 
@@ -60,15 +59,15 @@ class PipelineTask:
     task_id: str
     task_type: PipelineTaskType
     module_name: str
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     phase: PipelinePhase = PipelinePhase.INITIALIZATION
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     status: PipelinePhase = PipelinePhase.INITIALIZATION
-    result: Optional[Any] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    result: Any | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "task_id": self.task_id,
@@ -113,8 +112,8 @@ class PipelineGraph:
     """
 
     project_id: str
-    tasks: Dict[str, PipelineTask] = field(default_factory=dict)
-    edges: Dict[str, List[str]] = field(default_factory=dict)  # task_id -> [dependent_task_ids]
+    tasks: dict[str, PipelineTask] = field(default_factory=dict)
+    edges: dict[str, list[str]] = field(default_factory=dict)  # task_id -> [dependent_task_ids]
 
     def add_task(self, task: PipelineTask) -> None:
         """Add a task to the graph."""
@@ -130,7 +129,7 @@ class PipelineGraph:
                 self.edges[dep_id] = []
             self.edges[dep_id].append(task.task_id)
 
-    def get_ready_tasks(self) -> List[PipelineTask]:
+    def get_ready_tasks(self) -> list[PipelineTask]:
         """
         Get tasks that are ready to execute.
 
@@ -158,7 +157,7 @@ class PipelineGraph:
 
         return ready_tasks
 
-    def get_dependent_tasks(self, task_id: str) -> List[PipelineTask]:
+    def get_dependent_tasks(self, task_id: str) -> list[PipelineTask]:
         """
         Get tasks that depend on the specified task.
 
@@ -171,7 +170,7 @@ class PipelineGraph:
         dependent_ids = self.edges.get(task_id, [])
         return [self.tasks[dep_id] for dep_id in dependent_ids if dep_id in self.tasks]
 
-    def validate(self) -> tuple[bool, List[str]]:
+    def validate(self) -> tuple[bool, list[str]]:
         """
         Validate the DAG structure.
 
@@ -184,12 +183,15 @@ class PipelineGraph:
         visited = set()
         rec_stack = set()
 
-        def has_cycle(task_id: str, path: List[str]) -> bool:
+        def has_cycle(task_id: str, path: list[str]) -> bool:
             """Check if there's a cycle starting from task_id."""
             visited.add(task_id)
             rec_stack.add(task_id)
 
-            for dep_id in self.tasks.get(task_id, PipelineTask(task_id="", task_type=PipelineTaskType.PM_SPEC, module_name="")).dependencies:
+            for dep_id in self.tasks.get(
+                task_id,
+                PipelineTask(task_id="", task_type=PipelineTaskType.PM_SPEC, module_name=""),
+            ).dependencies:
                 if dep_id not in self.tasks:
                     errors.append(f"Dependency not found: {dep_id}")
                     continue
@@ -217,7 +219,7 @@ class PipelineGraph:
 
         return len(errors) == 0, errors
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "project_id": self.project_id,
@@ -230,7 +232,7 @@ class PipelineGraph:
         filepath.write_text(json.dumps(self.to_dict(), indent=2, ensure_ascii=False))
 
     @classmethod
-    def load(cls, filepath: Path) -> "PipelineGraph":
+    def load(cls, filepath: Path) -> PipelineGraph:
         """Load graph from file."""
         data = json.loads(filepath.read_text(encoding="utf-8"))
 
@@ -252,7 +254,7 @@ class PipelineGraph:
         return graph
 
 
-def build_multi_module_graph(modules: List[str], enable_parallel: bool = True) -> PipelineGraph:
+def build_multi_module_graph(modules: list[str], enable_parallel: bool = True) -> PipelineGraph:
     """
     Build a pipeline graph for multiple modules.
 
@@ -391,7 +393,7 @@ class ParallelPipelineConfig:
     project_id: str
     project_path: Path
     task_description: str
-    modules: List[str]
+    modules: list[str]
     enable_parallel: bool = True
     max_parallel_tasks: int = 10
     enable_checkpoints: bool = True
@@ -409,13 +411,13 @@ class ParallelPipelineResult:
     success: bool
     project_id: str
     run_id: str
-    module_results: Dict[str, Any] = field(default_factory=dict)
+    module_results: dict[str, Any] = field(default_factory=dict)
     total_tasks: int = 0
     completed_tasks: int = 0
     failed_tasks: int = 0
     execution_time_seconds: float = 0.0
-    error_message: Optional[str] = None
-    graph: Optional[PipelineGraph] = None
+    error_message: str | None = None
+    graph: PipelineGraph | None = None
 
 
 class ParallelPipelineOrchestrator:
@@ -428,7 +430,7 @@ class ParallelPipelineOrchestrator:
     def __init__(
         self,
         config: ParallelPipelineConfig,
-        progress_callback: Optional[Callable[[str, PipelinePhase], None]] = None,
+        progress_callback: Callable[[str, PipelinePhase], None] | None = None,
     ):
         """
         Initialize parallel pipeline orchestrator.
@@ -448,11 +450,11 @@ class ParallelPipelineOrchestrator:
         )
 
         # Execution tracking
-        self._completed_tasks: Set[str] = set()
-        self._failed_tasks: Set[str] = set()
-        self._running_tasks: Set[str] = set()
-        self.started_at: Optional[datetime] = None
-        self.completed_at: Optional[datetime] = None
+        self._completed_tasks: set[str] = set()
+        self._failed_tasks: set[str] = set()
+        self._running_tasks: set[str] = set()
+        self.started_at: datetime | None = None
+        self.completed_at: datetime | None = None
 
     async def execute(self) -> ParallelPipelineResult:
         """
@@ -523,13 +525,14 @@ class ParallelPipelineOrchestrator:
             graph=self.graph,
         )
 
-    async def _execute_tasks_parallel(self, tasks: List[PipelineTask]) -> None:
+    async def _execute_tasks_parallel(self, tasks: list[PipelineTask]) -> None:
         """
         Execute multiple tasks in parallel.
 
         Args:
             tasks: List of tasks to execute
         """
+
         async def execute_single_task(task: PipelineTask) -> None:
             """Execute a single task."""
             self._running_tasks.add(task.task_id)
@@ -591,14 +594,13 @@ class ParallelPipelineOrchestrator:
         # Store mock result
         task.result = f"Completed {task.task_type.value} for {task.module_name}"
 
-    def _collect_module_results(self) -> Dict[str, Any]:
+    def _collect_module_results(self) -> dict[str, Any]:
         """Collect results per module."""
-        module_results: Dict[str, Any] = {}
+        module_results: dict[str, Any] = {}
 
         for module in self.config.modules:
             module_tasks = [
-                task for task in self.graph.tasks.values()
-                if task.module_name == module
+                task for task in self.graph.tasks.values() if task.module_name == module
             ]
 
             module_results[module] = {
@@ -613,11 +615,12 @@ class ParallelPipelineOrchestrator:
 
 # Convenience function
 
+
 async def run_parallel_pipeline(
     project_id: str,
     project_path: Path,
     task_description: str,
-    modules: List[str],
+    modules: list[str],
     **kwargs,
 ) -> ParallelPipelineResult:
     """

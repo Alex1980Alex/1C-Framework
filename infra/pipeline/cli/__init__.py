@@ -12,16 +12,16 @@ Pipeline CLI - Command Line Interface для Development Pipeline.
 - logs: Просмотр логов
 """
 
-from .main import PipelineCLI, main
 from .commands import (
+    ConfigCommand,
+    ListCommand,
+    LogsCommand,
     RunCommand,
     StatusCommand,
-    ListCommand,
-    ConfigCommand,
-    LogsCommand,
 )
 from .config import CLIConfig
-from .output import OutputFormatter, OutputFormat
+from .main import PipelineCLI, main
+from .output import OutputFormat, OutputFormatter
 
 __all__ = [
     "PipelineCLI",

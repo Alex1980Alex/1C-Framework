@@ -283,14 +283,14 @@ def require_admin():
   from typing import TypedDict
   from fastapi import HTTPException, status
   from src.pdf_framework.config import get_settings  # или config.auth
-  
+
   class JWTPayload(TypedDict, total=False):
       sub: str          # subject (user id)
       tenant_id: str    # tenant identifier
       roles: list[str]  # role list (e.g. ["admin", "viewer"])
       exp: int          # expiry epoch
       iat: int          # issued-at epoch
-  
+
   def decode_token(token: str) -> JWTPayload:
       """Decode JWT and verify signature. Raises 401 on invalid."""
       settings = get_settings()
@@ -303,13 +303,13 @@ def require_admin():
       except jwt.InvalidTokenError as e:
           raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"Invalid token: {e}")
       return payload
-  
+
   def extract_tenant_id(payload: JWTPayload) -> str:
       tenant_id = payload.get("tenant_id")
       if not tenant_id:
           raise HTTPException(status.HTTP_400_BAD_REQUEST, "tenant_id missing in JWT")
       return tenant_id
-  
+
   def has_role(payload: JWTPayload, role: str) -> bool:
       roles = payload.get("roles", [])
       return role in roles
@@ -322,7 +322,7 @@ def require_admin():
   ```python
   from fastapi import Depends, Header, HTTPException, status
   from src.api.auth.jwt import decode_token, JWTPayload
-  
+
   def get_current_payload(authorization: str = Header(None)) -> JWTPayload:
       if not authorization or not authorization.startswith("Bearer "):
           raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bearer token required")
@@ -339,14 +339,14 @@ def require_admin():
   from fastapi import Depends
   from src.api.auth.jwt import extract_tenant_id, JWTPayload
   from src.api.dependencies.auth import get_current_payload
-  
+
   def get_current_tenant(payload: JWTPayload = Depends(get_current_payload)) -> str:
       return extract_tenant_id(payload)
   ```
 - [x] **2.2.4.c** Замена `require_admin()`:
   ```python
   from src.api.auth.jwt import has_role, JWTPayload
-  
+
   def require_admin(payload: JWTPayload = Depends(get_current_payload)) -> JWTPayload:
       if not has_role(payload, "admin"):
           raise HTTPException(status.HTTP_403_FORBIDDEN, "admin role required")
@@ -1102,11 +1102,11 @@ ARQ async workers. Описаны в chapter 09 deployment (`09_АДМИНИСТ
 - [x] **6.2.1.b** Add module docstring header:
   ```python
   """GigaEmbeddings (ai-sage/Giga-Embeddings-instruct, 1024d) — Russian SOTA option.
-  
+
   **Status (2026-04-30):** Path D alternative. Production использует Qwen3-Embedding-8B
   (Phase 8). Giga может быть лучше на чистом русском (ruMTEB 69.1), но не тестирован
   на code-content. Активируется через EMBEDDING__PROVIDER=giga.
-  
+
   Trade-off vs Qwen3:
   - Меньше memory (1024d vs 4096d, 4× экономия)
   - Не тестирован на code-heavy queries (Qwen3 MTEB-Code 80.68)

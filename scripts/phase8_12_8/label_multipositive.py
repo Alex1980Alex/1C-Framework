@@ -3,6 +3,7 @@
 KL-divergence validation skipped for pilot — TODO next iteration:
 compute KL between query↔positive cosine sim distribution vs noise baseline.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,9 +35,14 @@ def load_symbols_index(db_path: Path) -> tuple[dict[tuple[str, str], str], dict[
     return idx_full, idx_name
 
 
-def neighbors_of(conn: sqlite3.Connection, symbol_id: str, name: str, module_path: str,
-                 idx_full: dict[tuple[str, str], str],
-                 idx_name: dict[str, list[str]]) -> set[str]:
+def neighbors_of(
+    conn: sqlite3.Connection,
+    symbol_id: str,
+    name: str,
+    module_path: str,
+    idx_full: dict[tuple[str, str], str],
+    idx_name: dict[str, list[str]],
+) -> set[str]:
     neighbors: set[str] = set()
     cur = conn.cursor()
     cur.execute(
@@ -63,15 +69,21 @@ def neighbors_of(conn: sqlite3.Connection, symbol_id: str, name: str, module_pat
     return neighbors
 
 
-def fetch_chunk_id(client: QdrantClient, name: str, module_path: str,
-                   collection: str) -> str | None:
-    flt = Filter(must=[
-        FieldCondition(key="name", match=MatchValue(value=name)),
-        FieldCondition(key="module_path", match=MatchValue(value=module_path)),
-    ])
+def fetch_chunk_id(
+    client: QdrantClient, name: str, module_path: str, collection: str
+) -> str | None:
+    flt = Filter(
+        must=[
+            FieldCondition(key="name", match=MatchValue(value=name)),
+            FieldCondition(key="module_path", match=MatchValue(value=module_path)),
+        ]
+    )
     points, _ = client.scroll(
-        collection_name=collection, scroll_filter=flt,
-        limit=1, with_payload=False, with_vectors=False,
+        collection_name=collection,
+        scroll_filter=flt,
+        limit=1,
+        with_payload=False,
+        with_vectors=False,
     )
     return str(points[0].id) if points else None
 
@@ -89,7 +101,7 @@ def main() -> None:
     conn = sqlite3.connect(str(args.db))
 
     queries: list[dict] = []
-    with open(args.queries, "r", encoding="utf-8") as f:
+    with open(args.queries, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -124,12 +136,21 @@ def main() -> None:
             for cid in secondary_chunk_ids:
                 graded[cid] = 2
 
-            out.write(json.dumps({
-                "query": q["query"], "primary_positive": anchor_chunk_id,
-                "secondary_positives": secondary_chunk_ids, "graded": graded,
-                "anchor_symbol_id": sid, "anchor_chunk_id": anchor_chunk_id,
-                "n_neighbors": len(secondary_chunk_ids),
-            }, ensure_ascii=False) + "\n")
+            out.write(
+                json.dumps(
+                    {
+                        "query": q["query"],
+                        "primary_positive": anchor_chunk_id,
+                        "secondary_positives": secondary_chunk_ids,
+                        "graded": graded,
+                        "anchor_symbol_id": sid,
+                        "anchor_chunk_id": anchor_chunk_id,
+                        "n_neighbors": len(secondary_chunk_ids),
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
             total_positives += 1 + len(secondary_chunk_ids)
             processed += 1
 

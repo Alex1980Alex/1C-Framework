@@ -7,6 +7,7 @@ Usage:
     python scripts/wiki_backlink_walker.py --dry-run
     python scripts/wiki_backlink_walker.py
 """
+
 from __future__ import annotations
 
 import argparse
@@ -60,7 +61,7 @@ def add_backlink(frontmatter: str, source_stem: str) -> str:
     if block_match:
         existing = block_match.group(2)
         replacement = block_match.group(1) + "\n" + new_line + existing
-        return frontmatter[:block_match.start()] + replacement + frontmatter[block_match.end():]
+        return frontmatter[: block_match.start()] + replacement + frontmatter[block_match.end() :]
     return frontmatter.rstrip() + "\nrelated:\n" + new_line.rstrip("\n")
 
 

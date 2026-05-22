@@ -1,19 +1,20 @@
 """Test Docker MCP in same context as MCP server"""
+
 import asyncio
-import sys
-import os
 import logging
+import sys
 
 # Setup same as server.py
-sys.path.insert(0, 'src')
+sys.path.insert(0, "src")
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(levelname)s - %(name)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stderr)]
+    format="%(levelname)s - %(name)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stderr)],
 )
 
-from registry import Registry
 from loader import ServerLoader
+from registry import Registry
+
 
 async def test():
     print("=" * 60, file=sys.stderr)
@@ -22,6 +23,7 @@ async def test():
 
     # Same initialization as server.py
     from pathlib import Path
+
     config_path = Path(__file__).parent / "config" / "registry.yaml"
 
     print(f"Config path: {config_path}", file=sys.stderr)
@@ -50,10 +52,9 @@ async def test():
 
         # Execute tool
         print("\n[2] Executing brave_web_search...", file=sys.stderr)
-        result = await loader.execute_tool("brave", "brave_web_search", {
-            "query": "test MCP",
-            "count": 1
-        })
+        result = await loader.execute_tool(
+            "brave", "brave_web_search", {"query": "test MCP", "count": 1}
+        )
 
         if "error" in result:
             print(f"ERROR: {result['error']}", file=sys.stderr)
@@ -66,10 +67,10 @@ async def test():
         # Check if gateway started
         gateway = ServerLoader._gateway_instance
         if gateway:
-            print(f"Gateway started but brave failed", file=sys.stderr)
+            print("Gateway started but brave failed", file=sys.stderr)
             print(f"Gateway alive: {gateway.process.poll() is None}", file=sys.stderr)
             if gateway.process.poll() is not None:
-                stderr = gateway.process.stderr.read().decode('utf-8', errors='ignore')
+                stderr = gateway.process.stderr.read().decode("utf-8", errors="ignore")
                 print(f"Gateway stderr: {stderr[:500]}", file=sys.stderr)
         else:
             print("Gateway never started", file=sys.stderr)
@@ -77,5 +78,6 @@ async def test():
     await loader.shutdown_all()
     print("\nDone.", file=sys.stderr)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(test())

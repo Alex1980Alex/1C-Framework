@@ -127,13 +127,12 @@ def _record_cooldown(state: dict, key: str) -> None:
     sessions = state.setdefault("sessions", {})
     sessions[key] = datetime.utcnow().isoformat()
     if len(sessions) > COOKIE_BOOT:
-        oldest = sorted(sessions.items(), key=lambda kv: kv[1])[: -COOKIE_BOOT]
+        oldest = sorted(sessions.items(), key=lambda kv: kv[1])[:-COOKIE_BOOT]
         for k, _ in oldest:
             sessions.pop(k, None)
 
 
 class OpenspecChangeCoverage(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "PostToolUse":
             return None

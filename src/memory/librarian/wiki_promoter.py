@@ -65,7 +65,9 @@ class WikiPromoter:
             existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
                 slug = await self._create_draft(payload)
-                await self._publish_event("wiki.draft.created", {"slug": slug, "source_id": str(point.id)})
+                await self._publish_event(
+                    "wiki.draft.created", {"slug": slug, "source_id": str(point.id)}
+                )
                 created.append(slug)
         return created
 

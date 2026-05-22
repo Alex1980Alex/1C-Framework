@@ -1,24 +1,17 @@
 """Tests for INITIALIZER models."""
 
-import pytest
 from datetime import datetime
 from pathlib import Path
 
 from models import (
-    FileType,
-    ProjectType,
-    ObjectType,
     FileInfo,
-    DirectoryInfo,
-    ModuleInfo,
-    DependencyInfo,
-    PatternInfo,
-    ProjectStructure,
-    RelevantFile,
-    ContextReport,
+    FileType,
     InitializerConfig,
-    InitializerInput,
-    InitializerOutput,
+    ModuleInfo,
+    ObjectType,
+    ProjectStructure,
+    ProjectType,
+    RelevantFile,
 )
 
 
@@ -65,7 +58,9 @@ class TestObjectType:
         """Test object type detection from directory name."""
         assert ObjectType.from_directory("Catalogs") == ObjectType.CATALOG
         assert ObjectType.from_directory("Documents") == ObjectType.DOCUMENT
-        assert ObjectType.from_directory("AccumulationRegisters") == ObjectType.ACCUMULATION_REGISTER
+        assert (
+            ObjectType.from_directory("AccumulationRegisters") == ObjectType.ACCUMULATION_REGISTER
+        )
         assert ObjectType.from_directory("CommonModules") == ObjectType.COMMON_MODULE
 
     def test_from_directory_unknown(self):

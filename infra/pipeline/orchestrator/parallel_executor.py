@@ -13,26 +13,20 @@ This module provides functionality to:
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Callable, Any, Coroutine
-from pathlib import Path
-import logging
+from typing import Any
 
 from .models import (
-    TaskNode,
-    TaskGraph,
-    ParallelGroup,
-    TaskStatus,
-    ExecutionPriority,
-    MergeStrategy,
     Conflict,
-    ConflictType,
+    TaskGraph,
+    TaskNode,
 )
 from .task_decomposer import TaskDecomposer
-from constants import AgentRole
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +35,10 @@ logger = logging.getLogger(__name__)
 # Execution Result Models
 # =============================================================================
 
+
 class ExecutionState(Enum):
     """Overall execution state."""
+
     IDLE = "idle"
     RUNNING = "running"
     PAUSED = "paused"
@@ -58,9 +54,9 @@ class TaskResult:
     task_id: str
     success: bool
     output: Any = None
-    error_message: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     execution_time_ms: int = 0
     artifacts_produced: list[str] = field(default_factory=list)
     metrics: dict[str, Any] = field(default_factory=dict)
@@ -125,8 +121,8 @@ class ExecutionReport:
     progress: ExecutionProgress
     results: dict[str, TaskResult] = field(default_factory=dict)
     conflicts: list[Conflict] = field(default_factory=list)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     total_execution_time_ms: int = 0
 
     def to_dict(self) -> dict:
@@ -156,6 +152,7 @@ class ExecutionReport:
 # =============================================================================
 # Task Executor Interface
 # =============================================================================
+
 
 class TaskExecutorInterface:
     """Interface for task execution."""
@@ -225,6 +222,7 @@ class MockTaskExecutor(TaskExecutorInterface):
 # Parallel Executor
 # =============================================================================
 
+
 class ParallelExecutor:
     """
     Executes tasks in parallel based on dependency graph.
@@ -243,7 +241,7 @@ class ParallelExecutor:
         max_parallel: int = 4,
         retry_count: int = 1,
         retry_delay_seconds: float = 1.0,
-        progress_callback: Optional[Callable[[ExecutionProgress], None]] = None,
+        progress_callback: Callable[[ExecutionProgress], None] | None = None,
     ):
         """
         Initialize parallel executor.
@@ -275,7 +273,7 @@ class ParallelExecutor:
     async def execute(
         self,
         graph: TaskGraph,
-        context: Optional[dict] = None,
+        context: dict | None = None,
     ) -> ExecutionReport:
         """
         Execute all tasks in the graph.
@@ -382,11 +380,13 @@ class ParallelExecutor:
         processed_results: list[TaskResult] = []
         for task, result in zip(wave, results):
             if isinstance(result, Exception):
-                processed_results.append(TaskResult(
-                    task_id=task.id,
-                    success=False,
-                    error_message=str(result),
-                ))
+                processed_results.append(
+                    TaskResult(
+                        task_id=task.id,
+                        success=False,
+                        error_message=str(result),
+                    )
+                )
                 report.progress.failed_tasks += 1
             else:
                 processed_results.append(result)
@@ -404,7 +404,7 @@ class ParallelExecutor:
         report: ExecutionReport,
     ) -> TaskResult:
         """Execute single task with retry logic."""
-        last_result: Optional[TaskResult] = None
+        last_result: TaskResult | None = None
 
         for attempt in range(self.retry_count + 1):
             if self._cancelled:
@@ -478,11 +478,12 @@ class ParallelExecutor:
 # Convenience Functions
 # =============================================================================
 
+
 async def execute_graph(
     graph: TaskGraph,
-    executor: Optional[TaskExecutorInterface] = None,
+    executor: TaskExecutorInterface | None = None,
     max_parallel: int = 4,
-    context: Optional[dict] = None,
+    context: dict | None = None,
 ) -> ExecutionReport:
     """
     Execute a task graph.
@@ -509,7 +510,7 @@ async def execute_graph(
 
 async def execute_tasks(
     tasks: list[TaskNode],
-    executor: Optional[TaskExecutorInterface] = None,
+    executor: TaskExecutorInterface | None = None,
     max_parallel: int = 4,
     auto_detect_dependencies: bool = True,
 ) -> ExecutionReport:
@@ -533,9 +534,9 @@ async def execute_tasks(
 
 def run_graph_sync(
     graph: TaskGraph,
-    executor: Optional[TaskExecutorInterface] = None,
+    executor: TaskExecutorInterface | None = None,
     max_parallel: int = 4,
-    context: Optional[dict] = None,
+    context: dict | None = None,
 ) -> ExecutionReport:
     """
     Synchronous wrapper for execute_graph.

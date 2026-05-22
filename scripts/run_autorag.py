@@ -19,7 +19,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.pdf_framework.evaluation.autorag import AutoRAGOptimizer, run_autorag
+from src.pdf_framework.evaluation.autorag import AutoRAGOptimizer
 from src.pdf_framework.evaluation.benchmark import BenchmarkLoader
 
 # Configure logging
@@ -36,9 +36,7 @@ logger = logging.getLogger(__name__)
 
 async def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="AutoRAG - Automatic RAG Parameter Optimization"
-    )
+    parser = argparse.ArgumentParser(description="AutoRAG - Automatic RAG Parameter Optimization")
     parser.add_argument(
         "--dataset",
         type=str,
@@ -109,7 +107,7 @@ async def main():
     logger.info(f"Successful: {report.successful_experiments}")
     logger.info(f"Duration: {report.duration_seconds:.1f}s")
     logger.info("")
-    logger.info(f"BEST CONFIG:")
+    logger.info("BEST CONFIG:")
     logger.info(f"  Name: {report.best_config.name if report.best_config else 'N/A'}")
     logger.info(f"  Score: {report.best_score:.3f}")
     if report.best_config:

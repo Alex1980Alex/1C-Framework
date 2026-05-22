@@ -40,79 +40,152 @@ except (TypeError, ValueError):
 
 # Orchestrator: complex tasks needing decompose + batch delegate
 _ORCHESTRATOR_SIGNALS = [
-    "each file", "for every", "per file", "all files",
-    "batch", "multiple files", "several files",
+    "each file",
+    "for every",
+    "per file",
+    "all files",
+    "batch",
+    "multiple files",
+    "several files",
     # Russian
-    "каждый файл", "для каждого", "все файлы",
-    "пакетно", "несколько файлов", "по файлам",
-    "каждая фаза", "каждый модуль",
-    "по фазам", "несколько фаз", "для каждой фазы",
+    "каждый файл",
+    "для каждого",
+    "все файлы",
+    "пакетно",
+    "несколько файлов",
+    "по файлам",
+    "каждая фаза",
+    "каждый модуль",
+    "по фазам",
+    "несколько фаз",
+    "для каждой фазы",
 ]
 
 # Medium: docs, decomposition, tests, boilerplate, configs
 _MEDIUM_SIGNALS = [
-    "documentation", "readme", "changelog",
-    "decompos", "split into", "break down",
-    "generate tests", "test cases", "write tests",
-    "boilerplate", "template", "scaffold",
-    "config", "setup", "migration script",
-    "checklist", "summary", "table",
-    "roadmap", "plan document",
+    "documentation",
+    "readme",
+    "changelog",
+    "decompos",
+    "split into",
+    "break down",
+    "generate tests",
+    "test cases",
+    "write tests",
+    "boilerplate",
+    "template",
+    "scaffold",
+    "config",
+    "setup",
+    "migration script",
+    "checklist",
+    "summary",
+    "table",
+    "roadmap",
+    "plan document",
     # Russian
-    "разбей", "декомпозиция", "разбить на",
-    "дорожн", "план реализаци", "план фаз",
-    "создай документ", "напиши документ",
-    "сгенерируй", "напиши тесты", "создай тесты",
-    "напиши readme", "changelog",
-    "по шаблону", "бойлерплейт",
-    "максимальн", "подробн",
-    "конфиг", "настрой", "миграц",
-    "чеклист", "таблиц", "сводк",
-    "добавь", "создай файл",
+    "разбей",
+    "декомпозиция",
+    "разбить на",
+    "дорожн",
+    "план реализаци",
+    "план фаз",
+    "создай документ",
+    "напиши документ",
+    "сгенерируй",
+    "напиши тесты",
+    "создай тесты",
+    "напиши readme",
+    "changelog",
+    "по шаблону",
+    "бойлерплейт",
+    "максимальн",
+    "подробн",
+    "конфиг",
+    "настрой",
+    "миграц",
+    "чеклист",
+    "таблиц",
+    "сводк",
+    "добавь",
+    "создай файл",
 ]
 
 # Hard: code generation, refactoring, analysis
 _HARD_SIGNALS = [
-    "write code", "implement", "create module",
-    "refactor", "rewrite", "add feature",
-    "analysis report", "generate report",
-    "new class", "new function", "new hook",
-    "write service", "write handler",
+    "write code",
+    "implement",
+    "create module",
+    "refactor",
+    "rewrite",
+    "add feature",
+    "analysis report",
+    "generate report",
+    "new class",
+    "new function",
+    "new hook",
+    "write service",
+    "write handler",
     # Russian
-    "напиши код", "реализуй", "создай модуль",
-    "рефакторинг", "перепиши",
-    "аналитический отчёт", "сгенерируй отчёт",
-    "написать функцию", "написать класс",
-    "новый класс", "новый хук", "новый сервис",
-    "добавь функционал", "добавь фичу",
+    "напиши код",
+    "реализуй",
+    "создай модуль",
+    "рефакторинг",
+    "перепиши",
+    "аналитический отчёт",
+    "сгенерируй отчёт",
+    "написать функцию",
+    "написать класс",
+    "новый класс",
+    "новый хук",
+    "новый сервис",
+    "добавь функционал",
+    "добавь фичу",
 ]
 
 # Never: architecture, security, debugging (skip delegation)
 _NEVER_SIGNALS = [
-    "architecture", "how to design", "security",
-    "debug", "investigate", "why does",
+    "architecture",
+    "how to design",
+    "security",
+    "debug",
+    "investigate",
+    "why does",
     # Russian
-    "архитектур", "как лучше сделать", "безопасност",
-    "отладка", "отладить", "почему не работает",
-    "расследовать", "причина ошибки",
+    "архитектур",
+    "как лучше сделать",
+    "безопасност",
+    "отладка",
+    "отладить",
+    "почему не работает",
+    "расследовать",
+    "причина ошибки",
 ]
 
 # Numeric patterns: "10 files", "5 modules", etc.
 import re
-_MULTI_FILE_RE = re.compile(r"\b([3-9]|[1-9]\d+)\s*(файл|file|модул|module|фаз|phase|часте|part)", re.IGNORECASE)
+
+_MULTI_FILE_RE = re.compile(
+    r"\b([3-9]|[1-9]\d+)\s*(файл|file|модул|module|фаз|phase|часте|part)", re.IGNORECASE
+)
 
 # Min prompt length to consider (skip short prompts)
 _MIN_PROMPT_LEN = 20
 
 
 class ZAIDelegationEnforcer(BaseHook):
-
     def _bandit_level(self, prompt_lower: str) -> str | None:
         """Get delegation level from bandit model (AUTONOMOUS mode only)."""
         try:
             import importlib.util
             from pathlib import Path
-            bandit_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "shared" / "delegation_bandit.py")
+
+            bandit_path = str(
+                Path(__file__).resolve().parent.parent.parent
+                / "src"
+                / "shared"
+                / "delegation_bandit.py"
+            )
             spec = importlib.util.spec_from_file_location("delegation_bandit", bandit_path)
             if not spec or not spec.loader:
                 return None
@@ -122,9 +195,16 @@ class ZAIDelegationEnforcer(BaseHook):
             if bandit.mode != "AUTONOMOUS":
                 return None
             ctx = {
-                "content_type": "docs" if any(kw in prompt_lower for kw in ("документ", "readme", "дорожн", "plan")) else "code",
-                "has_code": any(kw in prompt_lower for kw in ("def ", "class ", "import ", "код", "функци", "модул")),
-                "has_architecture": any(kw in prompt_lower for kw in ("архитектур", "pattern", "design")),
+                "content_type": "docs"
+                if any(kw in prompt_lower for kw in ("документ", "readme", "дорожн", "plan"))
+                else "code",
+                "has_code": any(
+                    kw in prompt_lower
+                    for kw in ("def ", "class ", "import ", "код", "функци", "модул")
+                ),
+                "has_architecture": any(
+                    kw in prompt_lower for kw in ("архитектур", "pattern", "design")
+                ),
                 "domain": "other",
                 "estimated_lines": 50,
             }
@@ -148,6 +228,7 @@ class ZAIDelegationEnforcer(BaseHook):
         try:
             # Add repo src/ to path so router package import resolves.
             from pathlib import Path
+
             repo_root = Path(__file__).resolve().parent.parent.parent
             src_path = str(repo_root)
             if src_path not in sys.path:
@@ -261,7 +342,9 @@ class ZAIDelegationEnforcer(BaseHook):
         if bandit_level and bandit_level != "Never":
             bandit_msg = f"[Z.AI DELEGATION: {bandit_level.upper()}] Bandit model suggests delegation level {bandit_level}.\n"
             if bandit_level == "Hard":
-                bandit_msg += "Protocol: Z.AI generates draft -> Opus THOROUGH review (mandatory).\n"
+                bandit_msg += (
+                    "Protocol: Z.AI generates draft -> Opus THOROUGH review (mandatory).\n"
+                )
             elif bandit_level == "Medium":
                 bandit_msg += "Protocol: Z.AI generates draft -> Opus review (mandatory).\n"
             else:

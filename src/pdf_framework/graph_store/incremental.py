@@ -134,14 +134,22 @@ class IncrementalGraphUpdater:
         for entity in result.new_entities:
             await self._event_bus.publish(
                 "graph.entity_created",
-                {"entity_id": entity.id, "entity_name": entity.name, "entity_type": entity.entity_type},
+                {
+                    "entity_id": entity.id,
+                    "entity_name": entity.name,
+                    "entity_type": entity.entity_type,
+                },
                 source="IncrementalGraphUpdater",
             )
 
         for entity in result.merged_entities:
             await self._event_bus.publish(
                 "graph.entity_updated",
-                {"entity_id": entity.id, "entity_name": entity.name, "entity_type": entity.entity_type},
+                {
+                    "entity_id": entity.id,
+                    "entity_name": entity.name,
+                    "entity_type": entity.entity_type,
+                },
                 source="IncrementalGraphUpdater",
             )
 

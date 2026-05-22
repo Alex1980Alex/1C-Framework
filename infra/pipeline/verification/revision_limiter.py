@@ -4,18 +4,19 @@ Revision Limiter for Development Pipeline.
 Provides centralized limit management and escalation logic.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
-from constants import AgentRole, ArtifactType, MAX_REVISION_ATTEMPTS
+from constants import MAX_REVISION_ATTEMPTS, AgentRole, ArtifactType
 
 
 class EscalationLevel(str, Enum):
     """Escalation levels when limits are exceeded."""
 
-    NONE = "none"                  # No escalation needed
+    NONE = "none"  # No escalation needed
     AGENT_SWITCH = "agent_switch"  # Try different agent approach
     HUMAN_REVIEW = "human_review"  # Escalate to human
     PIPELINE_ABORT = "pipeline_abort"  # Abort entire pipeline
@@ -70,7 +71,7 @@ class EscalationEvent:
     resolved: bool = False
     resolution: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "project_id": self.project_id,
             "task_id": self.task_id,
@@ -96,11 +97,11 @@ class RevisionLimiter:
     - Timeout management
     """
 
-    def __init__(self, default_config: Optional[LimitConfig] = None) -> None:
+    def __init__(self, default_config: LimitConfig | None = None) -> None:
         self.default_config = default_config or LimitConfig.default()
-        self._configs: Dict[ArtifactType, LimitConfig] = {}
-        self._escalations: List[EscalationEvent] = []
-        self._callbacks: Dict[EscalationLevel, List[Callable]] = {
+        self._configs: dict[ArtifactType, LimitConfig] = {}
+        self._escalations: list[EscalationEvent] = []
+        self._callbacks: dict[EscalationLevel, list[Callable]] = {
             level: [] for level in EscalationLevel
         }
 
@@ -116,7 +117,7 @@ class RevisionLimiter:
         self,
         artifact_type: ArtifactType,
         current_attempt: int,
-    ) -> tuple[bool, Optional[EscalationLevel]]:
+    ) -> tuple[bool, EscalationLevel | None]:
         """
         Check if revision limit is exceeded.
 
@@ -199,8 +200,8 @@ class RevisionLimiter:
 
     def get_pending_escalations(
         self,
-        project_id: Optional[str] = None,
-    ) -> List[EscalationEvent]:
+        project_id: str | None = None,
+    ) -> list[EscalationEvent]:
         """Get unresolved escalations."""
         results = [e for e in self._escalations if not e.resolved]
 
@@ -209,15 +210,15 @@ class RevisionLimiter:
 
         return results
 
-    def get_escalation_summary(self) -> Dict[str, Any]:
+    def get_escalation_summary(self) -> dict[str, Any]:
         """Get summary of escalations."""
         total = len(self._escalations)
         pending = sum(1 for e in self._escalations if not e.resolved)
         resolved = total - pending
 
-        by_level: Dict[str, int] = {}
-        by_agent: Dict[str, int] = {}
-        by_artifact: Dict[str, int] = {}
+        by_level: dict[str, int] = {}
+        by_agent: dict[str, int] = {}
+        by_artifact: dict[str, int] = {}
 
         for e in self._escalations:
             level = e.escalation_level.value
@@ -248,8 +249,8 @@ class RevisionLimiter:
             "",
             "## Детали",
             "",
-            f"| Параметр | Значение |",
-            f"|----------|----------|",
+            "| Параметр | Значение |",
+            "|----------|----------|",
             f"| Проект | {event.project_id} |",
             f"| Задача | {event.task_id} |",
             f"| Артефакт | {event.artifact_type.value} |",
@@ -265,32 +266,38 @@ class RevisionLimiter:
 
         # Add action based on escalation level
         if event.escalation_level == EscalationLevel.HUMAN_REVIEW:
-            lines.extend([
-                "## Требуемые действия",
-                "",
-                "Требуется ручная проверка и исправление:",
-                "",
-                "1. Изучите историю ревизий",
-                "2. Определите корневую причину проблемы",
-                "3. Внесите исправления вручную или измените требования",
-                "4. Перезапустите верификацию",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Требуемые действия",
+                    "",
+                    "Требуется ручная проверка и исправление:",
+                    "",
+                    "1. Изучите историю ревизий",
+                    "2. Определите корневую причину проблемы",
+                    "3. Внесите исправления вручную или измените требования",
+                    "4. Перезапустите верификацию",
+                    "",
+                ]
+            )
         elif event.escalation_level == EscalationLevel.PIPELINE_ABORT:
-            lines.extend([
-                "## ⛔ Pipeline остановлен",
-                "",
-                "Выполнение pipeline прервано из-за критической ошибки.",
-                "Требуется ручное вмешательство перед продолжением.",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## ⛔ Pipeline остановлен",
+                    "",
+                    "Выполнение pipeline прервано из-за критической ошибки.",
+                    "Требуется ручное вмешательство перед продолжением.",
+                    "",
+                ]
+            )
         elif event.escalation_level == EscalationLevel.AGENT_SWITCH:
-            lines.extend([
-                "## Переключение агента",
-                "",
-                "Будет предпринята попытка с другим подходом агента.",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Переключение агента",
+                    "",
+                    "Будет предпринята попытка с другим подходом агента.",
+                    "",
+                ]
+            )
 
         return "\n".join(lines)
 

@@ -5,14 +5,14 @@ Quick reference for testing streaming/non-streaming functionality with token tra
 ## 🎯 Test Modes
 
 1. **MCP Streaming** - Has `reportProgress` + `mcpLog`, shows emoji indicators (🔴🟠🟢)
-2. **CLI Streaming** - No `reportProgress`, shows terminal progress bars  
+2. **CLI Streaming** - No `reportProgress`, shows terminal progress bars
 3. **Non-Streaming** - No progress reporting, single response
 
 ## 🚀 Quick Commands
 
 ```bash
 # Test Scripts (accept: mcp-streaming, cli-streaming, non-streaming, both, all)
-node test-parse-prd.js [mode] 
+node test-parse-prd.js [mode]
 node test-analyze-complexity.js [mode]
 node test-expand.js [mode] [num_subtasks]
 node test-expand-all.js [mode] [num_subtasks]
@@ -90,7 +90,7 @@ npm test
   "tool": "parse_prd",
   "args": {
     "input": "prd.txt",
-    "numTasks": "8", 
+    "numTasks": "8",
     "force": true,
     "projectRoot": "/path/to/project"
   }

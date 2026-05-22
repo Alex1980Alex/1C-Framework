@@ -52,6 +52,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput  # noqa: E402
+
 from shared import pr_helpers as pr  # noqa: E402
 from shared import pr_notifier as notify  # noqa: E402
 
@@ -62,8 +63,10 @@ DEFAULT_TEST_CMD = "pre-commit run --all-files"
 
 # --- state I/O ---------------------------------------------------------
 
+
 def _load_state() -> dict:
     import json
+
     if not STATE_FILE.exists():
         return {}
     try:
@@ -74,18 +77,18 @@ def _load_state() -> dict:
 
 def _save_state(state: dict) -> None:
     import json
+
     try:
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         tmp = STATE_FILE.with_suffix(STATE_FILE.suffix + ".tmp")
-        tmp.write_text(
-            json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        tmp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
         os.replace(tmp, STATE_FILE)
     except OSError:
         pass
 
 
 # --- pre-push tests ----------------------------------------------------
+
 
 def _run_pre_push_tests() -> tuple[bool, str]:
     """Run AUTO_PR_TEST_CMD (defaults to pre-commit run --all-files).
@@ -122,6 +125,7 @@ def _run_pre_push_tests() -> tuple[bool, str]:
 
 # --- PR body composition -----------------------------------------------
 
+
 def _compose_pr_body(
     *,
     task_id: str,
@@ -136,12 +140,8 @@ def _compose_pr_body(
     extra: dict | None = None,
 ) -> str:
     extra = extra or {}
-    scope_line = (
-        f"`{start_sha}..{head_sha}`" if start_sha else f"`{base}..{head_sha}`"
-    )
-    blockers_line = (
-        ", ".join(blocked_by_prs) if blocked_by_prs else "_none_"
-    )
+    scope_line = f"`{start_sha}..{head_sha}`" if start_sha else f"`{base}..{head_sha}`"
+    blockers_line = ", ".join(blocked_by_prs) if blocked_by_prs else "_none_"
 
     return (
         f"## Summary\n"
@@ -174,8 +174,8 @@ def _compose_pr_body(
 
 # --- main hook ---------------------------------------------------------
 
-class PostTaskPushPR(BaseHook):
 
+class PostTaskPushPR(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "PostToolUse":
             return None
@@ -196,13 +196,9 @@ class PostTaskPushPR(BaseHook):
                 start = pr.head_sha(cwd=PROJECT_ROOT)
                 if start:
                     entry["start_sha"] = start
-                    entry["in_progress_ts"] = datetime.now().isoformat(
-                        timespec="seconds"
-                    )
+                    entry["in_progress_ts"] = datetime.now().isoformat(timespec="seconds")
                     entry["blockedBy"] = list(
-                        ti.get("addBlockedBy")
-                        or (ti.get("metadata") or {}).get("blockedBy")
-                        or []
+                        ti.get("addBlockedBy") or (ti.get("metadata") or {}).get("blockedBy") or []
                     )
                     _save_state(state)
             return None
@@ -214,7 +210,8 @@ class PostTaskPushPR(BaseHook):
         required = pr.env_str("AUTO_PR_REQUIRE_LABEL")
         if required:
             ok, why = pr.task_meets_label_requirement(
-                ti, inp.tool_result if isinstance(inp.tool_result, dict) else None,
+                ti,
+                inp.tool_result if isinstance(inp.tool_result, dict) else None,
                 required,
             )
             if not ok:
@@ -304,8 +301,7 @@ class PostTaskPushPR(BaseHook):
         if not tests_ok:
             notify.notify_checks_failed(task_id, "", tests_msg)
             return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: pre-push gate FAILED. "
-                f"{tests_msg}"
+                f"[POST-TASK-PUSH-PR] Task #{task_id}: pre-push gate FAILED. " f"{tests_msg}"
             )
 
         slug = pr.slugify(subject or f"task-{task_id}")
@@ -325,36 +321,27 @@ class PostTaskPushPR(BaseHook):
             )
 
         # ---- create or update branch ref at HEAD (no checkout) ----
-        code, _, err = pr.run_git(
-            "branch", "-f", branch, "HEAD", cwd=PROJECT_ROOT
-        )
+        code, _, err = pr.run_git("branch", "-f", branch, "HEAD", cwd=PROJECT_ROOT)
         if code != 0:
             return HookOutput().system_message(
                 f"[POST-TASK-PUSH-PR] Task #{task_id}: branch ref failed: {err[:200]}"
             )
 
         # ---- P0.2: push with conflict-aware retry ----
-        push_ok, push_mode, push_msg = pr.push_branch_safe(
-            branch, cwd=PROJECT_ROOT, timeout=90
-        )
+        push_ok, push_mode, push_msg = pr.push_branch_safe(branch, cwd=PROJECT_ROOT, timeout=90)
         if not push_ok:
             notify.notify_pr_failed(task_id, "push", push_msg)
             return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: push failed "
-                f"({push_mode}): {push_msg}"
+                f"[POST-TASK-PUSH-PR] Task #{task_id}: push failed " f"({push_mode}): {push_msg}"
             )
 
         # ---- P0.3: detect existing PR ----
         existing = pr.gh_pr_list_for_branch(branch, cwd=PROJECT_ROOT)
-        open_pr = next(
-            (p for p in existing if (p.get("state") or "").upper() == "OPEN"), None
-        )
+        open_pr = next((p for p in existing if (p.get("state") or "").upper() == "OPEN"), None)
 
         # ---- P2.5: resolve blocked-by PR numbers ----
         blocked_task_ids = entry.get("blockedBy", []) or list(
-            ti.get("addBlockedBy")
-            or (ti.get("metadata") or {}).get("blockedBy")
-            or []
+            ti.get("addBlockedBy") or (ti.get("metadata") or {}).get("blockedBy") or []
         )
         blocked_pr_refs: list[str] = []
         blocked_labels: list[str] = []
@@ -396,9 +383,7 @@ class PostTaskPushPR(BaseHook):
             ok_c, cmsg = pr.gh_pr_comment(pr_url, comment, cwd=PROJECT_ROOT)
             pr_action = f"updated existing PR ({cmsg})"
         else:
-            ok_c, pr_url = pr.gh_pr_create(
-                branch, base, title, body, cwd=PROJECT_ROOT
-            )
+            ok_c, pr_url = pr.gh_pr_create(branch, base, title, body, cwd=PROJECT_ROOT)
             if not ok_c:
                 notify.notify_pr_failed(task_id, "pr_create", pr_url)
                 return HookOutput().system_message(
@@ -412,9 +397,7 @@ class PostTaskPushPR(BaseHook):
         reviewers = _resolve_reviewers(scope_base)
         if reviewers and pr_url:
             ok_r, rmsg = pr.gh_pr_add_reviewers(pr_url, reviewers, cwd=PROJECT_ROOT)
-            reviewer_note = (
-                f"reviewers: {','.join(reviewers)} ({'ok' if ok_r else rmsg})"
-            )
+            reviewer_note = f"reviewers: {','.join(reviewers)} ({'ok' if ok_r else rmsg})"
 
         # ---- P2.5: add blocked-by labels ----
         if blocked_labels and pr_url:
@@ -423,9 +406,7 @@ class PostTaskPushPR(BaseHook):
         # ---- P1.2: wait for checks before merge (queue-lite) ----
         merge_note = ""
         if pr_url and pr.env_flag("AUTO_PR_AUTO_MERGE"):
-            wait_timeout = pr.safe_int(
-                pr.env_str("AUTO_PR_CHECKS_TIMEOUT"), 300
-            )
+            wait_timeout = pr.safe_int(pr.env_str("AUTO_PR_CHECKS_TIMEOUT"), 300)
             if pr.env_flag("AUTO_PR_WAIT_FOR_CHECKS"):
                 ok_w, wmsg = pr.gh_pr_wait_checks(
                     pr_url, cwd=PROJECT_ROOT, max_seconds=wait_timeout
@@ -469,6 +450,7 @@ class PostTaskPushPR(BaseHook):
 
 
 # --- P2.3: reviewer resolution -----------------------------------------
+
 
 def _resolve_reviewers(scope_base: str) -> list[str]:
     """CODEOWNERS first, AUTO_PR_REVIEWERS fallback."""

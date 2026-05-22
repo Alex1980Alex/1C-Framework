@@ -16,13 +16,13 @@ import json
 import sys
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class HookInput:
     """Parsed stdin input from Claude Code hook system."""
 
-    def __init__(self, raw: Dict[str, Any]):
+    def __init__(self, raw: dict[str, Any]):
         self.raw = raw
         # UserPromptSubmit
         self.prompt = raw.get("prompt", raw.get("content", ""))
@@ -83,7 +83,7 @@ class HookOutput:
     """
 
     def __init__(self):
-        self._data: Dict[str, Any] = {}
+        self._data: dict[str, Any] = {}
 
     def allow(self) -> "HookOutput":
         """Allow the tool call to proceed (default)."""
@@ -103,13 +103,14 @@ class HookOutput:
         self._data["systemMessage"] = msg
         return self
 
-    def modified_input(self, new_input: Dict[str, Any]) -> "HookOutput":
+    def modified_input(self, new_input: dict[str, Any]) -> "HookOutput":
         """Modify the tool input parameters."""
         self._data["modifiedInput"] = new_input
         return self
 
-    def claude_fallback(self, hook_name: str, prompt: str,
-                        priority: str = "normal") -> "HookOutput":
+    def claude_fallback(
+        self, hook_name: str, prompt: str, priority: str = "normal"
+    ) -> "HookOutput":
         """Request Claude to perform a fallback action."""
         self._data["claudeFallback"] = {
             "hook_name": hook_name,
@@ -161,7 +162,7 @@ class BaseHook(ABC):
         self.start_time = time.time()
 
     @abstractmethod
-    def execute(self, inp: HookInput) -> Optional[HookOutput]:
+    def execute(self, inp: HookInput) -> HookOutput | None:
         """Main hook logic. Return HookOutput or None to pass through."""
         ...
 
@@ -184,8 +185,9 @@ class BaseHook(ABC):
             error_msg = f"{type(e).__name__}: {e}"
             # Log error before graceful degradation
             try:
-                from pathlib import Path as _P
                 from datetime import datetime as _DT
+                from pathlib import Path as _P
+
                 _log = _P(__file__).resolve().parent.parent / "cache" / "hook-errors.log"
                 _log.parent.mkdir(parents=True, exist_ok=True)
                 with open(str(_log), "a", encoding="utf-8") as _f:
@@ -199,6 +201,7 @@ class BaseHook(ABC):
             # Log invocation (always, even on error)
             try:
                 from shared.invocation_logger import log_invocation
+
                 log_invocation(
                     hook=type(self).__name__,
                     event=inp.detected_event,

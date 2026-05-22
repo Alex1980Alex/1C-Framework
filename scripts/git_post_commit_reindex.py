@@ -26,9 +26,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.bsl.project_discovery import find_project_for_relpath  # noqa: E402
 from src.framework_search.config import EXT_TO_LANGUAGE, MAX_FILE_BYTES, REPO_ROOT  # noqa: E402
 from src.framework_search.file_walker import _matches_skip  # noqa: E402
-from src.bsl.project_discovery import find_project_for_relpath  # noqa: E402
 
 LOG_PATH = PROJECT_ROOT / "cache" / "framework_search_reindex.log"
 BSL_LOG_PATH = PROJECT_ROOT / "cache" / "bsl_reindex.log"
@@ -48,9 +48,10 @@ def _changed_files(since_ref: str) -> list[str]:
     """
     try:
         out = subprocess.check_output(
-            ["git", "diff", "--name-only", "--diff-filter=ACMRT",
-             f"{since_ref}..HEAD"],
-            cwd=PROJECT_ROOT, text=True, stderr=subprocess.DEVNULL,
+            ["git", "diff", "--name-only", "--diff-filter=ACMRT", f"{since_ref}..HEAD"],
+            cwd=PROJECT_ROOT,
+            text=True,
+            stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError:
         return []
@@ -134,15 +135,23 @@ def _spawn_detached_cmd(cmd: list[str], log_path: Path, header: str) -> None:
         CREATE_NEW_PROCESS_GROUP = 0x00000200
         flags = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
         subprocess.Popen(
-            cmd, cwd=str(PROJECT_ROOT),
-            stdin=subprocess.DEVNULL, stdout=log_fh, stderr=log_fh,
-            creationflags=flags, close_fds=True,
+            cmd,
+            cwd=str(PROJECT_ROOT),
+            stdin=subprocess.DEVNULL,
+            stdout=log_fh,
+            stderr=log_fh,
+            creationflags=flags,
+            close_fds=True,
         )
     else:
         subprocess.Popen(
-            cmd, cwd=str(PROJECT_ROOT),
-            stdin=subprocess.DEVNULL, stdout=log_fh, stderr=log_fh,
-            start_new_session=True, close_fds=True,
+            cmd,
+            cwd=str(PROJECT_ROOT),
+            stdin=subprocess.DEVNULL,
+            stdout=log_fh,
+            stderr=log_fh,
+            start_new_session=True,
+            close_fds=True,
         )
 
 
@@ -150,7 +159,8 @@ def _spawn_framework_reindex(paths: list[str]) -> None:
     cmd = [
         str(PYTHON_EXE) if PYTHON_EXE.exists() else sys.executable,
         str(INDEX_SCRIPT),
-        "--paths", *paths,
+        "--paths",
+        *paths,
     ]
     sample = paths[:3]
     header = f"framework reindex {len(paths)} files: {sample}{'...' if len(paths) > 3 else ''}"
@@ -175,11 +185,16 @@ def _spawn_bsl_reindex(project: str, files: list[str]) -> None:
     cmd = [
         str(PYTHON_EXE) if PYTHON_EXE.exists() else sys.executable,
         str(BSL_INDEX_SCRIPT),
-        "--project", project,
-        "--paths", *files,
-        "--embedder", "qwen3-tei",
-        "--collection", "bsl_code_v4_late",
-        "--batch-size", "32",
+        "--project",
+        project,
+        "--paths",
+        *files,
+        "--embedder",
+        "qwen3-tei",
+        "--collection",
+        "bsl_code_v4_late",
+        "--batch-size",
+        "32",
     ]
     sample = files[:3]
     header = (
@@ -193,13 +208,16 @@ def _spawn_bsl_reindex(project: str, files: list[str]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Auto-reindex helper for git hooks")
     ap.add_argument(
-        "--since-ref", default="HEAD~1",
+        "--since-ref",
+        default="HEAD~1",
         help="Diff base (default HEAD~1 for post-commit; pass ORIG_HEAD for post-merge)",
     )
     ap.add_argument(
-        "--max-files", type=int, default=200,
+        "--max-files",
+        type=int,
+        default=200,
         help="Skip auto-reindex if more than N files changed (initial commit, "
-             "branch switch with huge diff). Default 200.",
+        "branch switch with huge diff). Default 200.",
     )
     args = ap.parse_args()
 
@@ -207,7 +225,8 @@ def main() -> int:
     try:
         subprocess.check_output(
             ["git", "rev-parse", "--verify", args.since_ref],
-            cwd=PROJECT_ROOT, stderr=subprocess.DEVNULL,
+            cwd=PROJECT_ROOT,
+            stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError:
         return 0  # silent: nothing to compare against
@@ -219,9 +238,7 @@ def main() -> int:
         # Bulk operation — let MCP lazy-check or manual reindex handle it.
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(LOG_PATH, "a", encoding="utf-8") as fh:
-            fh.write(
-                f"\n=== skip auto-reindex: {len(changed)} files > max {args.max_files} ===\n"
-            )
+            fh.write(f"\n=== skip auto-reindex: {len(changed)} files > max {args.max_files} ===\n")
         return 0
 
     framework_paths, bsl_groups = _split_bsl_and_framework(changed)

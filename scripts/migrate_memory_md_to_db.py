@@ -16,23 +16,25 @@ Exit codes:
     1 — one or more files failed
 """
 
-from pathlib import Path
-import sqlite3
-import hashlib
 import argparse
+import hashlib
 import json
-import sys
 import os
 import re
+import sqlite3
+import sys
 from datetime import datetime
+from pathlib import Path
 from uuid import uuid4
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
-MEMORY_DIR = Path(os.environ.get(
-    "CLAUDE_MEMORY_DIR",
-    Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
-))
+MEMORY_DIR = Path(
+    os.environ.get(
+        "CLAUDE_MEMORY_DIR",
+        Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
+    )
+)
 
 IMPORTANCE_BY_TYPE = {
     "feedback": 0.8,
@@ -203,7 +205,12 @@ def main():
                 continue
 
             result = insert_row(
-                conn, md_file.name, fm, fm["body"], chash, dry_run=args.dry_run,
+                conn,
+                md_file.name,
+                fm,
+                fm["body"],
+                chash,
+                dry_run=args.dry_run,
             )
             inserted += 1
             if args.verbose or args.dry_run:

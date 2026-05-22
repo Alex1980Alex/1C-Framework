@@ -23,4 +23,3 @@ This file provides a quick reference to the purpose of each rule file located in
 - **[`ui.mdc`](mdc:.cursor/rules/ui.mdc)**: Guidelines for implementing and maintaining user interface components.
 - **[`utilities.mdc`](mdc:.cursor/rules/utilities.mdc)**: Guidelines for implementing utility functions including tagged task lists utilities.
 - **[`telemetry.mdc`](mdc:.cursor/rules/telemetry.mdc)**: Guidelines for integrating AI usage telemetry across Task Master.
-

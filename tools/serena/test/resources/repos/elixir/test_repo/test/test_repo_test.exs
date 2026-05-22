@@ -11,4 +11,4 @@ defmodule TestRepoTest do
     assert TestRepo.add(-1, 1) == 0
     assert TestRepo.add(0, 0) == 0
   end
-end 
+end

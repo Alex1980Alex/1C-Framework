@@ -55,9 +55,7 @@ def build_ast_grep_backend(
         return AstGrepBackend(runner=runner, workspace_root=workspace_root)
 
     prefilter = _open_prefilter(db_path)
-    return AstGrepBackend(
-        runner=runner, workspace_root=workspace_root, prefilter=prefilter
-    )
+    return AstGrepBackend(runner=runner, workspace_root=workspace_root, prefilter=prefilter)
 
 
 def _open_prefilter(db_path: Path) -> CallGraphPreFilter:

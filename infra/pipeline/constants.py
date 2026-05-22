@@ -5,7 +5,6 @@ Defines core types used across all pipeline components.
 """
 
 from enum import Enum
-from typing import List
 
 
 class AgentRole(str, Enum):
@@ -34,20 +33,20 @@ class AgentMode(str, Enum):
     """Operating modes for agents."""
 
     # PM-SPEC modes
-    INIT = "INIT"           # Initialize context
-    SPEC = "SPEC"           # Create specification
-    VERIFY = "VERIFY"       # Verify implementation
+    INIT = "INIT"  # Initialize context
+    SPEC = "SPEC"  # Create specification
+    VERIFY = "VERIFY"  # Verify implementation
 
     # ARCHITECT modes
-    DESIGN = "DESIGN"       # Create architecture design
-    REVIEW = "REVIEW"       # Code review
+    DESIGN = "DESIGN"  # Create architecture design
+    REVIEW = "REVIEW"  # Code review
 
     # IMPLEMENTER modes
-    BUILD = "BUILD"         # Implement solution
-    FIX = "FIX"             # Fix issues after verification
+    BUILD = "BUILD"  # Implement solution
+    FIX = "FIX"  # Fix issues after verification
 
     # BSL-DEBUGGER modes
-    DEBUG = "DEBUG"         # Debug BSL runtime errors
+    DEBUG = "DEBUG"  # Debug BSL runtime errors
 
 
 class ArtifactType(str, Enum):

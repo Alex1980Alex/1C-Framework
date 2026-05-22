@@ -54,7 +54,7 @@ class GitHubExportService {
     this.baseURL = baseURL;
     this.rateLimiter = new RateLimiter();
   }
-  
+
   async exportTask(task, repoOwner, repoName, options = {}) {
     // Validate repository access
     // Format task content for GitHub
@@ -62,7 +62,7 @@ class GitHubExportService {
     // Update task with GitHub link
     // Return export result
   }
-  
+
   async updateTaskWithGitHubLink(taskId, issueUrl) {
     // Add GitHub link to task metadata
     // Update task file with link reference
@@ -77,21 +77,21 @@ class TaskToGitHubFormatter {
   formatIssueTitle(task) {
     return `[Task ${task.id}] ${task.title}`;
   }
-  
+
   formatIssueDescription(task) {
     let description = `# ${task.title}\n\n`;
     description += `**Task Master ID**: ${task.id}\n`;
     description += `**Priority**: ${task.priority}\n`;
     description += `**Status**: ${task.status}\n\n`;
-    
+
     if (task.description) {
       description += `## Description\n${task.description}\n\n`;
     }
-    
+
     if (task.details) {
       description += `## Implementation Details\n${task.details}\n\n`;
     }
-    
+
     if (task.subtasks && task.subtasks.length > 0) {
       description += `## Subtasks\n`;
       task.subtasks.forEach(subtask => {
@@ -99,7 +99,7 @@ class TaskToGitHubFormatter {
         description += `- [${checked}] ${subtask.title}\n`;
       });
     }
-    
+
     description += `\n---\n*Exported from Task Master*`;
     return description;
   }
@@ -111,7 +111,7 @@ class TaskToGitHubFormatter {
 class LinkManager {
   async addGitHubLinkToTask(taskId, issueUrl, issueNumber) {
     const task = await getTask(taskId);
-    
+
     if (!task.metadata) task.metadata = {};
     task.metadata.githubIssue = {
       url: issueUrl,
@@ -119,17 +119,17 @@ class LinkManager {
       exportedAt: new Date().toISOString(),
       repository: this.extractRepoFromUrl(issueUrl)
     };
-    
+
     await updateTask(taskId, task);
     await regenerateTaskFiles();
   }
-  
+
   async validateGitHubLink(issueUrl) {
     // Check if GitHub issue still exists
     // Verify access permissions
     // Return link status
   }
-  
+
   generateTaskMasterReference(taskId, projectName) {
     return `\n\n---\n**Task Master Reference**: Task #${taskId} in project "${projectName}"`;
   }
@@ -332,33 +332,33 @@ class GitHubExportService:
     def __init__(self, token):
         auth = Auth.Token(token)
         self.github = Github(auth=auth)
-    
+
     async def export_task_to_issue(self, task, repo_name):
         repo = self.github.get_repo(repo_name)
-        
+
         # Create issue with formatted content
         issue = repo.create_issue(
             title=f"[Task {task.id}] {task.title}",
             body=self.format_task_for_github(task),
             labels=self.map_task_labels(task)
         )
-        
+
         # Establish bidirectional link
         await self.add_github_link_to_task(task.id, issue.html_url)
-        
+
         return issue
-    
+
     def format_task_for_github(self, task):
         body = f"**Task Master ID**: {task.id}\n"
         body += f"**Priority**: {task.priority}\n"
         body += f"**Status**: {task.status}\n\n"
-        
+
         if task.description:
             body += f"## Description\n{task.description}\n\n"
-        
+
         if task.details:
             body += f"## Implementation Details\n{task.details}\n\n"
-        
+
         body += "\n---\n*Exported from Task Master*"
         return body
 ```
@@ -541,20 +541,20 @@ class GitHubExportService {
       interval: 'hour'
     });
   }
-  
+
   async exportTask(task, repoOwner, repoName, exportOptions = {}) {
     // Validate repository access
     await this.validateRepositoryAccess(repoOwner, repoName);
-    
+
     // Format task content for GitHub
     const issueData = this.formatTaskAsIssue(task, exportOptions);
-    
+
     // Create GitHub issue
     const issue = await this.createGitHubIssue(repoOwner, repoName, issueData);
-    
+
     // Update task with GitHub link
     await this.updateTaskWithGitHubLink(task.id, issue.html_url, issue.number);
-    
+
     return {
       success: true,
       issue: issue,
@@ -581,11 +581,11 @@ async createGitHubIssue(owner, repo, issueData) {
     assignees: issueData.assignees || [],
     milestone: issueData.milestone || null
   });
-  
+
   if (!response.ok) {
     throw new GitHubAPIError(`Failed to create issue: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 ```
@@ -623,7 +623,7 @@ class TaskToGitHubFormatter {
       ...options
     };
   }
-  
+
   formatTaskAsIssue(task, exportOptions = {}) {
     return {
       title: this.formatTitle(task, exportOptions),
@@ -639,22 +639,22 @@ class TaskToGitHubFormatter {
 ```javascript
 formatTitle(task, options) {
   let title = task.title;
-  
+
   // Add task ID prefix if enabled
   if (this.options.includeTaskId && !options.hideTaskId) {
     title = `[Task ${task.id}] ${title}`;
   }
-  
+
   // Add priority indicator for high priority tasks
   if (task.priority === 'high') {
     title = `🔥 ${title}`;
   }
-  
+
   // Truncate if too long (GitHub limit is 256 characters)
   if (title.length > 250) {
     title = title.substring(0, 247) + '...';
   }
-  
+
   return title;
 }
 ```
@@ -663,42 +663,42 @@ formatTitle(task, options) {
 ```javascript
 formatBody(task, options) {
   let body = '';
-  
+
   // Header with task metadata
   if (this.options.includeMetadata) {
     body += this.formatMetadataSection(task);
   }
-  
+
   // Main description
   if (task.description) {
     body += `## Description\n\n${task.description}\n\n`;
   }
-  
+
   // Implementation details
   if (task.details) {
     body += `## Implementation Details\n\n${this.formatDetails(task.details)}\n\n`;
   }
-  
+
   // Test strategy
   if (task.testStrategy) {
     body += `## Test Strategy\n\n${task.testStrategy}\n\n`;
   }
-  
+
   // Subtasks as checklist
   if (task.subtasks && task.subtasks.length > 0 && this.options.convertSubtasksToChecklist) {
     body += this.formatSubtasksSection(task.subtasks);
   }
-  
+
   // Dependencies
   if (task.dependencies && task.dependencies.length > 0) {
     body += this.formatDependenciesSection(task.dependencies);
   }
-  
+
   // Task Master reference
   if (this.options.addTaskMasterReference) {
     body += this.formatTaskMasterReference(task);
   }
-  
+
   return body;
 }
 ```
@@ -712,15 +712,15 @@ formatMetadataSection(task) {
   metadata += `| **Task ID** | ${task.id} |\n`;
   metadata += `| **Priority** | ${this.formatPriority(task.priority)} |\n`;
   metadata += `| **Status** | ${this.formatStatus(task.status)} |\n`;
-  
+
   if (task.dependencies && task.dependencies.length > 0) {
     metadata += `| **Dependencies** | ${task.dependencies.join(', ')} |\n`;
   }
-  
+
   if (task.complexityScore) {
     metadata += `| **Complexity** | ${task.complexityScore}/10 |\n`;
   }
-  
+
   metadata += '\n';
   return metadata;
 }
@@ -730,17 +730,17 @@ formatMetadataSection(task) {
 ```javascript
 formatSubtasksSection(subtasks) {
   let section = '## Subtasks\n\n';
-  
+
   subtasks.forEach(subtask => {
     const checked = subtask.status === 'done' ? 'x' : ' ';
     section += `- [${checked}] **${subtask.title}**`;
-    
+
     if (subtask.description) {
       section += ` - ${subtask.description}`;
     }
-    
+
     section += '\n';
-    
+
     // Add subtask details as indented content
     if (subtask.details) {
       const indentedDetails = subtask.details
@@ -750,7 +750,7 @@ formatSubtasksSection(subtasks) {
       section += `${indentedDetails}\n`;
     }
   });
-  
+
   section += '\n';
   return section;
 }
@@ -760,34 +760,34 @@ formatSubtasksSection(subtasks) {
 ```javascript
 formatLabels(task, options) {
   const labels = [];
-  
+
   // Always add task-master label
   labels.push('task-master');
-  
+
   // Priority-based labels
   if (task.priority === 'high') {
     labels.push('priority:high');
   } else if (task.priority === 'low') {
     labels.push('priority:low');
   }
-  
+
   // Status-based labels
   if (task.status === 'in-progress') {
     labels.push('in-progress');
   }
-  
+
   // Complexity-based labels
   if (task.complexityScore >= 8) {
     labels.push('complexity:high');
   } else if (task.complexityScore <= 3) {
     labels.push('complexity:low');
   }
-  
+
   // Custom labels from options
   if (options.labels) {
     labels.push(...options.labels);
   }
-  
+
   return labels;
 }
 ```
@@ -797,27 +797,27 @@ formatLabels(task, options) {
 formatDetails(details) {
   // Convert Task Master specific formatting to GitHub markdown
   let formatted = details;
-  
+
   // Convert code blocks
   formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
     return `\`\`\`${lang || ''}\n${code}\`\`\``;
   });
-  
+
   // Convert inline code
   formatted = formatted.replace(/`([^`]+)`/g, '`$1`');
-  
+
   // Convert headers
   formatted = formatted.replace(/^(#{1,6})\s+(.+)$/gm, '$1 $2');
-  
+
   // Convert lists
   formatted = formatted.replace(/^\s*[-*+]\s+(.+)$/gm, '- $1');
-  
+
   // Convert numbered lists
   formatted = formatted.replace(/^\s*\d+\.\s+(.+)$/gm, (match, content, offset, string) => {
     const lineNumber = string.substring(0, offset).split('\n').length;
     return `${lineNumber}. ${content}`;
   });
-  
+
   return formatted;
 }
 ```
@@ -843,7 +843,7 @@ class IssueTemplateManager {
       epic: new EpicTemplate()
     };
   }
-  
+
   applyTemplate(task, templateName, options) {
     const template = this.templates[templateName] || this.templates.default;
     return template.format(task, options);
@@ -854,22 +854,22 @@ class BugTemplate extends TaskToGitHubFormatter {
   formatTitle(task, options) {
     return `🐛 [BUG] ${task.title}`;
   }
-  
+
   formatBody(task, options) {
     let body = '## Bug Report\n\n';
     body += `**Task ID**: ${task.id}\n\n`;
-    
+
     if (task.description) {
       body += `### Description\n${task.description}\n\n`;
     }
-    
+
     if (task.details) {
       body += `### Steps to Reproduce\n${task.details}\n\n`;
     }
-    
+
     body += `### Expected Behavior\n<!-- Describe what should happen -->\n\n`;
     body += `### Actual Behavior\n<!-- Describe what actually happens -->\n\n`;
-    
+
     return body + this.formatTaskMasterReference(task);
   }
 }
@@ -898,15 +898,15 @@ class GitHubLinkManager {
     this.githubService = githubService;
     this.linkCache = new Map();
   }
-  
+
   async addGitHubLinkToTask(taskId, issueUrl, issueNumber, repository) {
     const task = await this.getTask(taskId);
-    
+
     // Initialize metadata if it doesn't exist
     if (!task.metadata) {
       task.metadata = {};
     }
-    
+
     // Add GitHub link information
     task.metadata.githubIssue = {
       url: issueUrl,
@@ -916,16 +916,16 @@ class GitHubLinkManager {
       lastValidated: new Date().toISOString(),
       status: 'active'
     };
-    
+
     // Update task in storage
     await this.updateTask(taskId, task);
-    
+
     // Regenerate task files to include the link
     await this.regenerateTaskFiles();
-    
+
     // Cache the link for quick access
     this.linkCache.set(taskId, task.metadata.githubIssue);
-    
+
     return task.metadata.githubIssue;
   }
 }
@@ -961,15 +961,15 @@ class LinkValidator {
   constructor(githubService) {
     this.githubService = githubService;
   }
-  
+
   async validateGitHubLink(taskId, linkInfo) {
     try {
       const { repository, number } = linkInfo;
       const [owner, repo] = repository.split('/');
-      
+
       // Check if issue still exists
       const issue = await this.githubService.getIssue(owner, repo, number);
-      
+
       if (!issue) {
         return {
           valid: false,
@@ -977,22 +977,22 @@ class LinkValidator {
           message: 'GitHub issue no longer exists'
         };
       }
-      
+
       // Check if issue is closed
       const status = issue.state === 'open' ? 'active' : 'closed';
-      
+
       // Update link status if changed
       if (linkInfo.status !== status) {
         await this.updateLinkStatus(taskId, status);
       }
-      
+
       return {
         valid: true,
         status: status,
         issue: issue,
         lastValidated: new Date().toISOString()
       };
-      
+
     } catch (error) {
       if (error.status === 404) {
         return {
@@ -1007,15 +1007,15 @@ class LinkValidator {
           message: 'Access denied to GitHub issue'
         };
       }
-      
+
       throw error;
     }
   }
-  
+
   async validateAllLinks() {
     const tasks = await this.getAllTasksWithGitHubLinks();
     const results = [];
-    
+
     for (const task of tasks) {
       if (task.metadata?.githubIssue) {
         const result = await this.validateGitHubLink(task.id, task.metadata.githubIssue);
@@ -1025,7 +1025,7 @@ class LinkValidator {
         });
       }
     }
-    
+
     return results;
   }
 }
@@ -1037,36 +1037,36 @@ class LinkValidator {
 class TaskFileGenerator {
   generateTaskFile(task) {
     let content = this.generateBasicTaskContent(task);
-    
+
     // Add GitHub integration section if link exists
     if (task.metadata?.githubIssue) {
       content += this.generateGitHubSection(task.metadata.githubIssue);
     }
-    
+
     return content;
   }
-  
+
   generateGitHubSection(githubInfo) {
     let section = '\n## GitHub Integration\n\n';
-    
+
     section += `**GitHub Issue**: [#${githubInfo.number}](${githubInfo.url})\n`;
     section += `**Repository**: ${githubInfo.repository}\n`;
     section += `**Status**: ${this.formatGitHubStatus(githubInfo.status)}\n`;
     section += `**Exported**: ${new Date(githubInfo.exportedAt).toLocaleDateString()}\n`;
-    
+
     if (githubInfo.lastValidated) {
       section += `**Last Validated**: ${new Date(githubInfo.lastValidated).toLocaleDateString()}\n`;
     }
-    
+
     if (githubInfo.status === 'closed') {
       section += '\n> ⚠️ **Note**: The linked GitHub issue has been closed.\n';
     } else if (githubInfo.status === 'deleted') {
       section += '\n> ❌ **Warning**: The linked GitHub issue no longer exists.\n';
     }
-    
+
     return section;
   }
-  
+
   formatGitHubStatus(status) {
     const statusMap = {
       'active': '🟢 Active',
@@ -1075,7 +1075,7 @@ class TaskFileGenerator {
       'invalid': '⚠️ Invalid',
       'access_denied': '🔒 Access Denied'
     };
-    
+
     return statusMap[status] || status;
   }
 }
@@ -1090,31 +1090,31 @@ class GitHubReferenceManager {
     reference += `- **Task ID**: #${taskId}\n`;
     reference += `- **Project**: ${projectName}\n`;
     reference += `- **Exported**: ${new Date().toISOString()}\n`;
-    
+
     if (taskUrl) {
       reference += `- **Task URL**: [View in Task Master](${taskUrl})\n`;
     }
-    
+
     reference += '\n*This issue is managed by Task Master. Changes made here may be overwritten during synchronization.*\n';
-    
+
     return reference;
   }
-  
+
   async updateGitHubIssueWithTaskReference(issueUrl, taskId, projectName) {
     const { owner, repo, number } = this.parseGitHubUrl(issueUrl);
     const issue = await this.githubService.getIssue(owner, repo, number);
-    
+
     if (!issue) {
       throw new Error('GitHub issue not found');
     }
-    
+
     // Check if Task Master reference already exists
     const hasReference = issue.body.includes('Task Master Integration');
-    
+
     if (!hasReference) {
       const reference = this.generateTaskMasterReference(taskId, projectName);
       const updatedBody = issue.body + reference;
-      
+
       await this.githubService.updateIssue(owner, repo, number, {
         body: updatedBody
       });
@@ -1130,51 +1130,51 @@ class LinkSynchronizer {
     this.githubService = githubService;
     this.linkManager = linkManager;
   }
-  
+
   async syncTaskWithGitHubIssue(taskId) {
     const task = await this.getTask(taskId);
     const githubInfo = task.metadata?.githubIssue;
-    
+
     if (!githubInfo || !githubInfo.syncEnabled) {
       return { synced: false, reason: 'Sync not enabled' };
     }
-    
+
     const { repository, number } = githubInfo;
     const [owner, repo] = repository.split('/');
-    
+
     try {
       const issue = await this.githubService.getIssue(owner, repo, number);
-      
+
       if (!issue) {
         await this.linkManager.updateLinkStatus(taskId, 'deleted');
         return { synced: false, reason: 'Issue deleted' };
       }
-      
+
       // Sync status changes
       const changes = await this.detectChanges(task, issue);
-      
+
       if (changes.length > 0) {
         await this.applyChanges(taskId, changes);
         await this.linkManager.updateLastSync(taskId);
-        
-        return { 
-          synced: true, 
+
+        return {
+          synced: true,
           changes: changes,
           lastSync: new Date().toISOString()
         };
       }
-      
+
       return { synced: true, changes: [] };
-      
+
     } catch (error) {
       console.error(`Failed to sync task ${taskId}:`, error);
       return { synced: false, error: error.message };
     }
   }
-  
+
   async detectChanges(task, issue) {
     const changes = [];
-    
+
     // Check if GitHub issue was closed and task is still pending
     if (issue.state === 'closed' && task.status !== 'done') {
       changes.push({
@@ -1184,7 +1184,7 @@ class LinkSynchronizer {
         reason: 'GitHub issue closed'
       });
     }
-    
+
     // Check if GitHub issue was reopened and task is done
     if (issue.state === 'open' && task.status === 'done') {
       changes.push({
@@ -1194,7 +1194,7 @@ class LinkSynchronizer {
         reason: 'GitHub issue reopened'
       });
     }
-    
+
     return changes;
   }
 }
@@ -1292,13 +1292,13 @@ async function handleGitHubExport(options) {
 
   // Validate inputs
   await validateExportOptions(options);
-  
+
   // Get task details
   const task = await getTask(taskId);
   if (!task) {
     throw new Error(`Task ${taskId} not found`);
   }
-  
+
   // Check for existing GitHub link
   if (task.metadata?.githubIssue && !force) {
     const existingUrl = task.metadata.githubIssue.url;
@@ -1306,17 +1306,17 @@ async function handleGitHubExport(options) {
     console.log(chalk.gray('Use --force to overwrite the existing link'));
     return;
   }
-  
+
   // Initialize GitHub service
   const githubToken = token || process.env.GITHUB_TOKEN;
   if (!githubToken) {
     throw new Error('GitHub token required. Use --token flag or set GITHUB_TOKEN environment variable');
   }
-  
+
   const githubService = new GitHubExportService(githubToken);
   const formatter = new TaskToGitHubFormatter();
   const linkManager = new GitHubLinkManager(githubService);
-  
+
   // Format task content
   const exportOptions = {
     titleOverride,
@@ -1327,9 +1327,9 @@ async function handleGitHubExport(options) {
     includeSubtasks,
     linkBack
   };
-  
+
   const issueData = formatter.formatTaskAsIssue(task, exportOptions);
-  
+
   // Dry run - just show what would be created
   if (dryRun) {
     console.log(chalk.cyan('\\n=== DRY RUN - GitHub Issue Preview ===\\n'));
@@ -1341,35 +1341,35 @@ async function handleGitHubExport(options) {
     console.log(chalk.cyan('\\n=== End Preview ===\\n'));
     return;
   }
-  
+
   // Show progress
   console.log(chalk.blue(`Exporting task ${taskId} to GitHub repository ${repository}...`));
-  
+
   // Export to GitHub
   const result = await githubService.exportTask(task, repository, exportOptions);
-  
+
   if (result.success) {
     console.log(chalk.green(`✅ Successfully exported task ${taskId} to GitHub!`));
     console.log(chalk.cyan(`GitHub Issue: ${result.issueUrl}`));
-    
+
     // Add bidirectional link
     await linkManager.addGitHubLinkToTask(taskId, result.issueUrl, result.issue.number, repository);
-    
+
     if (linkBack) {
       await linkManager.updateGitHubIssueWithTaskReference(result.issueUrl, taskId, getProjectName());
     }
-    
+
     if (sync) {
       await linkManager.enableSync(taskId);
       console.log(chalk.blue('🔄 Synchronization enabled for this task'));
     }
-    
+
     // Handle subtasks if requested
     if (separateSubtasks && task.subtasks && task.subtasks.length > 0) {
       console.log(chalk.blue('\\nExporting subtasks as separate issues...'));
       await exportSubtasksAsSeparateIssues(task.subtasks, repository, githubService, linkManager);
     }
-    
+
   } else {
     throw new Error(result.error || 'Export failed');
   }
@@ -1394,7 +1394,7 @@ export function registerGitHubExportTool(server) {
           description: "Task ID to export (required)"
         },
         repository: {
-          type: "string", 
+          type: "string",
           description: "GitHub repository in owner/repo format (required)"
         },
         token: {
@@ -1414,7 +1414,7 @@ export function registerGitHubExportTool(server) {
               description: "GitHub labels to add to the issue"
             },
             assignees: {
-              type: "array", 
+              type: "array",
               items: { type: "string" },
               description: "GitHub usernames to assign to the issue"
             },
@@ -1432,7 +1432,7 @@ export function registerGitHubExportTool(server) {
               description: "Include subtasks as checklist items"
             },
             separateSubtasks: {
-              type: "boolean", 
+              type: "boolean",
               description: "Create separate issues for subtasks"
             },
             dryRun: {
@@ -1485,7 +1485,7 @@ import { createLogWrapper } from '../../tools/utils.js';
 export async function githubExportDirect(args, log, context = {}) {
   const { session } = context;
   const mcpLog = createLogWrapper(log);
-  
+
   try {
     // Prepare options for the core handler
     const options = {
@@ -1495,14 +1495,14 @@ export async function githubExportDirect(args, log, context = {}) {
       ...args.options,
       projectRoot: args.projectRoot
     };
-    
+
     // Call the core export handler
     const result = await handleGitHubExport(options, {
       session,
       mcpLog,
       outputFormat: 'json' // Request JSON output for MCP
     });
-    
+
     return {
       success: true,
       data: {
@@ -1514,7 +1514,7 @@ export async function githubExportDirect(args, log, context = {}) {
         message: `Successfully exported task ${args.taskId} to GitHub issue #${result.issue.number}`
       }
     };
-    
+
   } catch (error) {
     mcpLog(`GitHub export failed: ${error.message}`);
     return {
@@ -1530,27 +1530,27 @@ export async function githubExportDirect(args, log, context = {}) {
 // scripts/modules/github/validation.js
 async function validateExportOptions(options) {
   const { id: taskId, repo: repository, token } = options;
-  
+
   // Validate task ID
   if (!taskId || !/^\\d+(\\.\\d+)*$/.test(taskId)) {
     throw new Error('Invalid task ID format');
   }
-  
+
   // Validate repository format
   if (!repository || !/^[a-zA-Z0-9._-]+\\/[a-zA-Z0-9._-]+$/.test(repository)) {
     throw new Error('Repository must be in owner/repo format');
   }
-  
+
   // Validate GitHub token
   const githubToken = token || process.env.GITHUB_TOKEN;
   if (!githubToken) {
     throw new Error('GitHub token is required');
   }
-  
+
   if (!/^gh[ps]_[a-zA-Z0-9]{36,}$/.test(githubToken)) {
     console.warn(chalk.yellow('Warning: GitHub token format appears invalid'));
   }
-  
+
   // Validate labels format
   if (options.labels) {
     const labels = options.labels.split(',').map(l => l.trim());
@@ -1560,7 +1560,7 @@ async function validateExportOptions(options) {
       }
     }
   }
-  
+
   // Validate assignees format
   if (options.assignees) {
     const assignees = options.assignees.split(',').map(a => a.trim());
@@ -1644,46 +1644,46 @@ describe('GitHub Export System', () => {
     test('should validate repository access', async () => {
       const service = new GitHubExportService('mock-token');
       const mockGitHub = jest.spyOn(service, 'validateRepositoryAccess');
-      
+
       await service.exportTask(mockTask, 'owner', 'repo');
       expect(mockGitHub).toHaveBeenCalledWith('owner', 'repo');
     });
-    
+
     test('should handle authentication errors', async () => {
       const service = new GitHubExportService('invalid-token');
-      
+
       await expect(service.exportTask(mockTask, 'owner', 'repo'))
         .rejects.toThrow('Authentication failed');
     });
-    
+
     test('should respect rate limits', async () => {
       const service = new GitHubExportService('valid-token');
       const rateLimiter = jest.spyOn(service.rateLimiter, 'removeTokens');
-      
+
       await service.exportTask(mockTask, 'owner', 'repo');
       expect(rateLimiter).toHaveBeenCalled();
     });
   });
-  
+
   describe('TaskToGitHubFormatter', () => {
     test('should format task title correctly', () => {
       const formatter = new TaskToGitHubFormatter();
       const task = { id: 42, title: 'Test Task', priority: 'high' };
-      
+
       const result = formatter.formatTitle(task);
       expect(result).toBe('🔥 [Task 42] Test Task');
     });
-    
+
     test('should truncate long titles', () => {
       const formatter = new TaskToGitHubFormatter();
       const longTitle = 'A'.repeat(300);
       const task = { id: 1, title: longTitle };
-      
+
       const result = formatter.formatTitle(task);
       expect(result.length).toBeLessThanOrEqual(250);
       expect(result).toEndWith('...');
     });
-    
+
     test('should format subtasks as checklist', () => {
       const formatter = new TaskToGitHubFormatter();
       const task = {
@@ -1694,37 +1694,37 @@ describe('GitHub Export System', () => {
           { title: 'Subtask 2', status: 'pending' }
         ]
       };
-      
+
       const result = formatter.formatBody(task);
       expect(result).toContain('- [x] **Subtask 1**');
       expect(result).toContain('- [ ] **Subtask 2**');
     });
-    
+
     test('should generate appropriate labels', () => {
       const formatter = new TaskToGitHubFormatter();
       const task = { priority: 'high', complexityScore: 9 };
-      
+
       const labels = formatter.formatLabels(task);
       expect(labels).toContain('task-master');
       expect(labels).toContain('priority:high');
       expect(labels).toContain('complexity:high');
     });
   });
-  
+
   describe('GitHubLinkManager', () => {
     test('should add GitHub link to task metadata', async () => {
       const linkManager = new GitHubLinkManager(mockGitHubService);
       const taskId = '42';
       const issueUrl = 'https://github.com/owner/repo/issues/123';
-      
+
       await linkManager.addGitHubLinkToTask(taskId, issueUrl, 123, 'owner/repo');
-      
+
       const task = await getTask(taskId);
       expect(task.metadata.githubIssue).toBeDefined();
       expect(task.metadata.githubIssue.url).toBe(issueUrl);
       expect(task.metadata.githubIssue.number).toBe(123);
     });
-    
+
     test('should validate GitHub links', async () => {
       const linkManager = new GitHubLinkManager(mockGitHubService);
       const linkInfo = {
@@ -1732,9 +1732,9 @@ describe('GitHub Export System', () => {
         number: 123,
         status: 'active'
       };
-      
+
       mockGitHubService.getIssue.mockResolvedValue({ state: 'open' });
-      
+
       const result = await linkManager.validateGitHubLink('42', linkInfo);
       expect(result.valid).toBe(true);
       expect(result.status).toBe('active');
@@ -1749,53 +1749,53 @@ describe('GitHub Export System', () => {
 describe('GitHub Export Integration', () => {
   let testRepository;
   let githubToken;
-  
+
   beforeAll(() => {
     githubToken = process.env.GITHUB_TEST_TOKEN;
     testRepository = process.env.GITHUB_TEST_REPO || 'taskmaster-test/test-repo';
-    
+
     if (!githubToken) {
       throw new Error('GITHUB_TEST_TOKEN environment variable required for integration tests');
     }
   });
-  
+
   test('should export task to real GitHub repository', async () => {
     const task = createTestTask();
     const service = new GitHubExportService(githubToken);
-    
+
     const result = await service.exportTask(task, testRepository, {
       labels: ['test', 'automated'],
       template: 'default'
     });
-    
+
     expect(result.success).toBe(true);
     expect(result.issueUrl).toMatch(/https:\\/\\/github\\.com\\/.+\\/issues\\/\\d+/);
-    
+
     // Cleanup: Close the test issue
     await service.updateIssue(testRepository, result.issue.number, { state: 'closed' });
   });
-  
+
   test('should handle repository permission errors', async () => {
     const task = createTestTask();
     const service = new GitHubExportService(githubToken);
-    
+
     await expect(service.exportTask(task, 'private/inaccessible-repo'))
       .rejects.toThrow(/permission|access/i);
   });
-  
+
   test('should respect GitHub API rate limits', async () => {
     const service = new GitHubExportService(githubToken);
     const tasks = Array.from({ length: 10 }, () => createTestTask());
-    
+
     const startTime = Date.now();
-    
+
     for (const task of tasks) {
       await service.exportTask(task, testRepository);
     }
-    
+
     const endTime = Date.now();
     const duration = endTime - startTime;
-    
+
     // Should take some time due to rate limiting
     expect(duration).toBeGreaterThan(1000);
   });
@@ -1808,11 +1808,11 @@ describe('GitHub Export Integration', () => {
 describe('GitHub Export CLI', () => {
   test('should validate required options', async () => {
     const result = await runCLI(['github-export']);
-    
+
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('required option');
   });
-  
+
   test('should perform dry run correctly', async () => {
     const result = await runCLI([
       'github-export',
@@ -1820,30 +1820,30 @@ describe('GitHub Export CLI', () => {
       '--repo=owner/repo',
       '--dry-run'
     ]);
-    
+
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('DRY RUN');
     expect(result.stdout).toContain('GitHub Issue Preview');
   });
-  
+
   test('should handle invalid task ID', async () => {
     const result = await runCLI([
       'github-export',
       '--id=invalid',
       '--repo=owner/repo'
     ]);
-    
+
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('Invalid task ID');
   });
-  
+
   test('should validate repository format', async () => {
     const result = await runCLI([
       'github-export',
       '--id=42',
       '--repo=invalid-format'
     ]);
-    
+
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('owner/repo format');
   });
@@ -1864,21 +1864,21 @@ describe('GitHub Export MCP Tool', () => {
         dryRun: true
       }
     };
-    
+
     const result = await githubExportDirect(args, mockLog, { session: mockSession });
-    
+
     expect(result.success).toBe(true);
     expect(result.data.taskId).toBe('42');
   });
-  
+
   test('should handle MCP tool errors', async () => {
     const args = {
       taskId: 'invalid',
       repository: 'owner/repo'
     };
-    
+
     const result = await githubExportDirect(args, mockLog, { session: mockSession });
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
   });
@@ -2055,21 +2055,21 @@ describe('GitHub Export Performance', () => {
   test('should export large task within time limit', async () => {
     const largeTask = createLargeTask(); // Task with many subtasks and long content
     const service = new GitHubExportService('test-token');
-    
+
     const startTime = performance.now();
     await service.exportTask(largeTask, 'owner/repo');
     const endTime = performance.now();
-    
+
     expect(endTime - startTime).toBeLessThan(5000); // Should complete in under 5 seconds
   });
-  
+
   test('should handle concurrent exports', async () => {
     const service = new GitHubExportService('test-token');
     const tasks = Array.from({ length: 5 }, () => createTestTask());
-    
+
     const promises = tasks.map(task => service.exportTask(task, 'owner/repo'));
     const results = await Promise.all(promises);
-    
+
     results.forEach(result => {
       expect(result.success).toBe(true);
     });
@@ -2125,4 +2125,3 @@ jobs:
           GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
           GITHUB_TEST_REPO: ${{ secrets.GITHUB_TEST_REPO }}
 ```
-

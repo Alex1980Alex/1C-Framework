@@ -208,4 +208,4 @@ defmodule TestRepo.Examples do
       error_handling: IntegrationExample.error_handling_example()
     }
   end
-end 
+end

@@ -79,7 +79,9 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--toc", type=Path, default=DEFAULT_TOC, help="Path to TOC file")
-    parser.add_argument("--docs-root", type=Path, default=None, help="Docs root (default: TOC parent)")
+    parser.add_argument(
+        "--docs-root", type=Path, default=None, help="Docs root (default: TOC parent)"
+    )
     parser.add_argument("--json", dest="as_json", action="store_true", help="JSON output for CI")
     args = parser.parse_args()
 

@@ -6,13 +6,14 @@ Parses result.md to extract code changes, functions, and test points.
 
 import re
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 
 class ChangeType(Enum):
     """Types of code changes."""
+
     ADDED = "added"
     MODIFIED = "modified"
     DELETED = "deleted"
@@ -22,13 +23,14 @@ class ChangeType(Enum):
 @dataclass
 class FileChange:
     """Represents a changed file."""
+
     path: str
     change_type: ChangeType
     description: str = ""
-    functions: List[str] = field(default_factory=list)
-    procedures: List[str] = field(default_factory=list)
+    functions: list[str] = field(default_factory=list)
+    procedures: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "path": self.path,
@@ -42,14 +44,15 @@ class FileChange:
 @dataclass
 class ImplementedFunction:
     """Represents an implemented function/procedure."""
+
     name: str
     description: str = ""
-    parameters: List[str] = field(default_factory=list)
+    parameters: list[str] = field(default_factory=list)
     returns: str = ""
     is_export: bool = False
     code: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "name": self.name,
@@ -63,11 +66,12 @@ class ImplementedFunction:
 @dataclass
 class CodeBlock:
     """Represents a code block from result.md."""
+
     language: str
     content: str
-    file_path: Optional[str] = None
+    file_path: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "language": self.language,
@@ -79,10 +83,11 @@ class CodeBlock:
 @dataclass
 class AnalysisResult:
     """Result of analyzing result.md."""
-    file_changes: List[FileChange] = field(default_factory=list)
-    functions: List[ImplementedFunction] = field(default_factory=list)
-    code_blocks: List[CodeBlock] = field(default_factory=list)
-    requirements_covered: List[str] = field(default_factory=list)
+
+    file_changes: list[FileChange] = field(default_factory=list)
+    functions: list[ImplementedFunction] = field(default_factory=list)
+    code_blocks: list[CodeBlock] = field(default_factory=list)
+    requirements_covered: list[str] = field(default_factory=list)
     summary: str = ""
 
     @property
@@ -96,11 +101,11 @@ class AnalysisResult:
         return len(self.functions)
 
     @property
-    def bsl_files(self) -> List[FileChange]:
+    def bsl_files(self) -> list[FileChange]:
         """Get only BSL files."""
-        return [f for f in self.file_changes if f.path.endswith('.bsl')]
+        return [f for f in self.file_changes if f.path.endswith(".bsl")]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "total_files": self.total_files,
@@ -131,43 +136,28 @@ class ResultAnalyzer:
 
     # Patterns for parsing
     FILE_TABLE_PATTERN = re.compile(
-        r'\|\s*([^\|]+\.bsl)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|',
-        re.IGNORECASE
+        r"\|\s*([^\|]+\.bsl)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|", re.IGNORECASE
     )
 
     FUNCTION_HEADER_PATTERN = re.compile(
-        r'###\s+(Функция|Процедура|Function|Procedure)\s+(\w+)',
-        re.IGNORECASE
+        r"###\s+(Функция|Процедура|Function|Procedure)\s+(\w+)", re.IGNORECASE
     )
 
-    CODE_BLOCK_PATTERN = re.compile(
-        r'```(\w+)?\s*\n(.*?)```',
-        re.DOTALL
-    )
+    CODE_BLOCK_PATTERN = re.compile(r"```(\w+)?\s*\n(.*?)```", re.DOTALL)
 
-    REQUIREMENT_PATTERN = re.compile(
-        r'(REQ-\d+|ТРБ-\d+)',
-        re.IGNORECASE
-    )
+    REQUIREMENT_PATTERN = re.compile(r"(REQ-\d+|ТРБ-\d+)", re.IGNORECASE)
 
-    BSL_FUNCTION_PATTERN = re.compile(
-        r'(Функция|Function)\s+(\w+)\s*\(([^)]*)\)',
-        re.IGNORECASE
-    )
+    BSL_FUNCTION_PATTERN = re.compile(r"(Функция|Function)\s+(\w+)\s*\(([^)]*)\)", re.IGNORECASE)
 
     BSL_PROCEDURE_PATTERN = re.compile(
-        r'(Процедура|Procedure)\s+(\w+)\s*\(([^)]*)\)',
-        re.IGNORECASE
+        r"(Процедура|Procedure)\s+(\w+)\s*\(([^)]*)\)", re.IGNORECASE
     )
 
-    EXPORT_PATTERN = re.compile(
-        r'\bЭкспорт\b|\bExport\b',
-        re.IGNORECASE
-    )
+    EXPORT_PATTERN = re.compile(r"\bЭкспорт\b|\bExport\b", re.IGNORECASE)
 
     def __init__(self) -> None:
         """Initialize analyzer."""
-        self._last_result: Optional[AnalysisResult] = None
+        self._last_result: AnalysisResult | None = None
 
     def analyze(self, content: str) -> AnalysisResult:
         """
@@ -219,29 +209,29 @@ class ResultAnalyzer:
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        content = path.read_text(encoding='utf-8')
+        content = path.read_text(encoding="utf-8")
         return self.analyze(content)
 
     def _extract_summary(self, content: str) -> str:
         """Extract summary from content."""
-        lines = content.split('\n')
+        lines = content.split("\n")
         summary_lines = []
 
         for line in lines:
             line = line.strip()
-            if line.startswith('#'):
+            if line.startswith("#"):
                 # Skip main headers
-                if line.startswith('# '):
+                if line.startswith("# "):
                     continue
                 break
-            if line and not line.startswith('|') and not line.startswith('```'):
+            if line and not line.startswith("|") and not line.startswith("```"):
                 summary_lines.append(line)
             if len(summary_lines) >= 3:
                 break
 
-        return ' '.join(summary_lines)
+        return " ".join(summary_lines)
 
-    def _extract_file_changes(self, content: str) -> List[FileChange]:
+    def _extract_file_changes(self, content: str) -> list[FileChange]:
         """Extract file changes from markdown tables."""
         changes = []
 
@@ -253,75 +243,83 @@ class ResultAnalyzer:
 
             # Map change type
             change_type = ChangeType.ADDED
-            if 'изменен' in change_type_str or 'modified' in change_type_str:
+            if "изменен" in change_type_str or "modified" in change_type_str:
                 change_type = ChangeType.MODIFIED
-            elif 'удален' in change_type_str or 'deleted' in change_type_str:
+            elif "удален" in change_type_str or "deleted" in change_type_str:
                 change_type = ChangeType.DELETED
-            elif 'рефактор' in change_type_str or 'refactor' in change_type_str:
+            elif "рефактор" in change_type_str or "refactor" in change_type_str:
                 change_type = ChangeType.REFACTORED
 
-            changes.append(FileChange(
-                path=path,
-                change_type=change_type,
-                description=description,
-            ))
+            changes.append(
+                FileChange(
+                    path=path,
+                    change_type=change_type,
+                    description=description,
+                )
+            )
 
         return changes
 
-    def _extract_code_blocks(self, content: str) -> List[CodeBlock]:
+    def _extract_code_blocks(self, content: str) -> list[CodeBlock]:
         """Extract code blocks from markdown."""
         blocks = []
 
         for match in self.CODE_BLOCK_PATTERN.finditer(content):
-            language = match.group(1) or 'text'
+            language = match.group(1) or "text"
             code = match.group(2).strip()
 
-            blocks.append(CodeBlock(
-                language=language.lower(),
-                content=code,
-            ))
+            blocks.append(
+                CodeBlock(
+                    language=language.lower(),
+                    content=code,
+                )
+            )
 
         return blocks
 
-    def _extract_functions(self, code_blocks: List[CodeBlock]) -> List[ImplementedFunction]:
+    def _extract_functions(self, code_blocks: list[CodeBlock]) -> list[ImplementedFunction]:
         """Extract functions from BSL code blocks."""
         functions = []
 
         for block in code_blocks:
-            if block.language not in ('bsl', '1c', 'onec'):
+            if block.language not in ("bsl", "1c", "onec"):
                 continue
 
             # Find functions
             for match in self.BSL_FUNCTION_PATTERN.finditer(block.content):
                 name = match.group(2)
                 params = match.group(3).strip()
-                is_export = bool(self.EXPORT_PATTERN.search(
-                    block.content[match.end():match.end() + 50]
-                ))
+                is_export = bool(
+                    self.EXPORT_PATTERN.search(block.content[match.end() : match.end() + 50])
+                )
 
-                functions.append(ImplementedFunction(
-                    name=name,
-                    parameters=[p.strip() for p in params.split(',') if p.strip()],
-                    is_export=is_export,
-                ))
+                functions.append(
+                    ImplementedFunction(
+                        name=name,
+                        parameters=[p.strip() for p in params.split(",") if p.strip()],
+                        is_export=is_export,
+                    )
+                )
 
             # Find procedures
             for match in self.BSL_PROCEDURE_PATTERN.finditer(block.content):
                 name = match.group(2)
                 params = match.group(3).strip()
-                is_export = bool(self.EXPORT_PATTERN.search(
-                    block.content[match.end():match.end() + 50]
-                ))
+                is_export = bool(
+                    self.EXPORT_PATTERN.search(block.content[match.end() : match.end() + 50])
+                )
 
-                functions.append(ImplementedFunction(
-                    name=name,
-                    parameters=[p.strip() for p in params.split(',') if p.strip()],
-                    is_export=is_export,
-                ))
+                functions.append(
+                    ImplementedFunction(
+                        name=name,
+                        parameters=[p.strip() for p in params.split(",") if p.strip()],
+                        is_export=is_export,
+                    )
+                )
 
         return functions
 
-    def _extract_documented_functions(self, content: str) -> List[ImplementedFunction]:
+    def _extract_documented_functions(self, content: str) -> list[ImplementedFunction]:
         """Extract functions documented in markdown headers."""
         functions = []
 
@@ -331,36 +329,38 @@ class ResultAnalyzer:
 
             # Try to extract description (next line)
             start = match.end()
-            end = content.find('\n###', start)
+            end = content.find("\n###", start)
             if end == -1:
                 end = start + 500
 
             section = content[start:end]
 
             # Extract description
-            desc_match = re.search(r'\*\*(?:Назначение|Description):\*\*\s*(.+)', section)
+            desc_match = re.search(r"\*\*(?:Назначение|Description):\*\*\s*(.+)", section)
             description = desc_match.group(1).strip() if desc_match else ""
 
             # Extract parameters
-            params_match = re.search(r'\*\*(?:Параметры|Parameters):\*\*\s*(.+)', section)
+            params_match = re.search(r"\*\*(?:Параметры|Parameters):\*\*\s*(.+)", section)
             params = []
             if params_match:
-                params = [p.strip() for p in params_match.group(1).split(',')]
+                params = [p.strip() for p in params_match.group(1).split(",")]
 
             # Extract return value
-            returns_match = re.search(r'\*\*(?:Возвращает|Returns):\*\*\s*(.+)', section)
+            returns_match = re.search(r"\*\*(?:Возвращает|Returns):\*\*\s*(.+)", section)
             returns = returns_match.group(1).strip() if returns_match else ""
 
-            functions.append(ImplementedFunction(
-                name=name,
-                description=description,
-                parameters=params,
-                returns=returns,
-            ))
+            functions.append(
+                ImplementedFunction(
+                    name=name,
+                    description=description,
+                    parameters=params,
+                    returns=returns,
+                )
+            )
 
         return functions
 
-    def _extract_requirements(self, content: str) -> List[str]:
+    def _extract_requirements(self, content: str) -> list[str]:
         """Extract requirement IDs mentioned in content."""
         requirements = set()
 
@@ -374,14 +374,14 @@ class ResultAnalyzer:
         # Group functions by likely file
         for func in result.functions:
             for file_change in result.file_changes:
-                if file_change.path.endswith('.bsl'):
+                if file_change.path.endswith(".bsl"):
                     # Add function to first matching BSL file
                     # In real scenario, we'd match by module name
                     if func.name not in file_change.functions:
                         file_change.functions.append(func.name)
                     break
 
-    def get_test_points(self) -> List[Dict[str, Any]]:
+    def get_test_points(self) -> list[dict[str, Any]]:
         """
         Get points that need testing based on last analysis.
 
@@ -395,26 +395,30 @@ class ResultAnalyzer:
 
         # Each function is a test point
         for func in self._last_result.functions:
-            test_points.append({
-                "type": "function",
-                "name": func.name,
-                "is_export": func.is_export,
-                "parameters": func.parameters,
-                "priority": 1 if func.is_export else 2,
-            })
+            test_points.append(
+                {
+                    "type": "function",
+                    "name": func.name,
+                    "is_export": func.is_export,
+                    "parameters": func.parameters,
+                    "priority": 1 if func.is_export else 2,
+                }
+            )
 
         # Each file change is a test point
         for file in self._last_result.file_changes:
-            test_points.append({
-                "type": "file",
-                "path": file.path,
-                "change_type": file.change_type.value,
-                "priority": 1 if file.change_type == ChangeType.ADDED else 2,
-            })
+            test_points.append(
+                {
+                    "type": "file",
+                    "path": file.path,
+                    "change_type": file.change_type.value,
+                    "priority": 1 if file.change_type == ChangeType.ADDED else 2,
+                }
+            )
 
         return test_points
 
-    def get_coverage_requirements(self) -> List[str]:
+    def get_coverage_requirements(self) -> list[str]:
         """Get requirements that need test coverage."""
         if not self._last_result:
             return []

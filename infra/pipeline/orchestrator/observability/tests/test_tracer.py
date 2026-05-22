@@ -1,25 +1,24 @@
 """Tests for distributed tracing module."""
 
-import pytest
-import time
 import asyncio
+import time
 from datetime import datetime
 
+import pytest
+
 from .tracer import (
-    SpanStatus,
-    SpanKind,
+    SimpleSpanProcessor,
+    Span,
     SpanContext,
     SpanEvent,
+    SpanKind,
     SpanLink,
-    Span,
-    SpanProcessor,
-    SimpleSpanProcessor,
-    ConsoleSpanProcessor,
+    SpanStatus,
     Tracer,
-    trace,
     configure_tracing,
-    get_tracer,
     get_span_processor,
+    get_tracer,
+    trace,
 )
 
 

@@ -353,7 +353,9 @@ class GoldenDatasetGenerator:
                     except json.JSONDecodeError as e:
                         logger.warning(
                             "[SYNTHETIC] Skipping malformed JSONL line %d in %s: %s",
-                            line_no, path, e,
+                            line_no,
+                            path,
+                            e,
                         )
                         continue
 

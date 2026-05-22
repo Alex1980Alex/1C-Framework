@@ -281,4 +281,3 @@
 ### Deployment
 - [Hayhooks (GitHub)](https://github.com/deepset-ai/hayhooks) — REST API + MCP
 - [Deploy Pipelines with Hayhooks (Blog)](https://haystack.deepset.ai/blog/deploy-ai-pipelines-faster-with-hayhooks) — YAML deploy, MCP tools
-

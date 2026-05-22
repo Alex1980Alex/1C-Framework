@@ -55,10 +55,13 @@ SKILL_USAGE_LOG = DATA_DIR / "skill-usage.log"
 
 # --- Test Suite Definitions ---
 
+
 class TestSuite:
     """Base class for test suites."""
 
-    def __init__(self, name: str, config: dict, *, live: bool = False, filter_id: str | None = None):
+    def __init__(
+        self, name: str, config: dict, *, live: bool = False, filter_id: str | None = None
+    ):
         self.name = name
         self.config = config
         self.live = live
@@ -84,7 +87,9 @@ class TestSuite:
 
         for i, test in enumerate(self.tests, 1):
             if self.live:
-                print(f"  [{i}/{len(self.tests)}] {test['id']}: {test['prompt'][:60]}...", flush=True)
+                print(
+                    f"  [{i}/{len(self.tests)}] {test['id']}: {test['prompt'][:60]}...", flush=True
+                )
             test_result = self.run_test(test)
             results["tests"].append(test_result)
             if test_result["status"] == "pass":
@@ -98,9 +103,7 @@ class TestSuite:
             else:
                 results["skipped"] += 1
 
-        results["rate"] = (
-            results["passed"] / results["total"] if results["total"] > 0 else 0.0
-        )
+        results["rate"] = results["passed"] / results["total"] if results["total"] > 0 else 0.0
         return results
 
     def run_test(self, test: dict) -> dict:
@@ -168,9 +171,13 @@ class SkillActivationSuite(TestSuite):
         try:
             result = subprocess.run(
                 [
-                    "claude", "-p", prompt,
-                    "--output-format", "json",
-                    "--allowedTools", "Skill,Read,Glob,Grep",
+                    "claude",
+                    "-p",
+                    prompt,
+                    "--output-format",
+                    "json",
+                    "--allowedTools",
+                    "Skill,Read,Glob,Grep",
                 ],
                 capture_output=True,
                 text=True,
@@ -178,7 +185,7 @@ class SkillActivationSuite(TestSuite):
                 cwd=str(PROJECT_ROOT),
             )
         except FileNotFoundError:
-            print(f"  ERROR: 'claude' not found in PATH — cannot run live tests")
+            print("  ERROR: 'claude' not found in PATH — cannot run live tests")
             return [], None
         except subprocess.TimeoutExpired:
             print(f"  TIMEOUT: prompt '{prompt[:50]}...' exceeded 90s")
@@ -196,7 +203,7 @@ class SkillActivationSuite(TestSuite):
 
         activations = []
         try:
-            with open(SKILL_USAGE_LOG, "r", encoding="utf-8") as f:
+            with open(SKILL_USAGE_LOG, encoding="utf-8") as f:
                 for line in f:
                     parts = line.split(" | ")
                     if len(parts) >= 2:
@@ -208,7 +215,7 @@ class SkillActivationSuite(TestSuite):
                         if before <= ts <= after:
                             skill_part = parts[1].strip()
                             if skill_part.startswith("skill="):
-                                activations.append(skill_part[len("skill="):])
+                                activations.append(skill_part[len("skill=") :])
         except OSError:
             pass
 
@@ -224,7 +231,7 @@ class SkillActivationSuite(TestSuite):
         # Parse log for recent activations
         activations = []
         try:
-            with open(SKILL_USAGE_LOG, "r", encoding="utf-8") as f:
+            with open(SKILL_USAGE_LOG, encoding="utf-8") as f:
                 for line in f:
                     parts = line.split(" | ")
                     if len(parts) >= 2:
@@ -334,11 +341,17 @@ class IDEFilteringSuite(TestSuite):
         prompt_stripped = prompt.strip()
 
         # IDE event patterns
-        if prompt_stripped.startswith(("<ide_", "<ide_opened_file", "<ide_selection", "<cursor>", "<file_")):
+        if prompt_stripped.startswith(
+            ("<ide_", "<ide_opened_file", "<ide_selection", "<cursor>", "<file_")
+        ):
             return True
 
         # XML heuristic (common in IDE events)
-        if prompt_stripped.startswith("<") and prompt_stripped.endswith(">") and "|" in prompt_stripped:
+        if (
+            prompt_stripped.startswith("<")
+            and prompt_stripped.endswith(">")
+            and "|" in prompt_stripped
+        ):
             return True
 
         # Slash commands
@@ -444,6 +457,7 @@ SUITE_CLASSES: dict[str, type[TestSuite]] = {
 
 # --- Log Parsing Utilities ---
 
+
 @lru_cache(maxsize=1)
 def load_test_prompts() -> dict:
     """Load test prompts from JSON file."""
@@ -451,7 +465,7 @@ def load_test_prompts() -> dict:
         return {"suites": {}}
 
     try:
-        with open(PROMPTS_FILE, "r", encoding="utf-8") as f:
+        with open(PROMPTS_FILE, encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
         return {"suites": {}}
@@ -472,6 +486,7 @@ def list_suites() -> None:
 
 
 # --- Report Formatters ---
+
 
 def format_suite_result(result: dict) -> str:
     """Format a single suite result."""
@@ -560,6 +575,7 @@ def format_summary(all_results: list[dict]) -> str:
 
 # --- Main ---
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Hook Evaluation Framework - Sandboxed A/B Testing",
@@ -578,11 +594,13 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
         """,
     )
     parser.add_argument(
-        "--suite", "-s",
+        "--suite",
+        "-s",
         help="Specific suite to run (default: all)",
     )
     parser.add_argument(
-        "--list-suites", "-l",
+        "--list-suites",
+        "-l",
         action="store_true",
         help="List available test suites",
     )
@@ -592,7 +610,8 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
         help="Output results as JSON",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Verbose output (show all test details)",
     )
@@ -602,7 +621,8 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
         help="Run live headless Claude Code sessions (skill-activation only)",
     )
     parser.add_argument(
-        "--filter", "-f",
+        "--filter",
+        "-f",
         help="Run only the test with this ID (e.g. sa-008)",
     )
 
@@ -655,7 +675,8 @@ Reference: GAP_P5_HOOK_OBSERVABILITY.md Phase 8
                 "total_tests": sum(r["total"] for r in all_results),
                 "total_passed": sum(r["passed"] for r in all_results),
                 "total_failed": sum(r["failed"] for r in all_results),
-                "overall_rate": sum(r["passed"] for r in all_results) / max(sum(r["total"] for r in all_results), 1),
+                "overall_rate": sum(r["passed"] for r in all_results)
+                / max(sum(r["total"] for r in all_results), 1),
             },
         }
         print(json.dumps(output, ensure_ascii=False, indent=2))

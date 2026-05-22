@@ -154,9 +154,7 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
 
         def _delete():
             assert self._db is not None
-            cursor = self._db.execute(
-                "DELETE FROM chunks WHERE source_path = ?", (source_path,)
-            )
+            cursor = self._db.execute("DELETE FROM chunks WHERE source_path = ?", (source_path,))
             self._db.commit()
             return cursor.rowcount
 
@@ -241,9 +239,7 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
         def _search():
             assert self._db is not None
             # FTS5 match query — escape special characters
-            fts_query = " ".join(
-                f'"{w}"' for w in query.split() if w.strip()
-            )
+            fts_query = " ".join(f'"{w}"' for w in query.split() if w.strip())
             if not fts_query:
                 return []
 
@@ -274,22 +270,26 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
                     raw_rank = abs(row[7]) if row[7] else 0.0
                     score = 1.0 / (1.0 + raw_rank)  # normalize to 0-1
                     tags = json.loads(row[5]) if row[5] else []
-                    results.append(SearchResultItem(
-                        unified_id=f"docs:docs-rag:chunk-{row[0]}",
-                        source=SourceServer.PDF_DOCS,
-                        memory_type=MemoryType.DOCUMENTATION,
-                        content=row[3],
-                        title=f"{row[1]}#{row[2]} — {row[4]}" if row[4] else f"{row[1]}#{row[2]}",
-                        raw_score=score,
-                        created_at=datetime.fromisoformat(row[6]) if row[6] else None,
-                        tags=tags,
-                        metadata={
-                            "source_path": row[1],
-                            "chunk_index": row[2],
-                            "section": row[4],
-                            "search_method": "fts",
-                        },
-                    ))
+                    results.append(
+                        SearchResultItem(
+                            unified_id=f"docs:docs-rag:chunk-{row[0]}",
+                            source=SourceServer.PDF_DOCS,
+                            memory_type=MemoryType.DOCUMENTATION,
+                            content=row[3],
+                            title=f"{row[1]}#{row[2]} — {row[4]}"
+                            if row[4]
+                            else f"{row[1]}#{row[2]}",
+                            raw_score=score,
+                            created_at=datetime.fromisoformat(row[6]) if row[6] else None,
+                            tags=tags,
+                            metadata={
+                                "source_path": row[1],
+                                "chunk_index": row[2],
+                                "section": row[4],
+                                "search_method": "fts",
+                            },
+                        )
+                    )
             except sqlite3.OperationalError as e:
                 logger.warning("FTS search failed: %s", e)
             return results
@@ -299,8 +299,7 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
     async def _vector_search(self, query: str, limit: int = 20) -> list[SearchResultItem]:
         """Vector similarity search using Qdrant (optional)."""
         try:
-            from ...vector_memory.server import _get_qdrant, _get_embedding
-            from qdrant_client.http import models as qmodels
+            from ...vector_memory.server import _get_embedding, _get_qdrant
 
             client = await asyncio.to_thread(_get_qdrant)
             vector = await _get_embedding(query)
@@ -316,20 +315,22 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
             for point in qresults.points:
                 payload = point.payload or {}
                 similarity = point.score or 0.0
-                results.append(SearchResultItem(
-                    unified_id=f"docs:docs-rag:vec-{point.id}",
-                    source=SourceServer.PDF_DOCS,
-                    memory_type=MemoryType.DOCUMENTATION,
-                    content=payload.get("content", ""),
-                    title=payload.get("title", ""),
-                    raw_score=similarity,
-                    tags=payload.get("tags", []),
-                    metadata={
-                        "source_path": payload.get("source_path", ""),
-                        "chunk_index": payload.get("chunk_index", 0),
-                        "search_method": "vector",
-                    },
-                ))
+                results.append(
+                    SearchResultItem(
+                        unified_id=f"docs:docs-rag:vec-{point.id}",
+                        source=SourceServer.PDF_DOCS,
+                        memory_type=MemoryType.DOCUMENTATION,
+                        content=payload.get("content", ""),
+                        title=payload.get("title", ""),
+                        raw_score=similarity,
+                        tags=payload.get("tags", []),
+                        metadata={
+                            "source_path": payload.get("source_path", ""),
+                            "chunk_index": payload.get("chunk_index", 0),
+                            "search_method": "vector",
+                        },
+                    )
+                )
             return results
 
         except Exception as e:
@@ -341,8 +342,9 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
     ) -> None:
         """Index chunks in Qdrant for vector search."""
         try:
-            from ...vector_memory.server import _get_qdrant, _get_embedding
             from qdrant_client.http import models as qmodels
+
+            from ...vector_memory.server import _get_embedding, _get_qdrant
 
             client = await asyncio.to_thread(_get_qdrant)
             points = []
@@ -352,17 +354,19 @@ class DocsRagSearchAdapter(BaseSearchAdapter):
                 import hashlib
 
                 numeric_id = int(hashlib.md5(point_id.encode()).hexdigest()[:16], 16)
-                points.append(qmodels.PointStruct(
-                    id=numeric_id,
-                    vector=vector,
-                    payload={
-                        "content": chunk_text,
-                        "source_path": source_path,
-                        "chunk_index": i,
-                        "title": metadata.get("section", ""),
-                        "tags": metadata.get("tags", []),
-                    },
-                ))
+                points.append(
+                    qmodels.PointStruct(
+                        id=numeric_id,
+                        vector=vector,
+                        payload={
+                            "content": chunk_text,
+                            "source_path": source_path,
+                            "chunk_index": i,
+                            "title": metadata.get("section", ""),
+                            "tags": metadata.get("tags", []),
+                        },
+                    )
+                )
 
             if points:
                 await asyncio.to_thread(

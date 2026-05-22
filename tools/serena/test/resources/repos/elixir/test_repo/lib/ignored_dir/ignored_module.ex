@@ -20,4 +20,4 @@ defmodule TestRepo.IgnoredDir.IgnoredModule do
   def process_ignored_user(user) do
     User.add_role(user, "ignored_role")
   end
-end 
+end

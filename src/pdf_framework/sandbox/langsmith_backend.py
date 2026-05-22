@@ -98,8 +98,11 @@ class LangSmithBackend(SandboxBackend):
         except CommandTimeoutError as e:  # type: ignore[misc]
             logger.warning("LangSmith timeout after %ss", timeout)
             return SandboxResult(
-                stdout="", stderr=str(e),
-                exit_code=124, duration_seconds=timeout, truncated=False,
+                stdout="",
+                stderr=str(e),
+                exit_code=124,
+                duration_seconds=timeout,
+                truncated=False,
             )
         except SandboxClientError:  # type: ignore[misc]
             logger.exception("LangSmith client error")
@@ -144,13 +147,17 @@ class LangSmithBackend(SandboxBackend):
     async def upload(self, local_path: Path, remote_path: str) -> None:
         await self._ensure_sandbox()
         await asyncio.to_thread(
-            self._sandbox.upload_file, str(local_path), remote_path,
+            self._sandbox.upload_file,
+            str(local_path),
+            remote_path,
         )
 
     async def download(self, remote_path: str, local_path: Path) -> None:
         await self._ensure_sandbox()
         await asyncio.to_thread(
-            self._sandbox.download_file, remote_path, str(local_path),
+            self._sandbox.download_file,
+            remote_path,
+            str(local_path),
         )
 
     async def close(self) -> None:

@@ -70,8 +70,11 @@ class E2BBackend(SandboxBackend):
     ) -> SandboxResult:
         if language != "python":
             return SandboxResult(
-                stdout="", stderr=f"E2B supports python only, got {language}",
-                exit_code=1, duration_seconds=0.0, truncated=False,
+                stdout="",
+                stderr=f"E2B supports python only, got {language}",
+                exit_code=1,
+                duration_seconds=0.0,
+                truncated=False,
             )
 
         async with self._lock:
@@ -84,12 +87,17 @@ class E2BBackend(SandboxBackend):
         t0 = time.monotonic()
         try:
             execution = await asyncio.to_thread(
-                self._sandbox.run_code, code, timeout=int(timeout),
+                self._sandbox.run_code,
+                code,
+                timeout=int(timeout),
             )
         except TimeoutError as e:
             return SandboxResult(
-                stdout="", stderr=str(e),
-                exit_code=124, duration_seconds=timeout, truncated=False,
+                stdout="",
+                stderr=str(e),
+                exit_code=124,
+                duration_seconds=timeout,
+                truncated=False,
             )
 
         duration = time.monotonic() - t0

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from .config import (
     DEFAULT_INDEX_FILES,
@@ -63,7 +63,8 @@ def iter_indexable_files(
         for dirpath, dirnames, filenames in os.walk(root_path):
             # Prune skipped dirs in-place to avoid descending.
             dirnames[:] = [
-                d for d in dirnames
+                d
+                for d in dirnames
                 if not _matches_skip(_posix_rel(repo_root, Path(dirpath) / d) + "/")
             ]
             for fname in filenames:
@@ -78,7 +79,9 @@ def iter_indexable_files(
 
 
 def _maybe_emit(
-    repo_root: Path, fp: Path, seen: set[Path],
+    repo_root: Path,
+    fp: Path,
+    seen: set[Path],
 ) -> Iterator[tuple[Path, str, str]]:
     try:
         fp_resolved = fp.resolve()

@@ -1,19 +1,18 @@
 """Tests for metrics collection module."""
 
-import pytest
 import time
 from datetime import datetime
 
 from .metrics import (
-    MetricType,
-    MetricUnit,
-    Metric,
-    MetricValue,
     Counter,
     Gauge,
     Histogram,
-    Timer,
+    Metric,
     MetricsCollector,
+    MetricType,
+    MetricUnit,
+    MetricValue,
+    Timer,
     get_metrics,
     reset_metrics,
 )
@@ -224,9 +223,9 @@ class TestHistogram:
         )
 
         histogram.observe(0.05)  # <= 0.1
-        histogram.observe(0.3)   # <= 0.5
-        histogram.observe(0.8)   # <= 1.0
-        histogram.observe(2.0)   # <= inf
+        histogram.observe(0.3)  # <= 0.5
+        histogram.observe(0.8)  # <= 1.0
+        histogram.observe(2.0)  # <= inf
 
         buckets = histogram.get_buckets()
         assert buckets[0.1] == 1

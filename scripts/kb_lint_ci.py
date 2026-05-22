@@ -23,6 +23,7 @@ Roadmap: closes encoding + Cyrillic-rename legs of `kb-lint` hook recovery —
 see commits `c46d49487` (install/--fix story) and the SKIP_PATTERNS update
 in `.claude/hooks/docs-change-enforcer.py` for the docs-enforcer side.
 """
+
 from __future__ import annotations
 
 import sys

@@ -19,7 +19,7 @@
                 font-size: 14px;
                 line-height: 22px;
             }
-            
+
             body {
                 padding-top: 1em;
             }
@@ -30,7 +30,7 @@
                 var expected = document.getElementById("expected").value;
                 var actual = document.getElementById("actual").value;
                 var diff = Diff.createTwoFilesPatch("expected", "actual", expected, actual);
-                var render =new Diff2HtmlUI(renderTo, diff, 
+                var render =new Diff2HtmlUI(renderTo, diff,
                     {
                         inputFormat: 'diff',
                         synchronisedScroll: true,
@@ -39,7 +39,7 @@
                         outputFormat: 'side-by-side',
                         renderNothingWhenEmpty: false,
                         drawFileList: false,
-                        showFiles: false, 
+                        showFiles: false,
                         highlight: false,
                         stickyFileHeaders: false
                     }
@@ -55,7 +55,7 @@
         <div class="hidden">
             <textarea id="actual">СравниваемыйТекст</textarea>
         </div>
-        
+
         <div id="container"></div>
     </body>
 </html>

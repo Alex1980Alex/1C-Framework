@@ -11,8 +11,8 @@ Timeout: 3s
 Adapted from 1C-Enterprise_Framework multi-pipeline-blocker.py (advisory mode).
 """
 
-import sys
 import os
+import sys
 
 # Core path resolution: find base/ + shared/ in user-level or project-level
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -51,27 +51,20 @@ class SearchOptimizer(BaseHook):
 
         # Check strategy parameter
         if "strategy" not in command:
-            suggestions.append(
-                'strategy="hybrid" (не указана, по умолчанию может быть suboptimal)'
-            )
+            suggestions.append('strategy="hybrid" (не указана, по умолчанию может быть suboptimal)')
 
         # Check rerank for /search/ask
         if "/search/ask" in command and "rerank" not in command:
-            suggestions.append(
-                "rerank=true (не указан, улучшает качество ответа)"
-            )
+            suggestions.append("rerank=true (не указан, улучшает качество ответа)")
 
         # Check k parameter
         if '"k"' not in command and "'k'" not in command and '"k":' not in command:
-            suggestions.append(
-                "k=10 (не указан, по умолчанию может вернуть мало результатов)"
-            )
+            suggestions.append("k=10 (не указан, по умолчанию может вернуть мало результатов)")
 
         if suggestions:
             msg = (
                 "[SEARCH-OPTIMIZER] Обнаружен вызов Search API.\n"
-                "Рекомендуемые параметры:\n"
-                + "\n".join(f"  - {s}" for s in suggestions)
+                "Рекомендуемые параметры:\n" + "\n".join(f"  - {s}" for s in suggestions)
             )
             return HookOutput().system_message(msg)
 

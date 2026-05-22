@@ -59,9 +59,7 @@ class LspSubprocess:
             self._state = LspState.FAILED
             self.breaker.record_failure()
             self._process = None
-            raise BackendError(
-                f"process spawn failed: {exc!r}", code="spawn_failed"
-            ) from exc
+            raise BackendError(f"process spawn failed: {exc!r}", code="spawn_failed") from exc
 
     def stop(self) -> None:
         """Terminate the process; idempotent and best-effort."""
@@ -84,14 +82,10 @@ class LspSubprocess:
             self._discard_process()
             self._state = LspState.FAILED
             if self.breaker.is_open():
-                raise BackendError(
-                    "circuit breaker opened after crash", code="breaker_open"
-                )
+                raise BackendError("circuit breaker opened after crash", code="breaker_open")
             self.start()
             if self._process is None:
-                raise BackendError(
-                    "process unavailable after restart", code="restart_failed"
-                )
+                raise BackendError("process unavailable after restart", code="restart_failed")
         try:
             result = self._process.send_request(method, params)
             self.breaker.record_success()
@@ -100,9 +94,7 @@ class LspSubprocess:
             self.breaker.record_failure()
             self._discard_process()
             self._state = LspState.FAILED
-            raise BackendError(
-                f"request failed: {exc!r}", code="request_failed"
-            ) from exc
+            raise BackendError(f"request failed: {exc!r}", code="request_failed") from exc
 
     def _discard_process(self) -> None:
         """Best-effort terminate + null out the current process handle."""
@@ -120,9 +112,7 @@ class LspSubprocess:
     @property
     def is_ready(self) -> bool:
         return (
-            self._state == LspState.READY
-            and self._process is not None
-            and self._process.is_alive()
+            self._state == LspState.READY and self._process is not None and self._process.is_alive()
         )
 
     def __enter__(self) -> LspSubprocess:

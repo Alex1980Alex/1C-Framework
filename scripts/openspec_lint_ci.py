@@ -3,7 +3,9 @@
 
 Используется в .github/workflows/openspec.yml и .pre-commit-config.yaml.
 """
+
 from __future__ import annotations
+
 import argparse
 import re
 import subprocess
@@ -30,8 +32,7 @@ class ChangeReport:
 def list_active_changes() -> list[Path]:
     if not CHANGES_ROOT.exists():
         return []
-    return [p for p in CHANGES_ROOT.iterdir()
-            if p.is_dir() and p.name != "archive"]
+    return [p for p in CHANGES_ROOT.iterdir() if p.is_dir() and p.name != "archive"]
 
 
 def check_change_structure(change_dir: Path) -> ChangeReport:
@@ -55,8 +56,9 @@ def check_change_structure(change_dir: Path) -> ChangeReport:
 
 def _git_run(args: list[str]) -> str:
     try:
-        out = subprocess.run(["git", "-c", "core.quotepath=false", *args],
-                             capture_output=True, text=True, check=True)
+        out = subprocess.run(
+            ["git", "-c", "core.quotepath=false", *args], capture_output=True, text=True, check=True
+        )
         return out.stdout
     except subprocess.CalledProcessError:
         return ""
@@ -84,8 +86,7 @@ def _change_mentions(change_dir: Path, jira: str) -> bool:
 
 def coverage_check(base: str, head: str) -> tuple[list[str], list[str]]:
     files = changed_files(base, head)
-    if not any("ИБTransportManagementDevelop/Конфигурация/src/" in f
-               for f in files):
+    if not any("ИБTransportManagementDevelop/Конфигурация/src/" in f for f in files):
         return [], []
     jiras = {j.upper() for j in JIRA_RE.findall(commit_messages(base, head))}
     if not jiras:
@@ -120,8 +121,7 @@ def render_report(structural, missing, ok_list) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--mode", choices=("structural", "coverage", "all"),
-                    default="structural")
+    ap.add_argument("--mode", choices=("structural", "coverage", "all"), default="structural")
     ap.add_argument("--base")
     ap.add_argument("--head")
     ap.add_argument("--fail-on-error", action="store_true")

@@ -1,5 +1,6 @@
 """Markdown + JSON writer for ReportSpec, with _latest_<subject>.md copy and
 append-only ``data/reports/index.jsonl`` registry."""
+
 from __future__ import annotations
 
 import json

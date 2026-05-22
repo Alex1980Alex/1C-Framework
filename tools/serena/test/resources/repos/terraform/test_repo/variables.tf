@@ -10,7 +10,7 @@ variable "instance_type" {
   description = "EC2 instance type"
   type        = string
   default     = "t3.micro"
-  
+
   validation {
     condition = contains([
       "t3.micro", "t3.small", "t3.medium",
@@ -24,7 +24,7 @@ variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
   default     = "dev"
-  
+
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
     error_message = "Environment must be dev, staging, or prod."
@@ -35,7 +35,7 @@ variable "project_name" {
   description = "Name of the project"
   type        = string
   default     = "terraform-test"
-  
+
   validation {
     condition     = can(regex("^[a-z0-9-]+$", var.project_name))
     error_message = "Project name must contain only lowercase letters, numbers, and hyphens."

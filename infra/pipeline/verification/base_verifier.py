@@ -4,12 +4,12 @@ Base Verifier for Development Pipeline.
 Provides common verification logic for all agents.
 """
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-import re
+from typing import Any
 
 from constants import (
     AgentRole,
@@ -23,10 +23,10 @@ from models import Artifact
 class CheckType(str, Enum):
     """Types of verification checks."""
 
-    STRUCTURE = "structure"      # Required sections present
+    STRUCTURE = "structure"  # Required sections present
     COMPLETENESS = "completeness"  # All requirements addressed
-    CONSISTENCY = "consistency"   # No contradictions
-    QUALITY = "quality"          # Code/design quality
+    CONSISTENCY = "consistency"  # No contradictions
+    QUALITY = "quality"  # Code/design quality
     TRACEABILITY = "traceability"  # Requirements traced to implementation
 
 
@@ -37,10 +37,10 @@ class CheckResult:
     check_type: CheckType
     passed: bool
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     severity: str = "error"  # error, warning, info
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "check_type": self.check_type.value,
             "passed": self.passed,
@@ -60,7 +60,7 @@ class RequirementCheck:
     evidence: str = ""
     notes: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "requirement_id": self.requirement_id,
             "description": self.description,
@@ -77,11 +77,11 @@ class VerificationResult:
     agent_role: AgentRole
     artifact_type: ArtifactType
     status: VerificationStatus
-    checks: List[CheckResult] = field(default_factory=list)
-    requirements: List[RequirementCheck] = field(default_factory=list)
+    checks: list[CheckResult] = field(default_factory=list)
+    requirements: list[RequirementCheck] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     summary: str = ""
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
     @property
     def passed_checks(self) -> int:
@@ -113,21 +113,25 @@ class VerificationResult:
 
         # Summary
         if self.summary:
-            lines.extend([
-                "## Резюме",
-                "",
-                self.summary,
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Резюме",
+                    "",
+                    self.summary,
+                    "",
+                ]
+            )
 
         # Checks table
         if self.checks:
-            lines.extend([
-                "## Проверки",
-                "",
-                "| Тип | Статус | Сообщение |",
-                "|-----|--------|-----------|",
-            ])
+            lines.extend(
+                [
+                    "## Проверки",
+                    "",
+                    "| Тип | Статус | Сообщение |",
+                    "|-----|--------|-----------|",
+                ]
+            )
             for check in self.checks:
                 status_icon = "✅" if check.passed else "❌"
                 lines.append(f"| {check.check_type.value} | {status_icon} | {check.message} |")
@@ -135,12 +139,14 @@ class VerificationResult:
 
         # Requirements table
         if self.requirements:
-            lines.extend([
-                "## Требования",
-                "",
-                "| ID | Описание | Статус | Примечания |",
-                "|----|----------|--------|------------|",
-            ])
+            lines.extend(
+                [
+                    "## Требования",
+                    "",
+                    "| ID | Описание | Статус | Примечания |",
+                    "|----|----------|--------|------------|",
+                ]
+            )
             for req in self.requirements:
                 lines.append(
                     f"| {req.requirement_id} | {req.description} | {req.status.value} | {req.notes} |"
@@ -148,27 +154,31 @@ class VerificationResult:
             lines.append("")
 
         # Statistics
-        lines.extend([
-            "## Статистика",
-            "",
-            f"- Проверок пройдено: {self.passed_checks}/{len(self.checks)}",
-            f"- Требований выполнено: {self.passed_requirements}/{len(self.requirements)}",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Статистика",
+                "",
+                f"- Проверок пройдено: {self.passed_checks}/{len(self.checks)}",
+                f"- Требований выполнено: {self.passed_requirements}/{len(self.requirements)}",
+                "",
+            ]
+        )
 
         # Recommendations
         if self.recommendations:
-            lines.extend([
-                "## Рекомендации",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Рекомендации",
+                    "",
+                ]
+            )
             for rec in self.recommendations:
                 lines.append(f"- {rec}")
             lines.append("")
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "agent_role": self.agent_role.value,
             "artifact_type": self.artifact_type.value,
@@ -195,7 +205,9 @@ class BaseVerifier(ABC):
         self.artifact_type = artifact_type
 
     @abstractmethod
-    def verify(self, artifact: Artifact, context: Optional[Dict[str, Any]] = None) -> VerificationResult:
+    def verify(
+        self, artifact: Artifact, context: dict[str, Any] | None = None
+    ) -> VerificationResult:
         """
         Verify an artifact.
 
@@ -228,44 +240,50 @@ class BaseVerifier(ABC):
             severity="info",
         )
 
-    def extract_requirements(self, spec_content: str) -> List[Dict[str, str]]:
+    def extract_requirements(self, spec_content: str) -> list[dict[str, str]]:
         """Extract requirements from spec.md content."""
         requirements = []
 
         # Pattern for REQ-N format
-        req_pattern = r"(?:REQ-\d+|Требование\s+\d+)[:\s]+(.+?)(?=(?:REQ-\d+|Требование\s+\d+|##|$))"
+        req_pattern = (
+            r"(?:REQ-\d+|Требование\s+\d+)[:\s]+(.+?)(?=(?:REQ-\d+|Требование\s+\d+|##|$))"
+        )
         matches = re.findall(req_pattern, spec_content, re.IGNORECASE | re.DOTALL)
 
         for i, match in enumerate(matches, 1):
-            requirements.append({
-                "id": f"REQ-{i}",
-                "description": match.strip()[:100],
-            })
+            requirements.append(
+                {
+                    "id": f"REQ-{i}",
+                    "description": match.strip()[:100],
+                }
+            )
 
         # Look for "## Требования" section - use line-by-line approach to capture until next H1
-        lines = spec_content.split('\n')
+        lines = spec_content.split("\n")
         in_req = False
         req_lines = []
-        
+
         for line in lines:
-            if re.match(r'^##\s*Требования', line, re.IGNORECASE):
+            if re.match(r"^##\s*Требования", line, re.IGNORECASE):
                 in_req = True
                 req_lines.append(line)
             elif in_req:
-                if re.match(r'^##\s+', line):  # Next H1 (starts with ## followed by non-#)
+                if re.match(r"^##\s+", line):  # Next H1 (starts with ## followed by non-#)
                     break
                 req_lines.append(line)
 
         if req_lines:
-            req_section_text = '\n'.join(req_lines)
+            req_section_text = "\n".join(req_lines)
             # Find all bullet points in the entire requirements section (including subsections)
             bullets = re.findall(r"[-*]\s+(.+)", req_section_text)
             for bullet in bullets:
                 bullet = bullet.strip()
-                
+
                 # Try to extract requirement ID from formats like "FR-001:", "NFR-001:", "REQ-001:"
-                id_match = re.match(r"^(FR-\d+|NFR-\d+|REQ-\d+|Требование\s+\d+):\s*(.+)$", bullet, re.IGNORECASE)
-                
+                id_match = re.match(
+                    r"^(FR-\d+|NFR-\d+|REQ-\d+|Требование\s+\d+):\s*(.+)$", bullet, re.IGNORECASE
+                )
+
                 if id_match:
                     # Has explicit ID - use it
                     req_id = id_match.group(1).replace("Требование ", "Требование-")
@@ -274,15 +292,17 @@ class BaseVerifier(ABC):
                     # No explicit ID - generate sequential ID
                     req_id = f"REQ-{len(requirements) + 1}"
                     desc = bullet[:100]
-                
-                requirements.append({
-                    "id": req_id,
-                    "description": desc,
-                })
+
+                requirements.append(
+                    {
+                        "id": req_id,
+                        "description": desc,
+                    }
+                )
 
         return requirements
 
-    def extract_acceptance_criteria(self, spec_content: str) -> List[Dict[str, str]]:
+    def extract_acceptance_criteria(self, spec_content: str) -> list[dict[str, str]]:
         """Extract acceptance criteria from spec.md content."""
         criteria = []
 
@@ -292,25 +312,27 @@ class BaseVerifier(ABC):
         matches = re.findall(ac_pattern, spec_content, re.IGNORECASE | re.DOTALL)
 
         for i, match in enumerate(matches, 1):
-            criteria.append({
-                "id": f"AC-{i}",
-                "description": match.strip()[:100],
-            })
+            criteria.append(
+                {
+                    "id": f"AC-{i}",
+                    "description": match.strip()[:100],
+                }
+            )
 
         # Also look for bullet points under "Критерии приёмки" section
         ac_section = re.search(
-            r"##\s*Критерии приёмки\s*\n(.*?)(?=##|$)",
-            spec_content,
-            re.IGNORECASE | re.DOTALL
+            r"##\s*Критерии приёмки\s*\n(.*?)(?=##|$)", spec_content, re.IGNORECASE | re.DOTALL
         )
 
         if ac_section:
             bullets = re.findall(r"[-*]\s+(.+)", ac_section.group(1))
             for i, bullet in enumerate(bullets, len(criteria) + 1):
-                criteria.append({
-                    "id": f"AC-{i}",
-                    "description": bullet.strip()[:100],
-                })
+                criteria.append(
+                    {
+                        "id": f"AC-{i}",
+                        "description": bullet.strip()[:100],
+                    }
+                )
 
         return criteria
 
@@ -340,8 +362,7 @@ class BaseVerifier(ABC):
             # Look for requirement ID or keywords from description
             keywords = item["description"].split()[:3]  # First 3 words
             found = any(
-                kw.lower() in target_artifact.content.lower()
-                for kw in keywords if len(kw) > 3
+                kw.lower() in target_artifact.content.lower() for kw in keywords if len(kw) > 3
             )
 
             if not found and item["id"] not in target_artifact.content:

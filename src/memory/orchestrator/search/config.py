@@ -14,16 +14,16 @@ from enum import Enum
 class FusionMethod(str, Enum):
     """Fusion methods for combining search results."""
 
-    RRF = "rrf"                   # Reciprocal Rank Fusion
+    RRF = "rrf"  # Reciprocal Rank Fusion
     WEIGHTED_SUM = "weighted_sum"  # Weighted sum of normalized scores
 
 
 class VectorType(str, Enum):
     """Search type."""
 
-    SPARSE = "sparse"    # BM25 only
-    DENSE = "dense"      # Embedding only (external)
-    HYBRID = "hybrid"    # BM25 + embeddings
+    SPARSE = "sparse"  # BM25 only
+    DENSE = "dense"  # Embedding only (external)
+    HYBRID = "hybrid"  # BM25 + embeddings
 
 
 @dataclass
@@ -34,13 +34,33 @@ class SparseConfig:
     b: float = 0.75
     min_token_length: int = 2
 
-    bsl_stopwords: list[str] = field(default_factory=lambda: [
-        "Если", "Тогда", "Иначе", "КонецЕсли",
-        "Для", "Каждого", "Из", "Цикл", "КонецЦикла",
-        "Пока", "Попытка", "Исключение", "КонецПопытки",
-        "Процедура", "КонецПроцедуры", "Функция", "КонецФункции",
-        "Возврат", "Перем", "Новый", "Неопределено", "Истина", "Ложь",
-    ])
+    bsl_stopwords: list[str] = field(
+        default_factory=lambda: [
+            "Если",
+            "Тогда",
+            "Иначе",
+            "КонецЕсли",
+            "Для",
+            "Каждого",
+            "Из",
+            "Цикл",
+            "КонецЦикла",
+            "Пока",
+            "Попытка",
+            "Исключение",
+            "КонецПопытки",
+            "Процедура",
+            "КонецПроцедуры",
+            "Функция",
+            "КонецФункции",
+            "Возврат",
+            "Перем",
+            "Новый",
+            "Неопределено",
+            "Истина",
+            "Ложь",
+        ]
+    )
 
 
 @dataclass
@@ -66,26 +86,36 @@ class BSLScorerConfig:
     export_boost: float = 1.3
     common_module_boost: float = 1.2
 
-    prefix_patterns: list[str] = field(default_factory=lambda: [
-        "гкс_", "упп_", "бсп_", "зуп_", "ут_",
-    ])
+    prefix_patterns: list[str] = field(
+        default_factory=lambda: [
+            "гкс_",
+            "упп_",
+            "бсп_",
+            "зуп_",
+            "ут_",
+        ]
+    )
 
-    object_type_weights: dict[str, float] = field(default_factory=lambda: {
-        "CommonModule": 1.5,
-        "DataProcessor": 1.3,
-        "Report": 1.2,
-        "Document": 1.1,
-        "Catalog": 1.0,
-        "InformationRegister": 1.0,
-        "AccumulationRegister": 0.9,
-    })
+    object_type_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "CommonModule": 1.5,
+            "DataProcessor": 1.3,
+            "Report": 1.2,
+            "Document": 1.1,
+            "Catalog": 1.0,
+            "InformationRegister": 1.0,
+            "AccumulationRegister": 0.9,
+        }
+    )
 
-    context_weights: dict[str, float] = field(default_factory=lambda: {
-        "query": 1.5,
-        "transaction": 1.4,
-        "form": 1.2,
-        "background": 1.1,
-    })
+    context_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "query": 1.5,
+            "transaction": 1.4,
+            "form": 1.2,
+            "background": 1.1,
+        }
+    )
 
 
 @dataclass

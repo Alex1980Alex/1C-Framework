@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate benchmark tasks JSON for BSL rename refactoring."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,10 @@ _RE_NEW = r"^\+\s*(?:Процедура|Функция|Procedure|Function|Пер
 
 def _git(*args: str) -> str:
     result = subprocess.run(
-        ["git", *args], cwd=str(REPO_ROOT), capture_output=True, text=True,
+        ["git", *args],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
     )
     return result.stdout
 
@@ -66,7 +70,18 @@ def _build_curated_tasks() -> list[dict[str, Any]]:
     cat1 = [
         ("T01", "СписокРегионов", "РегionsСписок", "adr", 54, 6, "97de8a6", "e6643f2", 1, 1),
         ("T02", "РезультатЗапроса", "ЗапросРезультат", "adr", 208, 6, "97de8a6", "e6643f2", 1, 1),
-        ("T03", "НаименованияРегионов", "ИменаРегионов", "adr_s", 223, 6, "97de8a6", "e6643f2", 1, 1),
+        (
+            "T03",
+            "НаименованияРегионов",
+            "ИменаРегионов",
+            "adr_s",
+            223,
+            6,
+            "97de8a6",
+            "e6643f2",
+            1,
+            1,
+        ),
         ("T04", "Параметры", "Парам", "adr_k", 17, 18, "97de8a6", "e6643f2", 1, 1),
     ]
     for tid, sym, new, fkey, fl, fc, sha, par, efa, ee in cat1:
@@ -74,21 +89,39 @@ def _build_curated_tasks() -> list[dict[str, Any]]:
         full = BSL_SRC / rel
         pos = find_symbol(full, sym)
         line, col = pos if pos else (fl, fc)
-        tasks.append({
-            "id": tid, "category": "CAT-1-local-variable",
-            "commit_sha": sha, "parent_sha": par,
-            "file_uri": _file_uri(rel),
-            "line": line, "character": col,
-            "old_name": sym, "new_name": new,
-            "expected_files_affected": efa, "expected_edits": ee,
-            "expected_files": [_file_uri(rel)],
-            "notes": f"Local variable: {sym}.",
-        })
+        tasks.append(
+            {
+                "id": tid,
+                "category": "CAT-1-local-variable",
+                "commit_sha": sha,
+                "parent_sha": par,
+                "file_uri": _file_uri(rel),
+                "line": line,
+                "character": col,
+                "old_name": sym,
+                "new_name": new,
+                "expected_files_affected": efa,
+                "expected_edits": ee,
+                "expected_files": [_file_uri(rel)],
+                "notes": f"Local variable: {sym}.",
+            }
+        )
 
     cat2 = [
         ("T05", "Выборка", "РезультатВыборки", "adr", 177, 10, "e09730e", "97de8a6", 1, 1),
         ("T06", "ПеревестиТекст", "ВыполнитьПеревод", "gp", 11, 9, "7e2b3c2", "b40eb80", 1, 2),
-        ("T07", "МаксимальныйРазмерПорции", "ПредельныйОбъёмПорции", "gp", 66, 9, "7e2b3c2", "b40eb80", 1, 1),
+        (
+            "T07",
+            "МаксимальныйРазмерПорции",
+            "ПредельныйОбъёмПорции",
+            "gp",
+            66,
+            9,
+            "7e2b3c2",
+            "b40eb80",
+            1,
+            1,
+        ),
         ("T08", "ДоступныеЯзыки", "ПоддерживаемыеЯзыки", "gp", 72, 9, "7e2b3c2", "b40eb80", 1, 1),
     ]
     for tid, sym, new, fkey, fl, fc, sha, par, efa, ee in cat2:
@@ -96,26 +129,77 @@ def _build_curated_tasks() -> list[dict[str, Any]]:
         full = BSL_SRC / rel
         pos = find_symbol(full, sym)
         line, col = pos if pos else (fl, fc)
-        tasks.append({
-            "id": tid, "category": "CAT-2-module-local-proc",
-            "commit_sha": sha, "parent_sha": par,
-            "file_uri": _file_uri(rel),
-            "line": line, "character": col,
-            "old_name": sym, "new_name": new,
-            "expected_files_affected": efa, "expected_edits": ee,
-            "expected_files": [_file_uri(rel)],
-            "notes": f"Module-local: {sym}.",
-        })
+        tasks.append(
+            {
+                "id": tid,
+                "category": "CAT-2-module-local-proc",
+                "commit_sha": sha,
+                "parent_sha": par,
+                "file_uri": _file_uri(rel),
+                "line": line,
+                "character": col,
+                "old_name": sym,
+                "new_name": new,
+                "expected_files_affected": efa,
+                "expected_edits": ee,
+                "expected_files": [_file_uri(rel)],
+                "notes": f"Module-local: {sym}.",
+            }
+        )
 
     cat3_data = [
-        ("T09", "СписокРегионов", "ПереченьРегионов", "adr_p", 1, 9, "732cb0b", "478049a", 3, 4,
-         ["adr_p", "adr", "adr_s"]),
-        ("T10", "ИсточникДанныхАдресногоКлассификатораВебСервис", "ЭтоВебСервисИсточник",
-         "adr_p", 1, 9, "732cb0b", "478049a", 2, 3, ["adr_p", "adr"]),
-        ("T11", "ПеревестиТексты", "ПеревестиМассивТекстов", "gp", 21, 9,
-         "478049a", "7e2b3c2", 2, 2, ["gp", "gp_c"]),
-        ("T12", "НастройкиАвторизации", "ПараметрыАвторизации", "gp", 137, 9,
-         "478049a", "7e2b3c2", 2, 2, ["gp", "gp_p"]),
+        (
+            "T09",
+            "СписокРегионов",
+            "ПереченьРегионов",
+            "adr_p",
+            1,
+            9,
+            "732cb0b",
+            "478049a",
+            3,
+            4,
+            ["adr_p", "adr", "adr_s"],
+        ),
+        (
+            "T10",
+            "ИсточникДанныхАдресногоКлассификатораВебСервис",
+            "ЭтоВебСервисИсточник",
+            "adr_p",
+            1,
+            9,
+            "732cb0b",
+            "478049a",
+            2,
+            3,
+            ["adr_p", "adr"],
+        ),
+        (
+            "T11",
+            "ПеревестиТексты",
+            "ПеревестиМассивТекстов",
+            "gp",
+            21,
+            9,
+            "478049a",
+            "7e2b3c2",
+            2,
+            2,
+            ["gp", "gp_c"],
+        ),
+        (
+            "T12",
+            "НастройкиАвторизации",
+            "ПараметрыАвторизации",
+            "gp",
+            137,
+            9,
+            "478049a",
+            "7e2b3c2",
+            2,
+            2,
+            ["gp", "gp_p"],
+        ),
     ]
     for tid, sym, new, fkey, fl, fc, sha, par, efa, ee, efkeys in cat3_data:
         rel = paths[fkey]
@@ -123,20 +207,45 @@ def _build_curated_tasks() -> list[dict[str, Any]]:
         pos = find_symbol(full, sym)
         line, col = pos if pos else (fl, fc)
         expected = [_file_uri(paths[k]) for k in efkeys]
-        tasks.append({
-            "id": tid, "category": "CAT-3-cross-file-export",
-            "commit_sha": sha, "parent_sha": par,
-            "file_uri": _file_uri(rel),
-            "line": line, "character": col,
-            "old_name": sym, "new_name": new,
-            "expected_files_affected": efa, "expected_edits": ee,
-            "expected_files": expected,
-            "notes": f"Cross-file export: {sym}.",
-        })
+        tasks.append(
+            {
+                "id": tid,
+                "category": "CAT-3-cross-file-export",
+                "commit_sha": sha,
+                "parent_sha": par,
+                "file_uri": _file_uri(rel),
+                "line": line,
+                "character": col,
+                "old_name": sym,
+                "new_name": new,
+                "expected_files_affected": efa,
+                "expected_edits": ee,
+                "expected_files": expected,
+                "notes": f"Cross-file export: {sym}.",
+            }
+        )
 
     cat4_data = [
-        ("T13", "ПриСозданииНаСервере", "ПриИнициализацииНаСервере", "f1", 12, 11, "40e7357", "0454f9e"),
-        ("T14", "ПриСозданииНаСервере", "ПриФормированииНаСервере", "f2", 12, 11, "40e7357", "0454f9e"),
+        (
+            "T13",
+            "ПриСозданииНаСервере",
+            "ПриИнициализацииНаСервере",
+            "f1",
+            12,
+            11,
+            "40e7357",
+            "0454f9e",
+        ),
+        (
+            "T14",
+            "ПриСозданииНаСервере",
+            "ПриФормированииНаСервере",
+            "f2",
+            12,
+            11,
+            "40e7357",
+            "0454f9e",
+        ),
         ("T15", "ПриОткрытии", "ПослеЗагрузки", "f1", 27, 11, "40e7357", "0454f9e"),
         ("T16", "ПриОткрытии", "НаСтарте", "f3", 26, 11, "649b105", "f9a701e"),
     ]
@@ -146,16 +255,23 @@ def _build_curated_tasks() -> list[dict[str, Any]]:
         pos = find_symbol(full, sym)
         line, col = pos if pos else (fl, fc)
         xml_rel = _form_xml_path(rel)
-        tasks.append({
-            "id": tid, "category": "CAT-4-form-handler",
-            "commit_sha": sha, "parent_sha": par,
-            "file_uri": _file_uri(rel),
-            "line": line, "character": col,
-            "old_name": sym, "new_name": new,
-            "expected_files_affected": 2, "expected_edits": 2,
-            "expected_files": [_file_uri(rel), _file_uri(xml_rel)],
-            "notes": f"Form handler: {sym}.",
-        })
+        tasks.append(
+            {
+                "id": tid,
+                "category": "CAT-4-form-handler",
+                "commit_sha": sha,
+                "parent_sha": par,
+                "file_uri": _file_uri(rel),
+                "line": line,
+                "character": col,
+                "old_name": sym,
+                "new_name": new,
+                "expected_files_affected": 2,
+                "expected_edits": 2,
+                "expected_files": [_file_uri(rel), _file_uri(xml_rel)],
+                "notes": f"Form handler: {sym}.",
+            }
+        )
 
     cat5 = [
         ("T17", "Выполнить", "Исполнить", "adm", 1060, 40, "5f520bb", "5eb22fd"),
@@ -168,16 +284,23 @@ def _build_curated_tasks() -> list[dict[str, Any]]:
         full = BSL_SRC / rel
         pos = find_symbol(full, sym)
         line, col = pos if pos else (fl, fc)
-        tasks.append({
-            "id": tid, "category": "CAT-5-edge-case",
-            "commit_sha": sha, "parent_sha": par,
-            "file_uri": _file_uri(rel),
-            "line": line, "character": col,
-            "old_name": sym, "new_name": new,
-            "expected_files_affected": 0, "expected_edits": 0,
-            "expected_files": [],
-            "notes": f"Edge case: {sym}.",
-        })
+        tasks.append(
+            {
+                "id": tid,
+                "category": "CAT-5-edge-case",
+                "commit_sha": sha,
+                "parent_sha": par,
+                "file_uri": _file_uri(rel),
+                "line": line,
+                "character": col,
+                "old_name": sym,
+                "new_name": new,
+                "expected_files_affected": 0,
+                "expected_edits": 0,
+                "expected_files": [],
+                "notes": f"Edge case: {sym}.",
+            }
+        )
 
     return tasks
 
@@ -224,16 +347,23 @@ def _build_auto_tasks(limit: int = 40) -> list[dict[str, Any]]:
         if current_file and old_names and new_names:
             for old, new in zip(old_names, new_names):
                 task_id += 1
-                tasks.append({
-                    "id": f"A{task_id:03d}", "category": "auto-detected",
-                    "commit_sha": sha[:7], "parent_sha": parent[:7],
-                    "file_uri": current_file,
-                    "line": 0, "character": 0,
-                    "old_name": old, "new_name": new,
-                    "expected_files_affected": -1, "expected_edits": -1,
-                    "expected_files": [],
-                    "notes": f"Auto: {old} -> {new}.",
-                })
+                tasks.append(
+                    {
+                        "id": f"A{task_id:03d}",
+                        "category": "auto-detected",
+                        "commit_sha": sha[:7],
+                        "parent_sha": parent[:7],
+                        "file_uri": current_file,
+                        "line": 0,
+                        "character": 0,
+                        "old_name": old,
+                        "new_name": new,
+                        "expected_files_affected": -1,
+                        "expected_edits": -1,
+                        "expected_files": [],
+                        "notes": f"Auto: {old} -> {new}.",
+                    }
+                )
 
     return tasks
 

@@ -1,9 +1,11 @@
 """Test more servers including ast-grep-mcp"""
-import subprocess
+
 import json
-import time
+import subprocess
 import threading
+import time
 from pathlib import Path
+
 
 def main():
     python_exe = Path(__file__).parent / ".venv" / "Scripts" / "python.exe"
@@ -17,7 +19,7 @@ def main():
         stderr=subprocess.PIPE,
         cwd=str(Path(__file__).parent),
         bufsize=0,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
     )
 
     time.sleep(2)
@@ -25,10 +27,11 @@ def main():
     def send(method, params=None, req_id=1, timeout=60):
         request = {"jsonrpc": "2.0", "id": req_id, "method": method, "params": params or {}}
         msg = json.dumps(request) + "\n"
-        proc.stdin.write(msg.encode('utf-8'))
+        proc.stdin.write(msg.encode("utf-8"))
         proc.stdin.flush()
 
         response_line = [None]
+
         def read():
             try:
                 response_line[0] = proc.stdout.readline()
@@ -40,37 +43,44 @@ def main():
         t.join(timeout=timeout)
 
         if response_line[0]:
-            decoded = response_line[0].decode('utf-8', errors='ignore').strip()
+            decoded = response_line[0].decode("utf-8", errors="ignore").strip()
             return json.loads(decoded) if decoded else None
         return None
 
     # Initialize
-    resp = send("initialize", {
-        "protocolVersion": "2024-11-05",
-        "capabilities": {},
-        "clientInfo": {"name": "test", "version": "1.0"}
-    }, 1)
+    resp = send(
+        "initialize",
+        {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "test", "version": "1.0"},
+        },
+        1,
+    )
     print(f"Initialize: {'OK' if resp and 'result' in resp else 'FAIL'}")
 
     # More tests
     tests = [
         # AST-grep (critical 1C tool)
-        ("ast-grep-mcp", "/1c-development/ast-grep-mcp/ast_grep", {
-            "pattern": "Процедура $NAME",
-            "language": "bsl",
-            "path": "D:/1C-Enterprise_Framework/src"
-        }, 90),
-        
+        (
+            "ast-grep-mcp",
+            "/1c-development/ast-grep-mcp/ast_grep",
+            {
+                "pattern": "Процедура $NAME",
+                "language": "bsl",
+                "path": "D:/1C-Enterprise_Framework/src",
+            },
+            90,
+        ),
         # Sequential thinking
-        ("sequential-thinking", "/reasoning/sequential-thinking/sequentialThinking", {
-            "thought": "Test",
-            "nextThoughtNeeded": False
-        }, 60),
-        
+        (
+            "sequential-thinking",
+            "/reasoning/sequential-thinking/sequentialThinking",
+            {"thought": "Test", "nextThoughtNeeded": False},
+            60,
+        ),
         # Brave search
-        ("brave-search", "/web/brave/brave_web_search", {
-            "query": "test"
-        }, 60),
+        ("brave-search", "/web/brave/brave_web_search", {"query": "test"}, 60),
     ]
 
     results = []
@@ -82,13 +92,12 @@ def main():
         print(f"Path: {tool_path}")
         print(f"{'='*60}")
 
-        resp = send("tools/call", {
-            "name": "execute_tool",
-            "arguments": {
-                "tool_path": tool_path,
-                "arguments": args
-            }
-        }, req_id, timeout=timeout)
+        resp = send(
+            "tools/call",
+            {"name": "execute_tool", "arguments": {"tool_path": tool_path, "arguments": args}},
+            req_id,
+            timeout=timeout,
+        )
         req_id += 1
 
         status = "UNKNOWN"
@@ -118,7 +127,7 @@ def main():
         else:
             status = "TIMEOUT"
 
-        safe_detail = ''.join(c if ord(c) < 128 else '?' for c in detail)
+        safe_detail = "".join(c if ord(c) < 128 else "?" for c in detail)
         print(f"Status: {status}")
         if safe_detail:
             print(f"Detail: {safe_detail}...")
@@ -146,6 +155,7 @@ def main():
         proc.wait(timeout=5)
     except:
         proc.kill()
+
 
 if __name__ == "__main__":
     main()

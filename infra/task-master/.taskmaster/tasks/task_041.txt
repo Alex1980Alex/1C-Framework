@@ -370,4 +370,3 @@ Include unit, integration, and regression tests; validate accessibility and perf
 1. Document integration with existing commands (analyze-complexity, generate, etc.)
 2. Provide examples showing how diagrams complement other Task Master features
 </info added on 2025-05-23T21:08:36.329Z>
-

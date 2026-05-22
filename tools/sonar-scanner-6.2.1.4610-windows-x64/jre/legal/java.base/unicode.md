@@ -1,5 +1,5 @@
 ## The Unicode Standard, Unicode Character Database, Version 13.0.0
- 
+
 ### Unicode Character Database
 ```
 
@@ -51,4 +51,3 @@ use or other dealings in these Data Files or Software without prior
 written authorization of the copyright holder.
 
 ```
-

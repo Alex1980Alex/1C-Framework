@@ -105,7 +105,9 @@ async def grade_documents(
         if is_dspy_available():
             try:
                 dspy_result = await async_predict(
-                    GraderSignature, question=question, document=content_preview,
+                    GraderSignature,
+                    question=question,
+                    document=content_preview,
                 )
                 score = dspy_result.get("relevance_score", "").lower()
                 if score in ("relevant", "partial", "irrelevant"):

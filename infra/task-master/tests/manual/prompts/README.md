@@ -14,7 +14,7 @@ node prompt-test.js
 
 **Main Menu Options:**
 1. **Test specific prompt template** - Choose individual templates and variants
-2. **Run all tests** - Execute the full test suite 
+2. **Run all tests** - Execute the full test suite
 3. **Toggle full prompt display** - Switch between preview and full prompt output (default: ON)
 4. **Generate HTML report** - Create a professional HTML report and open in browser
 5. **Exit** - Close the application
@@ -49,7 +49,7 @@ Generates a professional HTML report with all test results and full prompt conte
 - **Separate error condition section** - Tests for missing parameters, invalid variants, nonexistent templates
 - **Alphabetically sorted** - Templates and variants are sorted for predictable ordering
 - **Space-efficient layout** - Optimized for developer review with minimal vertical space
-- **Two-section layout**: 
+- **Two-section layout**:
   1. **Prompt Templates** - Real template variants testing
   2. **Error Condition Tests** - Error handling validation (empty-prompt, missing-parameters, invalid-variant, etc.)
   3. **Detailed Content** - Full system and user prompts below
@@ -82,7 +82,7 @@ The comprehensive test suite covers:
 ### Templates with Research Conditional Content
 These templates have `useResearch` or `research` parameters that modify prompt content:
 - **add-task** (default, research variants)
-- **analyze-complexity** (default, research variants)  
+- **analyze-complexity** (default, research variants)
 - **parse-prd** (default, research variants)
 - **update-subtask** (default, research variants)
 - **update-task** (default, append, research variants)
@@ -123,7 +123,7 @@ The test suite now includes specific validation for the new `gt` (greater than) 
 
 **Helper Function Tests:**
 - `conditional-zero-tasks`: Validates `numTasks = 0` produces "an appropriate number of" text
-- `conditional-positive-tasks`: Validates `numTasks = 5` produces "approximately 5" text  
+- `conditional-positive-tasks`: Validates `numTasks = 5` produces "approximately 5" text
 - `conditional-zero-subtasks`: Validates `subtaskCount = 0` produces "an appropriate number of" text
 - `conditional-positive-subtasks`: Validates `subtaskCount = 3` produces "exactly 3" text
 
@@ -137,7 +137,7 @@ Shows truncated prompts (200 characters) for quick overview:
 System Prompt Preview:
 You are an AI assistant helping with task management...
 
-User Prompt Preview:  
+User Prompt Preview:
 Create a new task based on the following description...
 
 Tip: Use option 3 in main menu to toggle full prompt display
@@ -252,4 +252,4 @@ This test suite should be run whenever:
 - New variants are added
 - Parameter schemas change
 - Prompt manager logic is updated
-- Before major releases 
+- Before major releases

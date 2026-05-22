@@ -65,7 +65,7 @@
   | `InteractiveDeleteMarked` | Справочник, Документ | Удаление помеченных на удаление |
   | `InteractiveDeletePredefinedData` | Справочник | Интерактивное удаление предопределённых элементов |
   | `InteractiveDeleteMarkedPredefinedData` | Справочник | Удаление помеченных предопределённых |
-  
+
   Права на установку/снятие пометки (`InteractiveSetDeletionMark`, `InteractiveClearDeletionMark`) **не трогаем** — это не удаление, а только пометка.
 
 ### 3.2 Найденные паттерны в конфигурации ✓ pattern

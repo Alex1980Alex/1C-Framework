@@ -87,4 +87,3 @@ Develop integration tests that verify the entire flow of using the --simple flag
 ### Description: Conduct final validation of the feature across all use cases and update the user documentation to include the new functionality.
 ### Details:
 Perform end-to-end testing of the feature to ensure it works correctly in all scenarios. Update the user documentation with detailed information about the new --simple flag, including its purpose, how to use it, and examples. Ensure that the documentation clearly explains the difference between AI-processed updates and simple updates.
-

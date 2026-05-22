@@ -89,7 +89,7 @@ export class StateManager {
     while (currentId) {
       const node = await this.getNode(currentId);
       if (!node) break;
-      
+
       path.unshift(node);
       currentId = node.parentId || '';
     }

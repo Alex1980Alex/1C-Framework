@@ -12,6 +12,7 @@ sequencing + discrepancy detection.
 Run:
     python -m pytest scripts/test_analyze_1c_task_runtime_trace.py -v
 """
+
 from __future__ import annotations
 
 import sys
@@ -149,11 +150,13 @@ def run_runtime_trace(
         eval_result = debug_client.debug_evaluate(expression=pred.condition)
         rt_value = eval_result.get("value", "unknown")
         rt_branch = eval_result.get("branch", "?")
-        result.branches.append(RuntimeBranch(
-            condition=pred.condition,
-            runtime_result=rt_value,
-            taken_branch=rt_branch,
-        ))
+        result.branches.append(
+            RuntimeBranch(
+                condition=pred.condition,
+                runtime_result=rt_value,
+                taken_branch=rt_branch,
+            )
+        )
 
     # Step 7: step through critical branches (in skill this calls debug_step("Step"))
     seq.append("debug_step[Step]")

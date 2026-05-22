@@ -26,7 +26,6 @@ migration completes and verification passes.
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 import time
 from pathlib import Path
@@ -150,7 +149,10 @@ def main() -> int:
 
     with tracker.stage("init_target"):
         created = create_target_collection(
-            client, args.target, dense_dim=src_dim, recreate=args.recreate,
+            client,
+            args.target,
+            dense_dim=src_dim,
+            recreate=args.recreate,
         )
 
     existing_ids: set[str] = set()
@@ -185,7 +187,9 @@ def main() -> int:
 
         upsert_points = []
         for (pid, dense_vec, payload), sparse_emb, norm_text in zip(
-            buffer, sparse_embs, texts_for_bm25,
+            buffer,
+            sparse_embs,
+            texts_for_bm25,
         ):
             vector_data: dict[str, Any] = {"dense": dense_vec}
             if norm_text:
@@ -256,16 +260,18 @@ def main() -> int:
             f"Some points may have failed to upsert — check logs."
         )
 
-    tracker.stop(summary={
-        "source": args.source,
-        "target": args.target,
-        "src_count": src_count,
-        "target_count": info.points_count,
-        "upserted": total_upserted,
-        "skipped": total_skipped,
-        "no_content": total_no_content,
-        "elapsed_s": round(elapsed, 1),
-    })
+    tracker.stop(
+        summary={
+            "source": args.source,
+            "target": args.target,
+            "src_count": src_count,
+            "target_count": info.points_count,
+            "upserted": total_upserted,
+            "skipped": total_skipped,
+            "no_content": total_no_content,
+            "elapsed_s": round(elapsed, 1),
+        }
+    )
     return 0 if delta >= 0 else 1
 
 

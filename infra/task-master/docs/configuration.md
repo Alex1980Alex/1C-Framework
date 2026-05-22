@@ -223,10 +223,10 @@ node scripts/init.js
    ```bash
    # Set MCP provider for main role
    task-master models set-main --provider mcp --model claude-3-5-sonnet-20241022
-   
-   # Set MCP provider for research role  
+
+   # Set MCP provider for research role
    task-master models set-research --provider mcp --model claude-3-opus-20240229
-   
+
    # Verify configuration
    task-master models list
    ```
@@ -303,7 +303,7 @@ Azure OpenAI provides enterprise-grade OpenAI models through Microsoft's Azure c
          "temperature": 0.7
        },
        "fallback": {
-         "provider": "azure", 
+         "provider": "azure",
          "modelId": "gpt-4o-mini",
          "maxTokens": 10000,
          "temperature": 0.7
@@ -322,7 +322,7 @@ Azure OpenAI provides enterprise-grade OpenAI models through Microsoft's Azure c
      "models": {
        "main": {
          "provider": "azure",
-         "modelId": "gpt-4o", 
+         "modelId": "gpt-4o",
          "maxTokens": 16000,
          "temperature": 0.7,
          "baseURL": "https://your-resource-name.azure.com/openai/deployments"
@@ -336,7 +336,7 @@ Azure OpenAI provides enterprise-grade OpenAI models through Microsoft's Azure c
        "fallback": {
          "provider": "azure",
          "modelId": "gpt-4o-mini",
-         "maxTokens": 10000, 
+         "maxTokens": 10000,
          "temperature": 0.7,
          "baseURL": "https://your-resource-name.azure.com/openai/deployments"
        }
@@ -348,7 +348,7 @@ Azure OpenAI provides enterprise-grade OpenAI models through Microsoft's Azure c
    ```bash
    # In .env file
    AZURE_OPENAI_API_KEY=your-azure-openai-api-key-here
-   
+
    # Optional: Override endpoint for all Azure models
    AZURE_OPENAI_ENDPOINT=https://your-resource-name.azure.com/openai/deployments
    ```

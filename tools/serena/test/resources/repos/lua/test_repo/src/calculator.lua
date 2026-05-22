@@ -46,7 +46,7 @@ function calculator.mean(numbers)
     if #numbers == 0 then
         return nil
     end
-    
+
     local sum = 0
     for _, num in ipairs(numbers) do
         sum = sum + num
@@ -58,13 +58,13 @@ function calculator.median(numbers)
     if #numbers == 0 then
         return nil
     end
-    
+
     local sorted = {}
     for i, v in ipairs(numbers) do
         sorted[i] = v
     end
     table.sort(sorted)
-    
+
     local mid = math.floor(#sorted / 2)
     if #sorted % 2 == 0 then
         return (sorted[mid] + sorted[mid + 1]) / 2

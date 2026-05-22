@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """smoke_test_openspec.py — preflight для OpenSpec workflow."""
+
 from __future__ import annotations
+
 import json
 import subprocess
 import sys
@@ -44,8 +46,11 @@ def check_changes() -> tuple[list[str], list[str]]:
 def check_lint() -> tuple[int, str]:
     try:
         out = subprocess.run(
-            [sys.executable, "scripts/openspec_lint_ci.py", "--mode",
-             "structural"], capture_output=True, text=True, timeout=30)
+            [sys.executable, "scripts/openspec_lint_ci.py", "--mode", "structural"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
         return out.returncode, out.stdout[-200:]
     except Exception as e:
         return 2, f"lint failed: {e}"

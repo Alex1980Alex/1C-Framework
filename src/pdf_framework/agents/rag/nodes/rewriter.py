@@ -119,9 +119,7 @@ async def rewrite_query(
             if graded_docs:
                 irrelevant = [d for d in graded_docs if not d["is_relevant"]]
                 if irrelevant:
-                    history_parts = [
-                        d.get("content_preview", "N/A")[:80] for d in irrelevant[:3]
-                    ]
+                    history_parts = [d.get("content_preview", "N/A")[:80] for d in irrelevant[:3]]
             dspy_result = await async_chain_of_thought(
                 RewriterSignature,
                 query=original_question,
@@ -131,7 +129,10 @@ async def rewrite_query(
             if rewritten and len(rewritten) >= 5 and rewritten != original_question:
                 logger.info(
                     "[REWRITE] Retry %d (dspy): '%s...' → '%s...' (strategy: %s)",
-                    new_retry_count, original_question[:50], rewritten[:50], new_strategy,
+                    new_retry_count,
+                    original_question[:50],
+                    rewritten[:50],
+                    new_strategy,
                 )
                 return {
                     "question": rewritten,

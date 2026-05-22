@@ -18,6 +18,7 @@ Confidence default 0.5 = "unverified, written by automation" per
 docs/wiki/SCHEMA.md allowed levels (high/medium/low → 0.9/0.6/0.3 by
 convention; 0.5 lands between low and medium for "needs manual review").
 """
+
 from __future__ import annotations
 
 import secrets
@@ -34,9 +35,9 @@ def uuid7() -> uuid.UUID:
     rand_a = secrets.randbits(12)
     rand_b = secrets.randbits(62)
     value = ts_ms << 80
-    value |= 0x7 << 76          # version 7
+    value |= 0x7 << 76  # version 7
     value |= rand_a << 64
-    value |= 0b10 << 62         # variant RFC 4122
+    value |= 0b10 << 62  # variant RFC 4122
     value |= rand_b
     return uuid.UUID(int=value)
 

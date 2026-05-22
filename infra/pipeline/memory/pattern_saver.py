@@ -9,34 +9,31 @@ This module provides functionality for:
 - Managing pattern lifecycle (creation, update, deprecation)
 """
 
-import re
-import json
-import logging
 import hashlib
+import logging
+import re
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Optional, List, Dict, Any, Set, Tuple
 from enum import Enum
 
 from models import (
+    LearningContext,
+    MemoryType,
     Pattern,
     PatternType,
-    MemoryEntry,
-    MemoryType,
-    LearningContext,
-)
-from .unified_memory_client import (
-    UnifiedMemoryClient,
-    SearchResult,
-    SaveResult,
 )
 
+from .unified_memory_client import (
+    SaveResult,
+    SearchResult,
+    UnifiedMemoryClient,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class PatternExtractionStrategy(Enum):
     """Strategy for extracting patterns from code/context."""
+
     STRUCTURAL = "structural"  # Based on code structure
     SEMANTIC = "semantic"  # Based on meaning/intent
     HYBRID = "hybrid"  # Combination of both
@@ -50,26 +47,49 @@ class PatternCandidate:
     problem: str
     solution: str
     pattern_type: PatternType
-    source_file: Optional[str] = None
-    source_lines: Optional[Tuple[int, int]] = None
+    source_file: str | None = None
+    source_lines: tuple[int, int] | None = None
     confidence: float = 0.5
-    keywords: List[str] = field(default_factory=list)
-    examples: List[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
+    examples: list[str] = field(default_factory=list)
 
     def generate_name(self) -> str:
         """Generate a name for the pattern."""
         # Extract key terms from problem
-        words = re.findall(r'\b\w+\b', self.problem.lower())
+        words = re.findall(r"\b\w+\b", self.problem.lower())
         # Filter out common words
         stop_words = {
-            'в', 'и', 'на', 'для', 'при', 'из', 'по', 'с', 'к', 'о',
-            'the', 'a', 'an', 'in', 'on', 'for', 'to', 'with', 'of',
-            'is', 'are', 'was', 'were', 'be', 'been', 'being',
+            "в",
+            "и",
+            "на",
+            "для",
+            "при",
+            "из",
+            "по",
+            "с",
+            "к",
+            "о",
+            "the",
+            "a",
+            "an",
+            "in",
+            "on",
+            "for",
+            "to",
+            "with",
+            "of",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
         }
         key_words = [w for w in words if w not in stop_words and len(w) > 2]
 
         if key_words:
-            name = '_'.join(key_words[:3])
+            name = "_".join(key_words[:3])
         else:
             name = f"pattern_{self.pattern_type.value}"
 
@@ -87,13 +107,13 @@ class MatchResult:
 
     pattern: Pattern
     score: float
-    matched_elements: List[str] = field(default_factory=list)
+    matched_elements: list[str] = field(default_factory=list)
     context_relevance: float = 0.0
 
     @property
     def combined_score(self) -> float:
         """Calculate combined matching score."""
-        return (self.score * 0.7 + self.context_relevance * 0.3)
+        return self.score * 0.7 + self.context_relevance * 0.3
 
 
 class PatternMatcher:
@@ -119,9 +139,9 @@ class PatternMatcher:
     async def find_matching_patterns(
         self,
         context: str,
-        pattern_type: Optional[PatternType] = None,
-        learning_context: Optional[LearningContext] = None,
-    ) -> List[MatchResult]:
+        pattern_type: PatternType | None = None,
+        learning_context: LearningContext | None = None,
+    ) -> list[MatchResult]:
         """
         Find patterns matching the given context.
 
@@ -153,29 +173,29 @@ class PatternMatcher:
 
             # Calculate match score
             keyword_score = self._calculate_keyword_score(context, pattern)
-            context_relevance = self._calculate_context_relevance(
-                pattern, learning_context
-            )
+            context_relevance = self._calculate_context_relevance(pattern, learning_context)
 
             combined_score = result.score * 0.5 + keyword_score * 0.3 + context_relevance * 0.2
 
             if combined_score >= self.min_score:
-                match_results.append(MatchResult(
-                    pattern=pattern,
-                    score=result.score,
-                    matched_elements=self._extract_matched_elements(context, pattern),
-                    context_relevance=context_relevance,
-                ))
+                match_results.append(
+                    MatchResult(
+                        pattern=pattern,
+                        score=result.score,
+                        matched_elements=self._extract_matched_elements(context, pattern),
+                        context_relevance=context_relevance,
+                    )
+                )
 
         # Sort by combined score
         match_results.sort(key=lambda x: x.combined_score, reverse=True)
 
-        return match_results[:self.max_results]
+        return match_results[: self.max_results]
 
     def _parse_pattern_from_result(
         self,
         result: SearchResult,
-    ) -> Optional[Pattern]:
+    ) -> Pattern | None:
         """Parse Pattern object from search result."""
         try:
             metadata = result.metadata
@@ -186,7 +206,7 @@ class PatternMatcher:
 
             # Parse from structured content
             content = result.content
-            lines = content.split('\n')
+            lines = content.split("\n")
 
             problem = ""
             solution = ""
@@ -229,11 +249,8 @@ class PatternMatcher:
         pattern: Pattern,
     ) -> float:
         """Calculate keyword matching score."""
-        context_words = set(re.findall(r'\b\w+\b', context.lower()))
-        pattern_words = set(re.findall(
-            r'\b\w+\b',
-            f"{pattern.problem} {pattern.solution}".lower()
-        ))
+        context_words = set(re.findall(r"\b\w+\b", context.lower()))
+        pattern_words = set(re.findall(r"\b\w+\b", f"{pattern.problem} {pattern.solution}".lower()))
 
         if not pattern_words:
             return 0.0
@@ -244,7 +261,7 @@ class PatternMatcher:
     def _calculate_context_relevance(
         self,
         pattern: Pattern,
-        learning_context: Optional[LearningContext],
+        learning_context: LearningContext | None,
     ) -> float:
         """Calculate context relevance score."""
         if not learning_context:
@@ -254,21 +271,15 @@ class PatternMatcher:
 
         # Check project match
         if learning_context.project_id:
-            project_keywords = learning_context.project_id.lower().split('_')
+            project_keywords = learning_context.project_id.lower().split("_")
             pattern_text = f"{pattern.problem} {pattern.solution}".lower()
-            project_matches = sum(
-                1 for kw in project_keywords if kw in pattern_text
-            )
+            project_matches = sum(1 for kw in project_keywords if kw in pattern_text)
             relevance += min(0.2, project_matches * 0.05)
 
         # Check task match
         if learning_context.current_task:
-            task_words = set(re.findall(
-                r'\b\w+\b', learning_context.current_task.lower()
-            ))
-            pattern_words = set(re.findall(
-                r'\b\w+\b', pattern.problem.lower()
-            ))
+            task_words = set(re.findall(r"\b\w+\b", learning_context.current_task.lower()))
+            pattern_words = set(re.findall(r"\b\w+\b", pattern.problem.lower()))
             if task_words & pattern_words:
                 relevance += 0.15
 
@@ -295,10 +306,10 @@ class PatternMatcher:
         self,
         context: str,
         pattern: Pattern,
-    ) -> List[str]:
+    ) -> list[str]:
         """Extract elements that matched between context and pattern."""
-        context_words = set(re.findall(r'\b\w{4,}\b', context.lower()))
-        problem_words = set(re.findall(r'\b\w{4,}\b', pattern.problem.lower()))
+        context_words = set(re.findall(r"\b\w{4,}\b", context.lower()))
+        problem_words = set(re.findall(r"\b\w{4,}\b", pattern.problem.lower()))
 
         matched = context_words & problem_words
         return list(matched)[:10]
@@ -324,12 +335,12 @@ class PatternSaver:
         self.memory_client = memory_client
         self.extraction_strategy = extraction_strategy
         self.min_confidence = min_confidence
-        self._known_hashes: Set[str] = set()
+        self._known_hashes: set[str] = set()
 
     async def save_pattern(
         self,
         pattern: Pattern,
-        learning_context: Optional[LearningContext] = None,
+        learning_context: LearningContext | None = None,
     ) -> SaveResult:
         """
         Save a pattern to memory.
@@ -368,7 +379,7 @@ class PatternSaver:
     async def save_from_candidate(
         self,
         candidate: PatternCandidate,
-        learning_context: Optional[LearningContext] = None,
+        learning_context: LearningContext | None = None,
     ) -> SaveResult:
         """
         Save a pattern from a candidate.
@@ -425,7 +436,7 @@ class PatternSaver:
     async def record_failure(
         self,
         pattern_id: str,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> bool:
         """
         Record failed use of a pattern.
@@ -457,9 +468,9 @@ class PatternSaver:
     async def extract_patterns_from_code(
         self,
         code: str,
-        file_path: Optional[str] = None,
-        context_description: Optional[str] = None,
-    ) -> List[PatternCandidate]:
+        file_path: str | None = None,
+        context_description: str | None = None,
+    ) -> list[PatternCandidate]:
         """
         Extract potential patterns from code.
 
@@ -477,17 +488,13 @@ class PatternSaver:
             PatternExtractionStrategy.STRUCTURAL,
             PatternExtractionStrategy.HYBRID,
         ):
-            candidates.extend(
-                self._extract_structural_patterns(code, file_path)
-            )
+            candidates.extend(self._extract_structural_patterns(code, file_path))
 
         if self.extraction_strategy in (
             PatternExtractionStrategy.SEMANTIC,
             PatternExtractionStrategy.HYBRID,
         ):
-            candidates.extend(
-                self._extract_semantic_patterns(code, context_description)
-            )
+            candidates.extend(self._extract_semantic_patterns(code, context_description))
 
         # Deduplicate by hash
         seen_hashes = set()
@@ -503,13 +510,13 @@ class PatternSaver:
     def _extract_structural_patterns(
         self,
         code: str,
-        file_path: Optional[str] = None,
-    ) -> List[PatternCandidate]:
+        file_path: str | None = None,
+    ) -> list[PatternCandidate]:
         """Extract patterns based on code structure."""
         candidates = []
 
         # BSL-specific patterns
-        if file_path and file_path.endswith('.bsl'):
+        if file_path and file_path.endswith(".bsl"):
             candidates.extend(self._extract_bsl_patterns(code, file_path))
         else:
             candidates.extend(self._extract_generic_patterns(code, file_path))
@@ -519,15 +526,14 @@ class PatternSaver:
     def _extract_bsl_patterns(
         self,
         code: str,
-        file_path: Optional[str] = None,
-    ) -> List[PatternCandidate]:
+        file_path: str | None = None,
+    ) -> list[PatternCandidate]:
         """Extract BSL-specific patterns."""
         candidates = []
 
         # Pattern: Error handling with Попытка/Исключение
         error_handling_pattern = re.compile(
-            r'Попытка\s*\n(.*?)\nИсключение\s*\n(.*?)\nКонецПопытки',
-            re.DOTALL | re.IGNORECASE
+            r"Попытка\s*\n(.*?)\nИсключение\s*\n(.*?)\nКонецПопытки", re.DOTALL | re.IGNORECASE
         )
 
         for match in error_handling_pattern.finditer(code):
@@ -535,103 +541,109 @@ class PatternSaver:
             except_block = match.group(2).strip()
 
             if len(try_block) > 20 and len(except_block) > 10:
-                candidates.append(PatternCandidate(
-                    problem="Обработка ошибок в BSL коде",
-                    solution=f"Использование Попытка/Исключение:\n{match.group(0)[:500]}",
-                    pattern_type=PatternType.IMPLEMENTATION,
-                    source_file=file_path,
-                    confidence=0.6,
-                    keywords=["обработка_ошибок", "попытка", "исключение", "bsl"],
-                ))
+                candidates.append(
+                    PatternCandidate(
+                        problem="Обработка ошибок в BSL коде",
+                        solution=f"Использование Попытка/Исключение:\n{match.group(0)[:500]}",
+                        pattern_type=PatternType.IMPLEMENTATION,
+                        source_file=file_path,
+                        confidence=0.6,
+                        keywords=["обработка_ошибок", "попытка", "исключение", "bsl"],
+                    )
+                )
 
         # Pattern: Query building
         query_pattern = re.compile(
             r'Запрос\s*=\s*Новый\s+Запрос[;\s]*\n\s*Запрос\.Текст\s*=\s*["\'].*?["\'];?',
-            re.DOTALL | re.IGNORECASE
+            re.DOTALL | re.IGNORECASE,
         )
 
         for match in query_pattern.finditer(code):
-            candidates.append(PatternCandidate(
-                problem="Построение запросов к базе данных 1С",
-                solution=f"Шаблон запроса:\n{match.group(0)[:500]}",
-                pattern_type=PatternType.IMPLEMENTATION,
-                source_file=file_path,
-                confidence=0.5,
-                keywords=["запрос", "query", "база_данных", "bsl"],
-            ))
+            candidates.append(
+                PatternCandidate(
+                    problem="Построение запросов к базе данных 1С",
+                    solution=f"Шаблон запроса:\n{match.group(0)[:500]}",
+                    pattern_type=PatternType.IMPLEMENTATION,
+                    source_file=file_path,
+                    confidence=0.5,
+                    keywords=["запрос", "query", "база_данных", "bsl"],
+                )
+            )
 
         # Pattern: Export functions
         export_pattern = re.compile(
-            r'(Функция|Процедура)\s+(\w+)\s*\([^)]*\)\s*Экспорт',
-            re.IGNORECASE
+            r"(Функция|Процедура)\s+(\w+)\s*\([^)]*\)\s*Экспорт", re.IGNORECASE
         )
 
         export_funcs = export_pattern.findall(code)
         if len(export_funcs) >= 3:
             func_names = [f[1] for f in export_funcs]
-            candidates.append(PatternCandidate(
-                problem="Организация экспортных функций модуля",
-                solution=f"Экспортные функции: {', '.join(func_names[:10])}",
-                pattern_type=PatternType.ARCHITECTURE,
-                source_file=file_path,
-                confidence=0.55,
-                keywords=["экспорт", "api", "модуль", "bsl"],
-            ))
+            candidates.append(
+                PatternCandidate(
+                    problem="Организация экспортных функций модуля",
+                    solution=f"Экспортные функции: {', '.join(func_names[:10])}",
+                    pattern_type=PatternType.ARCHITECTURE,
+                    source_file=file_path,
+                    confidence=0.55,
+                    keywords=["экспорт", "api", "модуль", "bsl"],
+                )
+            )
 
         return candidates
 
     def _extract_generic_patterns(
         self,
         code: str,
-        file_path: Optional[str] = None,
-    ) -> List[PatternCandidate]:
+        file_path: str | None = None,
+    ) -> list[PatternCandidate]:
         """Extract generic code patterns."""
         candidates = []
 
         # Pattern: Function definitions
-        func_pattern = re.compile(
-            r'(def|function|func)\s+(\w+)\s*\([^)]*\)',
-            re.IGNORECASE
-        )
+        func_pattern = re.compile(r"(def|function|func)\s+(\w+)\s*\([^)]*\)", re.IGNORECASE)
 
         functions = func_pattern.findall(code)
         if len(functions) >= 5:
             func_names = [f[1] for f in functions]
-            candidates.append(PatternCandidate(
-                problem="Module organization with multiple functions",
-                solution=f"Functions: {', '.join(func_names[:10])}",
-                pattern_type=PatternType.ARCHITECTURE,
-                source_file=file_path,
-                confidence=0.4,
-                keywords=["functions", "module", "organization"],
-            ))
+            candidates.append(
+                PatternCandidate(
+                    problem="Module organization with multiple functions",
+                    solution=f"Functions: {', '.join(func_names[:10])}",
+                    pattern_type=PatternType.ARCHITECTURE,
+                    source_file=file_path,
+                    confidence=0.4,
+                    keywords=["functions", "module", "organization"],
+                )
+            )
 
         return candidates
 
     def _extract_semantic_patterns(
         self,
         code: str,
-        context_description: Optional[str] = None,
-    ) -> List[PatternCandidate]:
+        context_description: str | None = None,
+    ) -> list[PatternCandidate]:
         """Extract patterns based on semantic meaning."""
         candidates = []
 
         if context_description:
             # Create pattern from description
-            candidates.append(PatternCandidate(
-                problem=context_description,
-                solution=f"Implementation:\n{code[:1000]}",
-                pattern_type=PatternType.IMPLEMENTATION,
-                confidence=0.5,
-                keywords=context_description.lower().split()[:5],
-            ))
+            candidates.append(
+                PatternCandidate(
+                    problem=context_description,
+                    solution=f"Implementation:\n{code[:1000]}",
+                    pattern_type=PatternType.IMPLEMENTATION,
+                    confidence=0.5,
+                    keywords=context_description.lower().split()[:5],
+                )
+            )
 
         return candidates
 
     async def _find_similar_pattern(
         self,
         pattern: Pattern,
-    ) -> Optional[Pattern]:
+    ) -> Pattern | None:
         """Find similar pattern in memory."""
         query = f"{pattern.problem} {pattern.solution}"
 
@@ -642,9 +654,7 @@ class PatternSaver:
 
         for result in results:
             if result.score > 0.85:  # High similarity threshold
-                parsed = PatternMatcher(
-                    self.memory_client
-                )._parse_pattern_from_result(result)
+                parsed = PatternMatcher(self.memory_client)._parse_pattern_from_result(result)
                 if parsed:
                     return parsed
 

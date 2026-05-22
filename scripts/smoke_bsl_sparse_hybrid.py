@@ -161,7 +161,9 @@ def main() -> int:
         total_upserted += len(upsert_points)
 
     elapsed = time.time() - t0
-    print(f"[done] upserted {total_upserted} pts in {elapsed:.1f}s ({total_upserted/elapsed:.0f} pts/s)")
+    print(
+        f"[done] upserted {total_upserted} pts in {elapsed:.1f}s ({total_upserted/elapsed:.0f} pts/s)"
+    )
 
     info = client.get_collection(args.target)
     print(f"[verify] {args.target}: {info.points_count} pts")

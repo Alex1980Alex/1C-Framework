@@ -34,4 +34,3 @@ Integrate a PDF generation library (e.g., pdfkit, Puppeteer, or jsPDF). Ensure t
 ### Description: Revise all relevant documentation, automated tests, and CLI help output to reflect the new export-based workflow and available options.
 ### Details:
 Update user guides, README files, and CLI help text. Add or modify tests to cover the new export command and its options. Ensure all documentation accurately describes the new workflow and usage.
-

@@ -4,11 +4,12 @@ Output Formatter - форматирование вывода CLI.
 Поддержка различных форматов вывода: text, json, markdown, table.
 """
 
-from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+import builtins
 import json
 import sys
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
 
 
 class OutputFormat(Enum):
@@ -123,7 +124,7 @@ class TableColumn:
 
     header: str
     key: str
-    width: Optional[int] = None
+    width: int | None = None
     align: str = "left"  # left, right, center
 
 
@@ -135,7 +136,7 @@ class OutputFormatter:
         format: OutputFormat = OutputFormat.TEXT,
         color_enabled: bool = True,
         unicode_enabled: bool = True,
-        output_stream=None
+        output_stream=None,
     ):
         self.format = format
         self.output = output_stream or sys.stdout  # ВАЖНО: до _supports_color()
@@ -221,10 +222,7 @@ class OutputFormatter:
     # === Форматированный вывод ===
 
     def table(
-        self,
-        data: List[Dict[str, Any]],
-        columns: List[TableColumn],
-        title: Optional[str] = None
+        self, data: list[dict[str, Any]], columns: list[TableColumn], title: str | None = None
     ) -> None:
         """Вывод таблицы."""
         if self.format == OutputFormat.JSON:
@@ -238,10 +236,7 @@ class OutputFormatter:
         self._table_text(data, columns, title)
 
     def _table_text(
-        self,
-        data: List[Dict[str, Any]],
-        columns: List[TableColumn],
-        title: Optional[str] = None
+        self, data: list[dict[str, Any]], columns: list[TableColumn], title: str | None = None
     ) -> None:
         """Текстовая таблица."""
         if title:
@@ -258,10 +253,7 @@ class OutputFormatter:
                 widths[col.key] = col.width
             else:
                 header_len = len(col.header)
-                max_data_len = max(
-                    len(str(row.get(col.key, "")))
-                    for row in data
-                ) if data else 0
+                max_data_len = max(len(str(row.get(col.key, ""))) for row in data) if data else 0
                 widths[col.key] = max(header_len, max_data_len) + 2
 
         # Заголовок
@@ -295,10 +287,7 @@ class OutputFormatter:
         self.print(bottom_border)
 
     def _table_markdown(
-        self,
-        data: List[Dict[str, Any]],
-        columns: List[TableColumn],
-        title: Optional[str] = None
+        self, data: list[dict[str, Any]], columns: list[TableColumn], title: str | None = None
     ) -> None:
         """Markdown таблица."""
         if title:
@@ -311,12 +300,14 @@ class OutputFormatter:
 
         # Заголовок
         header = "| " + " | ".join(col.header for col in columns) + " |"
-        separator = "| " + " | ".join(
-            ":---" if col.align == "left" else
-            "---:" if col.align == "right" else
-            ":---:"
-            for col in columns
-        ) + " |"
+        separator = (
+            "| "
+            + " | ".join(
+                ":---" if col.align == "left" else "---:" if col.align == "right" else ":---:"
+                for col in columns
+            )
+            + " |"
+        )
 
         self.print(header)
         self.print(separator)
@@ -326,12 +317,7 @@ class OutputFormatter:
             values = [str(row.get(col.key, "")) for col in columns]
             self.print("| " + " | ".join(values) + " |")
 
-    def list(
-        self,
-        items: List[str],
-        title: Optional[str] = None,
-        numbered: bool = False
-    ) -> None:
+    def list(self, items: list[str], title: str | None = None, numbered: bool = False) -> None:
         """Вывод списка."""
         if title:
             self.header(title, level=2)
@@ -347,12 +333,7 @@ class OutputFormatter:
                 prefix = self._symbol(Symbol.BULLET, "-")
             self.print(f"  {prefix} {item}")
 
-    def tree(
-        self,
-        data: Dict[str, Any],
-        title: Optional[str] = None,
-        indent: int = 0
-    ) -> None:
+    def tree(self, data: dict[str, Any], title: str | None = None, indent: int = 0) -> None:
         """Вывод дерева."""
         if title and indent == 0:
             self.header(title, level=2)
@@ -364,8 +345,7 @@ class OutputFormatter:
             for i, (key, value) in enumerate(items):
                 is_last = i == len(items) - 1
                 branch = self._symbol(
-                    Symbol.TREE_LAST if is_last else Symbol.TREE_BRANCH,
-                    "+-" if is_last else "|-"
+                    Symbol.TREE_LAST if is_last else Symbol.TREE_BRANCH, "+-" if is_last else "|-"
                 )
                 self.print(f"{prefix}{branch} {self._colorize(key, Color.BOLD)}")
 
@@ -379,21 +359,19 @@ class OutputFormatter:
                 bullet = self._symbol(Symbol.BULLET, "-")
                 self.print(f"{prefix}  {bullet} {item}")
 
-    def progress(
-        self,
-        current: int,
-        total: int,
-        message: str = "",
-        width: int = 40
-    ) -> None:
+    def progress(self, current: int, total: int, message: str = "", width: int = 40) -> None:
         """Прогресс-бар."""
         if self.format == OutputFormat.JSON:
-            self.print(json.dumps({
-                "current": current,
-                "total": total,
-                "percentage": (current / total * 100) if total > 0 else 0,
-                "message": message
-            }))
+            self.print(
+                json.dumps(
+                    {
+                        "current": current,
+                        "total": total,
+                        "percentage": (current / total * 100) if total > 0 else 0,
+                        "message": message,
+                    }
+                )
+            )
             return
 
         percentage = (current / total * 100) if total > 0 else 0
@@ -406,11 +384,7 @@ class OutputFormatter:
         if current >= total:
             self.print()  # Новая строка в конце
 
-    def status(
-        self,
-        items: List[Dict[str, Any]],
-        title: Optional[str] = None
-    ) -> None:
+    def status(self, items: builtins.list[dict[str, Any]], title: str | None = None) -> None:
         """Вывод статусов."""
         if title:
             self.header(title, level=2)
@@ -447,9 +421,7 @@ class OutputFormatter:
     # === Специальные форматы для pipeline ===
 
     def pipeline_status(
-        self,
-        phases: List[Dict[str, Any]],
-        current_phase: Optional[str] = None
+        self, phases: builtins.list[dict[str, Any]], current_phase: str | None = None
     ) -> None:
         """Статус pipeline."""
         self.header("Pipeline Status", level=1)
@@ -479,7 +451,7 @@ class OutputFormatter:
 
             self.print(line)
 
-    def artifact_summary(self, artifacts: List[Dict[str, Any]]) -> None:
+    def artifact_summary(self, artifacts: builtins.list[dict[str, Any]]) -> None:
         """Сводка артефактов."""
         self.section("Артефакты")
 

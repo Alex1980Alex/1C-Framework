@@ -16,7 +16,7 @@ Single source of truth for the filename-list commit message format
 from __future__ import annotations
 
 import os
-from typing import Iterable
+from collections.abc import Iterable
 
 DEFAULT_MAX_DISPLAY = 3
 

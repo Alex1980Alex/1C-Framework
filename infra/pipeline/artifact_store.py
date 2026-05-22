@@ -9,12 +9,11 @@ Based on MetaGPT's artifact management approach with:
 
 import json
 import logging
+import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
-import shutil
 
-from constants import ArtifactType, AgentRole
+from constants import AgentRole, ArtifactType
 from models import Artifact, ArtifactMetadata
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class ArtifactStore:
     - Persistence to filesystem
     """
 
-    def __init__(self, base_path: Path, session_id: Optional[str] = None) -> None:
+    def __init__(self, base_path: Path, session_id: str | None = None) -> None:
         """
         Initialize artifact store.
 
@@ -44,8 +43,8 @@ class ArtifactStore:
         self.session_path = self.base_path / self.session_id
 
         # In-memory cache
-        self._artifacts: Dict[ArtifactType, Artifact] = {}
-        self._history: Dict[ArtifactType, List[Artifact]] = {}
+        self._artifacts: dict[ArtifactType, Artifact] = {}
+        self._history: dict[ArtifactType, list[Artifact]] = {}
 
         # Ensure directories exist
         self._init_directories()
@@ -61,8 +60,8 @@ class ArtifactStore:
         artifact_type: ArtifactType,
         content: str,
         producer: AgentRole,
-        dependencies: Optional[List[ArtifactType]] = None,
-        tags: Optional[Dict] = None,
+        dependencies: list[ArtifactType] | None = None,
+        tags: dict | None = None,
     ) -> Artifact:
         """
         Store an artifact.
@@ -121,13 +120,12 @@ class ArtifactStore:
         self._persist_artifact(artifact)
 
         logger.info(
-            f"Stored artifact {artifact_type.value} v{metadata.version} "
-            f"by {producer.value}"
+            f"Stored artifact {artifact_type.value} v{metadata.version} " f"by {producer.value}"
         )
 
         return artifact
 
-    def get(self, artifact_type: ArtifactType) -> Optional[Artifact]:
+    def get(self, artifact_type: ArtifactType) -> Artifact | None:
         """
         Retrieve an artifact by type.
 
@@ -139,20 +137,20 @@ class ArtifactStore:
         """
         return self._artifacts.get(artifact_type)
 
-    def get_content(self, artifact_type: ArtifactType) -> Optional[str]:
+    def get_content(self, artifact_type: ArtifactType) -> str | None:
         """Get artifact content only."""
         artifact = self.get(artifact_type)
         return artifact.content if artifact else None
 
-    def get_all(self) -> Dict[ArtifactType, Artifact]:
+    def get_all(self) -> dict[ArtifactType, Artifact]:
         """Get all current artifacts."""
         return self._artifacts.copy()
 
-    def get_history(self, artifact_type: ArtifactType) -> List[Artifact]:
+    def get_history(self, artifact_type: ArtifactType) -> list[Artifact]:
         """Get version history for an artifact type."""
         return self._history.get(artifact_type, [])
 
-    def rollback(self, artifact_type: ArtifactType, version: int) -> Optional[Artifact]:
+    def rollback(self, artifact_type: ArtifactType, version: int) -> Artifact | None:
         """
         Rollback artifact to a specific version.
 
@@ -191,9 +189,7 @@ class ArtifactStore:
         # Save to history
         if artifact.metadata.version > 1:
             history_path = (
-                self.session_path
-                / "history"
-                / f"{artifact.name}.v{artifact.metadata.version - 1}"
+                self.session_path / "history" / f"{artifact.name}.v{artifact.metadata.version - 1}"
             )
             current = self.get(artifact.metadata.artifact_type)
             if current and artifact.metadata.version > 1:
@@ -231,7 +227,7 @@ class ArtifactStore:
             # Load metadata
             metadata_path = session_path / "metadata" / f"{artifact_type_str}.json"
             if metadata_path.exists():
-                with open(metadata_path, "r", encoding="utf-8") as f:
+                with open(metadata_path, encoding="utf-8") as f:
                     metadata = ArtifactMetadata.from_dict(json.load(f))
             else:
                 # Create default metadata
@@ -241,7 +237,7 @@ class ArtifactStore:
                 )
 
             # Load content (skip header if present)
-            with open(artifact_file, "r", encoding="utf-8") as f:
+            with open(artifact_file, encoding="utf-8") as f:
                 content = f.read()
                 # Remove YAML front matter if present
                 if content.startswith("---"):
@@ -260,9 +256,7 @@ class ArtifactStore:
         logger.info(f"Loaded session {session_id} with {len(self._artifacts)} artifacts")
         return True
 
-    def get_dependency_chain(
-        self, artifact_type: ArtifactType
-    ) -> List[ArtifactType]:
+    def get_dependency_chain(self, artifact_type: ArtifactType) -> list[ArtifactType]:
         """Get ordered list of dependencies for an artifact."""
         artifact = self.get(artifact_type)
         if not artifact:
@@ -288,7 +282,7 @@ class ArtifactStore:
     def get_summary(self) -> str:
         """Get human-readable summary of current artifacts."""
         lines = [
-            f"# Artifact Store Summary",
+            "# Artifact Store Summary",
             f"Session: {self.session_id}",
             f"Artifacts: {len(self._artifacts)}",
             "",

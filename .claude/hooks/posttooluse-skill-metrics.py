@@ -24,6 +24,7 @@ def _log_confirmed(skill_name: str, session_id: str, loaded: bool) -> None:
     """Log confirmed skill activation to SQLite (fallback: plain log)."""
     try:
         from shared.db_writer import log_skill_usage
+
         log_skill_usage(
             skill_name=skill_name,
             session_id=session_id,
@@ -48,6 +49,7 @@ def _log_accuracy_confirmed(prompt_id: str, skill_name: str, loaded: bool) -> No
     """Log accuracy event to SQLite (fallback: JSONL)."""
     try:
         from shared.db_writer import log_skill_usage
+
         log_skill_usage(
             skill_name=skill_name,
             loaded=loaded,
@@ -102,7 +104,9 @@ class PostToolUseSkillMetrics(BaseHook):
             response_text = str(tool_response) if tool_response else ""
 
         # Skill loaded if response contains "Launching skill:" or is non-empty
-        loaded = bool(response_text and ("Launching skill:" in response_text or len(response_text) > 20))
+        loaded = bool(
+            response_text and ("Launching skill:" in response_text or len(response_text) > 20)
+        )
 
         # Log confirmed activation
         _log_confirmed(skill_name, inp.session_id, loaded)
@@ -110,6 +114,7 @@ class PostToolUseSkillMetrics(BaseHook):
         # Accuracy tracking
         try:
             from shared.session_state import get_prompt_id
+
             prompt_id = get_prompt_id()
             if prompt_id:
                 _log_accuracy_confirmed(prompt_id, skill_name, loaded)

@@ -200,7 +200,7 @@ export class OpenRouterClient {
         this.client = this.rotationManager.createClient();
         const newModel = this.rotationManager.getCurrentModel();
         console.error(`🔄 Switched to ${this.rotationManager.getCurrentProvider()} (model: ${newModel})`);
-        
+
         // Wait before retry with new provider
         await sleep(this.retryDelayMs);
         return this.makeRequestWithRetry(newModel, systemPrompt, userMessage, 1);
@@ -213,7 +213,7 @@ export class OpenRouterClient {
         this.client = this.rotationManager.createClient();
         const newModel = this.rotationManager.getCurrentModel();
         console.error(`🔄 Switched to ${this.rotationManager.getCurrentProvider()} (model: ${newModel})`);
-        
+
         // Wait before retry with new provider
         await sleep(this.retryDelayMs);
         return this.makeRequestWithRetry(newModel, systemPrompt, userMessage, 1);
@@ -231,7 +231,7 @@ export class OpenRouterClient {
       throw error;
     }
   }
-  
+
   /**
    * Generate content with a custom system prompt
    * @param files Array of file content objects with path and content
@@ -263,21 +263,21 @@ export class OpenRouterClient {
 
       // Prepare user message
       let userMessage;
-      
+
       if (files.length === 0 && childrenContent && childrenContent.length > 0) {
         userMessage = "Generate content that synthesizes and summarizes information from the following subdirectory files. This directory contains no code files itself, but needs content that aggregates information from its subdirectories:";
       } else {
         userMessage = "Generate comprehensive but concise content for the following code files:";
-        
+
         if (fileContents) {
           userMessage += `\n\n${fileContents}`;
         }
       }
-      
+
       if (childrenDocsContent) {
         userMessage += `\n\nAdditionally, incorporate information from these subdirectory files:\n\n${childrenDocsContent}`;
       }
-      
+
       if (existingContent) {
         userMessage += `\n\nExisting content for reference:\n\`\`\`markdown\n${existingContent}\n\`\`\``;
       }
@@ -339,7 +339,7 @@ export class OpenRouterClient {
       };
     }
   }
-  
+
   /**
    * Generate documentation for a collection of files (for backward compatibility)
    * @param files Array of file content objects with path and content
@@ -355,7 +355,7 @@ export class OpenRouterClient {
   ): Promise<DocumentationResponse> {
     // Determine prompt based on level
     let systemPrompt: string;
-    
+
     if (isTopLevel) {
       systemPrompt = `You are a technical documentation expert. Create a high-level markdown documentation file that explains the functionality and architecture of a code project. This is the TOP-LEVEL directory, so provide a comprehensive overview of the entire project structure. DO NOT INCLUDE CODE SAMPLES. Keep your response concise and focused on explaining what each file does and how components relate.`;
     } else if (childrenDocs && childrenDocs.length > 0) {

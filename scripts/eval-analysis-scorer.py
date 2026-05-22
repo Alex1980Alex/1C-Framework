@@ -54,9 +54,17 @@ def main():
         rpath = base / entry["report_path"]
 
         if not rpath.exists():
-            results.append({"id": eid, "auto": None, "human": human,
-                            "delta": None, "auto_gaps": 0, "exp_gaps": len(exp_gaps),
-                            "error": "file not found"})
+            results.append(
+                {
+                    "id": eid,
+                    "auto": None,
+                    "human": human,
+                    "delta": None,
+                    "auto_gaps": 0,
+                    "exp_gaps": len(exp_gaps),
+                    "error": "file not found",
+                }
+            )
             continue
 
         text = rpath.read_text(encoding="utf-8")
@@ -66,9 +74,17 @@ def main():
         a_gaps = score["gaps"]
         delta = auto - human
 
-        results.append({"id": eid, "auto": auto, "human": human,
-                        "delta": delta, "auto_gaps": len(a_gaps), "exp_gaps": len(exp_gaps),
-                        "error": None})
+        results.append(
+            {
+                "id": eid,
+                "auto": auto,
+                "human": human,
+                "delta": delta,
+                "auto_gaps": len(a_gaps),
+                "exp_gaps": len(exp_gaps),
+                "error": None,
+            }
+        )
         auto_scores.append(auto)
         human_scores.append(human)
         all_auto_types.append(gap_types(a_gaps))
@@ -88,9 +104,14 @@ def main():
     mae = sum(abs(r["delta"]) for r in results if r["delta"] is not None) / n if n else 0
     corr = pearsonr(auto_scores, human_scores)
 
-    summary = {"n": n, "mae": round(mae, 1), "pearson_r": round(corr, 4),
-               "gap_precision": round(prec, 3), "gap_recall": round(rec, 3),
-               "gap_f1": round(f1, 3)}
+    summary = {
+        "n": n,
+        "mae": round(mae, 1),
+        "pearson_r": round(corr, 4),
+        "gap_precision": round(prec, 3),
+        "gap_recall": round(rec, 3),
+        "gap_f1": round(f1, 3),
+    }
 
     if json_output:
         print(json.dumps({"results": results, "summary": summary}, indent=2, ensure_ascii=False))

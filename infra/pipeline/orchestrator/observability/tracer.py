@@ -9,15 +9,16 @@ Provides comprehensive tracing capabilities:
 
 from __future__ import annotations
 
-import uuid
-import time
 import threading
-from enum import Enum
+import time
+import uuid
+from collections.abc import Callable
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Callable
-from contextlib import contextmanager
+from enum import Enum
 from functools import wraps
+from typing import Any
 
 
 class SpanStatus(Enum):
@@ -44,11 +45,11 @@ class SpanContext:
 
     trace_id: str
     span_id: str
-    parent_span_id: Optional[str] = None
-    baggage: Dict[str, str] = field(default_factory=dict)
+    parent_span_id: str | None = None
+    baggage: dict[str, str] = field(default_factory=dict)
 
     @classmethod
-    def new(cls, parent: Optional["SpanContext"] = None) -> "SpanContext":
+    def new(cls, parent: SpanContext | None = None) -> SpanContext:
         """Create a new span context."""
         trace_id = parent.trace_id if parent else str(uuid.uuid4())
         parent_span_id = parent.span_id if parent else None
@@ -60,7 +61,7 @@ class SpanContext:
             baggage=dict(parent.baggage) if parent else {},
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         result = {
             "trace_id": self.trace_id,
@@ -73,7 +74,7 @@ class SpanContext:
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SpanContext":
+    def from_dict(cls, data: dict[str, Any]) -> SpanContext:
         """Create from dictionary."""
         return cls(
             trace_id=data["trace_id"],
@@ -82,7 +83,7 @@ class SpanContext:
             baggage=data.get("baggage", {}),
         )
 
-    def to_headers(self) -> Dict[str, str]:
+    def to_headers(self) -> dict[str, str]:
         """Convert to HTTP headers for propagation."""
         return {
             "X-Trace-Id": self.trace_id,
@@ -91,7 +92,7 @@ class SpanContext:
         }
 
     @classmethod
-    def from_headers(cls, headers: Dict[str, str]) -> Optional["SpanContext"]:
+    def from_headers(cls, headers: dict[str, str]) -> SpanContext | None:
         """Extract from HTTP headers."""
         trace_id = headers.get("X-Trace-Id")
         span_id = headers.get("X-Span-Id")
@@ -112,9 +113,9 @@ class SpanEvent:
 
     name: str
     timestamp: datetime = field(default_factory=datetime.now)
-    attributes: Dict[str, Any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -128,9 +129,9 @@ class SpanLink:
     """A link to another span."""
 
     context: SpanContext
-    attributes: Dict[str, Any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "context": self.context.to_dict(),
@@ -146,24 +147,24 @@ class Span:
         name: str,
         context: SpanContext,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Optional[Dict[str, Any]] = None,
+        attributes: dict[str, Any] | None = None,
     ):
         self.name = name
         self.context = context
         self.kind = kind
         self.status = SpanStatus.UNSET
-        self.status_message: Optional[str] = None
-        self.attributes: Dict[str, Any] = attributes or {}
-        self.events: List[SpanEvent] = []
-        self.links: List[SpanLink] = []
+        self.status_message: str | None = None
+        self.attributes: dict[str, Any] = attributes or {}
+        self.events: list[SpanEvent] = []
+        self.links: list[SpanLink] = []
 
         self.start_time: datetime = datetime.now()
-        self.end_time: Optional[datetime] = None
+        self.end_time: datetime | None = None
         self._start_ns: int = time.perf_counter_ns()
-        self._end_ns: Optional[int] = None
+        self._end_ns: int | None = None
 
     @property
-    def duration_ms(self) -> Optional[float]:
+    def duration_ms(self) -> float | None:
         """Get duration in milliseconds."""
         if self._end_ns is None:
             return None
@@ -174,12 +175,12 @@ class Span:
         """Check if span has ended."""
         return self.end_time is not None
 
-    def set_attribute(self, key: str, value: Any) -> "Span":
+    def set_attribute(self, key: str, value: Any) -> Span:
         """Set a span attribute."""
         self.attributes[key] = value
         return self
 
-    def set_attributes(self, attributes: Dict[str, Any]) -> "Span":
+    def set_attributes(self, attributes: dict[str, Any]) -> Span:
         """Set multiple span attributes."""
         self.attributes.update(attributes)
         return self
@@ -187,32 +188,36 @@ class Span:
     def add_event(
         self,
         name: str,
-        attributes: Optional[Dict[str, Any]] = None,
-    ) -> "Span":
+        attributes: dict[str, Any] | None = None,
+    ) -> Span:
         """Add an event to the span."""
-        self.events.append(SpanEvent(
-            name=name,
-            attributes=attributes or {},
-        ))
+        self.events.append(
+            SpanEvent(
+                name=name,
+                attributes=attributes or {},
+            )
+        )
         return self
 
     def add_link(
         self,
         context: SpanContext,
-        attributes: Optional[Dict[str, Any]] = None,
-    ) -> "Span":
+        attributes: dict[str, Any] | None = None,
+    ) -> Span:
         """Add a link to another span."""
-        self.links.append(SpanLink(
-            context=context,
-            attributes=attributes or {},
-        ))
+        self.links.append(
+            SpanLink(
+                context=context,
+                attributes=attributes or {},
+            )
+        )
         return self
 
     def set_status(
         self,
         status: SpanStatus,
-        message: Optional[str] = None,
-    ) -> "Span":
+        message: str | None = None,
+    ) -> Span:
         """Set the span status."""
         self.status = status
         self.status_message = message
@@ -221,8 +226,8 @@ class Span:
     def record_exception(
         self,
         exception: Exception,
-        attributes: Optional[Dict[str, Any]] = None,
-    ) -> "Span":
+        attributes: dict[str, Any] | None = None,
+    ) -> Span:
         """Record an exception in the span."""
         import traceback
 
@@ -244,7 +249,7 @@ class Span:
             self._end_ns = time.perf_counter_ns()
             self.end_time = datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         result = {
             "name": self.name,
@@ -294,7 +299,7 @@ class SimpleSpanProcessor(SpanProcessor):
 
     def __init__(self, max_spans: int = 1000) -> None:
         self.max_spans = max_spans
-        self._spans: List[Span] = []
+        self._spans: list[Span] = []
         self._lock = threading.Lock()
 
     def on_end(self, span: Span) -> None:
@@ -302,13 +307,13 @@ class SimpleSpanProcessor(SpanProcessor):
         with self._lock:
             self._spans.append(span)
             if len(self._spans) > self.max_spans:
-                self._spans = self._spans[-self.max_spans:]
+                self._spans = self._spans[-self.max_spans :]
 
     def get_spans(
         self,
-        trace_id: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Span]:
+        trace_id: str | None = None,
+        limit: int | None = None,
+    ) -> list[Span]:
         """Get stored spans."""
         with self._lock:
             spans = list(self._spans)
@@ -321,7 +326,7 @@ class SimpleSpanProcessor(SpanProcessor):
 
         return spans
 
-    def get_trace(self, trace_id: str) -> List[Span]:
+    def get_trace(self, trace_id: str) -> list[Span]:
         """Get all spans for a trace."""
         return self.get_spans(trace_id=trace_id)
 
@@ -340,7 +345,9 @@ class ConsoleSpanProcessor(SpanProcessor):
     def on_end(self, span: Span) -> None:
         """Print span to console."""
         duration = f"{span.duration_ms:.2f}ms" if span.duration_ms else "?"
-        status = "✓" if span.status == SpanStatus.OK else "✗" if span.status == SpanStatus.ERROR else "○"
+        status = (
+            "✓" if span.status == SpanStatus.OK else "✗" if span.status == SpanStatus.ERROR else "○"
+        )
 
         print(f"[TRACE] {status} {span.name} ({duration}) [{span.context.trace_id[:8]}]")
 
@@ -355,14 +362,14 @@ class Tracer:
     def __init__(
         self,
         name: str,
-        processors: Optional[List[SpanProcessor]] = None,
+        processors: list[SpanProcessor] | None = None,
     ):
         self.name = name
         self._processors = processors or []
         self._local = threading.local()
 
     @property
-    def current_span(self) -> Optional[Span]:
+    def current_span(self) -> Span | None:
         """Get the current active span."""
         stack = getattr(self._local, "span_stack", [])
         return stack[-1] if stack else None
@@ -375,8 +382,8 @@ class Tracer:
         self,
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Optional[Dict[str, Any]] = None,
-        parent: Optional[SpanContext] = None,
+        attributes: dict[str, Any] | None = None,
+        parent: SpanContext | None = None,
     ) -> Span:
         """Start a new span."""
         # Use provided parent or current span's context
@@ -407,7 +414,7 @@ class Tracer:
             self._local.span_stack = []
         self._local.span_stack.append(span)
 
-    def _pop_span(self) -> Optional[Span]:
+    def _pop_span(self) -> Span | None:
         """Pop span from the context stack."""
         stack = getattr(self._local, "span_stack", [])
         return stack.pop() if stack else None
@@ -427,7 +434,7 @@ class Tracer:
         self,
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Optional[Dict[str, Any]] = None,
+        attributes: dict[str, Any] | None = None,
         end_on_exit: bool = True,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -461,12 +468,13 @@ class Tracer:
 
 
 def trace(
-    name: Optional[str] = None,
+    name: str | None = None,
     kind: SpanKind = SpanKind.INTERNAL,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: dict[str, Any] | None = None,
     record_exception: bool = True,
 ):
     """Decorator for tracing a function."""
+
     def decorator(func: Callable) -> Callable:
         span_name = name or func.__name__
 
@@ -504,6 +512,7 @@ def trace(
                 return result
 
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         return wrapper
@@ -512,8 +521,8 @@ def trace(
 
 
 # Global tracer registry
-_tracers: Dict[str, Tracer] = {}
-_default_processors: List[SpanProcessor] = []
+_tracers: dict[str, Tracer] = {}
+_default_processors: list[SpanProcessor] = []
 _tracer_lock = threading.Lock()
 
 
@@ -549,7 +558,7 @@ def get_tracer(name: str = "default") -> Tracer:
         return _tracers[name]
 
 
-def get_span_processor() -> Optional[SimpleSpanProcessor]:
+def get_span_processor() -> SimpleSpanProcessor | None:
     """Get the global memory span processor."""
     for processor in _default_processors:
         if isinstance(processor, SimpleSpanProcessor):

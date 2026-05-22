@@ -1,26 +1,26 @@
 """Tests for ContextGenerator."""
 
-import pytest
 import tempfile
 from datetime import datetime
 from pathlib import Path
+
+from models import (
+    DependencyInfo,
+    FileInfo,
+    FileType,
+    InitializerConfig,
+    ModuleInfo,
+    ObjectType,
+    PatternInfo,
+    ProjectStructure,
+    ProjectType,
+    RelevantFile,
+)
 
 from ..context_generator import (
     ContextGenerator,
     generate_context,
     generate_context_markdown,
-)
-from models import (
-    ObjectType,
-    ProjectType,
-    FileType,
-    FileInfo,
-    ModuleInfo,
-    ProjectStructure,
-    RelevantFile,
-    PatternInfo,
-    DependencyInfo,
-    InitializerConfig,
 )
 
 
@@ -212,7 +212,9 @@ class TestStructureSection:
         """Test that structure includes module information."""
         generator = ContextGenerator()
         modules = [
-            create_test_module("ТестМодуль", ObjectType.COMMON_MODULE, exports_count=10, line_count=500),
+            create_test_module(
+                "ТестМодуль", ObjectType.COMMON_MODULE, exports_count=10, line_count=500
+            ),
         ]
         structure = create_test_structure(modules)
 

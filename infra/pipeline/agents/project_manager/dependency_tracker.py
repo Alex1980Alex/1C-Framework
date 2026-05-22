@@ -4,16 +4,13 @@ Dependency Tracker for PROJECT-MANAGER Agent.
 Manages task dependencies and determines execution order.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Set, Optional, Tuple
 from collections import defaultdict
+from dataclasses import dataclass, field
 
 from agents.project_manager.models import (
     Project,
     Task,
     TaskStatus,
-    TaskDependency,
-    DependencyType,
 )
 
 
@@ -21,9 +18,13 @@ from agents.project_manager.models import (
 class DependencyGraph:
     """Graph representation of task dependencies."""
 
-    nodes: Set[str] = field(default_factory=set)  # task_ids
-    edges: Dict[str, List[str]] = field(default_factory=lambda: defaultdict(list))  # task_id -> [dependent_task_ids]
-    reverse_edges: Dict[str, List[str]] = field(default_factory=lambda: defaultdict(list))  # task_id -> [dependency_task_ids]
+    nodes: set[str] = field(default_factory=set)  # task_ids
+    edges: dict[str, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )  # task_id -> [dependent_task_ids]
+    reverse_edges: dict[str, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )  # task_id -> [dependency_task_ids]
 
     def add_node(self, task_id: str) -> None:
         """Add node to graph."""
@@ -42,11 +43,11 @@ class DependencyGraph:
         self.edges[from_task].append(to_task)
         self.reverse_edges[to_task].append(from_task)
 
-    def get_dependents(self, task_id: str) -> List[str]:
+    def get_dependents(self, task_id: str) -> list[str]:
         """Get tasks that depend on this task."""
         return self.edges.get(task_id, [])
 
-    def get_dependencies(self, task_id: str) -> List[str]:
+    def get_dependencies(self, task_id: str) -> list[str]:
         """Get tasks this task depends on."""
         return self.reverse_edges.get(task_id, [])
 
@@ -76,7 +77,7 @@ class DependencyGraph:
 
         return False
 
-    def topological_sort(self) -> Optional[List[str]]:
+    def topological_sort(self) -> list[str] | None:
         """
         Get topological ordering of tasks.
 
@@ -122,7 +123,7 @@ class DependencyTracker:
 
     def __init__(self) -> None:
         """Initialize tracker."""
-        self._graphs: Dict[str, DependencyGraph] = {}
+        self._graphs: dict[str, DependencyGraph] = {}
 
     def build_graph(self, project: Project) -> DependencyGraph:
         """
@@ -148,11 +149,11 @@ class DependencyTracker:
         self._graphs[project.project_id] = graph
         return graph
 
-    def get_graph(self, project_id: str) -> Optional[DependencyGraph]:
+    def get_graph(self, project_id: str) -> DependencyGraph | None:
         """Get cached graph for project."""
         return self._graphs.get(project_id)
 
-    def validate_dependencies(self, project: Project) -> Tuple[bool, List[str]]:
+    def validate_dependencies(self, project: Project) -> tuple[bool, list[str]]:
         """
         Validate project dependencies.
 
@@ -169,9 +170,7 @@ class DependencyTracker:
         for task in project.tasks:
             for dep_id in task.dependencies:
                 if dep_id not in task_ids:
-                    errors.append(
-                        f"Task '{task.task_id}' depends on non-existent task '{dep_id}'"
-                    )
+                    errors.append(f"Task '{task.task_id}' depends on non-existent task '{dep_id}'")
 
         # Check for cycles
         graph = self.build_graph(project)
@@ -180,7 +179,7 @@ class DependencyTracker:
 
         return len(errors) == 0, errors
 
-    def get_execution_order(self, project: Project) -> Optional[List[Task]]:
+    def get_execution_order(self, project: Project) -> list[Task] | None:
         """
         Get tasks in execution order.
 
@@ -200,7 +199,7 @@ class DependencyTracker:
         task_map = {t.task_id: t for t in project.tasks}
         return [task_map[task_id] for task_id in order if task_id in task_map]
 
-    def get_ready_tasks(self, project: Project) -> List[Task]:
+    def get_ready_tasks(self, project: Project) -> list[Task]:
         """
         Get tasks ready for execution.
 
@@ -214,10 +213,7 @@ class DependencyTracker:
         Returns:
             List of ready tasks sorted by priority
         """
-        completed_ids = {
-            t.task_id for t in project.tasks
-            if t.status == TaskStatus.COMPLETED
-        }
+        completed_ids = {t.task_id for t in project.tasks if t.status == TaskStatus.COMPLETED}
 
         ready = []
         for task in project.tasks:
@@ -232,7 +228,7 @@ class DependencyTracker:
         ready.sort(key=lambda t: t.priority.weight, reverse=True)
         return ready
 
-    def get_blocked_tasks(self, project: Project) -> List[Tuple[Task, List[str]]]:
+    def get_blocked_tasks(self, project: Project) -> list[tuple[Task, list[str]]]:
         """
         Get blocked tasks with their unmet dependencies.
 
@@ -242,10 +238,7 @@ class DependencyTracker:
         Returns:
             List of (task, unmet_dependency_ids) tuples
         """
-        completed_ids = {
-            t.task_id for t in project.tasks
-            if t.status == TaskStatus.COMPLETED
-        }
+        completed_ids = {t.task_id for t in project.tasks if t.status == TaskStatus.COMPLETED}
 
         blocked = []
         for task in project.tasks:
@@ -258,7 +251,7 @@ class DependencyTracker:
 
         return blocked
 
-    def can_start(self, project: Project, task_id: str) -> Tuple[bool, List[str]]:
+    def can_start(self, project: Project, task_id: str) -> tuple[bool, list[str]]:
         """
         Check if task can start.
 
@@ -276,15 +269,12 @@ class DependencyTracker:
         if task.status != TaskStatus.PENDING:
             return False, [f"Task status is '{task.status.value}', not pending"]
 
-        completed_ids = {
-            t.task_id for t in project.tasks
-            if t.status == TaskStatus.COMPLETED
-        }
+        completed_ids = {t.task_id for t in project.tasks if t.status == TaskStatus.COMPLETED}
 
         unmet = [dep for dep in task.dependencies if dep not in completed_ids]
         return len(unmet) == 0, unmet
 
-    def get_impact_of_failure(self, project: Project, task_id: str) -> List[Task]:
+    def get_impact_of_failure(self, project: Project, task_id: str) -> list[Task]:
         """
         Get tasks that would be blocked if a task fails.
 
@@ -311,7 +301,7 @@ class DependencyTracker:
         task_map = {t.task_id: t for t in project.tasks}
         return [task_map[tid] for tid in blocked_ids if tid in task_map]
 
-    def suggest_parallel_groups(self, project: Project) -> List[List[Task]]:
+    def suggest_parallel_groups(self, project: Project) -> list[list[Task]]:
         """
         Suggest groups of tasks that can run in parallel.
 
@@ -328,7 +318,7 @@ class DependencyTracker:
             return []
 
         # Group by level (tasks at same level can run in parallel)
-        levels: Dict[str, int] = {}
+        levels: dict[str, int] = {}
 
         for task_id in order:
             deps = graph.get_dependencies(task_id)
@@ -338,7 +328,7 @@ class DependencyTracker:
                 levels[task_id] = max(levels.get(d, 0) for d in deps) + 1
 
         # Group tasks by level
-        groups: Dict[int, List[str]] = defaultdict(list)
+        groups: dict[int, list[str]] = defaultdict(list)
         for task_id, level in levels.items():
             groups[level].append(task_id)
 

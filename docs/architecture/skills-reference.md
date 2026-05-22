@@ -353,5 +353,3 @@ Config-driven маршрутизация промптов к скиллам. К�
 | Version | Date | F1 | Changes |
 |--------|------|-----|---------|
 | v9 | 2026-03-16 | 0.80 | Added framework-api, framework-quickstart, framework-mcp-ui to framework-use bundle |
-
-

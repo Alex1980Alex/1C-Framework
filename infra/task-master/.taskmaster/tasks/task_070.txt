@@ -34,4 +34,3 @@ Create handlers for different output formats (SVG, PNG, PDF). Implement file out
 ### Description: Provide comprehensive documentation and examples for the 'diagram' command
 ### Details:
 Write detailed command documentation with all options explained. Create example diagrams covering different diagram types. Include troubleshooting section for common errors. Add documentation on extending the command with custom themes or templates. Create integration examples showing how to use the command in workflows with other tools.
-

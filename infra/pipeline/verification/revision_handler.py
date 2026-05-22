@@ -11,25 +11,26 @@ Handles REVISION_NEEDED status from verification:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from constants import (
+    MAX_REVISION_ATTEMPTS,
     AgentRole,
     ArtifactType,
-    MAX_REVISION_ATTEMPTS,
     VerificationStatus,
 )
 from models import Artifact
+
 from .base_verifier import CheckResult, VerificationResult
 
 
 class RevisionAction(str, Enum):
     """Actions for revision handling."""
 
-    REVISE = "revise"           # Send back to agent for revision
-    ESCALATE = "escalate"       # Escalate to human
-    ABORT = "abort"             # Abort pipeline
-    SKIP = "skip"               # Skip verification (with warning)
+    REVISE = "revise"  # Send back to agent for revision
+    ESCALATE = "escalate"  # Escalate to human
+    ABORT = "abort"  # Abort pipeline
+    SKIP = "skip"  # Skip verification (with warning)
 
 
 @dataclass
@@ -40,12 +41,12 @@ class RevisionRequest:
     verification_result: VerificationResult
     target_agent: AgentRole
     attempt_number: int
-    failed_checks: List[CheckResult]
+    failed_checks: list[CheckResult]
     revision_prompt: str
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "artifact_type": self.artifact.metadata.artifact_type.value,
             "target_agent": self.target_agent.value,
@@ -64,7 +65,7 @@ class RevisionHistory:
     artifact_type: ArtifactType
     project_id: str
     task_id: str
-    revisions: List[RevisionRequest] = field(default_factory=list)
+    revisions: list[RevisionRequest] = field(default_factory=list)
     current_attempt: int = 0
     max_attempts: int = MAX_REVISION_ATTEMPTS
     is_exhausted: bool = False
@@ -80,7 +81,7 @@ class RevisionHistory:
     def remaining_attempts(self) -> int:
         return max(0, self.max_attempts - self.current_attempt)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "artifact_type": self.artifact_type.value,
             "project_id": self.project_id,
@@ -106,7 +107,9 @@ class RevisionHandler:
 
     def __init__(self, max_attempts: int = MAX_REVISION_ATTEMPTS) -> None:
         self.max_attempts = max_attempts
-        self._histories: Dict[str, RevisionHistory] = {}  # key: "{project_id}:{task_id}:{artifact_type}"
+        self._histories: dict[
+            str, RevisionHistory
+        ] = {}  # key: "{project_id}:{task_id}:{artifact_type}"
 
     def handle_verification_result(
         self,
@@ -114,7 +117,7 @@ class RevisionHandler:
         verification_result: VerificationResult,
         project_id: str,
         task_id: str,
-    ) -> tuple[RevisionAction, Optional[RevisionRequest]]:
+    ) -> tuple[RevisionAction, RevisionRequest | None]:
         """
         Handle verification result and determine next action.
 
@@ -220,7 +223,7 @@ class RevisionHandler:
         self,
         artifact: Artifact,
         verification_result: VerificationResult,
-        failed_checks: List[CheckResult],
+        failed_checks: list[CheckResult],
         attempt_number: int,
     ) -> str:
         """Generate a detailed revision prompt for the agent."""
@@ -261,24 +264,28 @@ class RevisionHandler:
             lines.append("")
 
         # Add instructions
-        lines.extend([
-            "## Инструкции",
-            "",
-            "1. Внимательно изучите указанные проблемы",
-            "2. Исправьте все критические ошибки",
-            "3. По возможности устраните предупреждения",
-            "4. Повторно сгенерируйте артефакт",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Инструкции",
+                "",
+                "1. Внимательно изучите указанные проблемы",
+                "2. Исправьте все критические ошибки",
+                "3. По возможности устраните предупреждения",
+                "4. Повторно сгенерируйте артефакт",
+                "",
+            ]
+        )
 
         # Add remaining attempts warning
         remaining = self.max_attempts - attempt_number
         if remaining <= 1:
-            lines.extend([
-                "⚠️ **ВНИМАНИЕ**: Это последняя попытка!",
-                "При неуспешной верификации задача будет эскалирована.",
-                "",
-            ])
+            lines.extend(
+                [
+                    "⚠️ **ВНИМАНИЕ**: Это последняя попытка!",
+                    "При неуспешной верификации задача будет эскалирована.",
+                    "",
+                ]
+            )
         else:
             lines.append(f"ℹ️ Осталось попыток: {remaining}")
             lines.append("")
@@ -289,8 +296,8 @@ class RevisionHandler:
         self,
         project_id: str,
         task_id: str,
-        artifact_type: Optional[ArtifactType] = None,
-    ) -> List[RevisionHistory]:
+        artifact_type: ArtifactType | None = None,
+    ) -> list[RevisionHistory]:
         """
         Get revision history for a task.
 
@@ -316,7 +323,7 @@ class RevisionHandler:
         self,
         project_id: str,
         task_id: str,
-        artifact_type: Optional[ArtifactType] = None,
+        artifact_type: ArtifactType | None = None,
     ) -> None:
         """
         Reset revision history for a task.
@@ -339,13 +346,13 @@ class RevisionHandler:
         for key in keys_to_remove:
             del self._histories[key]
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about revision handling."""
         total_revisions = sum(len(h.revisions) for h in self._histories.values())
         exhausted_count = sum(1 for h in self._histories.values() if h.is_exhausted)
 
         # Count by agent
-        by_agent: Dict[str, int] = {}
+        by_agent: dict[str, int] = {}
         for history in self._histories.values():
             for revision in history.revisions:
                 agent = revision.target_agent.value

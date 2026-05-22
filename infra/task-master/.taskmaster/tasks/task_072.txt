@@ -46,4 +46,3 @@ Implement the core PDF generation logic using the selected library. Include func
 ### Description: Implement user-facing commands and options for generating and saving PDF reports
 ### Details:
 Develop CLI commands for PDF generation with parameters for customization (time period, detail level, etc.). Include options for automatic saving to specified locations, email distribution, and integration with existing project workflows.
-

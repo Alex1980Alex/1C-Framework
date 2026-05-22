@@ -4,15 +4,20 @@ Long-lived RDBGClient session (~75s) with ping_loop auto-attach for
 new worker targets. After BP set the user triggers a UI action which
 hits the BP. Script collects post-BP-fire validation: stack/vars/eval/step.
 """
+
 from __future__ import annotations
-import asyncio, sys, json
-sys.path.insert(0, r'C:/1С-Framework/tools/bsl-debug-server')
+
+import asyncio
+import json
+import sys
+
+sys.path.insert(0, r"C:/1С-Framework/tools/bsl-debug-server")
 from mcp_debug_server import RDBGClient
 
-INFOBASE = 'IBTransportManagementDevelop'
-CONFIG_VERSION = '39473d56e455bd4087b48823b4a6c24900000000'
-OBJ_UUID = '75e77f99-b9d1-4bc0-93aa-c77a93d760d3'
-PROP_UUID = 'd5963243-262e-4398-b4d7-fb16d06484f6'
+INFOBASE = "IBTransportManagementDevelop"
+CONFIG_VERSION = "39473d56e455bd4087b48823b4a6c24900000000"
+OBJ_UUID = "75e77f99-b9d1-4bc0-93aa-c77a93d760d3"
+PROP_UUID = "d5963243-262e-4398-b4d7-fb16d06484f6"
 LINE = 67
 WAIT_SECONDS = 75
 
@@ -34,9 +39,11 @@ async def main(infobase: str):
         report["initial_targets"] = ids
 
         await c.set_breakpoints(
-            module_type='ConfigModule',
-            object_id=OBJ_UUID, property_id=PROP_UUID,
-            lines=[LINE], version=CONFIG_VERSION,
+            module_type="ConfigModule",
+            object_id=OBJ_UUID,
+            property_id=PROP_UUID,
+            lines=[LINE],
+            version=CONFIG_VERSION,
         )
         report["bp_set"] = {"line": LINE, "version": CONFIG_VERSION}
         print(f"[setup OK] BP set, {len(ids)} targets attached", file=sys.stderr)

@@ -197,7 +197,7 @@ export class ProviderRotationManager {
   forceSwitch(): void {
     const usage = this.usage.get(this.currentProvider)!;
     usage.lastError = 'Rate limit - forced switch';
-    
+
     console.warn(`🔄 Force switching from ${this.currentProvider.toUpperCase()} due to rate limit...`);
     this.switchToFallback();
   }
@@ -209,13 +209,13 @@ export class ProviderRotationManager {
     // Find next provider that isn't the current one
     const allProviders = [this.config.primaryProvider, ...this.config.fallbackProviders];
     const currentIndex = allProviders.indexOf(this.currentProvider);
-    
+
     // Try next provider in the list
     for (let i = 1; i < allProviders.length; i++) {
       const nextIndex = (currentIndex + i) % allProviders.length;
       const nextProvider = allProviders[nextIndex];
       const usage = this.usage.get(nextProvider);
-      
+
       // Skip if this provider has too many errors
       if (usage && usage.errors < this.config.maxErrorsBeforeFallback) {
         this.currentProvider = nextProvider;

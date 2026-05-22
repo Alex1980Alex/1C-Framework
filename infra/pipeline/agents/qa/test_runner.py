@@ -6,34 +6,35 @@ Note: This is a simulation layer - actual BSL test execution
 requires 1C:Enterprise runtime.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Callable
-from datetime import datetime
-import time
 import random
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
 from agents.qa.models import (
+    Defect,
+    Severity,
     TestCase,
     TestResult,
     TestStatus,
     TestSuite,
-    TestType,
-    Defect,
-    Severity,
 )
 
 
 @dataclass
 class RunConfig:
     """Configuration for test run."""
+
     parallel: bool = False
     timeout_ms: int = 30000
     stop_on_failure: bool = False
-    skip_tags: List[str] = field(default_factory=list)
-    only_tags: List[str] = field(default_factory=list)
+    skip_tags: list[str] = field(default_factory=list)
+    only_tags: list[str] = field(default_factory=list)
     dry_run: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "parallel": self.parallel,
@@ -48,14 +49,15 @@ class RunConfig:
 @dataclass
 class RunSummary:
     """Summary of test run."""
+
     total: int = 0
     passed: int = 0
     failed: int = 0
     skipped: int = 0
     errors: int = 0
     duration_ms: int = 0
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     @property
     def pass_rate(self) -> float:
@@ -65,7 +67,7 @@ class RunSummary:
             return 0.0
         return (self.passed / executed) * 100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "total": self.total,
@@ -95,7 +97,7 @@ class TestRunner:
         print(f"Pass rate: {runner.summary.pass_rate}%")
     """
 
-    def __init__(self, config: Optional[RunConfig] = None) -> None:
+    def __init__(self, config: RunConfig | None = None) -> None:
         """
         Initialize runner.
 
@@ -103,14 +105,14 @@ class TestRunner:
             config: Run configuration
         """
         self.config = config or RunConfig()
-        self.results: List[TestResult] = []
-        self.defects: List[Defect] = []
+        self.results: list[TestResult] = []
+        self.defects: list[Defect] = []
         self.summary = RunSummary()
         self._defect_counter = 0
 
         # Callbacks
-        self._on_test_start: Optional[Callable[[TestCase], None]] = None
-        self._on_test_end: Optional[Callable[[TestResult], None]] = None
+        self._on_test_start: Callable[[TestCase], None] | None = None
+        self._on_test_end: Callable[[TestResult], None] | None = None
 
     def on_test_start(self, callback: Callable[[TestCase], None]) -> None:
         """Register callback for test start."""
@@ -120,7 +122,7 @@ class TestRunner:
         """Register callback for test end."""
         self._on_test_end = callback
 
-    def run(self, suite: TestSuite) -> List[TestResult]:
+    def run(self, suite: TestSuite) -> list[TestResult]:
         """
         Run all tests in suite.
 
@@ -162,13 +164,15 @@ class TestRunner:
             # Stop on failure if configured
             if self.config.stop_on_failure and result.status == TestStatus.FAILED:
                 # Mark remaining as skipped
-                remaining = tests_to_run[tests_to_run.index(test_case) + 1:]
+                remaining = tests_to_run[tests_to_run.index(test_case) + 1 :]
                 for remaining_test in remaining:
-                    self.results.append(TestResult(
-                        test_case=remaining_test,
-                        status=TestStatus.SKIPPED,
-                        actual_result="Skipped due to previous failure",
-                    ))
+                    self.results.append(
+                        TestResult(
+                            test_case=remaining_test,
+                            status=TestStatus.SKIPPED,
+                            actual_result="Skipped due to previous failure",
+                        )
+                    )
                     self.summary.skipped += 1
                 break
 
@@ -189,7 +193,7 @@ class TestRunner:
         """
         return self._run_single(test_case)
 
-    def _filter_tests(self, tests: List[TestCase]) -> List[TestCase]:
+    def _filter_tests(self, tests: list[TestCase]) -> list[TestCase]:
         """Filter tests based on config."""
         filtered = []
 
@@ -320,15 +324,15 @@ class TestRunner:
             expected_behavior=result.test_case.expected_result,
         )
 
-    def get_failed_tests(self) -> List[TestResult]:
+    def get_failed_tests(self) -> list[TestResult]:
         """Get list of failed tests."""
         return [r for r in self.results if r.status == TestStatus.FAILED]
 
-    def get_defects(self) -> List[Defect]:
+    def get_defects(self) -> list[Defect]:
         """Get list of created defects."""
         return self.defects
 
-    def get_coverage(self, requirements: List[str]) -> Dict[str, Any]:
+    def get_coverage(self, requirements: list[str]) -> dict[str, Any]:
         """
         Calculate requirement coverage.
 
@@ -339,7 +343,7 @@ class TestRunner:
             Coverage information
         """
         covered = set()
-        req_tests: Dict[str, List[str]] = {}
+        req_tests: dict[str, list[str]] = {}
 
         for result in self.results:
             if result.test_case.requirement_id:

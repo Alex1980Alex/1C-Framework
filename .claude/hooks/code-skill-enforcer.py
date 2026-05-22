@@ -29,7 +29,6 @@ import json
 import os
 import re
 import sys
-from typing import Any, Dict, List, Optional
 
 # Path resolution (same pattern as all other hooks)
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -52,6 +51,7 @@ except ImportError:
 # ============================================================================
 # Configuration Loader (lazy-load with caching)
 # ============================================================================
+
 
 class PatternConfig:
     """Lazy-loaded pattern configuration with caching."""
@@ -78,13 +78,13 @@ class PatternConfig:
             "directory_rules": {"mappings": []},
             "bash_rules": {"mappings": []},
             "research_protocol": {"patterns": []},
-            "post_verification": {"rules": []}
+            "post_verification": {"rules": []},
         }
         try:
             if os.path.exists(self.CONFIG_PATH):
-                with open(self.CONFIG_PATH, "r", encoding="utf-8") as f:
+                with open(self.CONFIG_PATH, encoding="utf-8") as f:
                     self._config.update(json.load(f))
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             pass
         self._compile_patterns()
 
@@ -152,6 +152,7 @@ class PatternConfig:
 # Code Skill Enforcer Hook (protocol.py base class)
 # ============================================================================
 
+
 class CodeSkillEnforcer(BaseHook):
     """
     Skill-First Enforcement via PreToolUse and PostToolUse events.
@@ -171,7 +172,7 @@ class CodeSkillEnforcer(BaseHook):
         super().__init__()
         self.config = PatternConfig.get()
 
-    def execute(self, inp: HookInput) -> Optional[HookOutput]:
+    def execute(self, inp: HookInput) -> HookOutput | None:
         event = inp.detected_event
 
         if event == "PreToolUse":
@@ -190,7 +191,20 @@ class CodeSkillEnforcer(BaseHook):
         file_path = inp.tool_input.get("file_path", "")
         if file_path:
             ext = os.path.splitext(file_path)[1].lower()
-            if ext in (".md", ".txt", ".json", ".yml", ".yaml", ".toml", ".env", ".ini", ".cfg", ".csv", ".log", ".v8i"):
+            if ext in (
+                ".md",
+                ".txt",
+                ".json",
+                ".yml",
+                ".yaml",
+                ".toml",
+                ".env",
+                ".ini",
+                ".cfg",
+                ".csv",
+                ".log",
+                ".v8i",
+            ):
                 return None
 
         # Level B: Directory rules (checked FIRST — most specific)
@@ -230,7 +244,7 @@ class CodeSkillEnforcer(BaseHook):
         # Remove absolute path prefixes
         for prefix in ["D:/1C-Enterprise_Framework/", "D:/1\u0421-Framework/", "C:/Users/"]:
             if normalized.startswith(prefix):
-                normalized = normalized[len(prefix):]
+                normalized = normalized[len(prefix) :]
                 break
         return normalized
 
@@ -321,11 +335,13 @@ class CodeSkillEnforcer(BaseHook):
 
         # Set pending_learn as backup for Level F
         if not SessionState.has_pending_learn():
-            SessionState.set_pending_learn({
-                "label": label,
-                "domain": domain,
-                "pattern": pattern,
-            })
+            SessionState.set_pending_learn(
+                {
+                    "label": label,
+                    "domain": domain,
+                    "pattern": pattern,
+                }
+            )
 
         return HookOutput().block(
             f"LEARNING REQUIRED: '{label}' — no dedicated skill exists.\n"
@@ -418,20 +434,14 @@ class CodeSkillEnforcer(BaseHook):
             # Check must_contain
             for pattern in rule.get("must_contain", []):
                 if not re.search(pattern, content):
-                    msg = rule.get("error_message",
-                        f"Missing pattern '{pattern}'")
-                    return HookOutput().system_message(
-                        f"[WARN] POST-VERIFICATION: {skill}\n{msg}"
-                    )
+                    msg = rule.get("error_message", f"Missing pattern '{pattern}'")
+                    return HookOutput().system_message(f"[WARN] POST-VERIFICATION: {skill}\n{msg}")
 
             # Check must_not_contain
             for pattern in rule.get("must_not_contain", []):
                 if re.search(pattern, content):
-                    msg = rule.get("error_message",
-                        f"Found anti-pattern '{pattern}'")
-                    return HookOutput().system_message(
-                        f"[WARN] POST-VERIFICATION: {skill}\n{msg}"
-                    )
+                    msg = rule.get("error_message", f"Found anti-pattern '{pattern}'")
+                    return HookOutput().system_message(f"[WARN] POST-VERIFICATION: {skill}\n{msg}")
 
         return None
 

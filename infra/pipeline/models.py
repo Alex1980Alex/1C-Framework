@@ -4,11 +4,11 @@ Artifact Models for Development Pipeline.
 Defines data structures for artifacts.
 """
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-import hashlib
+from typing import Any
 
 from constants import AgentRole, ArtifactType
 
@@ -23,10 +23,10 @@ class ArtifactMetadata:
     updated_at: datetime = field(default_factory=datetime.now)
     version: int = 1
     checksum: str = ""
-    dependencies: List[str] = field(default_factory=list)
-    tags: Dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    tags: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "artifact_type": self.artifact_type.value,
@@ -40,7 +40,7 @@ class ArtifactMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ArtifactMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> "ArtifactMetadata":
         """Create from dictionary."""
         return cls(
             artifact_type=ArtifactType(data["artifact_type"]),
@@ -61,7 +61,7 @@ class Artifact:
     name: str
     content: str
     metadata: ArtifactMetadata
-    path: Optional[Path] = None
+    path: Path | None = None
 
     def __post_init__(self) -> None:
         """Calculate checksum after initialization."""
@@ -97,7 +97,7 @@ checksum: {self.metadata.checksum}
         """Get content with metadata header."""
         return self.to_markdown_header() + self.content
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """Validate artifact structure. Returns list of errors."""
         errors = []
 
@@ -115,13 +115,21 @@ checksum: {self.metadata.checksum}
 
         return errors
 
-    def _get_required_sections(self) -> List[str]:
+    def _get_required_sections(self) -> list[str]:
         """Get required sections based on artifact type."""
         sections = {
             ArtifactType.CONTEXT: ["# Контекст проекта", "## Структура"],
             ArtifactType.SPEC: ["# Спецификация", "## Требования", "## Критерии приёмки"],
-            ArtifactType.DESIGN: ["# Техническое решение", "## Архитектурные решения", "## План изменений"],
-            ArtifactType.RESULT: ["# Результат реализации", "## Выполненные шаги", "## Созданные файлы"],
+            ArtifactType.DESIGN: [
+                "# Техническое решение",
+                "## Архитектурные решения",
+                "## План изменений",
+            ],
+            ArtifactType.RESULT: [
+                "# Результат реализации",
+                "## Выполненные шаги",
+                "## Созданные файлы",
+            ],
             ArtifactType.VERIFICATION: ["# Верификация", "## Статус", "## Вердикт"],
         }
         return sections.get(self.metadata.artifact_type, [])

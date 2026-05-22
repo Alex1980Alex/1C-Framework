@@ -6,13 +6,13 @@ Feel free to share your learnings by opening new issues, feature requests and ex
 
 ## Developer Environment Setup
 
-You can have a local setup via `uv` or a docker interpreter-based setup. 
+You can have a local setup via `uv` or a docker interpreter-based setup.
 The repository is also configured to seamlessly work within a GitHub Codespace. See the instructions
 for the various setup scenarios below.
 
-Independently of how the setup was done, the virtual environment can be 
+Independently of how the setup was done, the virtual environment can be
 created and activated via `uv` (see below), and the various tasks like formatting, testing, and documentation building
-can be executed using `poe`. For example, `poe format` will format the code, including the 
+can be executed using `poe`. For example, `poe format` will format the code, including the
 notebooks. Just run `poe` to see the available commands.
 
 ### Python (uv) setup
@@ -22,7 +22,7 @@ You can install a virtual environment with the required as follows
 1. Create a new virtual environment: `uv venv`
 2. Activate the environment:
     * On Linux/Unix/macOS or Windows with Git Bash: `source .venv/bin/activate`
-    * On Windows outside of Git Bash: `.venv\Scripts\activate.bat` (in cmd/ps) or `source .venv/Scripts/activate` (in git-bash) 
+    * On Windows outside of Git Bash: `.venv\Scripts\activate.bat` (in cmd/ps) or `source .venv/Scripts/activate` (in git-bash)
 3. Install the required packages with all extras: `uv pip install --all-extras -r pyproject.toml -e .`
 
 ## Running Tools Locally

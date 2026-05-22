@@ -24,15 +24,13 @@ class RelationDirection(str, Enum):
 class RelationWeight(str, Enum):
     """Weight category for a relation."""
 
-    STRONG = "strong"      # 0.8-1.0
+    STRONG = "strong"  # 0.8-1.0
     MODERATE = "moderate"  # 0.4-0.7
-    WEAK = "weak"        # 0.1-0.3
-
+    WEAK = "weak"  # 0.1-0.3
 
     NEGATIVE = "negative"  # -1.0-0.0
 
-
-    DERIVED = "derived"    # computed
+    DERIVED = "derived"  # computed
 
 
 # Weight value ranges
@@ -80,9 +78,7 @@ class RelationType(str, Enum):
     FORGETS = "forgets"
     ASSOCIATED_WITH = "associated_with"
 
-
     MENTIONS = "mentions"
-
 
     CONTRASTS_WITH = "contrasts_with"
 
@@ -92,10 +88,8 @@ class RelationType(str, Enum):
     USES_API = "uses_api"
     HANDLES_EVENT = "handles_event"
 
-
     MODIFIES = "modifies"
     VALIDATES = "validates"
-
 
     POSTS = "posts"
 
@@ -161,8 +155,8 @@ class RelationRegistry:
 
     def __init__(self):
         self._relations: list[Relation | None] = []
-        self._by_source: dict[str, list[int]] = {}   # source_id -> [indices]
-        self._by_target: dict[str, list[int]] = {}   # target_id -> [indices]
+        self._by_source: dict[str, list[int]] = {}  # source_id -> [indices]
+        self._by_target: dict[str, list[int]] = {}  # target_id -> [indices]
         self._by_type: dict[RelationType, list[int]] = {}  # type -> [indices]
 
         self._id_map: dict[str, int] = {}  # source:target:type -> index
@@ -176,7 +170,9 @@ class RelationRegistry:
         self._by_target.setdefault(relation.target_id, []).append(idx)
         self._by_type.setdefault(relation.relation_type, []).append(idx)
 
-        self._id_map[f"{relation.source_id}:{relation.target_id}:{relation.relation_type.value}"] = idx
+        self._id_map[
+            f"{relation.source_id}:{relation.target_id}:{relation.relation_type.value}"
+        ] = idx
 
         self._maybe_add_inverse(relation)
 
@@ -212,6 +208,7 @@ class RelationRegistry:
         """Get all relations of a specific type."""
         indices = self._by_type.get(relation_type, [])
         return [r for i in indices if (r := self._relations[i]) is not None]
+
     def get_between(self, source_id: str, target_id: str) -> list[Relation]:
         """Get relations between two entities."""
         result = []
@@ -240,10 +237,12 @@ class RelationRegistry:
             type_list.remove(idx)
         del self._id_map[key]
         return True
+
     @property
     def all_relations(self) -> list[Relation]:
         """Get all non-None relations."""
         return [r for r in self._relations if r is not None]
+
     @property
     def stats(self) -> dict[str, Any]:
         return {

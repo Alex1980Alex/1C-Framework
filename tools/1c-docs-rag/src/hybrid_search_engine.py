@@ -158,7 +158,7 @@ def sanitize_fts5_query(query: str) -> str:
 
 class HybridSearchEngine:
     """Гибридный поисковый движок"""
-    
+
     def __init__(self, db_path: str = "cache/docs-mcp/hybrid_search.db"):
         """Инициализация поискового движка"""
         # Настройка логирования
@@ -169,16 +169,16 @@ class HybridSearchEngine:
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
             self.logger.setLevel(logging.INFO)
-        
+
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.logger.info(f"Инициализация БД: {self.db_path}")
-        
+
         self._embedding_model = None
         self._embedding_model_loaded = False
         if not EMBEDDINGS_AVAILABLE:
             self.logger.warning("sentence-transformers недоступен. Семантический поиск отключен.")
-        
+
         try:
             self._init_database()
         except Exception as e:
@@ -277,7 +277,7 @@ class HybridSearchEngine:
                 content_hash TEXT
             )
         """)
-        
+
         # FTS5 таблица для полнотекстового поиска (standalone, не external content)
         cursor.execute("""
             CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(
@@ -332,7 +332,7 @@ class HybridSearchEngine:
                     FOREIGN KEY (document_id) REFERENCES documents (id)
                 )
             """)
-        
+
         # Индексы для оптимизации
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_type ON documents(doc_type)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_modified ON documents(modified)")
@@ -361,15 +361,15 @@ class HybridSearchEngine:
         conn.close()
 
         log_stderr(f"[OK] База данных инициализирована: {self.db_path}")
-    
+
     def _generate_doc_id(self, path: str) -> str:
         """Генерация уникального ID документа"""
         return hashlib.md5(path.encode()).hexdigest()[:12]
-    
+
     def _get_content_hash(self, content: str) -> str:
         """Хеш содержимого для определения изменений"""
         return hashlib.sha256(content.encode()).hexdigest()
-    
+
     def index_document(self, file_path: str, doc_type: str = "markdown", force: bool = False) -> bool:
         """Индексация одного документа
 
@@ -402,7 +402,7 @@ class HybridSearchEngine:
             if not force and self._is_document_current(doc_id, content_hash):
                 log_stderr(f"⏭️ Документ актуален: {path.name}")
                 return True
-            
+
             # Создаем документ
             document = Document(
                 id=doc_id,
@@ -415,14 +415,14 @@ class HybridSearchEngine:
                 tags=self._extract_tags(content, doc_type),
                 doc_type=doc_type
             )
-            
+
             # Сохраняем в базу
             self._save_document(document, content_hash)
-            
+
             # Генерируем эмбеддинги если доступны
             if self.embedding_model:
                 self._generate_embedding(document)
-            
+
             log_stderr(f"[OK] Проиндексирован: {path.name}")
             return True
 
@@ -611,16 +611,16 @@ class HybridSearchEngine:
         """Проверка актуальности документа"""
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute(
-            "SELECT content_hash FROM documents WHERE id = ?", 
+            "SELECT content_hash FROM documents WHERE id = ?",
             (doc_id,)
         )
         result = cursor.fetchone()
         conn.close()
-        
+
         return result and result[0] == content_hash
-    
+
     def _extract_tags(self, content: str, doc_type: str = "markdown") -> List[str]:
         """Извлечение тегов из содержимого"""
         tags = []
@@ -660,12 +660,12 @@ class HybridSearchEngine:
                 tags.append("common-module")
 
         return list(set(tags))  # Убираем дубликаты
-    
+
     def _save_document(self, document: Document, content_hash: str):
         """Сохранение документа в базу"""
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         # Основная таблица (триггеры автоматически обновят FTS5)
         # tags сохраняем как строку через пробел для FTS-индексации
         tags_str = " ".join(document.tags) if document.tags else ""
@@ -679,41 +679,41 @@ class HybridSearchEngine:
             tags_str, document.doc_type, content_hash
         ))
         # FTS5 синхронизируется автоматически через триггеры documents_ai/au
-        
+
         conn.commit()
         conn.close()
-    
+
     def _generate_embedding(self, document: Document):
         """Генерация эмбеддинга для документа"""
         if not self.embedding_model:
             return
-        
+
         try:
             # Комбинируем заголовок и содержимое для эмбеддинга
             text_to_embed = f"{document.title} {document.content}"
-            
+
             # Генерируем эмбеддинг
             embedding = self.embedding_model.encode(text_to_embed)
-            
+
             # Сохраняем в базу
             conn = self._get_connection()
             cursor = conn.cursor()
-            
+
             cursor.execute("""
                 INSERT OR REPLACE INTO embeddings (document_id, embedding)
                 VALUES (?, ?)
             """, (document.id, embedding.tobytes()))
-            
+
             conn.commit()
             conn.close()
-            
+
         except Exception as e:
             log_stderr(f"[WARNING] Ошибка генерации эмбеддинга для {document.title}: {e}")
-    
+
     def search(self, query: str, limit: int = 10, search_type: str = "hybrid") -> List[SearchResult]:
         """
         Основной метод поиска
-        
+
         Args:
             query: Поисковый запрос
             limit: Максимальное количество результатов
@@ -728,7 +728,7 @@ class HybridSearchEngine:
         else:
             # Fallback на полнотекстовый поиск
             return self._fulltext_search(query, limit)
-    
+
     def _fulltext_search(self, query: str, limit: int) -> List[SearchResult]:
         """Полнотекстовый поиск через FTS5"""
         try:
@@ -751,16 +751,16 @@ class HybridSearchEngine:
             ORDER BY score
             LIMIT :limit
             """, {"query": safe_query, "limit": limit})
-            
+
             results = []
             for row in cursor.fetchall():
                 try:
                     document = self._row_to_document(row[:-1])  # Исключаем score
                     score = row[-1]
-                    
+
                     # Генерируем snippet
                     snippet = self._generate_snippet(document.content, query)
-                    
+
                     results.append(SearchResult(
                         document=document,
                         score=abs(score),  # BM25 может быть отрицательным
@@ -770,18 +770,18 @@ class HybridSearchEngine:
                 except Exception as e:
                     self.logger.error(f"Ошибка обработки результата: {e}")
                     continue
-            
+
             conn.close()
             self.logger.info(f"Найдено {len(results)} результатов (fulltext)")
             return results
-            
+
         except sqlite3.Error as e:
             self.logger.error(f"Ошибка SQL в fulltext_search: {e}")
             return []
         except Exception as e:
             self.logger.error(f"Неожиданная ошибка в fulltext_search: {e}")
             return []
-    
+
     def _semantic_search(self, query: str, limit: int) -> List[SearchResult]:
         """Семантический поиск через эмбеддинги (двухфазный)"""
         if not self.embedding_model:
@@ -868,7 +868,7 @@ class HybridSearchEngine:
         except Exception as e:
             self.logger.error(f"Неожиданная ошибка в semantic_search: {e}")
             return []
-    
+
     @staticmethod
     def _normalize_scores(results: List[SearchResult]) -> List[SearchResult]:
         """Нормализация скоров к диапазону [0, 1] через min-max нормализацию.
@@ -945,7 +945,7 @@ class HybridSearchEngine:
             # Fallback на fulltext поиск
             self.logger.info("Переход на fulltext поиск как fallback")
             return self._fulltext_search(query, limit)
-    
+
     def _row_to_document(self, row) -> Document:
         """Преобразование строки БД в объект Document"""
         return Document(
@@ -959,51 +959,51 @@ class HybridSearchEngine:
             tags=json.loads(row[7]) if row[7] else [],
             doc_type=row[8]
         )
-    
+
     def _generate_snippet(self, content: str, query: str, max_length: int = 200) -> str:
         """Генерация сниппета с контекстом запроса"""
         query_lower = query.lower()
         content_lower = content.lower()
-        
+
         # Ищем первое вхождение запроса
         pos = content_lower.find(query_lower)
-        
+
         if pos == -1:
             # Если точного совпадения нет, берем начало
             return content[:max_length] + "..." if len(content) > max_length else content
-        
+
         # Определяем границы сниппета
         start = max(0, pos - max_length // 3)
         end = min(len(content), pos + len(query) + max_length // 3)
-        
+
         snippet = content[start:end]
-        
+
         # Добавляем многоточия
         if start > 0:
             snippet = "..." + snippet
         if end < len(content):
             snippet = snippet + "..."
-            
+
         return snippet
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Получение статистики по индексу"""
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         # Общая статистика
         cursor.execute("SELECT COUNT(*) FROM documents")
         total_docs = cursor.fetchone()[0]
-        
+
         cursor.execute("SELECT COUNT(*) FROM embeddings")
         docs_with_embeddings = cursor.fetchone()[0]
-        
+
         cursor.execute("SELECT SUM(size) FROM documents")
         total_size = cursor.fetchone()[0] or 0
-        
+
         cursor.execute("SELECT doc_type, COUNT(*) FROM documents GROUP BY doc_type")
         types_stats = dict(cursor.fetchall())
-        
+
         # Используем json_valid() для фильтрации невалидных JSON тегов
         cursor.execute("""
             SELECT COUNT(DISTINCT tags.value)
@@ -1012,9 +1012,9 @@ class HybridSearchEngine:
               AND json_valid(documents.tags)
         """)
         unique_tags = cursor.fetchone()[0] or 0
-        
+
         conn.close()
-        
+
         return {
             "total_documents": total_docs,
             "documents_with_embeddings": docs_with_embeddings,

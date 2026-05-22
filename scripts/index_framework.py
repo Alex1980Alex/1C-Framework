@@ -37,6 +37,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from _progress import make_tracker  # noqa: E402
+
 from src.framework_search.config import (  # noqa: E402
     DEFAULT_BATCH_SIZE,
     DEFAULT_COLLECTION,
@@ -52,14 +53,17 @@ def main() -> int:
     ap.add_argument("--qdrant-url", default=DEFAULT_QDRANT_URL)
     ap.add_argument("--tei-url", default=DEFAULT_TEI_URL)
     ap.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
-    ap.add_argument("--recreate", action="store_true",
-                    help="Drop and recreate the collection")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="Walk + chunk only, no embedding or upsert")
-    ap.add_argument("--limit", type=int, default=0,
-                    help="Cap chunks at N (0 = unlimited)")
-    ap.add_argument("--paths", nargs="*", default=None,
-                    help="Restrict to these repo-relative paths (incremental reindex)")
+    ap.add_argument("--recreate", action="store_true", help="Drop and recreate the collection")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="Walk + chunk only, no embedding or upsert"
+    )
+    ap.add_argument("--limit", type=int, default=0, help="Cap chunks at N (0 = unlimited)")
+    ap.add_argument(
+        "--paths",
+        nargs="*",
+        default=None,
+        help="Restrict to these repo-relative paths (incremental reindex)",
+    )
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
 
@@ -119,15 +123,17 @@ def main() -> int:
     if args.dry_run:
         print("  (dry-run — nothing was written)")
 
-    tracker.stop(summary={
-        "files_seen": stats.get("files_seen", 0),
-        "files_indexed": stats.get("files_indexed", 0),
-        "chunks": stats.get("chunks", 0),
-        "embeddings_done": stats.get("embeddings_done", 0),
-        "elapsed_s": round(dt, 1),
-        "collection": args.collection,
-        "dry_run": bool(args.dry_run),
-    })
+    tracker.stop(
+        summary={
+            "files_seen": stats.get("files_seen", 0),
+            "files_indexed": stats.get("files_indexed", 0),
+            "chunks": stats.get("chunks", 0),
+            "embeddings_done": stats.get("embeddings_done", 0),
+            "elapsed_s": round(dt, 1),
+            "collection": args.collection,
+            "dry_run": bool(args.dry_run),
+        }
+    )
     return 0
 
 

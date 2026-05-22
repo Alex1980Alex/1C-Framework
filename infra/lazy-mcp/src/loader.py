@@ -9,31 +9,31 @@ Windows-specific fixes based on:
 """
 
 import asyncio
+import json
+import logging
+import os
 import subprocess
 import sys
-import os
-import json
 import threading
-import urllib.request
 import urllib.error
-from typing import Optional, Any
-from dataclasses import dataclass, field
+import urllib.request
 from collections import OrderedDict
-import logging
+from dataclasses import dataclass
+from typing import Any
 
 # Windows-specific flags for subprocess
 # IMPORTANT: DO NOT use CREATE_NO_WINDOW - it breaks stdio pipes!
 # See: Testing 2026-01-06 - CREATE_NO_WINDOW causes all MCP servers to hang
 # Only use CREATE_NEW_PROCESS_GROUP for proper signal handling
-if sys.platform == 'win32':
+if sys.platform == "win32":
     WINDOWS_CREATION_FLAGS = subprocess.CREATE_NEW_PROCESS_GROUP
 else:
     WINDOWS_CREATION_FLAGS = 0
 
 try:
-    from .registry import ServerConfig, Registry
+    from .registry import Registry, ServerConfig
 except ImportError:
-    from registry import ServerConfig, Registry
+    from registry import Registry, ServerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ActiveServer:
     """Активный MCP сервер"""
+
     name: str
     process: subprocess.Popen
     config: ServerConfig
@@ -59,6 +60,7 @@ class ActiveServer:
 @dataclass
 class BridgeServer:
     """HTTP Bridge сервер (например MCPO)"""
+
     name: str
     config: ServerConfig
     base_url: str
@@ -81,7 +83,7 @@ class ServerLoader:
     """
 
     # Singleton для Docker MCP Gateway (класс-уровень)
-    _gateway_instance: Optional[ActiveServer] = None
+    _gateway_instance: ActiveServer | None = None
     _gateway_tools_cache: list[dict] = []
     _gateway_lock = asyncio.Lock()
 
@@ -92,7 +94,7 @@ class ServerLoader:
         self.bridge_servers: dict[str, BridgeServer] = {}  # HTTP bridge серверы
         self._lock = asyncio.Lock()
 
-    async def get_server(self, server_name: str) -> Optional[ActiveServer]:
+    async def get_server(self, server_name: str) -> ActiveServer | None:
         """
         Получить активный сервер (запустить если нужно).
 
@@ -127,7 +129,7 @@ class ServerLoader:
 
             return server
 
-    async def _start_server(self, server_name: str) -> Optional[ActiveServer]:
+    async def _start_server(self, server_name: str) -> ActiveServer | None:
         """Запустить MCP сервер"""
         config = self.registry.get_server_config(server_name)
         if not config:
@@ -146,19 +148,19 @@ class ServerLoader:
             # Подготовка окружения
             env = os.environ.copy()
             env.update(config.env)
-            env['PYTHONIOENCODING'] = 'utf-8'
+            env["PYTHONIOENCODING"] = "utf-8"
             # CRITICAL: Disable Python stdout buffering for stdio MCP protocol
             # Without this, responses are buffered (~8KB) and never reach the client
-            env['PYTHONUNBUFFERED'] = '1'
+            env["PYTHONUNBUFFERED"] = "1"
 
             # Формирование команды
             cmd = [config.command] + config.args
 
             # For Python servers: add -u flag for unbuffered stdout
             # This is more reliable than PYTHONUNBUFFERED for stdio MCP protocol
-            if 'python' in config.command.lower():
+            if "python" in config.command.lower():
                 # Insert -u after python executable and before script
-                cmd = [config.command, '-u'] + config.args
+                cmd = [config.command, "-u"] + config.args
 
             logger.info(f"Starting server: {server_name} (type: {config.type})")
             logger.debug(f"Command: {cmd}")
@@ -166,10 +168,16 @@ class ServerLoader:
             # Windows-specific: Use cmd /c wrapper instead of shell=True
             # shell=True creates intermediate cmd.exe which can break stdio pipes
             # Issue: https://github.com/modelcontextprotocol/python-sdk/issues/552
-            if sys.platform == 'win32' and config.command in ('npx', 'node', 'npm', 'python', 'java'):
+            if sys.platform == "win32" and config.command in (
+                "npx",
+                "node",
+                "npm",
+                "python",
+                "java",
+            ):
                 # Wrap command with cmd /c for PATH resolution
-                cmd_str = ' '.join(cmd)
-                cmd = ['cmd', '/c', cmd_str]
+                cmd_str = " ".join(cmd)
+                cmd = ["cmd", "/c", cmd_str]
                 use_shell = False
             else:
                 use_shell = False
@@ -184,7 +192,7 @@ class ServerLoader:
                 cwd=config.cwd,
                 bufsize=0,
                 shell=use_shell,
-                creationflags=WINDOWS_CREATION_FLAGS if sys.platform == 'win32' else 0
+                creationflags=WINDOWS_CREATION_FLAGS if sys.platform == "win32" else 0,
             )
 
             # CRITICAL FIX: Start daemon thread to drain stderr
@@ -197,7 +205,7 @@ class ServerLoader:
                     while proc.poll() is None:
                         line = proc.stderr.readline()
                         if line:
-                            text = line.decode('utf-8', errors='ignore').strip()
+                            text = line.decode("utf-8", errors="ignore").strip()
                             if text:
                                 logger.debug(f"[{name}] {text}")
                 except Exception:
@@ -207,19 +215,24 @@ class ServerLoader:
                 target=drain_stderr,
                 args=(process, server_name),
                 daemon=True,
-                name=f"stderr-drain-{server_name}"
+                name=f"stderr-drain-{server_name}",
             )
             stderr_thread.start()
 
             # Задержка для инициализации (больше для тяжёлых серверов)
             init_delay = 0.5
-            if server_name in ('unified-memory', 'bsl-platform-context', 'memory-ai', 'deep-code-reasoning'):
+            if server_name in (
+                "unified-memory",
+                "bsl-platform-context",
+                "memory-ai",
+                "deep-code-reasoning",
+            ):
                 init_delay = 3.0  # Эти серверы загружают модели/базы или внешние API
             await asyncio.sleep(init_delay)
 
             if process.poll() is not None:
-                stderr_out = process.stderr.read().decode('utf-8', errors='ignore')
-                stdout = process.stdout.read().decode('utf-8', errors='ignore')
+                stderr_out = process.stderr.read().decode("utf-8", errors="ignore")
+                stdout = process.stdout.read().decode("utf-8", errors="ignore")
                 logger.error(f"Server {server_name} failed to start")
                 logger.error(f"  Exit code: {process.returncode}")
                 logger.error(f"  Command: {' '.join(cmd)}")
@@ -231,10 +244,7 @@ class ServerLoader:
                 return None
 
             server = ActiveServer(
-                name=server_name,
-                process=process,
-                config=config,
-                stderr_thread=stderr_thread
+                name=server_name, process=process, config=config, stderr_thread=stderr_thread
             )
 
             # Получить список инструментов
@@ -248,7 +258,9 @@ class ServerLoader:
             logger.error(f"Failed to start server {server_name}: {e}")
             return None
 
-    async def _start_docker_server(self, server_name: str, config: ServerConfig) -> Optional[ActiveServer]:
+    async def _start_docker_server(
+        self, server_name: str, config: ServerConfig
+    ) -> ActiveServer | None:
         """
         Запустить docker-mcp сервер через Docker MCP Gateway (Singleton).
 
@@ -275,10 +287,7 @@ class ServerLoader:
             # Создаём виртуальный ActiveServer для docker-mcp
             # Он использует gateway.process для выполнения
             server = ActiveServer(
-                name=server_name,
-                process=gateway.process,
-                config=config,
-                is_proxy=True
+                name=server_name, process=gateway.process, config=config, is_proxy=True
             )
 
             # Добавляем инструменты сервера в proxied_servers
@@ -303,7 +312,9 @@ class ServerLoader:
     # HTTP Bridge Server Support (MCPO и аналоги)
     # =========================================================================
 
-    async def _register_bridge_server(self, server_name: str, config: ServerConfig) -> Optional[ActiveServer]:
+    async def _register_bridge_server(
+        self, server_name: str, config: ServerConfig
+    ) -> ActiveServer | None:
         """
         Зарегистрировать HTTP bridge сервер (MCPO).
 
@@ -322,10 +333,7 @@ class ServerLoader:
 
             # Создаём BridgeServer и добавляем в registry
             bridge = BridgeServer(
-                name=server_name,
-                config=config,
-                base_url=base_url,
-                is_running=True
+                name=server_name, config=config, base_url=base_url, is_running=True
             )
 
             # Получаем список инструментов от bridge (MCPO предоставляет OpenAPI)
@@ -333,7 +341,9 @@ class ServerLoader:
             bridge.tools = tools
 
             self.bridge_servers[server_name] = bridge
-            logger.info(f"Bridge server {server_name} registered at {base_url} with {len(tools)} tools")
+            logger.info(
+                f"Bridge server {server_name} registered at {base_url} with {len(tools)} tools"
+            )
 
             # Возвращаем "виртуальный" ActiveServer для совместимости с LRU cache
             # process=None означает что это не subprocess
@@ -342,7 +352,7 @@ class ServerLoader:
                 process=None,  # Нет subprocess для bridge
                 config=config,
                 tools=tools,
-                is_proxy=True  # Помечаем как proxy
+                is_proxy=True,  # Помечаем как proxy
             )
 
             return virtual_server
@@ -356,9 +366,7 @@ class ServerLoader:
         try:
             # Простой GET запрос на корень для проверки доступности
             req = urllib.request.Request(
-                base_url,
-                method="GET",
-                headers={"Accept": "application/json"}
+                base_url, method="GET", headers={"Accept": "application/json"}
             )
 
             loop = asyncio.get_event_loop()
@@ -416,8 +424,8 @@ class ServerLoader:
                     "inputSchema": {
                         "type": "object",
                         "properties": {"path": {"type": "string"}},
-                        "required": ["path"]
-                    }
+                        "required": ["path"],
+                    },
                 },
                 {
                     "name": "read_text_file",
@@ -425,20 +433,17 @@ class ServerLoader:
                     "inputSchema": {
                         "type": "object",
                         "properties": {"path": {"type": "string"}},
-                        "required": ["path"]
-                    }
+                        "required": ["path"],
+                    },
                 },
                 {
                     "name": "write_file",
                     "description": "Write content to file",
                     "inputSchema": {
                         "type": "object",
-                        "properties": {
-                            "path": {"type": "string"},
-                            "content": {"type": "string"}
-                        },
-                        "required": ["path", "content"]
-                    }
+                        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+                        "required": ["path", "content"],
+                    },
                 },
                 {
                     "name": "list_directory",
@@ -446,21 +451,18 @@ class ServerLoader:
                     "inputSchema": {
                         "type": "object",
                         "properties": {"path": {"type": "string"}},
-                        "required": ["path"]
-                    }
+                        "required": ["path"],
+                    },
                 },
                 {
                     "name": "search_files",
                     "description": "Search for files by pattern",
                     "inputSchema": {
                         "type": "object",
-                        "properties": {
-                            "path": {"type": "string"},
-                            "pattern": {"type": "string"}
-                        },
-                        "required": ["path", "pattern"]
-                    }
-                }
+                        "properties": {"path": {"type": "string"}, "pattern": {"type": "string"}},
+                        "required": ["path", "pattern"],
+                    },
+                },
             ],
             "ripgrep": [
                 {
@@ -468,12 +470,9 @@ class ServerLoader:
                     "description": "Search for pattern in files",
                     "inputSchema": {
                         "type": "object",
-                        "properties": {
-                            "pattern": {"type": "string"},
-                            "path": {"type": "string"}
-                        },
-                        "required": ["pattern", "path"]
-                    }
+                        "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}},
+                        "required": ["pattern", "path"],
+                    },
                 },
                 {
                     "name": "list-files",
@@ -481,9 +480,9 @@ class ServerLoader:
                     "inputSchema": {
                         "type": "object",
                         "properties": {"path": {"type": "string"}},
-                        "required": ["path"]
-                    }
-                }
+                        "required": ["path"],
+                    },
+                },
             ],
             "fetch": [
                 {
@@ -492,8 +491,8 @@ class ServerLoader:
                     "inputSchema": {
                         "type": "object",
                         "properties": {"url": {"type": "string"}},
-                        "required": ["url"]
-                    }
+                        "required": ["url"],
+                    },
                 }
             ],
             "brave": [
@@ -503,8 +502,8 @@ class ServerLoader:
                     "inputSchema": {
                         "type": "object",
                         "properties": {"query": {"type": "string"}},
-                        "required": ["query"]
-                    }
+                        "required": ["query"],
+                    },
                 }
             ],
             "serena": [
@@ -515,10 +514,10 @@ class ServerLoader:
                         "type": "object",
                         "properties": {
                             "relative_path": {"type": "string"},
-                            "recursive": {"type": "boolean"}
+                            "recursive": {"type": "boolean"},
                         },
-                        "required": ["relative_path", "recursive"]
-                    }
+                        "required": ["relative_path", "recursive"],
+                    },
                 },
                 {
                     "name": "find_file",
@@ -527,22 +526,17 @@ class ServerLoader:
                         "type": "object",
                         "properties": {
                             "file_mask": {"type": "string"},
-                            "relative_path": {"type": "string"}
+                            "relative_path": {"type": "string"},
                         },
-                        "required": ["file_mask", "relative_path"]
-                    }
-                }
-            ]
+                        "required": ["file_mask", "relative_path"],
+                    },
+                },
+            ],
         }
 
         return known_tools.get(endpoint_name, [])
 
-    async def execute_bridge_tool(
-        self,
-        server_name: str,
-        tool_name: str,
-        arguments: dict
-    ) -> Any:
+    async def execute_bridge_tool(self, server_name: str, tool_name: str, arguments: dict) -> Any:
         """
         Выполнить инструмент через HTTP bridge (MCPO).
 
@@ -577,10 +571,7 @@ class ServerLoader:
             # HTTP POST запрос к MCPO
             data = json.dumps(arguments).encode("utf-8")
             req = urllib.request.Request(
-                url,
-                data=data,
-                method="POST",
-                headers={"Content-Type": "application/json"}
+                url, data=data, method="POST", headers={"Content-Type": "application/json"}
             )
 
             loop = asyncio.get_event_loop()
@@ -610,7 +601,7 @@ class ServerLoader:
             logger.error(f"Error executing bridge tool {tool_name}: {e}")
             return {"error": str(e)}
 
-    def _find_tool_endpoint(self, bridge: BridgeServer, tool_name: str) -> Optional[str]:
+    def _find_tool_endpoint(self, bridge: BridgeServer, tool_name: str) -> str | None:
         """Найти endpoint для инструмента по имени"""
         for tool in bridge.tools:
             if tool.get("name") == tool_name:
@@ -644,12 +635,12 @@ class ServerLoader:
             "brave_web_search": "brave",
             # serena tools
             "list_dir": "serena",
-            "find_file": "serena"
+            "find_file": "serena",
         }
 
         return tool_to_endpoint.get(tool_name)
 
-    async def _ensure_gateway_running(self) -> Optional[ActiveServer]:
+    async def _ensure_gateway_running(self) -> ActiveServer | None:
         """
         Singleton pattern: получить или создать Docker MCP Gateway.
 
@@ -697,7 +688,7 @@ class ServerLoader:
             logger.error(f"Failed to start Docker MCP Gateway after {max_retries} attempts")
             return None
 
-    async def _start_gateway_process(self) -> Optional[ActiveServer]:
+    async def _start_gateway_process(self) -> ActiveServer | None:
         """Запустить процесс Docker MCP Gateway"""
         try:
             gateway_name = "docker-mcp-gateway"
@@ -716,9 +707,9 @@ class ServerLoader:
 
             # Windows-specific: Use cmd /c wrapper instead of shell=True
             # shell=True creates intermediate cmd.exe which can break stdio pipes
-            if sys.platform == 'win32':
-                cmd_str = ' '.join(cmd)
-                cmd = ['cmd', '/c', cmd_str]
+            if sys.platform == "win32":
+                cmd_str = " ".join(cmd)
+                cmd = ["cmd", "/c", cmd_str]
                 use_shell = False
             else:
                 use_shell = False
@@ -731,22 +722,19 @@ class ServerLoader:
                 env=env,
                 bufsize=0,
                 shell=use_shell,
-                creationflags=WINDOWS_CREATION_FLAGS if sys.platform == 'win32' else 0
+                creationflags=WINDOWS_CREATION_FLAGS if sys.platform == "win32" else 0,
             )
 
             # Задержка для запуска процесса (gateway грузит каталог ~2.5 сек)
             await asyncio.sleep(5.0)
 
             if process.poll() is not None:
-                stderr = process.stderr.read().decode('utf-8', errors='ignore')
+                stderr = process.stderr.read().decode("utf-8", errors="ignore")
                 logger.error(f"Docker MCP Gateway process exited immediately: {stderr}")
                 return None
 
             return ActiveServer(
-                name=gateway_name,
-                process=process,
-                config=gateway_config,
-                is_proxy=True
+                name=gateway_name, process=process, config=gateway_config, is_proxy=True
             )
 
         except Exception as e:
@@ -764,6 +752,7 @@ class ServerLoader:
             True если gateway готов, False если timeout
         """
         import time
+
         start_time = time.time()
         poll_interval = 1.0
         attempt = 0
@@ -775,26 +764,25 @@ class ServerLoader:
             "params": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {
-                    "name": "lazy-mcp",
-                    "version": "1.0.0"
-                }
-            }
+                "clientInfo": {"name": "lazy-mcp", "version": "1.0.0"},
+            },
         }
 
         while time.time() - start_time < timeout:
             attempt += 1
-            logger.debug(f"Checking gateway readiness (attempt {attempt}, elapsed: {time.time() - start_time:.1f}s)")
+            logger.debug(
+                f"Checking gateway readiness (attempt {attempt}, elapsed: {time.time() - start_time:.1f}s)"
+            )
 
             # Проверяем что процесс жив
             if gateway.process.poll() is not None:
-                stderr = gateway.process.stderr.read().decode('utf-8', errors='ignore')
+                stderr = gateway.process.stderr.read().decode("utf-8", errors="ignore")
                 logger.error(f"Gateway process died during wait: {stderr}")
                 return False
 
             try:
                 response = await self._send_request_with_timeout(gateway, init_request, timeout=3.0)
-                if response and 'result' in response:
+                if response and "result" in response:
                     logger.info(f"Gateway ready after {time.time() - start_time:.1f}s")
 
                     # Получаем и кешируем список инструментов
@@ -813,7 +801,9 @@ class ServerLoader:
         logger.error(f"Gateway did not become ready within {timeout}s")
         return False
 
-    async def _send_request_with_timeout(self, server: ActiveServer, request: dict, timeout: float = 5.0) -> Optional[dict]:
+    async def _send_request_with_timeout(
+        self, server: ActiveServer, request: dict, timeout: float = 5.0
+    ) -> dict | None:
         """Отправить JSON-RPC запрос с явным timeout"""
         try:
             # Check if process is still alive
@@ -822,9 +812,11 @@ class ServerLoader:
                 return None
 
             message = json.dumps(request) + "\n"
-            logger.debug(f"Sending (timeout={timeout}s) to {server.name}: {request.get('method', 'unknown')}")
+            logger.debug(
+                f"Sending (timeout={timeout}s) to {server.name}: {request.get('method', 'unknown')}"
+            )
 
-            server.process.stdin.write(message.encode('utf-8'))
+            server.process.stdin.write(message.encode("utf-8"))
             server.process.stdin.flush()
 
             loop = asyncio.get_event_loop()
@@ -834,14 +826,13 @@ class ServerLoader:
                     line = server.process.stdout.readline()
                     if not line:
                         return None
-                    return line.decode('utf-8', errors='ignore').strip()
+                    return line.decode("utf-8", errors="ignore").strip()
                 except Exception as e:
                     logger.debug(f"Read error from {server.name}: {e}")
                     return None
 
             response_line = await asyncio.wait_for(
-                loop.run_in_executor(None, read_response),
-                timeout=timeout
+                loop.run_in_executor(None, read_response), timeout=timeout
             )
 
             if response_line:
@@ -851,7 +842,7 @@ class ServerLoader:
             logger.debug(f"Empty response from {server.name}")
             return None
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.debug(f"Timeout ({timeout}s) from {server.name}")
             return None
         except json.JSONDecodeError as e:
@@ -867,17 +858,12 @@ class ServerLoader:
         if ServerLoader._gateway_tools_cache:
             return ServerLoader._gateway_tools_cache
 
-        tools_request = {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/list",
-            "params": {}
-        }
+        tools_request = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
         try:
             response = await self._send_request_with_timeout(gateway, tools_request, timeout=10.0)
-            if response and 'result' in response:
-                tools = response['result'].get('tools', [])
+            if response and "result" in response:
+                tools = response["result"].get("tools", [])
                 ServerLoader._gateway_tools_cache = tools
                 return tools
         except Exception as e:
@@ -885,7 +871,9 @@ class ServerLoader:
 
         return []
 
-    async def _add_docker_server_to_gateway(self, gateway: ActiveServer, server_config: ServerConfig) -> bool:
+    async def _add_docker_server_to_gateway(
+        self, gateway: ActiveServer, server_config: ServerConfig
+    ) -> bool:
         """
         Добавить docker-mcp сервер в gateway через mcp-add.
 
@@ -896,14 +884,16 @@ class ServerLoader:
             # Ищем инструмент mcp-add в gateway
             mcp_add_tool = None
             for tool in gateway.tools:
-                if 'mcp-add' in tool.get('name', ''):
+                if "mcp-add" in tool.get("name", ""):
                     mcp_add_tool = tool
                     break
 
             if not mcp_add_tool:
                 # В статическом режиме (--servers=) mcp-add отсутствует - это нормально
                 # Серверы уже предзагружены при старте gateway
-                logger.debug(f"Static mode: mcp-add not available, server {server_config.name} should be pre-loaded")
+                logger.debug(
+                    f"Static mode: mcp-add not available, server {server_config.name} should be pre-loaded"
+                )
                 return True  # Возвращаем True т.к. серверы уже загружены
 
             # Динамический режим: используем mcp-add
@@ -916,16 +906,16 @@ class ServerLoader:
                 "id": 10,
                 "method": "tools/call",
                 "params": {
-                    "name": mcp_add_tool['name'],
-                    "arguments": {
-                        "server": server_config.docker_image
-                    }
-                }
+                    "name": mcp_add_tool["name"],
+                    "arguments": {"server": server_config.docker_image},
+                },
             }
 
             response = await self._send_request(gateway, request)
-            if response and 'result' in response:
-                logger.info(f"Added docker-mcp server {server_config.name} ({server_config.docker_image}) to gateway")
+            if response and "result" in response:
+                logger.info(
+                    f"Added docker-mcp server {server_config.name} ({server_config.docker_image}) to gateway"
+                )
                 return True
 
             logger.warning(f"Failed to add {server_config.name} to gateway")
@@ -949,21 +939,17 @@ class ServerLoader:
             "brave": [
                 {"name": "brave_web_search", "description": "Search the web with Brave Search API"}
             ],
-            "fetch": [
-                {"name": "fetch", "description": "Fetch a URL and return the content"}
-            ],
+            "fetch": [{"name": "fetch", "description": "Fetch a URL and return the content"}],
             "puppeteer": [
                 {"name": "navigate", "description": "Navigate to a URL"},
                 {"name": "screenshot", "description": "Take a screenshot"},
-                {"name": "pdf", "description": "Save page as PDF"}
+                {"name": "pdf", "description": "Save page as PDF"},
             ],
             "zip": [
                 {"name": "read_zip", "description": "Read contents of a ZIP archive"},
-                {"name": "create_zip", "description": "Create a ZIP archive"}
+                {"name": "create_zip", "description": "Create a ZIP archive"},
             ],
-            "markitdown": [
-                {"name": "convert", "description": "Convert document to Markdown"}
-            ]
+            "markitdown": [{"name": "convert", "description": "Convert document to Markdown"}],
         }
 
         return known_tools.get(docker_server, [])
@@ -979,11 +965,8 @@ class ServerLoader:
                 "params": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {},
-                    "clientInfo": {
-                        "name": "lazy-mcp",
-                        "version": "1.0.0"
-                    }
-                }
+                    "clientInfo": {"name": "lazy-mcp", "version": "1.0.0"},
+                },
             }
 
             response = await self._send_request(server, init_request)
@@ -994,26 +977,18 @@ class ServerLoader:
             # После initialize response клиент ОБЯЗАН отправить эту нотификацию
             # Иначе серверы могут не принимать tools/call запросы
             # Fix: https://modelcontextprotocol.io/specification/basic/lifecycle
-            initialized_notification = {
-                "jsonrpc": "2.0",
-                "method": "notifications/initialized"
-            }
+            initialized_notification = {"jsonrpc": "2.0", "method": "notifications/initialized"}
             message = json.dumps(initialized_notification) + "\n"
-            server.process.stdin.write(message.encode('utf-8'))
+            server.process.stdin.write(message.encode("utf-8"))
             server.process.stdin.flush()
             logger.debug(f"Sent notifications/initialized to {server.name}")
 
             # Отправляем tools/list request
-            tools_request = {
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/list",
-                "params": {}
-            }
+            tools_request = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
             response = await self._send_request(server, tools_request)
-            if response and 'result' in response:
-                return response['result'].get('tools', [])
+            if response and "result" in response:
+                return response["result"].get("tools", [])
 
             return []
 
@@ -1021,18 +996,22 @@ class ServerLoader:
             logger.error(f"Failed to get tools from {server.name}: {e}")
             return []
 
-    async def _send_request(self, server: ActiveServer, request: dict, timeout: float = None) -> Optional[dict]:
+    async def _send_request(
+        self, server: ActiveServer, request: dict, timeout: float = None
+    ) -> dict | None:
         """Отправить JSON-RPC запрос серверу"""
         try:
             # Check if process is still alive
             if server.process.poll() is not None:
-                logger.error(f"Server {server.name} process died (exit code: {server.process.returncode})")
+                logger.error(
+                    f"Server {server.name} process died (exit code: {server.process.returncode})"
+                )
                 return None
 
             message = json.dumps(request) + "\n"
             logger.debug(f"Sending to {server.name}: {request.get('method', 'unknown')}")
 
-            server.process.stdin.write(message.encode('utf-8'))
+            server.process.stdin.write(message.encode("utf-8"))
             server.process.stdin.flush()
 
             # Читаем ответ с таймаутом (используем timeout из конфига или 30 сек по умолчанию)
@@ -1047,7 +1026,7 @@ class ServerLoader:
                 try:
                     # Windows fix: byte-by-byte reading instead of readline()
                     # readline() blocks on Windows due to stdout buffering issues
-                    data = b''
+                    data = b""
                     while True:
                         chunk = server.process.stdout.read(1)
                         if not chunk:
@@ -1057,16 +1036,15 @@ class ServerLoader:
                             break
                         data += chunk
                         # FastMCP uses \r\n as line terminator
-                        if data.endswith(b'\r\n') or data.endswith(b'\n'):
+                        if data.endswith(b"\r\n") or data.endswith(b"\n"):
                             break
-                    return data.decode('utf-8', errors='ignore').strip()
+                    return data.decode("utf-8", errors="ignore").strip()
                 except Exception as e:
                     logger.error(f"Error reading from {server.name}: {e}")
                     return None
 
             response_line = await asyncio.wait_for(
-                loop.run_in_executor(None, read_response),
-                timeout=timeout
+                loop.run_in_executor(None, read_response), timeout=timeout
             )
 
             if response_line:
@@ -1076,11 +1054,11 @@ class ServerLoader:
             logger.warning(f"Empty response from {server.name}")
             return None
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Timeout ({timeout}s) reading from {server.name}")
             # Check if process died during timeout
             if server.process.poll() is not None:
-                stderr = server.process.stderr.read().decode('utf-8', errors='ignore')
+                stderr = server.process.stderr.read().decode("utf-8", errors="ignore")
                 logger.error(f"Server {server.name} died during request: {stderr[:500]}")
             return None
         except json.JSONDecodeError as e:
@@ -1122,19 +1100,16 @@ class ServerLoader:
                 "jsonrpc": "2.0",
                 "id": 3,
                 "method": "tools/call",
-                "params": {
-                    "name": tool_name,
-                    "arguments": arguments
-                }
+                "params": {"name": tool_name, "arguments": arguments},
             }
 
             response = await self._send_request(server, request)
 
             if response:
-                if 'result' in response:
-                    return response['result']
-                elif 'error' in response:
-                    return {"error": response['error']}
+                if "result" in response:
+                    return response["result"]
+                elif "error" in response:
+                    return {"error": response["error"]}
 
             return {"error": "No response from server"}
 
@@ -1142,7 +1117,9 @@ class ServerLoader:
             logger.error(f"Error executing {tool_name} on {server_name}: {e}")
             return {"error": str(e)}
 
-    async def _execute_docker_tool(self, server: ActiveServer, tool_name: str, arguments: dict) -> Any:
+    async def _execute_docker_tool(
+        self, server: ActiveServer, tool_name: str, arguments: dict
+    ) -> Any:
         """
         Выполнить инструмент docker-mcp сервера через Docker MCP Gateway.
 
@@ -1161,11 +1138,11 @@ class ServerLoader:
             # В динамическом режиме (--enable-all-servers) используется mcp-exec
 
             # Проверяем наличие mcp-exec для определения режима
-            has_mcp_exec = any('mcp-exec' in tool.get('name', '') for tool in gateway.tools)
+            has_mcp_exec = any("mcp-exec" in tool.get("name", "") for tool in gateway.tools)
 
             if has_mcp_exec:
                 # Динамический режим: используем mcp-exec
-                mcp_exec_tool = next(t for t in gateway.tools if 'mcp-exec' in t.get('name', ''))
+                mcp_exec_tool = next(t for t in gateway.tools if "mcp-exec" in t.get("name", ""))
                 docker_server = server.config.docker_server or server.name
                 full_tool_name = f"mcp-{docker_server}/{tool_name}"
 
@@ -1174,12 +1151,9 @@ class ServerLoader:
                     "id": 20,
                     "method": "tools/call",
                     "params": {
-                        "name": mcp_exec_tool['name'],
-                        "arguments": {
-                            "name": full_tool_name,
-                            "arguments": arguments
-                        }
-                    }
+                        "name": mcp_exec_tool["name"],
+                        "arguments": {"name": full_tool_name, "arguments": arguments},
+                    },
                 }
             else:
                 # Статический режим: вызываем инструмент напрямую по имени
@@ -1188,20 +1162,17 @@ class ServerLoader:
                     "jsonrpc": "2.0",
                     "id": 20,
                     "method": "tools/call",
-                    "params": {
-                        "name": tool_name,
-                        "arguments": arguments
-                    }
+                    "params": {"name": tool_name, "arguments": arguments},
                 }
 
             logger.debug(f"Executing docker tool: {tool_name} (dynamic={has_mcp_exec})")
             response = await self._send_request(gateway, request)
 
             if response:
-                if 'result' in response:
-                    return response['result']
-                elif 'error' in response:
-                    return {"error": response['error']}
+                if "result" in response:
+                    return response["result"]
+                elif "error" in response:
+                    return {"error": response["error"]}
 
             return {"error": "No response from Docker MCP Gateway"}
 

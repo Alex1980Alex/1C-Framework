@@ -98,7 +98,7 @@ def _already_alerted(session_id: str) -> bool:
     if not session_id or not COOKIE_FILE.exists():
         return False
     try:
-        with open(COOKIE_FILE, "r", encoding="utf-8") as fh:
+        with open(COOKIE_FILE, encoding="utf-8") as fh:
             data = json.load(fh)
         return session_id in data.get("sessions", {})
     except (OSError, json.JSONDecodeError):
@@ -111,7 +111,7 @@ def _mark_alerted(session_id: str) -> None:
     try:
         COOKIE_FILE.parent.mkdir(parents=True, exist_ok=True)
         if COOKIE_FILE.exists():
-            with open(COOKIE_FILE, "r", encoding="utf-8") as fh:
+            with open(COOKIE_FILE, encoding="utf-8") as fh:
                 data = json.load(fh)
         else:
             data = {"sessions": {}}
@@ -128,7 +128,6 @@ def _mark_alerted(session_id: str) -> None:
 
 
 class ImplementOneCTaskSmokeStopAlert(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
             return None

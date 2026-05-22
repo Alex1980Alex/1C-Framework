@@ -1,7 +1,7 @@
 /**
  * mcp-e2e-framework.js
  * End-to-End Test Framework for Task Master MCP Server over stdio
- * 
+ *
  * This framework enables programmatic interaction with the FastMCP server
  * by launching it as a subprocess and communicating via JSON messages over stdio.
  */
@@ -21,14 +21,14 @@ const __dirname = path.dirname(__filename);
 export class MCPTestFramework extends EventEmitter {
 	constructor(options = {}) {
 		super();
-		
+
 		this.options = {
 			serverPath: path.join(__dirname, '../../mcp-server/server.js'),
 			timeout: 30000, // 30 seconds default timeout
 			debug: false,
 			...options
 		};
-		
+
 		this.server = null;
 		this.isRunning = false;
 		this.messageId = 0;
@@ -48,7 +48,7 @@ export class MCPTestFramework extends EventEmitter {
 		this.handleServerOutput = this.handleServerOutput.bind(this);
 		this.handleServerError = this.handleServerError.bind(this);
 	}
-	
+
 	/**
 	 * Launch the FastMCP server as subprocess
 	 */
@@ -56,7 +56,7 @@ export class MCPTestFramework extends EventEmitter {
 		if (this.isRunning) {
 			throw new Error('MCP server is already running');
 		}
-		
+
 		return new Promise((resolve, reject) => {
 			try {
 				// Launch server with Node.js
@@ -67,15 +67,15 @@ export class MCPTestFramework extends EventEmitter {
 						NODE_ENV: 'test'
 					}
 				});
-				
+
 				if (this.options.debug) {
 					console.log(`[DEBUG] Launched MCP server with PID: ${this.server.pid}`);
 				}
-				
+
 				// Setup event handlers
 				this.server.stdout.on('data', this.handleServerOutput);
 				this.server.stderr.on('data', this.handleServerError);
-				
+
 				this.server.on('close', (code) => {
 					this.isRunning = false;
 					if (this.options.debug) {
@@ -83,7 +83,7 @@ export class MCPTestFramework extends EventEmitter {
 					}
 					this.emit('close', code);
 				});
-				
+
 				this.server.on('error', (error) => {
 					if (this.options.debug) {
 						console.error(`[DEBUG] MCP server error:`, error);
@@ -91,35 +91,35 @@ export class MCPTestFramework extends EventEmitter {
 					this.emit('error', error);
 					reject(error);
 				});
-				
+
 				// Wait for server to be ready
 				// FastMCP should output initialization messages
 				const initTimeout = setTimeout(() => {
 					reject(new Error('Server initialization timeout'));
 				}, 10000);
-				
+
 				const onReady = () => {
 					clearTimeout(initTimeout);
 					this.isRunning = true;
 					resolve();
 				};
-				
+
 				// Listen for ready signal or first successful response
 				this.once('server-ready', onReady);
-				
+
 				// Send initialization message to check if server is ready
 				setTimeout(() => {
 					this.sendInitializationRequest()
 						.then(() => onReady())
 						.catch(reject);
 				}, 1000);
-				
+
 			} catch (error) {
 				reject(error);
 			}
 		});
 	}
-	
+
 	/**
 	 * Stop the MCP server
 	 */
@@ -127,7 +127,7 @@ export class MCPTestFramework extends EventEmitter {
 		if (!this.isRunning || !this.server) {
 			return;
 		}
-		
+
 		return new Promise((resolve) => {
 			const cleanup = () => {
 				this.isRunning = false;
@@ -136,11 +136,11 @@ export class MCPTestFramework extends EventEmitter {
 				this.responseBuffer = '';
 				resolve();
 			};
-			
+
 			// Try graceful shutdown first
 			this.server.on('close', cleanup);
 			this.server.kill('SIGTERM');
-			
+
 			// Force kill after timeout
 			setTimeout(() => {
 				if (this.server && !this.server.killed) {
@@ -150,7 +150,7 @@ export class MCPTestFramework extends EventEmitter {
 			}, 5000);
 		});
 	}
-	
+
 	/**
 	 * Send initialization request to check server readiness
 	 */
@@ -167,10 +167,10 @@ export class MCPTestFramework extends EventEmitter {
 				}
 			}
 		};
-		
+
 		return this.sendRequest(request);
 	}
-	
+
 	/**
 	 * Send JSON-RPC request to MCP server
 	 * Enhanced with correlation tracking and performance monitoring
@@ -275,7 +275,7 @@ export class MCPTestFramework extends EventEmitter {
 			}
 		});
 	}
-	
+
 	/**
 	 * Handle stdout data from MCP server
 	 * Enhanced message protocol handler with better streaming support
@@ -412,7 +412,7 @@ export class MCPTestFramework extends EventEmitter {
 
 		return null;
 	}
-	
+
 	/**
 	 * Handle stderr data from MCP server
 	 */
@@ -423,7 +423,7 @@ export class MCPTestFramework extends EventEmitter {
 		}
 		this.emit('server-error', error);
 	}
-	
+
 	/**
 	 * Handle parsed JSON response from server
 	 */
@@ -431,35 +431,35 @@ export class MCPTestFramework extends EventEmitter {
 		if (this.options.debug) {
 			console.log(`[DEBUG] Received response:`, response);
 		}
-		
+
 		// Handle responses with IDs (request/response pairs)
 		if (response.id && this.pendingRequests.has(response.id)) {
 			const { resolve, reject } = this.pendingRequests.get(response.id);
 			this.pendingRequests.delete(response.id);
-			
+
 			if (response.error) {
 				reject(new Error(response.error.message || 'Server error'));
 			} else {
 				resolve(response);
 			}
 		}
-		
+
 		// Handle notifications (no ID)
 		if (!response.id) {
 			this.emit('notification', response);
 		}
-		
+
 		// Emit all responses for general handling
 		this.emit('response', response);
 	}
-	
+
 	/**
 	 * Get next unique message ID
 	 */
 	getNextMessageId() {
 		return ++this.messageId;
 	}
-	
+
 	/**
 	 * Send tool call request
 	 */
@@ -471,10 +471,10 @@ export class MCPTestFramework extends EventEmitter {
 				arguments: parameters
 			}
 		};
-		
+
 		return this.sendRequest(request);
 	}
-	
+
 	/**
 	 * List available tools
 	 */
@@ -483,10 +483,10 @@ export class MCPTestFramework extends EventEmitter {
 			method: 'tools/list',
 			params: {}
 		};
-		
+
 		return this.sendRequest(request);
 	}
-	
+
 	/**
 	 * Get tool description
 	 */
@@ -906,7 +906,7 @@ export class MCPTestCase {
 	async delay(ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
-	
+
 	/**
 	 * Add a setup step
 	 */
@@ -914,7 +914,7 @@ export class MCPTestCase {
 		this.steps.unshift({ type: 'setup', fn });
 		return this;
 	}
-	
+
 	/**
 	 * Add a test step
 	 */
@@ -922,7 +922,7 @@ export class MCPTestCase {
 		this.steps.push({ type: 'step', description, fn });
 		return this;
 	}
-	
+
 	/**
 	 * Add a tool call step
 	 */
@@ -936,7 +936,7 @@ export class MCPTestCase {
 		});
 		return this;
 	}
-	
+
 	/**
 	 * Add assertion
 	 */
@@ -944,7 +944,7 @@ export class MCPTestCase {
 		this.assertions.push({ description, fn: assertionFn });
 		return this;
 	}
-	
+
 	/**
 	 * Add cleanup step
 	 */
@@ -952,7 +952,7 @@ export class MCPTestCase {
 		this.cleanup.push(fn);
 		return this;
 	}
-	
+
 	/**
 	 * Execute the test case
 	 */
@@ -963,18 +963,18 @@ export class MCPTestCase {
 			steps: [],
 			errors: []
 		};
-		
+
 		try {
 			// Execute setup and steps
 			for (const step of this.steps) {
 				const stepResult = await this.executeStep(step);
 				results.steps.push(stepResult);
-				
+
 				if (!stepResult.success) {
 					results.success = false;
 				}
 			}
-			
+
 			// Run assertions
 			for (const assertion of this.assertions) {
 				try {
@@ -995,7 +995,7 @@ export class MCPTestCase {
 					});
 				}
 			}
-			
+
 		} catch (error) {
 			results.success = false;
 			results.errors.push(error);
@@ -1010,38 +1010,38 @@ export class MCPTestCase {
 				}
 			}
 		}
-		
+
 		return results;
 	}
-	
+
 	/**
 	 * Execute individual step
 	 */
 	async executeStep(step) {
 		try {
 			let result;
-			
+
 			switch (step.type) {
 				case 'setup':
 				case 'step':
 					result = await step.fn();
 					break;
-					
+
 				case 'tool-call':
 					result = await this.framework.callTool(step.toolName, step.parameters);
 					break;
-					
+
 				default:
 					throw new Error(`Unknown step type: ${step.type}`);
 			}
-			
+
 			return {
 				type: step.type,
 				description: step.description || step.type,
 				success: true,
 				result
 			};
-			
+
 		} catch (error) {
 			return {
 				type: step.type,
@@ -1093,7 +1093,7 @@ export class MCPTestSuite {
 	createTests() {
 		return [];
 	}
-	
+
 	/**
 	 * Add test case
 	 */
@@ -1103,7 +1103,7 @@ export class MCPTestSuite {
 		this.testCases.push(testCase);
 		return this;
 	}
-	
+
 	/**
 	 * Run all test cases
 	 */
@@ -1282,18 +1282,18 @@ export const TestHelpers = {
 		if (!response || typeof response !== 'object') {
 			throw new Error('Response is not an object');
 		}
-		
+
 		for (const [key, type] of Object.entries(expectedStructure)) {
 			if (!(key in response)) {
 				throw new Error(`Missing required field: ${key}`);
 			}
-			
+
 			if (typeof response[key] !== type) {
 				throw new Error(`Field ${key} should be ${type}, got ${typeof response[key]}`);
 			}
 		}
 	},
-	
+
 	/**
 	 * Assert tool response success
 	 */
@@ -1301,12 +1301,12 @@ export const TestHelpers = {
 		if (!response.result) {
 			throw new Error('Tool call failed: missing result');
 		}
-		
+
 		if (response.error) {
 			throw new Error(`Tool call failed: ${response.error.message}`);
 		}
 	},
-	
+
 	/**
 	 * Assert task data structure
 	 */
@@ -1316,7 +1316,7 @@ export const TestHelpers = {
 			title: 'string',
 			status: 'string'
 		};
-		
+
 		TestHelpers.assertResponseStructure(task, required);
 	}
 };

@@ -254,4 +254,4 @@ defmodule TestRepo.Services do
       "electronics"
     )
   end
-end 
+end

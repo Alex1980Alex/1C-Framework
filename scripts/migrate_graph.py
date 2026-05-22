@@ -106,7 +106,10 @@ async def migrate(neo4j_uri: str, neo4j_user: str, neo4j_password: str, json_pat
     else:
         logger.warning(
             "Migration MISMATCH — expected %d/%d, got %d/%d",
-            len(nodes), len(edges), neo4j_nodes, neo4j_edges,
+            len(nodes),
+            len(edges),
+            neo4j_nodes,
+            neo4j_edges,
         )
 
     await store.close()

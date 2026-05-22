@@ -37,7 +37,9 @@ def _configure_logging() -> None:
     log_path = Path(__file__).resolve().parents[2] / "data" / "mcp-pdf-vector-graph.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s — %(message)s")
-    file_handler = RotatingFileHandler(log_path, maxBytes=2_000_000, backupCount=3, encoding="utf-8")
+    file_handler = RotatingFileHandler(
+        log_path, maxBytes=2_000_000, backupCount=3, encoding="utf-8"
+    )
     file_handler.setFormatter(fmt)
     stderr_handler = logging.StreamHandler(stream=sys.stderr)
     stderr_handler.setFormatter(fmt)

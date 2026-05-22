@@ -177,7 +177,12 @@ def main() -> None:
             "difficulty": "hard",
             "category": "procedural",
             "domain": "infra",
-            "expected_keywords": ["assert_tenant_access", "get_current_tenant", "admin", "tenant_id"],
+            "expected_keywords": [
+                "assert_tenant_access",
+                "get_current_tenant",
+                "admin",
+                "tenant_id",
+            ],
             "expected_answer_summary": "assert_tenant_access guard takes path tenant_id + current_tenant + role; raises 403 unless role=admin or tenants match.",
         },
         {

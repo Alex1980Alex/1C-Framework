@@ -416,7 +416,7 @@ log_step() {
   log_step "Verifying tag preservation after expand"
   task-master tags > tags_after_expand.log
   tag_count_after=$(jq 'keys | length' .taskmaster/tasks/tasks.json)
-  
+
   if [ "$tag_count_before" -eq "$tag_count_after" ]; then
     log_success "Tag count preserved: $tag_count_after (no corruption detected)"
   else
@@ -444,7 +444,7 @@ log_step() {
   exit_status_force_expand=$?
   echo "$cmd_output_force_expand"
   extract_and_sum_cost "$cmd_output_force_expand"
-  
+
   # Verify tags still preserved after force expand
   tag_count_after_force=$(jq 'keys | length' .taskmaster/tasks/tasks.json)
   if [ "$tag_count_before" -eq "$tag_count_after_force" ]; then
@@ -457,12 +457,12 @@ log_step() {
   # Add another task to feature-expand for expand-all testing
   task-master add-task --tag=feature-expand --prompt="Second task for expand-all testing" --priority=low
   second_expand_task_id=$(jq -r '.["feature-expand"].tasks[-1].id' .taskmaster/tasks/tasks.json)
-  
+
   cmd_output_expand_all=$(task-master expand --tag=feature-expand --all 2>&1)
   exit_status_expand_all=$?
   echo "$cmd_output_expand_all"
   extract_and_sum_cost "$cmd_output_expand_all"
-  
+
   # Verify tags preserved after expand-all
   tag_count_after_all=$(jq 'keys | length' .taskmaster/tasks/tasks.json)
   if [ "$tag_count_before" -eq "$tag_count_after_all" ]; then
@@ -470,7 +470,7 @@ log_step() {
   else
     log_error "Expand --all caused tag corruption"
   fi
-  
+
   log_success "Completed expand --all tag preservation test."
 
   # === End New Test Section: Tag-Aware Expand Testing ===
@@ -839,7 +839,7 @@ log_step() {
   log_step "Expanding Task 3 again (to have subtasks for next test)"
   task-master expand --id=3
   log_success "Attempted to expand Task 3."
-  # Verify 3.1 exists 
+  # Verify 3.1 exists
   if ! jq -e '.master.tasks[] | select(.id == 3) | .subtasks[] | select(.id == 1)' .taskmaster/tasks/tasks.json > /dev/null; then
       log_error "Subtask 3.1 not found in tasks.json after expanding Task 3."
       exit 1

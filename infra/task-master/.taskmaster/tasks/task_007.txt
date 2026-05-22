@@ -45,5 +45,3 @@ Test expanding various types of tasks into subtasks. Verify that subtasks are pr
 ### Dependencies: 7.1, 7.2, 7.4
 ### Description: Create functionality that allows users to regenerate unsatisfactory subtasks. Implement a command that can target specific subtasks for regeneration, preserve satisfactory subtasks, and incorporate feedback to improve the new generation. Design the system to maintain proper parent-child relationships and task IDs during regeneration.
 ### Details:
-
-

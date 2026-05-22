@@ -24,7 +24,7 @@ export class GitIgnoreParser {
   public loadRules(): boolean {
     try {
       const gitignorePath = path.join(this.rootPath, '.gitignore');
-      
+
       // Check if .gitignore exists
       if (fs.existsSync(gitignorePath)) {
         const content = fs.readFileSync(gitignorePath, 'utf8');
@@ -60,10 +60,10 @@ export class GitIgnoreParser {
     if (path.isAbsolute(filePath)) {
       relativePath = path.relative(this.rootPath, filePath);
     }
-    
+
     // Normalize path separators to forward slashes for ignore to work correctly
     relativePath = relativePath.replace(/\\/g, '/');
-    
+
     return this.ig.ignores(relativePath);
   }
 

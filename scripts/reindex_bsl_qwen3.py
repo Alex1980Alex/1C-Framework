@@ -24,13 +24,13 @@ Usage:
 import argparse
 import logging
 import os
-import re
 import sys
 import time
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 # Phase 8.12 C4 + roadmap 260518 Phase 2 fix: на Windows WDDM
 # `expandable_segments:True` позволяет аллокатору расти за пределы физ. VRAM
@@ -98,6 +98,7 @@ def _stage(name: str, **start_payload: Any) -> Iterator[None]:
             yield
     else:
         yield
+
 
 # Cap each Qdrant upsert payload. 4096-dim float32 vectors × 64 points ≈ 1 MB —
 # well under proxy/keepalive limits and survives WinError 10053 mid-stream resets.
@@ -290,6 +291,7 @@ class E5Embedder:
 
     def __init__(self) -> None:
         from sentence_transformers import SentenceTransformer
+
         self.model = SentenceTransformer("intfloat/multilingual-e5-large")
         self.dims = 1024
 
@@ -422,8 +424,7 @@ class Qwen3STEmbedder:
             self.buckets = buckets
         else:
             self.buckets = tuple(
-                (upper, min(default_bs, batch_size))
-                for upper, default_bs in self.DEFAULT_BUCKETS
+                (upper, min(default_bs, batch_size)) for upper, default_bs in self.DEFAULT_BUCKETS
             )
 
     def _bucket_batch(self, token_len: int) -> int:
@@ -441,13 +442,15 @@ class Qwen3STEmbedder:
         # token_lens aligned with what the forward pass sees.
         tokenizer = self.model.tokenizer
         token_lens = [
-            len(tokenizer(
-                t,
-                add_special_tokens=True,
-                truncation=True,
-                max_length=self.max_seq_length,
-                return_tensors=None,
-            )["input_ids"])
+            len(
+                tokenizer(
+                    t,
+                    add_special_tokens=True,
+                    truncation=True,
+                    max_length=self.max_seq_length,
+                    return_tensors=None,
+                )["input_ids"]
+            )
             for t in texts
         ]
 
@@ -464,8 +467,7 @@ class Qwen3STEmbedder:
         # XXL-bucket presence (potential VRAM pressure on 24 GB cards).
         if groups and len(texts) >= 32:
             tally = " ".join(
-                f"b{bs}={len(idxs)}"
-                for bs, idxs in sorted(groups.items(), reverse=True)
+                f"b{bs}={len(idxs)}" for bs, idxs in sorted(groups.items(), reverse=True)
             )
             max_len = max(token_lens) if token_lens else 0
             print(f"  [bucket] flush={len(texts)} {tally} max_tok={max_len}")
@@ -556,12 +558,15 @@ class Qwen3STEmbedder:
             result = self._embed_late_chunked_single_pass(parent_text, chunk_char_spans)
             forward_s = time.perf_counter() - t_sp
             if forward_s >= self.SINGLE_PASS_LOG_THRESHOLD_S:
-                _evt("single_pass", tokens=total_tokens, parent_chars=len(parent_text),
-                     chunks=len(chunk_char_spans), forward_s=round(forward_s, 3))
+                _evt(
+                    "single_pass",
+                    tokens=total_tokens,
+                    parent_chars=len(parent_text),
+                    chunks=len(chunk_char_spans),
+                    forward_s=round(forward_s, 3),
+                )
             return result
-        return self._embed_late_chunked_sliding(
-            parent_text, chunk_char_spans, total_tokens
-        )
+        return self._embed_late_chunked_sliding(parent_text, chunk_char_spans, total_tokens)
 
     def _embed_late_chunked_single_pass(
         self,
@@ -924,16 +929,23 @@ class Qwen3TEIEmbedder:
             pass
 
     def _post_embed_sub(self, sub: list[str]) -> list[list[float]]:
-        resp = self._client.post("/embed", json={
-            "inputs": sub, "normalize": True,
-            "truncate": True, "truncation_direction": "Right",
-        })
+        resp = self._client.post(
+            "/embed",
+            json={
+                "inputs": sub,
+                "normalize": True,
+                "truncate": True,
+                "truncation_direction": "Right",
+            },
+        )
         resp.raise_for_status()
         data = resp.json()
         if isinstance(data, dict) and "embeddings" in data:
             data = data["embeddings"]
         if not isinstance(data, list) or len(data) != len(sub):
-            raise RuntimeError(f"TEI shape: {len(data) if isinstance(data, list) else '?'} vs {len(sub)}")
+            raise RuntimeError(
+                f"TEI shape: {len(data) if isinstance(data, list) else '?'} vs {len(sub)}"
+            )
         return data
 
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
@@ -980,6 +992,7 @@ def make_embedder(
         return E5Embedder()
     if name == "qwen3":
         from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
+
         return Qwen3EmbeddingService()  # type: ignore[return-value]
     if name == "qwen3-st":
         return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size, enable_fa2=enable_fa2)
@@ -1170,6 +1183,7 @@ def flush_batch(
             raise
         try:
             import torch
+
             torch.cuda.empty_cache()
         except Exception:
             pass
@@ -1248,7 +1262,11 @@ def flush_batch(
                                 values=sp.values.tolist(),
                             )
                     elif dual_vector and mp_vectors and mp_vectors[idx] is not None:
-                        mp_vec = mp_vectors[idx] if isinstance(mp_vectors[idx], list) else mp_vectors[idx].tolist()
+                        mp_vec = (
+                            mp_vectors[idx]
+                            if isinstance(mp_vectors[idx], list)
+                            else mp_vectors[idx].tolist()
+                        )
                         vector_data = {"content": vec_list, "module_path": mp_vec}
                     else:
                         vector_data = vec_list
@@ -1265,17 +1283,30 @@ def flush_batch(
                     permanent_drops += 1
                     module_path_tail = chunk.module_path[-50:] if chunk.module_path else "unknown"
                     print(f"[DROP] {chunk.chunk_id} @ {module_path_tail}")
-                    _evt("chunk_dropped", reason="retry_returned_none", name=chunk.chunk_id, module_path=chunk.module_path)
+                    _evt(
+                        "chunk_dropped",
+                        reason="retry_returned_none",
+                        name=chunk.chunk_id,
+                        module_path=chunk.module_path,
+                    )
             except Exception as e:
                 permanent_drops += 1
                 module_path_tail = chunk.module_path[-50:] if chunk.module_path else "unknown"
                 print(f"[DROP] {chunk.chunk_id} @ {module_path_tail} (error: {type(e).__name__})")
-                _evt("chunk_dropped", reason="retry_exception", name=chunk.chunk_id, module_path=chunk.module_path, error=str(e))
+                _evt(
+                    "chunk_dropped",
+                    reason="retry_exception",
+                    name=chunk.chunk_id,
+                    module_path=chunk.module_path,
+                    error=str(e),
+                )
 
-        print(f"[RETRY] flush_batch: {len(none_chunks)} None vectors, recovered={recovered}, dropped={permanent_drops}")
+        print(
+            f"[RETRY] flush_batch: {len(none_chunks)} None vectors, recovered={recovered}, dropped={permanent_drops}"
+        )
 
     for start in range(0, len(points), UPSERT_SUB_BATCH):
-        _upsert_with_retry(client, collection, points[start:start + UPSERT_SUB_BATCH])
+        _upsert_with_retry(client, collection, points[start : start + UPSERT_SUB_BATCH])
     return len(points)
 
 
@@ -1291,10 +1322,12 @@ def _detect_bsl_project(bsl_path: Path) -> Path | None:
     """
     # Lazy import to avoid circular dependencies at module load.
     import sys
+
     repo_root_local = Path(__file__).resolve().parent.parent
     if str(repo_root_local) not in sys.path:
         sys.path.insert(0, str(repo_root_local))
     from src.bsl.project_discovery import find_project_for_path
+
     return find_project_for_path(bsl_path, repo_root_local)
 
 
@@ -1317,7 +1350,8 @@ def _delete_stale_for_paths(
         flt = models.Filter(
             must=[
                 models.FieldCondition(
-                    key="module_path", match=models.MatchValue(value=fp),
+                    key="module_path",
+                    match=models.MatchValue(value=fp),
                 ),
             ],
             must_not=[models.HasIdCondition(has_id=keep)] if keep else None,
@@ -1336,25 +1370,33 @@ def _delete_stale_for_paths(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
-    ap.add_argument("--project", type=Path, default=None,
-                    help="Project root with BSL files (required unless --paths is given)")
-    ap.add_argument("--paths", nargs="*", default=None,
-                    help="Incremental mode: list of .bsl files to reindex (instead of "
-                         "walking --project). Auto-detects project root from path. "
-                         "Used by git post-commit hooks for per-file updates.")
+    ap.add_argument(
+        "--project",
+        type=Path,
+        default=None,
+        help="Project root with BSL files (required unless --paths is given)",
+    )
+    ap.add_argument(
+        "--paths",
+        nargs="*",
+        default=None,
+        help="Incremental mode: list of .bsl files to reindex (instead of "
+        "walking --project). Auto-detects project root from path. "
+        "Used by git post-commit hooks for per-file updates.",
+    )
     ap.add_argument(
         "--embedder",
         choices=["e5", "qwen3", "qwen3-st", "qwen3-tei"],
         default="e5",
         help="Embedding model (default: e5; Phase 8.8 uses qwen3-st, Phase "
-             "8.12.6 adds qwen3-tei HTTP backend via text-embeddings-inference "
-             "Docker — see docker/docker-compose.gpu.yml `tei` profile)",
+        "8.12.6 adds qwen3-tei HTTP backend via text-embeddings-inference "
+        "Docker — see docker/docker-compose.gpu.yml `tei` profile)",
     )
     ap.add_argument(
         "--tei-url",
         default=Qwen3TEIEmbedder.DEFAULT_BASE_URL,
         help="qwen3-tei only: base URL of the TEI HTTP server (default: "
-             f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
+        f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
     )
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument(
@@ -1362,65 +1404,70 @@ def main() -> None:
         type=int,
         default=0,
         help="Chunks to accumulate before flush (0=auto: 512 for qwen3-st, "
-             "else --batch-size). Larger buffers give the qwen3-st length "
-             "bucketer a fuller pool, increasing throughput.",
+        "else --batch-size). Larger buffers give the qwen3-st length "
+        "bucketer a fuller pool, increasing throughput.",
     )
-    ap.add_argument("--collection", default="bsl_code_v4_late",
-                    help="Default: bsl_code_v4_late (Qwen3+Late, production). "
-                         "Legacy bsl_code_v3 dropped 2026-04-30 (§27).")
+    ap.add_argument(
+        "--collection",
+        default="bsl_code_v4_late",
+        help="Default: bsl_code_v4_late (Qwen3+Late, production). "
+        "Legacy bsl_code_v3 dropped 2026-04-30 (§27).",
+    )
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
     ap.add_argument(
         "--enable-sparse",
         action="store_true",
         help="When creating a new collection, use hybrid layout "
-             "(named `dense` + sparse `bm25` IDF). Existing collections "
-             "with hybrid layout are auto-detected regardless of this "
-             "flag — the production alias bsl_code_v4_late (hybrid since "
-             "2026-05-22 migration) makes incremental git post-commit "
-             "reindexes hybrid automatically.",
+        "(named `dense` + sparse `bm25` IDF). Existing collections "
+        "with hybrid layout are auto-detected regardless of this "
+        "flag — the production alias bsl_code_v4_late (hybrid since "
+        "2026-05-22 migration) makes incremental git post-commit "
+        "reindexes hybrid automatically.",
     )
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
-    ap.add_argument("--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)")
+    ap.add_argument(
+        "--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)"
+    )
     ap.add_argument(
         "--enable-fa2",
         action="store_true",
         help="qwen3-st only: enable FlashAttention 2 (1.5-2x on long chunks). "
-             "Requires `pip install flash-attn` and CUDA 12.x toolkit + MSVC on Windows. "
-             "Auto-applies left-padding (Phase 8.12 C6) - required for FA2 + last-token pooling.",
+        "Requires `pip install flash-attn` and CUDA 12.x toolkit + MSVC on Windows. "
+        "Auto-applies left-padding (Phase 8.12 C6) - required for FA2 + last-token pooling.",
     )
     ap.add_argument(
         "--pooling-mode",
         choices=["standard", "late-chunking"],
         default="standard",
         help="qwen3-st only. 'standard' (default): each chunk embedded "
-             "independently. 'late-chunking' (Phase 8.12.9 A2-alt, "
-             "arXiv:2409.04701): one forward pass per module, then mean-pool "
-             "the contextualized hidden states per chunk's char span. Each "
-             "chunk vector retains document-level context. Tail chunks past "
-             "the model's max_seq_length truncation fall back to standard "
-             "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
+        "independently. 'late-chunking' (Phase 8.12.9 A2-alt, "
+        "arXiv:2409.04701): one forward pass per module, then mean-pool "
+        "the contextualized hidden states per chunk's char span. Each "
+        "chunk vector retains document-level context. Tail chunks past "
+        "the model's max_seq_length truncation fall back to standard "
+        "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
     )
     ap.add_argument(
         "--sliding-overlap",
         type=float,
         default=None,
         help="Phase 2 of roadmap 260518: override sliding-window overlap "
-             "ratio (default 0.15). Raise to 0.25 to chase fallback%% below "
-             "<1%% on god-object modules at the cost of ~10%% more wall-clock "
-             "from extra overlap windows. See roadmap section 4.5.",
+        "ratio (default 0.15). Raise to 0.25 to chase fallback%% below "
+        "<1%% on god-object modules at the cost of ~10%% more wall-clock "
+        "from extra overlap windows. See roadmap section 4.5.",
     )
     ap.add_argument(
         "--no-region-aware",
         action="store_true",
         help="late-chunking only (Phase 3 of roadmap 260518). RECOMMENDED "
-             "for Cyrillic BSL production after section 1.2.5 quality "
-             "benchmark (2026-05-20) showed region-aware grouping causes "
-             "-25pp recall@10 regression on medium-sized modules. Disables "
-             "`(module_path, region)` grouping in late-chunking orchestrator "
-             "and reverts to the legacy `module_path` grouping (Phase 8.12.9 "
-             "behaviour). Region-aware grouping is ON by default (kept for "
-             "backwards compat); production reindex MUST add this flag.",
+        "for Cyrillic BSL production after section 1.2.5 quality "
+        "benchmark (2026-05-20) showed region-aware grouping causes "
+        "-25pp recall@10 regression on medium-sized modules. Disables "
+        "`(module_path, region)` grouping in late-chunking orchestrator "
+        "and reverts to the legacy `module_path` grouping (Phase 8.12.9 "
+        "behaviour). Region-aware grouping is ON by default (kept for "
+        "backwards compat); production reindex MUST add this flag.",
     )
     args = ap.parse_args()
 
@@ -1449,13 +1496,16 @@ def main() -> None:
         else:
             project = _detect_bsl_project(path_objs[0])
             if project is None:
-                print(f"ERROR: cannot auto-detect project root from {path_objs[0]} "
-                      f"(expected layout: configuration/<X>/...)")
+                print(
+                    f"ERROR: cannot auto-detect project root from {path_objs[0]} "
+                    f"(expected layout: configuration/<X>/...)"
+                )
                 sys.exit(1)
             print(f"[--paths] auto-detected project: {project}")
         # Sanity-check: all files must be under the same project root.
-        outside = [p for p in path_objs
-                   if project.resolve() not in p.parents and p != project.resolve()]
+        outside = [
+            p for p in path_objs if project.resolve() not in p.parents and p != project.resolve()
+        ]
         if outside:
             print(f"ERROR: --paths spans multiple projects; outside {project}:")
             for p in outside[:5]:
@@ -1566,10 +1616,7 @@ def main() -> None:
         # ratio active during the run. Range guard mirrors the ValueError
         # in `_make_char_windows` (overlap must be < window).
         if not 0.0 <= args.sliding_overlap < 1.0:
-            print(
-                f"ERROR: --sliding-overlap must be in [0.0, 1.0), got "
-                f"{args.sliding_overlap}"
-            )
+            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got " f"{args.sliding_overlap}")
             sys.exit(1)
         Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = args.sliding_overlap
         _evt("sliding_overlap_override", ratio=args.sliding_overlap)
@@ -1594,8 +1641,10 @@ def main() -> None:
         else:
             buffer_size = args.batch_size
 
-    print(f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size}, "
-          f"flush every {buffer_size} chunks)")
+    print(
+        f"Embedder: {args.embedder} ({vector_dims}d, batch={args.batch_size}, "
+        f"flush every {buffer_size} chunks)"
+    )
     if args.pooling_mode != "standard":
         # Phases 1-3 of roadmap 260518 apply only to late-chunking on qwen3-st.
         # Surface them in the run banner so log readers can correlate
@@ -1612,16 +1661,18 @@ def main() -> None:
     enricher = None
     if not args.no_context:
         try:
-            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
             from src.bsl.call_graph.store import CallGraphStore
+            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
 
             extractor = MetadataExtractor(project)
             cg_db = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
             cg = CallGraphStore(cg_db) if cg_db.exists() else None
             enricher = BSLContextEnricher(metadata_extractor=extractor, call_graph=cg)
             obj_stats = extractor.stats()
-            print(f"Context enrichment ON: {obj_stats['total']} objects"
-                  f"{', call graph loaded' if cg else ''}")
+            print(
+                f"Context enrichment ON: {obj_stats['total']} objects"
+                f"{', call graph loaded' if cg else ''}"
+            )
         except Exception as e:
             print(f"Context enrichment unavailable: {e}")
             enricher = None
@@ -1652,6 +1703,7 @@ def main() -> None:
     sparse_encoder = None
     if layout == "hybrid":
         from fastembed import SparseTextEmbedding
+
         sparse_encoder = SparseTextEmbedding(model_name="Qdrant/bm25")
         print("Hybrid layout: BM25 sparse vectors via fastembed Qdrant/bm25")
 
@@ -1708,7 +1760,16 @@ def main() -> None:
                     # the previous batch around to grow unbounded — the
                     # zombie-loop bug that ate ~75% of the 28.04 reindex.
                     try:
-                        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode, region_aware=not args.no_region_aware, sparse_encoder=sparse_encoder)
+                        n = flush_batch(
+                            qdrant,
+                            embedder,
+                            args.collection,
+                            batch,
+                            dual_vector=args.dual_vector,
+                            pooling_mode=args.pooling_mode,
+                            region_aware=not args.no_region_aware,
+                            sparse_encoder=sparse_encoder,
+                        )
                         total_chunks += n
                     finally:
                         batch.clear()
@@ -1725,11 +1786,22 @@ def main() -> None:
 
         if i % 100 == 0:
             elapsed = time.time() - t0
-            print(f"[{i}/{len(bsl_files)}] {total_symbols} symbols, {total_chunks} chunks, {elapsed:.0f}s")
+            print(
+                f"[{i}/{len(bsl_files)}] {total_symbols} symbols, {total_chunks} chunks, {elapsed:.0f}s"
+            )
 
     # Flush remaining
     if batch:
-        n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector, pooling_mode=args.pooling_mode, region_aware=not args.no_region_aware, sparse_encoder=sparse_encoder)
+        n = flush_batch(
+            qdrant,
+            embedder,
+            args.collection,
+            batch,
+            dual_vector=args.dual_vector,
+            pooling_mode=args.pooling_mode,
+            region_aware=not args.no_region_aware,
+            sparse_encoder=sparse_encoder,
+        )
         total_chunks += n
 
     # Delete stale chunks for files we just reindexed (--paths AND --project).
@@ -1741,14 +1813,17 @@ def main() -> None:
     # 30k+ duplicates.
     if paths_to_clean:
         cleaned = _delete_stale_for_paths(
-            qdrant, args.collection, paths_to_clean, upserted_ids_per_file,
+            qdrant,
+            args.collection,
+            paths_to_clean,
+            upserted_ids_per_file,
         )
         mode = "--paths" if args.paths else "--project"
         print(f"[{mode}] delete-stale: {cleaned} files cleaned")
 
     elapsed = time.time() - t0
     print(f"\n{'='*50}")
-    print(f"REINDEX COMPLETE")
+    print("REINDEX COMPLETE")
     print(f"{'='*50}")
     print(f"  Files:    {len(bsl_files)}")
     print(f"  Symbols:  {total_symbols}")
@@ -1762,14 +1837,16 @@ def main() -> None:
     # roadmap 260518 follow-up — final summary lands in JSONL run_end record;
     # makes it possible to script "compare last 3 runs" without parsing
     # the per-line `[evt]` stdout.
-    _tracker.stop(summary={
-        "files": len(bsl_files),
-        "symbols": total_symbols,
-        "chunks": total_chunks,
-        "errors": errors,
-        "elapsed_s": round(elapsed, 1),
-        "collection": args.collection,
-    })
+    _tracker.stop(
+        summary={
+            "files": len(bsl_files),
+            "symbols": total_symbols,
+            "chunks": total_chunks,
+            "errors": errors,
+            "elapsed_s": round(elapsed, 1),
+            "collection": args.collection,
+        }
+    )
 
 
 if __name__ == "__main__":

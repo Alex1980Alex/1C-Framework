@@ -6,26 +6,24 @@ Handles task scheduling, prioritization, and resource allocation.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
 from enum import Enum
+from typing import Any
 
+from agents.project_manager.dependency_tracker import DependencyTracker
 from agents.project_manager.models import (
     Project,
     Task,
     TaskStatus,
-    TaskPriority,
-    ProjectStatus,
 )
-from agents.project_manager.dependency_tracker import DependencyTracker
 
 
 class SchedulingStrategy(Enum):
     """Strategies for task scheduling."""
 
-    PRIORITY_FIRST = "priority_first"      # High priority tasks first
-    FIFO = "fifo"                          # First in, first out
-    SHORTEST_FIRST = "shortest_first"      # Shortest estimated time first
-    CRITICAL_PATH = "critical_path"        # Critical path method
+    PRIORITY_FIRST = "priority_first"  # High priority tasks first
+    FIFO = "fifo"  # First in, first out
+    SHORTEST_FIRST = "shortest_first"  # Shortest estimated time first
+    CRITICAL_PATH = "critical_path"  # Critical path method
 
 
 @dataclass
@@ -34,8 +32,8 @@ class ScheduledTask:
 
     task: Task
     scheduled_start: datetime
-    scheduled_end: Optional[datetime] = None
-    assigned_agent: Optional[str] = None
+    scheduled_end: datetime | None = None
+    assigned_agent: str | None = None
     parallel_group: int = 0  # Tasks in same group can run in parallel
 
     @property
@@ -50,7 +48,7 @@ class Schedule:
     """Complete schedule for a project."""
 
     project_id: str
-    scheduled_tasks: List[ScheduledTask] = field(default_factory=list)
+    scheduled_tasks: list[ScheduledTask] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     strategy: SchedulingStrategy = SchedulingStrategy.PRIORITY_FIRST
 
@@ -75,15 +73,16 @@ class Schedule:
             return 0
         return max(st.parallel_group for st in self.scheduled_tasks) + 1
 
-    def get_next_tasks(self, current_time: Optional[datetime] = None) -> List[ScheduledTask]:
+    def get_next_tasks(self, current_time: datetime | None = None) -> list[ScheduledTask]:
         """Get tasks scheduled to start next."""
         current = current_time or datetime.now()
         return [
-            st for st in self.scheduled_tasks
+            st
+            for st in self.scheduled_tasks
             if st.scheduled_start <= current and st.task.status == TaskStatus.PENDING
         ]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "project_id": self.project_id,
@@ -116,7 +115,7 @@ class TaskScheduler:
     - Parallel execution planning
     """
 
-    def __init__(self, dependency_tracker: Optional[DependencyTracker] = None) -> None:
+    def __init__(self, dependency_tracker: DependencyTracker | None = None) -> None:
         """Initialize scheduler."""
         self.dependency_tracker = dependency_tracker or DependencyTracker()
 
@@ -124,7 +123,7 @@ class TaskScheduler:
         self,
         project: Project,
         strategy: SchedulingStrategy = SchedulingStrategy.PRIORITY_FIRST,
-        start_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
     ) -> Schedule:
         """
         Create schedule for project.
@@ -170,19 +169,16 @@ class TaskScheduler:
 
             # Move to next time slot after longest task in group
             if sorted_group:
-                max_duration = max(
-                    timedelta(hours=t.estimated_hours or 1.0)
-                    for t in sorted_group
-                )
+                max_duration = max(timedelta(hours=t.estimated_hours or 1.0) for t in sorted_group)
                 current_time += max_duration
 
         return schedule
 
     def _sort_by_strategy(
         self,
-        tasks: List[Task],
+        tasks: list[Task],
         strategy: SchedulingStrategy,
-    ) -> List[Task]:
+    ) -> list[Task]:
         """Sort tasks based on scheduling strategy."""
         if strategy == SchedulingStrategy.PRIORITY_FIRST:
             return sorted(tasks, key=lambda t: t.priority.weight, reverse=True)
@@ -199,7 +195,7 @@ class TaskScheduler:
             )
         return tasks
 
-    def get_next_task(self, project: Project) -> Optional[Task]:
+    def get_next_task(self, project: Project) -> Task | None:
         """
         Get the next task to execute.
 
@@ -217,7 +213,7 @@ class TaskScheduler:
     def estimate_completion(
         self,
         project: Project,
-        start_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
     ) -> datetime:
         """
         Estimate project completion time.
@@ -232,7 +228,7 @@ class TaskScheduler:
         schedule = self.create_schedule(project, start_time=start_time)
         return (start_time or datetime.now()) + schedule.total_duration
 
-    def get_critical_path(self, project: Project) -> List[Task]:
+    def get_critical_path(self, project: Project) -> list[Task]:
         """
         Get critical path through project.
 
@@ -253,8 +249,8 @@ class TaskScheduler:
         task_map = {t.task_id: t for t in project.tasks}
 
         # Calculate longest path to each node
-        distances: Dict[str, float] = {task_id: 0 for task_id in order}
-        predecessors: Dict[str, Optional[str]] = {task_id: None for task_id in order}
+        distances: dict[str, float] = {task_id: 0 for task_id in order}
+        predecessors: dict[str, str | None] = {task_id: None for task_id in order}
 
         for task_id in order:
             task = task_map.get(task_id)
@@ -289,8 +285,8 @@ class TaskScheduler:
     def allocate_to_agents(
         self,
         project: Project,
-        available_agents: List[str],
-    ) -> Dict[str, List[Task]]:
+        available_agents: list[str],
+    ) -> dict[str, list[Task]]:
         """
         Allocate tasks to available agents.
 
@@ -304,7 +300,7 @@ class TaskScheduler:
         if not available_agents:
             return {}
 
-        allocation: Dict[str, List[Task]] = {agent: [] for agent in available_agents}
+        allocation: dict[str, list[Task]] = {agent: [] for agent in available_agents}
 
         # Get tasks in priority order
         ready = self.dependency_tracker.get_ready_tasks(project)
@@ -324,8 +320,8 @@ class TaskScheduler:
     def rebalance_workload(
         self,
         project: Project,
-        available_agents: List[str],
-    ) -> List[Task]:
+        available_agents: list[str],
+    ) -> list[Task]:
         """
         Rebalance workload and return tasks that need reassignment.
 
@@ -340,7 +336,7 @@ class TaskScheduler:
             return []
 
         # Get current workload
-        workload: Dict[str, float] = {agent: 0.0 for agent in available_agents}
+        workload: dict[str, float] = {agent: 0.0 for agent in available_agents}
 
         for task in project.tasks:
             if task.status == TaskStatus.IN_PROGRESS and task.assigned_agent:

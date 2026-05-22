@@ -72,6 +72,7 @@ class CheckResult:
 class McpHealth:
     """Структурированный health-check для всех опрошенных серверов.
     Используется hook'ами (implement-1c-task-preflight) для surface'а на UI."""
+
     edt_mcp: bool = False
     onec_crud: bool = False
     bsl_debugger: bool = False
@@ -110,15 +111,21 @@ def check_paths(config: dict) -> list[CheckResult]:
         if not cmd:
             continue
         if cmd in {"npx", "node", "java"}:
-            out.append(CheckResult(name=f"{name}: command={cmd}", ok=True, detail="resolved via PATH"))
+            out.append(
+                CheckResult(name=f"{name}: command={cmd}", ok=True, detail="resolved via PATH")
+            )
             continue
         path = Path(cmd)
         if path.is_absolute() and path.exists():
             out.append(CheckResult(name=f"{name}: {path.name}", ok=True, detail=str(path)))
         elif path.is_absolute():
-            out.append(CheckResult(name=f"{name}: {path.name}", ok=False, detail=f"NOT FOUND: {path}"))
+            out.append(
+                CheckResult(name=f"{name}: {path.name}", ok=False, detail=f"NOT FOUND: {path}")
+            )
         else:
-            out.append(CheckResult(name=f"{name}: {cmd}", ok=True, detail="relative — assumed on PATH"))
+            out.append(
+                CheckResult(name=f"{name}: {cmd}", ok=True, detail="relative — assumed on PATH")
+            )
     return out
 
 
@@ -154,20 +161,26 @@ async def mcp_handshake(name: str, cfg: dict) -> CheckResult:
         if isinstance(v, str):
             env[k] = v
 
-    initialize = json.dumps({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "initialize",
-        "params": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "smoke-test", "version": "0.1.0"},
-        },
-    }) + "\n"
+    initialize = (
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "smoke-test", "version": "0.1.0"},
+                },
+            }
+        )
+        + "\n"
+    )
 
     try:
         proc = await asyncio.create_subprocess_exec(
-            cmd, *args,
+            cmd,
+            *args,
             cwd=cwd,
             env=env,
             stdin=asyncio.subprocess.PIPE,
@@ -188,7 +201,7 @@ async def mcp_handshake(name: str, cfg: dict) -> CheckResult:
 
     try:
         line = await asyncio.wait_for(proc.stdout.readline(), timeout=HANDSHAKE_TIMEOUT)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         proc.kill()
         await proc.wait()
         return CheckResult(name=name, ok=False, detail=f"handshake timeout >{HANDSHAKE_TIMEOUT}s")
@@ -221,18 +234,28 @@ async def run(config_path: Path) -> Report:
 
     for port, label in PORTS.items():
         ok = probe_tcp("127.0.0.1", port)
-        rep.ports.append(CheckResult(name=f":{port} {label}", ok=ok, detail="LISTENING" if ok else "closed"))
+        rep.ports.append(
+            CheckResult(name=f":{port} {label}", ok=ok, detail="LISTENING" if ok else "closed")
+        )
 
     servers = raw.get("mcpServers", {})
     # edt-mcp — HTTP-bridge через `mcp-remote` обёртку: проверяем напрямую HTTP, не stdio.
     edt_url = "http://localhost:8765/mcp"
-    edt_ok, edt_detail = probe_http(edt_url) if probe_tcp("127.0.0.1", 8765) else (False, "port closed")
-    rep.handshakes.append(CheckResult(name="edt-mcp", ok=edt_ok, detail=f"{edt_url} -> {edt_detail}"))
+    edt_ok, edt_detail = (
+        probe_http(edt_url) if probe_tcp("127.0.0.1", 8765) else (False, "port closed")
+    )
+    rep.handshakes.append(
+        CheckResult(name="edt-mcp", ok=edt_ok, detail=f"{edt_url} -> {edt_detail}")
+    )
 
     # Stdio-серверы: handshake через initialize JSON-RPC.
     # 1c-debug-hmr опциональный — недоступность не меняет mode,
     # только отключает BP-verification в Этапе 5.x (mode "Full (no-BP)").
-    stdio_targets = [n for n in ("1c-mcp-crud", "bsl-debugger", "bsl-semantic-search", "1c-debug-hmr") if n in servers]
+    stdio_targets = [
+        n
+        for n in ("1c-mcp-crud", "bsl-debugger", "bsl-semantic-search", "1c-debug-hmr")
+        if n in servers
+    ]
     coros = [mcp_handshake(n, servers[n]) for n in stdio_targets]
     rep.handshakes.extend(await asyncio.gather(*coros))
 
@@ -240,7 +263,9 @@ async def run(config_path: Path) -> Report:
     rep.edt_mcp = bool(by_name.get("edt-mcp") and by_name["edt-mcp"].ok)
     rep.onec_crud = bool(by_name.get("1c-mcp-crud") and by_name["1c-mcp-crud"].ok)
     rep.bsl_debugger = bool(by_name.get("bsl-debugger") and by_name["bsl-debugger"].ok)
-    rep.bsl_semantic = bool(by_name.get("bsl-semantic-search") and by_name["bsl-semantic-search"].ok)
+    rep.bsl_semantic = bool(
+        by_name.get("bsl-semantic-search") and by_name["bsl-semantic-search"].ok
+    )
     rep.debug_hmr = bool(by_name.get("1c-debug-hmr") and by_name["1c-debug-hmr"].ok)
 
     rep.mcp_health = McpHealth(

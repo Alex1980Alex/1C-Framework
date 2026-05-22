@@ -6,7 +6,7 @@
 			<Type>xs:decimal</Type>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">Наименование</Name>
 		<ValueType>
@@ -17,7 +17,7 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">ТипОбъекта</Name>
 		<ValueType>
@@ -28,7 +28,7 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">ПолноеНаименование</Name>
 		<ValueType>
@@ -39,14 +39,14 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">ПочтовыйИндекс</Name>
 		<ValueType>
 			<Type>xs:decimal</Type>
 		</ValueType>
 	</column>
-	
+
 	<column>
 	<Name xsi:type="xs:string">ДиапазонПочтовыхИндексов</Name>
 		<ValueType>
@@ -57,14 +57,14 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">Идентификатор</Name>
 		<ValueType>
 			<Type>UUID</Type>
 		</ValueType>
 	</column>
-	
+
 	<column>
 	<Name xsi:type="xs:string">ОКТМО</Name>
 		<ValueType>

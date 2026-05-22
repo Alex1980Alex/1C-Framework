@@ -27,9 +27,9 @@ export interface ReviewToolConfig extends BaseToolConfig {
 export class ReviewTool extends BaseTool<ReviewToolConfig> {
   readonly name = 'autoreview';
   readonly description = 'Generates a code review for a repository by recursively analyzing directories and files, focusing on security issues, best practices, and potential improvements';
-  
+
   private openRouterClient: OpenRouterClient;
-  
+
   /**
    * Creates a new code review tool
    * @param apiKey OpenRouter API key (optional)
@@ -39,7 +39,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
   constructor(apiKey?: string, model?: string, updateExisting?: boolean) {
     // Get default config
     const config = getConfig();
-    
+
     // Create tool config
     const toolConfig: ReviewToolConfig = {
       outputFilename: 'review.md',
@@ -49,13 +49,13 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
       topLevelPrompt: codeReviewPrompts.topLevelPrompt,
       withChildrenPrompt: codeReviewPrompts.withChildrenPrompt
     };
-    
+
     super(toolConfig);
-    
+
     // Initialize OpenRouter client
     this.openRouterClient = new OpenRouterClient(apiKey, model, true);
   }
-  
+
   /**
    * Generates a code review for a directory
    * @param directoryPath Path to the source directory
@@ -77,7 +77,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
     const reviewFilePath = path.join(targetDir, this.config.outputFilename);
     const existingReview = this.readExistingFile(reviewFilePath);
     const isUpdate = existingReview !== null;
-    
+
     // Skip generation if the file exists and updateExisting is false
     if (isUpdate && !this.config.updateExisting) {
       console.error(`Skipping code review for ${directoryPath} - File exists and updateExisting is false`);
@@ -89,7 +89,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
         skipped: true
       };
     }
-    
+
     // Convert analyzed files to format expected by OpenRouterClient
     const files = analysisResult.analyzedFiles.map((file) => ({
       path: path.relative(directoryPath, file.path),
@@ -137,7 +137,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
           systemPrompt = this.config.systemPrompt;
         }
       }
-      
+
       // Add instruction about existing review
       if (existingReview) {
         systemPrompt += ` ${updateExistingContentPrompt}`;
@@ -151,7 +151,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
         isTopLevel,
         childrenContent
       );
-      
+
       if (!genResult.successful) {
         return {
           outputPath: reviewFilePath,
@@ -161,13 +161,13 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
           isUpdate
         };
       }
-      
+
       // Ensure output directory exists (important when outputDir is different from source)
       await fs.promises.mkdir(targetDir, { recursive: true });
 
       // Write the generated code review to file
       await fs.promises.writeFile(reviewFilePath, genResult.content, 'utf8');
-      
+
       return {
         outputPath: reviewFilePath,
         success: true,
@@ -184,7 +184,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
       };
     }
   }
-  
+
   /**
    * Creates fallback content for directories that exceed limits
    * @param directoryPath Path to the directory
@@ -196,13 +196,13 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
     analysisResult: AnalysisResult
   ): Promise<string> {
     const dirName = path.basename(directoryPath);
-    
+
     let content = `# ${dirName} - Code Review Skipped\n\n`;
-    
+
     if (analysisResult.limited && analysisResult.limitReason) {
       content += `## Reason\n\n${analysisResult.limitReason}\n\n`;
     }
-    
+
     if (analysisResult.analyzedFiles.length > 0) {
       content += `## Analyzed Files\n\n`;
       for (const file of analysisResult.analyzedFiles) {
@@ -210,7 +210,7 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
       }
       content += '\n';
     }
-    
+
     if (analysisResult.excludedFiles.length > 0) {
       content += `## Excluded Files\n\n`;
       for (const file of analysisResult.excludedFiles) {
@@ -218,14 +218,14 @@ export class ReviewTool extends BaseTool<ReviewToolConfig> {
       }
       content += '\n';
     }
-    
+
     content += `## How to Fix\n\n`;
     content += `You can manually create a code review for this directory by replacing this file with a proper ${this.config.outputFilename} file.\n`;
     content += `Alternatively, you can increase the file limits in the tool configuration and run again.\n`;
-    
+
     return content;
   }
-  
+
   /**
    * Reads an existing file if it exists
    * @param filePath Path to the file

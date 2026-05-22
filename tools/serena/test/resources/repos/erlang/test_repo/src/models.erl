@@ -57,8 +57,8 @@ add_item_to_order(Order, Item, Quantity) ->
 
 -spec calculate_order_total(#order{}) -> float().
 calculate_order_total(#order{items = Items}) ->
-    lists:foldl(fun(#item{price = Price, id = Qty}, Acc) -> 
-        Acc + (Price * Qty) 
+    lists:foldl(fun(#item{price = Price, id = Qty}, Acc) ->
+        Acc + (Price * Qty)
     end, 0.0, Items).
 
 %% Helper functions
@@ -79,5 +79,5 @@ format_user_info(#user{name = Name, email = Email, age = Age, active = Active}) 
         true -> "active";
         false -> "inactive"
     end,
-    lists:flatten(io_lib:format("~s (~s) - Age: ~w - Status: ~s", 
+    lists:flatten(io_lib:format("~s (~s) - Age: ~w - Status: ~s",
         [Name, Email, Age, Status])).

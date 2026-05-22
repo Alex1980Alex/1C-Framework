@@ -71,30 +71,51 @@ def parse_args() -> argparse.Namespace:
         "promote-patterns",
         help="Scan learned_patterns (L2) and promote high-confidence ones to docs/wiki/drafts/ (L5)",
     )
-    p_prom.add_argument("--min-confidence", type=float, default=0.8,
-                        help="Minimum confidence for promotion (default 0.8, per spec)")
-    p_prom.add_argument("--min-usage", type=int, default=5,
-                        help="Minimum usage_count for promotion (default 5, per spec)")
-    p_prom.add_argument("--similarity-threshold", type=float, default=0.85,
-                        help="Dedup threshold against existing wiki content (default 0.85)")
+    p_prom.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.8,
+        help="Minimum confidence for promotion (default 0.8, per spec)",
+    )
+    p_prom.add_argument(
+        "--min-usage",
+        type=int,
+        default=5,
+        help="Minimum usage_count for promotion (default 5, per spec)",
+    )
+    p_prom.add_argument(
+        "--similarity-threshold",
+        type=float,
+        default=0.85,
+        help="Dedup threshold against existing wiki content (default 0.85)",
+    )
     p_prom.add_argument("--drafts-dir", type=Path, default=Path("docs/wiki/drafts"))
     p_prom.add_argument("--qdrant-url", type=str, default="http://localhost:6333")
-    p_prom.add_argument("--qdrant-api-key", type=str, default=None,
-                        help="Qdrant API key (default: $QDRANT__API_KEY env var)")
+    p_prom.add_argument(
+        "--qdrant-api-key",
+        type=str,
+        default=None,
+        help="Qdrant API key (default: $QDRANT__API_KEY env var)",
+    )
     p_prom.add_argument("--verbose", "-v", action="store_true")
 
     # decay-confidence (time-based L3 confidence decay)
     p_dec = sub.add_parser(
         "decay-confidence",
         help="Apply time-based decay to learned_patterns confidence (counter-balance "
-             "asymmetric apply_pattern update so stale patterns don't ossify)",
+        "asymmetric apply_pattern update so stale patterns don't ossify)",
     )
-    p_dec.add_argument("--min-confidence", type=float, default=0.0,
-                       help="Floor for decay (default 0.0)")
+    p_dec.add_argument(
+        "--min-confidence", type=float, default=0.0, help="Floor for decay (default 0.0)"
+    )
     p_dec.add_argument("--batch-size", type=int, default=100)
     p_dec.add_argument("--qdrant-url", type=str, default="http://localhost:6333")
-    p_dec.add_argument("--qdrant-api-key", type=str, default=None,
-                       help="Qdrant API key (default: $QDRANT__API_KEY env var)")
+    p_dec.add_argument(
+        "--qdrant-api-key",
+        type=str,
+        default=None,
+        help="Qdrant API key (default: $QDRANT__API_KEY env var)",
+    )
     p_dec.add_argument("--dry-run", action="store_true")
     p_dec.add_argument("--verbose", "-v", action="store_true")
 
@@ -102,14 +123,22 @@ def parse_args() -> argparse.Namespace:
     p_arch = sub.add_parser(
         "archive-stale",
         help="Move wiki entities with low confidence or stale updated_at to "
-             "docs/wiki/archive/YYYY-MM/ (manual cadence; no auto-cron yet)",
+        "docs/wiki/archive/YYYY-MM/ (manual cadence; no auto-cron yet)",
     )
     p_arch.add_argument("--wiki-dir", type=Path, default=Path("docs/wiki/entities"))
     p_arch.add_argument("--archive-dir", type=Path, default=Path("docs/wiki/archive"))
-    p_arch.add_argument("--max-age-days", type=int, default=365,
-                        help="Archive if updated_at older than N days (default 365)")
-    p_arch.add_argument("--min-confidence", type=float, default=0.3,
-                        help="Archive only if confidence < threshold (default 0.3)")
+    p_arch.add_argument(
+        "--max-age-days",
+        type=int,
+        default=365,
+        help="Archive if updated_at older than N days (default 365)",
+    )
+    p_arch.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.3,
+        help="Archive only if confidence < threshold (default 0.3)",
+    )
     p_arch.add_argument("--dry-run", action="store_true")
     p_arch.add_argument("--verbose", "-v", action="store_true")
 
@@ -118,8 +147,7 @@ def parse_args() -> argparse.Namespace:
         "promote-openspec",
         help="Copy archived openspec changes to docs/wiki/openspec/ (roadmap 260520 §I)",
     )
-    p_ops.add_argument("--archive-src", type=Path,
-                       default=Path("openspec/changes/archive"))
+    p_ops.add_argument("--archive-src", type=Path, default=Path("openspec/changes/archive"))
     p_ops.add_argument("--wiki-dest", type=Path, default=Path("docs/wiki/openspec"))
     p_ops.add_argument("--dry-run", action="store_true")
     p_ops.add_argument("--verbose", "-v", action="store_true")
@@ -129,6 +157,7 @@ def parse_args() -> argparse.Namespace:
 
 async def _get_graph_store():
     from src.pdf_framework.graph_store import get_graph_store
+
     store = get_graph_store()
     await store.initialize()
     return store
@@ -225,7 +254,8 @@ async def cmd_verify(args: argparse.Namespace) -> int:
 
     # Check 1: Every entity → has wiki page
     entity_ids = [
-        nid for nid, data in graph.nodes(data=True)
+        nid
+        for nid, data in graph.nodes(data=True)
         if data.get("node_type") != "COMMUNITY" and data.get("name")
     ]
 
@@ -240,7 +270,10 @@ async def cmd_verify(args: argparse.Namespace) -> int:
 
     # Check 2: Every wiki page → has entity in graph
     if output_dir.exists():
-        graph_names = {WikiExporter._sanitize_filename(data.get("name", nid)) for nid, data in graph.nodes(data=True)}
+        graph_names = {
+            WikiExporter._sanitize_filename(data.get("name", nid))
+            for nid, data in graph.nodes(data=True)
+        }
         for wp in output_dir.glob("*.md"):
             if wp.stem not in graph_names:
                 print(f"  ORPHAN wiki: {wp.name} (no entity in graph)")
@@ -330,6 +363,7 @@ async def cmd_archive_stale(args: argparse.Namespace) -> int:
             continue
 
         import re
+
         fm_match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
         if not fm_match:
             skipped += 1
@@ -397,6 +431,7 @@ async def cmd_archive_stale(args: argparse.Namespace) -> int:
 async def cmd_promote_openspec(args: argparse.Namespace) -> int:
     """Copy archived OpenSpec changes to docs/wiki/openspec/."""
     import shutil
+
     src: Path = args.archive_src
     dst: Path = args.wiki_dest
     if not src.exists():
@@ -417,7 +452,8 @@ async def cmd_promote_openspec(args: argparse.Namespace) -> int:
             (target / "index.md").write_text(
                 f"---\nsource: openspec-archived\nchange_id: {change_dir.name}\n"
                 f"---\n\n# {change_dir.name}\n\nArchived OpenSpec change.\n",
-                encoding="utf-8")
+                encoding="utf-8",
+            )
         count += 1
     logger.info("promote-openspec: %d processed (dry=%s)", count, args.dry_run)
     return 0

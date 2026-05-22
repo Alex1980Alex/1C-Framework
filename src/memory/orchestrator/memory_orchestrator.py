@@ -39,15 +39,16 @@ from mcp.types import TextContent, Tool
 
 from ..ai_memory.services.audit_service import AuditAction, AuditQuery, AuditService
 from ..ai_memory.services.ttl_service import TTLPolicy, TTLService
-from ..ai_memory.services.versioning_service import ChangeType, VersioningService
+from ..ai_memory.services.versioning_service import VersioningService
 from ..infrastructure.cache import LRUCache
-from ..infrastructure.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerRegistry
+from ..infrastructure.circuit_breaker import (
+    CircuitBreakerRegistry,
+)
 from ..infrastructure.event_bus import EventBus
 from ..infrastructure.event_store import EventStore, EventStoreConfig
 from ..infrastructure.metrics import MetricsCollector, get_metrics_collector
-from ..infrastructure.subscription_manager import SubscriptionManager, SubscriptionManagerConfig
+from ..infrastructure.subscription_manager import SubscriptionManager
 from ..vector_memory.graph.algorithms import GraphAlgorithms
-from ..vector_memory.graph.relation_types import RelationRegistry
 from ..vector_memory.services.forgetgate_service import (
     ForgetCandidate,
     ForgetGateConfig,
@@ -70,8 +71,8 @@ from .tools.warmup import WarmupTool
 from .unified_id import MemoryType, SourceServer, UnifiedID
 from .unified_search import (
     BaseSearchAdapter,
-    SearchResultItem,
     SearchOptions,
+    SearchResultItem,
     UnifiedSearchEngine,
     UnifiedSearchResult,
 )
@@ -190,15 +191,17 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
             scored = [s for s in scored if s[1] > 0.0]
             scored.sort(key=lambda x: x[0], reverse=True)
             for combined, _match_ratio, row in scored[:limit]:
-                results.append(SearchResultItem(
-                    unified_id=f"episodic:memory-ai:{row[0]}",
-                    source=SourceServer.MEMORY_AI,
-                    memory_type=MemoryType.EPISODIC,
-                    content=row[1],
-                    raw_score=combined,
-                    created_at=datetime.fromisoformat(row[5]) if row[5] else None,
-                    tags=json.loads(row[4]) if row[4] else [],
-                ))
+                results.append(
+                    SearchResultItem(
+                        unified_id=f"episodic:memory-ai:{row[0]}",
+                        source=SourceServer.MEMORY_AI,
+                        memory_type=MemoryType.EPISODIC,
+                        content=row[1],
+                        raw_score=combined,
+                        created_at=datetime.fromisoformat(row[5]) if row[5] else None,
+                        tags=json.loads(row[4]) if row[4] else [],
+                    )
+                )
 
         await asyncio.to_thread(_do_search)
         return results
@@ -215,7 +218,7 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
         results = []
 
         try:
-            from ..vector_memory.server import _get_qdrant, _get_embedding, _pattern_from_payload
+            from ..vector_memory.server import _get_embedding, _get_qdrant, _pattern_from_payload
 
             client = await asyncio.to_thread(_get_qdrant)
             vector = await _get_embedding(query)
@@ -238,17 +241,22 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
                 payload = point.payload or {}
                 pattern = _pattern_from_payload(str(point.id), payload)
                 similarity = point.score or 0.0
-                results.append(SearchResultItem(
-                    unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
-                    source=SourceServer.VECTOR_MEMORY,
-                    memory_type=MemoryType.SEMANTIC,
-                    content=pattern.content,
-                    title=pattern.name,
-                    raw_score=similarity * pattern.confidence,
-                    created_at=pattern.created_at,
-                    tags=pattern.tags,
-                    metadata={"pattern_type": pattern.pattern_type.value, "confidence": pattern.confidence},
-                ))
+                results.append(
+                    SearchResultItem(
+                        unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
+                        source=SourceServer.VECTOR_MEMORY,
+                        memory_type=MemoryType.SEMANTIC,
+                        content=pattern.content,
+                        title=pattern.name,
+                        raw_score=similarity * pattern.confidence,
+                        created_at=pattern.created_at,
+                        tags=pattern.tags,
+                        metadata={
+                            "pattern_type": pattern.pattern_type.value,
+                            "confidence": pattern.confidence,
+                        },
+                    )
+                )
         except Exception as e:
             logger.warning(f"Vector memory search failed: {e}")
 
@@ -297,16 +305,20 @@ class SkillLearningSearchAdapter(BaseSearchAdapter):
 
             scored.sort(key=lambda x: x[1], reverse=True)
             for item, score in scored[:limit]:
-                results.append(SearchResultItem(
-                    unified_id=f"learning:skill-learning:{item.get('pattern_id', '')}",
-                    source=SourceServer.SKILL_LEARNING,
-                    memory_type=MemoryType.LEARNING,
-                    content=item.get("content", ""),
-                    title=item.get("name", ""),
-                    raw_score=score,
-                    created_at=datetime.fromisoformat(item["created_at"]) if item.get("created_at") else None,
-                    tags=item.get("tags", []),
-                ))
+                results.append(
+                    SearchResultItem(
+                        unified_id=f"learning:skill-learning:{item.get('pattern_id', '')}",
+                        source=SourceServer.SKILL_LEARNING,
+                        memory_type=MemoryType.LEARNING,
+                        content=item.get("content", ""),
+                        title=item.get("name", ""),
+                        raw_score=score,
+                        created_at=datetime.fromisoformat(item["created_at"])
+                        if item.get("created_at")
+                        else None,
+                        tags=item.get("tags", []),
+                    )
+                )
 
         await asyncio.to_thread(_search)
         return results
@@ -360,20 +372,21 @@ class MemoryOrchestrator:
 
         # Search Engine with adapters
         self._search_engine = UnifiedSearchEngine(self._link_registry)
-        self._search_engine.register_adapter(AiMemorySearchAdapter(
-            _PROJECT_ROOT / "data" / "memory_ai.db"
-        ))
+        self._search_engine.register_adapter(
+            AiMemorySearchAdapter(_PROJECT_ROOT / "data" / "memory_ai.db")
+        )
         self._search_engine.register_adapter(VectorMemorySearchAdapter())
-        self._search_engine.register_adapter(SkillLearningSearchAdapter(
-            _PROJECT_ROOT / "data" / "skill_learning"
-        ))
+        self._search_engine.register_adapter(
+            SkillLearningSearchAdapter(_PROJECT_ROOT / "data" / "skill_learning")
+        )
 
         self._search_engine.register_adapter(WikiSearchAdapter())
         self._search_engine.register_adapter(GraphSearchAdapter())
 
         # Pre-warm vector-memory (Qdrant gRPC connect + E5 model load)
         try:
-            from ..vector_memory.server import _get_qdrant, _get_embedding
+            from ..vector_memory.server import _get_embedding, _get_qdrant
+
             await asyncio.to_thread(_get_qdrant)
             await _get_embedding("warmup")
             logger.info("Vector-memory pre-warmed (Qdrant + E5)")
@@ -383,10 +396,12 @@ class MemoryOrchestrator:
         # Event Bus + Store (P3)
         self._event_bus = EventBus()
         await self._event_bus.start()
-        self._event_store = EventStore(EventStoreConfig(
-            hot_buffer_path=str(data_dir / "events.jsonl"),
-            cold_db_path=str(data_dir / "events.db"),
-        ))
+        self._event_store = EventStore(
+            EventStoreConfig(
+                hot_buffer_path=str(data_dir / "events.jsonl"),
+                cold_db_path=str(data_dir / "events.db"),
+            )
+        )
         await self._event_store.start()
 
         # Subscription Manager (P3)
@@ -524,10 +539,13 @@ class MemoryOrchestrator:
             "saved_entities": saved_entities,
             "cross_links_created": max(0, len(saved_entities) - 1),
         }
-        await self._emit_event("memory.save", {
-            "targets": decision.targets,
-            "entity_count": len(saved_entities),
-        })
+        await self._emit_event(
+            "memory.save",
+            {
+                "targets": decision.targets,
+                "entity_count": len(saved_entities),
+            },
+        )
         return result
 
     async def get_full_context(
@@ -552,9 +570,7 @@ class MemoryOrchestrator:
         }
 
         if include_related:
-            related = self._link_registry.get_related_entities(
-                entity_id, max_depth=max_depth
-            )
+            related = self._link_registry.get_related_entities(entity_id, max_depth=max_depth)
             result["links"] = [
                 {
                     "entity_id": r.entity_id,
@@ -595,9 +611,14 @@ class MemoryOrchestrator:
             strength=strength,
             bidirectional=bidirectional,
         )
-        await self._emit_event("memory.link", {
-            "source_id": source_id, "target_id": target_id, "link_type": link_type,
-        })
+        await self._emit_event(
+            "memory.link",
+            {
+                "source_id": source_id,
+                "target_id": target_id,
+                "link_type": link_type,
+            },
+        )
         return {"success": True, "link": link.to_dict()}
 
     async def get_related(
@@ -748,14 +769,19 @@ class MemoryOrchestrator:
         if self._graph_algorithms:
             try:
                 gstats = self._graph_algorithms.get_stats()
-                health["components"]["graph"] = {"status": "healthy", "nodes": gstats.get("total_nodes", 0)}
+                health["components"]["graph"] = {
+                    "status": "healthy",
+                    "nodes": gstats.get("total_nodes", 0),
+                }
             except Exception as e:
                 health["components"]["graph"] = {"status": "unhealthy", "error": str(e)}
 
         # Determine overall status
         unhealthy = [k for k, v in health["components"].items() if v.get("status") != "healthy"]
         if unhealthy:
-            health["status"] = "degraded" if len(unhealthy) < len(health["components"]) else "unhealthy"
+            health["status"] = (
+                "degraded" if len(unhealthy) < len(health["components"]) else "unhealthy"
+            )
 
         return health
 
@@ -836,7 +862,9 @@ class MemoryOrchestrator:
                     "event_id": e.event_id,
                     "event_type": e.event_type,
                     "data": e.data,
-                    "timestamp": e.timestamp.isoformat() if isinstance(e.timestamp, datetime) else str(e.timestamp),
+                    "timestamp": e.timestamp.isoformat()
+                    if isinstance(e.timestamp, datetime)
+                    else str(e.timestamp),
                     "source": e.source,
                 }
                 for e in events
@@ -866,7 +894,9 @@ class MemoryOrchestrator:
                     "event_id": e.event_id,
                     "event_type": e.event_type,
                     "data": e.data,
-                    "timestamp": e.timestamp.isoformat() if isinstance(e.timestamp, datetime) else str(e.timestamp),
+                    "timestamp": e.timestamp.isoformat()
+                    if isinstance(e.timestamp, datetime)
+                    else str(e.timestamp),
                     "source": e.source,
                 }
                 for e in events
@@ -919,8 +949,11 @@ class MemoryOrchestrator:
         if not self._research_tool:
             raise SubsystemUnavailableError("Research tool not initialized")
         return await self._research_tool.analyze(
-            query=query, entity_ids=entity_ids,
-            analysis_type=analysis_type, max_depth=max_depth, limit=limit,
+            query=query,
+            entity_ids=entity_ids,
+            analysis_type=analysis_type,
+            max_depth=max_depth,
+            limit=limit,
         )
 
     async def memory_id_management(
@@ -996,9 +1029,7 @@ class MemoryOrchestrator:
         stats["buffer_size"] = len(self._audit_service._buffer)
         return stats
 
-    async def memory_circuit_status(
-        self, name: str | None = None
-    ) -> dict[str, Any]:
+    async def memory_circuit_status(self, name: str | None = None) -> dict[str, Any]:
         """Get circuit breaker status for one or all named breakers."""
         self._track("memory_circuit_status")
         if not self._circuit_registry:
@@ -1006,7 +1037,10 @@ class MemoryOrchestrator:
         if name:
             cb = self._circuit_registry.get(name)
             if not cb:
-                return {"error": f"Circuit breaker '{name}' not found", "available": list(self._circuit_registry._breakers.keys())}
+                return {
+                    "error": f"Circuit breaker '{name}' not found",
+                    "available": list(self._circuit_registry._breakers.keys()),
+                }
             return cb.stats
         return {"breakers": self._circuit_registry.get_all_stats()}
 
@@ -1021,9 +1055,7 @@ class MemoryOrchestrator:
         cb.reset()
         return {"success": True, "name": name, "state": cb.state.value}
 
-    async def memory_metrics(
-        self, reset: bool = False
-    ) -> dict[str, Any]:
+    async def memory_metrics(self, reset: bool = False) -> dict[str, Any]:
         """Get aggregated metrics from all subsystems."""
         self._track("memory_metrics")
         if not self._metrics:
@@ -1064,7 +1096,11 @@ class MemoryOrchestrator:
             if not entry:
                 return {"entity_id": entity_id, "status": "not_found"}
             expired = entry.is_expired()
-            result: dict[str, Any] = {"entity_id": entity_id, "expired": expired, "entry": entry.to_dict()}
+            result: dict[str, Any] = {
+                "entity_id": entity_id,
+                "expired": expired,
+                "entry": entry.to_dict(),
+            }
             if not expired:
                 result["record_access"] = True
                 await self._ttl_service.record_access(entity_id)
@@ -1094,7 +1130,9 @@ class MemoryOrchestrator:
         if not self._versioning_service:
             raise SubsystemUnavailableError("Versioning service not initialized")
         versions = await self._versioning_service.get_version_history(
-            entity_id=entity_id, limit=limit, include_content=include_content,
+            entity_id=entity_id,
+            limit=limit,
+            include_content=include_content,
         )
         return {
             "entity_id": entity_id,
@@ -1118,7 +1156,10 @@ class MemoryOrchestrator:
             rollback_by=rollback_by,
         )
         if result is None:
-            return {"success": False, "error": f"Version {target_version} not found for entity {entity_id}"}
+            return {
+                "success": False,
+                "error": f"Version {target_version} not found for entity {entity_id}",
+            }
         return {"success": True, "new_version": result.to_dict()}
 
     async def memory_version_compare(
@@ -1132,7 +1173,9 @@ class MemoryOrchestrator:
         if not self._versioning_service:
             raise SubsystemUnavailableError("Versioning service not initialized")
         return await self._versioning_service.compare_versions(
-            entity_id=entity_id, version_a=version_a, version_b=version_b,
+            entity_id=entity_id,
+            version_a=version_a,
+            version_b=version_b,
         )
 
     async def memory_forget(
@@ -1147,11 +1190,6 @@ class MemoryOrchestrator:
         self._track("memory_forget")
         if not self._forgetgate_service:
             raise SubsystemUnavailableError("ForgetGate service not initialized")
-        from ..vector_memory.services.forgetgate_service import (
-            ForgetGateConfig,
-            ForgetStrategy,
-            ForgetCandidate,
-        )
         config = ForgetGateConfig(
             strategy=ForgetStrategy(strategy),
             dry_run=dry_run,
@@ -1164,9 +1202,13 @@ class MemoryOrchestrator:
                 ForgetCandidate(
                     entity_id=c.get("entity_id", ""),
                     current_confidence=c.get("confidence", 0.5),
-                    last_accessed=datetime.fromisoformat(c["last_accessed"]) if c.get("last_accessed") else None,
+                    last_accessed=datetime.fromisoformat(c["last_accessed"])
+                    if c.get("last_accessed")
+                    else None,
                     access_count=c.get("access_count", 0),
-                    created_at=datetime.fromisoformat(c["created_at"]) if c.get("created_at") else datetime.now(),
+                    created_at=datetime.fromisoformat(c["created_at"])
+                    if c.get("created_at")
+                    else datetime.now(),
                     tags=c.get("tags", []),
                     metadata=c.get("metadata", {}),
                 )
@@ -1215,11 +1257,17 @@ class MemoryOrchestrator:
         elif algorithm == "pagerank":
             ranks = self._graph_algorithms.pagerank(damping=damping, max_iterations=max_iterations)
             sorted_ranks = sorted(ranks.items(), key=lambda x: x[1], reverse=True)[:20]
-            return {"algorithm": "pagerank", "results": [{"node": n, "score": round(s, 6)} for n, s in sorted_ranks]}
+            return {
+                "algorithm": "pagerank",
+                "results": [{"node": n, "score": round(s, 6)} for n, s in sorted_ranks],
+            }
         elif algorithm == "centrality":
             cent = self._graph_algorithms.degree_centrality()
             sorted_cent = sorted(cent.items(), key=lambda x: x[1], reverse=True)[:20]
-            return {"algorithm": "centrality", "results": [{"node": n, "degree": d} for n, d in sorted_cent]}
+            return {
+                "algorithm": "centrality",
+                "results": [{"node": n, "degree": d} for n, d in sorted_cent],
+            }
         elif algorithm == "communities":
             communities = self._graph_algorithms.detect_communities()
             return {
@@ -1254,7 +1302,9 @@ class MemoryOrchestrator:
                 ],
             }
         else:
-            return {"error": f"Unknown algorithm: {algorithm}. Use: stats, pagerank, centrality, communities, shortest_path, connected_components"}
+            return {
+                "error": f"Unknown algorithm: {algorithm}. Use: stats, pagerank, centrality, communities, shortest_path, connected_components"
+            }
 
     # ----- Private helpers -----
 
@@ -1281,8 +1331,16 @@ class MemoryOrchestrator:
                             "INSERT INTO important_messages "
                             "(id, content, importance, category, tags, created_at, updated_at, metadata) "
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                            (entity_id, content, importance, category,
-                             json.dumps(tags), now, now, json.dumps({})),
+                            (
+                                entity_id,
+                                content,
+                                importance,
+                                category,
+                                json.dumps(tags),
+                                now,
+                                now,
+                                json.dumps({}),
+                            ),
                         )
                         conn.commit()
                     finally:
@@ -1291,7 +1349,7 @@ class MemoryOrchestrator:
                 await asyncio.to_thread(_save)
 
             elif target == "vector-memory":
-                from ..vector_memory.server import _get_qdrant, _get_embedding
+                from ..vector_memory.server import _get_embedding, _get_qdrant
 
                 client = await asyncio.to_thread(_get_qdrant)
                 vector = await _get_embedding(content)
@@ -1471,6 +1529,7 @@ class MemoryOrchestrator:
 
     async def _get_entity_by_raw_id(self, raw_id: str) -> dict[str, Any] | None:
         import sqlite3
+
         db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
         connection = None
         try:
@@ -1478,12 +1537,18 @@ class MemoryOrchestrator:
             cursor = connection.cursor()
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at "
-                "FROM important_messages WHERE id = ?", (raw_id,))
+                "FROM important_messages WHERE id = ?",
+                (raw_id,),
+            )
             row = cursor.fetchone()
             if row:
-                return {"unified_id": f"episodic:memory-ai:{row[0]}",
-                        "content": row[1], "importance": row[2],
-                        "category": row[3], "created_at": row[5]}
+                return {
+                    "unified_id": f"episodic:memory-ai:{row[0]}",
+                    "content": row[1],
+                    "importance": row[2],
+                    "category": row[3],
+                    "created_at": row[5],
+                }
             return None
         except Exception:
             return None
@@ -1645,7 +1710,11 @@ async def list_tools() -> list[Tool]:
                         "items": {"type": "string"},
                         "description": "Subsystem names to exclude",
                     },
-                    "min_score": {"type": "number", "default": 0.3, "description": "Minimum relevance score (0-1)"},
+                    "min_score": {
+                        "type": "number",
+                        "default": 0.3,
+                        "description": "Minimum relevance score (0-1)",
+                    },
                     "limit": {"type": "integer", "default": 20},
                 },
                 "required": ["query"],
@@ -1658,7 +1727,10 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "content": {"type": "string", "description": "Content to save"},
-                    "metadata": {"type": "object", "description": "Optional metadata (importance, category, tags, etc.)"},
+                    "metadata": {
+                        "type": "object",
+                        "description": "Optional metadata (importance, category, tags, etc.)",
+                    },
                     "auto_propagate": {"type": "boolean", "default": False},
                 },
                 "required": ["content"],
@@ -1709,7 +1781,11 @@ async def list_tools() -> list[Tool]:
                         "items": {"type": "string"},
                         "description": "Filter by link types",
                     },
-                    "direction": {"type": "string", "default": "both", "description": "outgoing, incoming, or both"},
+                    "direction": {
+                        "type": "string",
+                        "default": "both",
+                        "description": "outgoing, incoming, or both",
+                    },
                     "max_depth": {"type": "integer", "default": 2},
                     "min_strength": {"type": "number", "default": 0.5},
                 },
@@ -1762,7 +1838,10 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "client_id": {"type": "string", "description": "Client identifier"},
-                    "pattern": {"type": "string", "description": "Event pattern with wildcards (e.g. 'memory.*', 'memory.**')"},
+                    "pattern": {
+                        "type": "string",
+                        "description": "Event pattern with wildcards (e.g. 'memory.*', 'memory.**')",
+                    },
                     "metadata": {"type": "object", "description": "Optional subscription metadata"},
                 },
                 "required": ["client_id", "pattern"],
@@ -1785,7 +1864,10 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "event_type": {"type": "string", "description": "Dotted event type (e.g. 'memory.custom.alert')"},
+                    "event_type": {
+                        "type": "string",
+                        "description": "Dotted event type (e.g. 'memory.custom.alert')",
+                    },
                     "data": {"type": "object", "description": "Event payload"},
                     "source": {"type": "string", "description": "Source identifier"},
                 },
@@ -1840,7 +1922,10 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "subscription_id": {"type": "string", "description": "Send heartbeat for this subscription (omit to list all)"},
+                    "subscription_id": {
+                        "type": "string",
+                        "description": "Send heartbeat for this subscription (omit to list all)",
+                    },
                 },
             },
         ),
@@ -1852,7 +1937,11 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Search query to find entities"},
-                    "entity_ids": {"type": "array", "items": {"type": "string"}, "description": "Specific entity IDs"},
+                    "entity_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Specific entity IDs",
+                    },
                     "analysis_type": {
                         "type": "string",
                         "enum": ["relationships", "anomalies", "clusters", "timeline", "summary"],
@@ -1871,7 +1960,14 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "operation": {
                         "type": "string",
-                        "enum": ["generate", "resolve", "reverse_lookup", "resolve_conflict", "batch_register", "stats"],
+                        "enum": [
+                            "generate",
+                            "resolve",
+                            "reverse_lookup",
+                            "resolve_conflict",
+                            "batch_register",
+                            "stats",
+                        ],
                     },
                     "source": {"type": "string", "description": "Source server name"},
                     "memory_type": {"type": "string"},
@@ -1894,7 +1990,11 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "content": {"type": "string", "description": "Content to evaluate"},
                     "context": {"type": "string", "description": "Optional domain/topic context"},
-                    "detail": {"type": "boolean", "default": False, "description": "Include detailed comparison data"},
+                    "detail": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Include detailed comparison data",
+                    },
                 },
                 "required": ["content"],
             },
@@ -1922,7 +2022,10 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "action": {"type": "string", "description": "Filter by action type (create, read, update, delete, search, link, propagate, merge, rollback, export, config_change, health_check)"},
+                    "action": {
+                        "type": "string",
+                        "description": "Filter by action type (create, read, update, delete, search, link, propagate, merge, rollback, export, config_change, health_check)",
+                    },
                     "resource_type": {"type": "string", "description": "Filter by resource type"},
                     "resource_id": {"type": "string", "description": "Filter by resource ID"},
                     "limit": {"type": "integer", "default": 50},
@@ -1941,7 +2044,10 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string", "description": "Named circuit breaker (omit for all)"},
+                    "name": {
+                        "type": "string",
+                        "description": "Named circuit breaker (omit for all)",
+                    },
                 },
             },
         ),
@@ -1962,7 +2068,11 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "reset": {"type": "boolean", "default": False, "description": "Reset all metrics after reading"},
+                    "reset": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Reset all metrics after reading",
+                    },
                 },
             },
         ),
@@ -1973,8 +2083,15 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "entity_id": {"type": "string"},
-                    "policy": {"type": "string", "default": "long", "description": "TTL policy preset"},
-                    "ttl_seconds": {"type": "integer", "description": "Custom TTL in seconds (for policy=custom)"},
+                    "policy": {
+                        "type": "string",
+                        "default": "long",
+                        "description": "TTL policy preset",
+                    },
+                    "ttl_seconds": {
+                        "type": "integer",
+                        "description": "Custom TTL in seconds (for policy=custom)",
+                    },
                 },
                 "required": ["entity_id"],
             },
@@ -1985,7 +2102,10 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "entity_id": {"type": "string", "description": "Check specific entity (omit for stats)"},
+                    "entity_id": {
+                        "type": "string",
+                        "description": "Check specific entity (omit for stats)",
+                    },
                     "include_expired": {"type": "boolean", "default": False},
                 },
             },
@@ -2015,7 +2135,10 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "entity_id": {"type": "string"},
-                    "target_version": {"type": "integer", "description": "Version number to rollback to"},
+                    "target_version": {
+                        "type": "integer",
+                        "description": "Version number to rollback to",
+                    },
                     "rollback_by": {"type": "string", "default": ""},
                 },
                 "required": ["entity_id", "target_version"],
@@ -2040,8 +2163,16 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "strategy": {"type": "string", "default": "composite", "description": "Forget strategy"},
-                    "dry_run": {"type": "boolean", "default": True, "description": "If true, evaluate without applying"},
+                    "strategy": {
+                        "type": "string",
+                        "default": "composite",
+                        "description": "Forget strategy",
+                    },
+                    "dry_run": {
+                        "type": "boolean",
+                        "default": True,
+                        "description": "If true, evaluate without applying",
+                    },
                     "candidates": {
                         "type": "array",
                         "items": {"type": "object"},
@@ -2060,12 +2191,23 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "algorithm": {
                         "type": "string",
-                        "enum": ["stats", "pagerank", "centrality", "communities", "shortest_path", "connected_components"],
+                        "enum": [
+                            "stats",
+                            "pagerank",
+                            "centrality",
+                            "communities",
+                            "shortest_path",
+                            "connected_components",
+                        ],
                         "default": "stats",
                     },
                     "source": {"type": "string", "description": "Source node (for shortest_path)"},
                     "target": {"type": "string", "description": "Target node (for shortest_path)"},
-                    "damping": {"type": "number", "default": 0.85, "description": "Damping factor (for pagerank)"},
+                    "damping": {
+                        "type": "number",
+                        "default": 0.85,
+                        "description": "Damping factor (for pagerank)",
+                    },
                     "max_iterations": {"type": "integer", "default": 100},
                 },
             },
@@ -2269,10 +2411,16 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
-        return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2, default=str))]
+        return [
+            TextContent(
+                type="text", text=json.dumps(result, ensure_ascii=False, indent=2, default=str)
+            )
+        ]
 
     except OrchestratorError as e:
-        return [TextContent(type="text", text=json.dumps({"error": str(e), "type": type(e).__name__}))]
+        return [
+            TextContent(type="text", text=json.dumps({"error": str(e), "type": type(e).__name__}))
+        ]
     except Exception as e:
         logger.error(f"Error in {name}: {e}", exc_info=True)
         return [TextContent(type="text", text=f"Error: {str(e)}")]

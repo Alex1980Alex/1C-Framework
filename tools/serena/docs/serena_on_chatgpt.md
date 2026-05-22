@@ -8,7 +8,7 @@ Once configured, ChatGPT becomes a powerful **coding agent** with direct access 
 ---
 ## Prerequisites
 
-Make sure you have [uv](https://docs.astral.sh/uv/getting-started/installation/) 
+Make sure you have [uv](https://docs.astral.sh/uv/getting-started/installation/)
 and [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed.
 
 ## 1. Start the Serena MCP Server via MCPO
@@ -25,7 +25,7 @@ uvx mcpo --port 8000 --api-key <YOUR_SECRET_KEY> -- \
 - `--project` should point to the root of your codebase.
 
 You can also use other options, and you don't have to pass `--project` if you want to work on multiple projects
-or want to activate it later. See 
+or want to activate it later. See
 
 ```shell
 uvx --from git+https://github.com/oraios/serena serena start-mcp-server --help

@@ -31,7 +31,7 @@ declare -A DATABASE_CONFIGS=(
 load_config() {
     local env="${1:-dev}"
     local config_file="${CONFIG_DIR}/${env}.conf"
-    
+
     if [[ -f "$config_file" ]]; then
         echo "Loading configuration from $config_file"
         source "$config_file"
@@ -43,22 +43,22 @@ load_config() {
 # Function to validate configuration
 validate_config() {
     local errors=0
-    
+
     if [[ -z "$PROJECT_NAME" ]]; then
         echo "Error: PROJECT_NAME is not set" >&2
         ((errors++))
     fi
-    
+
     if [[ -z "$PROJECT_VERSION" ]]; then
         echo "Error: PROJECT_VERSION is not set" >&2
         ((errors++))
     fi
-    
+
     if [[ $DEFAULT_PORT -lt 1024 || $DEFAULT_PORT -gt 65535 ]]; then
         echo "Error: Invalid port number $DEFAULT_PORT" >&2
         ((errors++))
     fi
-    
+
     return $errors
 }
 
@@ -71,12 +71,12 @@ print_config() {
     echo "Default Port: $DEFAULT_PORT"
     echo "Default Timeout: $DEFAULT_TIMEOUT"
     echo "Default Retries: $DEFAULT_RETRIES"
-    
+
     echo "\n=== Environments ==="
     for env in "${!ENVIRONMENTS[@]}"; do
         echo "  $env: ${ENVIRONMENTS[$env]}"
     done
-    
+
     echo "\n=== Database Configuration ==="
     for key in "${!DATABASE_CONFIGS[@]}"; do
         echo "  $key: ${DATABASE_CONFIGS[$key]}"

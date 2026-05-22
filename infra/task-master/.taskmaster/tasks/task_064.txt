@@ -3,7 +3,7 @@
 # Status: done
 # Dependencies: None
 # Priority: medium
-# Description: Implement full support for installing and managing Taskmaster using Yarn package manager, ensuring users have the exact same experience as with npm or pnpm. The installation process, including any CLI prompts or web interfaces, must serve the exact same content and user experience regardless of whether npm, pnpm, or Yarn is used. The project uses 'module' as the package type, defines binaries 'task-master' and 'task-master-mcp', and its core logic resides in 'scripts/modules/'. The 'init' command (via scripts/init.js) creates the directory structure (.cursor/rules, scripts, tasks), copies templates (.env.example, .gitignore, rule files, dev.js), manages package.json merging, and sets up MCP config (.cursor/mcp.json). All dependencies are standard npm dependencies listed in package.json, and manual modifications are being removed. 
+# Description: Implement full support for installing and managing Taskmaster using Yarn package manager, ensuring users have the exact same experience as with npm or pnpm. The installation process, including any CLI prompts or web interfaces, must serve the exact same content and user experience regardless of whether npm, pnpm, or Yarn is used. The project uses 'module' as the package type, defines binaries 'task-master' and 'task-master-mcp', and its core logic resides in 'scripts/modules/'. The 'init' command (via scripts/init.js) creates the directory structure (.cursor/rules, scripts, tasks), copies templates (.env.example, .gitignore, rule files, dev.js), manages package.json merging, and sets up MCP config (.cursor/mcp.json). All dependencies are standard npm dependencies listed in package.json, and manual modifications are being removed.
 
 If the installation process includes a website component (such as for account setup or registration), ensure that any required website actions (e.g., creating an account, logging in, or configuring user settings) are clearly documented and tested for parity between Yarn and other package managers. If no website or account setup is required, confirm and document this explicitly.
 # Details:
@@ -199,4 +199,3 @@ When testing website account setup with Yarn, consider implementing a positive u
 7. Verify that error messages are friendly, clear, and provide actionable guidance rather than technical jargon
 8. Test the account recovery flow to ensure users have a smooth experience if they forget credentials
 </info added on 2025-04-25T17:22:46.293Z>
-

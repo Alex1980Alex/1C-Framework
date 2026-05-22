@@ -1,29 +1,22 @@
 """Tests for ContextCache."""
 
-import pytest
 import json
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+
+from models import (
+    ContextReport,
+    InitializerConfig,
+    ProjectStructure,
+    ProjectType,
+)
 
 from ..context_cache import (
     CacheEntry,
     ContextCache,
     get_cache,
-    cache_context,
-    get_cached_context,
-    invalidate_cache,
     is_cache_valid,
-)
-from models import (
-    InitializerConfig,
-    ContextReport,
-    ProjectStructure,
-    ProjectType,
-    RelevantFile,
-    FileInfo,
-    FileType,
 )
 
 
@@ -407,6 +400,7 @@ class TestConvenienceFunctions:
         # Note: This may interfere with other tests due to global state
         # Reset global cache first
         from .. import context_cache as cc
+
         cc._global_cache = None
 
         cache1 = get_cache()
@@ -475,6 +469,7 @@ class TestDirectoryHash:
 
             # Modify file (need to change mtime)
             import time
+
             time.sleep(0.1)  # Ensure different mtime
             bsl_file.write_text("// Version 2")
             hash2 = cache._compute_directory_hash(test_dir)

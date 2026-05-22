@@ -52,4 +52,3 @@ Support both environment-based authentication and explicit credentials using `go
 ### Description: Export the new provider, update the PROVIDERS object, and document setup instructions, including robust error handling for Vertex-specific issues.
 ### Details:
 Update `src/ai-providers/index.js` and `scripts/modules/ai-services-unified.js`, and provide clear documentation for setup, configuration, and error handling patterns.
-

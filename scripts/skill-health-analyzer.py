@@ -74,7 +74,9 @@ def get_f1_score() -> float | None:
     try:
         result = subprocess.run(
             [sys.executable, str(eval_script)],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
             cwd=str(PROJECT_ROOT),
         )
         # Parse "  F1:        0.7189" from "All (required + optional" section
@@ -183,7 +185,9 @@ def generate_report(
     ]
 
     sorted_skills = sorted(
-        stats.items(), key=lambda x: x[1].waste_rate, reverse=True,
+        stats.items(),
+        key=lambda x: x[1].waste_rate,
+        reverse=True,
     )
 
     for skill, s in sorted_skills:
@@ -216,9 +220,7 @@ def generate_report(
         lines.append("### NEVER USED (candidates for archiving)")
         for skill in sorted(never_used):
             s = stats[skill]
-            lines.append(
-                f"- **{skill}**: {s.recommended_count} recs, 0 activations"
-            )
+            lines.append(f"- **{skill}**: {s.recommended_count} recs, 0 activations")
         lines.append("")
 
     if not (high_waste or router_miss or never_used):
@@ -246,8 +248,14 @@ def main() -> int:
     high_waste, router_miss, never_used = identify_problems(stats)
 
     report = generate_report(
-        prompt_count, stats, f1, high_waste, router_miss, never_used,
-        args.min_samples, args.days,
+        prompt_count,
+        stats,
+        f1,
+        high_waste,
+        router_miss,
+        never_used,
+        args.min_samples,
+        args.days,
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

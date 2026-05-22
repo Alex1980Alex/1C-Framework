@@ -340,19 +340,19 @@ class SerenaConfig(ToolInclusionDefinition, ToStringMixin):
     whether to apply JetBrains mode
     """
     record_tool_usage_stats: bool = False
-    """Whether to record tool usage statistics, they will be shown in the web dashboard if recording is active. 
+    """Whether to record tool usage statistics, they will be shown in the web dashboard if recording is active.
     """
     token_count_estimator: str = RegisteredTokenCountEstimator.TIKTOKEN_GPT4O.name
     """Only relevant if `record_tool_usage` is True; the name of the token count estimator to use for tool usage statistics.
     See the `RegisteredTokenCountEstimator` enum for available options.
-    
+
     Note: some token estimators (like tiktoken) may require downloading data files
     on the first run, which can take some time and require internet access. Others, like the Anthropic ones, may require an API key
     and rate limits may apply.
     """
     default_max_tool_answer_chars: int = 150_000
     """Used as default for tools where the apply method has a default maximal answer length.
-    Even though the value of the max_answer_chars can be changed when calling the tool, it may make sense to adjust this default 
+    Even though the value of the max_answer_chars can be changed when calling the tool, it may make sense to adjust this default
     through the global configuration.
     """
     ls_specific_settings: dict = field(default_factory=dict)

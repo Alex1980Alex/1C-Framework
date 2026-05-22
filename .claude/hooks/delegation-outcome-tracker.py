@@ -109,8 +109,12 @@ class DelegationOutcomeTracker(BaseHook):
         ext = os.path.splitext(file_path)[1].lower()
 
         content_lower = content[:2000].lower()
-        has_code = any(kw in content_lower for kw in ("def ", "class ", "import ", "function ", "async "))
-        has_architecture = any(kw in content_lower for kw in ("architecture", "pattern", "design", "итерац"))
+        has_code = any(
+            kw in content_lower for kw in ("def ", "class ", "import ", "function ", "async ")
+        )
+        has_architecture = any(
+            kw in content_lower for kw in ("architecture", "pattern", "design", "итерац")
+        )
 
         classification = _auto_classify(content_type, lines, domain)
 
@@ -144,7 +148,13 @@ class DelegationOutcomeTracker(BaseHook):
         # Online learning: update bandit model
         try:
             import importlib.util
-            bandit_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "shared" / "delegation_bandit.py")
+
+            bandit_path = str(
+                Path(__file__).resolve().parent.parent.parent
+                / "src"
+                / "shared"
+                / "delegation_bandit.py"
+            )
             spec = importlib.util.spec_from_file_location("delegation_bandit", bandit_path)
             if spec and spec.loader:
                 mod = importlib.util.module_from_spec(spec)

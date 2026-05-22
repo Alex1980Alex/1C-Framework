@@ -10,7 +10,7 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams, Distance, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
 
 OLLAMA_URL = "http://localhost:11434/api/embeddings"
 QDRANT_URL = "http://localhost:6333"
@@ -35,7 +35,10 @@ def embed_text(text: str) -> list[float] | None:
             embedding = data.get("embedding")
             if embedding and len(embedding) == VECTOR_SIZE:
                 return embedding
-            print(f"Warning: Unexpected embedding size: {len(embedding) if embedding else 0}", file=sys.stderr)
+            print(
+                f"Warning: Unexpected embedding size: {len(embedding) if embedding else 0}",
+                file=sys.stderr,
+            )
             return None
     except (URLError, OSError) as e:
         print(f"Warning: Embedding failed: {e}", file=sys.stderr)
@@ -76,7 +79,9 @@ def index_experience(record: dict, client=None) -> str | None:
         trigger = record.get("trigger", {})
 
         insight_reason = insight.get("reason", "") if isinstance(insight, dict) else str(insight)
-        context_pattern = trigger.get("context_pattern", "") if isinstance(trigger, dict) else str(trigger)
+        context_pattern = (
+            trigger.get("context_pattern", "") if isinstance(trigger, dict) else str(trigger)
+        )
 
         embed_input = f"{insight_reason} {context_pattern}".strip()
         if not embed_input:
@@ -120,12 +125,14 @@ def search_experiences(query: str, limit: int = 5) -> list[dict]:
         output = []
         for point in response.points:
             payload = point.payload or {}
-            output.append({
-                "experience_id": payload.get("experience_id"),
-                "score": point.score,
-                "insight": payload.get("insight"),
-                "trigger": payload.get("trigger"),
-            })
+            output.append(
+                {
+                    "experience_id": payload.get("experience_id"),
+                    "score": point.score,
+                    "insight": payload.get("insight"),
+                    "trigger": payload.get("trigger"),
+                }
+            )
         return output
 
     except Exception as e:
@@ -182,7 +189,9 @@ def main():
         ensure_collection()
     elif args.index:
         results = index_all_experiences(args.index)
-        print(f"Indexing complete: {results['indexed']}/{results['total']} indexed, {results['failed']} failed")
+        print(
+            f"Indexing complete: {results['indexed']}/{results['total']} indexed, {results['failed']} failed"
+        )
     elif args.search:
         results = search_experiences(args.search)
         if not results:
@@ -191,7 +200,9 @@ def main():
             for i, result in enumerate(results, 1):
                 print(f"\n--- Result {i} (score: {result['score']:.4f}) ---")
                 print(f"  experience_id: {result['experience_id']}")
-                print(f"  insight: {json.dumps(result['insight'], ensure_ascii=False, indent=2) if result['insight'] else 'N/A'}")
+                print(
+                    f"  insight: {json.dumps(result['insight'], ensure_ascii=False, indent=2) if result['insight'] else 'N/A'}"
+                )
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ Claude Code Stop event (detects new ``run_end`` entries in
 ``data/indexing-progress.jsonl``). Also callable manually to re-render
 a report for any historical run_id.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,7 +41,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         choices=["sqlite", "neo4j", "qdrant_graph"],
         help="graph source (mode=graph only)",
     )
-    p.add_argument("--db-path", default=str(DEFAULT_BSL_DB), help="SQLite call graph DB (mode=graph, source=sqlite)")
+    p.add_argument(
+        "--db-path",
+        default=str(DEFAULT_BSL_DB),
+        help="SQLite call graph DB (mode=graph, source=sqlite)",
+    )
     p.add_argument("--neo4j-uri", default="bolt://localhost:7687")
     p.add_argument("--neo4j-user", default="neo4j")
     p.add_argument("--neo4j-password", default="bsl-graph-2026")
@@ -50,7 +55,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--qdrant-url", default=None)
     p.add_argument("--progress-jsonl", default=str(PROGRESS_JSONL))
     p.add_argument("--reports-dir", default=str(REPORTS_DIR))
-    p.add_argument("--json-only", action="store_true", help="emit JSON summary to stdout instead of paths")
+    p.add_argument(
+        "--json-only", action="store_true", help="emit JSON summary to stdout instead of paths"
+    )
     return p.parse_args(argv)
 
 
@@ -73,7 +80,10 @@ def main(argv: list[str] | None = None) -> int:
         )
     else:
         if not args.source:
-            print("ERROR: --source required for --mode=graph (sqlite|neo4j|qdrant_graph)", file=sys.stderr)
+            print(
+                "ERROR: --source required for --mode=graph (sqlite|neo4j|qdrant_graph)",
+                file=sys.stderr,
+            )
             return 2
         analyzer = GraphAnalyzer(
             source=args.source,

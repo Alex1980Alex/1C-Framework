@@ -102,15 +102,18 @@ def _auto_commit(status: SubmoduleStatus) -> bool:
     try:
         subprocess.run(
             ["git", "add", "-A"],
-            capture_output=True, timeout=GIT_TIMEOUT_S,
+            capture_output=True,
+            timeout=GIT_TIMEOUT_S,
             cwd=str(full_path),
         )
         result = subprocess.run(
             ["git", "commit", "-m", msg, "--no-verify"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
             timeout=GIT_TIMEOUT_S * 2,
             cwd=str(full_path),
-            encoding="utf-8", errors="replace",
+            encoding="utf-8",
+            errors="replace",
         )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, OSError):
@@ -148,15 +151,11 @@ class SubmoduleStatusCheck(BaseHook):
         for s in sorted(dirty, key=lambda x: -x.total)[:MAX_SUBMODULES_DISPLAY]:
             short = s.path.split("/")[-1][:40]
             marker = " [auto-committed]" if s.path in committed else ""
-            lines.append(
-                f"  - {short}: {s.modified} modified, {s.untracked} untracked{marker}"
-            )
+            lines.append(f"  - {short}: {s.modified} modified, {s.untracked} untracked{marker}")
         if len(dirty) > MAX_SUBMODULES_DISPLAY:
             lines.append(f"  ... and {len(dirty) - MAX_SUBMODULES_DISPLAY} more")
         if not auto_commit:
-            lines.append(
-                "  (set SUBMODULE_AUTO_COMMIT=1 to auto-commit; default detection-only)"
-            )
+            lines.append("  (set SUBMODULE_AUTO_COMMIT=1 to auto-commit; default detection-only)")
 
         return HookOutput().system_message("\n".join(lines))
 

@@ -30,11 +30,11 @@ JSON is recommended before drawing strong conclusions. The `id` field
 should be stable across regenerations as long as scrolled points stay
 the same (Qdrant scroll is deterministic-ish per offset).
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import random
 import sys
 import time
@@ -96,8 +96,9 @@ def _call_llm(prompt: str) -> str | None:
     # Lazy import to avoid forcing the heavy llm_rotation dependency at
     # module-load time (e.g. if someone imports this script for testing).
     try:
-        from src.shared.llm_rotation import get_service  # noqa: PLC0415
         import asyncio  # noqa: PLC0415
+
+        from src.shared.llm_rotation import get_service  # noqa: PLC0415
 
         async def _ainvoke() -> str | None:
             service = get_service()
@@ -128,8 +129,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Generate synthetic BSL golden set")
     ap.add_argument("--collection", default="bsl_code_v4_late")
     ap.add_argument("--count", type=int, default=50)
-    ap.add_argument("--output", type=Path,
-                    default=PROJECT_ROOT / "data" / "bsl_golden_set.json")
+    ap.add_argument("--output", type=Path, default=PROJECT_ROOT / "data" / "bsl_golden_set.json")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--qdrant-host", default="localhost")
     ap.add_argument("--qdrant-port", type=int, default=6333)
@@ -170,13 +170,14 @@ def main() -> int:
     print(f"  Got {len(candidates)} candidate symbols")
 
     if len(candidates) < args.count:
-        print(f"  [WARN] only {len(candidates)} candidates available, "
-              f"requested {args.count}")
+        print(f"  [WARN] only {len(candidates)} candidates available, " f"requested {args.count}")
         args.count = len(candidates)
 
     sampled = random.sample(candidates, args.count)
-    print(f"Generating {len(sampled)} synthetic queries via LLM "
-          f"(this is sequential, ~5s per query)...")
+    print(
+        f"Generating {len(sampled)} synthetic queries via LLM "
+        f"(this is sequential, ~5s per query)..."
+    )
 
     golden: list[dict[str, Any]] = []
     failures = 0
@@ -194,11 +195,13 @@ def main() -> int:
         item = {
             "id": f"SYNTH-{idx:03d}",
             "query": question,
-            "expected": [{
-                "module_path": payload["module_path"],
-                "line_start": int(payload.get("line_start") or 0),
-                "line_end": int(payload.get("line_end") or 0),
-            }],
+            "expected": [
+                {
+                    "module_path": payload["module_path"],
+                    "line_start": int(payload.get("line_start") or 0),
+                    "line_end": int(payload.get("line_end") or 0),
+                }
+            ],
             "slice": slc,
             "_meta": {
                 "name": payload.get("name"),

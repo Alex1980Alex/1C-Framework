@@ -21,8 +21,9 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from _progress import make_tracker  # noqa: E402
-from src.bsl.parser import BSLASTParser
+
 from src.bsl.call_graph.store import CallGraphStore
+from src.bsl.parser import BSLASTParser
 
 SKIP_PATTERNS = ["node_modules", "bin/", "build/"]
 DEFAULT_DB = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
@@ -53,7 +54,8 @@ def main() -> None:
 
     with tracker.stage("file_scan"):
         bsl_files = sorted(
-            f for f in project.rglob("*.bsl")
+            f
+            for f in project.rglob("*.bsl")
             if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
         )
     print(f"Found {len(bsl_files)} BSL files")
@@ -97,14 +99,16 @@ def main() -> None:
     print(f"  DB:         {args.db}")
     print(f"{'='*50}")
 
-    tracker.stop(summary={
-        "files": len(bsl_files),
-        "symbols": stats.get("symbols", 0),
-        "calls": stats.get("calls", 0),
-        "modules": stats.get("modules", 0),
-        "errors": errors,
-        "elapsed_s": round(elapsed, 1),
-    })
+    tracker.stop(
+        summary={
+            "files": len(bsl_files),
+            "symbols": stats.get("symbols", 0),
+            "calls": stats.get("calls", 0),
+            "modules": stats.get("modules", 0),
+            "errors": errors,
+            "elapsed_s": round(elapsed, 1),
+        }
+    )
 
 
 if __name__ == "__main__":

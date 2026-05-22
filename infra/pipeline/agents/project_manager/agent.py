@@ -9,22 +9,22 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 from uuid import uuid4
 
+from agents.project_manager.dependency_tracker import DependencyTracker
 from agents.project_manager.models import (
     Project,
-    ProjectStatus,
-    Task,
-    TaskStatus,
-    TaskPriority,
     ProjectManagerConfig,
     ProjectManagerInput,
     ProjectManagerOutput,
+    ProjectStatus,
+    Task,
+    TaskPriority,
+    TaskStatus,
 )
 from agents.project_manager.repository import ProjectRepository, TaskRepository
-from agents.project_manager.dependency_tracker import DependencyTracker
-from agents.project_manager.scheduler import TaskScheduler, SchedulingStrategy, Schedule
+from agents.project_manager.scheduler import Schedule, SchedulingStrategy, TaskScheduler
 
 
 @dataclass
@@ -33,7 +33,7 @@ class ProjectManagerResult:
 
     success: bool
     message: str
-    output: Optional[ProjectManagerOutput] = None
+    output: ProjectManagerOutput | None = None
     execution_time_ms: float = 0
 
     @property
@@ -73,7 +73,7 @@ class ProjectManagerAgent:
         next_task = agent.get_next_task("GKSTCPLK-1996")
     """
 
-    def __init__(self, config: Optional[ProjectManagerConfig] = None) -> None:
+    def __init__(self, config: ProjectManagerConfig | None = None) -> None:
         """
         Initialize agent.
 
@@ -93,9 +93,9 @@ class ProjectManagerAgent:
         project_id: str,
         name: str,
         description: str = "",
-        project_path: Optional[Path] = None,
-        tasks: Optional[List[Dict[str, Any]]] = None,
-        tags: Optional[List[str]] = None,
+        project_path: Path | None = None,
+        tasks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
     ) -> ProjectManagerResult:
         """
         Create new project.
@@ -165,7 +165,7 @@ class ProjectManagerAgent:
             execution_time_ms=(time.time() - start_time) * 1000,
         )
 
-    def get_project(self, project_id: str) -> Optional[Project]:
+    def get_project(self, project_id: str) -> Project | None:
         """
         Get project by ID.
 
@@ -211,9 +211,9 @@ class ProjectManagerAgent:
 
     def list_projects(
         self,
-        status: Optional[ProjectStatus] = None,
+        status: ProjectStatus | None = None,
         active_only: bool = False,
-    ) -> List[Project]:
+    ) -> list[Project]:
         """
         List projects.
 
@@ -382,9 +382,9 @@ class ProjectManagerAgent:
         title: str,
         description: str = "",
         priority: str = "medium",
-        dependencies: Optional[List[str]] = None,
-        assigned_agent: Optional[str] = None,
-        estimated_hours: Optional[float] = None,
+        dependencies: list[str] | None = None,
+        assigned_agent: str | None = None,
+        estimated_hours: float | None = None,
     ) -> ProjectManagerResult:
         """
         Add task to project.
@@ -590,7 +590,7 @@ class ProjectManagerAgent:
             execution_time_ms=(time.time() - start_time) * 1000,
         )
 
-    def get_next_task(self, project_id: str) -> Optional[Task]:
+    def get_next_task(self, project_id: str) -> Task | None:
         """
         Get next task to execute.
 
@@ -606,7 +606,7 @@ class ProjectManagerAgent:
 
         return self.scheduler.get_next_task(project)
 
-    def get_ready_tasks(self, project_id: str) -> List[Task]:
+    def get_ready_tasks(self, project_id: str) -> list[Task]:
         """
         Get all tasks ready for execution.
 
@@ -628,7 +628,7 @@ class ProjectManagerAgent:
         self,
         project_id: str,
         strategy: str = "priority_first",
-    ) -> Optional[Schedule]:
+    ) -> Schedule | None:
         """
         Create schedule for project.
 
@@ -648,7 +648,7 @@ class ProjectManagerAgent:
             SchedulingStrategy(strategy),
         )
 
-    def get_critical_path(self, project_id: str) -> List[Task]:
+    def get_critical_path(self, project_id: str) -> list[Task]:
         """
         Get critical path for project.
 
@@ -666,7 +666,7 @@ class ProjectManagerAgent:
 
     # ============ Status & Reporting ============
 
-    def get_project_status(self, project_id: str) -> Optional[Dict[str, Any]]:
+    def get_project_status(self, project_id: str) -> dict[str, Any] | None:
         """
         Get detailed project status.
 
@@ -697,7 +697,7 @@ class ProjectManagerAgent:
             "current_run_id": project.current_run_id,
         }
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """
         Get summary of all projects.
 
@@ -726,7 +726,7 @@ class ProjectManagerAgent:
 
     # ============ Helper Methods ============
 
-    def _create_task_from_dict(self, data: Dict[str, Any], index: int) -> Task:
+    def _create_task_from_dict(self, data: dict[str, Any], index: int) -> Task:
         """Create Task from dictionary."""
         task_id = data.get("task_id", f"task_{index}")
         return Task(

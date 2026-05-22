@@ -370,7 +370,7 @@
 			<Settings xsi:type="DynamicList">
 				<ManualQuery>true</ManualQuery>
 				<DynamicDataRead>false</DynamicDataRead>
-				<QueryText>ВЫБРАТЬ 
+				<QueryText>ВЫБРАТЬ
 	NULL КАК Ссылка</QueryText>
 				<ListSettings>
 					<dcsset:filter>

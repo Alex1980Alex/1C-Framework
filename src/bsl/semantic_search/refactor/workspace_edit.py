@@ -94,16 +94,12 @@ class WorkspaceEditApplier:
         while current_line < line:
             nl_idx = text.find("\n", offset)
             if nl_idx == -1:
-                raise IndexError(
-                    f"Line {line} is out of range (file has {current_line + 1} lines)"
-                )
+                raise IndexError(f"Line {line} is out of range (file has {current_line + 1} lines)")
             offset = nl_idx + 1
             current_line += 1
 
         line_end_idx = text.find("\n", offset)
-        line_length = (
-            (line_end_idx - offset) if line_end_idx != -1 else (len(text) - offset)
-        )
+        line_length = (line_end_idx - offset) if line_end_idx != -1 else (len(text) - offset)
 
         if character > line_length:
             raise IndexError(

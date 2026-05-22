@@ -11,11 +11,9 @@ Example usage:
     info = resolver.resolve("D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996")
 """
 
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import List, Optional
-import os
 import re
+from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -74,6 +72,7 @@ class ProjectInfo:
 
 class ProjectResolverError(Exception):
     """Raised when project cannot be resolved."""
+
     pass
 
 
@@ -94,8 +93,8 @@ class ProjectResolver:
 
     def __init__(
         self,
-        framework_root: Optional[Path] = None,
-        additional_search_paths: Optional[List[str]] = None,
+        framework_root: Path | None = None,
+        additional_search_paths: list[str] | None = None,
     ):
         """Initialize resolver.
 
@@ -105,7 +104,7 @@ class ProjectResolver:
             additional_search_paths: Extra paths to search for projects.
         """
         self.framework_root = framework_root or self._detect_framework_root()
-        self._known_projects: List[Path] = []  # populated by _build_search_paths
+        self._known_projects: list[Path] = []  # populated by _build_search_paths
         self.search_paths = self._build_search_paths(additional_search_paths or [])
 
     def _detect_framework_root(self) -> Path:
@@ -126,7 +125,7 @@ class ProjectResolver:
         # Fallback to current directory
         return Path.cwd()
 
-    def _build_search_paths(self, additional: List[str]) -> List[Path]:
+    def _build_search_paths(self, additional: list[str]) -> list[Path]:
         """Discover BSL projects via .bsl-language-server.json markers.
 
         Populates `self._known_projects` with all discovered project roots
@@ -136,15 +135,17 @@ class ProjectResolver:
         # Lazy-import to avoid forcing the dependency at module load.
         try:
             import sys
+
             if str(self.framework_root) not in sys.path:
                 sys.path.insert(0, str(self.framework_root))
             from src.bsl.project_discovery import find_bsl_projects
+
             self._known_projects = find_bsl_projects(self.framework_root)
         except ImportError:
             self._known_projects = []
 
         seen: set[Path] = set()
-        paths: List[Path] = []
+        paths: list[Path] = []
         for proj in self._known_projects:
             parent = proj.parent
             if parent not in seen:
@@ -209,7 +210,7 @@ class ProjectResolver:
 
         return "unknown"
 
-    def _find_by_name(self, name: str) -> Optional[Path]:
+    def _find_by_name(self, name: str) -> Path | None:
         """Find project by name among discovered BSL projects.
 
         Matches against `_known_projects` (populated from .bsl-language-server.json
@@ -287,14 +288,14 @@ class ProjectResolver:
             project_type=project_type,
         )
 
-    def resolve_or_none(self, project: str) -> Optional[ProjectInfo]:
+    def resolve_or_none(self, project: str) -> ProjectInfo | None:
         """Resolve project, returning None if not found."""
         try:
             return self.resolve(project)
         except ProjectResolverError:
             return None
 
-    def list_projects(self, project_type: Optional[str] = None) -> List[ProjectInfo]:
+    def list_projects(self, project_type: str | None = None) -> list[ProjectInfo]:
         """List all available projects.
 
         Args:
@@ -324,7 +325,7 @@ class ProjectResolver:
 
 
 # Global resolver instance for convenience
-_default_resolver: Optional[ProjectResolver] = None
+_default_resolver: ProjectResolver | None = None
 
 
 def get_resolver() -> ProjectResolver:

@@ -18,12 +18,12 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 
 class HookEvent(Enum):
     """Hook event types as defined by Claude Code."""
+
     USER_PROMPT_SUBMIT = "UserPromptSubmit"
     PRE_TOOL_USE = "PreToolUse"
     POST_TOOL_USE = "PostToolUse"
@@ -32,13 +32,14 @@ class HookEvent(Enum):
 
 class HookOutcome(Enum):
     """Possible hook execution outcomes."""
-    ALLOW = "allow"          # Let action proceed
-    BLOCK = "block"          # Block the action
-    MESSAGE = "message"      # Add system message but allow
-    ADVISE = "advise"        # Advisory message only
-    LEARN = "learn"          # Created learn tasks
-    ERROR = "error"          # Hook error (graceful degradation)
-    SKIP = "skip"            # Hook skipped execution
+
+    ALLOW = "allow"  # Let action proceed
+    BLOCK = "block"  # Block the action
+    MESSAGE = "message"  # Add system message but allow
+    ADVISE = "advise"  # Advisory message only
+    LEARN = "learn"  # Created learn tasks
+    ERROR = "error"  # Hook error (graceful degradation)
+    SKIP = "skip"  # Hook skipped execution
 
 
 @dataclass
@@ -56,13 +57,14 @@ class HookInput:
         "agent_id": "..."
     }
     """
-    detected_event: Optional[str] = None
-    tool_name: Optional[str] = None
-    tool_input: Dict[str, Any] = field(default_factory=dict)
-    prompt: Optional[str] = None
-    invocation_id: Optional[str] = None
-    agent_id: Optional[str] = None
-    raw_data: Dict[str, Any] = field(default_factory=dict)
+
+    detected_event: str | None = None
+    tool_name: str | None = None
+    tool_input: dict[str, Any] = field(default_factory=dict)
+    prompt: str | None = None
+    invocation_id: str | None = None
+    agent_id: str | None = None
+    raw_data: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_stdin(cls) -> "HookInput":
@@ -107,10 +109,10 @@ class HookInput:
             prompt=data.get("prompt"),
             invocation_id=data.get("invocation_id"),
             agent_id=data.get("agent_id"),
-            raw_data=data
+            raw_data=data,
         )
 
-    def get_event(self) -> Optional[HookEvent]:
+    def get_event(self) -> HookEvent | None:
         """Get parsed event as HookEvent enum."""
         if not self.detected_event:
             return None
@@ -142,10 +144,11 @@ class HookOutput:
     - Block response (via block + reason)
     - Plain text advice (via print)
     """
+
     _should_block: bool = False
     _block_reason: str = ""
     _system_message: str = ""
-    _print_output: List[str] = field(default_factory=list)
+    _print_output: list[str] = field(default_factory=list)
     _exit_code: int = 0
 
     def block(self, reason: str, exit_code: int = 2) -> None:
@@ -215,11 +218,7 @@ class HookOutput:
 
     def has_content(self) -> bool:
         """Check if this output has any content (message, block, or print)."""
-        return bool(
-            self._should_block or
-            self._system_message or
-            self._print_output
-        )
+        return bool(self._should_block or self._system_message or self._print_output)
 
     def flush(self) -> None:
         """
@@ -299,12 +298,13 @@ class BaseHook:
         """Setup invocation timer if invocation_logger is available."""
         try:
             from shared.invocation_logger import InvocationTimer
+
             self._timer = InvocationTimer(self.HOOK_NAME).start()
             self._start_time = datetime.now()
         except Exception:
             pass
 
-    def _log_outcome(self, outcome: HookOutcome, error: Optional[str] = None) -> None:
+    def _log_outcome(self, outcome: HookOutcome, error: str | None = None) -> None:
         """Log hook invocation outcome."""
         if not self._timer:
             return
@@ -384,10 +384,4 @@ class BaseHook:
 
 
 # Export for use in hooks
-__all__ = [
-    "BaseHook",
-    "HookEvent",
-    "HookOutcome",
-    "HookInput",
-    "HookOutput"
-]
+__all__ = ["BaseHook", "HookEvent", "HookOutcome", "HookInput", "HookOutput"]

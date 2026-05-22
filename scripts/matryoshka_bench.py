@@ -39,10 +39,9 @@ import numpy as np
 
 # Reuse production Qwen3 ST embedder from the BSL reindex pipeline.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from reindex_bsl_qwen3 import Qwen3STEmbedder  # noqa: E402
-
 from qdrant_client import QdrantClient  # noqa: E402
 from qdrant_client.http import models  # noqa: E402
+from reindex_bsl_qwen3 import Qwen3STEmbedder  # noqa: E402
 
 logger = logging.getLogger("matryoshka_bench")
 
@@ -121,9 +120,7 @@ def reembed_all(
         logger.info("Creating %s (%dd cosine)", name, dim)
         client.create_collection(
             collection_name=name,
-            vectors_config=models.VectorParams(
-                size=dim, distance=models.Distance.COSINE
-            ),
+            vectors_config=models.VectorParams(size=dim, distance=models.Distance.COSINE),
         )
 
     logger.info("Embedding %d chunks at 4096d on local GPU...", len(rows))
@@ -142,9 +139,7 @@ def reembed_all(
                     if dim < 4096
                     else list(v_full)  # 4096d already unit-normalized by Qwen3 ST
                 )
-                points.append(
-                    models.PointStruct(id=r["id"], vector=v, payload=r["payload"])
-                )
+                points.append(models.PointStruct(id=r["id"], vector=v, payload=r["payload"]))
             client.upsert(
                 collection_name=target_collection_name(dim),
                 points=points,
@@ -175,10 +170,7 @@ def load_golden() -> list[dict[str, Any]]:
     if not GOLDEN_PATH.is_file():
         raise FileNotFoundError(f"golden_v1 dataset not at {GOLDEN_PATH}")
     raw = json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
-    return [
-        it for it in raw["items"]
-        if it.get("expected_keywords") and it.get("query")
-    ]
+    return [it for it in raw["items"] if it.get("expected_keywords") and it.get("query")]
 
 
 def keyword_recall(retrieved_texts: list[str], keywords: list[str]) -> float:
@@ -219,11 +211,7 @@ def evaluate_collection(
         # prompt_name="query"), then truncate+renormalize to target dim
         # with the same transform as the indexed chunks.
         q_vec_full = embedder.embed_batch([item["query"]], is_query=True)[0]
-        q_vec = (
-            truncate_and_normalize(q_vec_full, dim)
-            if dim < 4096
-            else list(q_vec_full)
-        )
+        q_vec = truncate_and_normalize(q_vec_full, dim) if dim < 4096 else list(q_vec_full)
 
         t0 = time.perf_counter()
         hits = client.query_points(
@@ -234,9 +222,7 @@ def evaluate_collection(
         ).points
         latencies_ms.append((time.perf_counter() - t0) * 1000.0)
 
-        retrieved_texts = [
-            (h.payload or {}).get(SOURCE_TEXT_FIELD, "") for h in hits
-        ]
+        retrieved_texts = [(h.payload or {}).get(SOURCE_TEXT_FIELD, "") for h in hits]
         rec = keyword_recall(retrieved_texts, item["expected_keywords"])
         recalls.append(rec)
         diff = item.get("difficulty", "medium")
@@ -249,8 +235,7 @@ def evaluate_collection(
         "n_queries": len(items),
         "mean_keyword_recall": round(mean_recall, 4),
         "per_difficulty": {
-            d: round(sum(v) / len(v), 4) if v else 0.0
-            for d, v in per_difficulty.items()
+            d: round(sum(v) / len(v), 4) if v else 0.0 for d, v in per_difficulty.items()
         },
         "latency_ms": {
             "mean": round(sum(latencies_ms) / len(latencies_ms), 2),
@@ -269,9 +254,7 @@ def compare_results(results: list[dict[str, Any]]) -> dict[str, Any]:
             continue
         delta = r["mean_keyword_recall"] - baseline["mean_keyword_recall"]
         delta_rel = (
-            delta / baseline["mean_keyword_recall"]
-            if baseline["mean_keyword_recall"] > 0
-            else 0.0
+            delta / baseline["mean_keyword_recall"] if baseline["mean_keyword_recall"] > 0 else 0.0
         )
         # Asymmetric thresholds — only DEGRADATION counts against MRL. An
         # improvement at smaller dim is suspect (likely noise at small N)
@@ -282,19 +265,21 @@ def compare_results(results: list[dict[str, Any]]) -> dict[str, Any]:
             recommendation = "OPT_IN"
         else:
             recommendation = "REJECT"
-        comparisons.append({
-            "dim": r["dim"],
-            "keyword_recall": r["mean_keyword_recall"],
-            "delta_abs": round(delta, 4),
-            "delta_rel_pct": round(delta_rel * 100, 2),
-            "latency_speedup_p95": (
-                round(baseline["latency_ms"]["p95"] / r["latency_ms"]["p95"], 2)
-                if r["latency_ms"]["p95"] > 0
-                else None
-            ),
-            "storage_factor": round(4096 / r["dim"], 2),
-            "recommendation": recommendation,
-        })
+        comparisons.append(
+            {
+                "dim": r["dim"],
+                "keyword_recall": r["mean_keyword_recall"],
+                "delta_abs": round(delta, 4),
+                "delta_rel_pct": round(delta_rel * 100, 2),
+                "latency_speedup_p95": (
+                    round(baseline["latency_ms"]["p95"] / r["latency_ms"]["p95"], 2)
+                    if r["latency_ms"]["p95"] > 0
+                    else None
+                ),
+                "storage_factor": round(4096 / r["dim"], 2),
+                "recommendation": recommendation,
+            }
+        )
     return {
         "baseline_dim": 4096,
         "baseline_keyword_recall": baseline["mean_keyword_recall"],
@@ -306,19 +291,17 @@ def compare_results(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(
-        description="Matryoshka A/B bench (roadmap §4.1)"
+    ap = argparse.ArgumentParser(description="Matryoshka A/B bench (roadmap §4.1)")
+    ap.add_argument(
+        "--reembed", action="store_true", help="Re-embed pdf_documents at 4096/1024/512d"
     )
-    ap.add_argument("--reembed", action="store_true",
-                    help="Re-embed pdf_documents at 4096/1024/512d")
-    ap.add_argument("--evaluate", action="store_true",
-                    help="Run keyword recall@10 on existing MRL collections")
-    ap.add_argument("--full", action="store_true",
-                    help="--reembed then --evaluate")
+    ap.add_argument(
+        "--evaluate", action="store_true", help="Run keyword recall@10 on existing MRL collections"
+    )
+    ap.add_argument("--full", action="store_true", help="--reembed then --evaluate")
     ap.add_argument("--qdrant-url", default=DEFAULT_QDRANT)
     ap.add_argument("--batch-size", type=int, default=8)
-    ap.add_argument("--report", type=Path, default=None,
-                    help="Save JSON report to this path")
+    ap.add_argument("--report", type=Path, default=None, help="Save JSON report to this path")
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
 
@@ -358,8 +341,10 @@ def main() -> int:
             results.append(r)
             logger.info(
                 "%dd recall=%.3f  p50=%.1fms  p95=%.1fms",
-                dim, r["mean_keyword_recall"],
-                r["latency_ms"]["p50"], r["latency_ms"]["p95"],
+                dim,
+                r["mean_keyword_recall"],
+                r["latency_ms"]["p50"],
+                r["latency_ms"]["p95"],
             )
 
         summary = compare_results(results)

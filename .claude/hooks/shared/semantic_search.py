@@ -40,12 +40,14 @@ def embed_query_tei(text: str, timeout: float = 1.5) -> list[float] | None:
 
     try:
         body = QUERY_INSTRUCTION + text[:8000]
-        payload = json.dumps({
-            "inputs": [body],
-            "normalize": True,
-            "truncate": True,
-            "truncation_direction": "Right",
-        }).encode("utf-8")
+        payload = json.dumps(
+            {
+                "inputs": [body],
+                "normalize": True,
+                "truncate": True,
+                "truncation_direction": "Right",
+            }
+        ).encode("utf-8")
         req = urllib.request.Request(
             TEI_URL,
             data=payload,
@@ -104,9 +106,7 @@ def search_qdrant_semantic(
         return []
 
 
-def search_skills_semantic(
-    query: str, limit: int = 3, total_timeout: float = 2.0
-) -> list[dict]:
+def search_skills_semantic(query: str, limit: int = 3, total_timeout: float = 2.0) -> list[dict]:
     """High-level: embed query + search skill_library collection.
 
     Returns list of {skill_name, score, description, matched_by: "semantic"}.
@@ -119,9 +119,7 @@ def search_skills_semantic(
         if not embed:
             return []
 
-        results = search_qdrant_semantic(
-            "skill_library", embed, limit, timeout=total_timeout * 0.3
-        )
+        results = search_qdrant_semantic("skill_library", embed, limit, timeout=total_timeout * 0.3)
 
         formatted = []
         for result in results:

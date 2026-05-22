@@ -58,6 +58,7 @@ logging.basicConfig(
 log = logging.getLogger("auto-git-save")
 
 from base import BaseHook, HookInput, HookOutput
+
 from shared.circuit_breaker import with_circuit_breaker
 from shared.task_master import (
     add_task,
@@ -112,6 +113,7 @@ IGNORE_PATTERNS = [
 
 # --- Helpers ---
 
+
 def should_track_file(file_path: str) -> bool:
     """Check if file should be tracked for git commit.
 
@@ -143,7 +145,10 @@ def get_uncommitted_files() -> list[str]:
     try:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, encoding="utf-8", timeout=5,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode != 0:
@@ -241,6 +246,7 @@ def load_modified_files() -> dict:
 def save_modified_files(data: dict) -> None:
     """Save tracked files into task metadata."""
     from datetime import datetime
+
     data["last_change"] = datetime.now().isoformat()
     if not data.get("first_change"):
         data["first_change"] = data["last_change"]
@@ -248,6 +254,7 @@ def save_modified_files(data: dict) -> None:
 
 
 # --- Core: Sync Commit ---
+
 
 def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -> dict:
     """Execute git add + git commit SYNCHRONOUSLY.
@@ -265,7 +272,10 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         log.debug("step1: git status --porcelain")
         status = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            timeout=2, capture_output=True, text=True, encoding="utf-8",
+            timeout=2,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
         log.debug(f"step1: rc={status.returncode} stdout_len={len(status.stdout)}")
@@ -278,7 +288,10 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         try:
             r = subprocess.run(
                 ["git", "add", "--"] + modified_files,
-                timeout=10, capture_output=True, text=True, encoding="utf-8",
+                timeout=10,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
                 cwd=str(PROJECT_ROOT),
             )
             log.debug(f"step2: rc={r.returncode} stderr={r.stderr[:200] if r.stderr else ''}")
@@ -299,7 +312,10 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             try:
                 diff = subprocess.run(
                     ["git", "diff", "--cached", "--numstat", "--", settings_path],
-                    timeout=3, capture_output=True, text=True, encoding="utf-8",
+                    timeout=3,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
                     cwd=str(PROJECT_ROOT),
                 )
                 for line in diff.stdout.splitlines():
@@ -318,7 +334,9 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
                         )
                         subprocess.run(
                             ["git", "reset", "HEAD", "--", settings_path],
-                            timeout=3, capture_output=True, cwd=str(PROJECT_ROOT),
+                            timeout=3,
+                            capture_output=True,
+                            cwd=str(PROJECT_ROOT),
                         )
                         return {
                             "success": False,
@@ -334,12 +352,16 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         # Step 3: Commit
         count = len(modified_files)
         from shared.auto_save_core import format_commit_message
+
         commit_msg = format_commit_message(modified_files, prefix="chore: auto-save")
 
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
             ["git", "commit", "-m", commit_msg],
-            timeout=timeout, capture_output=True, text=True, encoding="utf-8",
+            timeout=timeout,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
         log.debug(f"step3: rc={commit.returncode} duration={time.time()-start:.1f}s")
@@ -384,6 +406,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
 
 # --- Core: Zombie Task Prevention ---
 
+
 def sync_pending_tasks_with_git() -> int:
     """Sync pending tasks with actual git status.
 
@@ -395,7 +418,10 @@ def sync_pending_tasks_with_git() -> int:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             cwd=str(PROJECT_ROOT),
-            capture_output=True, text=True, encoding="utf-8", timeout=2,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=2,
         )
         if result.returncode != 0:
             return 0
@@ -415,8 +441,9 @@ def sync_pending_tasks_with_git() -> int:
                     uncommitted_dirs.add(fp)
 
         # Check each pending task
-        from shared.task_master import _read_todos, _write_todos
         from datetime import datetime
+
+        from shared.task_master import _read_todos, _write_todos
 
         data = _read_todos()
         todos = data.get("todos", [])
@@ -472,6 +499,7 @@ def sync_pending_tasks_with_git() -> int:
 
 # --- Core: Validate Cache ---
 
+
 def validate_cache() -> list[str] | None:
     """Check which cached files are still uncommitted.
 
@@ -488,7 +516,8 @@ def validate_cache() -> list[str] | None:
             try:
                 r = subprocess.run(
                     ["git", "diff", "--quiet", "--", fp],
-                    timeout=1, capture_output=True,
+                    timeout=1,
+                    capture_output=True,
                     cwd=str(PROJECT_ROOT),
                 )
                 if r.returncode != 0:
@@ -502,6 +531,7 @@ def validate_cache() -> list[str] | None:
 
 
 # --- Main Hook ---
+
 
 class AutoGitSave(BaseHook):
     """Sync git commit hook with file tracking and zombie prevention.
@@ -579,9 +609,13 @@ class AutoGitSave(BaseHook):
             # Commit ALL uncommitted files in watched paths, not just tracked ones
             all_uncommitted = get_uncommitted_files()
             files_to_commit = all_uncommitted if all_uncommitted else modified_data["files"]
-            log.debug(f"all_uncommitted={len(all_uncommitted)} tracked={len(modified_data['files'])}")
+            log.debug(
+                f"all_uncommitted={len(all_uncommitted)} tracked={len(modified_data['files'])}"
+            )
             timeout = calculate_timeout(len(files_to_commit))
-            log.debug(f"THRESHOLD REACHED → sync commit {len(files_to_commit)} files timeout={timeout}")
+            log.debug(
+                f"THRESHOLD REACHED → sync commit {len(files_to_commit)} files timeout={timeout}"
+            )
             result = perform_sync_commit(files_to_commit, timeout=timeout)
             log.debug(f"commit result: {result}")
 
@@ -598,8 +632,7 @@ class AutoGitSave(BaseHook):
                 self._ensure_task(modified_data)
                 save_modified_files(modified_data)
                 return HookOutput().system_message(
-                    f"[AUTO-GIT-SAVE FAILED] {error}. "
-                    "Создана задача для ручного коммита."
+                    f"[AUTO-GIT-SAVE FAILED] {error}. " "Создана задача для ручного коммита."
                 )
 
         # --- Below threshold: track + create/update task ---

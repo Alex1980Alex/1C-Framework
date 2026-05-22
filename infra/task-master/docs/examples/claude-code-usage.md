@@ -87,22 +87,22 @@ The Claude Code settings can be specified globally in the `claudeCode` section o
   "claudeCode": {
     // Maximum conversation turns Claude can make in a single request
     "maxTurns": 5,
-    
+
     // Custom system prompt to override Claude Code's default behavior
     "customSystemPrompt": "You are a helpful assistant focused on code quality",
 
     // Append additional content to the system prompt
     "appendSystemPrompt": "Always follow coding best practices",
-    
+
     // Permission mode for file system operations
     "permissionMode": "default", // Options: "default", "acceptEdits", "plan", "bypassPermissions"
-    
+
     // Explicitly allow only certain tools
     "allowedTools": ["Read", "LS"], // Claude can only read files and list directories
-    
+
     // Explicitly disallow certain tools
     "disallowedTools": ["Write", "Edit"], // Prevent Claude from modifying files
-    
+
     // MCP servers for additional tool integrations
     "mcpServers": {
       "mcp-server-name": {

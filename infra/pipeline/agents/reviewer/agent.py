@@ -6,28 +6,27 @@ all review components for automated code review.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
-import json
+from typing import Any
 
+from agents.reviewer.arch_checker import ArchChecker
+from agents.reviewer.diff_analyzer import DiffAnalyzer
 from agents.reviewer.models import (
-    ReviewReport,
-    ReviewIssue,
-    IssueSeverity,
     IssueCategory,
+    IssueSeverity,
+    ReviewIssue,
+    ReviewReport,
     ReviewVerdict,
-    FileChange,
 )
-from agents.reviewer.diff_analyzer import DiffAnalyzer, AnalysisResult
-from agents.reviewer.style_checker import StyleChecker, StyleCheckResult
-from agents.reviewer.arch_checker import ArchChecker, ArchCheckResult
-from agents.reviewer.report_generator import ReviewGenerator, ReviewContext
+from agents.reviewer.report_generator import ReviewContext, ReviewGenerator
+from agents.reviewer.style_checker import StyleChecker
 
 
 @dataclass
 class ReviewerConfig:
     """Configuration for REVIEWER agent."""
+
     # Severity thresholds
     max_critical_for_approval: int = 0
     max_warnings_for_approval: int = 5
@@ -46,7 +45,7 @@ class ReviewerConfig:
     # Quality thresholds
     min_quality_score: float = 6.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "max_critical_for_approval": self.max_critical_for_approval,
@@ -62,20 +61,21 @@ class ReviewerConfig:
 @dataclass
 class ReviewInput:
     """Input for REVIEWER agent."""
+
     project_id: str
     task_id: str
 
     # Artifacts from previous pipeline stages
-    spec_path: Optional[str] = None      # spec.md from PM-SPEC
-    design_path: Optional[str] = None    # design.md from ARCHITECT
-    result_path: Optional[str] = None    # result.md from IMPLEMENTER
+    spec_path: str | None = None  # spec.md from PM-SPEC
+    design_path: str | None = None  # design.md from ARCHITECT
+    result_path: str | None = None  # result.md from IMPLEMENTER
 
     # Code to review
-    diff_text: Optional[str] = None      # Git diff
-    bsl_files: Dict[str, str] = field(default_factory=dict)  # path -> content
+    diff_text: str | None = None  # Git diff
+    bsl_files: dict[str, str] = field(default_factory=dict)  # path -> content
 
     # Optional: paths to load from
-    bsl_paths: List[str] = field(default_factory=list)
+    bsl_paths: list[str] = field(default_factory=list)
 
     def load_artifacts(self) -> "ReviewInput":
         """Load artifacts from file paths."""
@@ -86,9 +86,9 @@ class ReviewInput:
         # Load BSL files from paths
         for path in self.bsl_paths:
             p = Path(path)
-            if p.exists() and p.suffix.lower() == '.bsl':
+            if p.exists() and p.suffix.lower() == ".bsl":
                 try:
-                    content = p.read_text(encoding='utf-8')
+                    content = p.read_text(encoding="utf-8")
                     self.bsl_files[str(p)] = content
                 except Exception:
                     pass
@@ -99,10 +99,11 @@ class ReviewInput:
 @dataclass
 class ReviewOutput:
     """Output from REVIEWER agent."""
+
     report: ReviewReport
     review_path: str
     success: bool
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     execution_time_ms: int = 0
 
     @property
@@ -120,7 +121,7 @@ class ReviewOutput:
         """Check if review blocked."""
         return self.report.verdict == ReviewVerdict.BLOCKED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "success": self.success,
@@ -172,8 +173,8 @@ class ReviewerAgent:
 
     def __init__(
         self,
-        config: Optional[ReviewerConfig] = None,
-        artifact_store_path: Optional[str] = None,
+        config: ReviewerConfig | None = None,
+        artifact_store_path: str | None = None,
     ):
         """
         Initialize REVIEWER agent.
@@ -192,8 +193,8 @@ class ReviewerAgent:
         self.generator = ReviewGenerator()
 
         # Execution state
-        self._current_input: Optional[ReviewInput] = None
-        self._start_time: Optional[datetime] = None
+        self._current_input: ReviewInput | None = None
+        self._start_time: datetime | None = None
 
     def run(self, input: ReviewInput) -> ReviewOutput:
         """
@@ -207,7 +208,7 @@ class ReviewerAgent:
         """
         self._start_time = datetime.now()
         self._current_input = input
-        errors: List[str] = []
+        errors: list[str] = []
 
         try:
             # Phase 1: Load artifacts
@@ -226,9 +227,7 @@ class ReviewerAgent:
             review_path = self._save_review(report, input)
 
             # Calculate execution time
-            execution_time = int(
-                (datetime.now() - self._start_time).total_seconds() * 1000
-            )
+            execution_time = int((datetime.now() - self._start_time).total_seconds() * 1000)
 
             return ReviewOutput(
                 report=report,
@@ -247,25 +246,27 @@ class ReviewerAgent:
                 verdict=ReviewVerdict.BLOCKED,
                 quality_score=0.0,
             )
-            report.issues.append(ReviewIssue(
-                id="ERR-001",
-                title="Ошибка выполнения ревью",
-                description=str(e),
-                severity=IssueSeverity.CRITICAL,
-                category=IssueCategory.LOGIC_ERROR,
-            ))
+            report.issues.append(
+                ReviewIssue(
+                    id="ERR-001",
+                    title="Ошибка выполнения ревью",
+                    description=str(e),
+                    severity=IssueSeverity.CRITICAL,
+                    category=IssueCategory.LOGIC_ERROR,
+                )
+            )
 
             return ReviewOutput(
                 report=report,
                 review_path="",
                 success=False,
                 errors=errors,
-                execution_time_ms=int(
-                    (datetime.now() - self._start_time).total_seconds() * 1000
-                ) if self._start_time else 0,
+                execution_time_ms=int((datetime.now() - self._start_time).total_seconds() * 1000)
+                if self._start_time
+                else 0,
             )
 
-    def _load_artifacts(self, input: ReviewInput) -> Dict[str, str]:
+    def _load_artifacts(self, input: ReviewInput) -> dict[str, str]:
         """Load pipeline artifacts."""
         artifacts = {}
 
@@ -278,26 +279,26 @@ class ReviewerAgent:
                 artifact_file = project_path / artifact
                 if artifact_file.exists():
                     try:
-                        artifacts[artifact] = artifact_file.read_text(encoding='utf-8')
+                        artifacts[artifact] = artifact_file.read_text(encoding="utf-8")
                     except Exception:
                         pass
 
         # Load from explicit paths
         if input.spec_path and Path(input.spec_path).exists():
             try:
-                artifacts["spec.md"] = Path(input.spec_path).read_text(encoding='utf-8')
+                artifacts["spec.md"] = Path(input.spec_path).read_text(encoding="utf-8")
             except Exception:
                 pass
 
         if input.design_path and Path(input.design_path).exists():
             try:
-                artifacts["design.md"] = Path(input.design_path).read_text(encoding='utf-8')
+                artifacts["design.md"] = Path(input.design_path).read_text(encoding="utf-8")
             except Exception:
                 pass
 
         if input.result_path and Path(input.result_path).exists():
             try:
-                artifacts["result.md"] = Path(input.result_path).read_text(encoding='utf-8')
+                artifacts["result.md"] = Path(input.result_path).read_text(encoding="utf-8")
             except Exception:
                 pass
 
@@ -306,11 +307,7 @@ class ReviewerAgent:
 
         return artifacts
 
-    def _build_context(
-        self,
-        input: ReviewInput,
-        artifacts: Dict[str, str]
-    ) -> ReviewContext:
+    def _build_context(self, input: ReviewInput, artifacts: dict[str, str]) -> ReviewContext:
         """Build review context from input and artifacts."""
         return ReviewContext(
             project_id=input.project_id,
@@ -327,7 +324,7 @@ class ReviewerAgent:
         # Limit issues per category
         if self.config.max_issues_per_category > 0:
             limited_issues = []
-            category_counts: Dict[IssueCategory, int] = {}
+            category_counts: dict[IssueCategory, int] = {}
 
             for issue in report.issues:
                 count = category_counts.get(issue.category, 0)
@@ -339,10 +336,7 @@ class ReviewerAgent:
 
         # Filter recommendations if disabled
         if not self.config.include_recommendations:
-            report.issues = [
-                i for i in report.issues
-                if i.severity != IssueSeverity.RECOMMENDATION
-            ]
+            report.issues = [i for i in report.issues if i.severity != IssueSeverity.RECOMMENDATION]
 
         # Remove code snippets if disabled
         if not self.config.include_code_snippets:
@@ -376,11 +370,11 @@ class ReviewerAgent:
 
         # Generate and save markdown
         markdown = self.generator.generate_markdown(report)
-        output_path.write_text(markdown, encoding='utf-8')
+        output_path.write_text(markdown, encoding="utf-8")
 
         return str(output_path)
 
-    def validate_input(self, input: ReviewInput) -> List[str]:
+    def validate_input(self, input: ReviewInput) -> list[str]:
         """
         Validate review input.
 
@@ -403,7 +397,7 @@ class ReviewerAgent:
 
         return errors
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get agent status."""
         return {
             "name": self.NAME,
@@ -415,14 +409,14 @@ class ReviewerAgent:
                 "style_checker": True,
                 "arch_checker": True,
                 "report_generator": True,
-            }
+            },
         }
 
 
 # Factory functions
 def create_reviewer(
-    config: Optional[ReviewerConfig] = None,
-    artifact_store_path: Optional[str] = None,
+    config: ReviewerConfig | None = None,
+    artifact_store_path: str | None = None,
 ) -> ReviewerAgent:
     """
     Create REVIEWER agent.
@@ -440,7 +434,7 @@ def create_reviewer(
     )
 
 
-def create_strict_reviewer(artifact_store_path: Optional[str] = None) -> ReviewerAgent:
+def create_strict_reviewer(artifact_store_path: str | None = None) -> ReviewerAgent:
     """Create strict REVIEWER (no warnings allowed)."""
     config = ReviewerConfig(
         max_critical_for_approval=0,
@@ -450,7 +444,7 @@ def create_strict_reviewer(artifact_store_path: Optional[str] = None) -> Reviewe
     return ReviewerAgent(config=config, artifact_store_path=artifact_store_path)
 
 
-def create_lenient_reviewer(artifact_store_path: Optional[str] = None) -> ReviewerAgent:
+def create_lenient_reviewer(artifact_store_path: str | None = None) -> ReviewerAgent:
     """Create lenient REVIEWER (more tolerant)."""
     config = ReviewerConfig(
         max_critical_for_approval=0,
@@ -465,10 +459,10 @@ def create_lenient_reviewer(artifact_store_path: Optional[str] = None) -> Review
 def run_review(
     project_id: str,
     task_id: str,
-    diff_text: Optional[str] = None,
-    bsl_files: Optional[Dict[str, str]] = None,
-    design_path: Optional[str] = None,
-    artifact_store_path: Optional[str] = None,
+    diff_text: str | None = None,
+    bsl_files: dict[str, str] | None = None,
+    design_path: str | None = None,
+    artifact_store_path: str | None = None,
 ) -> ReviewOutput:
     """
     Run code review (convenience function).
@@ -497,10 +491,7 @@ def run_review(
     return agent.run(input)
 
 
-def quick_review(
-    bsl_code: str,
-    file_name: str = "module.bsl"
-) -> ReviewReport:
+def quick_review(bsl_code: str, file_name: str = "module.bsl") -> ReviewReport:
     """
     Quick review of BSL code snippet.
 

@@ -7,7 +7,7 @@ This guide explains how to add support for a new programming language to Serena.
 Adding a new language involves:
 
 1. **Language Server Implementation** - Creating a language-specific server class
-2. **Language Registration** - Adding the language to enums and configurations  
+2. **Language Registration** - Adding the language to enums and configurations
 3. **Test Repository** - Creating a minimal test project
 4. **Test Suite** - Writing comprehensive tests
 5. **Runtime Dependencies** - Configuring automatic language server downloads
@@ -32,11 +32,11 @@ class NewLanguageServer(SolidLanguageServer):
     """
     Language server implementation for NewLanguage.
     """
-    
+
     def __init__(self, config: LanguageServerConfig, logger: LanguageServerLogger, repository_root_path: str):
         # Determine language server command
         cmd = self._get_language_server_command()
-        
+
         super().__init__(
             config,
             logger,
@@ -44,12 +44,12 @@ class NewLanguageServer(SolidLanguageServer):
             ProcessLaunchInfo(cmd=cmd, cwd=repository_root_path),
             "new_language",  # Language ID for LSP
         )
-    
+
     def _get_language_server_command(self) -> list[str]:
         """Get the command to start the language server."""
         # Example: return ["new-language-server", "--stdio"]
         pass
-    
+
     @override
     def is_ignored_dirname(self, dirname: str) -> bool:
         """Define language-specific directories to ignore."""
@@ -68,7 +68,7 @@ def _ensure_server_installed(cls, logger: LanguageServerLogger) -> str:
     system_server = shutil.which("new-language-server")
     if system_server:
         return system_server
-    
+
     # Download and install if needed
     server_path = cls._download_and_install_server(logger)
     return server_path
@@ -98,7 +98,7 @@ def _start_server(self):
     """Start the language server with custom handlers."""
     # Set up notification handlers
     self.server.on_notification("window/logMessage", self._handle_log_message)
-    
+
     # Start server and initialize
     self.server.start()
     init_response = self.server.send.initialize(self._get_initialize_params())
@@ -115,7 +115,7 @@ In `src/solidlsp/ls_config.py`, add your language to the `Language` enum:
 class Language(str, Enum):
     # Existing languages...
     NEW_LANGUAGE = "new_language"
-    
+
     def get_source_fn_matcher(self) -> FilenameMatcher:
         match self:
             # Existing cases...
@@ -169,7 +169,7 @@ class Calculator {
     func add(a: Int, b: Int) -> Int {
         return a + b
     }
-    
+
     func subtract(a: Int, b: Int) -> Int {
         return helper.subtract(a, b)  // Reference to imported function
     }

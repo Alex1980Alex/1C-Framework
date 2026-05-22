@@ -65,7 +65,9 @@ async def probe_only(debug_url: str, infobase: str) -> dict:
         "errors": [],
     }
     if not probe_tcp("localhost", 1550):
-        report["errors"].append("dbgs.exe TCP :1550 unreachable — 1С Server / debug agent not running")
+        report["errors"].append(
+            "dbgs.exe TCP :1550 unreachable — 1С Server / debug agent not running"
+        )
         return report
     report["tcp_1550"] = True
 
@@ -127,8 +129,11 @@ async def full_cycle(args) -> dict:
             lines=[args.line],
         )
         report["bp_set"] = True
-        print(f"[smoke] BP set on {args.module_type} @ line {args.line}. "
-              f"Запустите сценарий в 1С (макс {args.wait_bp}с)...", file=sys.stderr)
+        print(
+            f"[smoke] BP set on {args.module_type} @ line {args.line}. "
+            f"Запустите сценарий в 1С (макс {args.wait_bp}с)...",
+            file=sys.stderr,
+        )
 
         # Wait for BP fire — ping_loop dispatches events to client._stopped_targets
         loop = asyncio.get_running_loop()  # py3.12+ forward-compat
@@ -173,14 +178,22 @@ async def full_cycle(args) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Debug pipeline smoke test (roadmap §13 P3.2)")
-    parser.add_argument("--probe-only", action="store_true", help="Quick TCP+attach probe (default)")
-    parser.add_argument("--full", action="store_true", help="Full BP-fire cycle (requires interactive 1С)")
+    parser.add_argument(
+        "--probe-only", action="store_true", help="Quick TCP+attach probe (default)"
+    )
+    parser.add_argument(
+        "--full", action="store_true", help="Full BP-fire cycle (requires interactive 1С)"
+    )
     parser.add_argument("--debug-url", default=DEFAULT_DEBUG_URL)
     parser.add_argument("--infobase", default=DEFAULT_INFOBASE)
-    parser.add_argument("--object-id", help="Metadata object UUID (Document, CommonModule, ...) for --full")
+    parser.add_argument(
+        "--object-id", help="Metadata object UUID (Document, CommonModule, ...) for --full"
+    )
     parser.add_argument("--module-type", default="CommonModule", help="BSL module kind for --full")
     parser.add_argument("--line", type=int, default=1, help="Line number for BP in --full")
-    parser.add_argument("--wait-bp", type=int, default=30, help="Seconds to wait for BP fire in --full")
+    parser.add_argument(
+        "--wait-bp", type=int, default=30, help="Seconds to wait for BP fire in --full"
+    )
     parser.add_argument("--json", action="store_true", help="Emit JSON report")
     args = parser.parse_args()
 
@@ -201,7 +214,7 @@ def main() -> int:
         for k, v in report.items():
             print(f"  {k}: {v}")
         if report["errors"]:
-            print(f"\nErrors:\n  " + "\n  ".join(report["errors"]))
+            print("\nErrors:\n  " + "\n  ".join(report["errors"]))
         labels = {0: "OK (Full)", 1: "DEGRADED", 2: "UNUSABLE (1С not running)"}
         print(f"\n=> exit_code={report['exit_code']} ({labels.get(report['exit_code'], '?')})")
 

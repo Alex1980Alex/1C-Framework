@@ -269,10 +269,10 @@ function listTasks(tasksPath, statusFilter, withSubtasks = false, outputFormat =
   try {
     // Existing data retrieval logic
     const filteredTasks = /* ... */;
-    
+
     // Early return for JSON format
     if (outputFormat === 'json') return filteredTasks;
-    
+
     // Existing CLI output logic
   } catch (error) {
     if (outputFormat === 'json') {
@@ -960,7 +960,7 @@ Here's additional information addressing the request for research on npm package
 
 ### Distinguishing Package and Project Paths
 
-1. **Package Installation Path**: 
+1. **Package Installation Path**:
    - Use `require.resolve()` to find paths relative to your package
    - For global installs, use `process.execPath` to locate the Node.js executable
 
@@ -1054,7 +1054,7 @@ Here's additional information addressing the request for clarification on path h
    ```javascript
    import { fileURLToPath } from 'url';
    import path from 'path';
-   
+
    const __filename = fileURLToPath(import.meta.url);
    const __dirname = path.dirname(__filename);
    const packageRoot = path.resolve(__dirname, '..');
@@ -1203,7 +1203,5 @@ This method provides a consistent way to access environment variables defined in
 
 ## 46. adjust rules so it prioritizes mcp commands over script [done]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
-
-

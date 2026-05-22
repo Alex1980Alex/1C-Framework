@@ -19,10 +19,10 @@ export class Reasoner {
     this.validator = new InputValidator();
     this.performanceOptimizer = new PerformanceOptimizer();
     this.stateManager = new StateManager(CONFIG.cacheSize);
-    
+
     // Initialize available strategies
     this.strategies = new Map();
-    
+
     // Initialize base strategies
     this.strategies.set(
       ReasoningStrategy.BEAM_SEARCH,
@@ -32,7 +32,7 @@ export class Reasoner {
       ReasoningStrategy.MCTS,
       StrategyFactory.createStrategy(ReasoningStrategy.MCTS, this.stateManager, undefined, CONFIG.numSimulations)
     );
-    
+
     // Initialize experimental MCTS strategies
     this.strategies.set(
       ReasoningStrategy.MCTS_002_ALPHA,
@@ -126,7 +126,7 @@ export class Reasoner {
 
   public async getStats(): Promise<ReasoningStats> {
     const nodes = await this.stateManager.getAllNodes();
-    
+
     if (nodes.length === 0) {
       return {
         totalNodes: 0,
@@ -154,7 +154,7 @@ export class Reasoner {
 
   private async getStrategyMetrics(): Promise<Record<string, StrategyMetrics>> {
     const metrics: Record<string, StrategyMetrics> = {};
-    
+
     for (const [name, strategy] of this.strategies.entries()) {
       metrics[name] = await strategy.getMetrics();
       if (strategy === this.currentStrategy) {

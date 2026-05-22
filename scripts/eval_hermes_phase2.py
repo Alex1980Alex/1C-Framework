@@ -74,21 +74,16 @@ def _build_backend_patches(backend: BackendConfig) -> list:
         patches.append(
             patch(f"{_ADAPTER_MOD}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
         )
-        patches.append(
-            patch(f"{mod}.is_cheap_llm_enabled", return_value=backend.cheap_llm)
-        )
-        patches.append(
-            patch(f"{_PROMPTS_MOD}.is_dspy_available", return_value=backend.dspy)
-        )
-        patches.append(
-            patch(f"{mod}.is_dspy_available", return_value=backend.dspy)
-        )
+        patches.append(patch(f"{mod}.is_cheap_llm_enabled", return_value=backend.cheap_llm))
+        patches.append(patch(f"{_PROMPTS_MOD}.is_dspy_available", return_value=backend.dspy))
+        patches.append(patch(f"{mod}.is_dspy_available", return_value=backend.dspy))
     return patches
 
 
 # ---------------------------------------------------------------------------
 # State construction helpers
 # ---------------------------------------------------------------------------
+
 
 def make_grader_state(query: str, context: str) -> RAGState:
     chunk = DocumentChunk(
@@ -118,6 +113,7 @@ def make_hallucination_state(answer: str, context: str) -> RAGState:
 # Metrics
 # ---------------------------------------------------------------------------
 
+
 def precision_recall_f1(tp: int, fp: int, fn: int) -> dict[str, float]:
     prec = tp / (tp + fp) if (tp + fp) else 0.0
     rec = tp / (tp + fn) if (tp + fn) else 0.0
@@ -145,7 +141,12 @@ def compute_hallucination_metrics(results: list[dict]) -> dict[str, float]:
     """F1 and accuracy on grounded (not hallucinated) detection."""
     clean = [r for r in results if "error" not in r]
     if not clean:
-        return {"accuracy": 0.0, "grounded_precision": 0.0, "grounded_recall": 0.0, "grounded_f1": 0.0}
+        return {
+            "accuracy": 0.0,
+            "grounded_precision": 0.0,
+            "grounded_recall": 0.0,
+            "grounded_f1": 0.0,
+        }
 
     correct = sum(1 for r in clean if r["predicted_grounded"] == r["expected_grounded"])
     accuracy = correct / len(clean)
@@ -191,6 +192,7 @@ def bootstrap_ci(values: list[float], n_boot: int = 1000, ci: float = 0.95) -> d
 # Eval runners
 # ---------------------------------------------------------------------------
 
+
 async def run_grader_eval(
     entries: list[dict],
     llm: ChatAnthropic,
@@ -214,21 +216,25 @@ async def run_grader_eval(
 
                 graded = out.get("graded_documents", [])
                 predicted = graded[0]["is_relevant"] if graded else True
-                results.append({
-                    "id": entry["id"],
-                    "predicted_relevant": predicted,
-                    "expected_relevant": entry["expected_is_relevant"],
-                    "latency": latency,
-                })
+                results.append(
+                    {
+                        "id": entry["id"],
+                        "predicted_relevant": predicted,
+                        "expected_relevant": entry["expected_is_relevant"],
+                        "latency": latency,
+                    }
+                )
             except Exception as exc:
                 latencies.append(time.perf_counter() - t0)
-                results.append({
-                    "id": entry["id"],
-                    "predicted_relevant": True,
-                    "expected_relevant": entry["expected_is_relevant"],
-                    "latency": 0.0,
-                    "error": str(exc),
-                })
+                results.append(
+                    {
+                        "id": entry["id"],
+                        "predicted_relevant": True,
+                        "expected_relevant": entry["expected_is_relevant"],
+                        "latency": 0.0,
+                        "error": str(exc),
+                    }
+                )
 
     return results, latencies
 
@@ -261,21 +267,25 @@ async def run_hallucination_eval(
 
                 predicted_grounded = not out.get("is_hallucinated", False)
                 expected_grounded = entry.get("grounded", True)
-                results.append({
-                    "id": entry["id"],
-                    "predicted_grounded": predicted_grounded,
-                    "expected_grounded": expected_grounded,
-                    "latency": latency,
-                })
+                results.append(
+                    {
+                        "id": entry["id"],
+                        "predicted_grounded": predicted_grounded,
+                        "expected_grounded": expected_grounded,
+                        "latency": latency,
+                    }
+                )
             except Exception as exc:
                 latencies.append(time.perf_counter() - t0)
-                results.append({
-                    "id": entry["id"],
-                    "predicted_grounded": True,
-                    "expected_grounded": entry.get("grounded", True),
-                    "latency": 0.0,
-                    "error": str(exc),
-                })
+                results.append(
+                    {
+                        "id": entry["id"],
+                        "predicted_grounded": True,
+                        "expected_grounded": entry.get("grounded", True),
+                        "latency": 0.0,
+                        "error": str(exc),
+                    }
+                )
 
     return results, latencies
 
@@ -283,6 +293,7 @@ async def run_hallucination_eval(
 # ---------------------------------------------------------------------------
 # Main eval orchestrator
 # ---------------------------------------------------------------------------
+
 
 async def run_eval(
     dataset_path: str,
@@ -307,11 +318,14 @@ async def run_eval(
     # Configure DSPy LM for candidate runs
     if backend.dspy:
         import dspy
+
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
             print("[WARN] ANTHROPIC_API_KEY not set, DSPy will use fallback chain")
         else:
-            lm = dspy.LM(model="anthropic/claude-sonnet-4-5-20250929", api_key=api_key, max_tokens=256)
+            lm = dspy.LM(
+                model="anthropic/claude-sonnet-4-5-20250929", api_key=api_key, max_tokens=256
+            )
             dspy.configure(lm=lm)
             print("[DSPY] Configured with anthropic/claude-sonnet-4-5-20250929")
 
@@ -325,14 +339,21 @@ async def run_eval(
     hall_entries = [e for e in entries if e.get("hallucination_answer")]
     print(f"[HALLUCINATION] Running on {len(hall_entries)} entries (backend={backend.label})...")
     hall_results, hall_latencies = await run_hallucination_eval(
-        hall_entries, llm, settings, backend,
+        hall_entries,
+        llm,
+        settings,
+        backend,
     )
     hall_metrics = compute_hallucination_metrics(hall_results)
     hall_latency = compute_latency_metrics(hall_latencies)
 
     # Bootstrap CI for key metrics
-    grader_acc_ci = bootstrap_ci([int(r["predicted_relevant"] == r["expected_relevant"]) for r in grader_results])
-    hall_acc_ci = bootstrap_ci([int(r["predicted_grounded"] == r["expected_grounded"]) for r in hall_results])
+    grader_acc_ci = bootstrap_ci(
+        [int(r["predicted_relevant"] == r["expected_relevant"]) for r in grader_results]
+    )
+    hall_acc_ci = bootstrap_ci(
+        [int(r["predicted_grounded"] == r["expected_grounded"]) for r in hall_results]
+    )
 
     report = {
         "backend": backend.label,
@@ -391,7 +412,11 @@ def generate_report(baseline_path: str, candidate_path: str, report_path: str) -
                 continue
             delta = cv - bv
             ci_info = c.get("accuracy_ci", {})
-            ci_str = f"[{ci_info.get('lo', 0):.3f}, {ci_info.get('hi', 0):.3f}]" if key == "accuracy" else "—"
+            ci_str = (
+                f"[{ci_info.get('lo', 0):.3f}, {ci_info.get('hi', 0):.3f}]"
+                if key == "accuracy"
+                else "—"
+            )
             lines.append(f"| {key} | {bv:.4f} | {cv:.4f} | {delta:+.4f} | {ci_str} |")
         lines.append("")
 

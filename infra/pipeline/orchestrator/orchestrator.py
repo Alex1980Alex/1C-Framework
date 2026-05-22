@@ -10,52 +10,53 @@ Version: 1.0.0
 """
 
 import asyncio
+import json
+import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable
-import json
-import uuid
+from typing import Any
 
-from models import Artifact, ArtifactMetadata
 from constants import (
-    AgentRole,
-    AgentMode,
-    PipelinePhase,
-    VerificationStatus,
-    MAX_REVISION_ATTEMPTS,
-    DEFAULT_TIMEOUT_SECONDS,
     ARTIFACT_DIR,
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_REVISION_ATTEMPTS,
+    AgentMode,
+    AgentRole,
     ArtifactType,
+    PipelinePhase,
 )
-from .models import TaskNode, TaskGraph, TaskStatus
-from .parallel_executor import ParallelExecutor, ExecutionReport, ExecutionProgress
+from models import Artifact, ArtifactMetadata
+
+from .models import TaskGraph
+from .parallel_executor import ExecutionProgress
 
 
 class OrchestratorState(str, Enum):
     """States of the orchestrator."""
 
-    IDLE = "idle"                      # Not running
-    INITIALIZING = "initializing"      # Setting up
+    IDLE = "idle"  # Not running
+    INITIALIZING = "initializing"  # Setting up
     RUNNING_PM_SPEC = "running_pm_spec"  # PM-SPEC phase active
     RUNNING_ARCHITECT = "running_architect"  # ARCHITECT phase active
     RUNNING_IMPLEMENTER = "running_implementer"  # IMPLEMENTER phase active
     RUNNING_BSL_DEBUGGER = "running_bsl_debugger"  # BSL-DEBUGGER phase active
     AWAITING_CHECKPOINT = "awaiting_checkpoint"  # Waiting for user input
-    COMPLETED = "completed"            # Successfully finished
-    FAILED = "failed"                  # Failed with error
-    CANCELLED = "cancelled"            # Cancelled by user
-    PAUSED = "paused"                  # Paused by user
+    COMPLETED = "completed"  # Successfully finished
+    FAILED = "failed"  # Failed with error
+    CANCELLED = "cancelled"  # Cancelled by user
+    PAUSED = "paused"  # Paused by user
 
 
 class CheckpointAction(str, Enum):
     """Actions user can take at checkpoint."""
 
-    ACCEPT = "accept"                  # Accept and continue
-    CORRECT = "correct"                # Request corrections
-    REDO = "redo"                      # Redo the phase
-    CANCEL = "cancel"                  # Cancel pipeline
+    ACCEPT = "accept"  # Accept and continue
+    CORRECT = "correct"  # Request corrections
+    REDO = "redo"  # Redo the phase
+    CANCEL = "cancel"  # Cancel pipeline
 
 
 @dataclass
@@ -67,10 +68,10 @@ class Checkpoint:
     artifact_name: str
     prompt: str
     created_at: datetime = field(default_factory=datetime.now)
-    action: Optional[CheckpointAction] = None
-    user_comment: Optional[str] = None
+    action: CheckpointAction | None = None
+    user_comment: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -83,7 +84,7 @@ class Checkpoint:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Checkpoint":
+    def from_dict(cls, data: dict[str, Any]) -> "Checkpoint":
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -122,13 +123,13 @@ class PipelineResult:
     success: bool
     run_id: str
     phase: PipelinePhase
-    artifacts: Dict[str, Artifact] = field(default_factory=dict)
-    checkpoints: List[Checkpoint] = field(default_factory=list)
-    error_message: Optional[str] = None
+    artifacts: dict[str, Artifact] = field(default_factory=dict)
+    checkpoints: list[Checkpoint] = field(default_factory=list)
+    error_message: str | None = None
     execution_time_seconds: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "success": self.success,
@@ -157,8 +158,8 @@ class PipelineOrchestrator:
     def __init__(
         self,
         config: PipelineConfig,
-        state_callback: Optional[Callable[[OrchestratorState], None]] = None,
-        progress_callback: Optional[Callable[[ExecutionProgress], None]] = None,
+        state_callback: Callable[[OrchestratorState], None] | None = None,
+        progress_callback: Callable[[ExecutionProgress], None] | None = None,
     ):
         """
         Initialize orchestrator.
@@ -178,22 +179,22 @@ class PipelineOrchestrator:
         # State tracking
         self._state = OrchestratorState.IDLE
         self.current_phase = PipelinePhase.INITIALIZATION
-        self.started_at: Optional[datetime] = None
-        self.completed_at: Optional[datetime] = None
+        self.started_at: datetime | None = None
+        self.completed_at: datetime | None = None
 
         # Artifacts storage
-        self.artifacts: Dict[str, Artifact] = {}
+        self.artifacts: dict[str, Artifact] = {}
 
         # Checkpoints
-        self.checkpoints: List[Checkpoint] = []
-        self.current_checkpoint: Optional[Checkpoint] = None
+        self.checkpoints: list[Checkpoint] = []
+        self.current_checkpoint: Checkpoint | None = None
 
         # Execution tracking
         self.revision_count = 0
-        self.error_log: List[str] = []
+        self.error_log: list[str] = []
 
         # Task graph for parallel execution (if needed)
-        self.task_graph: Optional[TaskGraph] = None
+        self.task_graph: TaskGraph | None = None
 
         # Create artifact directory
         self.config.artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -287,20 +288,32 @@ class PipelineOrchestrator:
                     # After retry, continue to verification if enabled
                     if not self.config.skip_verification and implementation_success:
                         verification_passed = self._run_verification_phase()
-                        if not verification_passed and self.revision_count < self.config.max_revision_attempts:
+                        if (
+                            not verification_passed
+                            and self.revision_count < self.config.max_revision_attempts
+                        ):
                             self.revision_count += 1
                             implementation_success = self._run_implementer_phase(mode=AgentMode.FIX)
 
                     # Return result after retry
-                    self._set_state(OrchestratorState.COMPLETED if implementation_success else OrchestratorState.FAILED)
+                    self._set_state(
+                        OrchestratorState.COMPLETED
+                        if implementation_success
+                        else OrchestratorState.FAILED
+                    )
                     self.completed_at = datetime.now()
-                    return self._create_result(PipelinePhase.IMPLEMENTATION, success=implementation_success)
+                    return self._create_result(
+                        PipelinePhase.IMPLEMENTATION, success=implementation_success
+                    )
 
             # Phase 5: VERIFICATION
             if not self.config.skip_verification:
                 verification_passed = self._run_verification_phase()
 
-                if not verification_passed and self.revision_count < self.config.max_revision_attempts:
+                if (
+                    not verification_passed
+                    and self.revision_count < self.config.max_revision_attempts
+                ):
                     # Back to IMPLEMENTER for fixes
                     self.revision_count += 1
                     self._run_implementer_phase(mode=AgentMode.FIX)
@@ -425,10 +438,10 @@ class PipelineOrchestrator:
         )
 
         # Merge results
-        merged_design = f"# Техническое решение\n\n"
+        merged_design = "# Техническое решение\n\n"
         merged_design += f"## Задача\n{self.config.task_description}\n\n"
-        merged_design += f"## Параллельное проектирование\n\n"
-        merged_design += f"Время выполнения: параллельно (4 потока)\n\n"
+        merged_design += "## Параллельное проектирование\n\n"
+        merged_design += "Время выполнения: параллельно (4 потока)\n\n"
 
         for (task_name, _), result in zip(design_tasks.items(), results):
             if isinstance(result, Exception):
@@ -591,9 +604,9 @@ class PipelineOrchestrator:
         verification_artifact = self._create_artifact(
             ArtifactType.VERIFICATION,
             AgentRole.PM_SPEC,
-            f"# Верификация\n\n"
-            f"## Статус\n✅ PASSED\n\n"
-            f"## Вердикт\nРеализация соответствует спецификации.",
+            "# Верификация\n\n"
+            "## Статус\n✅ PASSED\n\n"
+            "## Вердикт\nРеализация соответствует спецификации.",
         )
         self.artifacts["verification.md"] = verification_artifact
 
@@ -650,7 +663,7 @@ class PipelineOrchestrator:
         self,
         checkpoint_id: str,
         action: CheckpointAction,
-        comment: Optional[str] = None,
+        comment: str | None = None,
     ) -> bool:
         """
         Handle user response to checkpoint.
@@ -692,7 +705,7 @@ class PipelineOrchestrator:
 
         return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current pipeline status."""
         return {
             "run_id": self.run_id,
@@ -710,7 +723,11 @@ class PipelineOrchestrator:
 
     def cancel(self) -> None:
         """Cancel pipeline execution."""
-        if self.state in [OrchestratorState.IDLE, OrchestratorState.COMPLETED, OrchestratorState.FAILED]:
+        if self.state in [
+            OrchestratorState.IDLE,
+            OrchestratorState.COMPLETED,
+            OrchestratorState.FAILED,
+        ]:
             return
 
         self._set_state(OrchestratorState.CANCELLED)
@@ -721,8 +738,12 @@ class PipelineOrchestrator:
 
     def pause(self) -> None:
         """Pause pipeline execution."""
-        if self.state not in [OrchestratorState.RUNNING_PM_SPEC, OrchestratorState.RUNNING_ARCHITECT,
-                              OrchestratorState.RUNNING_IMPLEMENTER, OrchestratorState.RUNNING_BSL_DEBUGGER]:
+        if self.state not in [
+            OrchestratorState.RUNNING_PM_SPEC,
+            OrchestratorState.RUNNING_ARCHITECT,
+            OrchestratorState.RUNNING_IMPLEMENTER,
+            OrchestratorState.RUNNING_BSL_DEBUGGER,
+        ]:
             return
 
         self._set_state(OrchestratorState.PAUSED)
@@ -775,7 +796,7 @@ class PipelineOrchestrator:
         self,
         phase: PipelinePhase,
         success: bool,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
     ) -> PipelineResult:
         """Create pipeline result."""
         return PipelineResult(
@@ -793,7 +814,7 @@ class PipelineOrchestrator:
             },
         )
 
-    def save_state(self, filepath: Optional[Path] = None) -> None:
+    def save_state(self, filepath: Path | None = None) -> None:
         """Save orchestrator state to file for recovery."""
         if filepath is None:
             filepath = self.config.artifact_dir / f"{self.run_id}_state.json"
@@ -843,8 +864,14 @@ class PipelineOrchestrator:
         orchestrator.run_id = state_data["run_id"]
         orchestrator._state = OrchestratorState(state_data["state"])
         orchestrator.current_phase = PipelinePhase(state_data["current_phase"])
-        orchestrator.started_at = datetime.fromisoformat(state_data["started_at"]) if state_data["started_at"] else None
-        orchestrator.completed_at = datetime.fromisoformat(state_data["completed_at"]) if state_data["completed_at"] else None
+        orchestrator.started_at = (
+            datetime.fromisoformat(state_data["started_at"]) if state_data["started_at"] else None
+        )
+        orchestrator.completed_at = (
+            datetime.fromisoformat(state_data["completed_at"])
+            if state_data["completed_at"]
+            else None
+        )
         orchestrator.revision_count = state_data["revision_count"]
         orchestrator.error_log = state_data["error_log"]
 
@@ -884,8 +911,10 @@ class PipelineOrchestrator:
                 name: {
                     "name": artifact.name,
                     "content": artifact.content,
-                    "metadata": artifact.metadata.to_dict() if hasattr(artifact.metadata, 'to_dict') else {},
-                    "path": str(artifact.path) if artifact.path else None
+                    "metadata": artifact.metadata.to_dict()
+                    if hasattr(artifact.metadata, "to_dict")
+                    else {},
+                    "path": str(artifact.path) if artifact.path else None,
                 }
                 for name, artifact in self.artifacts.items()
             },
@@ -895,8 +924,7 @@ class PipelineOrchestrator:
 
         checkpoint_path = self.config.artifact_dir / f"{self.run_id}_checkpoint_{phase.value}.json"
         checkpoint_path.write_text(
-            json.dumps(checkpoint_data, indent=2, ensure_ascii=False),
-            encoding="utf-8"
+            json.dumps(checkpoint_data, indent=2, ensure_ascii=False), encoding="utf-8"
         )
 
         if self.config.verbose:
@@ -926,11 +954,15 @@ class PipelineOrchestrator:
 
             # Validate checkpoint version and run_id
             if checkpoint_data.get("version") != "1.0":
-                self.error_log.append(f"Incompatible checkpoint version: {checkpoint_data.get('version')}")
+                self.error_log.append(
+                    f"Incompatible checkpoint version: {checkpoint_data.get('version')}"
+                )
                 return False
 
             if checkpoint_data["run_id"] != self.run_id:
-                self.error_log.append(f"Checkpoint run_id mismatch: {checkpoint_data['run_id']} != {self.run_id}")
+                self.error_log.append(
+                    f"Checkpoint run_id mismatch: {checkpoint_data['run_id']} != {self.run_id}"
+                )
                 return False
 
             # Restore state
@@ -963,7 +995,9 @@ class PipelineOrchestrator:
             self.checkpoints = [Checkpoint.from_dict(c) for c in checkpoint_data["checkpoints"]]
 
             if self.config.verbose:
-                print(f"[{self.run_id}] Checkpoint loaded: {phase.value} ({len(self.artifacts)} artifacts)")
+                print(
+                    f"[{self.run_id}] Checkpoint loaded: {phase.value} ({len(self.artifacts)} artifacts)"
+                )
 
             return True
 
@@ -985,7 +1019,7 @@ class PipelineOrchestrator:
             return self._create_result(
                 phase,
                 success=False,
-                error_message=f"Failed to load checkpoint for phase: {phase.value}"
+                error_message=f"Failed to load checkpoint for phase: {phase.value}",
             )
 
         self.started_at = datetime.now()
@@ -1008,19 +1042,26 @@ class PipelineOrchestrator:
 
                 if not self.config.skip_verification and implementation_success:
                     verification_passed = self._run_verification_phase()
-                    if not verification_passed and self.revision_count < self.config.max_revision_attempts:
+                    if (
+                        not verification_passed
+                        and self.revision_count < self.config.max_revision_attempts
+                    ):
                         self.revision_count += 1
                         implementation_success = self._run_implementer_phase(mode=AgentMode.FIX)
 
-                self._set_state(OrchestratorState.COMPLETED if implementation_success else OrchestratorState.FAILED)
+                self._set_state(
+                    OrchestratorState.COMPLETED
+                    if implementation_success
+                    else OrchestratorState.FAILED
+                )
                 self.completed_at = datetime.now()
-                return self._create_result(PipelinePhase.IMPLEMENTATION, success=implementation_success)
+                return self._create_result(
+                    PipelinePhase.IMPLEMENTATION, success=implementation_success
+                )
 
             else:
                 return self._create_result(
-                    phase,
-                    success=False,
-                    error_message=f"Cannot resume from phase: {phase.value}"
+                    phase, success=False, error_message=f"Cannot resume from phase: {phase.value}"
                 )
 
         except Exception as e:
@@ -1062,13 +1103,22 @@ class PipelineOrchestrator:
 
                 if not self.config.skip_verification and implementation_success:
                     verification_passed = self._run_verification_phase()
-                    if not verification_passed and self.revision_count < self.config.max_revision_attempts:
+                    if (
+                        not verification_passed
+                        and self.revision_count < self.config.max_revision_attempts
+                    ):
                         self.revision_count += 1
                         implementation_success = self._run_implementer_phase(mode=AgentMode.FIX)
 
-                self._set_state(OrchestratorState.COMPLETED if implementation_success else OrchestratorState.FAILED)
+                self._set_state(
+                    OrchestratorState.COMPLETED
+                    if implementation_success
+                    else OrchestratorState.FAILED
+                )
                 self.completed_at = datetime.now()
-                return self._create_result(PipelinePhase.IMPLEMENTATION, success=implementation_success)
+                return self._create_result(
+                    PipelinePhase.IMPLEMENTATION, success=implementation_success
+                )
 
         # Verification
         if not self.config.skip_verification:
@@ -1085,6 +1135,7 @@ class PipelineOrchestrator:
 
 
 # Convenience functions
+
 
 def create_pipeline(
     project_id: str,

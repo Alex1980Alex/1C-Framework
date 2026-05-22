@@ -50,9 +50,16 @@ def chunk_markdown(
     if boundaries[0][0] > 0:
         pre = "".join(lines[: boundaries[0][0]])
         if pre.strip():
-            chunks.extend(_emit_section(
-                relative_path, pre, "", 1, boundaries[0][0], mtime,
-            ))
+            chunks.extend(
+                _emit_section(
+                    relative_path,
+                    pre,
+                    "",
+                    1,
+                    boundaries[0][0],
+                    mtime,
+                )
+            )
 
     # Walk sections.
     heading_stack: list[tuple[int, str]] = []  # [(level, text), ...]
@@ -67,10 +74,16 @@ def chunk_markdown(
         section_text = "".join(lines[line_idx:next_line_idx])
         if not section_text.strip():
             continue
-        chunks.extend(_emit_section(
-            relative_path, section_text, path_str,
-            line_idx + 1, next_line_idx, mtime,
-        ))
+        chunks.extend(
+            _emit_section(
+                relative_path,
+                section_text,
+                path_str,
+                line_idx + 1,
+                next_line_idx,
+                mtime,
+            )
+        )
 
     return chunks
 
@@ -85,16 +98,18 @@ def _emit_section(
 ) -> list[Chunk]:
     """Emit one or more section chunks; split by paragraph if oversize."""
     if len(text) <= MAX_CHUNK_CHARS:
-        return [Chunk(
-            relative_path=relative_path,
-            content=text,
-            language="markdown",
-            chunk_type="section",
-            symbol_name=symbol_name or None,
-            line_start=line_start,
-            line_end=line_end,
-            mtime=mtime,
-        )]
+        return [
+            Chunk(
+                relative_path=relative_path,
+                content=text,
+                language="markdown",
+                chunk_type="section",
+                symbol_name=symbol_name or None,
+                line_start=line_start,
+                line_end=line_end,
+                mtime=mtime,
+            )
+        ]
 
     # Split by blank-line paragraph boundaries, accumulate up to limit.
     paragraphs = re.split(r"\n\s*\n", text)
@@ -105,29 +120,33 @@ def _emit_section(
     for para in paragraphs:
         para_lines = para.count("\n") + 1
         if buf and len(buf) + len(para) + 2 > MAX_CHUNK_CHARS:
-            out.append(Chunk(
+            out.append(
+                Chunk(
+                    relative_path=relative_path,
+                    content=buf,
+                    language="markdown",
+                    chunk_type="section",
+                    symbol_name=symbol_name or None,
+                    line_start=buf_start_line,
+                    line_end=cur_line,
+                    mtime=mtime,
+                )
+            )
+            buf = ""
+            buf_start_line = cur_line + 1
+        buf = (buf + "\n\n" + para) if buf else para
+        cur_line += para_lines + 1  # +1 for blank line separator
+    if buf.strip():
+        out.append(
+            Chunk(
                 relative_path=relative_path,
                 content=buf,
                 language="markdown",
                 chunk_type="section",
                 symbol_name=symbol_name or None,
                 line_start=buf_start_line,
-                line_end=cur_line,
+                line_end=line_end,
                 mtime=mtime,
-            ))
-            buf = ""
-            buf_start_line = cur_line + 1
-        buf = (buf + "\n\n" + para) if buf else para
-        cur_line += para_lines + 1  # +1 for blank line separator
-    if buf.strip():
-        out.append(Chunk(
-            relative_path=relative_path,
-            content=buf,
-            language="markdown",
-            chunk_type="section",
-            symbol_name=symbol_name or None,
-            line_start=buf_start_line,
-            line_end=line_end,
-            mtime=mtime,
-        ))
+            )
+        )
     return out

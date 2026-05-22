@@ -5,13 +5,14 @@ the BP set on ObjectModule line 141 (OnPosting handler). The MCP HTTP
 call hangs while target is stopped at BP — main session uses mcp__1c-debug
 to inspect stack/vars/eval and then step Continue to resume.
 """
+
 from __future__ import annotations
 
 import asyncio
 import json
 import sys
 import time
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -19,16 +20,13 @@ URL = "http://localhost/transport/hs/mcp/rpc"
 USER = "a.terletskiy@sodrugestvo.ru"
 PASSWORD = "Alex80Alex"
 DOC_GUID = "326d2e61-4a6f-11f1-a14d-dc567b7507dc"
-DOC_TYPE = "ДокументСсылка." \
-           "гкс_Лабораторный" \
-           "Анализ"
-KEY_UID = "УникальныйИден" \
-          "тификатор"
+DOC_TYPE = "ДокументСсылка." "гкс_Лабораторный" "Анализ"
+KEY_UID = "УникальныйИден" "тификатор"
 KEY_TYPE = "ТипОбъекта"
 
 
 async def main() -> int:
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "jsonrpc": "2.0",
         "id": 1,
         "method": "tools/call",

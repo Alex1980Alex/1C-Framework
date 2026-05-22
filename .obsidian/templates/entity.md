@@ -26,4 +26,3 @@ created: {{date}}
 - Source:
 
 ## Notes
-

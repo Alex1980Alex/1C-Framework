@@ -299,7 +299,7 @@ def print_plan(groups: dict[str, list[Path]], index: dict) -> None:
     existing = set(index.get("topics", {}).keys())
 
     print(f"\n{'='*60}")
-    print(f"Doc-to-Cache: План обработки")
+    print("Doc-to-Cache: План обработки")
     print(f"{'='*60}")
     print(f"Тем: {len(groups)}, Файлов: {total_files}")
     print(f"Существующих тем в кеше: {len(existing)}")
@@ -363,7 +363,7 @@ def create_scaffolds(groups: dict[str, list[Path]], index: dict) -> None:
             "category": category,
             "created": today,
             "keywords": keywords,
-            "summary": f"[SCAFFOLD] {len(files)} файлов из docs/documentation. Требует заполнения через Claude."
+            "summary": f"[SCAFFOLD] {len(files)} файлов из docs/documentation. Требует заполнения через Claude.",
         }
 
         created_count += 1
@@ -372,10 +372,7 @@ def create_scaffolds(groups: dict[str, list[Path]], index: dict) -> None:
     # Save index
     index["topics"] = topics_data
     index["last_updated"] = today
-    INDEX_PATH.write_text(
-        json.dumps(index, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    INDEX_PATH.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"\nСоздано заготовок: {created_count}")
     print(f"Индекс обновлён: {INDEX_PATH.relative_to(PROJECT_ROOT)}")

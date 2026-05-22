@@ -55,6 +55,7 @@ def _get_langfuse_client() -> Any | None:
         return None
     try:
         from src.pdf_framework.config import get_settings
+
         obs = get_settings().observability
         if not (obs.langfuse_public_key and obs.langfuse_secret_key):
             _LANGFUSE_CLIENT_INIT_FAILED = True
@@ -69,6 +70,7 @@ def _get_langfuse_client() -> Any | None:
         _LANGFUSE_CLIENT_INIT_FAILED = True
         logger.debug("[LANGFUSE] client init failed (suppressed)", exc_info=True)
         return None
+
 
 if TYPE_CHECKING:
     from src.pdf_framework.callbacks.langfuse import LangfuseCallbackHandler
@@ -94,7 +96,7 @@ def is_langfuse_enabled() -> bool:
 def build_langfuse_callback(
     user_id: str | None = None,
     session_id: str | None = None,
-) -> "LangfuseCallbackHandler | None":
+) -> LangfuseCallbackHandler | None:
     """Construct a `LangfuseCallbackHandler` if enabled, else return None.
 
     Reads `langfuse_enabled` from settings. When disabled or `langfuse`

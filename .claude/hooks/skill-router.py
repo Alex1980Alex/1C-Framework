@@ -55,6 +55,7 @@ def _get_tfidf_scorer():
         else:
             try:
                 from shared.tfidf_scorer import TfidfScorer
+
                 project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
                 artifacts_dir = os.path.join(project_dir, "data", "route-tfidf")
                 scorer = TfidfScorer(artifacts_dir)
@@ -91,6 +92,7 @@ def _get_fuzzy_matcher(all_keywords: list[str]):
     if _fuzzy_matcher is None:
         try:
             from shared.fuzzy_match import FuzzyMatcher
+
             # Only single words for fuzzy (multi-word phrases use exact match)
             single_words = [kw for kw in all_keywords if " " not in kw]
             if single_words:
@@ -118,14 +120,19 @@ def _get_semantic_searcher():
         else:
             try:
                 from shared import semantic_search
+
                 _semantic_searcher = semantic_search
             except Exception:
                 _semantic_searcher = False
     return _semantic_searcher if _semantic_searcher is not False else None
 
 
-def _log_match(prompt_snippet: str, bundles: list[str], skills: list[str],
-               matched_by: dict[str, str] | None = None) -> None:
+def _log_match(
+    prompt_snippet: str,
+    bundles: list[str],
+    skills: list[str],
+    matched_by: dict[str, str] | None = None,
+) -> None:
     """Append match info to data/skill-router.log for monitoring (Phase 10)."""
     try:
         project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
@@ -213,7 +220,7 @@ def _detect_skill_activations(prompt: str, session_id: str) -> None:
     """
     try:
         # Pattern: <command-name>skill-name</command-name>
-        markers = re.findall(r'<command-name>([^<]+)</command-name>', prompt)
+        markers = re.findall(r"<command-name>([^<]+)</command-name>", prompt)
         if not markers:
             return
 
@@ -246,7 +253,7 @@ def _load_config() -> dict | None:
         abs_path = os.path.abspath(path)
         if os.path.isfile(abs_path):
             try:
-                with open(abs_path, "r", encoding="utf-8") as f:
+                with open(abs_path, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError):
                 return None
@@ -257,14 +264,26 @@ class SkillRouter(BaseHook):
     """Config-driven skill router via keyword bundle matching."""
 
     # Regex to strip file paths from prompt (prevents false matches on paths)
-    _PATH_RE = re.compile(r'[a-zA-Z]:\\[^\s>]*|/[^\s>]*\.\w+')
+    _PATH_RE = re.compile(r"[a-zA-Z]:\\[^\s>]*|/[^\s>]*\.\w+")
 
     # Intent classification markers
     _INFO_MARKERS = [
-        "что такое", "как работает", "объясни", "расскажи",
-        "what is", "how does", "explain", "describe", "tell me about",
-        "где находится", "where is", "покажи", "show me", "зачем",
-        "в чем разница", "what's the difference",
+        "что такое",
+        "как работает",
+        "объясни",
+        "расскажи",
+        "what is",
+        "how does",
+        "explain",
+        "describe",
+        "tell me about",
+        "где находится",
+        "where is",
+        "покажи",
+        "show me",
+        "зачем",
+        "в чем разница",
+        "what's the difference",
     ]
     _SYSTEM_PREFIXES = ("/", "!!", "git ", "cd ")
 
@@ -288,10 +307,16 @@ class SkillRouter(BaseHook):
 
         # TIER 2A: Skip IDE events (VS Code metadata, not user intent)
         prompt_stripped = prompt.strip()
-        if prompt_stripped.startswith((
-            "<ide_", "<ide_opened_file", "<ide_selection",
-            "<file_", "<selection", "<cursor",
-        )):
+        if prompt_stripped.startswith(
+            (
+                "<ide_",
+                "<ide_opened_file",
+                "<ide_selection",
+                "<file_",
+                "<selection",
+                "<cursor",
+            )
+        ):
             return None
         # Skip prompts that are mostly XML tags (IDE metadata dumps)
         if len(prompt_stripped) > 20 and prompt_stripped.count("<") > len(prompt_stripped) / 10:
@@ -308,7 +333,7 @@ class SkillRouter(BaseHook):
 
         # TIER 2A: Strip file paths to prevent false matches
         # (e.g. "d:\1с-framework\" triggering "1с" keyword)
-        prompt_lower = self._PATH_RE.sub('', prompt.lower())
+        prompt_lower = self._PATH_RE.sub("", prompt.lower())
 
         # Collect all single-word keywords for fuzzy matching
         all_keywords = []
@@ -370,7 +395,9 @@ class SkillRouter(BaseHook):
             # Fallback: keyword scores too low → try semantic
             if max_kw_score < fallback_trigger:
                 sem_results = semantic.search_skills_semantic(
-                    prompt_lower, limit=3, total_timeout=0.5,
+                    prompt_lower,
+                    limit=3,
+                    total_timeout=0.5,
                 )
                 strong_th = sem_cfg.get("strong", 0.75)
                 moderate_th = sem_cfg.get("moderate", 0.50)
@@ -397,7 +424,9 @@ class SkillRouter(BaseHook):
             # Hybrid boost: keyword matched but weak → semantic can strengthen
             elif max_kw_score < 4:
                 sem_results = semantic.search_skills_semantic(
-                    prompt_lower, limit=2, total_timeout=0.5,
+                    prompt_lower,
+                    limit=2,
+                    total_timeout=0.5,
                 )
                 for sr in sem_results:
                     if sr.get("score", 0.0) < 0.7:
@@ -412,10 +441,7 @@ class SkillRouter(BaseHook):
                             break
 
         # --- Filter bundles above min_score ---
-        matched = {
-            name: score for name, score in scores.items()
-            if score >= min_score
-        }
+        matched = {name: score for name, score in scores.items() if score >= min_score}
 
         if not matched:
             return None
@@ -449,9 +475,11 @@ class SkillRouter(BaseHook):
         affine_skills: list[str] = []
         for skill in required_skills:
             for related in affinities.get(skill, []):
-                if (related not in required_skills
-                        and related not in optional_skills
-                        and related not in affine_skills):
+                if (
+                    related not in required_skills
+                    and related not in optional_skills
+                    and related not in affine_skills
+                ):
                     affine_skills.append(related)
         # Add affine skills to optional (free injection)
         optional_skills.extend(affine_skills)
@@ -462,6 +490,7 @@ class SkillRouter(BaseHook):
                 get_already_recommended,
                 record_recommendation,
             )
+
             already = get_already_recommended()
             new_required = [s for s in required_skills if s not in already]
             new_optional = [s for s in optional_skills if s not in already]
@@ -498,6 +527,7 @@ class SkillRouter(BaseHook):
             prompt_id = _generate_prompt_id(prompt)
             try:
                 from shared.session_state import set_prompt_id
+
                 set_prompt_id(prompt_id)
             except Exception:
                 pass
@@ -518,8 +548,7 @@ class SkillRouter(BaseHook):
         # Re-filter with intent-aware threshold
         if effective_min_score > min_score:
             matched = {
-                name: score for name, score in matched.items()
-                if score >= effective_min_score
+                name: score for name, score in matched.items() if score >= effective_min_score
             }
             if not matched:
                 return None
@@ -545,19 +574,13 @@ class SkillRouter(BaseHook):
         ]
 
         if required_skills:
-            parts.append(
-                f"Рекомендованные скиллы: {', '.join(required_skills)}"
-            )
+            parts.append(f"Рекомендованные скиллы: {', '.join(required_skills)}")
 
         if optional_skills:
-            parts.append(
-                f"Опционально (по контексту): {', '.join(optional_skills)}"
-            )
+            parts.append(f"Опционально (по контексту): {', '.join(optional_skills)}")
 
         if affine_skills:
-            parts.append(
-                f"Аффинные скиллы (связанные): {', '.join(affine_skills)}"
-            )
+            parts.append(f"Аффинные скиллы (связанные): {', '.join(affine_skills)}")
 
         # TIER 4: Append workflow instruction if detected
         if detected_workflow:
@@ -587,12 +610,12 @@ class SkillRouter(BaseHook):
         # Mark that router fired (for enforcer dedup)
         try:
             from shared.session_state import SessionState
+
             SessionState.set_router_fired()
         except Exception:
             pass
 
         return None  # stdout already delivered, no systemMessage needed
-
 
     # --- Workflow instruction templates ---
     _WORKFLOW_TEMPLATES = {

@@ -37,13 +37,13 @@ except ImportError as e:
 
 class FrameworkDocsMCPServer:
     """MCP сервер для документации фреймворка"""
-    
+
     def __init__(self):
         """Инициализация сервера"""
         self.search_engine = HybridSearchEngine()
         self.server = Server("1c-framework-docs") if MCP_AVAILABLE else None
         self.rag_module = RAGModule(self.search_engine) if RAG_AVAILABLE else None
-        
+
         # Получаем пути к документации из переменной окружения (поддержка множественных путей через ';')
         docs_root = os.getenv('DOCS_ROOT')
         if docs_root:
@@ -53,7 +53,7 @@ class FrameworkDocsMCPServer:
         else:
             # Абсолютный путь к документации (singular для обратной совместимости)
             self.docs_paths = [Path("D:/1С-Framework/docs")]
-        
+
         # Для обратной совместимости - первый путь как основной
         self.docs_path = self.docs_paths[0]
 
@@ -62,12 +62,12 @@ class FrameworkDocsMCPServer:
 
         if MCP_AVAILABLE:
             self._setup_handlers()
-    
+
     def _setup_handlers(self):
         """Настройка обработчиков MCP"""
         if not self.server:
             return
-        
+
         # Список доступных инструментов
         @self.server.list_tools()
         async def list_tools() -> List[Tool]:
@@ -346,12 +346,12 @@ class FrameworkDocsMCPServer:
                     }
                 )
             ]
-        
+
         # Обработчик поиска документов
         @self.server.call_tool()
         async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
             """Обработка вызовов инструментов"""
-            
+
             if name == "search_docs":
                 return await self._handle_search(arguments)
             elif name == "get_document":
@@ -387,46 +387,46 @@ class FrameworkDocsMCPServer:
                     type="text",
                     text=f"[ERROR] Неизвестный инструмент: {name}"
                 )]
-    
+
     async def _handle_search(self, args: Dict[str, Any]) -> List[TextContent]:
         """Обработка поиска по документации"""
         query = args.get("query", "")
         limit = args.get("limit", 5)
         search_type = args.get("search_type", "hybrid")
         source = args.get("source", "")
-        
+
         if not query.strip():
             return [TextContent(
                 type="text",
                 text="[ERROR] Пустой поисковый запрос"
             )]
-        
+
         try:
             # Выполняем поиск
             results = self.search_engine.search(query, limit=limit, search_type=search_type)
-            
+
             # Фильтрация по источнику если указан
             if source:
                 results = [r for r in results if source.lower() in r.document.path.lower()]
-            
+
             if not results:
                 return [TextContent(
                     type="text",
-                    text=f"[SEARCH] По запросу '{query}' ничего не найдено." + 
+                    text=f"[SEARCH] По запросу '{query}' ничего не найдено." +
                            (f" (фильтр: {source})" if source else "")
                 )]
-            
+
             # Форматируем результаты
             response_text = f"[SEARCH] **Результаты поиска по запросу:** '{query}'\n"
             response_text += f"[STATS] **Тип поиска:** {search_type}\n"
             response_text += f"[LIST] **Найдено:** {len(results)} результат(ов)\n\n"
-            
+
             for i, result in enumerate(results, 1):
                 doc = result.document
                 score = result.score
                 match_type = result.match_type
                 snippet = result.snippet
-                
+
                 response_text += f"## {i}. {doc.title}\n"
                 response_text += f"**[FOLDER] Файл:** `{Path(doc.path).name}`\n"
                 response_text += f"**[TARGET] Релевантность:** {score:.3f} ({match_type})\n"
@@ -435,51 +435,51 @@ class FrameworkDocsMCPServer:
                 response_text += f"**[NOTE] Фрагмент:**\n```\n{snippet}\n```\n"
                 response_text += f"**🆔 ID:** `{doc.id}`\n\n"
                 response_text += "---\n\n"
-            
+
             response_text += f"[INFO] **Совет:** Используйте `get_document` с ID для получения полного содержимого.\n"
-            
+
             return [TextContent(type="text", text=response_text)]
-            
+
         except Exception as e:
             return [TextContent(
                 type="text",
                 text=f"[ERROR] Ошибка поиска: {str(e)}"
             )]
-    
+
     async def _handle_get_document(self, args: Dict[str, Any]) -> List[TextContent]:
         """Получение полного содержимого документа"""
         document_id = args.get("document_id", "")
-        
+
         if not document_id:
             return [TextContent(
                 type="text",
                 text="[ERROR] Не указан ID документа"
             )]
-        
+
         try:
             # Поиск документа по ID
             import sqlite3
             conn = sqlite3.connect(self.search_engine.db_path)
             cursor = conn.cursor()
-            
+
             cursor.execute("""
                 SELECT title, path, content, size, modified, tags, doc_type
-                FROM documents 
+                FROM documents
                 WHERE id = ?
             """, (document_id,))
-            
+
             result = cursor.fetchone()
             conn.close()
-            
+
             if not result:
                 return [TextContent(
                     type="text",
                     text=f"[ERROR] Документ с ID '{document_id}' не найден"
                 )]
-            
+
             title, path, content, size, modified, tags, doc_type = result
             tags_list = json.loads(tags) if tags else []
-            
+
             response_text = f"# [FILE] {title}\n\n"
             response_text += f"**[FOLDER] Путь:** `{path}`\n"
             response_text += f"**📏 Размер:** {size} символов\n"
@@ -489,36 +489,36 @@ class FrameworkDocsMCPServer:
             response_text += "---\n\n"
             response_text += "## 📖 Содержимое\n\n"
             response_text += content
-            
+
             return [TextContent(type="text", text=response_text)]
-            
+
         except Exception as e:
             return [TextContent(
                 type="text",
                 text=f"[ERROR] Ошибка получения документа: {str(e)}"
             )]
-    
+
     async def _handle_reindex(self, args: Dict[str, Any]) -> List[TextContent]:
         """Переиндексация документации"""
         force = args.get("force", False)
-        
+
         try:
             # Проверяем существование всех путей документации
             non_existing = [p for p in self.docs_paths if not p.exists()]
             if non_existing:
                 return [TextContent(
                     type="text",
-                    text=f"[ERROR] Папки документации не найдены:\n" + 
+                    text=f"[ERROR] Папки документации не найдены:\n" +
                            "\n".join(f"  - {p}" for p in non_existing)
                 )]
-            
+
             response_text = "[SYNC] **Переиндексация документации фреймворка**\n\n"
             response_text += f"[INFO] Обрабатывается папок: {len(self.docs_paths)}\n\n"
-            
+
             indexed_count = 0
             skipped_count = 0
             error_count = 0
-            
+
             # Индексируем все markdown файлы из всех путей
             for docs_path in self.docs_paths:
                 response_text += f"[PATH] Индексация: {docs_path}\n"
@@ -533,57 +533,57 @@ class FrameworkDocsMCPServer:
                     except Exception as e:
                         error_count += 1
                         response_text += f"[ERROR] {md_file.name}: {e}\n"
-            
+
             # Статистика
             response_text += f"\n[STATS] **Результаты индексации:**\n"
             response_text += f"- [OK] Проиндексировано: {indexed_count}\n"
             response_text += f"- ⏭️ Пропущено: {skipped_count}\n"
             response_text += f"- [ERROR] Ошибок: {error_count}\n"
-            
+
             # Общая статистика индекса
             stats = self.search_engine.get_statistics()
             response_text += f"\n📈 **Статистика индекса:**\n"
             response_text += f"- [DOCS] Всего документов: {stats['total_documents']}\n"
             response_text += f"- 🧠 С эмбеддингами: {stats['documents_with_embeddings']}\n"
             response_text += f"- [SAVE] Размер: {stats['total_size_mb']} MB\n"
-            
+
             return [TextContent(type="text", text=response_text)]
-            
+
         except Exception as e:
             return [TextContent(
                 type="text",
                 text=f"[ERROR] Ошибка переиндексации: {str(e)}"
             )]
-    
+
     async def _handle_get_stats(self, args: Dict[str, Any]) -> List[TextContent]:
         """Получение статистики индекса"""
         try:
             stats = self.search_engine.get_statistics()
-            
+
             response_text = "[STATS] **Статистика поискового индекса**\n\n"
             response_text += f"[DOCS] **Документы:**\n"
             response_text += f"- Всего: {stats['total_documents']}\n"
             response_text += f"- С эмбеддингами: {stats['documents_with_embeddings']}\n"
             response_text += f"- Уникальных тегов: {stats['unique_tags']}\n\n"
-            
+
             response_text += f"[SAVE] **Размер:**\n"
             response_text += f"- Общий: {stats['total_size_mb']} MB\n"
             response_text += f"- Байт: {stats['total_size_bytes']:,}\n\n"
-            
+
             response_text += f"[LIST] **Типы документов:**\n"
             for doc_type, count in stats['document_types'].items():
                 response_text += f"- {doc_type}: {count}\n"
-            
+
             response_text += f"\n🧠 **Эмбеддинги:**\n"
             response_text += f"- Включены: {'[OK]' if stats['embeddings_enabled'] else '[ERROR]'}\n"
             if stats['model_name']:
                 response_text += f"- Модель: {stats['model_name']}\n"
-            
+
             response_text += f"\n[CONFIG] **Возможности:**\n"
             response_text += f"- Полнотекстовый поиск: [OK] (SQLite FTS5)\n"
             response_text += f"- Семантический поиск: {'[OK]' if stats['embeddings_enabled'] else '[ERROR]'}\n"
             response_text += f"- Гибридный поиск: {'[OK]' if stats['embeddings_enabled'] else '[WARNING] (только FTS5)'}\n"
-            
+
             return [TextContent(type="text", text=response_text)]
 
         except Exception as e:
@@ -949,7 +949,7 @@ class FrameworkDocsMCPServer:
             # Форматируем результаты
             result_text = f"## 🔍 Результаты поиска с фасетами\n\n"
             result_text += f"**Запрос:** {query}\n\n"
-            
+
             # Показываем применённые фильтры
             active_filters = []
             if doc_type:
@@ -962,7 +962,7 @@ class FrameworkDocsMCPServer:
                 active_filters.append(f"до={date_before}")
             if source:
                 active_filters.append(f"источник={source}")
-            
+
             if active_filters:
                 result_text += f"**Фильтры:** {', '.join(active_filters)}\n\n"
                 result_text += "---\n\n"

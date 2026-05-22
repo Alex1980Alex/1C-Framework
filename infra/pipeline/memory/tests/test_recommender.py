@@ -1,32 +1,27 @@
 """Tests for Recommender module."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from datetime import datetime
 
-from .recommender import (
-    Recommender,
-    RecommendationEngine,
-    RecommendationContext,
-    ScoredRecommendation,
-    RecommendationSource,
-)
+import pytest
 from models import (
     Recommendation,
     RecommendationType,
-    Pattern,
-    PatternType,
-    ErrorRecord,
-    ErrorSeverity,
-    MemoryType,
+)
+
+from .error_learner import ErrorLearner
+from .pattern_saver import MatchResult, PatternMatcher
+from .recommender import (
+    RecommendationContext,
+    RecommendationEngine,
+    RecommendationSource,
+    Recommender,
+    ScoredRecommendation,
 )
 from .unified_memory_client import (
-    UnifiedMemoryClient,
-    SearchResult,
     SaveResult,
+    SearchResult,
+    UnifiedMemoryClient,
 )
-from .pattern_saver import PatternMatcher, MatchResult
-from .error_learner import ErrorLearner
 
 
 class TestRecommendationSource:
@@ -411,9 +406,7 @@ class TestRecommendationEngine:
         mock_match.combined_score = 0.85
         mock_match.context_relevance = 0.7
 
-        mock_pattern_matcher.find_matching_patterns = AsyncMock(
-            return_value=[mock_match]
-        )
+        mock_pattern_matcher.find_matching_patterns = AsyncMock(return_value=[mock_match])
 
         context = RecommendationContext(
             current_task="Implement error handling",
@@ -726,9 +719,7 @@ class TestRecommenderIntegration:
             if recs:
                 # Accept odd, reject even
                 if i % 2 == 0:
-                    recommender.reject_recommendation(
-                        recs[0].id, reason="not helpful"
-                    )
+                    recommender.reject_recommendation(recs[0].id, reason="not helpful")
                 else:
                     recommender.accept_recommendation(recs[0].id, helpful=True)
 
@@ -736,4 +727,3 @@ class TestRecommenderIntegration:
         stats = recommender.get_statistics()
         assert "feedback_count" in stats
         assert "average_acceptance_rate" in stats
-

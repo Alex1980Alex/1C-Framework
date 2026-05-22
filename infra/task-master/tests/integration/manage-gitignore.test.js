@@ -132,7 +132,7 @@ old-files.txt
 # Old task files (to be replaced)
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/
 
 # More existing content
 cache/`;
@@ -347,9 +347,9 @@ existing.txt
 
 # Task files
 tasks.json
-# tasks.json  
-# tasks/ 
-tasks/ 
+# tasks.json
+# tasks/
+tasks/
 #tasks.json
 
 # More content
@@ -487,7 +487,7 @@ jspm_packages/
 logs
 *.log
 
-# Dependencies  
+# Dependencies
 node_modules/
 
 # Environment variables
@@ -544,7 +544,7 @@ node_modules/
 # Current task setup - keeping in git
 # Task files
 tasks.json
-tasks/ 
+tasks/
 
 # Build output
 dist/`;

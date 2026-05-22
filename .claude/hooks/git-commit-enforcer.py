@@ -67,8 +67,8 @@ def get_uncommitted_changes() -> list[str]:
             if not line or len(line) < 4:
                 continue
 
-            index_status = line[0]   # staged
-            work_status = line[1]    # unstaged
+            index_status = line[0]  # staged
+            work_status = line[1]  # unstaged
             # Use line[2:].lstrip() to handle both "M  path" and " M path"
             # line[3:] would strip leading "." from ".claude/" paths
             filepath = line[2:].lstrip().strip('"')
@@ -78,9 +78,7 @@ def get_uncommitted_changes() -> list[str]:
 
             # At least one status must indicate a real change
             has_change = (
-                is_untracked
-                or index_status in CHANGE_STATUSES
-                or work_status in CHANGE_STATUSES
+                is_untracked or index_status in CHANGE_STATUSES or work_status in CHANGE_STATUSES
             )
             if not has_change:
                 continue
@@ -105,6 +103,7 @@ def main():
     # Invocation timer
     try:
         from shared.invocation_logger import InvocationTimer
+
         timer = InvocationTimer("git-commit-enforcer", event="Stop").start()
     except Exception:
         timer = None
@@ -140,7 +139,7 @@ def main():
             "Создай коммит перед завершением сессии:\n"
             "1. Проверь изменения: git diff --stat\n"
             "2. Добавь файлы: git add <файлы>\n"
-            "3. Закоммить: git commit -m \"описание изменений\"\n\n"
+            '3. Закоммить: git commit -m "описание изменений"\n\n'
             "После коммита можешь завершить."
         )
 

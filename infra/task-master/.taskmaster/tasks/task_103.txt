@@ -149,13 +149,13 @@ After fixing the migration bug in readJSON and updating `list` and `move` comman
 
 **✅ COMPLETED:**
 - `list` command - Has projectRoot fix + tag support working
-- `move` command - Has projectRoot fix + tag support working  
+- `move` command - Has projectRoot fix + tag support working
 
 **❌ STILL NEED BOTH --tag FLAG + projectRoot FIX:**
 
 **High Priority (Core Task Operations):**
 1. `show` - View specific tasks (needs tag context)
-2. `add-task` - Create tasks (needs tag context) 
+2. `add-task` - Create tasks (needs tag context)
 3. `set-status` - Update task status (needs tag context)
 4. `next` - Find next task (needs tag context)
 
@@ -214,14 +214,14 @@ Same pattern as `list` and `move` commands:
 - Both single task and multiple task views work properly
 
 **UPDATED STATUS - 1 of 4 High-Priority Commands Complete:**
-1. ✅ `show` - **COMPLETED** 
+1. ✅ `show` - **COMPLETED**
 2. ❌ `add-task` - Create tasks (needs tag context)
-3. ❌ `set-status` - Update task status (needs tag context) 
+3. ❌ `set-status` - Update task status (needs tag context)
 4. ❌ `next` - Find next task (needs tag context)
 
 **NEXT ACTION:** Continue with `add-task` command following the same proven pattern:
 - Add `--tag` flag to CLI command
-- Call `findProjectRoot()` in action function  
+- Call `findProjectRoot()` in action function
 - Pass `{ projectRoot, tag }` context to underlying function
 - Update underlying function to accept context and pass projectRoot to readJSON/writeJSON
 </info added on 2025-06-12T22:47:22.415Z>
@@ -242,7 +242,7 @@ Same pattern as `list` and `move` commands:
 - Tag resolution and context handling work properly
 
 **COMPLETED HIGH-PRIORITY COMMANDS:**
-1. ✅ `show` - **COMPLETED** 
+1. ✅ `show` - **COMPLETED**
 2. ✅ `add-task` - **COMPLETED**
 3. ❌ `set-status` - Update task status (needs tag context)
 4. ❌ `next` - Find next task (needs tag context)
@@ -269,7 +269,7 @@ Next commands to fix: `set-status` and `next` commands following the same patter
 **Commands Status Update:**
 ✅ **COMPLETED HIGH-PRIORITY COMMANDS:**
 1. ✅ `show` - Added --tag flag + fixed projectRoot passing
-2. ✅ `add-task` - Already had proper tag support  
+2. ✅ `add-task` - Already had proper tag support
 3. ✅ `list` - Already had proper tag support
 4. ✅ `move` - Already had proper tag support
 5. ✅ `tags` - Fixed errors and working perfectly
@@ -443,7 +443,7 @@ Enable seamless context switching between code branches and task tags. Use add-t
    - `--from-branch` flag for `add-tag` command
    - `task-master sync-git` command for manual git-tag synchronization
 
-5. **Configuration Integration**: 
+5. **Configuration Integration**:
    - Check `config.tags.enabledGitworkflow` before git operations
    - Use `config.tags.autoSwitchTagWithBranch` for automatic switching
 
@@ -467,7 +467,7 @@ Enable seamless context switching between code branches and task tags. Use add-t
    - `isGitRepository()` - Check if we're in a git repo
    - `shouldAutoSync()` - Check if git workflow is enabled and conditions are met
 
-3. **Automatic Integration Hook**: 
+3. **Automatic Integration Hook**:
    - Add `checkAndSyncGitTags()` function to utils.js
    - Integrate into `readJSON()` similar to migration system
    - Automatically create tags from branch names when conditions are met
@@ -490,7 +490,7 @@ Enable seamless context switching between code branches and task tags. Use add-t
 
 **Final Implementation Summary:**
 
-1. **Proper Module Organization**: 
+1. **Proper Module Organization**:
    - Moved `checkAndAutoSwitchGitTag` function to correct location in `scripts/modules/utils/git-utils.js`
    - Updated imports in `utils.js` to use the git-utils version
    - Maintains clean separation of concerns with git operations in dedicated module
@@ -523,7 +523,7 @@ Enable seamless context switching between code branches and task tags. Use add-t
 
 **Implementation Status Changed:**
 - **CANCELLED**: All automatic git-tag synchronization features
-- **CANCELLED**: Configuration-driven git workflow automation  
+- **CANCELLED**: Configuration-driven git workflow automation
 - **CANCELLED**: Silent background git integration
 - **CANCELLED**: Branch-tag mapping persistence and auto-switching
 
@@ -815,7 +815,7 @@ This validates that the tag structure preservation improvements work consistentl
    - Filter for `tasks_*.json` pattern using regex
    - Return array of discovered external files
 
-2. `getExternalTagsFromFiles(projectRoot)` - ~15-20 lines  
+2. `getExternalTagsFromFiles(projectRoot)` - ~15-20 lines
    - Call scanForExternalTaskFiles()
    - Extract tag names from filenames using regex
    - Return array of external tag names
@@ -875,5 +875,3 @@ This validates that the tag structure preservation improvements work consistentl
 2.  **Refactor `generate-task-files.js`:** Update the core generation logic to be fully tag-aware.
 3.  **Implement New Filename Convention:** Change the task file naming scheme to include the tag name as a suffix. The new format will be `task_[ID]_[TAG].txt`. For example: `task_001_master.txt` and `task_001_gezo.txt`. This will prevent filename collisions and allow task files from different tags to coexist peacefully.
 ### Details:
-
-

@@ -42,6 +42,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput  # noqa: E402
+
 from shared.slash_detect import detect_slash_command  # noqa: E402
 
 TARGET_COMMAND = "implement-1c-task"
@@ -107,7 +108,9 @@ class ImplementOneCTaskPreflight(BaseHook):
         debug_hmr_ready = bool(((data or {}).get("mcp_health") or {}).get("debug_hmr"))
         self._log_preflight(inp, exit_code=exit_code, mode=mode, debug_hmr_ready=debug_hmr_ready)
 
-        return HookOutput().system_message(self._render_message(exit_code, mode, failed, debug_hmr_ready))
+        return HookOutput().system_message(
+            self._render_message(exit_code, mode, failed, debug_hmr_ready)
+        )
 
     @staticmethod
     def _failed_handshakes(data) -> list:
@@ -122,7 +125,9 @@ class ImplementOneCTaskPreflight(BaseHook):
         return out
 
     @staticmethod
-    def _render_message(exit_code: int, mode: str, failed: list, debug_hmr_ready: bool = False) -> str:
+    def _render_message(
+        exit_code: int, mode: str, failed: list, debug_hmr_ready: bool = False
+    ) -> str:
         prefix = "[implement-1c-task-preflight]"
         # Этап 5.x BP-verification требует 1c-debug-hmr (roadmap 260510 §3.2).
         # При его отсутствии в режимах Full / Full (no-BP) — surface'ить отдельной строкой.
@@ -130,7 +135,7 @@ class ImplementOneCTaskPreflight(BaseHook):
             "\n  Debug environment: ready (BP-verification Этап 5.x доступна)"
             if debug_hmr_ready
             else "\n  Debug environment: not-ready — BP-verification Этапа 5.x будет SKIP "
-                 "(1c-debug-hmr недоступен; pipeline продолжит без live BP-trace)"
+            "(1c-debug-hmr недоступен; pipeline продолжит без live BP-trace)"
         )
         if exit_code == 0:
             return (
@@ -158,10 +163,13 @@ class ImplementOneCTaskPreflight(BaseHook):
             f"mode={mode}. Pipeline preflight inconclusive — Skill Stage 0 will re-probe."
         )
 
-    def _log_preflight(self, inp: HookInput, exit_code: int, mode: str, debug_hmr_ready: bool = False) -> None:
+    def _log_preflight(
+        self, inp: HookInput, exit_code: int, mode: str, debug_hmr_ready: bool = False
+    ) -> None:
         try:
             from shared.invocation_logger import log_invocation
             from shared.run_context import get_run_id
+
             log_invocation(
                 hook=self.HOOK_NAME,
                 event="UserPromptSubmit",

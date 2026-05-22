@@ -55,13 +55,13 @@ export const defaultConfig: AutodocumentConfig = {
     temperature: 0.5, // Lower temperature for more focused, deterministic responses
     maxTokens: 4000, // Reduced max tokens to limit response size
   },
-  
+
   fileProcessing: {
     codeExtensions: ['.ts', '.js', '.tsx', '.jsx', '.py', '.java', '.c', '.cpp', '.cs', '.php', '.rb', '.go', '.rs', '.bsl'],
     maxFileSizeKb: 100,
     maxFilesPerDirectory: 10,
   },
-  
+
   documentation: {
     outputFilename: 'documentation.md',
     fallbackFilename: 'undocumented.md',
@@ -80,20 +80,20 @@ export const defaultConfig: AutodocumentConfig = {
  */
 export function getConfig(overrides?: Partial<AutodocumentConfig>): AutodocumentConfig {
   const config = { ...defaultConfig };
-  
+
   // Override with environment variables if present
   if (process.env.OPENROUTER_API_KEY) {
     config.openRouter.apiKey = process.env.OPENROUTER_API_KEY;
   }
-  
+
   if (process.env.OPENROUTER_MODEL) {
     config.openRouter.model = process.env.OPENROUTER_MODEL;
   }
-  
+
   if (process.env.MAX_FILE_SIZE_KB) {
     config.fileProcessing.maxFileSizeKb = parseInt(process.env.MAX_FILE_SIZE_KB, 10);
   }
-  
+
   if (process.env.MAX_FILES_PER_DIR) {
     config.fileProcessing.maxFilesPerDirectory = parseInt(process.env.MAX_FILES_PER_DIR, 10);
   }

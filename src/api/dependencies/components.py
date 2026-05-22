@@ -442,9 +442,7 @@ class Components:
             self.search_manager.register_strategy("raptor", raptor_strategy)
             _step("RAPTORSearchStrategy (Phase 13.2)")
 
-        logger.info(
-            "[Components] __init__ DONE in %.2fs", time.monotonic() - _t0
-        )
+        logger.info("[Components] __init__ DONE in %.2fs", time.monotonic() - _t0)
 
     async def initialize(self) -> None:
         """Initialize async components (stores)."""
@@ -492,9 +490,7 @@ class Components:
         # Phase 40
         await _astep("query_tracker.initialize", self.query_tracker.initialize())
         await _astep("audit_logger.initialize", self.audit_logger.initialize())
-        logger.info(
-            "[Components.init] DONE in %.2fs", time.monotonic() - _t0
-        )
+        logger.info("[Components.init] DONE in %.2fs", time.monotonic() - _t0)
 
 
 _components: Components | None = None

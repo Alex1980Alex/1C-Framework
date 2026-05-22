@@ -94,7 +94,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="BSL reindex with FastEmbed ONNX")
     ap.add_argument("--project", type=Path, required=True)
     ap.add_argument("--batch-size", type=int, default=64)
-    ap.add_argument("--collection", default="bsl_code_v4_late")  # legacy bsl_code_v3 dropped 2026-04-30 §27
+    ap.add_argument(
+        "--collection", default="bsl_code_v4_late"
+    )  # legacy bsl_code_v3 dropped 2026-04-30 §27
     ap.add_argument("--recreate", action="store_true")
     ap.add_argument("--no-context", action="store_true")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks (0=all)")
@@ -109,8 +111,10 @@ def main() -> None:
 
     # FastEmbed ONNX model
     import warnings
+
     warnings.filterwarnings("ignore", category=UserWarning)
     from fastembed import TextEmbedding
+
     print("Loading FastEmbed E5-large (ONNX)...")
     embedder = TextEmbedding("intfloat/multilingual-e5-large")
     print(f"Model loaded in {time.time() - t0:.1f}s")
@@ -122,15 +126,18 @@ def main() -> None:
     enricher = None
     if not args.no_context:
         try:
-            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
             from src.bsl.call_graph.store import CallGraphStore
+            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
+
             extractor = MetadataExtractor(project)
             cg_db = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
             cg = CallGraphStore(cg_db) if cg_db.exists() else None
             enricher = BSLContextEnricher(metadata_extractor=extractor, call_graph=cg)
             obj_stats = extractor.stats()
-            print(f"Context enrichment ON: {obj_stats['total']} objects"
-                  f"{', call graph loaded' if cg else ''}")
+            print(
+                f"Context enrichment ON: {obj_stats['total']} objects"
+                f"{', call graph loaded' if cg else ''}"
+            )
         except Exception as e:
             print(f"Context enrichment unavailable: {e}")
 
@@ -198,8 +205,10 @@ def main() -> None:
             elapsed = time.time() - t0
             speed = total_chunks / elapsed if elapsed > 0 else 0
             eta = (total_files - i) / (i / elapsed) if elapsed > 0 else 0
-            print(f"[{i}/{total_files}] {total_symbols} sym, {total_chunks} chunks, "
-                  f"{speed:.1f} ch/s, ETA ~{eta/60:.0f}min")
+            print(
+                f"[{i}/{total_files}] {total_symbols} sym, {total_chunks} chunks, "
+                f"{speed:.1f} ch/s, ETA ~{eta/60:.0f}min"
+            )
 
     # Flush remaining
     if batch:

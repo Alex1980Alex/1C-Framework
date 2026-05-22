@@ -2,10 +2,8 @@
 Integration tests for PMSpecVerifier.
 """
 
-import pytest
-
-from constants import VerificationStatus, ArtifactType
-from verification import PMSpecVerifier, CheckType
+from constants import ArtifactType, VerificationStatus
+from verification import CheckType, PMSpecVerifier
 
 
 class TestPMSpecVerifier:
@@ -24,10 +22,7 @@ class TestPMSpecVerifier:
         assert len(result.checks) > 0
 
         # Check that all critical checks passed
-        critical_failed = [
-            c for c in result.checks
-            if not c.passed and c.severity == "error"
-        ]
+        critical_failed = [c for c in result.checks if not c.passed and c.severity == "error"]
         assert len(critical_failed) == 0, f"Critical checks failed: {critical_failed}"
 
     def test_verify_incomplete_context(self, incomplete_context_artifact):
@@ -38,10 +33,7 @@ class TestPMSpecVerifier:
         assert len(result.checks) > 0
 
         # Check that some critical checks failed
-        critical_failed = [
-            c for c in result.checks
-            if not c.passed and c.severity == "error"
-        ]
+        critical_failed = [c for c in result.checks if not c.passed and c.severity == "error"]
         assert len(critical_failed) > 0
 
     def test_verify_complete_spec(self, sample_spec_artifact):
@@ -90,15 +82,11 @@ class TestPMSpecVerifier:
         """Test traceability between context and spec."""
         # Verify spec with context as reference
         result = self.verifier.verify(
-            sample_spec_artifact,
-            context={"context": sample_context_artifact}
+            sample_spec_artifact, context={"context": sample_context_artifact}
         )
 
         # Check for traceability check
-        traceability_checks = [
-            c for c in result.checks
-            if c.check_type == CheckType.TRACEABILITY
-        ]
+        traceability_checks = [c for c in result.checks if c.check_type == CheckType.TRACEABILITY]
 
         # Should have at least one traceability check
         assert len(traceability_checks) >= 0  # May or may not be present based on impl
@@ -112,8 +100,8 @@ class TestPMSpecVerifierEdgeCases:
 
     def test_empty_content(self):
         """Test with empty content."""
-        from models import Artifact, ArtifactMetadata
         from constants import AgentRole, ArtifactType
+        from models import Artifact, ArtifactMetadata
 
         artifact = Artifact(
             name="empty_context.md",
@@ -131,8 +119,8 @@ class TestPMSpecVerifierEdgeCases:
 
     def test_minimal_valid_content(self):
         """Test with minimal but valid content."""
-        from models import Artifact, ArtifactMetadata
         from constants import AgentRole, ArtifactType
+        from models import Artifact, ArtifactMetadata
 
         content = """# Контекст проекта
 

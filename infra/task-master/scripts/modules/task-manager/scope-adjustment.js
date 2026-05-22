@@ -345,7 +345,7 @@ Return a JSON object with a "subtasks" array. Each subtask should have:
 - status: "pending"
 - testStrategy: Testing approach
 
-IMPORTANT: 
+IMPORTANT:
 - The 'id' field must be a NUMBER, not a string!
 - Dependencies must be strings, not numbers!
 
@@ -429,7 +429,7 @@ function generateScopePrompt(task, direction, strength, customPrompt) {
 		heavy: isUp ? 'significant complexity additions' : 'major simplifications'
 	};
 
-	let basePrompt = `You are tasked with adjusting the complexity of a task. 
+	let basePrompt = `You are tasked with adjusting the complexity of a task.
 
 CURRENT TASK:
 Title: ${task.title}
@@ -452,7 +452,7 @@ ADJUSTMENT REQUIREMENTS:
 	} else {
 		basePrompt += `
 - Focus on core functionality and essential requirements
-- Remove or simplify non-essential features  
+- Remove or simplify non-essential features
 - Streamline implementation details
 - Simplify testing to focus on basic functionality`;
 	}
@@ -463,7 +463,7 @@ ADJUSTMENT REQUIREMENTS:
 
 	basePrompt += `\n\nReturn a JSON object with the updated task containing these fields:
 - title: Updated task title
-- description: Updated task description  
+- description: Updated task description
 - details: Updated implementation details
 - testStrategy: Updated test strategy
 - priority: Task priority ('low', 'medium', or 'high')

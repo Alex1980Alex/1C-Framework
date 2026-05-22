@@ -1,4 +1,5 @@
 """Phase 8.12.8 Step 3: Promptagator-style query generation via Z.AI."""
+
 from __future__ import annotations
 
 import argparse
@@ -40,6 +41,7 @@ PROMPT_TEMPLATE = """Контекст: модуль 1С {module_name} (тип: {
 
 def call_z_ai(prompt: str) -> str:
     from scripts.phase8_12_8._llm import llm_complete
+
     return llm_complete(prompt, max_tokens=80, temperature=0.4)
 
 
@@ -50,15 +52,21 @@ def parse_symbol_id(sid: str) -> tuple[str, str]:
     return module_path, name
 
 
-def fetch_chunk(client: QdrantClient, name: str, module_path: str,
-                collection: str) -> tuple[str | None, str | None, str | None]:
-    flt = Filter(must=[
-        FieldCondition(key="name", match=MatchValue(value=name)),
-        FieldCondition(key="module_path", match=MatchValue(value=module_path)),
-    ])
+def fetch_chunk(
+    client: QdrantClient, name: str, module_path: str, collection: str
+) -> tuple[str | None, str | None, str | None]:
+    flt = Filter(
+        must=[
+            FieldCondition(key="name", match=MatchValue(value=name)),
+            FieldCondition(key="module_path", match=MatchValue(value=module_path)),
+        ]
+    )
     records, _ = client.scroll(
-        collection_name=collection, scroll_filter=flt,
-        limit=1, with_payload=True, with_vectors=False,
+        collection_name=collection,
+        scroll_filter=flt,
+        limit=1,
+        with_payload=True,
+        with_vectors=False,
     )
     if not records:
         return None, None, None
@@ -73,8 +81,11 @@ def load_qdrant_keys(client: QdrantClient, collection: str) -> set[tuple[str, st
     offset = None
     while True:
         records, next_offset = client.scroll(
-            collection_name=collection, limit=1024, offset=offset,
-            with_payload=True, with_vectors=False,
+            collection_name=collection,
+            limit=1024,
+            offset=offset,
+            with_payload=True,
+            with_vectors=False,
         )
         if not records:
             break
@@ -87,8 +98,7 @@ def load_qdrant_keys(client: QdrantClient, collection: str) -> set[tuple[str, st
     return keys
 
 
-def filter_clusters_to_qdrant(clusters: list[dict],
-                              keys: set[tuple[str, str]]) -> list[dict]:
+def filter_clusters_to_qdrant(clusters: list[dict], keys: set[tuple[str, str]]) -> list[dict]:
     """Keep only members whose (name, module_path) exists in qdrant collection."""
     out = []
     for c in clusters:
@@ -125,7 +135,7 @@ def main() -> None:
     random.seed(args.seed)
 
     clusters: list[dict] = []
-    with open(args.clusters, "r", encoding="utf-8") as f:
+    with open(args.clusters, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -165,16 +175,21 @@ def main() -> None:
                 if not module_path:
                     continue
                 chunk_id, content, module_type = fetch_chunk(
-                    client, name, module_path, args.qdrant_collection,
+                    client,
+                    name,
+                    module_path,
+                    args.qdrant_collection,
                 )
                 if chunk_id is None or not content:
                     skipped_unmatched += 1
                     continue
                 module_name = Path(module_path).parent.name or Path(module_path).name
                 prompt = PROMPT_TEMPLATE.format(
-                    module_name=module_name, module_type=module_type or "BSL",
+                    module_name=module_name,
+                    module_type=module_type or "BSL",
                     top_modules=", ".join(str(m) for m in (top_modules or [])[:3]) or "—",
-                    symbol_name=name, symbol_body=content[:3000],
+                    symbol_name=name,
+                    symbol_body=content[:3000],
                 )
                 # Z.AI rate limit 30 RPM → ~2.5s between calls (5s for safety margin).
                 time.sleep(5)
@@ -185,17 +200,28 @@ def main() -> None:
                     continue
                 if not query:
                     continue
-                out.write(json.dumps({
-                    "query": query, "anchor_chunk_id": chunk_id, "anchor_symbol_id": sid,
-                    "cluster_id": cluster.get("cluster_id"),
-                    "cluster_top_modules": top_modules,
-                    "anchor_module_path": module_path, "anchor_name": name,
-                }, ensure_ascii=False) + "\n")
+                out.write(
+                    json.dumps(
+                        {
+                            "query": query,
+                            "anchor_chunk_id": chunk_id,
+                            "anchor_symbol_id": sid,
+                            "cluster_id": cluster.get("cluster_id"),
+                            "cluster_top_modules": top_modules,
+                            "anchor_module_path": module_path,
+                            "anchor_name": name,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
                 generated += 1
                 if generated % 10 == 0:
                     print(f"[{generated}/{args.total}] last: {sid}")
 
-    print(f"Generated {generated} queries -> {args.output} (skipped unmatched: {skipped_unmatched})")
+    print(
+        f"Generated {generated} queries -> {args.output} (skipped unmatched: {skipped_unmatched})"
+    )
 
 
 if __name__ == "__main__":

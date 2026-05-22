@@ -1,4 +1,5 @@
 """One-shot: split docs/architecture/PATTERNS.md into per-pattern wiki pages."""
+
 import re
 from datetime import date
 from pathlib import Path

@@ -16,24 +16,33 @@ with a discovery mechanism that works for both:
             src/                       ← actual BSL files
           docs/                        ← ТЗ
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List, Optional
 
 # Skip these directory names during discovery (case-sensitive parts match)
-_DISCOVERY_SKIP_PARTS = frozenset({
-    ".git", "node_modules", ".venv", "venv", "__pycache__",
-    ".tmp", "dist", "build", ".obsidian", ".mypy_cache",
-    ".ruff_cache", ".pytest_cache",
-})
+_DISCOVERY_SKIP_PARTS = frozenset(
+    {
+        ".git",
+        "node_modules",
+        ".venv",
+        "venv",
+        "__pycache__",
+        ".tmp",
+        "dist",
+        "build",
+        ".obsidian",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".pytest_cache",
+    }
+)
 
 # Specific paths to exclude even though they have .bsl-language-server.json
 # (test fixtures, etc.)
-_EXCLUDE_PATH_SUBSTRINGS = (
-    "tools/bsl-ls/test-workspace",
-)
+_EXCLUDE_PATH_SUBSTRINGS = ("tools/bsl-ls/test-workspace",)
 
 
 def _should_skip(rel_parts: tuple[str, ...]) -> bool:
@@ -44,7 +53,7 @@ def _should_skip(rel_parts: tuple[str, ...]) -> bool:
     return any(s in rel_posix for s in _EXCLUDE_PATH_SUBSTRINGS)
 
 
-def find_bsl_projects(repo_root: Path) -> List[Path]:
+def find_bsl_projects(repo_root: Path) -> list[Path]:
     """Find all BSL project roots under `repo_root`.
 
     A project root is any directory containing `.bsl-language-server.json`,
@@ -54,7 +63,7 @@ def find_bsl_projects(repo_root: Path) -> List[Path]:
         Absolute paths to project root directories, sorted.
     """
     repo_root = repo_root.resolve()
-    projects: List[Path] = []
+    projects: list[Path] = []
     for marker in repo_root.rglob(".bsl-language-server.json"):
         try:
             rel_parts = marker.relative_to(repo_root).parts
@@ -82,7 +91,7 @@ def get_bsl_source_root(project: Path) -> Path:
     return (project / config_root).resolve()
 
 
-def find_project_for_path(target: Path, repo_root: Path) -> Optional[Path]:
+def find_project_for_path(target: Path, repo_root: Path) -> Path | None:
     """Walk UP from `target` to find the nearest BSL project root.
 
     Returns the directory containing `.bsl-language-server.json`, or None
@@ -104,7 +113,7 @@ def find_project_for_path(target: Path, repo_root: Path) -> Optional[Path]:
         cur = cur.parent
 
 
-def find_project_for_relpath(rel: str, repo_root: Path) -> Optional[Path]:
+def find_project_for_relpath(rel: str, repo_root: Path) -> Path | None:
     """Resolve a repo-relative POSIX path and find its BSL project.
 
     Used by tools that receive repo-relative paths from `git diff` output.

@@ -8,12 +8,9 @@ Tests for CLI main module.
 """
 
 import pytest
-from tempfile import TemporaryDirectory
-from unittest.mock import Mock, patch, MagicMock
-from io import StringIO
 
-from cli.main import PipelineCLI, main
 from cli.config import CLIConfig, OutputFormat, VerbosityLevel
+from cli.main import PipelineCLI, main
 
 
 class TestPipelineCLI:
@@ -134,12 +131,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "run",
-            "--project", "TEST",
-            "--task", "Test",
-            "--dry-run"
-        ])
+        args = parser.parse_args(["run", "--project", "TEST", "--task", "Test", "--dry-run"])
 
         assert args.dry_run is True
 
@@ -148,12 +140,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "run",
-            "--project", "TEST",
-            "--task", "Test",
-            "--no-checkpoint"
-        ])
+        args = parser.parse_args(["run", "--project", "TEST", "--task", "Test", "--no-checkpoint"])
 
         assert args.no_checkpoint is True
 
@@ -162,10 +149,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "status",
-            "--run-id", "run-12345"
-        ])
+        args = parser.parse_args(["status", "--run-id", "run-12345"])
 
         assert args.run_id == "run-12345"
 
@@ -174,10 +158,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "status",
-            "--watch"
-        ])
+        args = parser.parse_args(["status", "--watch"])
 
         assert args.watch is True
 
@@ -186,10 +167,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "logs",
-            "--lines", "100"
-        ])
+        args = parser.parse_args(["logs", "--lines", "100"])
 
         assert args.lines == 100
 
@@ -198,10 +176,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "logs",
-            "--follow"
-        ])
+        args = parser.parse_args(["logs", "--follow"])
 
         assert args.follow is True
 
@@ -210,10 +185,7 @@ class TestCreateParser:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "config", "set",
-            "max_parallel_tasks", "8"
-        ])
+        args = parser.parse_args(["config", "set", "max_parallel_tasks", "8"])
 
         assert args.action == "set"
         assert args.key == "max_parallel_tasks"
@@ -330,10 +302,7 @@ class TestCLIOutputFormats:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "--format", "text",
-            "status"
-        ])
+        args = parser.parse_args(["--format", "text", "status"])
 
         assert args.format == "text"
 
@@ -342,10 +311,7 @@ class TestCLIOutputFormats:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "--format", "json",
-            "status"
-        ])
+        args = parser.parse_args(["--format", "json", "status"])
 
         assert args.format == "json"
 
@@ -354,10 +320,7 @@ class TestCLIOutputFormats:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "--format", "markdown",
-            "status"
-        ])
+        args = parser.parse_args(["--format", "markdown", "status"])
 
         assert args.format == "markdown"
 
@@ -366,10 +329,7 @@ class TestCLIOutputFormats:
         cli = PipelineCLI()
         parser = cli.create_parser()
 
-        args = parser.parse_args([
-            "--format", "table",
-            "status"
-        ])
+        args = parser.parse_args(["--format", "table", "status"])
 
         assert args.format == "table"
 

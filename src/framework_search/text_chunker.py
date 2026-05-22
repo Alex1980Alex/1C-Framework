@@ -19,16 +19,18 @@ def chunk_text(
 
     if len(content) <= MAX_CHUNK_CHARS:
         total_lines = content.count("\n") + 1
-        return [Chunk(
-            relative_path=relative_path,
-            content=content,
-            language=language,
-            chunk_type=chunk_type,
-            symbol_name=None,
-            line_start=1,
-            line_end=total_lines,
-            mtime=mtime,
-        )]
+        return [
+            Chunk(
+                relative_path=relative_path,
+                content=content,
+                language=language,
+                chunk_type=chunk_type,
+                symbol_name=None,
+                line_start=1,
+                line_end=total_lines,
+                mtime=mtime,
+            )
+        ]
 
     out: list[Chunk] = []
     window = 4000
@@ -40,16 +42,18 @@ def chunk_text(
             continue
         ls = content.count("\n", 0, offset) + 1
         le = ls + piece.count("\n")
-        out.append(Chunk(
-            relative_path=relative_path,
-            content=piece,
-            language=language,
-            chunk_type=chunk_type,
-            symbol_name=None,
-            line_start=ls,
-            line_end=le,
-            mtime=mtime,
-        ))
+        out.append(
+            Chunk(
+                relative_path=relative_path,
+                content=piece,
+                language=language,
+                chunk_type=chunk_type,
+                symbol_name=None,
+                line_start=ls,
+                line_end=le,
+                mtime=mtime,
+            )
+        )
         if offset + window >= len(content):
             break
     return out

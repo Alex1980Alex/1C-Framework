@@ -20,6 +20,7 @@ Timeout: 8s
 
 Не блокирует. Per-session cooldown через cookie file.
 """
+
 from __future__ import annotations
 
 import json
@@ -44,8 +45,12 @@ def _git(args: list[str]) -> str:
     try:
         out = subprocess.run(
             ["git", "-c", "core.quotepath=false", *args],
-            capture_output=True, text=True, check=True, timeout=5,
-            encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+            encoding="utf-8",
+            errors="replace",
         )
         return out.stdout
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
@@ -55,8 +60,7 @@ def _git(args: list[str]) -> str:
 def _list_active_changes() -> list[Path]:
     if not CHANGES_ROOT.exists():
         return []
-    return [p for p in CHANGES_ROOT.iterdir()
-            if p.is_dir() and p.name != "archive"]
+    return [p for p in CHANGES_ROOT.iterdir() if p.is_dir() and p.name != "archive"]
 
 
 def _change_matches_jira(change_dir: Path, jira: str) -> bool:
@@ -91,14 +95,12 @@ def _load_cookie() -> dict:
 def _save_cookie(state: dict) -> None:
     try:
         COOKIE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        COOKIE_PATH.write_text(json.dumps(state, ensure_ascii=False),
-                               encoding="utf-8")
+        COOKIE_PATH.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
     except OSError:
         pass
 
 
 class OpenspecTaskProgress(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
             return None
@@ -139,14 +141,13 @@ class OpenspecTaskProgress(BaseHook):
                     diff_low = diff.lower()
                     # Простое совпадение: упоминание имени файла/символа из задачи.
                     # Берём слова длиной >=8 (имена 1С).
-                    words = [w for w in re.findall(r"[А-Яа-яA-Za-z_]{8,}", ttext)
-                             if len(w) >= 8]
+                    words = [w for w in re.findall(r"[А-Яа-яA-Za-z_]{8,}", ttext) if len(w) >= 8]
                     if any(w.lower() in diff_low for w in words[:3]):
                         candidates.append(f"  - **{tid}** {ttext[:80]}")
                 if candidates:
                     matches.append(
-                        f"### Change `{ch.name}` (JIRA {jira})\n" +
-                        "\n".join(candidates[:5]))
+                        f"### Change `{ch.name}` (JIRA {jira})\n" + "\n".join(candidates[:5])
+                    )
 
         if not matches:
             return None
@@ -158,8 +159,7 @@ class OpenspecTaskProgress(BaseHook):
         body = "\n\n".join(matches)
         msg = (
             "[OPENSPEC-TASK-PROGRESS] Обнаружены изменённые файлы, похожие на "
-            "задачи в active openspec change'ах. Кандидаты на completed:\n\n" +
-            body + "\n\n"
+            "задачи в active openspec change'ах. Кандидаты на completed:\n\n" + body + "\n\n"
             "Если эти задачи действительно выполнены — обнови через "
             "`mcp__openspec-mcp__openspec_batch_update_tasks(changeId, updates=[{id, status:done}])`."
         )

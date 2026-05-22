@@ -395,7 +395,9 @@ class BSLSearchService:
             sparse_cfg = info.config.params.sparse_vectors
             has_named_dense = isinstance(vec_cfg, dict) and "dense" in vec_cfg
             has_sparse_bm25 = bool(sparse_cfg and "bm25" in sparse_cfg)
-            self._collection_layout = "hybrid" if (has_named_dense and has_sparse_bm25) else "dense_only"
+            self._collection_layout = (
+                "hybrid" if (has_named_dense and has_sparse_bm25) else "dense_only"
+            )
             logger.info(
                 f"[QDRANT] Collection '{collection_name}' layout: {self._collection_layout}"
             )
@@ -417,6 +419,7 @@ class BSLSearchService:
             return self._bm25_sparse
         try:
             from fastembed import SparseTextEmbedding
+
             self._bm25_sparse = SparseTextEmbedding(model_name="Qdrant/bm25")
             logger.info("[BM25] FastEmbed Qdrant/bm25 loaded for hybrid search")
             return self._bm25_sparse
@@ -430,6 +433,7 @@ class BSLSearchService:
     def _normalize_camelcase_for_bm25(text: str) -> str:
         """Delegates to canonical bm25_tokenizer (single source of truth)."""
         from .bm25_tokenizer import normalize_camelcase
+
         return normalize_camelcase(text)
 
     async def _call_qdrant_search(self, query: str, limit: int, filters: Any) -> list[dict]:
@@ -465,65 +469,87 @@ class BSLSearchService:
                 bm25 = self._get_bm25_sparse()
                 if bm25 is not None:
                     from qdrant_client import models as qm
+
                     norm_query = self._normalize_camelcase_for_bm25(query)
-                    sparse_emb = await asyncio.to_thread(lambda: next(iter(bm25.embed([norm_query]))))
-                    search_results = (await asyncio.to_thread(self._qdrant_client.query_points,
-                        collection_name=collection_name,
-                        query=qm.SparseVector(
-                            indices=sparse_emb.indices.tolist(),
-                            values=sparse_emb.values.tolist(),
-                        ),
-                        using="bm25",
-                        limit=limit,
-                        query_filter=filters,
-                    )).points
+                    sparse_emb = await asyncio.to_thread(
+                        lambda: next(iter(bm25.embed([norm_query])))
+                    )
+                    search_results = (
+                        await asyncio.to_thread(
+                            self._qdrant_client.query_points,
+                            collection_name=collection_name,
+                            query=qm.SparseVector(
+                                indices=sparse_emb.indices.tolist(),
+                                values=sparse_emb.values.tolist(),
+                            ),
+                            using="bm25",
+                            limit=limit,
+                            query_filter=filters,
+                        )
+                    ).points
                 else:
                     # FastEmbed missing — fall back to dense via named vector.
                     # This is worse than BM25 (golden eval: dense ~18% recall@10
                     # vs bm25 ~76%) but better than nothing.
                     if self._embedding_service is None:
                         import atexit
+
                         from src.framework_search.embedder import FrameworkTEIEmbedder
+
                         self._embedding_service = FrameworkTEIEmbedder()
                         atexit.register(self._embedding_service.close)
                     try:
-                        query_embedding = (await asyncio.to_thread(
-                            self._embedding_service.embed_batch, [query], is_query=True,
-                        ))[0]
+                        query_embedding = (
+                            await asyncio.to_thread(
+                                self._embedding_service.embed_batch,
+                                [query],
+                                is_query=True,
+                            )
+                        )[0]
                     except Exception as exc:
                         logger.error(f"TEI embedding failed: {exc}", exc_info=True)
                         return []
-                    search_results = (await asyncio.to_thread(
-                        self._qdrant_client.query_points,
-                        collection_name=collection_name,
-                        query=query_embedding,
-                        using="dense",
-                        limit=limit,
-                        query_filter=filters,
-                    )).points
+                    search_results = (
+                        await asyncio.to_thread(
+                            self._qdrant_client.query_points,
+                            collection_name=collection_name,
+                            query=query_embedding,
+                            using="dense",
+                            limit=limit,
+                            query_filter=filters,
+                        )
+                    ).points
             else:
                 # Legacy single-vector path (Phase 8.12 BSL collections, others).
                 # Requires TEI dense embedding.
                 if self._embedding_service is None:
                     import atexit
+
                     from src.framework_search.embedder import FrameworkTEIEmbedder
+
                     self._embedding_service = FrameworkTEIEmbedder()
                     atexit.register(self._embedding_service.close)
                 try:
-                    query_embedding = (await asyncio.to_thread(self._embedding_service.embed_batch, [query], is_query=True))[0]
+                    query_embedding = (
+                        await asyncio.to_thread(
+                            self._embedding_service.embed_batch, [query], is_query=True
+                        )
+                    )[0]
                 except Exception as exc:
                     logger.error(f"TEI embedding failed: {exc}", exc_info=True)
                     return []
                 if not query_embedding:
                     logger.error("TEI вернул пустой embedding для запроса")
                     return []
-                search_results = (await asyncio.to_thread(
-                    self._qdrant_client.query_points,
-                    collection_name=collection_name,
-                    query=query_embedding,
-                    limit=limit,
-                    query_filter=filters,
-                )).points
+                search_results = (
+                    await asyncio.to_thread(
+                        self._qdrant_client.query_points,
+                        collection_name=collection_name,
+                        query=query_embedding,
+                        limit=limit,
+                        query_filter=filters,
+                    )
+                ).points
 
             # Преобразование результатов
             results = []
@@ -622,9 +648,7 @@ class BSLSearchService:
             """
 
             async with driver.session() as session:
-                result = await session.run(
-                    cypher_query, {"keywords": keywords, "limit": limit}
-                )
+                result = await session.run(cypher_query, {"keywords": keywords, "limit": limit})
                 results = [dict(record) async for record in result]
 
             formatted_results = []

@@ -115,6 +115,7 @@ class CodeVerifyReminder(BaseHook):
 
         try:
             from pathlib import Path
+
             tp = Path(path_str)
             if not tp.is_file():
                 return None

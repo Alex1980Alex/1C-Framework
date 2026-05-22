@@ -204,7 +204,7 @@ jq -c 'to_entries[] | .key as $provider | .value[] | select(.allowed_roles[]? ==
 
     log_info "Running update-subtask --id=1.1 --prompt='Test generateObjectService' (timeout 120s)"
     update_subtask_output_file="update_subtask_raw_output_${provider}_${model_id//\//_}.log"
-    
+
     # Capture output to a variable AND a file
     update_subtask_command_output=""
     timeout 120s task-master update-subtask --id=1.1 --prompt="Simple test prompt to verify generateObjectService call." 2>&1 | tee "$update_subtask_output_file" &

@@ -37,11 +37,11 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Generator
+from datetime import UTC, datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +53,14 @@ CONSOLE_EXPORT = os.getenv("OTEL_EXPORTER_CONSOLE", "").lower() in ("1", "true",
 
 # --- Data Models ---
 
+
 @dataclass
 class Span:
     """OpenTelemetry-compatible span."""
 
     name: str
     start_time: float = field(default_factory=time.perf_counter)
-    start_timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    start_timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     end_time: float | None = None
     status: str = "ok"
     attributes: dict = field(default_factory=dict)
@@ -96,7 +97,14 @@ class Span:
                 {
                     "resource": {
                         "attributes": [
-                            {"key": "service.name", "value": {"string_value": self.attributes.get("service.name", "claude-hooks")}}
+                            {
+                                "key": "service.name",
+                                "value": {
+                                    "string_value": self.attributes.get(
+                                        "service.name", "claude-hooks"
+                                    )
+                                },
+                            }
                         ]
                     },
                     "schema_url": "",
@@ -107,16 +115,20 @@ class Span:
                                 {
                                     "name": self.name,
                                     "start_time_unix_nano": int(self.start_time * 1e9),
-                                    "end_time_unix_nano": int((self.end_time or time.perf_counter()) * 1e9),
-                                    "status": {"status_code": "OK" if self.status == "ok" else "ERROR"},
+                                    "end_time_unix_nano": int(
+                                        (self.end_time or time.perf_counter()) * 1e9
+                                    ),
+                                    "status": {
+                                        "status_code": "OK" if self.status == "ok" else "ERROR"
+                                    },
                                     "attributes": [
                                         {"key": k, "value": {"string_value": str(v)}}
                                         for k, v in self.attributes.items()
                                     ],
                                 }
-                            ]
+                            ],
                         }
-                    ]
+                    ],
                 }
             ]
         }
@@ -132,6 +144,7 @@ class ExportResult:
 
 
 # --- Exporters ---
+
 
 class BaseExporter:
     """Base class for span exporters."""
@@ -212,6 +225,7 @@ class OTLPHTTPExporter(BaseExporter):
         if self._session is None:
             try:
                 import requests
+
                 self._session = requests.Session()
                 self._session.headers.update(self._headers)
             except ImportError:
@@ -276,6 +290,7 @@ class MultiExporter(BaseExporter):
 
 # --- Hook Tracer ---
 
+
 class HookTracer:
     """
     Distributed tracing for Claude Code hooks.
@@ -329,9 +344,7 @@ class HookTracer:
 
         # OTLP HTTP exporter
         if endpoint or DEFAULT_ENDPOINT:
-            exporters.append(
-                OTLPHTTPExporter(endpoint or DEFAULT_ENDPOINT)
-            )
+            exporters.append(OTLPHTTPExporter(endpoint or DEFAULT_ENDPOINT))
 
         return exporters
 
@@ -403,10 +416,12 @@ class HookTracer:
         if error:
             span.status = "error"
             span.attributes["error.message"] = error
-            span.events.append({
-                "name": "error",
-                "attributes": {"exception.message": error},
-            })
+            span.events.append(
+                {
+                    "name": "error",
+                    "attributes": {"exception.message": error},
+                }
+            )
 
         span.attributes.update(extra_attrs)
 
@@ -449,6 +464,7 @@ class HookTracer:
 
 # --- Configuration Helpers ---
 
+
 def configure_exporter(
     endpoint: str | None = None,
     service_name: str = DEFAULT_SERVICE_NAME,
@@ -481,6 +497,7 @@ def configure_exporter(
 
 
 # --- Hook Integration ---
+
 
 class HookTracerAdapter:
     """

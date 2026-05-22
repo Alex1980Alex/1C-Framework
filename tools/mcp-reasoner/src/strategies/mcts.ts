@@ -22,7 +22,7 @@ export class MonteCarloTreeSearchStrategy extends BaseStrategy {
 
   public async processThought(request: ReasoningRequest): Promise<ReasoningResponse> {
     const nodeId = uuidv4();
-    const parentNode = request.parentId ? 
+    const parentNode = request.parentId ?
       await this.getNode(request.parentId) as MCTSNode : undefined;
 
     const node: MCTSNode = {
@@ -160,22 +160,22 @@ export class MonteCarloTreeSearchStrategy extends BaseStrategy {
       current.visits++;
       current.totalReward += reward;
       await this.saveNode(current);
-      current = current.parentId ? 
-        await this.getNode(current.parentId) as MCTSNode : 
+      current = current.parentId ?
+        await this.getNode(current.parentId) as MCTSNode :
         undefined;
     }
   }
 
   private selectBestUCT(nodes: MCTSNode[]): MCTSNode {
     const totalVisits = nodes.reduce((sum, node) => sum + node.visits, 0);
-    
+
     return nodes.reduce((best, node) => {
       const exploitation = node.totalReward / node.visits;
       const exploration = Math.sqrt(Math.log(totalVisits) / node.visits);
       const uct = exploitation + this.explorationConstant * exploration;
-      
-      return uct > (best.totalReward / best.visits + 
-        this.explorationConstant * Math.sqrt(Math.log(totalVisits) / best.visits)) 
+
+      return uct > (best.totalReward / best.visits +
+        this.explorationConstant * Math.sqrt(Math.log(totalVisits) / best.visits))
         ? node : best;
     });
   }
@@ -191,11 +191,11 @@ export class MonteCarloTreeSearchStrategy extends BaseStrategy {
 
   public async getBestPath(): Promise<ThoughtNode[]> {
     if (!this.root) return [];
-    
+
     const bestChild = (await Promise.all(
       this.root.children.map(id => this.getNode(id))
     ) as MCTSNode[])
-      .reduce((best, node) => 
+      .reduce((best, node) =>
         node.visits > best.visits ? node : best
       );
 

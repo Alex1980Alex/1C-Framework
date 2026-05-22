@@ -14,24 +14,19 @@ Usage:
 
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from orchestrator.orchestrator import (
-    PipelineOrchestrator,
     PipelineConfig,
-    PipelinePhase,
-    OrchestratorState,
+    PipelineOrchestrator,
 )
 from orchestrator.pipeline_graph import (
-    ParallelPipelineOrchestrator,
     ParallelPipelineConfig,
-    PipelineGraph,
-    PipelineTask,
-    PipelineTaskType,
+    ParallelPipelineOrchestrator,
     build_multi_module_graph,
 )
 
@@ -101,15 +96,17 @@ def test_p1_checkpoint_system():
     orchestrator = PipelineOrchestrator(config)
 
     print("\n[+] Test 1: save_checkpoint() method exists")
-    assert hasattr(orchestrator, 'save_checkpoint'), "save_checkpoint method not found"
+    assert hasattr(orchestrator, "save_checkpoint"), "save_checkpoint method not found"
     print("   [+] PASS: save_checkpoint method exists")
 
     print("\n[+] Test 2: load_checkpoint() method exists")
-    assert hasattr(orchestrator, 'load_checkpoint'), "load_checkpoint method not found"
+    assert hasattr(orchestrator, "load_checkpoint"), "load_checkpoint method not found"
     print("   [+] PASS: load_checkpoint method exists")
 
     print("\n[+] Test 3: resume_from_checkpoint() method exists")
-    assert hasattr(orchestrator, 'resume_from_checkpoint'), "resume_from_checkpoint method not found"
+    assert hasattr(
+        orchestrator, "resume_from_checkpoint"
+    ), "resume_from_checkpoint method not found"
     print("   [+] PASS: resume_from_checkpoint method exists")
 
     # Test checkpoint saving (simplified - no artifact creation)
@@ -119,7 +116,7 @@ def test_p1_checkpoint_system():
 
         # Check save_checkpoint signature
         sig = inspect.signature(orchestrator.save_checkpoint)
-        if 'phase' in sig.parameters:
+        if "phase" in sig.parameters:
             print("   [+] PASS: save_checkpoint has 'phase' parameter")
         else:
             print("   [FAIL] save_checkpoint missing 'phase' parameter")
@@ -158,11 +155,11 @@ async def test_p2_parallel_subtasks():
 
     print("\n[+] Test 1: Parallel design methods exist")
     parallel_methods = [
-        '_run_parallel_architect_design',
-        '_design_database_schema',
-        '_design_api_interface',
-        '_design_security_model',
-        '_design_integrations',
+        "_run_parallel_architect_design",
+        "_design_database_schema",
+        "_design_api_interface",
+        "_design_security_model",
+        "_design_integrations",
     ]
 
     for method_name in parallel_methods:
@@ -191,7 +188,7 @@ async def test_p2_parallel_subtasks():
         time_saved = sequential_time_estimate - execution_time
         savings_percent = (time_saved / sequential_time_estimate) * 100
 
-        print(f"\n[STATS] P2 Performance Analysis:")
+        print("\n[STATS] P2 Performance Analysis:")
         print(f"   - Parallel execution time: {execution_time:.2f}s")
         print(f"   - Estimated sequential time: {sequential_time_estimate:.2f}s")
         print(f"   - Time saved: {time_saved:.2f}s ({savings_percent:.1f}%)")
@@ -269,7 +266,7 @@ async def test_p3_pipeline_dag():
     else:
         print(f"   [FAIL] FAIL: Pipeline execution failed: {result.error_message}")
 
-    print(f"\n[STATS] P3 Execution Statistics:")
+    print("\n[STATS] P3 Execution Statistics:")
     print(f"   - Total tasks: {result.total_tasks}")
     print(f"   - Completed tasks: {result.completed_tasks}")
     print(f"   - Failed tasks: {result.failed_tasks}")
@@ -327,13 +324,13 @@ def print_summary():
 
 async def main():
     """Run all tests."""
-    import sys
     import io
+    import sys
 
     # Set UTF-8 encoding for Windows console
     if sys.platform == "win32":
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
     print("\n" + "=" * 80)
     print("[TEST] ORCHESTRATOR ENHANCEMENTS TEST SUITE")
@@ -363,6 +360,7 @@ async def main():
     except Exception as e:
         print(f"\n[ERROR] TEST SUITE FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

@@ -16,9 +16,7 @@ class CallGraphPreFilter:
     def __init__(self, store: CallGraphStore) -> None:
         self._store = store
 
-    def allowed_files(
-        self, old_name: str, module_hint: str | None = None
-    ) -> set[Path] | None:
+    def allowed_files(self, old_name: str, module_hint: str | None = None) -> set[Path] | None:
         """Return files where edits are expected, or None for fallback."""
         if self._store._conn is None:
             return None
@@ -36,9 +34,7 @@ class CallGraphPreFilter:
         allowed.update(defining)
         return allowed
 
-    def _defining_modules(
-        self, name: str, module_hint: str | None
-    ) -> set[Path]:
+    def _defining_modules(self, name: str, module_hint: str | None) -> set[Path]:
         if module_hint is not None:
             sid = self._store._symbol_id(module_hint, name)
             sym = self._store.get_symbol(sid)

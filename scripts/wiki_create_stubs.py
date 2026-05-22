@@ -11,6 +11,7 @@ human writer can fill them in later without losing context.
 Source: same uuid7 generator as scripts/patterns_fill_frontmatter.py
         (RFC 9562 section 5.7).
 """
+
 from __future__ import annotations
 
 import secrets
@@ -130,8 +131,8 @@ STUBS = {
             "See `.claude/skills/code-verify/SKILL.md` for the canonical 4-mode pipeline.\n\n"
             "## Loop semantics\n\n"
             "Each iteration receives: reference + previous attempt + reviewer feedback + "
-            "instruction \"fix ONLY the listed issues\". After 3 unsuccessful iterations — "
-            "stop, explain root cause, mark as \"requires manual review\".\n\n"
+            'instruction "fix ONLY the listed issues". After 3 unsuccessful iterations — '
+            'stop, explain root cause, mark as "requires manual review".\n\n'
             "**Status: stub.** Expand with example transcripts."
         ),
     },

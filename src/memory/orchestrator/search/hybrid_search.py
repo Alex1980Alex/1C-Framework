@@ -14,8 +14,9 @@ import math
 import re
 import time
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Awaitable
+from typing import Any
 
 from .config import (
     DEFAULT_SEARCH_CONFIG,
@@ -233,7 +234,9 @@ class HybridSearchService:
         k: int = 60,
     ) -> list[tuple[str, float, float, float]]:
         """Reciprocal Rank Fusion: RRF(d) = sum 1/(k + rank)."""
-        scores: dict[str, dict[str, float]] = defaultdict(lambda: {"rrf": 0.0, "dense": 0.0, "sparse": 0.0})
+        scores: dict[str, dict[str, float]] = defaultdict(
+            lambda: {"rrf": 0.0, "dense": 0.0, "sparse": 0.0}
+        )
 
         for rank, (doc_id, score) in enumerate(dense_results, 1):
             scores[doc_id]["rrf"] += 1 / (k + rank)
@@ -244,8 +247,7 @@ class HybridSearchService:
             scores[doc_id]["sparse"] = score
 
         results = [
-            (doc_id, data["rrf"], data["dense"], data["sparse"])
-            for doc_id, data in scores.items()
+            (doc_id, data["rrf"], data["dense"], data["sparse"]) for doc_id, data in scores.items()
         ]
         results.sort(key=lambda x: x[1], reverse=True)
         return results
@@ -258,7 +260,9 @@ class HybridSearchService:
         sparse_weight: float = 0.3,
     ) -> list[tuple[str, float, float, float]]:
         """Weighted sum fusion with normalization."""
-        scores: dict[str, dict[str, float]] = defaultdict(lambda: {"weighted": 0.0, "dense": 0.0, "sparse": 0.0})
+        scores: dict[str, dict[str, float]] = defaultdict(
+            lambda: {"weighted": 0.0, "dense": 0.0, "sparse": 0.0}
+        )
 
         if dense_results:
             max_dense = max(r[1] for r in dense_results)
@@ -309,8 +313,10 @@ class HybridSearchService:
                 fused = self._rrf_fusion(dense_results, sparse_results, self.config.hybrid.rrf_k)
             else:
                 fused = self._weighted_fusion(
-                    dense_results, sparse_results,
-                    self.config.hybrid.dense_weight, self.config.hybrid.sparse_weight,
+                    dense_results,
+                    sparse_results,
+                    self.config.hybrid.dense_weight,
+                    self.config.hybrid.sparse_weight,
                 )
         elif dense_results and not sparse_results:
             fused = [(doc_id, score, score, 0.0) for doc_id, score in dense_results]
@@ -322,13 +328,15 @@ class HybridSearchService:
         results = []
         for doc_id, score, dense_score, sparse_score in fused[:top_k]:
             content = self.bm25_index.documents.get(doc_id, "")
-            results.append(SearchResult(
-                id=doc_id,
-                content=content,
-                score=score,
-                dense_score=dense_score if dense_score > 0 else None,
-                sparse_score=sparse_score if sparse_score > 0 else None,
-            ))
+            results.append(
+                SearchResult(
+                    id=doc_id,
+                    content=content,
+                    score=score,
+                    dense_score=dense_score if dense_score > 0 else None,
+                    sparse_score=sparse_score if sparse_score > 0 else None,
+                )
+            )
 
         search_time_ms = (time.time() - start_time) * 1000
 

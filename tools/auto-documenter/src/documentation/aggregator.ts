@@ -11,32 +11,32 @@ export interface AggregationResult {
    * Total number of directories processed
    */
   totalDirectories: number;
-  
+
   /**
    * Number of directories successfully documented
    */
   successfulDocumentations: number;
-  
+
   /**
    * Number of directories that failed documentation
    */
   failedDocumentations: number;
-  
+
   /**
    * Number of directories with undocumented.md files
    */
   undocumentedFiles: number;
-  
+
   /**
    * Number of directories that were updated
    */
   updatedDocumentations: number;
-  
+
   /**
    * Number of directories that were skipped (existing files when updateExisting is false)
    */
   skippedDocumentations: number;
-  
+
   /**
    * Errors encountered during the process
    */
@@ -55,7 +55,7 @@ export class DocumentationAggregator {
   private crawler: DirectoryCrawler;
   private analyzer: FileAnalyzer;
   private generator: DocumentationGenerator;
-  
+
   /**
    * Creates a new documentation aggregator
    * @param rootPath The root directory to process
@@ -72,7 +72,7 @@ export class DocumentationAggregator {
     this.analyzer = new FileAnalyzer();
     this.generator = new DocumentationGenerator(apiKey, model, updateExisting);
   }
-  
+
   /**
    * Runs the full documentation aggregation process
    * @param progressCallback Optional callback for progress updates
@@ -88,47 +88,47 @@ export class DocumentationAggregator {
       skippedDocumentations: 0,
       errors: []
     };
-    
+
     try {
       // Create a bottom-up processing order
       const directories = await this.crawler.createBottomUpOrder();
       result.totalDirectories = directories.length;
-      
+
       // Process each directory in bottom-up order
       for (let i = 0; i < directories.length; i++) {
         const directoryPath = directories[i];
         console.error(`Processing directory: ${directoryPath}`);
-        
+
         // Get all code files in the directory
         const files = this.crawler.getCodeFiles(directoryPath);
-        
+
         // Report progress if callback is provided
         if (progressCallback) {
           progressCallback(
-            path.relative(this.rootPath, directoryPath) || '.', 
-            files.length, 
-            i + 1, 
+            path.relative(this.rootPath, directoryPath) || '.',
+            files.length,
+            i + 1,
             directories.length
           );
         }
-        
+
         // Check if directory has subdirectories
         const hasSubdirectories = this.crawler.hasSubdirectories(directoryPath);
-        
+
         // Check if directory should be documented
         if (!this.analyzer.shouldDocument(directoryPath, files, hasSubdirectories)) {
           console.error(`Skipping directory ${directoryPath} - Not enough code files to document or skipped due to rules`);
-          
+
           // If this is a single-file directory, it will be included in its parent's documentation
           continue;
         }
-        
+
         // Get documentation from subdirectories and single-file directories that weren't documented
         const subdirDocs = this.crawler.getSubdirectoryDocs(directoryPath);
-        
+
         // Get single-file subdirectories' content to include in this directory's documentation
         const singleFileDocs = this.crawler.getSingleFileSubdirectories(directoryPath);
-        
+
         // Check if this is a directory with no code files but with subdirectories
         if (files.length === 0 && hasSubdirectories) {
           console.error(`Processing directory ${directoryPath} - No code files, but contains subdirectories with documentation`);
@@ -136,7 +136,7 @@ export class DocumentationAggregator {
 
         // Analyze files (might be empty if directory only has subdirectories)
         const analysisResult = await this.analyzer.analyzeFiles(directoryPath, files);
-        
+
         // Check if files are too large or too many
         if (analysisResult.limited) {
           console.error(`Directory ${directoryPath} exceeds limits: ${analysisResult.limitReason}`);
@@ -144,15 +144,15 @@ export class DocumentationAggregator {
           result.undocumentedFiles++;
           continue;
         }
-        
+
         // Get all documentation from child directories (subdirectories and single-file directories)
         const allChildDocs = [...subdirDocs];
-        
+
         // Add content from single-file subdirectories
         if (singleFileDocs.length > 0) {
           allChildDocs.push(...singleFileDocs);
         }
-        
+
         // Generate documentation
         const isTopLevel = directoryPath === this.rootPath;
         const docResult = await this.generateDocumentation(
@@ -162,7 +162,7 @@ export class DocumentationAggregator {
           allChildDocs,
           result
         );
-        
+
         if (docResult.skipped) {
           result.skippedDocumentations++;
           console.error(`Skipped existing documentation for ${directoryPath} (updateExisting=false)`);
@@ -170,7 +170,7 @@ export class DocumentationAggregator {
           result.updatedDocumentations++;
         }
       }
-      
+
       return result;
     } catch (error: any) {
       console.error('Error during documentation aggregation:', error);
@@ -181,7 +181,7 @@ export class DocumentationAggregator {
       return result;
     }
   }
-  
+
   /**
    * Generates documentation for a directory and updates the aggregation result
    * @param directoryPath Path to the directory
@@ -205,7 +205,7 @@ export class DocumentationAggregator {
         isTopLevel,
         subdirDocs
       );
-      
+
       if (docResult.success) {
         console.error(`Successfully ${docResult.isUpdate ? 'updated' : 'generated'} documentation for ${directoryPath}`);
         aggregationResult.successfulDocumentations++;
@@ -217,7 +217,7 @@ export class DocumentationAggregator {
           error: docResult.error || 'Unknown error'
         });
       }
-      
+
       return docResult;
     } catch (error: any) {
       console.error(`Error generating documentation for ${directoryPath}:`, error);
@@ -226,7 +226,7 @@ export class DocumentationAggregator {
         directory: directoryPath,
         error: error.message
       });
-      
+
       return {
         documentationPath: path.join(directoryPath, 'documentation.md'),
         success: false,

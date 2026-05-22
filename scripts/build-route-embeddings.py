@@ -34,7 +34,7 @@ OUTPUT_DIR = PROJECT_DIR / "data" / "route-tfidf"
 
 def load_config() -> dict:
     """Load skill-router-config.json."""
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -133,9 +133,7 @@ def build_artifacts(config: dict, validate: bool = False) -> None:
         "num_bundles": len(bundle_names),
         "total_texts": len(all_texts),
         "ngram_range": [2, 4],
-        "texts_per_bundle": {
-            name: len(bundle_texts[name]) for name in bundle_names
-        },
+        "texts_per_bundle": {name: len(bundle_texts[name]) for name in bundle_names},
     }
     meta_path = OUTPUT_DIR / "metadata.json"
     with open(meta_path, "w", encoding="utf-8") as f:
@@ -143,7 +141,7 @@ def build_artifacts(config: dict, validate: bool = False) -> None:
     print(f"Saved: {meta_path}")
 
     print(f"\nBuild complete. Config hash: {config_hash}")
-    print(f"Texts per bundle:")
+    print("Texts per bundle:")
     for name in bundle_names:
         print(f"  {name:25s}: {len(bundle_texts[name]):3d} texts")
 
@@ -162,7 +160,7 @@ def _validate_ngrams(vectorizer, sample_texts: list[str]) -> None:
     def pure_python_ngrams(text: str, ngram_range=(2, 4)) -> set[str]:
         """Pure-Python char_wb n-gram extraction (matches tfidf_scorer.py)."""
         text = text.lower().strip()
-        words = re.split(r'\s+', text)
+        words = re.split(r"\s+", text)
         ngrams = set()
         min_n, max_n = ngram_range
         for word in words:
@@ -171,7 +169,7 @@ def _validate_ngrams(vectorizer, sample_texts: list[str]) -> None:
             padded = f" {word} "
             for n in range(min_n, max_n + 1):
                 for i in range(len(padded) - n + 1):
-                    ngrams.add(padded[i:i + n])
+                    ngrams.add(padded[i : i + n])
         return ngrams
 
     # sklearn's char_wb analyzer
@@ -212,13 +210,13 @@ def _sanity_check(centroids, bundle_names, vocab, idf):
     for prompt in test_prompts:
         # Compute TF-IDF vector (pure-Python style)
         text = prompt.lower().strip()
-        words = re.split(r'\s+', text)
+        words = re.split(r"\s+", text)
         ngrams = []
         for word in words:
             padded = f" {word} "
             for n in range(2, 5):
                 for i in range(len(padded) - n + 1):
-                    ngrams.append(padded[i:i + n])
+                    ngrams.append(padded[i : i + n])
 
         tf_counts = {}
         for ng in ngrams:
@@ -244,7 +242,9 @@ def _sanity_check(centroids, bundle_names, vocab, idf):
 
 def main():
     parser = argparse.ArgumentParser(description="Build TF-IDF artifacts for skill-router")
-    parser.add_argument("--validate", action="store_true", help="Validate Python vs sklearn n-gram extraction")
+    parser.add_argument(
+        "--validate", action="store_true", help="Validate Python vs sklearn n-gram extraction"
+    )
     args = parser.parse_args()
 
     if not CONFIG_PATH.exists():

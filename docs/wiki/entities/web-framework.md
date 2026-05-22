@@ -27,7 +27,7 @@ Web Framework
 
 ## Why
 
-Entity of type TECHNOLOGY extracted from 
+Entity of type TECHNOLOGY extracted from
 
 ## Where
 

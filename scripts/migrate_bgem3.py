@@ -25,7 +25,7 @@ import typer
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from src.pdf_framework.config import VectorStoreSettings
-from src.pdf_framework.embeddings.providers.bgem3 import BGEM3Provider, create_bgem3_provider
+from src.pdf_framework.embeddings.providers.bgem3 import create_bgem3_provider
 from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
 
 logger = logging.getLogger(__name__)
@@ -103,19 +103,20 @@ def main(
 
             # Prepare new points
             from qdrant_client.models import PointStruct
-            from src.pdf_framework.vector_store.providers.qdrant import _to_qdrant_id
 
             points = []
             for result, output in zip(results, outputs):
-                points.append(PointStruct(
-                    id=result.id,
-                    vector={
-                        "dense": output.dense,
-                        "sparse": output.sparse,
-                        "colbert": _mean_pool_colbert(output.colbert),
-                    },
-                    payload=result.payload,
-                ))
+                points.append(
+                    PointStruct(
+                        id=result.id,
+                        vector={
+                            "dense": output.dense,
+                            "sparse": output.sparse,
+                            "colbert": _mean_pool_colbert(output.colbert),
+                        },
+                        payload=result.payload,
+                    )
+                )
 
             # Upsert to new collection
             await vector_store._client.upsert(
@@ -139,8 +140,7 @@ def main(
 
         if new_count != current_count:
             logger.error(
-                f"[MIGRATION] Count mismatch! "
-                f"Expected {current_count}, got {new_count}"
+                f"[MIGRATION] Count mismatch! " f"Expected {current_count}, got {new_count}"
             )
             return
 
@@ -185,6 +185,7 @@ def main(
             Mean-pooled dense vector
         """
         import numpy as np
+
         return np.mean(colbert_vecs, axis=0).tolist()
 
     asyncio.run(run_migration())

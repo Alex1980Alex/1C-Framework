@@ -227,10 +227,7 @@ class RRFMerger:
 
         # Normalize RRF scores to [0, 1] range
         # Max possible RRF score = sum of (weight / (k + 1)) for each source at rank 0
-        max_rrf = sum(
-            self._source_weights.get(src, 1.0) / (self._k + 1)
-            for src in source_results
-        )
+        max_rrf = sum(self._source_weights.get(src, 1.0) / (self._k + 1) for src in source_results)
         if max_rrf == 0:
             max_rrf = 1.0
 
@@ -436,7 +433,9 @@ class UnifiedSearchEngine:
                 sources_failed.append(
                     SourceError(source=name, error="hard_timeout", duration_ms=hard_timeout * 1000)
                 )
-            logger.error(f"Search hard timeout after {hard_timeout:.1f}s; cancelled remaining adapters")
+            logger.error(
+                f"Search hard timeout after {hard_timeout:.1f}s; cancelled remaining adapters"
+            )
 
         # Filter by memory type (per-source before fusion)
         if memory_types:
@@ -491,10 +490,7 @@ class UnifiedSearchEngine:
             sources_searched=sources_searched,
             sources_failed=sources_failed,
             metadata={
-                "options": {
-                    k: v for k, v in options.__dict__.items()
-                    if not callable(v)
-                },
+                "options": {k: v for k, v in options.__dict__.items() if not callable(v)},
                 "fusion": "rrf" if options.rrf_enabled else "normalize",
             },
         )

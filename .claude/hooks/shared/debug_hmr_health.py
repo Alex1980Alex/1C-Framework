@@ -7,6 +7,7 @@ sync — change the probe protocol here and both hooks pick it up.
 
 Roadmap: docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md §5.1
 """
+
 from __future__ import annotations
 
 import json

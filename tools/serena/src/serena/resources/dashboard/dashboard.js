@@ -30,7 +30,7 @@ class LogMessage {
     }
 
     escapeHtml (convertString) {
-        if (typeof convertString !== 'string') return convertString; 
+        if (typeof convertString !== 'string') return convertString;
 
         const patterns = {
             '<'  : '&lt;',
@@ -292,12 +292,12 @@ class Dashboard {
         const inputTokens = names.map(n => stats[n].input_tokens);
         const outputTokens = names.map(n => stats[n].output_tokens);
         const totalTokens = names.map(n => stats[n].input_tokens + stats[n].output_tokens);
-        
+
         // Calculate totals for summary table
         const totalCalls = counts.reduce((sum, count) => sum + count, 0);
         const totalInputTokens = inputTokens.reduce((sum, tokens) => sum + tokens, 0);
         const totalOutputTokens = outputTokens.reduce((sum, tokens) => sum + tokens, 0);
-        
+
         // Generate consistent colors for tools
         const colors = this.generateColors(names.length);
 
@@ -325,16 +325,16 @@ class Dashboard {
         // Tool calls pie chart
         this.countChart = new Chart(countCtx, {
             type: 'pie',
-            data: { 
-                labels: names, 
-                datasets: [{ 
+            data: {
+                labels: names,
+                datasets: [{
                     data: counts,
                     backgroundColor: colors
-                }] 
+                }]
             },
             options: {
                 plugins: {
-                    legend: { 
+                    legend: {
                         display: true,
                         labels: {
                             color: textColor
@@ -353,16 +353,16 @@ class Dashboard {
         // Input tokens pie chart
         this.inputChart = new Chart(inputCtx, {
             type: 'pie',
-            data: { 
-                labels: names, 
-                datasets: [{ 
+            data: {
+                labels: names,
+                datasets: [{
                     data: inputTokens,
                     backgroundColor: colors
-                }] 
+                }]
             },
             options: {
                 plugins: {
-                    legend: { 
+                    legend: {
                         display: true,
                         labels: {
                             color: textColor
@@ -381,16 +381,16 @@ class Dashboard {
         // Output tokens pie chart
         this.outputChart = new Chart(outputCtx, {
             type: 'pie',
-            data: { 
-                labels: names, 
-                datasets: [{ 
+            data: {
+                labels: names,
+                datasets: [{
                     data: outputTokens,
                     backgroundColor: colors
-                }] 
+                }]
             },
             options: {
                 plugins: {
-                    legend: { 
+                    legend: {
                         display: true,
                         labels: {
                             color: textColor
@@ -409,11 +409,11 @@ class Dashboard {
         // Combined input/output tokens bar chart
         this.tokensChart = new Chart(tokensCtx, {
             type: 'bar',
-            data: { 
-                labels: names, 
+            data: {
+                labels: names,
                 datasets: [
-                    { 
-                        label: 'Input Tokens', 
+                    {
+                        label: 'Input Tokens',
                         data: inputTokens,
                         backgroundColor: colors.map(color => color + '80'), // Semi-transparent
                         borderColor: colors,
@@ -421,8 +421,8 @@ class Dashboard {
                         borderSkipped: false,
                         yAxisID: 'y'
                     },
-                    { 
-                        label: 'Output Tokens', 
+                    {
+                        label: 'Output Tokens',
                         data: outputTokens,
                         backgroundColor: colors,
                         yAxisID: 'y1'
@@ -452,8 +452,8 @@ class Dashboard {
                         display: true,
                         position: 'left',
                         beginAtZero: true,
-                        title: { 
-                            display: true, 
+                        title: {
+                            display: true,
                             text: 'Input Tokens',
                             color: textColor
                         },
@@ -469,15 +469,15 @@ class Dashboard {
                         display: true,
                         position: 'right',
                         beginAtZero: true,
-                        title: { 
-                            display: true, 
+                        title: {
+                            display: true,
                             text: 'Output Tokens',
                             color: textColor
                         },
                         ticks: {
                             color: textColor
                         },
-                        grid: { 
+                        grid: {
                             drawOnChartArea: false,
                             color: gridColor
                         }
@@ -511,7 +511,7 @@ class Dashboard {
     initializeTheme() {
         // Check if user has manually set a theme preference
         const savedTheme = localStorage.getItem('serena-theme');
-        
+
         if (savedTheme) {
             // User has manually set a preference, use it
             this.setTheme(savedTheme);
@@ -519,7 +519,7 @@ class Dashboard {
             // No manual preference, detect system color scheme
             this.detectSystemTheme();
         }
-        
+
         // Listen for system theme changes
         this.setupSystemThemeListener();
     }
@@ -534,7 +534,7 @@ class Dashboard {
     setupSystemThemeListener() {
         // Listen for changes in system color scheme
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        
+
         const handleSystemThemeChange = (e) => {
             // Only auto-switch if user hasn't manually set a preference
             const savedTheme = localStorage.getItem('serena-theme');
@@ -543,7 +543,7 @@ class Dashboard {
                 this.setTheme(newTheme);
             }
         };
-        
+
         // Add listener for system theme changes
         if (mediaQuery.addEventListener) {
             mediaQuery.addEventListener('change', handleSystemThemeChange);
@@ -556,7 +556,7 @@ class Dashboard {
     toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        
+
         // When user manually toggles, save their preference
         localStorage.setItem('serena-theme', newTheme);
         this.setTheme(newTheme);
@@ -565,7 +565,7 @@ class Dashboard {
     setTheme(theme) {
         // Set the theme on the document element
         document.documentElement.setAttribute('data-theme', theme);
-        
+
         // Update the toggle button
         if (theme === 'dark') {
             this.$themeIcon.text('☀️');
@@ -574,13 +574,13 @@ class Dashboard {
             this.$themeIcon.text('🌙');
             this.$themeText.text('Dark');
         }
-        
+
         // Update the logo based on theme
         this.updateLogo(theme);
-        
+
         // Save to localStorage
         localStorage.setItem('serena-theme', theme);
-        
+
         // Update charts if they exist
         this.updateChartsTheme();
     }
@@ -600,7 +600,7 @@ class Dashboard {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const textColor = isDark ? '#ffffff' : '#000000';
         const gridColor = isDark ? '#444' : '#ddd';
-        
+
         // Update existing charts
         if (this.countChart) {
             this.countChart.options.scales.x.ticks.color = textColor;
@@ -609,7 +609,7 @@ class Dashboard {
             this.countChart.options.scales.y.grid.color = gridColor;
             this.countChart.update();
         }
-        
+
         if (this.inputChart) {
             this.inputChart.options.scales.x.ticks.color = textColor;
             this.inputChart.options.scales.y.ticks.color = textColor;
@@ -617,7 +617,7 @@ class Dashboard {
             this.inputChart.options.scales.y.grid.color = gridColor;
             this.inputChart.update();
         }
-        
+
         if (this.outputChart) {
             this.outputChart.options.scales.x.ticks.color = textColor;
             this.outputChart.options.scales.y.ticks.color = textColor;
@@ -625,7 +625,7 @@ class Dashboard {
             this.outputChart.options.scales.y.grid.color = gridColor;
             this.outputChart.update();
         }
-        
+
         if (this.tokensChart) {
             this.tokensChart.options.scales.x.ticks.color = textColor;
             this.tokensChart.options.scales.y.ticks.color = textColor;

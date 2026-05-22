@@ -46,4 +46,3 @@ Create unit tests for core functionality including moving tasks to subtasks, sub
 ### Description: Ensure the move function is properly exported and integrated with existing code
 ### Details:
 Export the move function in scripts/modules/task-manager.js. Update task-master-core.js to include the direct function. Reuse validation logic from add-subtask.js and remove-subtask.js where appropriate. Follow silent mode implementation pattern from other direct functions and match parameter naming conventions in MCP tools.
-

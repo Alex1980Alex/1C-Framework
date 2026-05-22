@@ -43,10 +43,10 @@ your-project/
 
 ## Benefits of the New Structure
 
-✅ **Cleaner Project Root**: No more scattered Task Master files  
-✅ **Better Organization**: Logical separation of tasks, docs, reports, and templates  
-✅ **Hidden by Default**: `.taskmaster/` directory is hidden from most file browsers  
-✅ **Future-Proof**: Centralized location for Task Master extensions  
+✅ **Cleaner Project Root**: No more scattered Task Master files
+✅ **Better Organization**: Logical separation of tasks, docs, reports, and templates
+✅ **Hidden by Default**: `.taskmaster/` directory is hidden from most file browsers
+✅ **Future-Proof**: Centralized location for Task Master extensions
 ✅ **Backward Compatible**: Existing projects continue to work until migrated
 
 ## Migration Options
@@ -137,9 +137,9 @@ The migration process handles these file types:
 
 Once migrated, Task Master will:
 
-✅ **Automatically use** the new directory structure  
-✅ **Show deprecation warnings** when legacy files are detected  
-✅ **Create new files** in the proper locations  
+✅ **Automatically use** the new directory structure
+✅ **Show deprecation warnings** when legacy files are detected
+✅ **Create new files** in the proper locations
 ✅ **Fall back gracefully** to legacy locations if new ones don't exist
 
 ### Verification
@@ -167,13 +167,13 @@ After migration, verify everything works:
 
 ### Migration Issues
 
-**Q: Migration says "no files to migrate"**  
+**Q: Migration says "no files to migrate"**
 A: Your project may already be using the new structure or have no Task Master files to migrate.
 
-**Q: Migration fails with permission errors**  
+**Q: Migration fails with permission errors**
 A: Ensure you have write permissions in your project directory.
 
-**Q: Some files weren't migrated**  
+**Q: Some files weren't migrated**
 A: Check the migration output - some files may not match the expected patterns. You can migrate these manually.
 
 ### Working with Legacy Projects

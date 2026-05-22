@@ -72,7 +72,7 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
     const baseResponse = await super.processThought(request);
 
     const nodeId = uuidv4();
-    const parentNode = request.parentId ? 
+    const parentNode = request.parentId ?
       await this.getNode(request.parentId) as BidirectionalPolicyNode : undefined;
 
     const node: BidirectionalPolicyNode = {
@@ -92,7 +92,7 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
       policyScore: 0,
       valueEstimate: 0,
       priorActionProbs: new Map(),
-      actionHistory: parentNode ? 
+      actionHistory: parentNode ?
         [...(parentNode.actionHistory || []), this.getActionKey(request.thought)] :
         [this.getActionKey(request.thought)],
       searchDepth: 0,
@@ -140,7 +140,7 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
     direction: 'forward' | 'backward'
   ): Promise<BidirectionalPolicyNode | null> {
     const levelSize = queue.size();
-    
+
     for (let i = 0; i < levelSize; i++) {
       const current = queue.dequeue();
       if (!current) continue;
@@ -177,32 +177,32 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
   }
 
   private async bidirectionalSearch(
-    start: BidirectionalPolicyNode, 
+    start: BidirectionalPolicyNode,
     goal: BidirectionalPolicyNode
   ): Promise<BidirectionalPolicyNode[]> {
     const forwardQueue = new Queue<BidirectionalPolicyNode>();
     const backwardQueue = new Queue<BidirectionalPolicyNode>();
     const forwardVisited = new Map<string, BidirectionalPolicyNode>();
     const backwardVisited = new Map<string, BidirectionalPolicyNode>();
-    
+
     forwardQueue.enqueue(start);
     backwardQueue.enqueue(goal);
     forwardVisited.set(start.id, start);
     backwardVisited.set(goal.id, goal);
-    
+
     while (!forwardQueue.isEmpty() && !backwardQueue.isEmpty()) {
       // Search from both directions with policy guidance
       const meetingPoint = await this.searchLevel(
-        forwardQueue, 
-        forwardVisited, 
+        forwardQueue,
+        forwardVisited,
         backwardVisited,
         'forward'
       );
-      
+
       if (meetingPoint) {
         const path = this.reconstructPath(
-          meetingPoint, 
-          forwardVisited, 
+          meetingPoint,
+          forwardVisited,
           backwardVisited
         );
         this.updateBidirectionalStats(path);
@@ -229,7 +229,7 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
       // Adapt exploration rates based on progress
       this.adaptBidirectionalExploration(forwardVisited, backwardVisited);
     }
-    
+
     return [];
   }
 
@@ -239,32 +239,32 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
     backwardVisited: Map<string, BidirectionalPolicyNode>
   ): BidirectionalPolicyNode[] {
     const path: BidirectionalPolicyNode[] = [meetingPoint];
-    
+
     // Reconstruct forward path
     let current = meetingPoint;
     while (current.parent && forwardVisited.has(current.parent)) {
       current = forwardVisited.get(current.parent)!;
       path.unshift(current);
     }
-    
+
     // Reconstruct backward path
     current = meetingPoint;
     while (current.parent && backwardVisited.has(current.parent)) {
       current = backwardVisited.get(current.parent)!;
       path.push(current);
     }
-    
+
     return path;
   }
 
   private async updatePathWithPolicyGuidance(path: BidirectionalPolicyNode[]): Promise<void> {
     const pathBonus = 0.2;
-    
+
     for (const node of path) {
       // Boost both policy and value estimates for nodes along the path
       node.policyScore += pathBonus;
       node.valueEstimate = (node.valueEstimate + 1) / 2;
-      
+
       // Update action probabilities with path information
       if (node.parentId) {
         const parentNode = await this.getNode(node.parentId) as BidirectionalPolicyNode;
@@ -279,7 +279,7 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
     }
 
     // Update path quality metric
-    this.bidirectionalStats.pathQuality = path.reduce((acc, node) => 
+    this.bidirectionalStats.pathQuality = path.reduce((acc, node) =>
       acc + node.policyScore + node.valueEstimate, 0) / (path.length * 2);
   }
 
@@ -306,31 +306,31 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
   private updateBidirectionalStats(path: BidirectionalPolicyNode[]): void {
     const forwardNodes = path.filter(n => n.direction === 'forward');
     const backwardNodes = path.filter(n => n.direction === 'backward');
-    
+
     // Update exploration rates based on path composition
     const forwardQuality = forwardNodes.reduce((acc, n) => acc + n.policyScore, 0) / forwardNodes.length;
     const backwardQuality = backwardNodes.reduce((acc, n) => acc + n.policyScore, 0) / backwardNodes.length;
-    
+
     this.bidirectionalStats.pathQuality = (forwardQuality + backwardQuality) / 2;
   }
 
   private calculateBidirectionalPolicyScore(path: ThoughtNode[]): number {
     if (path.length === 0) return 0;
-    
+
     return path.reduce((acc, node) => {
       const biNode = node as BidirectionalPolicyNode;
       const baseScore = node.score;
       const policyBonus = biNode.policyScore || 0;
       const valueBonus = biNode.valueEstimate || 0;
       const meetingPointBonus = biNode.meetingPoint ? 0.2 : 0;
-      const directionBonus = biNode.direction === 'forward' ? 
+      const directionBonus = biNode.direction === 'forward' ?
         this.bidirectionalStats.forwardExplorationRate * 0.1 :
         this.bidirectionalStats.backwardExplorationRate * 0.1;
-      
+
       return acc + (
-        baseScore + 
-        policyBonus + 
-        valueBonus + 
+        baseScore +
+        policyBonus +
+        valueBonus +
         meetingPointBonus +
         directionBonus
       ) / 5;
@@ -340,7 +340,7 @@ export class MCTS002AltAlphaStrategy extends MCTS002AlphaStrategy {
   public async getMetrics(): Promise<any> {
     const baseMetrics = await super.getMetrics();
     const nodes = await this.stateManager.getAllNodes() as BidirectionalPolicyNode[];
-    
+
     const forwardNodes = nodes.filter(n => n.direction === 'forward');
     const backwardNodes = nodes.filter(n => n.direction === 'backward');
     const meetingPoints = nodes.filter(n => n.meetingPoint);

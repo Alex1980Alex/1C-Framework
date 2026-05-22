@@ -12,6 +12,7 @@ to the parent's `src/` and the MCP server can't find its own modules.
 Wired in .mcp.json as the entry point of the 1c-mcp-crud server
 (replacing the previous external/1c_mcp/mcp_stdio.py).
 """
+
 import asyncio
 import os
 import sys

@@ -1,9 +1,8 @@
 """Tests for DependencyTracker."""
 
 import pytest
-
-from agents.project_manager.models import Project, Task, TaskStatus, TaskPriority
 from agents.project_manager.dependency_tracker import DependencyGraph, DependencyTracker
+from agents.project_manager.models import Project, Task, TaskStatus
 
 
 class TestDependencyGraph:

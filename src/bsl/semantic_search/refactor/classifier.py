@@ -9,8 +9,7 @@ try:
     import yaml
 except ImportError as exc:
     raise ImportError(
-        "PyYAML is required for routing matrix loading. "
-        "Install it with: pip install pyyaml"
+        "PyYAML is required for routing matrix loading. " "Install it with: pip install pyyaml"
     ) from exc
 
 log = logging.getLogger(__name__)
@@ -45,24 +44,27 @@ _DEFAULT_ROUTES: dict[SymbolKind, RouteDecision] = {
         "multilspy", "ast-grep", 0.95, "cross-file rename via LSP preload"
     ),
     SymbolKind.MODULE_LOCAL_PROC: RouteDecision(
-        "multilspy", "ast-grep", 0.95,
-        "module-scope — calibrated pilot-B 4/4 success"
+        "multilspy", "ast-grep", 0.95, "module-scope — calibrated pilot-B 4/4 success"
     ),
     SymbolKind.MODULE_LOCAL_FUNC: RouteDecision(
-        "multilspy", "ast-grep", 0.95,
-        "module-scope — calibrated pilot-B 4/4 success"
+        "multilspy", "ast-grep", 0.95, "module-scope — calibrated pilot-B 4/4 success"
     ),
     SymbolKind.LOCAL_VARIABLE: RouteDecision(
-        "multilspy", None, 0.95,
-        "local scope, single file — calibrated pilot-B 4/4 success"
+        "multilspy", None, 0.95, "local scope, single file — calibrated pilot-B 4/4 success"
     ),
     SymbolKind.FORM_HANDLER: RouteDecision(
-        "ast-grep", "multilspy", 0.95,
+        "ast-grep",
+        "multilspy",
+        0.95,
         "form handlers — calibrated pilot-B 4/4 success",
         manual_fallback=True,
     ),
     SymbolKind.UNKNOWN: RouteDecision(
-        "ast-grep", None, 0.30, "pattern-based fallback", manual_fallback=True,
+        "ast-grep",
+        None,
+        0.30,
+        "pattern-based fallback",
+        manual_fallback=True,
     ),
 }
 
@@ -116,8 +118,7 @@ class RoutingMatrix:
         version = data.get("version")
         if version != 2:
             raise ValueError(
-                f"Unsupported routing matrix version {version!r} "
-                f"(expected 2) in {path}"
+                f"Unsupported routing matrix version {version!r} " f"(expected 2) in {path}"
             )
 
         raw_routes: dict[str, dict] = data.get("routes")
@@ -159,8 +160,10 @@ class RoutingMatrix:
 
         log.info(
             "Loaded %d routes, %d denylist entries, ast-grep prefilter=%s from %s",
-            len(new_routes), len(cls._DENYLIST),
-            cls._AST_GREP_GLOBAL["use_call_graph_prefilter"], path,
+            len(new_routes),
+            len(cls._DENYLIST),
+            cls._AST_GREP_GLOBAL["use_call_graph_prefilter"],
+            path,
         )
 
     @classmethod
@@ -202,17 +205,9 @@ class HeuristicClassifier:
         is_export = any(marker in code for marker in self._EXPORT_MARKERS)
 
         if "Процедура" in code or "Procedure" in code:
-            return (
-                SymbolKind.MODULE_EXPORT_PROC
-                if is_export
-                else SymbolKind.MODULE_LOCAL_PROC
-            )
+            return SymbolKind.MODULE_EXPORT_PROC if is_export else SymbolKind.MODULE_LOCAL_PROC
         if "Функция" in code or "Function" in code:
-            return (
-                SymbolKind.MODULE_EXPORT_FUNC
-                if is_export
-                else SymbolKind.MODULE_LOCAL_FUNC
-            )
+            return SymbolKind.MODULE_EXPORT_FUNC if is_export else SymbolKind.MODULE_LOCAL_FUNC
         # First token check — tolerates tabs / multiple spaces after `Перем`/`Var`.
         first_token = code.split(maxsplit=1)[0] if code.strip() else ""
         if first_token in ("Перем", "Var"):

@@ -36,10 +36,12 @@ def _run_audit() -> dict | None:
     try:
         result = subprocess.run(
             [sys.executable, str(AUDIT_SCRIPT), "--json", "--stdout"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
             timeout=SUBPROCESS_TIMEOUT_S,
             cwd=str(PROJECT_ROOT),
-            encoding="utf-8", errors="replace",
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode not in (0, 1):
             return None
@@ -52,9 +54,9 @@ def _run_audit() -> dict | None:
         if brace < 0:
             # Fallback: file starts with `{` (no banner)
             if out.lstrip().startswith("{"):
-                return json.loads(out[out.find("{"):])
+                return json.loads(out[out.find("{") :])
             return None
-        return json.loads(out[brace + 1:])
+        return json.loads(out[brace + 1 :])
     except (subprocess.TimeoutExpired, OSError, json.JSONDecodeError):
         return None
 
@@ -86,7 +88,9 @@ class AuditCoverageCheck(BaseHook):
             covered = sum(v for k, v in summary.items() if "coverage" in k.lower())
             if covered:
                 lines.append(f"  summary: {summary}")
-        lines.append("  Run `make audit-docs` for full report or `make audit-docs-update` to auto-fix")
+        lines.append(
+            "  Run `make audit-docs` for full report or `make audit-docs-update` to auto-fix"
+        )
 
         return HookOutput().system_message("\n".join(lines))
 

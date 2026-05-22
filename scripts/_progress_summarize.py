@@ -16,6 +16,7 @@ Output (per run):
 
 Stdlib-only. Streams the JSONL once per call.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -113,8 +114,11 @@ def _summarize_one(recs: list[dict[str, Any]]) -> None:
         print("ended  : (no run_end — process killed or still running)")
     print(f"elapsed: {total_s:.2f}s")
     if run_end:
-        summary = {k: v for k, v in run_end.items()
-                   if k not in ("ts", "run_id", "script", "category", "elapsed_s")}
+        summary = {
+            k: v
+            for k, v in run_end.items()
+            if k not in ("ts", "run_id", "script", "category", "elapsed_s")
+        }
         if summary:
             print(f"summary: {summary}")
     print("=" * 72)
@@ -134,8 +138,9 @@ def _summarize_one(recs: list[dict[str, Any]]) -> None:
             # stage_end's "elapsed_s" is the in-stage duration when wired in
             # _progress.py (see ProgressTracker.stage). Use it directly.
             status = "OK" if r.get("ok") else "FAIL"
-            rows.append((name, start if start is not None else ts_elapsed,
-                         r.get("elapsed_s", 0.0), status))
+            rows.append(
+                (name, start if start is not None else ts_elapsed, r.get("elapsed_s", 0.0), status)
+            )
     if rows:
         print(f"\nStages ({len(rows)}):")
         print(f"  {'name':<28} {'started_at':>12} {'duration':>12}  status")
@@ -168,8 +173,10 @@ def _summarize_one(recs: list[dict[str, Any]]) -> None:
     if sliding:
         fwd = [r["forward_s"] for r in sliding]
         print(f"\nSliding window forward_s ({len(sliding)} windows):")
-        print(f"  min={min(fwd):.2f}s  median={statistics.median(fwd):.2f}s  "
-              f"mean={statistics.mean(fwd):.2f}s  max={max(fwd):.2f}s")
+        print(
+            f"  min={min(fwd):.2f}s  median={statistics.median(fwd):.2f}s  "
+            f"mean={statistics.mean(fwd):.2f}s  max={max(fwd):.2f}s"
+        )
         if len(fwd) >= 2:
             print(f"  stdev={statistics.stdev(fwd):.2f}s  total={sum(fwd):.1f}s")
         # Histogram
@@ -186,8 +193,10 @@ def _summarize_one(recs: list[dict[str, Any]]) -> None:
         top = sorted(sliding_starts, key=lambda r: -(r.get("total_tokens") or 0))[:5]
         print(f"  {'total_tokens':>13} {'windows':>9} {'parent_chars':>13}")
         for r in top:
-            print(f"  {r.get('total_tokens', 0):>13} {r.get('windows', 0):>9} "
-                  f"{r.get('parent_chars', 0):>13}")
+            print(
+                f"  {r.get('total_tokens', 0):>13} {r.get('windows', 0):>9} "
+                f"{r.get('parent_chars', 0):>13}"
+            )
 
     # ---- Late-chunk fallback (Phase 1/2 quality signal)
     fallbacks = [r for r in events if r.get("name") == "late_chunk_fallback"]
@@ -195,32 +204,34 @@ def _summarize_one(recs: list[dict[str, Any]]) -> None:
         total_fb = sum((r.get("fallback") or 0) for r in fallbacks)
         total_grp = sum((r.get("group") or 0) for r in fallbacks)
         ratio = (100.0 * total_fb / total_grp) if total_grp else 0.0
-        print(f"\nLate-chunking fallback:")
+        print("\nLate-chunking fallback:")
         print(f"  groups with fallback: {len(fallbacks)}")
         print(f"  total fallback chunks: {total_fb} / {total_grp} ({ratio:.1f}%)")
         # By-module aggregate (a single module can produce many region groups).
-        by_mod: dict[str, dict[str, int]] = defaultdict(
-            lambda: {"fb": 0, "total": 0, "groups": 0})
+        by_mod: dict[str, dict[str, int]] = defaultdict(lambda: {"fb": 0, "total": 0, "groups": 0})
         for r in fallbacks:
             mod = r.get("module_path") or "<unknown>"
             by_mod[mod]["fb"] += r.get("fallback") or 0
             by_mod[mod]["total"] += r.get("group") or 0
             by_mod[mod]["groups"] += 1
         print("  top 10 worst modules:")
-        ranked = sorted(by_mod.items(),
-                        key=lambda kv: -(kv[1]["fb"] / max(1, kv[1]["total"])))[:10]
+        ranked = sorted(by_mod.items(), key=lambda kv: -(kv[1]["fb"] / max(1, kv[1]["total"])))[:10]
         for mod, st in ranked:
             r_pct = 100.0 * st["fb"] / max(1, st["total"])
-            print(f"    {r_pct:5.1f}%  {st['fb']:>5}/{st['total']:>5}  "
-                  f"({st['groups']:>2} groups)  {mod}")
+            print(
+                f"    {r_pct:5.1f}%  {st['fb']:>5}/{st['total']:>5}  "
+                f"({st['groups']:>2} groups)  {mod}"
+            )
 
     # ---- OOM
     ooms = [r for r in events if r.get("name") == "oom_recovery"]
     if ooms:
         print(f"\nOOM recoveries: {len(ooms)}")
         for r in ooms[:5]:
-            print(f"  batch={r.get('batch')} largest_chars={r.get('largest_chars')} "
-                  f"largest_name={r.get('largest_name')}")
+            print(
+                f"  batch={r.get('batch')} largest_chars={r.get('largest_chars')} "
+                f"largest_name={r.get('largest_name')}"
+            )
     print()
 
 
@@ -247,12 +258,14 @@ def main() -> int:
         pass
 
     ap = argparse.ArgumentParser(description="Summarize an indexing-progress.jsonl run")
-    ap.add_argument("--log", type=Path, default=DEFAULT_LOG,
-                    help=f"Path to JSONL log (default: {DEFAULT_LOG.name})")
-    ap.add_argument("--run-id", default=None,
-                    help="Run ID to summarize; default = most recent run")
-    ap.add_argument("--list", action="store_true",
-                    help="List all known runs and exit")
+    ap.add_argument(
+        "--log",
+        type=Path,
+        default=DEFAULT_LOG,
+        help=f"Path to JSONL log (default: {DEFAULT_LOG.name})",
+    )
+    ap.add_argument("--run-id", default=None, help="Run ID to summarize; default = most recent run")
+    ap.add_argument("--list", action="store_true", help="List all known runs and exit")
     args = ap.parse_args()
 
     if args.list:

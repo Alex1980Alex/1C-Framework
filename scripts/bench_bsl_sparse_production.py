@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import re
 import sys
 import time
 from pathlib import Path
@@ -45,7 +44,7 @@ def derive_query_fragment(content: str, seed: int) -> str:
         return text
     start = rng.randint(20, max(20, len(text) - 80))
     length = rng.randint(50, min(120, len(text) - start))
-    return text[start: start + length].strip()
+    return text[start : start + length].strip()
 
 
 def embed_query_tei(text: str, base_url: str) -> list[float]:
@@ -128,7 +127,8 @@ def main() -> int:
         sparse_values = sparse_emb.values.tolist()
 
         r_dense = [
-            str(p.id) for p in client.query_points(
+            str(p.id)
+            for p in client.query_points(
                 collection_name=args.collection,
                 query=dense_vec,
                 using="dense",
@@ -137,7 +137,8 @@ def main() -> int:
             ).points
         ]
         r_bm25 = [
-            str(p.id) for p in client.query_points(
+            str(p.id)
+            for p in client.query_points(
                 collection_name=args.collection,
                 query=models.SparseVector(indices=sparse_indices, values=sparse_values),
                 using="bm25",
@@ -146,13 +147,15 @@ def main() -> int:
             ).points
         ]
         r_hybrid = [
-            str(p.id) for p in client.query_points(
+            str(p.id)
+            for p in client.query_points(
                 collection_name=args.collection,
                 prefetch=[
                     models.Prefetch(query=dense_vec, using="dense", limit=50),
                     models.Prefetch(
                         query=models.SparseVector(
-                            indices=sparse_indices, values=sparse_values,
+                            indices=sparse_indices,
+                            values=sparse_values,
                         ),
                         using="bm25",
                         limit=50,
@@ -171,15 +174,17 @@ def main() -> int:
         metrics["bm25"].append(m_bm25)
         metrics["hybrid_rrf"].append(m_hybrid)
 
-        query_log.append({
-            "query_idx": i,
-            "target_id": target_id,
-            "fragment_len": len(fragment),
-            "dense_ms": round(dense_ms, 1),
-            "dense_rank": m_dense["rank"],
-            "bm25_rank": m_bm25["rank"],
-            "hybrid_rank": m_hybrid["rank"],
-        })
+        query_log.append(
+            {
+                "query_idx": i,
+                "target_id": target_id,
+                "fragment_len": len(fragment),
+                "dense_ms": round(dense_ms, 1),
+                "dense_rank": m_dense["rank"],
+                "bm25_rank": m_bm25["rank"],
+                "hybrid_rank": m_hybrid["rank"],
+            }
+        )
 
         if (i + 1) % 5 == 0:
             print(

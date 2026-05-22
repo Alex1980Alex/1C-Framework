@@ -6,7 +6,7 @@
 			<Type>xs:decimal</Type>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">Наименование</Name>
 		<ValueType>
@@ -17,7 +17,7 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">Сокращение</Name>
 		<ValueType>
@@ -28,7 +28,7 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<column>
 		<Name xsi:type="xs:string">СокращениеПриказаМинфинаРФ171н</Name>
 		<ValueType>
@@ -39,11 +39,11 @@
 			</StringQualifiers>
 		</ValueType>
 	</column>
-	
+
 	<index><column>Уровень</column></index>
 	<index><column>Наименование</column></index>
 	<index><column>Сокращение</column></index>
-	
+
 	<row><Value>1</Value><Value>Автономная область</Value><Value>а.обл.</Value><Value>а.обл.</Value></row>
 	<row><Value>1</Value><Value>Автономная область</Value><Value>Аобл</Value><Value>а.обл.</Value></row>
 	<row><Value>1</Value><Value>Автономный округ</Value><Value>а.окр.</Value><Value>а.окр.</Value></row>
@@ -445,5 +445,5 @@
 	<row><Value>91</Value><Value>Ферма</Value><Value>ферма</Value><Value></Value></row>
 	<row><Value>91</Value><Value>Хутор</Value><Value>х</Value><Value>х.</Value></row>
 	<row><Value>91</Value><Value>Шоссе</Value><Value>ш</Value><Value>ш.</Value></row>
-	
+
 </ValueTable>

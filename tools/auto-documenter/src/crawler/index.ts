@@ -43,7 +43,7 @@ export class DirectoryCrawler {
       this.options = { ...this.options, ...options };
     }
     this.gitIgnoreParser = new GitIgnoreParser(rootPath);
-    
+
     if (this.options.respectGitignore) {
       this.gitIgnoreParser.loadRules();
     }
@@ -150,28 +150,28 @@ export class DirectoryCrawler {
         .filter(file => {
           const filePath = path.join(directoryPath, file);
           const stats = fs.statSync(filePath);
-          
+
           // Skip directories
           if (stats.isDirectory()) {
             return false;
           }
-          
+
           // Check if it should be ignored by gitignore
           if (this.options.respectGitignore && this.gitIgnoreParser.shouldIgnore(filePath)) {
             return false;
           }
-          
+
           // Check if it's a hidden file
           if (!this.options.includeHidden && file.startsWith('.')) {
             return false;
           }
-          
+
           // Check if it's a code file based on extension
           const ext = path.extname(file).toLowerCase();
           return this.config.fileProcessing.codeExtensions.includes(ext);
         })
         .map(file => path.join(directoryPath, file));
-      
+
       return allFiles;
     } catch (error) {
       console.error(`Error getting code files for ${directoryPath}:`, error);
@@ -186,11 +186,11 @@ export class DirectoryCrawler {
    */
   public getDocumentationFile(directoryPath: string): string | null {
     const docFilePath = path.join(directoryPath, this.config.documentation.outputFilename);
-    
+
     if (fs.existsSync(docFilePath)) {
       return docFilePath;
     }
-    
+
     return null;
   }
 
@@ -213,14 +213,14 @@ export class DirectoryCrawler {
             return false;
           }
         });
-        
+
       return subdirs.length > 0;
     } catch (error) {
       console.error(`Error checking subdirectories for ${directoryPath}:`, error);
       return false;
     }
   }
-  
+
   /**
    * Gets single-file subdirectories that weren't documented on their own
    * @param directoryPath Path to the parent directory
@@ -229,7 +229,7 @@ export class DirectoryCrawler {
   public getSingleFileSubdirectories(directoryPath: string): Array<{ path: string; content: string }> {
     try {
       const result: Array<{ path: string; content: string }> = [];
-      
+
       // Get immediate subdirectories
       const subdirs = fs.readdirSync(directoryPath)
         .map(file => path.join(directoryPath, file))
@@ -238,11 +238,11 @@ export class DirectoryCrawler {
           return stats.isDirectory() &&
                  (!this.options.respectGitignore || !this.gitIgnoreParser.shouldIgnore(filePath));
         });
-      
+
       // For each subdirectory, check if it has only one code file
       for (const subdir of subdirs) {
         const files = this.getCodeFiles(subdir);
-        
+
         if (files.length === 1) {
           // This is a single-file directory - include its content
           const fileContent = this.readFileContent(files[0]);
@@ -256,14 +256,14 @@ export class DirectoryCrawler {
           }
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error(`Error getting single-file subdirectories for ${directoryPath}:`, error);
       return [];
     }
   }
-  
+
   /**
    * Gets content of documentation files from subdirectories
    * @param directoryPath Path to the parent directory
@@ -272,16 +272,16 @@ export class DirectoryCrawler {
   public getSubdirectoryDocs(directoryPath: string): Array<{ path: string; content: string }> {
     try {
       const result: Array<{ path: string; content: string }> = [];
-      
+
       // Get immediate subdirectories
       const subdirs = fs.readdirSync(directoryPath)
         .map(file => path.join(directoryPath, file))
         .filter(filePath => {
           const stats = fs.statSync(filePath);
-          return stats.isDirectory() && 
+          return stats.isDirectory() &&
                  (!this.options.respectGitignore || !this.gitIgnoreParser.shouldIgnore(filePath));
         });
-      
+
       // Check for documentation in each subdirectory
       for (const subdir of subdirs) {
         const docFile = this.getDocumentationFile(subdir);
@@ -297,7 +297,7 @@ export class DirectoryCrawler {
           }
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error(`Error getting subdirectory docs for ${directoryPath}:`, error);
@@ -313,13 +313,13 @@ export class DirectoryCrawler {
   public readFileContent(filePath: string): string | null {
     try {
       const stats = fs.statSync(filePath);
-      
+
       // Check if file is too large
       if (stats.size > this.config.fileProcessing.maxFileSizeKb * 1024) {
         console.warn(`File ${filePath} exceeds max size limit of ${this.config.fileProcessing.maxFileSizeKb}KB`);
         return null;
       }
-      
+
       return fs.readFileSync(filePath, 'utf8');
     } catch (error) {
       console.error(`Error reading file ${filePath}:`, error);
@@ -338,26 +338,26 @@ export class DirectoryCrawler {
     try {
       const subdirectories: Directory[] = [];
       const files: string[] = [];
-      
+
       // Read all entries in directory
       const entries = fs.readdirSync(dirPath);
-      
+
       for (const entry of entries) {
         const entryPath = path.join(dirPath, entry);
-        
+
         // Skip if entry should be ignored
         if (this.options.respectGitignore && this.gitIgnoreParser.shouldIgnore(entryPath)) {
           continue;
         }
-        
+
         // Skip hidden files/directories if not included
         if (!this.options.includeHidden && entry.startsWith('.')) {
           continue;
         }
-        
+
         try {
           const stats = fs.statSync(entryPath);
-          
+
           if (stats.isDirectory()) {
             // Recursively scan subdirectory
             const subdir = this.scanDirectory(entryPath);
@@ -370,7 +370,7 @@ export class DirectoryCrawler {
           console.error(`Error processing ${entryPath}:`, error);
         }
       }
-      
+
       return {
         path: dirPath,
         name: path.basename(dirPath),

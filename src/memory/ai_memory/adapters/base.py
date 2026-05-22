@@ -14,7 +14,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class SaveRequest:
     """Request to save content to a memory backend."""
 
     content: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def importance(self) -> float:
@@ -35,7 +35,7 @@ class SaveRequest:
         return self.metadata.get("category", "general")
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         return self.metadata.get("tags", [])
 
 
@@ -46,13 +46,13 @@ class SearchResult:
     content: str
     score: float  # 0.0-1.0 normalized
     source: str  # backend name
-    entity_id: Optional[str] = None
-    title: Optional[str] = None
-    created_at: Optional[datetime] = None
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    entity_id: str | None = None
+    title: str | None = None
+    created_at: datetime | None = None
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "content": self.content,
             "score": self.score,
@@ -72,9 +72,9 @@ class BackendStats:
     backend_name: str
     status: str = "healthy"  # healthy, unhealthy, no_data
     total_items: int = 0
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "backend_name": self.backend_name,
             "status": self.status,
@@ -93,7 +93,7 @@ class BaseMemoryAdapter(ABC):
     - SkillLearningAdapter → JSONL files (patterns.jsonl)
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.enabled = config.get("enabled", True)
         self.timeout = config.get("timeout", 5.0)
@@ -110,7 +110,7 @@ class BaseMemoryAdapter(ABC):
         ...
 
     @abstractmethod
-    async def search(self, query: str, limit: int = 10, **kwargs) -> List[SearchResult]:
+    async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResult]:
         """
         Search this backend.
 
@@ -120,7 +120,7 @@ class BaseMemoryAdapter(ABC):
         ...
 
     @abstractmethod
-    async def get(self, entity_id: str) -> Dict[str, Any] | None:
+    async def get(self, entity_id: str) -> dict[str, Any] | None:
         """
         Get a specific entity by ID.
 
@@ -140,7 +140,7 @@ class BaseMemoryAdapter(ABC):
         ...
 
     @abstractmethod
-    async def update(self, entity_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, entity_id: str, updates: dict[str, Any]) -> bool:
         """
         Update an entity's fields.
 

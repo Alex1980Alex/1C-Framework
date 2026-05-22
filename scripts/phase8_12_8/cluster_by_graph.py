@@ -1,4 +1,5 @@
 """Phase 8.12.8 Step 2: cluster filtered chunks via call-graph WCC."""
+
 from __future__ import annotations
 
 import argparse
@@ -78,10 +79,18 @@ def main() -> None:
         for cid, comp in enumerate(components):
             if args.min_size <= len(comp) <= args.max_size:
                 members = sorted(comp)
-                f.write(json.dumps({
-                    "cluster_id": cid, "size": len(comp), "members": members,
-                    "summary": cluster_summary(G, members),
-                }, ensure_ascii=False) + "\n")
+                f.write(
+                    json.dumps(
+                        {
+                            "cluster_id": cid,
+                            "size": len(comp),
+                            "members": members,
+                            "summary": cluster_summary(G, members),
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
                 written += 1
 
     print(f"Done: {written} clusters -> {args.output}")

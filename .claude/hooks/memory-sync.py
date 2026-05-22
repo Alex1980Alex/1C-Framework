@@ -39,6 +39,7 @@ def _emit_langfuse_span(status: str, change_count: int = 0) -> None:
     try:
         sys.path.insert(0, str(PROJECT_ROOT))
         from src.pdf_framework.observability.langfuse_setup import emit_observation
+
         emit_observation(
             name=HOOK_NAME,
             input={"watched_paths": MEMORY_PATHS},

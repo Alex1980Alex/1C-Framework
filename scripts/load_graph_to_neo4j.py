@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Load BSL call graph from SQLite to Neo4j (Phase 3 GraphRAG roadmap)."""
+
 from __future__ import annotations
+
 import argparse
 import sqlite3
 import sys
@@ -35,8 +37,10 @@ def chunked(items, size):
     for x in items:
         buf.append(x)
         if len(buf) >= size:
-            yield buf; buf = []
-    if buf: yield buf
+            yield buf
+            buf = []
+    if buf:
+        yield buf
 
 
 def load_modules_and_objects(session, conn, tracker=None):
@@ -48,14 +52,25 @@ def load_modules_and_objects(session, conn, tracker=None):
         tracker.set_state(modules_total=len(rows), modules_done=0)
     batch_idx = 0
     for batch in chunked(rows, 1000):
-        session.run("""
+        session.run(
+            """
             UNWIND $rows AS row
             MERGE (m:Module {id: row.path})
             SET m.path = row.path, m.module_type = row.module_type,
                 m.subsystem = row.subsystem, m.object_type = row.object_type,
                 m.object_name = row.object_name
-        """, rows=[{"path": r[0], "module_type": r[1] or "", "subsystem": r[2] or "",
-                    "object_type": r[3] or "", "object_name": r[4] or ""} for r in batch])
+        """,
+            rows=[
+                {
+                    "path": r[0],
+                    "module_type": r[1] or "",
+                    "subsystem": r[2] or "",
+                    "object_type": r[3] or "",
+                    "object_name": r[4] or "",
+                }
+                for r in batch
+            ],
+        )
         batch_idx += 1
         if tracker:
             tracker.set_state(modules_done=min(batch_idx * 1000, len(rows)))
@@ -64,11 +79,14 @@ def load_modules_and_objects(session, conn, tracker=None):
     print(f"  Objects: {len(objects)}")
     obj_rows = [{"id": f"{ot}/{on}", "object_type": ot, "name": on} for ot, on in objects]
     if obj_rows:
-        session.run("""
+        session.run(
+            """
             UNWIND $rows AS row
             MERGE (o:Object {id: row.id})
             SET o.object_type = row.object_type, o.name = row.name
-        """, rows=obj_rows)
+        """,
+            rows=obj_rows,
+        )
     if obj_rows:
         session.run("""
             MATCH (m:Module), (o:Object {id: m.object_type + '/' + m.object_name})
@@ -85,14 +103,27 @@ def load_symbols(session, conn, tracker=None):
         tracker.set_state(symbols_total=len(rows), symbols_done=0)
     batch_idx = 0
     for batch in chunked(rows, 2000):
-        session.run("""
+        session.run(
+            """
             UNWIND $rows AS row
             MERGE (s:Symbol {id: row.id})
             SET s.name = row.name, s.symbol_type = row.symbol_type,
                 s.module_path = row.module_path, s.line_start = row.line_start,
                 s.line_end = row.line_end, s.is_export = row.is_export
-        """, rows=[{"id": r[0], "name": r[1], "symbol_type": r[2], "module_path": r[3],
-                    "line_start": r[4] or 0, "line_end": r[5] or 0, "is_export": bool(r[6])} for r in batch])
+        """,
+            rows=[
+                {
+                    "id": r[0],
+                    "name": r[1],
+                    "symbol_type": r[2],
+                    "module_path": r[3],
+                    "line_start": r[4] or 0,
+                    "line_end": r[5] or 0,
+                    "is_export": bool(r[6]),
+                }
+                for r in batch
+            ],
+        )
         batch_idx += 1
         if tracker:
             tracker.set_state(symbols_done=min(batch_idx * 2000, len(rows)))
@@ -113,16 +144,28 @@ def load_calls(session, conn, tracker=None):
     batch_idx = 0
     for batch in chunked(rows, 5000):
         import time as _t
+
         t_b = _t.perf_counter()
-        session.run("""
+        session.run(
+            """
             UNWIND $rows AS row
             MATCH (caller:Symbol {id: row.caller_id})
             OPTIONAL MATCH (callee:Symbol {name: row.callee_name})
             FOREACH (_ IN CASE WHEN callee IS NOT NULL THEN [1] ELSE [] END |
                 MERGE (caller)-[r:CALLS]->(callee)
                 ON CREATE SET r.call_type = row.call_type, r.line = row.line_number)
-        """, rows=[{"caller_id": r[0], "callee_name": r[1], "callee_module": r[2] or "",
-                    "line_number": r[3] or 0, "call_type": r[4]} for r in batch])
+        """,
+            rows=[
+                {
+                    "caller_id": r[0],
+                    "callee_name": r[1],
+                    "callee_module": r[2] or "",
+                    "line_number": r[3] or 0,
+                    "call_type": r[4],
+                }
+                for r in batch
+            ],
+        )
         batch_idx += 1
         if tracker:
             done = min(batch_idx * 5000, len(rows))
@@ -143,7 +186,8 @@ def main():
     ap.add_argument("--clear", action="store_true")
     args = ap.parse_args()
     if not args.db.exists():
-        print(f"ERROR: {args.db} missing"); sys.exit(1)
+        print(f"ERROR: {args.db} missing")
+        sys.exit(1)
     tracker = make_tracker("load_graph_to_neo4j").start()
     tracker.event("startup", db=str(args.db), neo4j_uri=NEO4J_URI, clear=bool(args.clear))
     t0 = time.time()
@@ -159,7 +203,8 @@ def main():
                 session.run("MATCH (n) DETACH DELETE n")
         with tracker.stage("schema"):
             print("Setting up schema...")
-            for cypher in SCHEMA: session.run(cypher)
+            for cypher in SCHEMA:
+                session.run(cypher)
         print("\n=== Loading modules + objects ===")
         with tracker.stage("load_modules_objects"):
             load_modules_and_objects(session, conn, tracker=tracker)

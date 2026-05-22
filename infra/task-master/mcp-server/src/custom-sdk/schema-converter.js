@@ -39,7 +39,7 @@ You must respond with ONLY valid JSON for "${objectName}".
 
 STRICT REQUIREMENTS:
 1. Response must start with { and end with }
-2. Use double quotes for all strings and property names  
+2. Use double quotes for all strings and property names
 3. Do not include any text before or after the JSON
 4. Do not wrap in markdown code blocks
 5. Do not include explanations or comments

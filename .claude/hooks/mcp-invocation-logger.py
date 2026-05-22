@@ -32,8 +32,6 @@ Timeout: 3s
 
 import os
 import sys
-import time
-from datetime import datetime
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)

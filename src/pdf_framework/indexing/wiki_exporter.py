@@ -42,6 +42,7 @@ from src.pdf_framework.schemas.entities import Entity, Relation
 
 try:
     from src.memory.infrastructure.metrics import get_metrics_collector
+
     _metrics = get_metrics_collector()
 except ImportError:
     _metrics = None
@@ -52,9 +53,7 @@ logger = logging.getLogger(__name__)
 # Closes stub entities like 01012009, 13042023-111027, deadbeef00.
 # NOTE: version strings (8.3.27, v1.2.3, Python 3.11) are deliberately allowed —
 # they are valid domain entities for 1C / library versions. Research: 2026-05-13.
-_NOISE_RE = re.compile(
-    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|[0-9a-f]{16,}|(?:20|19)\d{2})$"
-)
+_NOISE_RE = re.compile(r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|[0-9a-f]{16,}|(?:20|19)\d{2})$")
 
 
 def _is_noise_entity_name(name: str) -> bool:
@@ -178,12 +177,15 @@ class WikiExporter:
         # Iterate all entity nodes
         graph = getattr(self._graph_store, "_graph", None)
         if graph is None:
-            result.errors.append({"reason": "graph_store_unavailable", "detail": "No _graph attribute"})
+            result.errors.append(
+                {"reason": "graph_store_unavailable", "detail": "No _graph attribute"}
+            )
             result.duration_seconds = time.monotonic() - start
             return result
 
         entity_ids = [
-            nid for nid, data in graph.nodes(data=True)
+            nid
+            for nid, data in graph.nodes(data=True)
             if data.get("node_type") != "COMMUNITY" and data.get("name")
         ]
         result.total_entities = len(entity_ids)
@@ -360,7 +362,9 @@ class ForwardSyncService:
             updated = data.get("updated_at")
             if updated:
                 try:
-                    updated_dt = datetime.fromisoformat(updated) if isinstance(updated, str) else updated
+                    updated_dt = (
+                        datetime.fromisoformat(updated) if isinstance(updated, str) else updated
+                    )
                     if updated_dt > since:
                         entity_ids.append(nid)
                 except (ValueError, TypeError):
@@ -405,7 +409,11 @@ class ForwardSyncService:
         if relations:
             link_lines = []
             for rel in relations[:50]:
-                target = rel.target_entity_id if rel.source_entity_id == entity.id else rel.source_entity_id
+                target = (
+                    rel.target_entity_id
+                    if rel.source_entity_id == entity.id
+                    else rel.source_entity_id
+                )
                 link_lines.append(f"- [[{target}]] ({rel.relation_type})")
             sections.append("## Related Entities\n\n" + "\n".join(link_lines) + "\n")
 
@@ -667,7 +675,9 @@ class ReverseSyncService:
                     properties={"source": "wiki_edit"},
                 )
                 await self._graph_store.add_relation(relation)
-                logger.info("[REV-SYNC] Added relation: %s → %s", change.entity_id, rel_data["target"])
+                logger.info(
+                    "[REV-SYNC] Added relation: %s → %s", change.entity_id, rel_data["target"]
+                )
             except Exception as exc:
                 logger.warning("[REV-SYNC] Failed to add relation: %s", exc)
 
@@ -682,11 +692,12 @@ class ReverseSyncService:
 
         if fm_match:
             import yaml
+
             try:
                 frontmatter = yaml.safe_load(fm_match.group(1)) or {}
             except Exception as exc:
                 raise WikiParseError(f"Invalid frontmatter in {path}: {exc}") from exc
-            body = content[fm_match.end():]
+            body = content[fm_match.end() :]
 
         links = re.findall(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]", body)
 
@@ -698,13 +709,10 @@ class ReverseSyncService:
             added_links=links,
         )
 
-    def _links_to_relations(
-        self, links: list[str], source_entity_id: str
-    ) -> list[dict[str, str]]:
+    def _links_to_relations(self, links: list[str], source_entity_id: str) -> list[dict[str, str]]:
         """Convert [[target-id|Display]] → relation dicts."""
         return [
-            {"source": source_entity_id, "target": link, "type": "related_to"}
-            for link in links
+            {"source": source_entity_id, "target": link, "type": "related_to"} for link in links
         ]
 
     async def _on_file_event(self, path: str, change_type: str) -> None:

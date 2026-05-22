@@ -9,6 +9,7 @@ Options:
     --since YYYY-MM-DD    Only include events from this date onward
     --stdout              Print summary to stdout instead of file
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,9 +26,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 def _load_events(data_dir: Path, since: date | None = None) -> list[dict]:
     events: list[dict] = []
     for path in sorted(data_dir.glob("refactor-telemetry*.jsonl*")):
-        opener = (
-            gzip.open if path.suffix == ".gz" else lambda p, *a, **kw: open(p, *a, **kw)
-        )
+        opener = gzip.open if path.suffix == ".gz" else lambda p, *a, **kw: open(p, *a, **kw)
         with opener(path, "rt", encoding="utf-8") as fh:
             for line in fh:
                 line = line.strip()
@@ -103,7 +102,9 @@ def aggregate(
         lines.append(f"- fallback_rate: {fallback_rate:.3f}")
         lines.append(f"- rollback_rate: {rollback_rate:.3f}")
         lines.append(f"- proposed_confidence: {proposed:.3f}")
-        lines.append(f"- latency: p50={pctls['p50']:.0f}ms p95={pctls['p95']:.0f}ms p99={pctls['p99']:.0f}ms")
+        lines.append(
+            f"- latency: p50={pctls['p50']:.0f}ms p95={pctls['p95']:.0f}ms p99={pctls['p99']:.0f}ms"
+        )
         if top_errs:
             lines.append("- top_errors:")
             for code, cnt, pct in top_errs:

@@ -43,49 +43,47 @@ Testing should verify both the protocol design and implementation:
 # Subtasks:
 ## 42. Define MCP-to-MCP communication protocol [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Implement adapter pattern for MCP integration [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Develop client module for MCP tool discovery and interaction [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Provide reference implementation for GitHub-MCP integration [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Add support for solo/local and multiplayer/remote modes [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Update core modules to support dynamic mode-based operations [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Document protocol and mode-switching functionality [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 42. Update terminology to reflect MCP server-based communication [pending]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
-
-

@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import re
 import sys
 import time
 from pathlib import Path
@@ -153,7 +152,7 @@ def main() -> int:
     client = QdrantClient(url=args.qdrant_url, timeout=120)
     rng = random.Random(args.seed)
 
-    print(f"[load] FastEmbed Qdrant/bm25...")
+    print("[load] FastEmbed Qdrant/bm25...")
     bm25 = SparseTextEmbedding(model_name="Qdrant/bm25")
 
     smoke_info = client.get_collection(args.smoke)
@@ -214,16 +213,18 @@ def main() -> int:
         metrics["hybrid_rrf_smoke"].append(m_hybrid_smoke)
         metrics["dense_prod_full"].append(m_dense_prod)
 
-        query_log.append({
-            "query_idx": i,
-            "target_id": target_id,
-            "fragment_len": len(fragment),
-            "dense_ms": round(dense_ms, 1),
-            "dense_smoke_rank": m_dense_smoke["rank"],
-            "bm25_smoke_rank": m_bm25_smoke["rank"],
-            "hybrid_smoke_rank": m_hybrid_smoke["rank"],
-            "dense_prod_rank": m_dense_prod["rank"],
-        })
+        query_log.append(
+            {
+                "query_idx": i,
+                "target_id": target_id,
+                "fragment_len": len(fragment),
+                "dense_ms": round(dense_ms, 1),
+                "dense_smoke_rank": m_dense_smoke["rank"],
+                "bm25_smoke_rank": m_bm25_smoke["rank"],
+                "hybrid_smoke_rank": m_hybrid_smoke["rank"],
+                "dense_prod_rank": m_dense_prod["rank"],
+            }
+        )
 
         if (i + 1) % 5 == 0:
             print(
@@ -267,12 +268,8 @@ def main() -> int:
     print("=" * 75)
 
     if summary["dense_smoke"].get("n", 0) > 0 and summary["hybrid_rrf_smoke"].get("n", 0) > 0:
-        d_mrr = (
-            summary["hybrid_rrf_smoke"]["mrr_at_10"] - summary["dense_smoke"]["mrr_at_10"]
-        )
-        d_hit10 = (
-            summary["hybrid_rrf_smoke"]["hit_at_10"] - summary["dense_smoke"]["hit_at_10"]
-        )
+        d_mrr = summary["hybrid_rrf_smoke"]["mrr_at_10"] - summary["dense_smoke"]["mrr_at_10"]
+        d_hit10 = summary["hybrid_rrf_smoke"]["hit_at_10"] - summary["dense_smoke"]["hit_at_10"]
         print(f"\n[delta] Hybrid_RRF vs Dense (smoke): MRR@10 {d_mrr:+.3f}, Hit@10 {d_hit10:+.2%}")
 
     out_path = Path(args.out)

@@ -26,8 +26,8 @@ MODEL_ID = "Qwen/Qwen3-Embedding-8B"
 
 BENCH_MODES: list[dict[str, Any]] = [
     {"label": "seq~512  b=8", "batch_size": 8, "n_chunks": 1000, "char_cap": 1800},
-    {"label": "seq~2048 b=4", "batch_size": 4, "n_chunks": 400,  "char_cap": 7000},
-    {"label": "seq~8192 b=2", "batch_size": 2, "n_chunks": 100,  "char_cap": 28000},
+    {"label": "seq~2048 b=4", "batch_size": 4, "n_chunks": 400, "char_cap": 7000},
+    {"label": "seq~8192 b=2", "batch_size": 2, "n_chunks": 100, "char_cap": 28000},
 ]
 
 ACCEPTANCE_RATE = 30.0  # chunks/sec for the first mode (b=8)
@@ -72,7 +72,9 @@ def fetch_chunks(n: int) -> list[str]:
     return chunks[:n]
 
 
-def bench(model: SentenceTransformer, texts: list[str], batch_size: int, label: str) -> dict[str, Any]:
+def bench(
+    model: SentenceTransformer, texts: list[str], batch_size: int, label: str
+) -> dict[str, Any]:
     """Run a single benchmark mode, returning stats or error status."""
     print(f"\n--- Running benchmark: {label} ---", flush=True)
     print(f"    Chunks: {len(texts)}, Batch size: {batch_size}", flush=True)
@@ -106,21 +108,21 @@ def bench(model: SentenceTransformer, texts: list[str], batch_size: int, label: 
         t1 = time.perf_counter()
 
         elapsed = t1 - t0
-        vram_peak = torch.cuda.max_memory_allocated(device="cuda") / (1024 ** 3)
+        vram_peak = torch.cuda.max_memory_allocated(device="cuda") / (1024**3)
 
         result["status"] = "OK"
         result["time_sec"] = round(elapsed, 4)
         result["vram_peak_gb"] = round(vram_peak, 3)
         result["rate_chunks_sec"] = round(len(texts) / elapsed, 2)
 
-        print(f"    Status: OK", flush=True)
+        print("    Status: OK", flush=True)
         print(f"    Time:   {result['time_sec']} sec", flush=True)
         print(f"    Rate:   {result['rate_chunks_sec']} chunks/sec", flush=True)
         print(f"    VRAM:   {result['vram_peak_gb']} GB", flush=True)
 
     except torch.cuda.OutOfMemoryError:
         result["error"] = "CUDA OutOfMemoryError"
-        print(f"    Status: FAILED (CUDA OutOfMemoryError)", flush=True)
+        print("    Status: FAILED (CUDA OutOfMemoryError)", flush=True)
         torch.cuda.empty_cache()
     except Exception as e:
         result["error"] = f"{type(e).__name__}: {str(e)}"
@@ -162,7 +164,9 @@ def main() -> int:
     print(f"Fetched {len(chunks)} chunks.", flush=True)
 
     if len(chunks) < max_chunks_needed:
-        print(f"FAIL: Not enough chunks. Needed {max_chunks_needed}, got {len(chunks)}.", flush=True)
+        print(
+            f"FAIL: Not enough chunks. Needed {max_chunks_needed}, got {len(chunks)}.", flush=True
+        )
         return 3
 
     results: list[dict[str, Any]] = []
@@ -183,14 +187,14 @@ def main() -> int:
     print("=" * 60, flush=True)
 
     primary_run = results[0]
-    is_pass = (
-        primary_run["status"] == "OK"
-        and primary_run["rate_chunks_sec"] >= ACCEPTANCE_RATE
-    )
+    is_pass = primary_run["status"] == "OK" and primary_run["rate_chunks_sec"] >= ACCEPTANCE_RATE
 
     status_str = "PASS" if is_pass else "FAIL"
     print(f"Mode: {primary_run['label']}", flush=True)
-    print(f"Rate: {primary_run['rate_chunks_sec']} chunks/sec (Target: >= {ACCEPTANCE_RATE})", flush=True)
+    print(
+        f"Rate: {primary_run['rate_chunks_sec']} chunks/sec (Target: >= {ACCEPTANCE_RATE})",
+        flush=True,
+    )
     print(f"Result: {status_str}", flush=True)
 
     final_output = {

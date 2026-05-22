@@ -68,7 +68,7 @@ def _recent_counts() -> tuple[int, int]:
     cutoff = datetime.now() - timedelta(hours=RECENT_WINDOW_HOURS)
     slash_n = mcp_n = 0
     try:
-        with open(LOG_FILE, "r", encoding="utf-8") as f:
+        with open(LOG_FILE, encoding="utf-8") as f:
             for line in f:
                 try:
                     entry = json.loads(line)

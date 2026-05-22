@@ -12,43 +12,45 @@ This module defines:
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
-import json
-import hashlib
-
+from typing import Any
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class MemoryType(Enum):
     """Type of memory entry."""
-    PATTERN = "pattern"           # Successful implementation pattern
-    ERROR = "error"               # Error record for learning
-    CONTEXT = "context"           # Project/task context
+
+    PATTERN = "pattern"  # Successful implementation pattern
+    ERROR = "error"  # Error record for learning
+    CONTEXT = "context"  # Project/task context
     RECOMMENDATION = "recommendation"  # Generated recommendation
-    EXECUTION = "execution"       # Execution history
-    CODE = "code"                 # Code snippets
-    GENERAL = "general"           # General knowledge
+    EXECUTION = "execution"  # Execution history
+    CODE = "code"  # Code snippets
+    GENERAL = "general"  # General knowledge
 
 
 class PatternType(Enum):
     """Type of implementation pattern."""
-    ARCHITECTURE = "architecture"     # Architectural pattern
-    IMPLEMENTATION = "implementation" # Implementation pattern
-    REFACTORING = "refactoring"       # Refactoring pattern
-    BUG_FIX = "bug_fix"               # Bug fix pattern
-    OPTIMIZATION = "optimization"     # Performance optimization
-    INTEGRATION = "integration"       # Integration pattern
-    TESTING = "testing"               # Testing pattern
-    DOCUMENTATION = "documentation"   # Documentation pattern
+
+    ARCHITECTURE = "architecture"  # Architectural pattern
+    IMPLEMENTATION = "implementation"  # Implementation pattern
+    REFACTORING = "refactoring"  # Refactoring pattern
+    BUG_FIX = "bug_fix"  # Bug fix pattern
+    OPTIMIZATION = "optimization"  # Performance optimization
+    INTEGRATION = "integration"  # Integration pattern
+    TESTING = "testing"  # Testing pattern
+    DOCUMENTATION = "documentation"  # Documentation pattern
 
 
 class ErrorSeverity(Enum):
     """Severity level of errors."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -57,16 +59,18 @@ class ErrorSeverity(Enum):
 
 class RecommendationType(Enum):
     """Type of recommendation."""
-    PATTERN_MATCH = "pattern_match"       # Based on pattern matching
-    ERROR_PREVENTION = "error_prevention" # Based on error history
-    BEST_PRACTICE = "best_practice"       # Based on best practices
-    OPTIMIZATION = "optimization"         # Performance optimization
-    SIMILAR_TASK = "similar_task"         # Based on similar tasks
+
+    PATTERN_MATCH = "pattern_match"  # Based on pattern matching
+    ERROR_PREVENTION = "error_prevention"  # Based on error history
+    BEST_PRACTICE = "best_practice"  # Based on best practices
+    OPTIMIZATION = "optimization"  # Performance optimization
+    SIMILAR_TASK = "similar_task"  # Based on similar tasks
 
 
 # =============================================================================
 # Base Memory Entry
 # =============================================================================
+
 
 @dataclass
 class MemoryEntry:
@@ -78,10 +82,10 @@ class MemoryEntry:
     metadata: dict[str, Any] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
     importance: float = 0.5  # 0.0 to 1.0
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    project_id: Optional[str] = None
-    session_id: Optional[str] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    project_id: str | None = None
+    session_id: str | None = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -105,7 +109,7 @@ class MemoryEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "MemoryEntry":
+    def from_dict(cls, data: dict) -> MemoryEntry:
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -114,8 +118,12 @@ class MemoryEntry:
             metadata=data.get("metadata", {}),
             tags=data.get("tags", []),
             importance=data.get("importance", 0.5),
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None,
-            updated_at=datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None,
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else None,
+            updated_at=datetime.fromisoformat(data["updated_at"])
+            if data.get("updated_at")
+            else None,
             project_id=data.get("project_id"),
             session_id=data.get("session_id"),
         )
@@ -130,6 +138,7 @@ class MemoryEntry:
 # Pattern
 # =============================================================================
 
+
 @dataclass
 class Pattern:
     """Represents a successful implementation pattern."""
@@ -140,25 +149,25 @@ class Pattern:
     description: str
 
     # Pattern details
-    problem: str                          # Problem being solved
-    solution: str                         # Solution approach
-    code_template: Optional[str] = None   # Code template if applicable
+    problem: str  # Problem being solved
+    solution: str  # Solution approach
+    code_template: str | None = None  # Code template if applicable
 
     # Context
     applicable_contexts: list[str] = field(default_factory=list)  # When to apply
-    prerequisites: list[str] = field(default_factory=list)        # Required conditions
+    prerequisites: list[str] = field(default_factory=list)  # Required conditions
 
     # Metrics
-    success_count: int = 0                # Times successfully applied
-    failure_count: int = 0                # Times failed
-    avg_time_saved_minutes: float = 0.0   # Average time saved
+    success_count: int = 0  # Times successfully applied
+    failure_count: int = 0  # Times failed
+    avg_time_saved_minutes: float = 0.0  # Average time saved
 
     # Metadata
     tags: list[str] = field(default_factory=list)
     importance: float = 0.5
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    created_by: Optional[str] = None      # Agent or user
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    created_by: str | None = None  # Agent or user
 
     def __post_init__(self):
         if self.created_at is None:
@@ -205,7 +214,7 @@ class Pattern:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Pattern":
+    def from_dict(cls, data: dict) -> Pattern:
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -222,8 +231,12 @@ class Pattern:
             avg_time_saved_minutes=data.get("avg_time_saved_minutes", 0.0),
             tags=data.get("tags", []),
             importance=data.get("importance", 0.5),
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None,
-            updated_at=datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None,
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else None,
+            updated_at=datetime.fromisoformat(data["updated_at"])
+            if data.get("updated_at")
+            else None,
             created_by=data.get("created_by"),
         )
 
@@ -245,36 +258,37 @@ class Pattern:
 # Error Record
 # =============================================================================
 
+
 @dataclass
 class ErrorRecord:
     """Records an error for learning purposes."""
 
     id: str
-    error_type: str                       # Exception type or error category
-    error_message: str                    # Error message
+    error_type: str  # Exception type or error category
+    error_message: str  # Error message
     severity: ErrorSeverity
 
     # Context
-    context: str                          # What was being done
-    file_path: Optional[str] = None       # File where error occurred
-    function_name: Optional[str] = None   # Function name
-    line_number: Optional[int] = None     # Line number
+    context: str  # What was being done
+    file_path: str | None = None  # File where error occurred
+    function_name: str | None = None  # Function name
+    line_number: int | None = None  # Line number
 
     # Analysis
-    root_cause: Optional[str] = None      # Identified root cause
-    fix_applied: Optional[str] = None     # How it was fixed
-    prevention_hint: Optional[str] = None # How to prevent in future
+    root_cause: str | None = None  # Identified root cause
+    fix_applied: str | None = None  # How it was fixed
+    prevention_hint: str | None = None  # How to prevent in future
 
     # Metrics
-    occurrence_count: int = 1             # How many times seen
-    time_to_fix_minutes: Optional[float] = None  # Time spent fixing
+    occurrence_count: int = 1  # How many times seen
+    time_to_fix_minutes: float | None = None  # Time spent fixing
 
     # Metadata
     tags: list[str] = field(default_factory=list)
-    project_id: Optional[str] = None
-    session_id: Optional[str] = None
-    created_at: Optional[datetime] = None
-    resolved_at: Optional[datetime] = None
+    project_id: str | None = None
+    session_id: str | None = None
+    created_at: datetime | None = None
+    resolved_at: datetime | None = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -310,7 +324,7 @@ class ErrorRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ErrorRecord":
+    def from_dict(cls, data: dict) -> ErrorRecord:
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -329,8 +343,12 @@ class ErrorRecord:
             tags=data.get("tags", []),
             project_id=data.get("project_id"),
             session_id=data.get("session_id"),
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None,
-            resolved_at=datetime.fromisoformat(data["resolved_at"]) if data.get("resolved_at") else None,
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else None,
+            resolved_at=datetime.fromisoformat(data["resolved_at"])
+            if data.get("resolved_at")
+            else None,
         )
 
     def to_memory_entry(self) -> MemoryEntry:
@@ -341,7 +359,8 @@ class ErrorRecord:
             content=f"Error: {self.error_type}\n{self.error_message}\n\nContext: {self.context}",
             metadata=self.to_dict(),
             tags=self.tags + [self.error_type, self.severity.value],
-            importance=0.3 + (0.2 * ["low", "medium", "high", "critical"].index(self.severity.value)),
+            importance=0.3
+            + (0.2 * ["low", "medium", "high", "critical"].index(self.severity.value)),
             created_at=self.created_at,
             project_id=self.project_id,
             session_id=self.session_id,
@@ -351,6 +370,7 @@ class ErrorRecord:
 # =============================================================================
 # Recommendation
 # =============================================================================
+
 
 @dataclass
 class Recommendation:
@@ -362,28 +382,28 @@ class Recommendation:
     description: str
 
     # Action details
-    action: str                           # Recommended action
-    rationale: str                        # Why this is recommended
-    expected_benefit: str                 # Expected benefit
+    action: str  # Recommended action
+    rationale: str  # Why this is recommended
+    expected_benefit: str  # Expected benefit
 
     # Source
-    source_pattern_id: Optional[str] = None    # Pattern this is based on
+    source_pattern_id: str | None = None  # Pattern this is based on
     source_error_ids: list[str] = field(default_factory=list)  # Errors this prevents
 
     # Confidence
-    confidence: float = 0.5               # 0.0 to 1.0
-    priority: int = 1                     # 1 (highest) to 5 (lowest)
+    confidence: float = 0.5  # 0.0 to 1.0
+    priority: int = 1  # 1 (highest) to 5 (lowest)
 
     # Metadata
     tags: list[str] = field(default_factory=list)
-    context_query: Optional[str] = None   # Query that triggered this
-    created_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None  # When recommendation expires
+    context_query: str | None = None  # Query that triggered this
+    created_at: datetime | None = None
+    expires_at: datetime | None = None  # When recommendation expires
 
     # Feedback
-    was_applied: Optional[bool] = None
-    was_helpful: Optional[bool] = None
-    feedback_notes: Optional[str] = None
+    was_applied: bool | None = None
+    was_helpful: bool | None = None
+    feedback_notes: str | None = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -421,7 +441,7 @@ class Recommendation:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Recommendation":
+    def from_dict(cls, data: dict) -> Recommendation:
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -437,8 +457,12 @@ class Recommendation:
             priority=data.get("priority", 1),
             tags=data.get("tags", []),
             context_query=data.get("context_query"),
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None,
-            expires_at=datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else None,
+            expires_at=datetime.fromisoformat(data["expires_at"])
+            if data.get("expires_at")
+            else None,
             was_applied=data.get("was_applied"),
             was_helpful=data.get("was_helpful"),
             feedback_notes=data.get("feedback_notes"),
@@ -449,14 +473,15 @@ class Recommendation:
 # Learning Context
 # =============================================================================
 
+
 @dataclass
 class LearningContext:
     """Context for learning operations."""
 
     project_id: str
     session_id: str
-    current_task: Optional[str] = None
-    current_agent: Optional[str] = None   # PM-SPEC, ARCHITECT, IMPLEMENTER, etc.
+    current_task: str | None = None
+    current_agent: str | None = None  # PM-SPEC, ARCHITECT, IMPLEMENTER, etc.
 
     # Current state
     files_modified: list[str] = field(default_factory=list)
@@ -468,7 +493,7 @@ class LearningContext:
     object_types: list[str] = field(default_factory=list)  # 1C object types
 
     # Timing
-    started_at: Optional[datetime] = None
+    started_at: datetime | None = None
 
     def __post_init__(self):
         if self.started_at is None:

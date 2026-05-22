@@ -54,7 +54,7 @@ class TestBslDeepAnalyzer(unittest.TestCase):
         test_file.write_text(test_code, encoding='utf-8')
 
         result = self.analyzer.analyze_file_deep(test_file)
-        
+
         self.assertIsInstance(result, dict)
         if result:  # Может не работать без tree-sitter
             self.assertIn("ПростаяФункция", result)
@@ -68,25 +68,25 @@ class TestBslDeepAnalyzer(unittest.TestCase):
 Функция СложнаяФункция(МассивДанных, ПорогЗначения) Экспорт
     Результат = Новый Массив;
     Счетчик = 0;
-    
+
     Если МассивДанных.Количество() = 0 Тогда
         Возврат Результат;
     КонецЕсли;
-    
+
     Для Каждого Элемент Из МассивДанных Цикл
         Счетчик = Счетчик + 1;
-        
+
         Если Элемент.Значение > ПорогЗначения Тогда
             Результат.Добавить(Элемент);
         ИначеЕсли Элемент.Значение < 0 Тогда
             Сообщить("Отрицательное значение: " + Элемент.Значение);
         КонецЕсли;
-        
+
         Если Счетчик > 1000 Тогда
             Прервать;
         КонецЕсли;
     КонецЦикла;
-    
+
     Возврат Результат;
 КонецФункции
 '''
@@ -94,7 +94,7 @@ class TestBslDeepAnalyzer(unittest.TestCase):
         test_file.write_text(test_code, encoding='utf-8')
 
         result = self.analyzer.analyze_file_deep(test_file)
-        
+
         # Проверяем, что анализ выполнен без ошибок
         self.assertIsInstance(result, dict)
 
@@ -129,7 +129,7 @@ class TestBslLogicAnalyzer(unittest.TestCase):
 КонецПроцедуры
 '''
         result = self.analyzer.analyze_function_logic(test_function, "ПростаяПроцедура")
-        
+
         self.assertIsInstance(result, LogicFlow)
         self.assertGreaterEqual(len(result.nodes), 1)
         self.assertGreaterEqual(result.algorithm_complexity, 1)
@@ -154,7 +154,7 @@ class TestBslLogicAnalyzer(unittest.TestCase):
 КонецПроцедуры
 '''
         result = self.analyzer.analyze_function_logic(test_function, "СложнаяПроцедура")
-        
+
         self.assertIsInstance(result, LogicFlow)
         self.assertGreaterEqual(len(result.nodes), 3)
         self.assertGreaterEqual(result.algorithm_complexity, 3)
@@ -198,16 +198,16 @@ class TestBslHtmlVisualizer(unittest.TestCase):
 '''
         test_file = self.test_dir / "test.bsl"
         test_file.write_text(test_code, encoding='utf-8')
-        
+
         output_file = self.test_dir / "report.html"
-        
+
         success = self.visualizer.create_single_file_report(
             test_file, output_file, "Тестовый отчет"
         )
-        
+
         self.assertTrue(success)
         self.assertTrue(output_file.exists())
-        
+
         # Проверяем содержимое отчета
         content = output_file.read_text(encoding='utf-8')
         self.assertIn("<html", content.lower())
@@ -225,21 +225,21 @@ class TestBslHtmlVisualizer(unittest.TestCase):
     Возврат Параметр + 2;
 КонецФункции
 '''
-        
+
         file1 = self.test_dir / "old.bsl"
         file2 = self.test_dir / "new.bsl"
         file1.write_text(test_code1, encoding='utf-8')
         file2.write_text(test_code2, encoding='utf-8')
-        
+
         output_file = self.test_dir / "diff_report.html"
-        
+
         success = self.visualizer.create_diff_report(
             file1, file2, output_file, "Отчет сравнения"
         )
-        
+
         self.assertTrue(success)
         self.assertTrue(output_file.exists())
-        
+
         # Проверяем содержимое отчета
         content = output_file.read_text(encoding='utf-8')
         self.assertIn("Отчет сравнения", content)
@@ -287,11 +287,11 @@ class TestIntegration(unittest.TestCase):
     Результат = Новый Структура;
     Результат.Вставить("Количество", 0);
     Результат.Вставить("Элементы", Новый Массив);
-    
+
     Если МассивДанных = Неопределено Тогда
         Возврат Результат;
     КонецЕсли;
-    
+
     Для Каждого Элемент Из МассивДанных Цикл
         Попытка
             Если ТипЗнч(Элемент) = Тип("Число") Тогда
@@ -305,7 +305,7 @@ class TestIntegration(unittest.TestCase):
             Продолжить;
         КонецПопытки;
     КонецЦикла;
-    
+
     Возврат Результат;
 КонецФункции
 
@@ -313,18 +313,18 @@ class TestIntegration(unittest.TestCase):
     Сообщить("Вспомогательная процедура");
 КонецПроцедуры
 '''
-        
+
         test_file = self.test_dir / "full_test.bsl"
         test_file.write_text(test_code, encoding='utf-8')
-        
+
         # 1. Глубокий анализ
         deep_result = self.deep_analyzer.analyze_file_deep(test_file)
         self.assertIsInstance(deep_result, dict)
-        
+
         # 2. Анализ логики функции
         logic_result = self.logic_analyzer.analyze_function_logic(test_code, "ПолныйАнализ")
         self.assertIsInstance(logic_result, LogicFlow)
-        
+
         # 3. Создание HTML отчета
         output_file = self.test_dir / "full_report.html"
         html_success = self.html_visualizer.create_single_file_report(
@@ -342,7 +342,7 @@ class TestIntegration(unittest.TestCase):
     Возврат Результат;
 КонецФункции
 '''
-        
+
         code_v2 = '''
 Функция ВерсияДва(Параметр) Экспорт
     // Добавлен комментарий
@@ -350,25 +350,25 @@ class TestIntegration(unittest.TestCase):
     Возврат Результат;
 КонецФункции
 '''
-        
+
         file_v1 = self.test_dir / "version1.bsl"
         file_v2 = self.test_dir / "version2.bsl"
         file_v1.write_text(code_v1, encoding='utf-8')
         file_v2.write_text(code_v2, encoding='utf-8')
-        
+
         # Анализируем оба файла
         analysis_v1 = self.deep_analyzer.analyze_file_deep(file_v1)
         analysis_v2 = self.deep_analyzer.analyze_file_deep(file_v2)
-        
+
         self.assertIsInstance(analysis_v1, dict)
         self.assertIsInstance(analysis_v2, dict)
-        
+
         # Создаем отчет сравнения
         output_file = self.test_dir / "comparison_report.html"
         success = self.html_visualizer.create_diff_report(
             file_v1, file_v2, output_file, "Сравнение версий"
         )
-        
+
         self.assertTrue(success)
         self.assertTrue(output_file.exists())
 
@@ -380,14 +380,14 @@ class TestErrorHandling(unittest.TestCase):
         """Тест обработки пустых файлов"""
         analyzer = BslDeepAnalyzer()
         test_dir = Path(tempfile.mkdtemp())
-        
+
         try:
             empty_file = test_dir / "empty.bsl"
             empty_file.write_text("", encoding='utf-8')
-            
+
             result = analyzer.analyze_file_deep(empty_file)
             self.assertIsInstance(result, dict)
-            
+
         finally:
             import shutil
             shutil.rmtree(test_dir, ignore_errors=True)
@@ -395,10 +395,10 @@ class TestErrorHandling(unittest.TestCase):
     def test_invalid_syntax_handling(self):
         """Тест обработки некорректного синтаксиса"""
         analyzer = BslLogicAnalyzer()
-        
+
         # Тест с некорректным синтаксисом
         invalid_code = "Функция НеЗакрытая( \n Если Условие \n"
-        
+
         result = analyzer.analyze_function_logic(invalid_code, "НеЗакрытая")
         self.assertIsInstance(result, LogicFlow)
         # Анализатор должен обрабатывать ошибки gracefully
@@ -406,14 +406,14 @@ class TestErrorHandling(unittest.TestCase):
     def test_missing_file_handling(self):
         """Тест обработки отсутствующих файлов"""
         visualizer = BslHtmlVisualizer()
-        
+
         non_existent_file = Path("non_existent_file.bsl")
         output_file = Path("output.html")
-        
+
         success = visualizer.create_single_file_report(
             non_existent_file, output_file, "Тест"
         )
-        
+
         # Должно корректно обработать отсутствие файла
         self.assertFalse(success)
 
@@ -422,11 +422,11 @@ def run_comprehensive_tests():
     """Запуск всех тестов"""
     print("🧪 ЗАПУСК ВСЕСТОРОННИХ ТЕСТОВ BSL Semantic Diff MCP v2.0")
     print("=" * 70)
-    
+
     # Создаем test suite
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    
+
     # Добавляем все тестовые классы
     test_classes = [
         TestBslDeepAnalyzer,
@@ -435,42 +435,42 @@ def run_comprehensive_tests():
         TestIntegration,
         TestErrorHandling
     ]
-    
+
     for test_class in test_classes:
         tests = loader.loadTestsFromTestCase(test_class)
         suite.addTests(tests)
-    
+
     # Запускаем тесты
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
-    
+
     print("\n" + "=" * 70)
     print("📊 РЕЗУЛЬТАТЫ ВСЕСТОРОННИХ ТЕСТОВ:")
     print(f"✅ Пройдено: {result.testsRun - len(result.failures) - len(result.errors)}")
     print(f"❌ Ошибок: {len(result.errors)}")
     print(f"⚠️ Неудач: {len(result.failures)}")
     print(f"📈 Всего тестов: {result.testsRun}")
-    
+
     if result.failures:
         print("\n⚠️ НЕУДАЧНЫЕ ТЕСТЫ:")
         for test, traceback in result.failures:
             print(f"  - {test}: {traceback.split('AssertionError:')[-1].strip()}")
-    
+
     if result.errors:
         print("\n❌ ОШИБКИ:")
         for test, traceback in result.errors:
             print(f"  - {test}: {traceback.split('Error:')[-1].strip()}")
-    
+
     success_rate = ((result.testsRun - len(result.failures) - len(result.errors)) / result.testsRun) * 100
     print(f"\n🎯 Процент успешности: {success_rate:.1f}%")
-    
+
     if success_rate >= 80:
         print("🎉 ОТЛИЧНЫЙ РЕЗУЛЬТАТ! BSL Semantic Diff MCP v2.0 готов к использованию")
     elif success_rate >= 60:
         print("✅ ХОРОШИЙ РЕЗУЛЬТАТ! Небольшие доработки могут улучшить стабильность")
     else:
         print("⚠️ ТРЕБУЮТСЯ ИСПРАВЛЕНИЯ для повышения надежности")
-    
+
     return result.wasSuccessful()
 
 

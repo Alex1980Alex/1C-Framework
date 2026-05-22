@@ -27,8 +27,14 @@ from pathlib import Path
 
 DATASET_PATH = Path("data/eval/golden_v1.json")
 SCHEMA_KEYS = {
-    "id", "query", "expected_chunk_ids", "expected_keywords",
-    "expected_answer_summary", "difficulty", "category", "domain",
+    "id",
+    "query",
+    "expected_chunk_ids",
+    "expected_keywords",
+    "expected_answer_summary",
+    "difficulty",
+    "category",
+    "domain",
 }
 
 
@@ -79,7 +85,9 @@ def main() -> int:
         for m in missing:
             print(f"  - {m}", file=sys.stderr)
         print(file=sys.stderr)
-        print("This script is a scaffold. Install deps + provide LLM creds to run.", file=sys.stderr)
+        print(
+            "This script is a scaffold. Install deps + provide LLM creds to run.", file=sys.stderr
+        )
         return 2
 
     if args.dry_run:

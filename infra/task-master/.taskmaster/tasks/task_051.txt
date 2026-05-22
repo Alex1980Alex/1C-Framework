@@ -457,4 +457,3 @@ Testing approach:
 - Test streaming response handling
 - Verify error handling and recovery
 - Test with various research styles and queries
-

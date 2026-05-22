@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run the BSL rename benchmark with configurable backends."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,18 +17,19 @@ def _ast_grep_binary() -> str:
             return str(npm_bin)
     return shutil.which("ast-grep") or "ast-grep"
 
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
 
-from src.bsl.semantic_search.refactor.backends.ast_grep_runner import SubprocessAstGrepRunner
-
 from benchmark.runner import BenchmarkRunner
+
+from src.bsl.semantic_search.refactor.backends.ast_grep_runner import SubprocessAstGrepRunner
 
 
 def _build_multilspy_backend(repo_root: Path):
-    from src.bsl.semantic_search.refactor.backends.real_bsl_client import create_bsl_client
     from src.bsl.semantic_search.refactor.backends.multilspy_backend import MultilspyBackend
+    from src.bsl.semantic_search.refactor.backends.real_bsl_client import create_bsl_client
 
     # BSL LS expects workspace root to be the 1C Configuration dir
     # (Configuration.xml present). src/bsl/ holds our test configuration.

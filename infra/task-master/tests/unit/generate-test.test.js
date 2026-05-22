@@ -90,7 +90,7 @@ describe('Test Task', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup default mocks
     readJSON.mockReturnValue([mockTask]);
     findTaskById.mockReturnValue(mockTask);
@@ -400,7 +400,7 @@ describe('Test Task', () => {
       const task = { id: '1', title: 'Test Task' };
       findTaskById.mockReturnValue(task);
 
-      return generateTestForTask('1', { 
+      return generateTestForTask('1', {
         tasksPath: './tasks.json',
         filePrefix: 'unit_test_'
       }).then(result => {

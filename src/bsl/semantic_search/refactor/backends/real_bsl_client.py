@@ -72,9 +72,7 @@ class _BSLLanguageServer(LanguageServer):
         jar: Path,
     ) -> None:
         if not jar.exists():
-            raise BackendError(
-                f"BSL LS jar not found: {jar}", code="jar_missing"
-            )
+            raise BackendError(f"BSL LS jar not found: {jar}", code="jar_missing")
         launch = ProcessLaunchInfo(cmd=["java", "-jar", str(jar), "--lsp"], cwd=root)
         super().__init__(config, logger, root, launch, language_id="bsl")
 
@@ -173,9 +171,7 @@ class RealBSLClient:
         if self._start_error is not None:
             err = self._start_error
             self._force_stop()
-            raise BackendError(
-                f"BSL LS start failed: {err!r}", code="start_failed"
-            ) from err
+            raise BackendError(f"BSL LS start failed: {err!r}", code="start_failed") from err
 
     def stop(self) -> None:
         if self._loop is None:
@@ -184,9 +180,7 @@ class RealBSLClient:
         # Close file stack first so didClose is sent before shutdown.
         try:
             if self._file_stack is not None:
-                fut = asyncio.run_coroutine_threadsafe(
-                    self._close_file_stack(), loop
-                )
+                fut = asyncio.run_coroutine_threadsafe(self._close_file_stack(), loop)
                 try:
                     fut.result(timeout=10)
                 except Exception:
@@ -194,9 +188,7 @@ class RealBSLClient:
         finally:
             try:
                 if self._server_stack is not None:
-                    fut = asyncio.run_coroutine_threadsafe(
-                        self._server_stack.aclose(), loop
-                    )
+                    fut = asyncio.run_coroutine_threadsafe(self._server_stack.aclose(), loop)
                     try:
                         fut.result(timeout=15)
                     except Exception:
@@ -288,9 +280,7 @@ class RealBSLClient:
                 for t in pending:
                     t.cancel()
                 if pending:
-                    loop.run_until_complete(
-                        asyncio.gather(*pending, return_exceptions=True)
-                    )
+                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
             except Exception:
                 pass
             try:
@@ -355,9 +345,7 @@ class RealBSLClient:
             "skipped_duplicate": skipped_duplicate,
             "skipped_missing": skipped_missing,
             "elapsed_ms": elapsed_ms,
-            "files_per_sec": (
-                round(opened / (elapsed_ms / 1000), 1) if elapsed_ms > 0 else 0.0
-            ),
+            "files_per_sec": (round(opened / (elapsed_ms / 1000), 1) if elapsed_ms > 0 else 0.0),
         }
 
     async def _close_file_stack(self) -> None:
@@ -377,19 +365,11 @@ class RealBSLClient:
                 f"LSP request timed out after {timeout}s", code="request_timeout"
             ) from exc
         except Exception as exc:
-            raise BackendError(
-                f"LSP request failed: {exc!r}", code="request_failed"
-            ) from exc
+            raise BackendError(f"LSP request failed: {exc!r}", code="request_failed") from exc
 
     def _ensure_ready(self) -> None:
-        if (
-            self._thread is None
-            or not self._thread.is_alive()
-            or self._server is None
-        ):
-            raise BackendError(
-                "client not started; call start() first", code="not_started"
-            )
+        if self._thread is None or not self._thread.is_alive() or self._server is None:
+            raise BackendError("client not started; call start() first", code="not_started")
 
     @property
     def workspace_root(self) -> Path:

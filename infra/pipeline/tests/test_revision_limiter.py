@@ -2,17 +2,15 @@
 Integration tests for RevisionLimiter.
 """
 
-import pytest
-
-from constants import ArtifactType, AgentRole
+from constants import AgentRole, ArtifactType
 from verification import (
-    RevisionLimiter,
-    LimitConfig,
-    EscalationLevel,
     EscalationEvent,
+    EscalationLevel,
+    LimitConfig,
+    RevisionLimiter,
     create_default_limiter,
-    create_strict_limiter,
     create_lenient_limiter,
+    create_strict_limiter,
 )
 
 
@@ -47,7 +45,7 @@ class TestRevisionLimiter:
         """Test custom config for specific artifact type."""
         self.limiter.set_config(
             ArtifactType.SPEC,
-            LimitConfig(max_attempts=5, escalation_level=EscalationLevel.PIPELINE_ABORT)
+            LimitConfig(max_attempts=5, escalation_level=EscalationLevel.PIPELINE_ABORT),
         )
 
         # SPEC should have custom config

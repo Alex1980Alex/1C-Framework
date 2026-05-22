@@ -1,26 +1,20 @@
 """Tests for TaskDecomposer."""
 
-import pytest
-from .task_decomposer import (
-    TaskDecomposer,
-    decompose_task,
-    find_parallel_groups,
-    build_dependency_graph,
-    analyze_parallelism,
-    ResourcePattern,
-    DecompositionPattern,
-)
 from models import (
-    TaskNode,
-    TaskGraph,
-    TaskDependency,
     DependencyType,
     ExecutionPriority,
-    ParallelGroup,
-    MergeStrategy,
-    TaskStatus,
+    TaskDependency,
+    TaskGraph,
+    TaskNode,
 )
-from constants import AgentRole
+
+from .task_decomposer import (
+    TaskDecomposer,
+    analyze_parallelism,
+    build_dependency_graph,
+    decompose_task,
+    find_parallel_groups,
+)
 
 
 class TestResourceExtraction:
@@ -29,58 +23,44 @@ class TestResourceExtraction:
     def test_extract_module_read(self):
         """Test extracting module read resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Изучить модуль ОбщиеПроцедуры"
-        )
+        reads, writes = decomposer._extract_resources("Изучить модуль ОбщиеПроцедуры")
         assert "module:ОбщиеПроцедуры" in reads
         assert len(writes) == 0
 
     def test_extract_module_write(self):
         """Test extracting module write resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Изменить модуль ОбработкаДанных"
-        )
+        reads, writes = decomposer._extract_resources("Изменить модуль ОбработкаДанных")
         assert "module:ОбработкаДанных" in writes
 
     def test_extract_document_read(self):
         """Test extracting document read resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Проанализировать документ ПриходТоваров"
-        )
+        reads, writes = decomposer._extract_resources("Проанализировать документ ПриходТоваров")
         assert "document:ПриходТоваров" in reads
 
     def test_extract_document_write(self):
         """Test extracting document write resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Создать документ РасходТоваров"
-        )
+        reads, writes = decomposer._extract_resources("Создать документ РасходТоваров")
         assert "document:РасходТоваров" in writes
 
     def test_extract_catalog(self):
         """Test extracting catalog resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Добавить справочник Номенклатура"
-        )
+        reads, writes = decomposer._extract_resources("Добавить справочник Номенклатура")
         assert "catalog:Номенклатура" in writes
 
     def test_extract_register(self):
         """Test extracting register resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Работа с регистр ОстаткиТоваров"
-        )
+        reads, writes = decomposer._extract_resources("Работа с регистр ОстаткиТоваров")
         assert "register:ОстаткиТоваров" in reads
 
     def test_extract_file(self):
         """Test extracting file resource."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Редактировать файл Module.bsl"
-        )
+        reads, writes = decomposer._extract_resources("Редактировать файл Module.bsl")
         assert "file:Module.bsl" in writes
 
     def test_extract_multiple_resources(self):
@@ -95,9 +75,7 @@ class TestResourceExtraction:
     def test_extract_no_resources(self):
         """Test extraction when no resources found."""
         decomposer = TaskDecomposer(project_id="TEST")
-        reads, writes = decomposer._extract_resources(
-            "Просто какая-то задача"
-        )
+        reads, writes = decomposer._extract_resources("Просто какая-то задача")
         assert len(reads) == 0
         assert len(writes) == 0
 
@@ -429,11 +407,13 @@ class TestExecutionPlan:
         graph = TaskGraph(id="TEST")
         graph.add_task(task1)
         graph.add_task(task2)
-        graph.add_dependency(TaskDependency(
-            source_id="T2",
-            target_id="T1",
-            dependency_type=DependencyType.PRODUCES,
-        ))
+        graph.add_dependency(
+            TaskDependency(
+                source_id="T2",
+                target_id="T1",
+                dependency_type=DependencyType.PRODUCES,
+            )
+        )
 
         plan = decomposer.build_execution_plan(graph)
 
@@ -464,10 +444,7 @@ class TestExecutionPlan:
         """Test execution plan respects max parallel limit."""
         decomposer = TaskDecomposer(project_id="TEST", max_parallel_tasks=2)
 
-        tasks = [
-            TaskNode(id=f"T{i}", name=f"Task {i}")
-            for i in range(5)
-        ]
+        tasks = [TaskNode(id=f"T{i}", name=f"Task {i}") for i in range(5)]
 
         graph = TaskGraph(id="TEST")
         for task in tasks:

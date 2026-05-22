@@ -4,16 +4,14 @@ Implements fallback patterns including fallback chains,
 cached results, and alternative service calls.
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import (
-    Optional, Callable, Any, TypeVar, Dict, List,
-    Generic, Awaitable, Union
-)
-from functools import wraps
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from functools import wraps
+from typing import Generic, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +21,13 @@ T = TypeVar("T")
 class FallbackType(Enum):
     """Types of fallback strategies."""
 
-    DEFAULT_VALUE = "default_value"      # Return a default value
-    CACHED_RESULT = "cached_result"      # Return cached result
+    DEFAULT_VALUE = "default_value"  # Return a default value
+    CACHED_RESULT = "cached_result"  # Return cached result
     ALTERNATIVE_SERVICE = "alternative_service"  # Call alternative
     DEGRADED_RESPONSE = "degraded_response"  # Partial/degraded response
     QUEUE_FOR_LATER = "queue_for_later"  # Queue for later processing
-    SKIP = "skip"                        # Skip this operation
-    FAIL = "fail"                        # Fail immediately
+    SKIP = "skip"  # Skip this operation
+    FAIL = "fail"  # Fail immediately
 
 
 @dataclass
@@ -37,12 +35,12 @@ class FallbackResult(Generic[T]):
     """Result of a fallback operation."""
 
     success: bool
-    value: Optional[T] = None
-    fallback_type: Optional[FallbackType] = None
-    fallback_name: Optional[str] = None
-    original_error: Optional[Exception] = None
+    value: T | None = None
+    fallback_type: FallbackType | None = None
+    fallback_name: str | None = None
+    original_error: Exception | None = None
     execution_time_ms: float = 0.0
-    message: Optional[str] = None
+    message: str | None = None
 
     @property
     def used_fallback(self) -> bool:
@@ -56,17 +54,12 @@ class FallbackStrategy(Generic[T]):
 
     name: str
     fallback_type: FallbackType
-    handler: Callable[..., Union[T, Awaitable[T]]]
+    handler: Callable[..., T | Awaitable[T]]
     priority: int = 0
-    condition: Optional[Callable[[Exception], bool]] = None
-    timeout_seconds: Optional[float] = None
+    condition: Callable[[Exception], bool] | None = None
+    timeout_seconds: float | None = None
 
-    async def execute(
-        self,
-        original_error: Exception,
-        *args,
-        **kwargs
-    ) -> FallbackResult[T]:
+    async def execute(self, original_error: Exception, *args, **kwargs) -> FallbackResult[T]:
         """Execute this fallback strategy.
 
         Args:
@@ -94,8 +87,7 @@ class FallbackStrategy(Generic[T]):
             if asyncio.iscoroutinefunction(self.handler):
                 if self.timeout_seconds:
                     value = await asyncio.wait_for(
-                        self.handler(*args, **kwargs),
-                        timeout=self.timeout_seconds
+                        self.handler(*args, **kwargs), timeout=self.timeout_seconds
                     )
                 else:
                     value = await self.handler(*args, **kwargs)
@@ -132,8 +124,8 @@ class FallbackChain(Generic[T]):
 
     def __init__(self, name: str = "default") -> None:
         self._name = name
-        self._strategies: List[FallbackStrategy[T]] = []
-        self._last_result: Optional[FallbackResult[T]] = None
+        self._strategies: list[FallbackStrategy[T]] = []
+        self._last_result: FallbackResult[T] | None = None
 
     @property
     def name(self) -> str:
@@ -141,7 +133,7 @@ class FallbackChain(Generic[T]):
         return self._name
 
     @property
-    def last_result(self) -> Optional[FallbackResult[T]]:
+    def last_result(self) -> FallbackResult[T] | None:
         """Get last execution result."""
         return self._last_result
 
@@ -164,7 +156,7 @@ class FallbackChain(Generic[T]):
         name: str,
         value: T,
         priority: int = 100,
-        condition: Optional[Callable[[Exception], bool]] = None,
+        condition: Callable[[Exception], bool] | None = None,
     ) -> "FallbackChain[T]":
         """Add a default value fallback.
 
@@ -177,22 +169,24 @@ class FallbackChain(Generic[T]):
         Returns:
             Self for chaining
         """
-        return self.add(FallbackStrategy(
-            name=name,
-            fallback_type=FallbackType.DEFAULT_VALUE,
-            handler=lambda *args, **kwargs: value,
-            priority=priority,
-            condition=condition,
-        ))
+        return self.add(
+            FallbackStrategy(
+                name=name,
+                fallback_type=FallbackType.DEFAULT_VALUE,
+                handler=lambda *args, **kwargs: value,
+                priority=priority,
+                condition=condition,
+            )
+        )
 
     def add_handler(
         self,
         name: str,
-        handler: Callable[..., Union[T, Awaitable[T]]],
+        handler: Callable[..., T | Awaitable[T]],
         fallback_type: FallbackType = FallbackType.ALTERNATIVE_SERVICE,
         priority: int = 50,
-        condition: Optional[Callable[[Exception], bool]] = None,
-        timeout_seconds: Optional[float] = None,
+        condition: Callable[[Exception], bool] | None = None,
+        timeout_seconds: float | None = None,
     ) -> "FallbackChain[T]":
         """Add a handler-based fallback.
 
@@ -207,21 +201,18 @@ class FallbackChain(Generic[T]):
         Returns:
             Self for chaining
         """
-        return self.add(FallbackStrategy(
-            name=name,
-            fallback_type=fallback_type,
-            handler=handler,
-            priority=priority,
-            condition=condition,
-            timeout_seconds=timeout_seconds,
-        ))
+        return self.add(
+            FallbackStrategy(
+                name=name,
+                fallback_type=fallback_type,
+                handler=handler,
+                priority=priority,
+                condition=condition,
+                timeout_seconds=timeout_seconds,
+            )
+        )
 
-    async def execute(
-        self,
-        error: Exception,
-        *args,
-        **kwargs
-    ) -> FallbackResult[T]:
+    async def execute(self, error: Exception, *args, **kwargs) -> FallbackResult[T]:
         """Execute fallback chain.
 
         Tries each strategy in order until one succeeds.
@@ -240,14 +231,12 @@ class FallbackChain(Generic[T]):
 
             if result.success:
                 logger.info(
-                    f"Fallback chain '{self._name}': "
-                    f"strategy '{strategy.name}' succeeded"
+                    f"Fallback chain '{self._name}': " f"strategy '{strategy.name}' succeeded"
                 )
                 return result
 
             logger.debug(
-                f"Fallback chain '{self._name}': "
-                f"strategy '{strategy.name}' failed, trying next"
+                f"Fallback chain '{self._name}': " f"strategy '{strategy.name}' failed, trying next"
             )
 
         # All strategies failed
@@ -262,14 +251,10 @@ class FallbackRegistry:
     """Registry for managing fallback chains."""
 
     def __init__(self) -> None:
-        self._chains: Dict[str, FallbackChain] = {}
-        self._default_chain: Optional[str] = None
+        self._chains: dict[str, FallbackChain] = {}
+        self._default_chain: str | None = None
 
-    def register(
-        self,
-        chain: FallbackChain,
-        set_default: bool = False
-    ) -> None:
+    def register(self, chain: FallbackChain, set_default: bool = False) -> None:
         """Register a fallback chain.
 
         Args:
@@ -280,7 +265,7 @@ class FallbackRegistry:
         if set_default or self._default_chain is None:
             self._default_chain = chain.name
 
-    def get(self, name: str) -> Optional[FallbackChain]:
+    def get(self, name: str) -> FallbackChain | None:
         """Get a fallback chain by name.
 
         Args:
@@ -291,7 +276,7 @@ class FallbackRegistry:
         """
         return self._chains.get(name)
 
-    def get_default(self) -> Optional[FallbackChain]:
+    def get_default(self) -> FallbackChain | None:
         """Get the default fallback chain.
 
         Returns:
@@ -312,7 +297,7 @@ class FallbackRegistry:
             if self._default_chain == name:
                 self._default_chain = None
 
-    def list_chains(self) -> List[str]:
+    def list_chains(self) -> list[str]:
         """List all registered chain names.
 
         Returns:
@@ -337,12 +322,8 @@ def get_global_registry() -> FallbackRegistry:
 class CachedFallback(Generic[T]):
     """Fallback that uses cached results."""
 
-    def __init__(
-        self,
-        max_age_seconds: float = 300.0,
-        max_entries: int = 100
-    ):
-        self._cache: Dict[str, tuple[T, datetime]] = {}
+    def __init__(self, max_age_seconds: float = 300.0, max_entries: int = 100):
+        self._cache: dict[str, tuple[T, datetime]] = {}
         self._max_age = max_age_seconds
         self._max_entries = max_entries
 
@@ -364,14 +345,11 @@ class CachedFallback(Generic[T]):
         # Evict old entries if needed
         if len(self._cache) > self._max_entries:
             # Remove oldest entries
-            sorted_items = sorted(
-                self._cache.items(),
-                key=lambda x: x[1][1]
-            )
-            for old_key, _ in sorted_items[:len(self._cache) - self._max_entries]:
+            sorted_items = sorted(self._cache.items(), key=lambda x: x[1][1])
+            for old_key, _ in sorted_items[: len(self._cache) - self._max_entries]:
                 del self._cache[old_key]
 
-    def get(self, *args, **kwargs) -> Optional[T]:
+    def get(self, *args, **kwargs) -> T | None:
         """Get cached value.
 
         Args:
@@ -399,9 +377,7 @@ class CachedFallback(Generic[T]):
         self._cache.clear()
 
     def create_strategy(
-        self,
-        name: str = "cached_fallback",
-        priority: int = 10
+        self, name: str = "cached_fallback", priority: int = 10
     ) -> FallbackStrategy[T]:
         """Create a fallback strategy using this cache.
 
@@ -412,6 +388,7 @@ class CachedFallback(Generic[T]):
         Returns:
             FallbackStrategy instance
         """
+
         async def handler(*args, **kwargs) -> T:
             cached = self.get(*args, **kwargs)
             if cached is None:
@@ -427,9 +404,9 @@ class CachedFallback(Generic[T]):
 
 
 def with_fallback(
-    fallback_chain: Optional[FallbackChain[T]] = None,
-    default_value: Optional[T] = None,
-    on_fallback: Optional[Callable[[FallbackResult], None]] = None,
+    fallback_chain: FallbackChain[T] | None = None,
+    default_value: T | None = None,
+    on_fallback: Callable[[FallbackResult], None] | None = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator for adding fallback behavior.
 
@@ -441,16 +418,13 @@ def with_fallback(
     Returns:
         Decorated function
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         # Create simple chain if only default_value provided
         chain = fallback_chain
         if chain is None and default_value is not None:
             chain = FallbackChain[T](name=f"{func.__name__}_fallback")
-            chain.add_default_value(
-                name="default",
-                value=default_value,
-                priority=100
-            )
+            chain.add_default_value(name="default", value=default_value, priority=100)
 
         @wraps(func)
         async def async_wrapper(*args, **kwargs) -> T:
@@ -499,11 +473,8 @@ def with_fallback(
 
 # Utility functions for common fallback patterns
 
-def create_timeout_fallback(
-    name: str,
-    default_value: T,
-    priority: int = 50
-) -> FallbackStrategy[T]:
+
+def create_timeout_fallback(name: str, default_value: T, priority: int = 50) -> FallbackStrategy[T]:
     """Create fallback for timeout errors.
 
     Args:
@@ -514,11 +485,9 @@ def create_timeout_fallback(
     Returns:
         FallbackStrategy for timeouts
     """
+
     def is_timeout(error: Exception) -> bool:
-        return (
-            isinstance(error, asyncio.TimeoutError) or
-            "timeout" in str(error).lower()
-        )
+        return isinstance(error, asyncio.TimeoutError) or "timeout" in str(error).lower()
 
     return FallbackStrategy(
         name=name,
@@ -530,9 +499,7 @@ def create_timeout_fallback(
 
 
 def create_network_fallback(
-    name: str,
-    handler: Callable[..., Union[T, Awaitable[T]]],
-    priority: int = 30
+    name: str, handler: Callable[..., T | Awaitable[T]], priority: int = 30
 ) -> FallbackStrategy[T]:
     """Create fallback for network errors.
 
@@ -544,15 +511,16 @@ def create_network_fallback(
     Returns:
         FallbackStrategy for network errors
     """
+
     def is_network_error(error: Exception) -> bool:
         error_type = type(error).__name__.lower()
         error_msg = str(error).lower()
         return (
-            "connection" in error_type or
-            "network" in error_type or
-            "socket" in error_type or
-            "connection" in error_msg or
-            "network" in error_msg
+            "connection" in error_type
+            or "network" in error_type
+            or "socket" in error_type
+            or "connection" in error_msg
+            or "network" in error_msg
         )
 
     return FallbackStrategy(

@@ -13,6 +13,7 @@ Usage:
     python scripts/wiki_confidence_status_sync.py
     python scripts/wiki_confidence_status_sync.py --apply
 """
+
 from __future__ import annotations
 
 import argparse

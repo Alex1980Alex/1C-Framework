@@ -65,38 +65,59 @@ CRITERIA_SIGNAL_MAP = {
     "settings.json updated": ["settings.json"],
     "MEMORY.md updated": ["memory.md", "memory updated"],
     "test passed": [
-        "test pass", "tests pass", "тест пройден", "pass",
-        "all tests", "7/7", "verified",
+        "test pass",
+        "tests pass",
+        "тест пройден",
+        "pass",
+        "all tests",
+        "7/7",
+        "verified",
     ],
     "all files created": ["created", "написан", "создан"],
     "tests pass": ["test pass", "tests pass", "verified"],
     "all listed items completed": ["completed", "завершен", "done"],
     "all tasks completed": ["completed", "завершен", "done"],
     "comparison table created": [
-        "comparison", "таблица", "matrix", "pros", "cons", "сравнение",
+        "comparison",
+        "таблица",
+        "matrix",
+        "pros",
+        "cons",
+        "сравнение",
     ],
     "recommendation given": [
-        "recommendation", "рекомендация", "выбран", "recommend", "chosen",
+        "recommendation",
+        "рекомендация",
+        "выбран",
+        "recommend",
+        "chosen",
     ],
     "target metric reached": [
-        "target reached", "цель достигнута", "autoresearch_done",
-        "metric target", "target met",
+        "target reached",
+        "цель достигнута",
+        "autoresearch_done",
+        "metric target",
+        "target met",
     ],
     "autoresearch complete": [
-        "autoresearch_done", "autoresearch complete", "autoresearch завершён",
-        "all iterations", "plateau",
+        "autoresearch_done",
+        "autoresearch complete",
+        "autoresearch завершён",
+        "all iterations",
+        "plateau",
     ],
 }
+
 
 def _find_hook_todos():
     """Find hook-todos.json via core_paths or fallback."""
     try:
         from shared.core_paths import get_cache_dir
+
         return str(get_cache_dir() / "hook-todos.json")
     except ImportError:
         return os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "..", "cache", "hook-todos.json"
+            os.path.dirname(os.path.abspath(__file__)), "..", "cache", "hook-todos.json"
         )
 
 
@@ -106,14 +127,13 @@ HOOK_TODOS_PATH = _find_hook_todos()
 def _get_pending_mandatory_tasks() -> list[str]:
     """Read hook-todos.json and return pending mandatory task titles."""
     try:
-        with open(HOOK_TODOS_PATH, "r", encoding="utf-8") as f:
+        with open(HOOK_TODOS_PATH, encoding="utf-8") as f:
             data = json.load(f)
         todos = data.get("todos", [])
         return [
             t.get("content", "unknown")
             for t in todos
-            if t.get("status") == "pending"
-            and t.get("createdBy") in MANDATORY_HOOKS
+            if t.get("status") == "pending" and t.get("createdBy") in MANDATORY_HOOKS
         ]
     except (FileNotFoundError, json.JSONDecodeError, OSError):
         return []
@@ -146,9 +166,13 @@ def _block(count: int, max_iter: int, reason: str) -> None:
 
 def main():
     from shared.ralph_state import (
-        is_active, is_stale, deactivate,
-        increment_iteration, get_max_iterations, get_criteria,
-        set_stop_running, clear_stop_running,
+        deactivate,
+        get_criteria,
+        get_max_iterations,
+        increment_iteration,
+        is_active,
+        is_stale,
+        set_stop_running,
     )
 
     # 1. Not active → allow stop
@@ -213,18 +237,20 @@ def main():
             if unmet:
                 unmet_str = f" Unmet criteria: {', '.join(unmet)}."
         _block(
-            count, max_iter,
+            count,
+            max_iter,
             f"Pending mandatory tasks: {tasks_str}.{unmet_str} "
-            "Continue working. Include RALPH_DONE when all done."
+            "Continue working. Include RALPH_DONE when all done.",
         )
 
     # 8. Incomplete signals → block
     incomplete_found = [s for s in INCOMPLETE_SIGNALS if s in combined]
     if incomplete_found:
         _block(
-            count, max_iter,
+            count,
+            max_iter,
             f"Incomplete signals: {', '.join(incomplete_found[:3])}. "
-            "Continue working. Include RALPH_DONE when all done."
+            "Continue working. Include RALPH_DONE when all done.",
         )
 
     # 9. Early iterations without clear completion → block
@@ -235,9 +261,10 @@ def main():
             if unmet:
                 unmet_str = f" Unmet: {', '.join(unmet)}."
         _block(
-            count, max_iter,
+            count,
+            max_iter,
             f"Task may not be complete.{unmet_str} "
-            "Check all criteria. Include RALPH_DONE if done."
+            "Check all criteria. Include RALPH_DONE if done.",
         )
 
     # 10. Later iterations with no signals → allow stop
@@ -248,6 +275,7 @@ if __name__ == "__main__":
     _timer = None
     try:
         from shared.invocation_logger import InvocationTimer
+
         _timer = InvocationTimer("ralph-wiggum-stop", event="Stop").start()
     except Exception:
         pass
@@ -268,6 +296,7 @@ if __name__ == "__main__":
     # Clean up stop lock
     try:
         from shared.ralph_state import clear_stop_running
+
         clear_stop_running()
     except Exception:
         pass

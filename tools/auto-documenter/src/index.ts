@@ -218,30 +218,30 @@ class AutodocumentServer {
           updateExisting,
           effectiveOutputDir
         );
-        
+
         // Get progress token from the request metadata if available
         const progressToken = request.params._meta?.progressToken || `autodoc-${Date.now()}`;
-        
+
         // Create a progress callback for logging progress and preventing timeouts
         const progressCallback = (directory: string, fileCount: number, currentDir: number, totalDirs: number) => {
           // Calculate progress percentage
           const percent = Math.round((currentDir / totalDirs) * 100);
-          
+
           // Log detailed progress to console - this will be seen in the logs
           console.error(`[${percent}%] Processing directory: ${directory} (${fileCount} files, ${currentDir}/${totalDirs})`);
-          
+
           // Add heartbeat logging to prevent timeouts
           if (currentDir % 3 === 0 || percent % 10 === 0) {
             console.error(`Heartbeat at ${new Date().toISOString()}: ${percent}% complete`);
           }
         };
-        
+
         // Run the tool process with progress updates
         const result = await aggregator.run(progressCallback);
-        
+
         // Format the result for display
         const resultSummary = tool.formatResultSummary(result);
-        
+
         return {
           content: [
             {
@@ -252,7 +252,7 @@ class AutodocumentServer {
         };
       } catch (error: any) {
         console.error('Error generating documentation:', error);
-        
+
         return {
           content: [
             {

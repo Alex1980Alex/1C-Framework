@@ -19,10 +19,10 @@ DEFAULT_INDEX_ROOTS: list[str] = [
     "docs/roadmap",
     ".mcp",
     "openspec",  # OpenSpec changes/archive/specs — semantic search через
-                 # framework_code_v1, фильтр path_glob='openspec/changes/**' либо
-                 # 'openspec/changes/archive/**'. Альтернатива отдельной коллекции
-                 # openspec_changes_v1 (см. roadmap 260520 §H — закрыт через
-                 # переиспользование framework_code_v1).
+    # framework_code_v1, фильтр path_glob='openspec/changes/**' либо
+    # 'openspec/changes/archive/**'. Альтернатива отдельной коллекции
+    # openspec_changes_v1 (см. roadmap 260520 §H — закрыт через
+    # переиспользование framework_code_v1).
 ]
 
 # Single-file roots at repo root.
@@ -67,12 +67,12 @@ SKIP_PATTERNS: list[str] = [
     "/tmp/",
     "/logs/",
     "/.obsidian/",
-    "/configuration/",                    # BSL projects -> bsl_code_v4_late
-                                          # NB: post 2026-05-02, BSL projects are
-                                          # discovered via .bsl-language-server.json
-                                          # marker (see src/bsl/project_discovery.py).
-                                          # EDT projects at repo root are naturally
-                                          # excluded — they're not in DEFAULT_INDEX_ROOTS.
+    "/configuration/",  # BSL projects -> bsl_code_v4_late
+    # NB: post 2026-05-02, BSL projects are
+    # discovered via .bsl-language-server.json
+    # marker (see src/bsl/project_discovery.py).
+    # EDT projects at repo root are naturally
+    # excluded — they're not in DEFAULT_INDEX_ROOTS.
     # Imported third-party reference docs (huge, not "framework code")
     "/docs/documentation/Lang Chain Docs/",
     "/docs/documentation/Claude Code Docs/",
@@ -82,11 +82,11 @@ SKIP_PATTERNS: list[str] = [
     # NB: dirname pruning sees repo-relative POSIX paths WITHOUT leading slash,
     # so top-level dir patterns must NOT start with `/` (otherwise `/tools/X/`
     # won't match the actual probe value `tools/X/`).
-    "tools/serena/",                      # vendored Serena agent toolkit
-    "tools/multilspy-fork/",              # vendored microsoft/multilspy fork
-    "tools/sonar-scanner",                # vendored binary distribution
-    "tools/coverage41c/",                 # vendored Java coverage tool
-    "package-lock.json",                  # auto-generated, no semantic value
+    "tools/serena/",  # vendored Serena agent toolkit
+    "tools/multilspy-fork/",  # vendored microsoft/multilspy fork
+    "tools/sonar-scanner",  # vendored binary distribution
+    "tools/coverage41c/",  # vendored Java coverage tool
+    "package-lock.json",  # auto-generated, no semantic value
 ]
 
 # Max bytes per file (skip giant generated/binary-ish files).
@@ -96,6 +96,6 @@ MAX_FILE_BYTES: int = 512 * 1024  # 512 KB
 DEFAULT_COLLECTION: str = "framework_code_v1"
 DEFAULT_TEI_URL: str = "http://localhost:8080"
 DEFAULT_QDRANT_URL: str = "http://localhost:6333"
-DEFAULT_BATCH_SIZE: int = 16          # framework chunks heterogeneous; smaller batch = lower OOM risk
-DEFAULT_TEI_CLIENT_BATCH: int = 32    # TEI MAX_CLIENT_BATCH_SIZE default
-MAX_CHUNK_CHARS: int = 8000           # ~2k tokens, well under MAX_INPUT_LENGTH=4096
+DEFAULT_BATCH_SIZE: int = 16  # framework chunks heterogeneous; smaller batch = lower OOM risk
+DEFAULT_TEI_CLIENT_BATCH: int = 32  # TEI MAX_CLIENT_BATCH_SIZE default
+MAX_CHUNK_CHARS: int = 8000  # ~2k tokens, well under MAX_INPUT_LENGTH=4096

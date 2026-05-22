@@ -21,12 +21,12 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   async processThought(request: ReasoningRequest): Promise<ReasoningResponse> {
     const currentNode = await this.generateDocumentPatternThought(request);
-    
+
     // Enhanced evaluation for 1C document patterns
     currentNode.score = this.evaluateBSLDocumentPatterns(currentNode);
-    
+
     await this.saveNode(currentNode);
-    
+
     return {
       nodeId: currentNode.id,
       thought: currentNode.thought,
@@ -40,9 +40,9 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   private async generateDocumentPatternThought(request: ReasoningRequest): Promise<ThoughtNode> {
     const nodeId = this.generateNodeId();
-    
+
     let documentThought = '';
-    
+
     if (request.thoughtNumber <= 2) {
       documentThought = this.analyzeDocumentStructure(request.thought);
     } else if (request.thoughtNumber <= 4) {
@@ -69,7 +69,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   private analyzeDocumentStructure(originalThought: string): string {
     this.documentsAnalyzed++;
-    
+
     return `Анализирую структуру и паттерны документов 1С в контексте "${originalThought}":
 
 **Анализ структуры документа:**
@@ -98,7 +98,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   private analyzePostingAlgorithms(originalThought: string): string {
     this.postingAlgorithmsChecked++;
-    
+
     return `Детально анализирую алгоритмы проведения документов:
 
 **Анализ процедуры ОбработкаПроведения():**
@@ -110,7 +110,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
 2. **Паттерны движений регистров**:
    - **Регистры накопления**: анализирую корректность формирования приходов/расходов
-   - **Регистры сведений**: проверяю актуальность записываемой информации  
+   - **Регистры сведений**: проверяю актуальность записываемой информации
    - **Регистры бухгалтерии**: контролирую соблюдение принципа двойной записи
    - **Регистры расчета**: анализирую корректность расчетных операций
 
@@ -131,7 +131,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   private analyzeBusinessLogicPatterns(originalThought: string): string {
     this.businessLogicPatterns++;
-    
+
     return `Анализирую паттерны бизнес-логики в документах:
 
 **Обработчики событий документа:**
@@ -154,7 +154,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
 **Специфические паттерны для типов документов:**
 - **Документы поступления**: контроль соответствия накладных и счетов
-- **Документы реализации**: проверка остатков и резервирование товаров  
+- **Документы реализации**: проверка остатков и резервирование товаров
 - **Финансовые документы**: контроль лимитов и валидация банковских операций
 - **Производственные документы**: контроль технологических ограничений
 
@@ -169,7 +169,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   private analyzePerformancePatterns(originalThought: string): string {
     this.performanceIssues++;
-    
+
     return `Провожу анализ производительности обработки документов:
 
 **Выявленные узкие места:**
@@ -267,13 +267,13 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
     let score = 0;
 
     const thought = node.thought.toLowerCase();
-    
+
     // Document-specific terms
     const documentTerms = [
       'документ', 'проведение', 'движения', 'регистр', 'реквизит',
       'табличная часть', 'нумерация', 'алгоритм', 'контроль'
     ];
-    
+
     for (const term of documentTerms) {
       if (thought.includes(term)) {
         score += 0.12;
@@ -285,19 +285,19 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
       'производительность', 'оптимизация', 'запрос', 'индекс',
       'цикл', 'временная таблица', 'блокировка'
     ];
-    
+
     for (const term of performanceTerms) {
       if (thought.includes(term)) {
         score += 0.15;
       }
     }
 
-    // Business logic terms  
+    // Business logic terms
     const businessTerms = [
       'бизнес-логика', 'валидация', 'обработчик событий',
       'переднаписью', 'призаписи', 'остатки'
     ];
-    
+
     for (const term of businessTerms) {
       if (thought.includes(term)) {
         score += 0.18;
@@ -323,7 +323,7 @@ export class BSLDocumentPatternAnalyzer extends BaseStrategy {
 
   public async getMetrics(): Promise<BSLDocumentMetrics> {
     const baseMetrics = await super.getMetrics();
-    
+
     return {
       ...baseMetrics,
       name: 'BSL Document Pattern Analyzer',

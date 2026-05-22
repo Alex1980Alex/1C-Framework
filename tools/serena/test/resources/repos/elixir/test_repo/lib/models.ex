@@ -163,4 +163,4 @@ defmodule TestRepo.Models do
   def create_sample_item do
     Item.new("sample", "Sample Item", 9.99, "sample")
   end
-end 
+end

@@ -14,12 +14,12 @@ import os
 import re
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams, Distance, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEI_URL = os.environ.get("TEI_URL", "http://localhost:8080") + "/embed"
@@ -50,7 +50,7 @@ def parse_frontmatter(content: str) -> dict:
     for marker in ["Триггеры:", "Triggers:", "Триггеры: '", "triggers:"]:
         if marker.lower() in description.lower():
             idx = description.lower().index(marker.lower())
-            triggers = description[idx + len(marker):].strip()
+            triggers = description[idx + len(marker) :].strip()
             break
     meta["triggers"] = triggers
 
@@ -65,12 +65,14 @@ def embed_text(text: str) -> list[float] | None:
     """
     if not text.strip():
         return None
-    payload = json.dumps({
-        "inputs": [text[:8000]],
-        "normalize": True,
-        "truncate": True,
-        "truncation_direction": "Right",
-    }).encode()
+    payload = json.dumps(
+        {
+            "inputs": [text[:8000]],
+            "normalize": True,
+            "truncate": True,
+            "truncation_direction": "Right",
+        }
+    ).encode()
     req = Request(
         TEI_URL,
         data=payload,
@@ -167,7 +169,7 @@ def main():
                 "description": description,
                 "triggers": triggers,
                 "content_preview": content_preview[:500],
-                "indexed_at": datetime.now(timezone.utc).isoformat(),
+                "indexed_at": datetime.now(UTC).isoformat(),
             },
         )
 

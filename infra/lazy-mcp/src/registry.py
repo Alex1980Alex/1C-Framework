@@ -4,32 +4,35 @@ Registry Module - Реестр MCP серверов и категорий
 Загружает конфигурацию серверов и предоставляет навигацию по категориям.
 """
 
-import yaml
 import json
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional, Any
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 
 @dataclass
 class ServerConfig:
     """Конфигурация MCP сервера"""
+
     name: str
     command: str
     args: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
-    cwd: Optional[str] = None
+    cwd: str | None = None
     description: str = ""
     timeout: int = 60000
     type: str = "native"  # native, docker-mcp, npx, docker-gateway, bridge
-    docker_image: Optional[str] = None  # Для docker-mcp: mcp/brave-search
-    docker_server: Optional[str] = None  # Для docker-mcp: имя сервера в gateway
+    docker_image: str | None = None  # Для docker-mcp: mcp/brave-search
+    docker_server: str | None = None  # Для docker-mcp: имя сервера в gateway
     endpoints: dict[str, str] = field(default_factory=dict)  # Для bridge: {base_url, ...}
 
 
 @dataclass
 class ToolInfo:
     """Информация об инструменте"""
+
     name: str
     description: str
     server: str
@@ -51,7 +54,7 @@ class Registry:
     └── ...
     """
 
-    def __init__(self, config_path: Optional[Path | str] = None):
+    def __init__(self, config_path: Path | str | None = None):
         # Конвертация str в Path если передана строка
         if config_path is not None:
             self.config_path = Path(config_path) if isinstance(config_path, str) else config_path
@@ -67,37 +70,37 @@ class Registry:
         if not self.config_path.exists():
             raise FileNotFoundError(f"Registry config not found: {self.config_path}")
 
-        with open(self.config_path, 'r', encoding='utf-8') as f:
+        with open(self.config_path, encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
-        self.categories = config.get('categories', {})
+        self.categories = config.get("categories", {})
 
         # Парсинг серверов из категорий
         for category_name, category_data in self.categories.items():
-            servers = category_data.get('servers', {})
+            servers = category_data.get("servers", {})
             for server_name, server_data in servers.items():
-                server_type = server_data.get('type', 'native')
+                server_type = server_data.get("type", "native")
 
                 # Для docker-mcp серверов command может быть не указан
                 if server_type == "docker-mcp":
                     command = "docker"  # Заглушка, будет игнорироваться
                     args = []
                 else:
-                    command = server_data.get('command', '')
-                    args = server_data.get('args', [])
+                    command = server_data.get("command", "")
+                    args = server_data.get("args", [])
 
                 self.servers[server_name] = ServerConfig(
                     name=server_name,
                     command=command,
                     args=args,
-                    env=server_data.get('env', {}),
-                    cwd=server_data.get('cwd'),
-                    description=server_data.get('description', ''),
-                    timeout=server_data.get('timeout', 60000),
+                    env=server_data.get("env", {}),
+                    cwd=server_data.get("cwd"),
+                    description=server_data.get("description", ""),
+                    timeout=server_data.get("timeout", 60000),
                     type=server_type,
-                    docker_image=server_data.get('docker_image'),
-                    docker_server=server_data.get('docker_server', server_name),
-                    endpoints=server_data.get('endpoints', {})
+                    docker_image=server_data.get("docker_image"),
+                    docker_server=server_data.get("docker_server", server_name),
+                    endpoints=server_data.get("endpoints", {}),
                 )
 
     def get_categories(self, path: str = "/") -> list[str]:
@@ -110,26 +113,26 @@ class Registry:
         Returns:
             Список имён категорий или серверов
         """
-        path = path.strip('/')
+        path = path.strip("/")
 
         if not path:
             # Корневой уровень - возвращаем категории
             return list(self.categories.keys())
 
-        parts = path.split('/')
+        parts = path.split("/")
 
         if len(parts) == 1:
             # Уровень категории - возвращаем серверы
             category = parts[0]
             if category in self.categories:
-                return list(self.categories[category].get('servers', {}).keys())
+                return list(self.categories[category].get("servers", {}).keys())
             return []
 
         if len(parts) == 2:
             # Уровень сервера - возвращаем инструменты
             category, server = parts
             if category in self.categories:
-                servers = self.categories[category].get('servers', {})
+                servers = self.categories[category].get("servers", {})
                 if server in servers:
                     # Здесь нужно получить инструменты сервера
                     return self._get_server_tools_names(server)
@@ -145,11 +148,11 @@ class Registry:
         # Заглушка - реальные инструменты будут загружены при первом вызове
         return [f"[tools of {server_name} - call execute_tool to load]"]
 
-    def get_server_config(self, server_name: str) -> Optional[ServerConfig]:
+    def get_server_config(self, server_name: str) -> ServerConfig | None:
         """Получить конфигурацию сервера по имени"""
         return self.servers.get(server_name)
 
-    def find_server_by_path(self, tool_path: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    def find_server_by_path(self, tool_path: str) -> tuple[str | None, str | None, str | None]:
         """
         Найти сервер по полному пути к инструменту.
 
@@ -159,8 +162,8 @@ class Registry:
         Returns:
             (category, server_name, tool_name) или (None, None, None)
         """
-        path = tool_path.strip('/')
-        parts = path.split('/')
+        path = tool_path.strip("/")
+        parts = path.split("/")
 
         if len(parts) >= 2:
             category = parts[0]
@@ -168,7 +171,7 @@ class Registry:
             tool = parts[2] if len(parts) > 2 else None
 
             if category in self.categories:
-                servers = self.categories[category].get('servers', {})
+                servers = self.categories[category].get("servers", {})
                 if server in servers:
                     return (category, server, tool)
 
@@ -186,17 +189,17 @@ class Registry:
                 "type": "category" | "servers" | "tools"
             }
         """
-        path = path.strip('/')
+        path = path.strip("/")
 
         if not path:
             return {
                 "path": "/",
                 "description": "Root - all tool categories",
                 "items": list(self.categories.keys()),
-                "type": "categories"
+                "type": "categories",
             }
 
-        parts = path.split('/')
+        parts = path.split("/")
 
         if len(parts) == 1:
             category = parts[0]
@@ -204,9 +207,9 @@ class Registry:
                 cat_data = self.categories[category]
                 return {
                     "path": f"/{category}",
-                    "description": cat_data.get('description', ''),
-                    "items": list(cat_data.get('servers', {}).keys()),
-                    "type": "servers"
+                    "description": cat_data.get("description", ""),
+                    "items": list(cat_data.get("servers", {}).keys()),
+                    "type": "servers",
                 }
 
         if len(parts) == 2:
@@ -218,10 +221,7 @@ class Registry:
                     "description": server_config.description,
                     "items": self._get_server_tools_names(server),
                     "type": "tools",
-                    "server_config": {
-                        "command": server_config.command,
-                        "type": server_config.type
-                    }
+                    "server_config": {"command": server_config.command, "type": server_config.type},
                 }
 
         return {"error": f"Path not found: {path}"}
@@ -233,12 +233,16 @@ class Registry:
     def get_servers_in_category(self, category: str) -> list[str]:
         """Получить список серверов в категории"""
         if category in self.categories:
-            return list(self.categories[category].get('servers', {}).keys())
+            return list(self.categories[category].get("servers", {}).keys())
         return []
 
     def to_json(self) -> str:
         """Экспорт реестра в JSON для отладки"""
-        return json.dumps({
-            "categories": self.categories,
-            "servers": {k: v.__dict__ for k, v in self.servers.items()}
-        }, indent=2, ensure_ascii=False)
+        return json.dumps(
+            {
+                "categories": self.categories,
+                "servers": {k: v.__dict__ for k, v in self.servers.items()},
+            },
+            indent=2,
+            ensure_ascii=False,
+        )

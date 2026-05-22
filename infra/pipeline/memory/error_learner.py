@@ -9,36 +9,36 @@ This module provides functionality for:
 - Providing error-based recommendations
 """
 
-import re
-import logging
 import hashlib
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any, Tuple
-from enum import Enum
+import logging
+import re
 from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
 from models import (
     ErrorRecord,
     ErrorSeverity,
-    MemoryEntry,
-    MemoryType,
     LearningContext,
+    MemoryType,
     Recommendation,
     RecommendationType,
 )
-from .unified_memory_client import (
-    UnifiedMemoryClient,
-    SearchResult,
-    SaveResult,
-)
 
+from .unified_memory_client import (
+    SaveResult,
+    SearchResult,
+    UnifiedMemoryClient,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorCategory(Enum):
     """Categories of errors for learning."""
+
     SYNTAX = "syntax"  # Syntax/parsing errors
     RUNTIME = "runtime"  # Runtime exceptions
     LOGIC = "logic"  # Logic/business errors
@@ -56,8 +56,8 @@ class ErrorSignature:
 
     error_type: str
     key_message: str
-    file_pattern: Optional[str] = None
-    line_pattern: Optional[str] = None
+    file_pattern: str | None = None
+    line_pattern: str | None = None
     category: ErrorCategory = ErrorCategory.UNKNOWN
 
     def generate_hash(self) -> str:
@@ -69,7 +69,7 @@ class ErrorSignature:
     def from_error(cls, error: ErrorRecord) -> "ErrorSignature":
         """Create signature from error record."""
         # Extract key message (first line or first 100 chars)
-        key_message = error.error_message.split('\n')[0][:100]
+        key_message = error.error_message.split("\n")[0][:100]
 
         # Detect category
         category = cls._detect_category(error)
@@ -79,7 +79,7 @@ class ErrorSignature:
         if error.context and "file" in error.context:
             file_path = error.context["file"]
             # Generalize file path (remove specific names)
-            file_pattern = re.sub(r'\d+', '*', file_path)
+            file_pattern = re.sub(r"\d+", "*", file_path)
 
         return cls(
             error_type=error.error_type,
@@ -95,21 +95,21 @@ class ErrorSignature:
         type_lower = error.error_type.lower()
 
         # Category detection rules
-        if any(kw in type_lower for kw in ['syntax', 'parse', 'compile']):
+        if any(kw in type_lower for kw in ["syntax", "parse", "compile"]):
             return ErrorCategory.SYNTAX
-        elif any(kw in type_lower for kw in ['runtime', 'exception', 'error']):
+        elif any(kw in type_lower for kw in ["runtime", "exception", "error"]):
             return ErrorCategory.RUNTIME
-        elif any(kw in message_lower for kw in ['config', 'setting', 'environment']):
+        elif any(kw in message_lower for kw in ["config", "setting", "environment"]):
             return ErrorCategory.CONFIGURATION
-        elif any(kw in message_lower for kw in ['connect', 'api', 'external', 'timeout']):
+        elif any(kw in message_lower for kw in ["connect", "api", "external", "timeout"]):
             return ErrorCategory.INTEGRATION
-        elif any(kw in message_lower for kw in ['slow', 'performance', 'memory', 'timeout']):
+        elif any(kw in message_lower for kw in ["slow", "performance", "memory", "timeout"]):
             return ErrorCategory.PERFORMANCE
-        elif any(kw in message_lower for kw in ['security', 'permission', 'access', 'auth']):
+        elif any(kw in message_lower for kw in ["security", "permission", "access", "auth"]):
             return ErrorCategory.SECURITY
-        elif any(kw in message_lower for kw in ['data', 'validation', 'constraint', 'null']):
+        elif any(kw in message_lower for kw in ["data", "validation", "constraint", "null"]):
             return ErrorCategory.DATA
-        elif any(kw in message_lower for kw in ['logic', 'business', 'rule']):
+        elif any(kw in message_lower for kw in ["logic", "business", "rule"]):
             return ErrorCategory.LOGIC
         else:
             return ErrorCategory.UNKNOWN
@@ -121,13 +121,13 @@ class ErrorAnalysis:
 
     error: ErrorRecord
     signature: ErrorSignature
-    similar_errors: List[ErrorRecord] = field(default_factory=list)
+    similar_errors: list[ErrorRecord] = field(default_factory=list)
     occurrence_count: int = 1
-    first_seen: Optional[datetime] = None
-    last_seen: Optional[datetime] = None
-    known_fixes: List[str] = field(default_factory=list)
-    prevention_hints: List[str] = field(default_factory=list)
-    related_patterns: List[str] = field(default_factory=list)
+    first_seen: datetime | None = None
+    last_seen: datetime | None = None
+    known_fixes: list[str] = field(default_factory=list)
+    prevention_hints: list[str] = field(default_factory=list)
+    related_patterns: list[str] = field(default_factory=list)
 
     @property
     def is_recurring(self) -> bool:
@@ -135,7 +135,7 @@ class ErrorAnalysis:
         return self.occurrence_count > 1
 
     @property
-    def recurrence_frequency(self) -> Optional[float]:
+    def recurrence_frequency(self) -> float | None:
         """Calculate recurrence frequency (errors per day)."""
         if not self.first_seen or not self.last_seen:
             return None
@@ -156,8 +156,8 @@ class PreventionRule:
     error_signature_hash: str
     rule_type: str  # 'code_check', 'pre_condition', 'validation', 'warning'
     description: str
-    check_pattern: Optional[str] = None  # Regex pattern to check
-    recommendation: Optional[str] = None
+    check_pattern: str | None = None  # Regex pattern to check
+    recommendation: str | None = None
     effectiveness: float = 0.5  # 0.0 to 1.0
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -178,12 +178,12 @@ class ErrorAnalyzer:
         memory_client: UnifiedMemoryClient,
     ):
         self.memory_client = memory_client
-        self._signature_cache: Dict[str, ErrorSignature] = {}
+        self._signature_cache: dict[str, ErrorSignature] = {}
 
     async def analyze_error(
         self,
         error: ErrorRecord,
-        learning_context: Optional[LearningContext] = None,
+        learning_context: LearningContext | None = None,
     ) -> ErrorAnalysis:
         """
         Analyze an error and find related information.
@@ -206,9 +206,7 @@ class ErrorAnalyzer:
         known_fixes = self._extract_fixes(similar)
 
         # Generate prevention hints
-        prevention_hints = self._generate_prevention_hints(
-            error, signature, similar
-        )
+        prevention_hints = self._generate_prevention_hints(error, signature, similar)
 
         # Find related patterns
         related_patterns = await self._find_related_patterns(error, signature)
@@ -219,10 +217,7 @@ class ErrorAnalyzer:
         last_seen = None
 
         if similar:
-            timestamps = [
-                s.timestamp for s in similar
-                if s.timestamp
-            ]
+            timestamps = [s.timestamp for s in similar if s.timestamp]
             if timestamps:
                 first_seen = min(timestamps)
                 last_seen = max(timestamps)
@@ -243,7 +238,7 @@ class ErrorAnalyzer:
         self,
         error: ErrorRecord,
         signature: ErrorSignature,
-    ) -> List[ErrorRecord]:
+    ) -> list[ErrorRecord]:
         """Find similar errors from memory."""
         query = f"{error.error_type} {signature.key_message}"
 
@@ -264,7 +259,7 @@ class ErrorAnalyzer:
     def _parse_error_from_result(
         self,
         result: SearchResult,
-    ) -> Optional[ErrorRecord]:
+    ) -> ErrorRecord | None:
         """Parse ErrorRecord from search result."""
         try:
             metadata = result.metadata
@@ -274,7 +269,7 @@ class ErrorAnalyzer:
 
             # Parse from content
             content = result.content
-            lines = content.split('\n')
+            lines = content.split("\n")
 
             error_type = ""
             error_message = ""
@@ -299,7 +294,8 @@ class ErrorAnalyzer:
                     error_message=error_message,
                     severity=severity,
                     timestamp=datetime.fromisoformat(result.created_at)
-                    if result.created_at else None,
+                    if result.created_at
+                    else None,
                 )
 
             return None
@@ -310,8 +306,8 @@ class ErrorAnalyzer:
 
     def _extract_fixes(
         self,
-        similar_errors: List[ErrorRecord],
-    ) -> List[str]:
+        similar_errors: list[ErrorRecord],
+    ) -> list[str]:
         """Extract known fixes from similar errors."""
         fixes = []
         seen = set()
@@ -331,8 +327,8 @@ class ErrorAnalyzer:
         self,
         error: ErrorRecord,
         signature: ErrorSignature,
-        similar_errors: List[ErrorRecord],
-    ) -> List[str]:
+        similar_errors: list[ErrorRecord],
+    ) -> list[str]:
         """Generate prevention hints based on analysis."""
         hints = []
 
@@ -379,11 +375,12 @@ class ErrorAnalyzer:
         self,
         error: ErrorRecord,
         signature: ErrorSignature,
-    ) -> List[str]:
+    ) -> list[str]:
         """Find patterns related to the error."""
         query = f"fix {signature.category.value} {signature.key_message}"
 
         from .pattern_saver import PatternMatcher
+
         matcher = PatternMatcher(self.memory_client)
 
         results = await matcher.find_matching_patterns(
@@ -408,17 +405,17 @@ class ErrorLearner:
     def __init__(
         self,
         memory_client: UnifiedMemoryClient,
-        analyzer: Optional[ErrorAnalyzer] = None,
+        analyzer: ErrorAnalyzer | None = None,
     ):
         self.memory_client = memory_client
         self.analyzer = analyzer or ErrorAnalyzer(memory_client)
-        self._prevention_rules: Dict[str, PreventionRule] = {}
-        self._error_counts: Dict[str, int] = defaultdict(int)
+        self._prevention_rules: dict[str, PreventionRule] = {}
+        self._error_counts: dict[str, int] = defaultdict(int)
 
     async def learn_from_error(
         self,
         error: ErrorRecord,
-        learning_context: Optional[LearningContext] = None,
+        learning_context: LearningContext | None = None,
     ) -> ErrorAnalysis:
         """
         Learn from an error and save to memory.
@@ -450,7 +447,7 @@ class ErrorLearner:
         self,
         error: ErrorRecord,
         analysis: ErrorAnalysis,
-        learning_context: Optional[LearningContext] = None,
+        learning_context: LearningContext | None = None,
     ) -> SaveResult:
         """Save error to memory with analysis."""
         # Add analysis info to tags for searchability
@@ -469,7 +466,7 @@ class ErrorLearner:
     async def _generate_prevention_rule(
         self,
         analysis: ErrorAnalysis,
-    ) -> Optional[PreventionRule]:
+    ) -> PreventionRule | None:
         """Generate prevention rule for recurring error."""
         sig_hash = analysis.signature.generate_hash()
 
@@ -485,9 +482,7 @@ class ErrorLearner:
             ErrorCategory.INTEGRATION: "warning",
         }
 
-        rule_type = rule_type_map.get(
-            analysis.signature.category, "warning"
-        )
+        rule_type = rule_type_map.get(analysis.signature.category, "warning")
 
         # Generate description
         description = self._generate_rule_description(analysis)
@@ -534,7 +529,7 @@ class ErrorLearner:
     def _generate_check_pattern(
         self,
         analysis: ErrorAnalysis,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Generate regex check pattern if applicable."""
         category = analysis.signature.category
 
@@ -545,9 +540,7 @@ class ErrorLearner:
         if category == ErrorCategory.DATA:
             # Look for field names in error message
             field_match = re.search(
-                r"field[:\s]+['\"]?(\w+)['\"]?",
-                analysis.error.error_message,
-                re.IGNORECASE
+                r"field[:\s]+['\"]?(\w+)['\"]?", analysis.error.error_message, re.IGNORECASE
             )
             if field_match:
                 field_name = field_match.group(1)
@@ -583,8 +576,8 @@ class ErrorLearner:
     async def check_for_potential_errors(
         self,
         code: str,
-        file_path: Optional[str] = None,
-    ) -> List[Recommendation]:
+        file_path: str | None = None,
+    ) -> list[Recommendation]:
         """
         Check code for potential errors based on learned patterns.
 
@@ -600,15 +593,17 @@ class ErrorLearner:
         for sig_hash, rule in self._prevention_rules.items():
             if rule.check_pattern:
                 if re.search(rule.check_pattern, code, re.IGNORECASE):
-                    recommendations.append(Recommendation(
-                        id=f"rec_{sig_hash}",
-                        recommendation_type=RecommendationType.PREVENTIVE,
-                        title=f"Potential {rule.rule_type} issue",
-                        action=rule.recommendation or rule.description,
-                        rationale=f"Based on {self._error_counts[sig_hash]} previous occurrences",
-                        confidence=rule.effectiveness,
-                        priority=2 if rule.effectiveness > 0.7 else 3,
-                    ))
+                    recommendations.append(
+                        Recommendation(
+                            id=f"rec_{sig_hash}",
+                            recommendation_type=RecommendationType.PREVENTIVE,
+                            title=f"Potential {rule.rule_type} issue",
+                            action=rule.recommendation or rule.description,
+                            rationale=f"Based on {self._error_counts[sig_hash]} previous occurrences",
+                            confidence=rule.effectiveness,
+                            priority=2 if rule.effectiveness > 0.7 else 3,
+                        )
+                    )
 
         return recommendations
 
@@ -660,7 +655,7 @@ class ErrorLearner:
         self,
         error_id: str,
         fix_attempted: str,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> bool:
         """
         Record that a fix attempt failed.
@@ -705,7 +700,7 @@ class ErrorLearner:
 
         return result.success
 
-    def get_error_stats(self) -> Dict[str, Any]:
+    def get_error_stats(self) -> dict[str, Any]:
         """Get statistics about learned errors."""
         return {
             "total_error_signatures": len(self._error_counts),

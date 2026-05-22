@@ -11,10 +11,8 @@ Automation Scripts for Pipeline CLI.
 import json
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
-
+from pathlib import Path
 
 # Корень проекта
 PROJECT_ROOT = Path(__file__).parents[4]
@@ -25,7 +23,7 @@ class PipelineAutomation:
     Класс для автоматизации работы с Pipeline CLI.
     """
 
-    def __init__(self, config_path: Optional[Path] = None) -> None:
+    def __init__(self, config_path: Path | None = None) -> None:
         """
         Инициализация.
 
@@ -58,14 +56,14 @@ class PipelineAutomation:
             [self.python, "-m", "shared.pipeline.cli"] + cmd_args,
             capture_output=True,
             text=True,
-            cwd=PROJECT_ROOT
+            cwd=PROJECT_ROOT,
         )
 
         output = {
             "exit_code": result.returncode,
             "stdout": result.stdout,
             "stderr": result.stderr,
-            "success": result.returncode == 0
+            "success": result.returncode == 0,
         }
 
         if format_json and result.stdout:
@@ -77,11 +75,7 @@ class PipelineAutomation:
         return output
 
     def run_pipeline(
-        self,
-        project: str,
-        task: str,
-        timeout: int = 3600,
-        dry_run: bool = False
+        self, project: str, task: str, timeout: int = 3600, dry_run: bool = False
     ) -> dict:
         """
         Запустить pipeline.
@@ -95,19 +89,14 @@ class PipelineAutomation:
         Returns:
             Dict с результатом
         """
-        args = [
-            "run",
-            "--project", project,
-            "--task", task,
-            "--timeout", str(timeout)
-        ]
+        args = ["run", "--project", project, "--task", task, "--timeout", str(timeout)]
 
         if dry_run:
             args.append("--dry-run")
 
         return self.run_cli(args)
 
-    def get_status(self, run_id: Optional[str] = None) -> dict:
+    def get_status(self, run_id: str | None = None) -> dict:
         """
         Получить статус pipeline.
 
@@ -133,12 +122,7 @@ class PipelineAutomation:
         """
         return self.run_cli(["list", "projects"], format_json=True)
 
-    def add_project(
-        self,
-        name: str,
-        path: str,
-        project_type: str = "configuration"
-    ) -> dict:
+    def add_project(self, name: str, path: str, project_type: str = "configuration") -> dict:
         """
         Добавить проект.
 
@@ -150,18 +134,12 @@ class PipelineAutomation:
         Returns:
             Dict с результатом
         """
-        return self.run_cli([
-            "config", "add-project",
-            "--name", name,
-            "--path", path,
-            "--type", project_type
-        ])
+        return self.run_cli(
+            ["config", "add-project", "--name", name, "--path", path, "--type", project_type]
+        )
 
     def wait_for_completion(
-        self,
-        run_id: str,
-        timeout: int = 3600,
-        poll_interval: int = 10
+        self, run_id: str, timeout: int = 3600, poll_interval: int = 10
     ) -> dict:
         """
         Ожидать завершения pipeline.
@@ -186,10 +164,7 @@ class PipelineAutomation:
 
             time.sleep(poll_interval)
 
-        return {
-            "success": False,
-            "error": "Timeout waiting for pipeline completion"
-        }
+        return {"success": False, "error": "Timeout waiting for pipeline completion"}
 
 
 def example_batch_processing():
@@ -203,18 +178,9 @@ def example_batch_processing():
     automation = PipelineAutomation()
 
     tasks = [
-        {
-            "project": "GKSTCPLK-1872",
-            "task": "Добавить валидацию номенклатуры"
-        },
-        {
-            "project": "GKSTCPLK-1872",
-            "task": "Оптимизировать запрос в регистре"
-        },
-        {
-            "project": "GKSTCPLK-1996",
-            "task": "Исправить ошибку проведения"
-        }
+        {"project": "GKSTCPLK-1872", "task": "Добавить валидацию номенклатуры"},
+        {"project": "GKSTCPLK-1872", "task": "Оптимизировать запрос в регистре"},
+        {"project": "GKSTCPLK-1996", "task": "Исправить ошибку проведения"},
     ]
 
     results = []
@@ -225,14 +191,16 @@ def example_batch_processing():
         result = automation.run_pipeline(
             project=task_info["project"],
             task=task_info["task"],
-            dry_run=True  # Симуляция
+            dry_run=True,  # Симуляция
         )
 
-        results.append({
-            "task": task_info,
-            "success": result["success"],
-            "output": result["stdout"][:200] if result["stdout"] else ""
-        })
+        results.append(
+            {
+                "task": task_info,
+                "success": result["success"],
+                "output": result["stdout"][:200] if result["stdout"] else "",
+            }
+        )
 
         print(f"  Status: {'✅ Success' if result['success'] else '❌ Failed'}")
 
@@ -265,11 +233,7 @@ def example_scheduled_run():
         print("Weekday - running quick check")
         task = "Быстрая проверка качества кода"
 
-    result = automation.run_pipeline(
-        project="GKSTCPLK-1872",
-        task=task,
-        dry_run=True
-    )
+    result = automation.run_pipeline(project="GKSTCPLK-1872", task=task, dry_run=True)
 
     print(f"\nScheduled task result: {'✅' if result['success'] else '❌'}")
 
@@ -307,9 +271,7 @@ def example_conditional_workflow():
     # Шаг 4: Запустить pipeline
     print("Step 4: Start pipeline...")
     result = automation.run_pipeline(
-        project=project_name,
-        task="Условный workflow - автоматическая задача",
-        dry_run=True
+        project=project_name, task="Условный workflow - автоматическая задача", dry_run=True
     )
 
     print(f"\nWorkflow completed: {'✅' if result['success'] else '❌'}")
@@ -325,28 +287,29 @@ def example_report_generation():
 
     automation = PipelineAutomation()
 
-    report = {
-        "generated_at": datetime.now().isoformat(),
-        "sections": []
-    }
+    report = {"generated_at": datetime.now().isoformat(), "sections": []}
 
     # Собрать данные о проектах
     print("Collecting projects data...")
     projects_result = automation.list_projects()
-    report["sections"].append({
-        "name": "Projects",
-        "success": projects_result.get("success", False),
-        "data": projects_result.get("data")
-    })
+    report["sections"].append(
+        {
+            "name": "Projects",
+            "success": projects_result.get("success", False),
+            "data": projects_result.get("data"),
+        }
+    )
 
     # Собрать статус
     print("Collecting status data...")
     status_result = automation.get_status()
-    report["sections"].append({
-        "name": "Current Status",
-        "success": status_result.get("success", False),
-        "data": status_result.get("data")
-    })
+    report["sections"].append(
+        {
+            "name": "Current Status",
+            "success": status_result.get("success", False),
+            "data": status_result.get("data"),
+        }
+    )
 
     # Вывести отчёт
     print("\n" + "-" * 40)

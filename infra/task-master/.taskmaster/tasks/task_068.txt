@@ -22,4 +22,3 @@ Design a form with fields for task title, description, priority, assignee, due d
 ### Description: Develop the backend functionality to save manually created tasks to the database
 ### Details:
 Create API endpoints to handle task creation requests from the frontend. Implement data validation, error handling, and confirmation messages. Ensure the saved tasks appear in the task list view and can be edited or deleted like PRD-parsed tasks.
-

@@ -57,6 +57,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput
+
 from shared.slash_detect import detect_slash_command as _detect_slash_command  # noqa: F401
 
 
@@ -87,6 +88,7 @@ class SlashCommandTracker(BaseHook):
 
         try:
             from shared.run_context import set_run
+
             set_run(inp.session_id, run_id, command)
         except Exception:
             pass
@@ -112,6 +114,7 @@ class SlashCommandTracker(BaseHook):
         # Skip if UPS already recorded this turn — avoids duplicate run_id.
         try:
             from shared.run_context import get_run
+
             if get_run(inp.session_id):
                 return
         except Exception:
@@ -121,6 +124,7 @@ class SlashCommandTracker(BaseHook):
 
         try:
             from shared.run_context import set_run
+
             set_run(inp.session_id, run_id, command)
         except Exception:
             pass
@@ -136,6 +140,7 @@ class SlashCommandTracker(BaseHook):
     def _handle_stop(self, inp: HookInput) -> None:
         try:
             from shared.run_context import clear_run
+
             entry = clear_run(inp.session_id)
         except Exception:
             entry = {}
@@ -167,6 +172,7 @@ class SlashCommandTracker(BaseHook):
     ) -> None:
         try:
             from shared.invocation_logger import log_invocation
+
             log_invocation(
                 hook=self.HOOK_NAME,
                 event=event,

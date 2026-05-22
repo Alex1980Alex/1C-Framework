@@ -7,7 +7,7 @@ This VS Code extension uses a **3-file packaging system** to avoid dependency co
 ```
 apps/extension/
 ├── package.json           # Development configuration
-├── package.publish.json   # Clean publishing configuration  
+├── package.publish.json   # Clean publishing configuration
 ├── package.mjs           # Build script for packaging
 ├── .vscodeignore         # Files to exclude from extension package
 └── vsix-build/           # Generated clean package directory
@@ -17,7 +17,7 @@ apps/extension/
 
 ### `package.json` (Development)
 - **Purpose**: Development environment with all build tools
-- **Contains**: 
+- **Contains**:
   - All `devDependencies` needed for building
   - Development scripts (`build`, `watch`, `lint`, etc.)
   - Development package name: `"taskr"`
@@ -54,7 +54,7 @@ npm run watch
 # Run just JavaScript build
 npm run build:js
 
-# Run just CSS build  
+# Run just CSS build
 npm run build:css
 
 # Full production build
@@ -102,7 +102,7 @@ When updating extension metadata, ensure these fields match between `package.jso
 ```json
 {
   "version": "1.0.1",                    // ⚠️ MUST MATCH
-  "publisher": "Hamster",        // ⚠️ MUST MATCH  
+  "publisher": "Hamster",        // ⚠️ MUST MATCH
   "displayName": "taskr: Task Master Kanban", // ⚠️ MUST MATCH
   "description": "A visual Kanban board...",  // ⚠️ MUST MATCH
 }
@@ -216,7 +216,7 @@ This allows independent versioning and prevents conflicts in the monorepo.
 
 ### Changeset Issues
 **Problem**: Version workflow not triggering
-**Check**: 
+**Check**:
 1. Changeset files exist in `.changeset/`
 2. Package name in changeset matches `package.publish.json`
 3. Changes are pushed to `main` branch
@@ -253,4 +253,4 @@ This allows independent versioning and prevents conflicts in the monorepo.
 
 ---
 
-**Remember**: Always use `npx changeset add` for changes, then push to trigger automated releases! 🚀 
+**Remember**: Always use `npx changeset add` for changes, then push to trigger automated releases! 🚀

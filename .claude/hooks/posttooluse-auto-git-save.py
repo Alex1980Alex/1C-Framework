@@ -20,12 +20,8 @@ sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
 
-_DEBOUNCE_FILE = os.path.join(
-    os.path.dirname(_HOOK_DIR), "cache", "git-save-debounce.json"
-)
-_PAUSE_FILE = os.path.join(
-    os.path.dirname(_HOOK_DIR), "cache", "auto-git-save.paused"
-)
+_DEBOUNCE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "git-save-debounce.json")
+_PAUSE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "auto-git-save.paused")
 _DEBOUNCE_SECONDS = 5.0
 _MAX_PENDING = 20
 
@@ -38,6 +34,7 @@ def _is_paused() -> bool:
     hook; here we conservatively pause whenever the file exists).
     """
     return os.path.isfile(_PAUSE_FILE)
+
 
 # Paths that should NOT trigger auto-git-save
 SKIP_PATTERNS = [
@@ -61,8 +58,18 @@ def _should_track(file_path: str) -> bool:
             return False
     # Only track code files
     code_extensions = {
-        ".py", ".js", ".ts", ".bsl", ".md", ".json",
-        ".toml", ".yml", ".yaml", ".xml", ".html", ".css",
+        ".py",
+        ".js",
+        ".ts",
+        ".bsl",
+        ".md",
+        ".json",
+        ".toml",
+        ".yml",
+        ".yaml",
+        ".xml",
+        ".html",
+        ".css",
     }
     _, ext = os.path.splitext(normalized)
     return ext.lower() in code_extensions
@@ -72,7 +79,7 @@ def _load_pending() -> dict:
     """Load debounce state."""
     try:
         if os.path.isfile(_DEBOUNCE_FILE):
-            with open(_DEBOUNCE_FILE, "r", encoding="utf-8") as f:
+            with open(_DEBOUNCE_FILE, encoding="utf-8") as f:
                 return json.load(f)
     except (json.JSONDecodeError, OSError):
         pass
@@ -99,23 +106,28 @@ def _git_commit(files: list[str]) -> bool:
         for f in files:
             subprocess.run(
                 ["git", "add", f],
-                capture_output=True, timeout=10,
+                capture_output=True,
+                timeout=10,
                 cwd=project_dir,
             )
         # Count staged changes
         result = subprocess.run(
             ["git", "diff", "--cached", "--stat"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=project_dir,
         )
         if not result.stdout.strip():
             return False
         # Commit
         from shared.auto_save_core import format_commit_message
+
         commit_msg = format_commit_message(files, prefix="chore: auto-save")
         subprocess.run(
             ["git", "commit", "-m", commit_msg, "--no-verify"],
-            capture_output=True, timeout=15,
+            capture_output=True,
+            timeout=15,
             cwd=project_dir,
         )
         return True
@@ -157,35 +169,43 @@ class PostToolUseAutoGitSave(BaseHook):
 
         if elapsed < _DEBOUNCE_SECONDS:
             # Within debounce window — save and wait
-            _save_pending({
-                "files": files,
-                "last_commit": last_commit,
-            })
+            _save_pending(
+                {
+                    "files": files,
+                    "last_commit": last_commit,
+                }
+            )
             return None
 
         # Pause sentinel honored: shared with auto-git-save.py; user toggles
         # both hooks with one `.claude/cache/auto-git-save.paused` file.
         # We still accumulate files in pending so commit resumes when lifted.
         if _is_paused():
-            _save_pending({
-                "files": files,
-                "last_commit": last_commit,
-            })
+            _save_pending(
+                {
+                    "files": files,
+                    "last_commit": last_commit,
+                }
+            )
             return None
 
         # Debounce expired — commit
         success = _git_commit(files)
         if success:
-            _save_pending({
-                "files": [],
-                "last_commit": now,
-            })
+            _save_pending(
+                {
+                    "files": [],
+                    "last_commit": now,
+                }
+            )
         else:
             # Commit failed — keep pending
-            _save_pending({
-                "files": files,
-                "last_commit": last_commit,
-            })
+            _save_pending(
+                {
+                    "files": files,
+                    "last_commit": last_commit,
+                }
+            )
 
         return None
 

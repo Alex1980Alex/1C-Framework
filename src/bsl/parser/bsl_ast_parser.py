@@ -51,8 +51,7 @@ _DIRECTIVE_RE = re.compile(
 
 # Module-level variable
 _VAR_RE = re.compile(
-    r"^[ \t]*(?:Var|Перем)\s+(?P<name>[а-яА-ЯёЁa-zA-Z_]\w*)"
-    r"(?:\s+(?P<export>Export|Экспорт))?",
+    r"^[ \t]*(?:Var|Перем)\s+(?P<name>[а-яА-ЯёЁa-zA-Z_]\w*)" r"(?:\s+(?P<export>Export|Экспорт))?",
     re.MULTILINE | re.IGNORECASE,
 )
 

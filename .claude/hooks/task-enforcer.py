@@ -25,16 +25,19 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+
 # Resolve cache path: core_paths if available, else fallback
 def _find_cache_dir() -> Path:
     try:
         import os as _os
+
         _this = _os.path.dirname(_os.path.abspath(__file__))
         _user = _os.path.join(_os.path.expanduser("~"), ".claude", "hooks")
         if _os.path.isdir(_os.path.join(_user, "shared")):
             sys.path.insert(0, _user)
         sys.path.insert(0, _this)
         from shared.core_paths import get_cache_dir
+
         return get_cache_dir()
     except (ImportError, Exception):
         return Path(__file__).resolve().parent.parent / "cache"
@@ -73,8 +76,7 @@ def sync_stale_code_verify_tasks(data: dict, current_session_id: str = "") -> in
     now = datetime.now()
 
     for todo in todos:
-        if (todo.get("status") != "pending"
-                or todo.get("createdBy") != "code-verify-reminder"):
+        if todo.get("status") != "pending" or todo.get("createdBy") != "code-verify-reminder":
             continue
 
         task_session = todo.get("sessionId", "")
@@ -83,7 +85,9 @@ def sync_stale_code_verify_tasks(data: dict, current_session_id: str = "") -> in
         if current_session_id and task_session and task_session != current_session_id:
             todo["status"] = "completed"
             todo["completedAt"] = now.isoformat()
-            todo["note"] = f"Auto-cleaned: different session ({task_session[:8]}… vs {current_session_id[:8]}…)"
+            todo["note"] = (
+                f"Auto-cleaned: different session ({task_session[:8]}… vs {current_session_id[:8]}…)"
+            )
             completed += 1
             continue
 
@@ -119,7 +123,10 @@ def sync_git_tasks_with_status(data: dict) -> int:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
             cwd=str(PROJECT_ROOT),
-            capture_output=True, text=True, encoding="utf-8", timeout=3,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=3,
         )
         if result.returncode != 0:
             return 0
@@ -133,8 +140,7 @@ def sync_git_tasks_with_status(data: dict) -> int:
         now = datetime.now().isoformat()
 
         for todo in todos:
-            if (todo.get("status") == "pending"
-                    and todo.get("createdBy") == "auto-git-save-hook"):
+            if todo.get("status") == "pending" and todo.get("createdBy") == "auto-git-save-hook":
                 todo["status"] = "completed"
                 todo["completedAt"] = now
                 todo["note"] = "Auto-synced: git status clean at stop"
@@ -171,7 +177,7 @@ def get_pending_mandatory_tasks(current_session_id: str = "") -> list:
         return []
 
     try:
-        with open(TODOS_FILE, "r", encoding="utf-8") as f:
+        with open(TODOS_FILE, encoding="utf-8") as f:
             data = json.load(f)
 
         needs_save = False
@@ -203,13 +209,14 @@ def get_pending_mandatory_tasks(current_session_id: str = "") -> list:
         pending = []
 
         for todo in todos:
-            if (todo.get("status") == "pending"
-                    and todo.get("createdBy", "") in MANDATORY_HOOKS):
-                pending.append({
-                    "content": todo.get("content", ""),
-                    "createdBy": todo.get("createdBy", ""),
-                    "createdAt": todo.get("createdAt", ""),
-                })
+            if todo.get("status") == "pending" and todo.get("createdBy", "") in MANDATORY_HOOKS:
+                pending.append(
+                    {
+                        "content": todo.get("content", ""),
+                        "createdBy": todo.get("createdBy", ""),
+                        "createdAt": todo.get("createdAt", ""),
+                    }
+                )
 
         return pending
     except (json.JSONDecodeError, OSError, KeyError):
@@ -231,6 +238,7 @@ def main():
     # Invocation timer
     try:
         from shared.invocation_logger import InvocationTimer
+
         timer = InvocationTimer("task-enforcer", event="Stop").start()
     except Exception:
         timer = None

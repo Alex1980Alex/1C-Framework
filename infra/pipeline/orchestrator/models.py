@@ -8,23 +8,20 @@ and result merging.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
-import hashlib
-import json
+from typing import Any
 
 
 class DependencyType(str, Enum):
     """Types of dependencies between tasks."""
 
     # Hard dependencies - must complete before dependent can start
-    PRODUCES = "produces"       # Task A produces artifact needed by B
-    REQUIRES = "requires"       # Task A requires completion of B
-    MODIFIES = "modifies"       # Task A modifies resource used by B
+    PRODUCES = "produces"  # Task A produces artifact needed by B
+    REQUIRES = "requires"  # Task A requires completion of B
+    MODIFIES = "modifies"  # Task A modifies resource used by B
 
     # Soft dependencies - preferred but not required
-    PREFERS = "prefers"         # Better if A runs before B
-    SUGGESTS = "suggests"       # Hint for optimization
+    PREFERS = "prefers"  # Better if A runs before B
+    SUGGESTS = "suggests"  # Hint for optimization
 
     @property
     def is_hard(self) -> bool:
@@ -39,78 +36,78 @@ class DependencyType(str, Enum):
 class ExecutionPriority(str, Enum):
     """Priority levels for task execution."""
 
-    CRITICAL = "critical"       # Must run first, blocking
-    HIGH = "high"               # Prefer to run early
-    NORMAL = "normal"           # Standard priority
-    LOW = "low"                 # Can be deferred
-    BACKGROUND = "background"   # Run when resources available
+    CRITICAL = "critical"  # Must run first, blocking
+    HIGH = "high"  # Prefer to run early
+    NORMAL = "normal"  # Standard priority
+    LOW = "low"  # Can be deferred
+    BACKGROUND = "background"  # Run when resources available
 
 
 class TaskStatus(str, Enum):
     """Status of a task in execution."""
 
-    PENDING = "pending"         # Not yet started
-    WAITING = "waiting"         # Waiting for dependencies
-    READY = "ready"             # All dependencies satisfied, ready to run
-    RUNNING = "running"         # Currently executing
-    COMPLETED = "completed"     # Successfully completed
-    FAILED = "failed"           # Failed with error
-    CANCELLED = "cancelled"     # Cancelled by user or system
-    SKIPPED = "skipped"         # Skipped due to conditions
+    PENDING = "pending"  # Not yet started
+    WAITING = "waiting"  # Waiting for dependencies
+    READY = "ready"  # All dependencies satisfied, ready to run
+    RUNNING = "running"  # Currently executing
+    COMPLETED = "completed"  # Successfully completed
+    FAILED = "failed"  # Failed with error
+    CANCELLED = "cancelled"  # Cancelled by user or system
+    SKIPPED = "skipped"  # Skipped due to conditions
 
 
 class MergeStrategy(str, Enum):
     """Strategies for merging parallel results."""
 
-    COMBINE = "combine"             # Merge dicts, concatenate lists/strings
-    OVERRIDE = "override"           # Last value wins
-    CONCATENATE = "concatenate"     # Append results sequentially
-    AGGREGATE = "aggregate"         # Combine into structured format
-    BEST_WINS = "best_wins"         # Take result with best quality score
-    UNION = "union"                 # Merge unique items from all results
-    INTERSECTION = "intersection"   # Keep only common items
-    WEIGHTED = "weighted"           # Weighted combination based on priority
+    COMBINE = "combine"  # Merge dicts, concatenate lists/strings
+    OVERRIDE = "override"  # Last value wins
+    CONCATENATE = "concatenate"  # Append results sequentially
+    AGGREGATE = "aggregate"  # Combine into structured format
+    BEST_WINS = "best_wins"  # Take result with best quality score
+    UNION = "union"  # Merge unique items from all results
+    INTERSECTION = "intersection"  # Keep only common items
+    WEIGHTED = "weighted"  # Weighted combination based on priority
 
 
 class ConflictType(str, Enum):
     """Types of conflicts between parallel tasks."""
 
-    WRITE_WRITE = "write_write"             # Multiple tasks write to same resource
-    WRITE_READ = "write_read"               # Write conflicts with read dependency
-    FILE_COLLISION = "file_collision"       # Multiple tasks modify same file
-    RESOURCE_LOCK = "resource_lock"         # Competing for same resource
+    WRITE_WRITE = "write_write"  # Multiple tasks write to same resource
+    WRITE_READ = "write_read"  # Write conflicts with read dependency
+    FILE_COLLISION = "file_collision"  # Multiple tasks modify same file
+    RESOURCE_LOCK = "resource_lock"  # Competing for same resource
     DATA_INCONSISTENCY = "data_inconsistency"  # Conflicting data changes
-    ARTIFACT_OVERLAP = "artifact_overlap"   # Overlapping artifact contents
+    ARTIFACT_OVERLAP = "artifact_overlap"  # Overlapping artifact contents
     SEQUENCE_VIOLATION = "sequence_violation"  # Order dependency violated
 
 
 class ConflictResolution(str, Enum):
     """Resolution strategies for conflicts."""
 
-    UNRESOLVED = "unresolved"           # Not yet resolved
-    TAKE_FIRST = "take_first"           # Take first task's result
-    TAKE_LAST = "take_last"             # Take last task's result
-    PRIORITY_WINS = "priority_wins"     # Higher priority task wins
-    LATEST_WINS = "latest_wins"         # Latest completion wins
-    MERGE_MANUAL = "merge_manual"       # Require manual merge
-    MERGE_AUTO = "merge_auto"           # Automatic merge attempt
-    ABORT = "abort"                     # Abort conflicting tasks
-    RETRY = "retry"                     # Retry with serialization
-    MERGED = "merged"                   # Successfully merged results
-    SKIPPED = "skipped"                 # Conflict skipped
+    UNRESOLVED = "unresolved"  # Not yet resolved
+    TAKE_FIRST = "take_first"  # Take first task's result
+    TAKE_LAST = "take_last"  # Take last task's result
+    PRIORITY_WINS = "priority_wins"  # Higher priority task wins
+    LATEST_WINS = "latest_wins"  # Latest completion wins
+    MERGE_MANUAL = "merge_manual"  # Require manual merge
+    MERGE_AUTO = "merge_auto"  # Automatic merge attempt
+    ABORT = "abort"  # Abort conflicting tasks
+    RETRY = "retry"  # Retry with serialization
+    MERGED = "merged"  # Successfully merged results
+    SKIPPED = "skipped"  # Conflict skipped
 
 
 @dataclass
 class TaskDependency:
     """Represents a dependency between two tasks."""
 
-    source_id: str              # Task that depends on target
-    target_id: str              # Task that must complete first
+    source_id: str  # Task that depends on target
+    target_id: str  # Task that must complete first
     dependency_type: DependencyType
-    artifact_name: Optional[str] = None  # Specific artifact if applicable
-    condition: Optional[str] = None       # Conditional expression
+    artifact_name: str | None = None  # Specific artifact if applicable
+    condition: str | None = None  # Conditional expression
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "source_id": self.source_id,
@@ -121,7 +118,7 @@ class TaskDependency:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TaskDependency":
+    def from_dict(cls, data: dict[str, Any]) -> "TaskDependency":
         """Create from dictionary."""
         return cls(
             source_id=data["source_id"],
@@ -147,24 +144,24 @@ class TaskNode:
     status: TaskStatus = TaskStatus.PENDING
 
     # Artifacts
-    input_artifacts: List[str] = field(default_factory=list)
-    output_artifacts: List[str] = field(default_factory=list)
+    input_artifacts: list[str] = field(default_factory=list)
+    output_artifacts: list[str] = field(default_factory=list)
 
     # Resources (files, modules, etc.)
-    resources_read: Set[str] = field(default_factory=set)
-    resources_write: Set[str] = field(default_factory=set)
+    resources_read: set[str] = field(default_factory=set)
+    resources_write: set[str] = field(default_factory=set)
 
     # Timing
     estimated_duration_seconds: int = 60
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
     # Results
-    result: Optional[Dict[str, Any]] = None
-    error_message: Optional[str] = None
+    result: dict[str, Any] | None = None
+    error_message: str | None = None
 
     # Metadata
-    tags: Dict[str, Any] = field(default_factory=dict)
+    tags: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_parallelizable(self) -> bool:
@@ -173,7 +170,7 @@ class TaskNode:
         return len(self.resources_write) == 0 or self.priority != ExecutionPriority.CRITICAL
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Get actual execution duration if completed."""
         if self.started_at and self.completed_at:
             return (self.completed_at - self.started_at).total_seconds()
@@ -191,7 +188,7 @@ class TaskNode:
             return True
         return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -214,7 +211,7 @@ class TaskNode:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TaskNode":
+    def from_dict(cls, data: dict[str, Any]) -> "TaskNode":
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -229,8 +226,12 @@ class TaskNode:
             resources_read=set(data.get("resources_read", [])),
             resources_write=set(data.get("resources_write", [])),
             estimated_duration_seconds=data.get("estimated_duration_seconds", 60),
-            started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+            started_at=datetime.fromisoformat(data["started_at"])
+            if data.get("started_at")
+            else None,
+            completed_at=datetime.fromisoformat(data["completed_at"])
+            if data.get("completed_at")
+            else None,
             result=data.get("result"),
             error_message=data.get("error_message"),
             tags=data.get("tags", {}),
@@ -242,17 +243,17 @@ class ParallelGroup:
     """A group of tasks that can execute in parallel."""
 
     id: str
-    tasks: List[TaskNode] = field(default_factory=list)
+    tasks: list[TaskNode] = field(default_factory=list)
     merge_strategy: MergeStrategy = MergeStrategy.CONCATENATE
 
     # Execution constraints
-    max_parallel: int = 4           # Maximum concurrent tasks
-    timeout_seconds: int = 600      # Group timeout
-    fail_fast: bool = False         # Stop on first failure
+    max_parallel: int = 4  # Maximum concurrent tasks
+    timeout_seconds: int = 600  # Group timeout
+    fail_fast: bool = False  # Stop on first failure
 
     # Results
-    results: List[Dict[str, Any]] = field(default_factory=list)
-    merged_result: Optional[Dict[str, Any]] = None
+    results: list[dict[str, Any]] = field(default_factory=list)
+    merged_result: dict[str, Any] | None = None
 
     @property
     def task_count(self) -> int:
@@ -273,7 +274,7 @@ class ParallelGroup:
         """Add a task to the group."""
         self.tasks.append(task)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -287,7 +288,7 @@ class ParallelGroup:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ParallelGroup":
+    def from_dict(cls, data: dict[str, Any]) -> "ParallelGroup":
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -307,9 +308,9 @@ class TaskGraph:
 
     id: str
     name: str = ""
-    nodes: Dict[str, TaskNode] = field(default_factory=dict)
-    dependencies: List[TaskDependency] = field(default_factory=list)
-    parallel_groups: List[ParallelGroup] = field(default_factory=list)
+    nodes: dict[str, TaskNode] = field(default_factory=dict)
+    dependencies: list[TaskDependency] = field(default_factory=list)
+    parallel_groups: list[ParallelGroup] = field(default_factory=list)
 
     # Graph metadata
     created_at: datetime = field(default_factory=datetime.now)
@@ -322,7 +323,7 @@ class TaskGraph:
         return self.id
 
     @property
-    def tasks(self) -> Dict[str, "TaskNode"]:
+    def tasks(self) -> dict[str, "TaskNode"]:
         """Alias for nodes - used by ParallelExecutor."""
         return self.nodes
 
@@ -330,7 +331,9 @@ class TaskGraph:
         """Alias for add_node - used by ParallelExecutor."""
         self.add_node(task)
 
-    def add_dependency(self, source_id, target_id: str = None, dep_type: "DependencyType" = None) -> None:
+    def add_dependency(
+        self, source_id, target_id: str = None, dep_type: "DependencyType" = None
+    ) -> None:
         """
         Add a dependency between tasks.
 
@@ -346,6 +349,7 @@ class TaskGraph:
             raise ValueError("target_id is required when source_id is a string")
         else:
             from .models import DependencyType
+
             dependency = TaskDependency(
                 source_id=source_id,
                 target_id=target_id,
@@ -364,15 +368,15 @@ class TaskGraph:
         self.nodes[node.id] = node
         self.updated_at = datetime.now()
 
-    def get_dependencies(self, task_id: str) -> List[TaskDependency]:
+    def get_dependencies(self, task_id: str) -> list[TaskDependency]:
         """Get all dependencies where task_id is the source (depends on others)."""
         return [d for d in self.dependencies if d.source_id == task_id]
 
-    def get_dependents(self, task_id: str) -> List[TaskDependency]:
+    def get_dependents(self, task_id: str) -> list[TaskDependency]:
         """Get all dependencies where task_id is the target (others depend on it)."""
         return [d for d in self.dependencies if d.target_id == task_id]
 
-    def get_ready_tasks(self) -> List[TaskNode]:
+    def get_ready_tasks(self) -> list[TaskNode]:
         """Get all tasks that are ready to execute (all dependencies satisfied)."""
         ready = []
         for node in self.nodes.values():
@@ -394,7 +398,7 @@ class TaskGraph:
 
         return ready
 
-    def find_parallel_groups(self, max_group_size: int = None) -> List[ParallelGroup]:
+    def find_parallel_groups(self, max_group_size: int = None) -> list[ParallelGroup]:
         """
         Identify groups of tasks that can run in parallel.
 
@@ -411,14 +415,14 @@ class TaskGraph:
             return groups
 
         # Build dependency set for quick lookup (task_id -> set of tasks it depends on)
-        depends_on: Dict[str, Set[str]] = {task.id: set() for task in all_tasks}
+        depends_on: dict[str, set[str]] = {task.id: set() for task in all_tasks}
         for dep in self.dependencies:
             if dep.dependency_type.is_hard:
                 depends_on[dep.source_id].add(dep.target_id)
 
         # Group by non-conflicting tasks (no resource conflicts AND no dependencies)
         current_group = ParallelGroup(id=f"group_{len(self.parallel_groups)}")
-        tasks_in_groups: Set[str] = set()
+        tasks_in_groups: set[str] = set()
 
         for task in all_tasks:
             # Check if task conflicts with any in current group
@@ -454,7 +458,7 @@ class TaskGraph:
 
         return groups
 
-    def topological_sort(self) -> List[TaskNode]:
+    def topological_sort(self) -> list[TaskNode]:
         """Return tasks in topological order (respecting dependencies)."""
         # Kahn's algorithm
         in_degree = {node_id: 0 for node_id in self.nodes}
@@ -464,11 +468,7 @@ class TaskGraph:
                 in_degree[dep.source_id] += 1
 
         # Start with nodes that have no dependencies
-        queue = [
-            self.nodes[node_id]
-            for node_id, degree in in_degree.items()
-            if degree == 0
-        ]
+        queue = [self.nodes[node_id] for node_id, degree in in_degree.items() if degree == 0]
 
         # Sort by priority
         queue.sort(key=lambda n: list(ExecutionPriority).index(n.priority))
@@ -491,7 +491,7 @@ class TaskGraph:
 
         return result
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """Validate the task graph. Returns list of errors."""
         errors = []
 
@@ -517,7 +517,7 @@ class TaskGraph:
 
         return errors
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -530,7 +530,7 @@ class TaskGraph:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TaskGraph":
+    def from_dict(cls, data: dict[str, Any]) -> "TaskGraph":
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -538,8 +538,12 @@ class TaskGraph:
             nodes={k: TaskNode.from_dict(v) for k, v in data.get("nodes", {}).items()},
             dependencies=[TaskDependency.from_dict(d) for d in data.get("dependencies", [])],
             parallel_groups=[ParallelGroup.from_dict(g) for g in data.get("parallel_groups", [])],
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else datetime.now(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else datetime.now(),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else datetime.now(),
+            updated_at=datetime.fromisoformat(data["updated_at"])
+            if data.get("updated_at")
+            else datetime.now(),
         )
 
     def to_mermaid(self) -> str:
@@ -576,13 +580,13 @@ class Conflict:
 
     id: str
     conflict_type: ConflictType
-    task_ids: List[str]
+    task_ids: list[str]
     resource: str  # The resource that caused the conflict
     description: str
     detected_at: datetime = field(default_factory=datetime.now)
-    resolution: Optional[ConflictResolution] = None
-    resolved_at: Optional[datetime] = None
-    resolution_details: Optional[str] = None
+    resolution: ConflictResolution | None = None
+    resolved_at: datetime | None = None
+    resolution_details: str | None = None
 
     @property
     def is_resolved(self) -> bool:
@@ -595,7 +599,7 @@ class Conflict:
         self.resolved_at = datetime.now()
         self.resolution_details = details
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -610,7 +614,7 @@ class Conflict:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Conflict":
+    def from_dict(cls, data: dict[str, Any]) -> "Conflict":
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -618,8 +622,12 @@ class Conflict:
             task_ids=data["task_ids"],
             resource=data["resource"],
             description=data["description"],
-            detected_at=datetime.fromisoformat(data["detected_at"]) if data.get("detected_at") else datetime.now(),
+            detected_at=datetime.fromisoformat(data["detected_at"])
+            if data.get("detected_at")
+            else datetime.now(),
             resolution=ConflictResolution(data["resolution"]) if data.get("resolution") else None,
-            resolved_at=datetime.fromisoformat(data["resolved_at"]) if data.get("resolved_at") else None,
+            resolved_at=datetime.fromisoformat(data["resolved_at"])
+            if data.get("resolved_at")
+            else None,
             resolution_details=data.get("resolution_details"),
         )

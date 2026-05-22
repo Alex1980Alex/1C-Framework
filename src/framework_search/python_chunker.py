@@ -44,8 +44,9 @@ def chunk_python(
     try:
         tree = ast.parse(content)
     except SyntaxError as e:
-        logger.debug("python_chunker: %s parse failed (%s); falling back to sliding window",
-                     relative_path, e)
+        logger.debug(
+            "python_chunker: %s parse failed (%s); falling back to sliding window", relative_path, e
+        )
         return _fallback_chunks(relative_path, content, mtime)
 
     lines = content.splitlines(keepends=True)
@@ -69,22 +70,30 @@ def chunk_python(
         if ls - 1 > last_emitted_line:
             gap_text = _slice_lines(lines, last_emitted_line + 1, ls - 1)
             if gap_text.strip():
-                chunks.append(_make_module_chunk(
-                    relative_path, gap_text, last_emitted_line + 1, ls - 1, mtime,
-                ))
+                chunks.append(
+                    _make_module_chunk(
+                        relative_path,
+                        gap_text,
+                        last_emitted_line + 1,
+                        ls - 1,
+                        mtime,
+                    )
+                )
 
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             text = _slice_lines(lines, ls, le)
-            chunks.append(Chunk(
-                relative_path=relative_path,
-                content=text[:MAX_CHUNK_CHARS],
-                language="python",
-                chunk_type="function",
-                symbol_name=node.name,
-                line_start=ls,
-                line_end=le,
-                mtime=mtime,
-            ))
+            chunks.append(
+                Chunk(
+                    relative_path=relative_path,
+                    content=text[:MAX_CHUNK_CHARS],
+                    language="python",
+                    chunk_type="function",
+                    symbol_name=node.name,
+                    line_start=ls,
+                    line_end=le,
+                    mtime=mtime,
+                )
+            )
         elif isinstance(node, ast.ClassDef):
             chunks.extend(_emit_class(relative_path, node, lines, mtime))
         else:
@@ -100,15 +109,25 @@ def chunk_python(
     if total_lines > last_emitted_line:
         tail = _slice_lines(lines, last_emitted_line + 1, total_lines)
         if tail.strip():
-            chunks.append(_make_module_chunk(
-                relative_path, tail, last_emitted_line + 1, total_lines, mtime,
-            ))
+            chunks.append(
+                _make_module_chunk(
+                    relative_path,
+                    tail,
+                    last_emitted_line + 1,
+                    total_lines,
+                    mtime,
+                )
+            )
 
     return chunks
 
 
 def _make_module_chunk(
-    relative_path: str, text: str, ls: int, le: int, mtime: float,
+    relative_path: str,
+    text: str,
+    ls: int,
+    le: int,
+    mtime: float,
 ) -> Chunk:
     return Chunk(
         relative_path=relative_path,
@@ -123,7 +142,10 @@ def _make_module_chunk(
 
 
 def _emit_class(
-    relative_path: str, node: ast.ClassDef, lines: list[str], mtime: float,
+    relative_path: str,
+    node: ast.ClassDef,
+    lines: list[str],
+    mtime: float,
 ) -> list[Chunk]:
     """Emit class body: one chunk for class header + each method as its own chunk.
 
@@ -136,16 +158,18 @@ def _emit_class(
     full_text = _slice_lines(lines, cls_ls, cls_le)
 
     if len(full_text) <= MAX_CHUNK_CHARS:
-        return [Chunk(
-            relative_path=relative_path,
-            content=full_text,
-            language="python",
-            chunk_type="class",
-            symbol_name=node.name,
-            line_start=cls_ls,
-            line_end=cls_le,
-            mtime=mtime,
-        )]
+        return [
+            Chunk(
+                relative_path=relative_path,
+                content=full_text,
+                language="python",
+                chunk_type="class",
+                symbol_name=node.name,
+                line_start=cls_ls,
+                line_end=cls_le,
+                mtime=mtime,
+            )
+        ]
 
     out: list[Chunk] = []
     # Header = class def line + decorators + docstring (up to first method/inner-class)
@@ -155,31 +179,35 @@ def _emit_class(
     header_le = max(cls_ls, first_method_line - 1)
     header_text = _slice_lines(lines, cls_ls, header_le)
     if header_text.strip():
-        out.append(Chunk(
-            relative_path=relative_path,
-            content=header_text[:MAX_CHUNK_CHARS],
-            language="python",
-            chunk_type="class",
-            symbol_name=node.name,
-            line_start=cls_ls,
-            line_end=header_le,
-            mtime=mtime,
-        ))
+        out.append(
+            Chunk(
+                relative_path=relative_path,
+                content=header_text[:MAX_CHUNK_CHARS],
+                language="python",
+                chunk_type="class",
+                symbol_name=node.name,
+                line_start=cls_ls,
+                line_end=header_le,
+                mtime=mtime,
+            )
+        )
 
     for m in methods:
         m_ls = m.lineno
         m_le = m.end_lineno or m_ls
         text = _slice_lines(lines, m_ls, m_le)
-        out.append(Chunk(
-            relative_path=relative_path,
-            content=text[:MAX_CHUNK_CHARS],
-            language="python",
-            chunk_type="function",
-            symbol_name=f"{node.name}.{m.name}",
-            line_start=m_ls,
-            line_end=m_le,
-            mtime=mtime,
-        ))
+        out.append(
+            Chunk(
+                relative_path=relative_path,
+                content=text[:MAX_CHUNK_CHARS],
+                language="python",
+                chunk_type="function",
+                symbol_name=f"{node.name}.{m.name}",
+                line_start=m_ls,
+                line_end=m_le,
+                mtime=mtime,
+            )
+        )
     return out
 
 
@@ -187,14 +215,16 @@ def _fallback_chunks(relative_path: str, content: str, mtime: float) -> list[Chu
     """Sliding-window fallback for unparsable files."""
     out: list[Chunk] = []
     for ls, le, piece in _sliding_window(content):
-        out.append(Chunk(
-            relative_path=relative_path,
-            content=piece[:MAX_CHUNK_CHARS],
-            language="python",
-            chunk_type="text",
-            symbol_name=None,
-            line_start=ls,
-            line_end=le,
-            mtime=mtime,
-        ))
+        out.append(
+            Chunk(
+                relative_path=relative_path,
+                content=piece[:MAX_CHUNK_CHARS],
+                language="python",
+                chunk_type="text",
+                symbol_name=None,
+                line_start=ls,
+                line_end=le,
+                mtime=mtime,
+            )
+        )
     return out

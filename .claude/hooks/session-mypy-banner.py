@@ -49,7 +49,10 @@ def _delta_vs_main() -> int | None:
     try:
         r = subprocess.run(
             ["git", "diff", "--numstat", "origin/main", "--", "mypy-baseline.txt"],
-            capture_output=True, text=True, encoding="utf-8", timeout=3,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode != 0 or not r.stdout.strip():

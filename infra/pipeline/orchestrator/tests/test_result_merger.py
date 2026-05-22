@@ -4,38 +4,38 @@ Tests for Result Merger.
 Sprint 3.2.3: Синхронизация результатов
 """
 
-import pytest
+import tempfile
 from datetime import datetime
 from pathlib import Path
-import tempfile
-import json
 
+import pytest
 from models import (
-    TaskNode,
-    TaskGraph,
-    ParallelGroup,
-    MergeStrategy,
     Conflict,
-    ConflictType,
     ConflictResolution,
+    ConflictType,
+    MergeStrategy,
+    ParallelGroup,
+    TaskGraph,
+    TaskNode,
 )
-from .parallel_executor import TaskResult, ExecutionReport, ExecutionState, ExecutionProgress
+
+from .parallel_executor import ExecutionProgress, ExecutionReport, ExecutionState, TaskResult
 from .result_merger import (
-    MergeStatus,
     ArtifactMerge,
-    MergeResult,
     MergedOutput,
+    MergeResult,
+    MergeStatus,
     MergeStrategyHandler,
     ResultMerger,
+    load_merged_output,
     merge_results,
     save_merged_output,
-    load_merged_output,
 )
-
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def simple_tasks():
@@ -114,6 +114,7 @@ def partial_failure_results():
 # =============================================================================
 # Test MergeStrategyHandler
 # =============================================================================
+
 
 class TestMergeStrategyCombine:
     """Test COMBINE merge strategy."""
@@ -223,6 +224,7 @@ class TestMergeStrategyHelpers:
 # Test MergeResult
 # =============================================================================
 
+
 class TestMergeResult:
     """Test MergeResult dataclass."""
 
@@ -252,6 +254,7 @@ class TestMergeResult:
 # =============================================================================
 # Test MergedOutput
 # =============================================================================
+
 
 class TestMergedOutput:
     """Test MergedOutput dataclass."""
@@ -315,6 +318,7 @@ class TestMergedOutput:
 # =============================================================================
 # Test ResultMerger
 # =============================================================================
+
 
 class TestResultMerger:
     """Test ResultMerger class."""
@@ -381,6 +385,7 @@ class TestResultMerger:
 
     def test_merge_with_conflict_handler(self, conflicting_tasks, simple_results):
         """Test custom conflict handler."""
+
         def resolve_to_first(conflict: Conflict) -> ConflictResolution:
             return ConflictResolution.TAKE_FIRST
 
@@ -462,6 +467,7 @@ class TestResultMergerExecutionReport:
 # Test Convenience Functions
 # =============================================================================
 
+
 class TestConvenienceFunctions:
     """Test convenience functions."""
 
@@ -512,6 +518,7 @@ class TestConvenienceFunctions:
 # Test ArtifactMerge
 # =============================================================================
 
+
 class TestArtifactMerge:
     """Test ArtifactMerge dataclass."""
 
@@ -543,6 +550,7 @@ class TestArtifactMerge:
 # =============================================================================
 # Test MergeStatus
 # =============================================================================
+
 
 class TestMergeStatus:
     """Test MergeStatus enum."""

@@ -36,6 +36,7 @@ SKILL_ACCURACY_LOG = DATA_DIR / "skill-accuracy.jsonl"
 
 # --- Period parsing ---
 
+
 def parse_period(period_str: str) -> datetime | None:
     """Parse period string to cutoff datetime. None = no filter."""
     if period_str == "all":
@@ -55,13 +56,14 @@ def parse_period(period_str: str) -> datetime | None:
 
 # --- Log parsers ---
 
+
 def parse_invocations(cutoff: datetime | None) -> list[dict]:
     """Parse hook-invocations.jsonl."""
     entries = []
     if not INVOCATIONS_FILE.exists():
         return entries
     try:
-        with open(INVOCATIONS_FILE, "r", encoding="utf-8") as f:
+        with open(INVOCATIONS_FILE, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -86,7 +88,7 @@ def parse_skill_router_log(cutoff: datetime | None) -> list[dict]:
     if not SKILL_ROUTER_LOG.exists():
         return entries
     try:
-        with open(SKILL_ROUTER_LOG, "r", encoding="utf-8") as f:
+        with open(SKILL_ROUTER_LOG, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -116,7 +118,7 @@ def parse_skill_usage_log(cutoff: datetime | None) -> list[dict]:
     if not SKILL_USAGE_LOG.exists():
         return entries
     try:
-        with open(SKILL_USAGE_LOG, "r", encoding="utf-8") as f:
+        with open(SKILL_USAGE_LOG, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -146,7 +148,7 @@ def parse_skill_accuracy_log(cutoff: datetime | None) -> list[dict]:
     if not SKILL_ACCURACY_LOG.exists():
         return entries
     try:
-        with open(SKILL_ACCURACY_LOG, "r", encoding="utf-8") as f:
+        with open(SKILL_ACCURACY_LOG, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -166,6 +168,7 @@ def parse_skill_accuracy_log(cutoff: datetime | None) -> list[dict]:
 
 
 # --- Metrics computation ---
+
 
 def compute_hook_metrics(invocations: list[dict]) -> dict[str, Any]:
     """Compute per-hook metrics from invocations."""
@@ -244,7 +247,9 @@ def compute_skill_metrics(
     return {
         "total_recommended": total_recommended,
         "total_activated": total_activated,
-        "activation_rate": (total_activated / total_recommended * 100) if total_recommended > 0 else 0.0,
+        "activation_rate": (total_activated / total_recommended * 100)
+        if total_recommended > 0
+        else 0.0,
         "by_source": dict(by_source),
         "per_skill": per_skill,
         "dead_skills": sorted(dead),
@@ -349,12 +354,14 @@ def compute_accuracy_metrics(accuracy_entries: list[dict]) -> dict[str, Any]:
             matched += 1
         else:
             missed += 1
-            recent_misses.append({
-                "prompt_id": pid,
-                "ts": data["ts"][:19],
-                "prompt": data["prompt"][:60],
-                "recommended": data["recommended"],
-            })
+            recent_misses.append(
+                {
+                    "prompt_id": pid,
+                    "ts": data["ts"][:19],
+                    "prompt": data["prompt"][:60],
+                    "recommended": data["recommended"],
+                }
+            )
 
     total = matched + missed
     per_skill_precision = {}
@@ -379,6 +386,7 @@ def compute_accuracy_metrics(accuracy_entries: list[dict]) -> dict[str, Any]:
 
 # --- Display formatters ---
 
+
 def format_summary(
     hook_metrics: dict,
     skill_metrics: dict,
@@ -398,7 +406,7 @@ def format_summary(
 
     lines = [
         f"{'=' * 62}",
-        f"  HOOK & SKILL OBSERVABILITY DASHBOARD",
+        "  HOOK & SKILL OBSERVABILITY DASHBOARD",
         f"  Period: {period}",
         f"{'=' * 62}",
         "",
@@ -430,7 +438,7 @@ def format_hooks(hook_metrics: dict) -> str:
 
     lines = [
         f"{'-' * 62}",
-        f"  HOOK INVOCATIONS",
+        "  HOOK INVOCATIONS",
         f"{'-' * 62}",
         f"  {'Hook':<30} {'Count':>6} {'p95ms':>6} {'Block':>6} {'Err':>4}",
         f"  {'-' * 54}",
@@ -458,16 +466,18 @@ def format_skills(skill_metrics: dict) -> str:
 
     lines = [
         f"{'-' * 74}",
-        f"  SKILL ACTIVATION",
+        "  SKILL ACTIVATION",
         f"{'-' * 74}",
     ]
     if source_summary:
         lines.append(source_summary)
         lines.append("")
-    lines.extend([
-        f"  {'Skill':<28} {'Rec':>5} {'Act':>5} {'Rate':>6}  {'Source'}",
-        f"  {'-' * 68}",
-    ])
+    lines.extend(
+        [
+            f"  {'Skill':<28} {'Rec':>5} {'Act':>5} {'Rate':>6}  {'Source'}",
+            f"  {'-' * 68}",
+        ]
+    )
 
     per_skill = skill_metrics.get("per_skill", {})
     if not per_skill:
@@ -491,7 +501,7 @@ def format_skills(skill_metrics: dict) -> str:
 
     if skill_metrics.get("dead_skills"):
         lines.append("")
-        lines.append(f"  Dead skills (recommended but never activated):")
+        lines.append("  Dead skills (recommended but never activated):")
         for s in skill_metrics["dead_skills"][:10]:
             lines.append(f"    - {s}")
 
@@ -535,11 +545,11 @@ def format_sessions(session_metrics: dict) -> str:
         f"  {'-' * 42}",
     ]
 
-    for sid, m in sorted(session_metrics.items(), key=lambda x: x[1]["invocations"], reverse=True)[:10]:
+    for sid, m in sorted(session_metrics.items(), key=lambda x: x[1]["invocations"], reverse=True)[
+        :10
+    ]:
         dur = f"{m['duration_min']}m"
-        lines.append(
-            f"  {sid:<14} {m['invocations']:>6} {m['hooks']:>6} {dur:>7} {m['errors']:>4}"
-        )
+        lines.append(f"  {sid:<14} {m['invocations']:>6} {m['hooks']:>6} {dur:>7} {m['errors']:>4}")
 
     lines.append("")
     return "\n".join(lines)
@@ -557,7 +567,7 @@ def format_accuracy(accuracy_metrics: dict) -> str:
 
     lines = [
         f"{'-' * 62}",
-        f"  SKILL ACCURACY (per-prompt correlation)",
+        "  SKILL ACCURACY (per-prompt correlation)",
         f"{'-' * 62}",
         "",
         f"  Total prompts:        {total:>6}",
@@ -573,9 +583,7 @@ def format_accuracy(accuracy_metrics: dict) -> str:
     sorted_skills = sorted(psp.items(), key=lambda x: x[1]["recommended"], reverse=True)
     for skill, m in sorted_skills:
         prec_str = f"{m['precision']:.0f}%"
-        lines.append(
-            f"  {skill:<30} {m['recommended']:>5} {m['activated']:>5} {prec_str:>6}"
-        )
+        lines.append(f"  {skill:<30} {m['recommended']:>5} {m['activated']:>5} {prec_str:>6}")
 
     misses = accuracy_metrics.get("recent_misses", [])
     if misses:
@@ -583,9 +591,7 @@ def format_accuracy(accuracy_metrics: dict) -> str:
         lines.append(f"  Recent misses ({len(misses)}):")
         for miss in misses[-5:]:
             skills_str = ",".join(miss["recommended"][:3])
-            lines.append(
-                f"    [{miss['ts']}] {miss['prompt'][:40]}... -> {skills_str}"
-            )
+            lines.append(f"    [{miss['ts']}] {miss['prompt'][:40]}... -> {skills_str}")
 
     lines.append("")
     return "\n".join(lines)
@@ -593,22 +599,18 @@ def format_accuracy(accuracy_metrics: dict) -> str:
 
 # --- Main ---
 
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Hook & Skill Observability Dashboard"
-    )
+    parser = argparse.ArgumentParser(description="Hook & Skill Observability Dashboard")
     parser.add_argument(
-        "--period", default="24h",
-        help="Time period: 1h, 24h, 7d, 4w, all (default: 24h)"
+        "--period", default="24h", help="Time period: 1h, 24h, 7d, 4w, all (default: 24h)"
     )
+    parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument(
-        "--json", action="store_true",
-        help="Output as JSON"
-    )
-    parser.add_argument(
-        "--section", default="all",
+        "--section",
+        default="all",
         choices=["all", "summary", "hooks", "skills", "accuracy", "errors", "sessions"],
-        help="Show specific section only"
+        help="Show specific section only",
     )
     args = parser.parse_args()
 
@@ -688,7 +690,9 @@ def _format_mcp_health() -> str:
             status = s.get("status", "?")
             lat = f"{s.get('latency_ms', 0):.0f}ms" if status == "ok" else "—"
             tools = str(s.get("tools_count", 0)) if status == "ok" else "—"
-            lines.append(f"  {s.get('name', '?'):<28} {status:<8} {lat:<10} {tools:<6} {s.get('transport', '?'):<8}")
+            lines.append(
+                f"  {s.get('name', '?'):<28} {status:<8} {lat:<10} {tools:<6} {s.get('transport', '?'):<8}"
+            )
 
             # Alert: error/timeout servers
             if status in ("error", "timeout"):

@@ -1,22 +1,17 @@
 """Tests for ProjectManagerAgent."""
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
-from datetime import datetime
 
+import pytest
+from agents.project_manager.agent import ProjectManagerAgent, ProjectManagerResult
 from agents.project_manager.models import (
-    Project,
-    Task,
-    TaskStatus,
-    TaskPriority,
-    ProjectStatus,
     ProjectManagerConfig,
     ProjectManagerInput,
+    ProjectStatus,
+    TaskStatus,
 )
-from agents.project_manager.repository import ProjectRepository
-from agents.project_manager.agent import ProjectManagerAgent, ProjectManagerResult
 
 
 class TestProjectManagerAgent:

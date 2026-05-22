@@ -79,14 +79,16 @@ def cmd_analyze(args):
     issues_url = f"{config.host}/dashboard?id={project_key}"
     if result.returncode == 0:
         logger.info("Analysis completed successfully")
-        print(f"Quality Gate: PASSED")
+        print("Quality Gate: PASSED")
         print(f"Results: {issues_url}")
         with open(args.output, "w", encoding="utf-8") as f:
-            f.write(f"# SonarQube Analysis Report\n\nQuality Gate: PASSED\n\nResults: {issues_url}\n")
+            f.write(
+                f"# SonarQube Analysis Report\n\nQuality Gate: PASSED\n\nResults: {issues_url}\n"
+            )
         logger.info(f"Report saved to: {args.output}")
     else:
         logger.error("sonar-scanner failed (exit %d):\n%s", result.returncode, result.stderr)
-        print(f"Quality Gate: FAILED")
+        print("Quality Gate: FAILED")
         if result.stdout:
             print(result.stdout[-2000:])
         sys.exit(result.returncode)

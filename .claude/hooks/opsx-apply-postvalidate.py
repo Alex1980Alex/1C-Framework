@@ -117,7 +117,6 @@ def _save_cookie(state: dict) -> None:
 
 
 class OpsxApplyPostvalidate(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
             return None

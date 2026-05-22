@@ -36,6 +36,7 @@ Scenario JSON example (scripts/scenarios/post_lab_doc.json):
       "stop_timeout_sec": 15
     }
 """
+
 from __future__ import annotations
 
 import argparse
@@ -96,15 +97,16 @@ def validate_scenario(scenario: dict) -> list:
         errors.append("$.force_recycle must be bool")
 
     if "stop_timeout_sec" in scenario and not isinstance(
-            scenario["stop_timeout_sec"], (int, float)):
+        scenario["stop_timeout_sec"], (int, float)
+    ):
         errors.append("$.stop_timeout_sec must be number")
 
     if "pre_trigger_wait_sec" in scenario and not isinstance(
-            scenario["pre_trigger_wait_sec"], (int, float)):
+        scenario["pre_trigger_wait_sec"], (int, float)
+    ):
         errors.append("$.pre_trigger_wait_sec must be number")
 
-    if "warmup_trigger_count" in scenario and not isinstance(
-            scenario["warmup_trigger_count"], int):
+    if "warmup_trigger_count" in scenario and not isinstance(scenario["warmup_trigger_count"], int):
         errors.append("$.warmup_trigger_count must be int")
 
     bps = scenario.get("breakpoints", [])
@@ -148,15 +150,18 @@ async def _trigger_bsl_via_iis(scenario: dict) -> tuple[int, str]:
     pwd = os.environ.get(iis.get("auth_pwd_env", ""), "")
     if not url:
         return EXIT_BSL_TRIGGER_FAILED, "scenario.iis.url not set"
-    body = {"jsonrpc": "2.0", "id": 1, "method": "execute_code",
-            "params": {"code": scenario.get("bsl_trigger", "")}}
+    body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "execute_code",
+        "params": {"code": scenario.get("bsl_trigger", "")},
+    }
     auth = httpx.BasicAuth(user, pwd) if user else None
     try:
         async with httpx.AsyncClient(timeout=120.0) as cli:
             resp = await cli.post(url, json=body, auth=auth)
         if resp.status_code != 200:
-            return EXIT_BSL_TRIGGER_FAILED, \
-                f"IIS POST {resp.status_code}: {resp.text[:300]}"
+            return EXIT_BSL_TRIGGER_FAILED, f"IIS POST {resp.status_code}: {resp.text[:300]}"
         return EXIT_OK, f"BSL OK ({len(resp.text)} bytes)"
     except (httpx.HTTPError, OSError) as e:
         return EXIT_BSL_TRIGGER_FAILED, f"trigger exception: {e}"
@@ -170,12 +175,16 @@ def _format_inspection_result(eval_resp: list, expr: str) -> tuple[bool, str]:
     if first.get("evalResultState") == "withErrors":
         return False, f"eval error: {first.get('exceptionStr', '')[:200]}"
     info = first.get("resultValueInfo", {})
-    return True, json.dumps({
-        "type": info.get("typeName"),
-        "value": info.get("valueString") or info.get("valueDecimal")
-                 or info.get("valueBoolean"),
-        "presentation_b64": info.get("pres", "")[:80],
-    }, ensure_ascii=False)
+    return True, json.dumps(
+        {
+            "type": info.get("typeName"),
+            "value": info.get("valueString")
+            or info.get("valueDecimal")
+            or info.get("valueBoolean"),
+            "presentation_b64": info.get("pres", "")[:80],
+        },
+        ensure_ascii=False,
+    )
 
 
 async def _check_inspections(inspections: list, target_id: str) -> tuple[bool, list]:
@@ -185,8 +194,7 @@ async def _check_inspections(inspections: list, target_id: str) -> tuple[bool, l
     for insp in inspections:
         expr = insp["expr"]
         try:
-            raw = await mds.debug_evaluate(expression=expr,
-                                            target_id=target_id)
+            raw = await mds.debug_evaluate(expression=expr, target_id=target_id)
             eval_resp = json.loads(raw).get("result", [])
             ok, detail = _format_inspection_result(eval_resp, expr)
             if "expect_substring" in insp:
@@ -220,13 +228,13 @@ async def run_scenario(scenario: dict) -> int:
     _print_section("Phase 1 — Health check")
     health_raw = await mds.debug_health_check()
     health = json.loads(health_raw)
-    print(f"ready={health['ready']}, "
-          f"workflow={health['recommended_workflow']}")
+    print(f"ready={health['ready']}, " f"workflow={health['recommended_workflow']}")
     if not health["ready"]:
         if health.get("auto_prepare_available"):
             print(f"auto-prepare: {health['auto_prepare_available']}")
             prep_raw = await mds.debug_health_check(
-                mode="prepare", actions=health["auto_prepare_available"])
+                mode="prepare", actions=health["auto_prepare_available"]
+            )
             prep = json.loads(prep_raw)
             print(f"prepare result: ready={prep.get('ready')}")
             if not prep.get("ready"):
@@ -245,8 +253,10 @@ async def run_scenario(scenario: dict) -> int:
     if connect.get("status") != "connected":
         print(f"[FAIL] connect: {connect}")
         return EXIT_CONNECT_FAILED
-    print(f"session={connect['attach']['session_id'][:8]}…, "
-          f"targets={len(connect.get('targets', []))}")
+    print(
+        f"session={connect['attach']['session_id'][:8]}…, "
+        f"targets={len(connect.get('targets', []))}"
+    )
 
     _print_section("Phase 3 — Set breakpoints")
     bps = scenario.get("breakpoints", [])
@@ -256,8 +266,7 @@ async def run_scenario(scenario: dict) -> int:
             line=bp["line"],
             module_type=bp.get("module_type", "CommonModule"),
         )
-        print(f"  BP{i}: {bp.get('module_type')} obj={bp['object_id'][:8]}… "
-              f"line={bp['line']}")
+        print(f"  BP{i}: {bp.get('module_type')} obj={bp['object_id'][:8]}… " f"line={bp['line']}")
 
     _print_section("Phase 4 — Trigger BSL + capture stops")
     # Pre-trigger wait: даём ragent время spawn'ить fresh rphost'ы и
@@ -297,8 +306,7 @@ async def run_scenario(scenario: dict) -> int:
     fired = 0
     inspection_failures = []
     for i, bp in enumerate(bps, 1):
-        print(f"\n  Waiting for BP{i} (timeout {timeout_per_stop}s)…",
-              flush=True)
+        print(f"\n  Waiting for BP{i} (timeout {timeout_per_stop}s)…", flush=True)
         target_id = await _wait_for_stop(timeout_per_stop)
         if not target_id:
             print(f"[FAIL] BP{i} timeout — got {fired}/{expected_stops}")
@@ -310,8 +318,7 @@ async def run_scenario(scenario: dict) -> int:
         stack_raw = await mds.debug_stack_trace(target_id=target_id)
         stack = json.loads(stack_raw).get("stack", [])
         top = stack[0] if stack else {}
-        print(f"  BP{i} fired @ line={top.get('lineNo', '?')} "
-              f"depth={len(stack)}")
+        print(f"  BP{i} fired @ line={top.get('lineNo', '?')} " f"depth={len(stack)}")
         # Run inspections
         if bp.get("inspections"):
             ok, results = await _check_inspections(bp["inspections"], target_id)
@@ -343,21 +350,20 @@ async def run_scenario(scenario: dict) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("scenario", type=Path,
-                        help="Path to scenario JSON file")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("scenario", type=Path, help="Path to scenario JSON file")
     args = parser.parse_args()
 
     if not args.scenario.is_file():
-        print(f"[FAIL] scenario file not found: {args.scenario}",
-              file=sys.stderr)
+        print(f"[FAIL] scenario file not found: {args.scenario}", file=sys.stderr)
         return 2
 
     scenario = json.loads(args.scenario.read_text(encoding="utf-8"))
     schema_errors = validate_scenario(scenario)
     if schema_errors:
-        print(f"[FAIL] scenario schema validation failed:", file=sys.stderr)
+        print("[FAIL] scenario schema validation failed:", file=sys.stderr)
         for err in schema_errors:
             print(f"  - {err}", file=sys.stderr)
         return EXIT_SCHEMA_INVALID

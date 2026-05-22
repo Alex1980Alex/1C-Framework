@@ -134,11 +134,11 @@ describe("OAuth Authorization", () => {
     it("returns metadata when first fetch fails but second without MCP header succeeds", async () => {
       // Set up a counter to control behavior
       let callCount = 0;
-      
+
       // Mock implementation that changes behavior based on call count
       mockFetch.mockImplementation((_url, _options) => {
         callCount++;
-        
+
         if (callCount === 1) {
           // First call with MCP header - fail with TypeError (simulating CORS error)
           // We need to use TypeError specifically because that's what the implementation checks for
@@ -156,10 +156,10 @@ describe("OAuth Authorization", () => {
       // Should succeed with the second call
       const metadata = await discoverOAuthMetadata("https://auth.example.com");
       expect(metadata).toEqual(validMetadata);
-      
+
       // Verify both calls were made
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      
+
       // Verify first call had MCP header
       expect(mockFetch.mock.calls[0][1]?.headers).toHaveProperty("MCP-Protocol-Version");
     });
@@ -167,11 +167,11 @@ describe("OAuth Authorization", () => {
     it("throws an error when all fetch attempts fail", async () => {
       // Set up a counter to control behavior
       let callCount = 0;
-      
+
       // Mock implementation that changes behavior based on call count
       mockFetch.mockImplementation((_url, _options) => {
         callCount++;
-        
+
         if (callCount === 1) {
           // First call - fail with TypeError
           return Promise.reject(new TypeError("First failure"));
@@ -184,7 +184,7 @@ describe("OAuth Authorization", () => {
       // Should fail with the second error
       await expect(discoverOAuthMetadata("https://auth.example.com"))
         .rejects.toThrow("Second failure");
-        
+
       // Verify both calls were made
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
@@ -576,7 +576,7 @@ import { OAuthClientInformationFullSchema, OAuthMetadataSchema, OAuthTokensSchem
 
 /**
  * Implements an end-to-end OAuth client to be used with one MCP server.
- * 
+ *
  * This client relies upon a concept of an authorized "session," the exact
  * meaning of which is application-defined. Tokens, authorization codes, and
  * code verifiers should not cross different sessions.
@@ -603,7 +603,7 @@ export interface OAuthClientProvider {
    * If implemented, this permits the OAuth client to dynamically register with
    * the server. Client information saved this way should later be read via
    * `clientInformation()`.
-   * 
+   *
    * This method is not required to be implemented if client information is
    * statically known (e.g., pre-registered).
    */
@@ -649,7 +649,7 @@ export class UnauthorizedError extends Error {
 
 /**
  * Orchestrates the full auth flow with a server.
- * 
+ *
  * This can be used as a single entry point for all authorization functionality,
  * instead of linking together the other lower-level functions in this module.
  */
@@ -2739,23 +2739,23 @@ export class SseError extends Error {
 export type SSEClientTransportOptions = {
   /**
    * An OAuth client provider to use for authentication.
-   * 
+   *
    * When an `authProvider` is specified and the SSE connection is started:
    * 1. The connection is attempted with any existing access token from the `authProvider`.
    * 2. If the access token has expired, the `authProvider` is used to refresh the token.
    * 3. If token refresh fails or no access token exists, and auth is required, `OAuthClientProvider.redirectToAuthorization` is called, and an `UnauthorizedError` will be thrown from `connect`/`start`.
-   * 
+   *
    * After the user has finished authorizing via their user agent, and is redirected back to the MCP client application, call `SSEClientTransport.finishAuth` with the authorization code before retrying the connection.
-   * 
+   *
    * If an `authProvider` is not provided, and auth is required, an `UnauthorizedError` will be thrown.
-   * 
+   *
    * `UnauthorizedError` might also be thrown when sending any message over the SSE transport, indicating that the session has expired, and needs to be re-authed and reconnected.
    */
   authProvider?: OAuthClientProvider;
 
   /**
    * Customizes the initial SSE request to the server (the request that begins the stream).
-   * 
+   *
    * NOTE: Setting this property will prevent an `Authorization` header from
    * being automatically attached to the SSE request, if an `authProvider` is
    * also given. This can be worked around by setting the `Authorization` header
@@ -4152,7 +4152,7 @@ describe('Client Registration Handler', () => {
       expect(response.body.client_secret).toBeUndefined();
       expect(response.body.client_secret_expires_at).toBeUndefined();
     });
-    
+
     it('sets client_secret_expires_at for public clients only', async () => {
       // Test for public client (token_endpoint_auth_method not 'none')
       const publicClientMetadata: OAuthClientMetadata = {
@@ -4167,7 +4167,7 @@ describe('Client Registration Handler', () => {
       expect(publicResponse.status).toBe(201);
       expect(publicResponse.body.client_secret).toBeDefined();
       expect(publicResponse.body.client_secret_expires_at).toBeDefined();
-      
+
       // Test for non-public client (token_endpoint_auth_method is 'none')
       const nonPublicClientMetadata: OAuthClientMetadata = {
         redirect_uris: ['https://example.com/callback'],
@@ -4297,7 +4297,7 @@ export type ClientRegistrationHandlerOptions = {
 
   /**
    * The number of seconds after which to expire issued client secrets, or 0 to prevent expiration of client secrets (not recommended).
-   * 
+   *
    * If not set, defaults to 30 days.
    */
   clientSecretExpirySeconds?: number;
@@ -5168,7 +5168,7 @@ export function tokenHandler({ provider, rateLimit: rateLimitConfig }: TokenHand
   if (rateLimitConfig !== false) {
     router.use(rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 50, // 50 requests per windowMs 
+      max: 50, // 50 requests per windowMs
       standardHeaders: true,
       legacyHeaders: false,
       message: new TooManyRequestsError('You have exceeded the rate limit for token requests').toResponseObject(),
@@ -5345,7 +5345,7 @@ import { MethodNotAllowedError } from "../errors.js";
 
 /**
  * Middleware to handle unsupported HTTP methods with a 405 Method Not Allowed response.
- * 
+ *
  * @param allowedMethods Array of allowed HTTP methods for this endpoint (e.g., ['GET', 'POST'])
  * @returns Express middleware that returns a 405 error if method not in allowed list
  */
@@ -5425,7 +5425,7 @@ describe("requireBearerAuth middleware", () => {
     expect(mockResponse.status).not.toHaveBeenCalled();
     expect(mockResponse.json).not.toHaveBeenCalled();
   });
-  
+
   it("should reject expired tokens", async () => {
     const expiredAuthInfo: AuthInfo = {
       token: "expired-token",
@@ -5453,7 +5453,7 @@ describe("requireBearerAuth middleware", () => {
     );
     expect(nextFunction).not.toHaveBeenCalled();
   });
-  
+
   it("should accept non-expired tokens", async () => {
     const nonExpiredAuthInfo: AuthInfo = {
       token: "valid-token",
@@ -5705,7 +5705,7 @@ declare module "express-serve-static-core" {
 
 /**
  * Middleware that requires a valid Bearer token in the Authorization header.
- * 
+ *
  * This will validate the token with the auth provider and add the resulting auth info to the request object.
  */
 export function requireBearerAuth({ provider, requiredScopes = [] }: BearerAuthMiddlewareOptions): RequestHandler {
@@ -5808,7 +5808,7 @@ describe('clientAuth middleware', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
-    
+
     options = {
       clientsStore: mockClientStore
     };
@@ -5879,7 +5879,7 @@ describe('clientAuth middleware', () => {
     // Since the client has no secret, this should pass without providing one
     expect(response.status).toBe(200);
   });
-  
+
   it('rejects request when client secret has expired', async () => {
     const response = await supertest(app)
       .post('/protected')
@@ -6012,9 +6012,9 @@ export interface OAuthRegisteredClientsStore {
 
   /**
    * Registers a new client with the server. The client ID and secret will be automatically generated by the library. A modified version of the client information can be returned to reflect specific values enforced by the server.
-   * 
+   *
    * NOTE: Implementations should NOT delete expired client secrets in-place. Auth middleware provided by this library will automatically check the `client_secret_expires_at` field and reject requests with expired secrets. Any custom logic for authenticating clients should check the `client_secret_expires_at` field as well.
-   * 
+   *
    * If unimplemented, dynamic client registration is unsupported.
    */
   registerClient?(client: OAuthClientInformationFull): OAuthClientInformationFull | Promise<OAuthClientInformationFull>;
@@ -6245,8 +6245,8 @@ export interface OAuthServerProvider {
   get clientsStore(): OAuthRegisteredClientsStore;
 
   /**
-   * Begins the authorization flow, which can either be implemented by this server itself or via redirection to a separate authorization server. 
-   * 
+   * Begins the authorization flow, which can either be implemented by this server itself or via redirection to a separate authorization server.
+   *
    * This server must eventually issue a redirect with an authorization response or an error response to the given redirect URI. Per OAuth 2.1:
    * - In the successful case, the redirect MUST include the `code` and `state` (if present) query parameters.
    * - In the error case, the redirect MUST include the `error` query parameter, and MAY include an optional `error_description` query parameter.
@@ -6275,7 +6275,7 @@ export interface OAuthServerProvider {
 
   /**
    * Revokes an access or refresh token. If unimplemented, token revocation is not supported (not recommended).
-   * 
+   *
    * If the given token is invalid or already revoked, this method should do nothing.
    */
   revokeToken?(client: OAuthClientInformationFull, request: OAuthTokenRevocationRequest): Promise<void>;
@@ -6681,11 +6681,11 @@ export type AuthRouterOptions = {
 
 /**
  * Installs standard MCP authorization endpoints, including dynamic client registration and token revocation (if supported). Also advertises standard authorization server metadata, for easier discovery of supported configurations by clients.
- * 
+ *
  * By default, rate limiting is applied to all endpoints to prevent abuse.
- * 
+ *
  * This router MUST be installed at the application root, like so:
- * 
+ *
  *  const app = express();
  *  app.use(mcpAuthRouter(...));
  */
@@ -8166,7 +8166,7 @@ describe("tool()", () => {
 
     // This should succeed
     mcpServer.tool("tool1", () => ({ content: [] }));
-    
+
     // This should also succeed and not throw about request handlers
     mcpServer.tool("tool2", () => ({ content: [] }));
   });
@@ -8663,7 +8663,7 @@ describe("resource()", () => {
         },
       ],
     }));
-    
+
     // This should also succeed and not throw about request handlers
     mcpServer.resource("resource2", "test://resource2", async () => ({
       contents: [
@@ -9169,7 +9169,7 @@ describe("prompt()", () => {
         },
       ],
     }));
-    
+
     // This should also succeed and not throw about request handlers
     mcpServer.prompt("prompt2", async () => ({
       messages: [
@@ -9526,7 +9526,7 @@ export class McpServer {
     if (this._toolHandlersInitialized) {
       return;
     }
-    
+
     this.server.assertCanSetRequestHandler(
       ListToolsRequestSchema.shape.method.value,
     );
@@ -9805,7 +9805,7 @@ export class McpServer {
     );
 
     this.setCompletionRequestHandler();
-    
+
     this._resourceHandlersInitialized = true;
   }
 
@@ -9877,7 +9877,7 @@ export class McpServer {
     );
 
     this.setCompletionRequestHandler();
-    
+
     this._promptHandlersInitialized = true;
   }
 
@@ -10580,7 +10580,7 @@ export class StdioServerTransport implements Transport {
       // This prevents interfering with other parts of the application that might be using stdin
       this._stdin.pause();
     }
-    
+
     // Clear the buffer and notify closure
     this._readBuffer.clear();
     this.onclose?.();
@@ -11406,7 +11406,7 @@ export abstract class Protocol<
   private _onprogress(notification: ProgressNotification): void {
     const { progressToken, ...params } = notification.params;
     const messageId = Number(progressToken);
-    
+
     const handler = this._progressHandlers.get(messageId);
     if (!handler) {
       this._onerror(new Error(`Received a progress notification for an unknown token: ${JSON.stringify(notification)}`));
@@ -14615,4 +14615,3 @@ Issues and pull requests are welcome on GitHub at https://github.com/modelcontex
 ## License
 
 This project is licensed under the MIT License—see the [LICENSE](LICENSE) file for details.
-

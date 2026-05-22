@@ -5,7 +5,7 @@
 # Priority: high
 # Description: Design and implement an end-to-end (E2E) test framework for the Taskmaster MCP server, enabling programmatic interaction with the FastMCP server over stdio by sending and receiving JSON tool request/response messages.
 # Details:
-Research existing E2E testing approaches for MCP servers, referencing examples such as the MCP Server E2E Testing Example. Architect a test harness (preferably in Python or Node.js) that can launch the FastMCP server as a subprocess, establish stdio communication, and send well-formed JSON tool request messages. 
+Research existing E2E testing approaches for MCP servers, referencing examples such as the MCP Server E2E Testing Example. Architect a test harness (preferably in Python or Node.js) that can launch the FastMCP server as a subprocess, establish stdio communication, and send well-formed JSON tool request messages.
 
 Implementation details:
 1. Use `subprocess.Popen` (Python) or `child_process.spawn` (Node.js) to launch the FastMCP server with appropriate stdin/stdout pipes
@@ -14,7 +14,7 @@ Implementation details:
 4. Develop a request/response correlation mechanism using unique IDs for each request
 5. Implement timeout handling for requests that don't receive responses
 
-Implement robust parsing of JSON responses, including error handling for malformed or unexpected output. The framework should support defining test cases as scripts or data files, allowing for easy addition of new scenarios. 
+Implement robust parsing of JSON responses, including error handling for malformed or unexpected output. The framework should support defining test cases as scripts or data files, allowing for easy addition of new scenarios.
 
 Test case structure should include:
 - Setup phase for environment preparation
@@ -48,7 +48,7 @@ Verify the framework by implementing a suite of representative E2E tests that co
    - Missing required parameters
    - Server crash recovery
 
-Confirm that tests can start and stop the FastMCP server, send requests, and accurately parse and validate responses. Implement specific assertions for response timing, structure validation using JSON schema, and content verification. Intentionally introduce malformed requests and simulate server errors to ensure robust error handling. 
+Confirm that tests can start and stop the FastMCP server, send requests, and accurately parse and validate responses. Implement specific assertions for response timing, structure validation using JSON schema, and content verification. Intentionally introduce malformed requests and simulate server errors to ensure robust error handling.
 
 Implement detailed logging with different verbosity levels:
 - ERROR: Failed tests and critical issues
@@ -100,4 +100,3 @@ Create test cases for basic server operations, error conditions, edge cases, and
 ### Description: Set up continuous integration for the test framework and create comprehensive documentation
 ### Details:
 Configure the test framework to run in CI environments, generate reports, and fail builds appropriately. Create documentation covering framework architecture, usage instructions, test case development guidelines, and troubleshooting procedures. Include examples of extending the framework for new test scenarios.
-

@@ -49,10 +49,10 @@ class BSLChunker:
     # ~3-4 chars/token, Latin keywords ~4-5 chars/token. We use 3 (the
     # tighter end) so the resulting windows fit comfortably under the
     # 4096-token model.max_seq_length cap set in scripts/reindex_bsl_qwen3.
-    DEFAULT_SPLIT_THRESHOLD_CHARS = 6000   # ~ 2K tokens — split anything bigger
-    DEFAULT_WINDOW_CHARS = 3000             # ~ 1024 tokens
-    DEFAULT_OVERLAP_CHARS = 750             # ~ 256 tokens (25%)
-    DEFAULT_MAX_SUMMARY_CHARS = 30000       # ~ 10K tokens — drop above
+    DEFAULT_SPLIT_THRESHOLD_CHARS = 6000  # ~ 2K tokens — split anything bigger
+    DEFAULT_WINDOW_CHARS = 3000  # ~ 1024 tokens
+    DEFAULT_OVERLAP_CHARS = 750  # ~ 256 tokens (25%)
+    DEFAULT_MAX_SUMMARY_CHARS = 30000  # ~ 10K tokens — drop above
 
     def __init__(
         self,
@@ -66,20 +66,16 @@ class BSLChunker:
         self.include_module_summary = include_module_summary
         self.max_context_lines = max_context_lines
         self.split_threshold_chars = (
-            split_threshold_chars if split_threshold_chars is not None
+            split_threshold_chars
+            if split_threshold_chars is not None
             else self.DEFAULT_SPLIT_THRESHOLD_CHARS
         )
-        self.window_chars = (
-            window_chars if window_chars is not None
-            else self.DEFAULT_WINDOW_CHARS
-        )
+        self.window_chars = window_chars if window_chars is not None else self.DEFAULT_WINDOW_CHARS
         self.overlap_chars = (
-            overlap_chars if overlap_chars is not None
-            else self.DEFAULT_OVERLAP_CHARS
+            overlap_chars if overlap_chars is not None else self.DEFAULT_OVERLAP_CHARS
         )
         self.max_summary_chars = (
-            max_summary_chars if max_summary_chars is not None
-            else self.DEFAULT_MAX_SUMMARY_CHARS
+            max_summary_chars if max_summary_chars is not None else self.DEFAULT_MAX_SUMMARY_CHARS
         )
         # Defensive: overlap must leave forward progress.
         if self.overlap_chars >= self.window_chars:
@@ -214,7 +210,6 @@ class BSLChunker:
             },
         )
 
-
     def _split_long_chunk(self, chunk: BSLChunk) -> list[BSLChunk]:
         """Phase 8.12.5 (A2): split a too-long symbol chunk via line-aware
         sliding window.
@@ -280,11 +275,13 @@ class BSLChunker:
             new_meta["split_total"] = len(windows)
             new_meta["parent_chunk_id"] = chunk.chunk_id
             new_meta["name"] = f"{original_name}_part{i}" if original_name else f"part{i}"
-            out.append(BSLChunk(
-                chunk_id=f"{chunk.chunk_id}__part{i}",
-                content=body,
-                metadata=new_meta,
-            ))
+            out.append(
+                BSLChunk(
+                    chunk_id=f"{chunk.chunk_id}__part{i}",
+                    content=body,
+                    metadata=new_meta,
+                )
+            )
         return out
 
 
@@ -295,8 +292,9 @@ def _safe_id(s: str) -> str:
     avoid chunk_id collisions on long similar paths (e.g. multiple
     Commands/X/CommandModule.bsl under same Catalog truncated to same prefix).
     """
-    import re as _re
     import hashlib
+    import re as _re
+
     cleaned = _re.sub(r"[^\w]", "_", s).strip("_")
     if len(cleaned) <= 80:
         return cleaned

@@ -2,7 +2,7 @@
 # Claude Task Master - Product Requirements Document
 
 <PRD>
-# Technical Architecture  
+# Technical Architecture
 
 ## System Components
 1. **Task Management Core**
@@ -126,7 +126,7 @@
    - Cursor editor integration
    - Command-line terminal access
 
-# Development Roadmap  
+# Development Roadmap
 
 ## Phase 1: Core Task Management System
 1. **Task Data Structure**
@@ -315,13 +315,13 @@
     - Must be completed before release
     - Ensures users can effectively use the system
 
-# Risks and Mitigations  
+# Risks and Mitigations
 
 ## Technical Challenges
 
 ### API Reliability
 **Risk**: Anthropic or Perplexity API could have downtime, rate limiting, or breaking changes.
-**Mitigation**: 
+**Mitigation**:
 - Implement robust error handling with exponential backoff
 - Add fallback mechanisms (Claude fallback for Perplexity)
 - Cache important responses to reduce API dependency
@@ -396,7 +396,7 @@
 - Implement progressive documentation (basic to advanced)
 - Build help directly into the CLI
 
-# Appendix  
+# Appendix
 
 ## AI Prompt Engineering Specifications
 

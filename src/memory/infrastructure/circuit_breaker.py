@@ -18,10 +18,11 @@ Version: 2.0 (2026-04-04) — P1 migration
 import asyncio
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import wraps
-from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,9 @@ class CircuitBreaker:
         self._lock = asyncio.Lock()
         logger.debug(
             "CircuitBreaker '%s' initialized: threshold=%d, timeout=%.0fs",
-            name, self.config.failure_threshold, self.config.reset_timeout,
+            name,
+            self.config.failure_threshold,
+            self.config.reset_timeout,
         )
 
     @property
@@ -175,8 +178,11 @@ class CircuitBreaker:
         if self._stats.state == CircuitState.HALF_OPEN:
             if self._stats.consecutive_successes >= self.config.success_threshold:
                 self._transition_to(CircuitState.CLOSED)
-                logger.info("Circuit '%s' CLOSED after %d successes",
-                            self.name, self._stats.consecutive_successes)
+                logger.info(
+                    "Circuit '%s' CLOSED after %d successes",
+                    self.name,
+                    self._stats.consecutive_successes,
+                )
         elif self._stats.state == CircuitState.CLOSED:
             self._stats.failure_count = 0  # reset on success
 
@@ -197,7 +203,9 @@ class CircuitBreaker:
                 self._transition_to(CircuitState.OPEN)
                 logger.warning(
                     "Circuit '%s' OPEN after %d failures: %s",
-                    self.name, self._stats.failure_count, error[:100],
+                    self.name,
+                    self._stats.failure_count,
+                    error[:100],
                 )
 
     def reset(self):
@@ -220,9 +228,11 @@ class CircuitBreaker:
 
     def __call__(self, func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         """Decorator for async functions."""
+
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             return await self.call_async(func(*args, **kwargs))
+
         return wrapper
 
     def __repr__(self) -> str:

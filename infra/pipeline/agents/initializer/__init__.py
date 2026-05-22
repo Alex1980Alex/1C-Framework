@@ -15,55 +15,50 @@ INITIALIZER Agent - контекстный анализатор для Developme
 - InitializerAgent - главный оркестратор
 """
 
-from agents.initializer.models import (
-    # Enums
-    FileType,
-    ProjectType,
-    # Dataclasses
-    FileInfo,
-    DirectoryInfo,
-    ModuleInfo,
-    DependencyInfo,
-    PatternInfo,
-    ProjectStructure,
-    ContextReport,
-    # Config
-    InitializerConfig,
-    InitializerInput,
-    InitializerOutput,
+from agents.initializer.agent import (
+    InitializerAgent,
+    create_initializer,
+    run_initializer,
 )
-
 from agents.initializer.codebase_scanner import (
     CodebaseScanner,
-    scan_directory,
     detect_project_type,
     get_file_stats,
+    scan_directory,
 )
-
+from agents.initializer.context_cache import (
+    CacheEntry,
+    ContextCache,
+    cache_context,
+    get_cached_context,
+    invalidate_cache,
+)
 from agents.initializer.context_generator import (
     ContextGenerator,
     generate_context,
     generate_context_markdown,
 )
-
 from agents.initializer.file_selector import (
     FileSelector,
-    select_relevant_files,
     rank_files_by_relevance,
+    select_relevant_files,
 )
-
-from agents.initializer.context_cache import (
-    ContextCache,
-    CacheEntry,
-    cache_context,
-    get_cached_context,
-    invalidate_cache,
-)
-
-from agents.initializer.agent import (
-    InitializerAgent,
-    create_initializer,
-    run_initializer,
+from agents.initializer.models import (
+    ContextReport,
+    DependencyInfo,
+    DirectoryInfo,
+    # Dataclasses
+    FileInfo,
+    # Enums
+    FileType,
+    # Config
+    InitializerConfig,
+    InitializerInput,
+    InitializerOutput,
+    ModuleInfo,
+    PatternInfo,
+    ProjectStructure,
+    ProjectType,
 )
 
 __all__ = [

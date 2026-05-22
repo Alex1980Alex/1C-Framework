@@ -208,16 +208,16 @@ const generateTaskWithContext = async (prdSection, relatedSections, fullPRD) => 
   const contextWindow = buildContextWindow(prdSection, relatedSections, fullPRD);
   const prompt = `
     Generate a task based on this PRD section:
-    
+
     PRIMARY SECTION:
     ${prdSection.content}
-    
+
     RELATED CONTEXT:
     ${contextWindow}
-    
+
     Ensure the task preserves all specific requirements and technical details.
   `;
-  
+
   // Generate task with embedded context
   const task = await generateTask(prompt);
   task.prdContext = {
@@ -226,7 +226,7 @@ const generateTaskWithContext = async (prdSection, relatedSections, fullPRD) => 
     relatedSections: relatedSections.map(s => s.title),
     contextWindow: contextWindow
   };
-  
+
   return task;
 };
 ```
@@ -272,7 +272,7 @@ const parsePRDWithExpansion = async (prdContent, options) => {
   // Phase 1: Analyze and generate tasks with context
   const prdAnalysis = await analyzePRDStructure(prdContent);
   const tasksWithContext = await generateTasksWithContext(prdAnalysis);
-  
+
   // Phase 2: Expand tasks if requested
   if (options.expandTasks) {
     for (const task of tasksWithContext) {
@@ -282,7 +282,7 @@ const parsePRDWithExpansion = async (prdContent, options) => {
       }
     }
   }
-  
+
   return tasksWithContext;
 };
 
@@ -291,19 +291,19 @@ const expandTaskWithPRDContext = async (task) => {
   const { prdContext } = task;
   const expansionPrompt = `
     Expand this task into detailed subtasks using the original PRD context:
-    
+
     TASK: ${task.title}
     DESCRIPTION: ${task.description}
-    
+
     ORIGINAL PRD CONTEXT:
     ${prdContext.originalText}
-    
+
     RELATED SECTIONS:
     ${prdContext.contextWindow}
-    
+
     Generate subtasks that preserve all technical details and requirements from the PRD.
   `;
-  
+
   return await generateSubtasks(expansionPrompt);
 };
 ```
@@ -353,7 +353,7 @@ const expandTaskWithPRDContext = async (task) => {
 // Enhanced expand-task with PRD context
 const expandTaskWithContext = async (taskId, options, context) => {
   const task = await getTask(taskId);
-  
+
   // Check for PRD context
   if (task.prdContext) {
     return await expandWithPRDContext(task, options);
@@ -365,34 +365,34 @@ const expandTaskWithContext = async (taskId, options, context) => {
 
 const expandWithPRDContext = async (task, options) => {
   const { prdContext } = task;
-  
+
   const enhancedPrompt = `
     Expand this task into detailed subtasks using the original PRD context:
-    
+
     TASK DETAILS:
     Title: ${task.title}
     Description: ${task.description}
     Current Details: ${task.details}
-    
+
     ORIGINAL PRD CONTEXT:
     Source Section: ${prdContext.sourceSection}
     Original Requirements:
     ${prdContext.originalText}
-    
+
     RELATED CONTEXT:
     ${prdContext.contextWindow}
-    
+
     EXPANSION REQUIREMENTS:
     - Preserve all technical specifications from the PRD
     - Maintain requirement accuracy and completeness
     - Generate ${options.num || 'appropriate number of'} subtasks
     - Include implementation details that reflect PRD specifics
-    
+
     Generate subtasks that are grounded in the original PRD content.
   `;
-  
+
   const subtasks = await generateSubtasks(enhancedPrompt, options);
-  
+
   // Add PRD context inheritance to subtasks
   subtasks.forEach(subtask => {
     subtask.prdContext = {
@@ -401,7 +401,7 @@ const expandWithPRDContext = async (task, options) => {
       relevantExcerpt: extractRelevantExcerpt(prdContext, subtask)
     };
   });
-  
+
   return subtasks;
 };
 ```
@@ -589,13 +589,13 @@ describe('Enhanced Parse-PRD', () => {
       expect(analysis.sections).toHaveLength(expectedSectionCount);
       expect(analysis.overallComplexity).toBeGreaterThan(0);
     });
-    
+
     test('should calculate appropriate task count', async () => {
       const analysis = await analyzePRDStructure(testPRDs.complex);
       expect(analysis.recommendedTaskCount).toBeGreaterThan(10);
     });
   });
-  
+
   describe('Context Preservation', () => {
     test('should embed PRD context in tasks', async () => {
       const tasks = await generateTasksWithContext(testPRDs.technical);
@@ -606,12 +606,12 @@ describe('Enhanced Parse-PRD', () => {
       });
     });
   });
-  
+
   describe('Expansion Accuracy', () => {
     test('should generate relevant subtasks from PRD context', async () => {
       const task = createTestTaskWithPRDContext();
       const subtasks = await expandTaskWithPRDContext(task);
-      
+
       const relevanceScore = calculateRelevanceScore(subtasks, task.prdContext);
       expect(relevanceScore).toBeGreaterThan(0.8);
     });
@@ -636,4 +636,3 @@ describe('Enhanced Parse-PRD', () => {
 - Set up performance benchmarking
 - Implement quality gates for PRD processing
 - Create regression testing for context preservation
-

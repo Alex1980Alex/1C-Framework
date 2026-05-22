@@ -5,21 +5,23 @@ Data structures for code review workflow.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class IssueSeverity(Enum):
     """Severity levels for review issues."""
-    CRITICAL = "critical"      # 🔴 Blocks release
-    WARNING = "warning"        # 🟡 Should fix
+
+    CRITICAL = "critical"  # 🔴 Blocks release
+    WARNING = "warning"  # 🟡 Should fix
     RECOMMENDATION = "recommendation"  # 🔵 Nice to have
-    INFO = "info"              # ⚪ Informational
+    INFO = "info"  # ⚪ Informational
 
 
 class IssueCategory(Enum):
     """Categories of review issues."""
+
     # Critical categories
     SECURITY = "security"
     DATA_INTEGRITY = "data_integrity"
@@ -40,29 +42,31 @@ class IssueCategory(Enum):
 
 class ReviewVerdict(Enum):
     """Final review verdict."""
-    APPROVED = "approved"                    # ✅ Can deploy
+
+    APPROVED = "approved"  # ✅ Can deploy
     CHANGES_REQUESTED = "changes_requested"  # ⚠️ Needs work
-    BLOCKED = "blocked"                      # 🔴 Cannot proceed
+    BLOCKED = "blocked"  # 🔴 Cannot proceed
 
 
 @dataclass
 class DiffHunk:
     """A single hunk in a diff."""
+
     old_start: int
     old_count: int
     new_start: int
     new_count: int
     content: str
-    added_lines: List[str] = field(default_factory=list)
-    removed_lines: List[str] = field(default_factory=list)
-    context_lines: List[str] = field(default_factory=list)
+    added_lines: list[str] = field(default_factory=list)
+    removed_lines: list[str] = field(default_factory=list)
+    context_lines: list[str] = field(default_factory=list)
 
     @property
     def has_changes(self) -> bool:
         """Check if hunk has actual changes."""
         return len(self.added_lines) > 0 or len(self.removed_lines) > 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "old_start": self.old_start,
@@ -77,17 +81,18 @@ class DiffHunk:
 @dataclass
 class FileChange:
     """Represents changes to a single file."""
+
     file_path: str
     change_type: str  # added, modified, deleted, renamed
-    old_path: Optional[str] = None  # for renames
-    hunks: List[DiffHunk] = field(default_factory=list)
+    old_path: str | None = None  # for renames
+    hunks: list[DiffHunk] = field(default_factory=list)
     additions: int = 0
     deletions: int = 0
     is_bsl: bool = False
 
     def __post_init__(self):
         """Calculate metrics after init."""
-        self.is_bsl = self.file_path.lower().endswith('.bsl')
+        self.is_bsl = self.file_path.lower().endswith(".bsl")
         if self.hunks and self.additions == 0 and self.deletions == 0:
             self.additions = sum(len(h.added_lines) for h in self.hunks)
             self.deletions = sum(len(h.removed_lines) for h in self.hunks)
@@ -97,7 +102,7 @@ class FileChange:
         """Total lines changed."""
         return self.additions + self.deletions
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "file_path": self.file_path,
@@ -112,15 +117,16 @@ class FileChange:
 @dataclass
 class ReviewIssue:
     """A single issue found during review."""
+
     id: str
     title: str
     description: str
     severity: IssueSeverity
     category: IssueCategory
-    file_path: Optional[str] = None
-    line_number: Optional[int] = None
-    code_snippet: Optional[str] = None
-    recommendation: Optional[str] = None
+    file_path: str | None = None
+    line_number: int | None = None
+    code_snippet: str | None = None
+    recommendation: str | None = None
 
     def __post_init__(self):
         """Generate ID if not provided."""
@@ -143,7 +149,7 @@ class ReviewIssue:
             IssueSeverity.INFO: "⚪",
         }.get(self.severity, "⚪")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -172,12 +178,14 @@ class ReviewIssue:
         lines.append(f"- **Описание:** {self.description}")
 
         if self.code_snippet:
-            lines.extend([
-                "- **Код:**",
-                "```bsl",
-                self.code_snippet,
-                "```",
-            ])
+            lines.extend(
+                [
+                    "- **Код:**",
+                    "```bsl",
+                    self.code_snippet,
+                    "```",
+                ]
+            )
 
         if self.recommendation:
             lines.append(f"- **Рекомендация:** {self.recommendation}")
@@ -188,14 +196,15 @@ class ReviewIssue:
 @dataclass
 class StyleViolation:
     """Code style violation."""
+
     rule_id: str
     rule_name: str
     file_path: str
     line_number: int
-    column: Optional[int] = None
+    column: int | None = None
     message: str = ""
     severity: IssueSeverity = IssueSeverity.WARNING
-    code_line: Optional[str] = None
+    code_line: str | None = None
 
     def to_review_issue(self) -> ReviewIssue:
         """Convert to ReviewIssue."""
@@ -210,7 +219,7 @@ class StyleViolation:
             code_snippet=self.code_line,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "rule_id": self.rule_id,
@@ -225,12 +234,13 @@ class StyleViolation:
 @dataclass
 class ArchIssue:
     """Architecture issue."""
+
     component: str
     issue_type: str  # missing, wrong_interface, wrong_structure, circular_dep
     description: str
     severity: IssueSeverity = IssueSeverity.WARNING
-    related_files: List[str] = field(default_factory=list)
-    recommendation: Optional[str] = None
+    related_files: list[str] = field(default_factory=list)
+    recommendation: str | None = None
 
     def to_review_issue(self) -> ReviewIssue:
         """Convert to ReviewIssue."""
@@ -244,7 +254,7 @@ class ArchIssue:
             recommendation=self.recommendation,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "component": self.component,
@@ -258,12 +268,13 @@ class ArchIssue:
 @dataclass
 class StandardCheck:
     """Result of a standard compliance check."""
+
     standard_name: str
     passed: bool
     status: str  # ✅, ⚠️, ❌
-    comment: Optional[str] = None
+    comment: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "standard_name": self.standard_name,
@@ -276,35 +287,36 @@ class StandardCheck:
 @dataclass
 class ReviewReport:
     """Complete review report."""
+
     project_id: str
     task_id: str
     timestamp: datetime = field(default_factory=datetime.now)
 
     # Analyzed items
-    files_reviewed: List[FileChange] = field(default_factory=list)
+    files_reviewed: list[FileChange] = field(default_factory=list)
 
     # Issues
-    issues: List[ReviewIssue] = field(default_factory=list)
+    issues: list[ReviewIssue] = field(default_factory=list)
 
     # Standard checks
-    standard_checks: List[StandardCheck] = field(default_factory=list)
+    standard_checks: list[StandardCheck] = field(default_factory=list)
 
     # Verdict
     verdict: ReviewVerdict = ReviewVerdict.APPROVED
     quality_score: float = 10.0  # 0-10
 
     @property
-    def critical_issues(self) -> List[ReviewIssue]:
+    def critical_issues(self) -> list[ReviewIssue]:
         """Get critical issues."""
         return [i for i in self.issues if i.severity == IssueSeverity.CRITICAL]
 
     @property
-    def warnings(self) -> List[ReviewIssue]:
+    def warnings(self) -> list[ReviewIssue]:
         """Get warnings."""
         return [i for i in self.issues if i.severity == IssueSeverity.WARNING]
 
     @property
-    def recommendations(self) -> List[ReviewIssue]:
+    def recommendations(self) -> list[ReviewIssue]:
         """Get recommendations."""
         return [i for i in self.issues if i.severity == IssueSeverity.RECOMMENDATION]
 
@@ -352,7 +364,7 @@ class ReviewReport:
         # Ensure bounds
         return max(0.0, min(10.0, score))
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "project_id": self.project_id,
@@ -374,7 +386,7 @@ class ReviewReport:
             "",
             f"> **Проект:** {self.project_id}",
             f"> **Задача:** {self.task_id}",
-            f"> **Ревьюер:** REVIEWER Agent",
+            "> **Ревьюер:** REVIEWER Agent",
             f"> **Дата:** {self.timestamp.strftime('%Y-%m-%d %H:%M')}",
             f"> **Вердикт:** {self.verdict_icon} {self.verdict.value.upper().replace('_', ' ')}",
             "",
@@ -395,50 +407,58 @@ class ReviewReport:
 
         # Critical issues
         if self.critical_issues:
-            lines.extend([
-                "---",
-                "",
-                "## 🔴 Критические замечания",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 🔴 Критические замечания",
+                    "",
+                ]
+            )
             for issue in self.critical_issues:
                 lines.append(issue.to_markdown())
                 lines.append("")
 
         # Warnings
         if self.warnings:
-            lines.extend([
-                "---",
-                "",
-                "## 🟡 Предупреждения",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 🟡 Предупреждения",
+                    "",
+                ]
+            )
             for issue in self.warnings:
                 lines.append(issue.to_markdown())
                 lines.append("")
 
         # Recommendations
         if self.recommendations:
-            lines.extend([
-                "---",
-                "",
-                "## 🔵 Рекомендации",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 🔵 Рекомендации",
+                    "",
+                ]
+            )
             for issue in self.recommendations:
                 lines.append(issue.to_markdown())
                 lines.append("")
 
         # Standard checks
         if self.standard_checks:
-            lines.extend([
-                "---",
-                "",
-                "## Проверка стандартов",
-                "",
-                "| Стандарт | Статус | Комментарий |",
-                "|----------|--------|-------------|",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## Проверка стандартов",
+                    "",
+                    "| Стандарт | Статус | Комментарий |",
+                    "|----------|--------|-------------|",
+                ]
+            )
             for check in self.standard_checks:
                 comment = check.comment or "-"
                 lines.append(f"| {check.standard_name} | {check.status} | {comment} |")
@@ -446,27 +466,33 @@ class ReviewReport:
 
         # Files reviewed
         if self.files_reviewed:
-            lines.extend([
-                "---",
-                "",
-                "## Проверенные файлы",
-                "",
-                "| Файл | Тип | +/- |",
-                "|------|-----|-----|",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## Проверенные файлы",
+                    "",
+                    "| Файл | Тип | +/- |",
+                    "|------|-----|-----|",
+                ]
+            )
             for f in self.files_reviewed[:20]:  # Limit to 20
-                lines.append(f"| `{f.file_path}` | {f.change_type} | +{f.additions}/-{f.deletions} |")
+                lines.append(
+                    f"| `{f.file_path}` | {f.change_type} | +{f.additions}/-{f.deletions} |"
+                )
             if len(self.files_reviewed) > 20:
                 lines.append(f"| ... и ещё {len(self.files_reviewed) - 20} файлов | | |")
             lines.append("")
 
         # Conclusion
-        lines.extend([
-            "---",
-            "",
-            "## Заключение",
-            "",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "## Заключение",
+                "",
+            ]
+        )
 
         if self.verdict == ReviewVerdict.APPROVED:
             lines.append("✅ Код проверен и одобрен. Можно продолжать.")
@@ -476,13 +502,15 @@ class ReviewReport:
             lines.append("🔴 Код заблокирован. Исправьте критические замечания.")
 
         # Next steps
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## Следующие шаги",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "---",
+                "",
+                "## Следующие шаги",
+                "",
+            ]
+        )
 
         if self.critical_issues:
             lines.append("- [ ] Исправить критические замечания (CR-*)")

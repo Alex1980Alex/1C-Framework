@@ -87,4 +87,4 @@ pytest test/solidlsp/elixir/ -m elixir
 - **Language identifier**: `"elixir"`
 - **Command**: `nextls --stdio`
 
-The implementation follows the same patterns as other language servers in this project, inheriting from `SolidLanguageServer` and providing Elixir-specific configuration and behavior. 
+The implementation follows the same patterns as other language servers in this project, inheriting from `SolidLanguageServer` and providing Elixir-specific configuration and behavior.

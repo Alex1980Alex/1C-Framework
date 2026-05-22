@@ -88,10 +88,7 @@ class JsonlTelemetryWriter:
         if not self._rotate_daily:
             return self._base_path
         today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
-        return (
-            self._base_path.parent
-            / f"{self._base_path.stem}-{today}{self._base_path.suffix}"
-        )
+        return self._base_path.parent / f"{self._base_path.stem}-{today}{self._base_path.suffix}"
 
     @staticmethod
     def _sha1(value: str) -> str:
@@ -146,7 +143,9 @@ class JsonlTelemetryWriter:
             if not match or match["stem"] != stem or match["suffix"] != suffix:
                 continue
             try:
-                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)  # noqa: UP017
+                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(
+                    tzinfo=timezone.utc
+                )  # noqa: UP017
             except ValueError:
                 continue
             if file_date >= cutoff:

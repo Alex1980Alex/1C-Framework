@@ -121,29 +121,69 @@ class RoutingStats:
 
 EXPLICIT_KEYWORDS: dict[str, list[str]] = {
     "patterns": [
-        "паттерн", "pattern", "правило кода", "convention",
-        "best practice", "bestpractice", "антипаттерн",
-        "architecture", "design pattern", "standard",
+        "паттерн",
+        "pattern",
+        "правило кода",
+        "convention",
+        "best practice",
+        "bestpractice",
+        "антипаттерн",
+        "architecture",
+        "design pattern",
+        "standard",
     ],
     "facts": [
-        "важно запомнить", "запомни", "сохранить", "fact",
-        "важно", "вывод", "результат", "conclusion",
-        "решение принято", "decision",
+        "важно запомнить",
+        "запомни",
+        "сохранить",
+        "fact",
+        "важно",
+        "вывод",
+        "результат",
+        "conclusion",
+        "решение принято",
+        "decision",
     ],
     "code": [
-        "код", "function", "procedure", "class",
-        "bsl", "python", "функция", "процедура",
+        "код",
+        "function",
+        "procedure",
+        "class",
+        "bsl",
+        "python",
+        "функция",
+        "процедура",
     ],
     "skills": [
-        "навык", "skill", "умение", "подтверждено",
-        "confirmed", "best practice confirmed", "практика",
-        "workflow", "рабочий процесс", "алгоритм работы",
+        "навык",
+        "skill",
+        "умение",
+        "подтверждено",
+        "confirmed",
+        "best practice confirmed",
+        "практика",
+        "workflow",
+        "рабочий процесс",
+        "алгоритм работы",
     ],
     "wiki": [
-        "wiki", "статья", "article", "документация",
-        "promote", "продвинуть", "опубликовать", "publish",
-        "obsidian", "заметка", "note", "драфт", "draft",
-        "карточка", "card", "справка", "reference",
+        "wiki",
+        "статья",
+        "article",
+        "документация",
+        "promote",
+        "продвинуть",
+        "опубликовать",
+        "publish",
+        "obsidian",
+        "заметка",
+        "note",
+        "драфт",
+        "draft",
+        "карточка",
+        "card",
+        "справка",
+        "reference",
     ],
 }
 
@@ -191,28 +231,74 @@ CONFIG_PATTERNS: list[str] = [
 
 CATEGORY_KEYWORDS: dict[str, list[str]] = {
     "patterns": [
-        "bsl", "код", "функция", "процедура", "класс", "алгоритм",
-        "паттерн", "pattern", "convention", "standard",
-        "bestpractice", "архитектура", "design", "refactoring",
-        "шаблон", "approach", "methodology", "strategy",
+        "bsl",
+        "код",
+        "функция",
+        "процедура",
+        "класс",
+        "алгоритм",
+        "паттерн",
+        "pattern",
+        "convention",
+        "standard",
+        "bestpractice",
+        "архитектура",
+        "design",
+        "refactoring",
+        "шаблон",
+        "approach",
+        "methodology",
+        "strategy",
     ],
     "facts": [
-        "важно", "запомнить", "сохранить", "fact",
-        "вывод", "результат", "conclusion",
-        "решение", "decision", "принято",
-        "ошибка", "error", "bug", "issue",
-        "fix", "исправлен", "решен",
+        "важно",
+        "запомнить",
+        "сохранить",
+        "fact",
+        "вывод",
+        "результат",
+        "conclusion",
+        "решение",
+        "decision",
+        "принято",
+        "ошибка",
+        "error",
+        "bug",
+        "issue",
+        "fix",
+        "исправлен",
+        "решен",
     ],
     "skills": [
-        "навык", "skill", "умение", "практика",
-        "confirmed", "подтверждено", "workflow",
-        "процесс", "алгоритм", "подход",
-        "эффективный", "working", "проверенный",
+        "навык",
+        "skill",
+        "умение",
+        "практика",
+        "confirmed",
+        "подтверждено",
+        "workflow",
+        "процесс",
+        "алгоритм",
+        "подход",
+        "эффективный",
+        "working",
+        "проверенный",
     ],
     "wiki": [
-        "wiki", "статья", "article", "заметка", "note",
-        "promote", "продвинуть", "опубликовать", "publish",
-        "obsidian", "драфт", "draft", "карточка", "card",
+        "wiki",
+        "статья",
+        "article",
+        "заметка",
+        "note",
+        "promote",
+        "продвинуть",
+        "опубликовать",
+        "publish",
+        "obsidian",
+        "драфт",
+        "draft",
+        "карточка",
+        "card",
     ],
 }
 
@@ -249,13 +335,19 @@ _FACT_SIGNALS: list[tuple[str, str]] = [
 ]
 
 _PREFERENCE_SIGNALS: list[tuple[str, str]] = [
-    (r"(?:предпочита|prefer|нравится|like|хочу|want|всегда использу|always use)", "keyword:preference"),
+    (
+        r"(?:предпочита|prefer|нравится|like|хочу|want|всегда использу|always use)",
+        "keyword:preference",
+    ),
     (r"(?:не люблю|don'?t like|избега|avoid|никогда не|never)", "keyword:avoidance"),
     (r"(?:стиль|style|формат|format)", "keyword:style"),
 ]
 
 _RULE_SIGNALS: list[tuple[str, str]] = [
-    (r"(?:правило|rule|стандарт|standard|convention|запрещено|forbidden|обязательно|must)", "keyword:rule"),
+    (
+        r"(?:правило|rule|стандарт|standard|convention|запрещено|forbidden|обязательно|must)",
+        "keyword:rule",
+    ),
     (r"(?:best.?practice|bestpractice|антипаттерн|anti.?pattern)", "keyword:practice"),
     (r"(?:lint|eslint|ruff|sonar)", "keyword:linter"),
 ]
@@ -308,7 +400,9 @@ class ContentClassifier:
         for ct, patterns in _CONTENT_TYPE_SIGNALS.items():
             self._compiled[ct] = [(re.compile(p, re.IGNORECASE), label) for p, label in patterns]
 
-    def classify(self, content: str, metadata: dict[str, Any] | None = None) -> ClassificationResult:
+    def classify(
+        self, content: str, metadata: dict[str, Any] | None = None
+    ) -> ClassificationResult:
         """Classify content into a ContentType with confidence and signals.
 
         Scoring: each matching signal adds weight. The type with the highest
@@ -488,7 +582,9 @@ class MemoryRouter:
             parts.append(f"{target}({score:.2f})")
         return f"Routed by {self.stats.__dict__.get('total_routes', 0)} -> {', '.join(parts)}"
 
-    def classify_content(self, content: str, metadata: dict[str, Any] | None = None) -> ClassificationResult:
+    def classify_content(
+        self, content: str, metadata: dict[str, Any] | None = None
+    ) -> ClassificationResult:
         """Phase 0: Auto-classify content type (public API for external use)."""
         return self._classifier.classify(content, metadata)
 

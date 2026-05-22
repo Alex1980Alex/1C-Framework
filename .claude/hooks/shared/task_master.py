@@ -89,7 +89,9 @@ class FileLock:
         # call. None here means refactor regression — fail loud instead of
         # silently reporting "acquired".
         if self._lock_file is None:
-            raise RuntimeError("FileLock._platform_lock called before __enter__ opened the lock file")
+            raise RuntimeError(
+                "FileLock._platform_lock called before __enter__ opened the lock file"
+            )
         if sys.platform == "win32":
             import msvcrt
 

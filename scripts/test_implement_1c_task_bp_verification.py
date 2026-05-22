@@ -12,6 +12,7 @@ swap in mocks and verify the sequence and assertions.
 Run:
     python -m pytest scripts/test_implement_1c_task_bp_verification.py -v
 """
+
 from __future__ import annotations
 
 import sys
@@ -197,9 +198,7 @@ def _make_happy_client() -> MagicMock:
         {"enabled": True, "lineNo": 42, "moduleName": "Doc.ABC"}
     ]
     c.debug_ping.return_value = {"last_stopped_target_id": "tgt-1"}
-    c.debug_stack_trace.return_value = [
-        {"lineNo": 42, "moduleName": "Doc.ABC.SomeProcedure"}
-    ]
+    c.debug_stack_trace.return_value = [{"lineNo": 42, "moduleName": "Doc.ABC.SomeProcedure"}]
     c.debug_variables.return_value = {"Counterparty": "LLC Test"}
     return c
 
@@ -274,8 +273,12 @@ def test_force_recycle_fallback_when_break_on_next_also_fails():
     c = _make_happy_client()
     # 3 ping no-stop (initial) + 3 ping no-stop (after break_on_next) + 1 stop (after recycle)
     c.debug_ping.side_effect = [
-        {"last_stopped_target_id": None}, {"last_stopped_target_id": None}, {"last_stopped_target_id": None},
-        {"last_stopped_target_id": None}, {"last_stopped_target_id": None}, {"last_stopped_target_id": None},
+        {"last_stopped_target_id": None},
+        {"last_stopped_target_id": None},
+        {"last_stopped_target_id": None},
+        {"last_stopped_target_id": None},
+        {"last_stopped_target_id": None},
+        {"last_stopped_target_id": None},
         {"last_stopped_target_id": "tgt-recycled"},
     ]
 

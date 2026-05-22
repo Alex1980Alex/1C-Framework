@@ -31,7 +31,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.pdf_framework.config import EmbeddingSettings, get_settings
+from src.pdf_framework.config import EmbeddingSettings
 from src.pdf_framework.embeddings import get_embedding_engine
 
 logging.basicConfig(
@@ -111,21 +111,27 @@ async def run_benchmark(
     corpus = dataset["corpus"]
 
     label = f"{provider}+ctx" if context_prefix else provider
-    logger.info("Provider: %s, Model: %s, Dims: %d, Contextual: %s",
-                label, engine.get_model_name(), engine.get_dimensions(),
-                bool(context_prefix))
+    logger.info(
+        "Provider: %s, Model: %s, Dims: %d, Contextual: %s",
+        label,
+        engine.get_model_name(),
+        engine.get_dimensions(),
+        bool(context_prefix),
+    )
     logger.info("Corpus: %d passages, Queries: %d", len(corpus), len(queries))
 
     # Embed corpus (with optional contextual prefix)
     t0 = time.perf_counter()
     corpus_texts = [
-        f"{context_prefix} {c['text']}" if context_prefix else c["text"]
-        for c in corpus
+        f"{context_prefix} {c['text']}" if context_prefix else c["text"] for c in corpus
     ]
     corpus_embeddings = await engine.embed_batch(corpus_texts)
     embed_time = time.perf_counter() - t0
-    logger.info("Corpus embedded in %.2fs (%.0f texts/sec)",
-                embed_time, len(corpus_texts) / embed_time if embed_time > 0 else 0)
+    logger.info(
+        "Corpus embedded in %.2fs (%.0f texts/sec)",
+        embed_time,
+        len(corpus_texts) / embed_time if embed_time > 0 else 0,
+    )
 
     # Evaluate each query
     recall_5_scores = []
@@ -138,10 +144,7 @@ async def run_benchmark(
         relevant_ids = set(q["relevant_indices"])
 
         # Compute similarities
-        sims = [
-            (i, _cosine_similarity(query_emb, ce))
-            for i, ce in enumerate(corpus_embeddings)
-        ]
+        sims = [(i, _cosine_similarity(query_emb, ce)) for i, ce in enumerate(corpus_embeddings)]
         sims.sort(key=lambda x: x[1], reverse=True)
         retrieved = [idx for idx, _ in sims]
 
@@ -181,25 +184,36 @@ async def main():
     parser.add_argument("--provider", default="local", help="Embedding provider (local/jina/giga)")
     parser.add_argument("--dataset", type=Path, default=_DEFAULT_DATASET, help="Dataset JSON path")
     parser.add_argument("--jina-key", default="", help="Jina API key")
-    parser.add_argument("--jina-truncate-dim", type=int, default=None, help="Jina Matryoshka dim (512/256)")
+    parser.add_argument(
+        "--jina-truncate-dim", type=int, default=None, help="Jina Matryoshka dim (512/256)"
+    )
     parser.add_argument("--compare", nargs="+", help="Compare multiple providers")
-    parser.add_argument("--contextual", action="store_true",
-                        help="Run with contextual prefix (simulates Contextual Retrieval)")
+    parser.add_argument(
+        "--contextual",
+        action="store_true",
+        help="Run with contextual prefix (simulates Contextual Retrieval)",
+    )
     parser.add_argument("--output", type=Path, default=None, help="Output JSON path")
     args = parser.parse_args()
 
-    ctx_prefix = "Этот фрагмент из документации 1С:Предприятие 8.3.27 описывает:" if args.contextual else ""
+    ctx_prefix = (
+        "Этот фрагмент из документации 1С:Предприятие 8.3.27 описывает:" if args.contextual else ""
+    )
 
     if not args.dataset.exists():
         logger.error("Dataset not found: %s", args.dataset)
         logger.info("Create a benchmark dataset with format:")
-        logger.info('  {"corpus": [{"text": "..."}], "queries": [{"query": "...", "relevant_indices": [0,1]}]}')
+        logger.info(
+            '  {"corpus": [{"text": "..."}], "queries": [{"query": "...", "relevant_indices": [0,1]}]}'
+        )
         sys.exit(1)
 
     if args.compare:
         all_results = {}
         for prov in args.compare:
-            results = await run_benchmark(prov, args.dataset, args.jina_key, args.jina_truncate_dim, ctx_prefix)
+            results = await run_benchmark(
+                prov, args.dataset, args.jina_key, args.jina_truncate_dim, ctx_prefix
+            )
             all_results[prov] = results
 
         # Comparison table
@@ -219,7 +233,9 @@ async def main():
 
         output = args.output or _RESULTS_DIR / "embedding_comparison.json"
     else:
-        all_results = await run_benchmark(args.provider, args.dataset, args.jina_key, args.jina_truncate_dim, ctx_prefix)
+        all_results = await run_benchmark(
+            args.provider, args.dataset, args.jina_key, args.jina_truncate_dim, ctx_prefix
+        )
         suffix = f"_{args.provider}_ctx" if args.contextual else f"_{args.provider}"
         output = args.output or _RESULTS_DIR / f"embedding_baseline{suffix}.json"
 

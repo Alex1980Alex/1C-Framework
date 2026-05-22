@@ -4,14 +4,15 @@ Implements error classification, severity levels, and graceful
 degradation patterns for the pipeline orchestrator.
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Optional, Callable, Any, TypeVar, Dict, List
-from functools import wraps
 import asyncio
 import logging
 import traceback
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from functools import wraps
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -46,25 +47,25 @@ class ErrorSeverity(Enum):
 class ErrorCategory(Enum):
     """Error category classification."""
 
-    NETWORK = "network"          # Network-related errors
-    TIMEOUT = "timeout"          # Timeout errors
-    VALIDATION = "validation"    # Input validation errors
-    RESOURCE = "resource"        # Resource exhaustion
-    PERMISSION = "permission"    # Permission/auth errors
-    DEPENDENCY = "dependency"    # External dependency errors
+    NETWORK = "network"  # Network-related errors
+    TIMEOUT = "timeout"  # Timeout errors
+    VALIDATION = "validation"  # Input validation errors
+    RESOURCE = "resource"  # Resource exhaustion
+    PERMISSION = "permission"  # Permission/auth errors
+    DEPENDENCY = "dependency"  # External dependency errors
     CONFIGURATION = "configuration"  # Config errors
-    INTERNAL = "internal"        # Internal logic errors
-    UNKNOWN = "unknown"          # Unclassified errors
+    INTERNAL = "internal"  # Internal logic errors
+    UNKNOWN = "unknown"  # Unclassified errors
 
 
 class DegradationLevel(Enum):
     """Degradation levels for graceful degradation."""
 
-    FULL = "full"           # Full functionality
-    REDUCED = "reduced"     # Reduced functionality
-    MINIMAL = "minimal"     # Minimal functionality
-    OFFLINE = "offline"     # Offline/cached mode
-    FAILED = "failed"       # Complete failure
+    FULL = "full"  # Full functionality
+    REDUCED = "reduced"  # Reduced functionality
+    MINIMAL = "minimal"  # Minimal functionality
+    OFFLINE = "offline"  # Offline/cached mode
+    FAILED = "failed"  # Complete failure
 
 
 @dataclass
@@ -79,28 +80,28 @@ class ErrorContext:
     timestamp: datetime = field(default_factory=datetime.now)
 
     # Location info
-    file_path: Optional[str] = None
-    function_name: Optional[str] = None
-    line_number: Optional[int] = None
+    file_path: str | None = None
+    function_name: str | None = None
+    line_number: int | None = None
 
     # Additional context
-    task_id: Optional[str] = None
-    agent_type: Optional[str] = None
-    phase: Optional[str] = None
+    task_id: str | None = None
+    agent_type: str | None = None
+    phase: str | None = None
 
     # Error details
-    original_exception: Optional[Exception] = None
-    stack_trace: Optional[str] = None
+    original_exception: Exception | None = None
+    stack_trace: str | None = None
 
     # Recovery hints
     is_recoverable: bool = True
-    suggested_action: Optional[str] = None
-    retry_after_seconds: Optional[float] = None
+    suggested_action: str | None = None
+    retry_after_seconds: float | None = None
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "error_id": self.error_id,
@@ -127,9 +128,9 @@ class ErrorContext:
         cls,
         exception: Exception,
         error_id: str,
-        severity: Optional[ErrorSeverity] = None,
-        category: Optional[ErrorCategory] = None,
-        **kwargs
+        severity: ErrorSeverity | None = None,
+        category: ErrorCategory | None = None,
+        **kwargs,
     ) -> "ErrorContext":
         """Create ErrorContext from an exception."""
         # Auto-classify if not provided
@@ -147,7 +148,7 @@ class ErrorContext:
             original_exception=exception,
             stack_trace=traceback.format_exc(),
             is_recoverable=cls._is_recoverable(exception),
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -203,8 +204,11 @@ class ErrorContext:
     def _is_recoverable(exception: Exception) -> bool:
         """Determine if error is recoverable."""
         non_recoverable = {
-            "SystemExit", "KeyboardInterrupt", "MemoryError",
-            "SyntaxError", "IndentationError"
+            "SystemExit",
+            "KeyboardInterrupt",
+            "MemoryError",
+            "SyntaxError",
+            "IndentationError",
         }
         return type(exception).__name__ not in non_recoverable
 
@@ -213,10 +217,7 @@ class PipelineError(Exception):
     """Base exception for pipeline errors."""
 
     def __init__(
-        self,
-        message: str,
-        context: Optional[ErrorContext] = None,
-        cause: Optional[Exception] = None
+        self, message: str, context: ErrorContext | None = None, cause: Exception | None = None
     ):
         super().__init__(message)
         self.context = context
@@ -233,12 +234,7 @@ class PipelineError(Exception):
 class RecoverableError(PipelineError):
     """Error that can be recovered from."""
 
-    def __init__(
-        self,
-        message: str,
-        retry_after: Optional[float] = None,
-        **kwargs
-    ):
+    def __init__(self, message: str, retry_after: float | None = None, **kwargs):
         super().__init__(message, **kwargs)
         self.retry_after = retry_after
 
@@ -260,13 +256,13 @@ class DegradationState:
     """Current state of degradation."""
 
     level: DegradationLevel
-    reason: Optional[str] = None
+    reason: str | None = None
     since: datetime = field(default_factory=datetime.now)
     error_count: int = 0
-    last_error: Optional[ErrorContext] = None
-    disabled_features: List[str] = field(default_factory=list)
+    last_error: ErrorContext | None = None
+    disabled_features: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "level": self.level.value,
@@ -293,8 +289,8 @@ class GracefulDegradationHandler:
         self._error_threshold_minimal = error_threshold_minimal
         self._error_threshold_offline = error_threshold_offline
         self._recovery_interval = recovery_interval_seconds
-        self._error_history: List[ErrorContext] = []
-        self._listeners: List[Callable[[DegradationState], None]] = []
+        self._error_history: list[ErrorContext] = []
+        self._listeners: list[Callable[[DegradationState], None]] = []
         self._lock = asyncio.Lock()
 
     @property
@@ -332,9 +328,7 @@ class GracefulDegradationHandler:
                 self._state.since = datetime.now()
                 self._state.reason = f"Error: {error.message}"
 
-                logger.warning(
-                    f"Degradation level changed: {old_level.value} -> {new_level.value}"
-                )
+                logger.warning(f"Degradation level changed: {old_level.value} -> {new_level.value}")
 
                 # Notify listeners
                 for listener in self._listeners:
@@ -440,6 +434,7 @@ def with_graceful_degradation(
     Returns:
         Decorated function
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def async_wrapper(*args, **kwargs) -> T:
@@ -465,6 +460,7 @@ def with_graceful_degradation(
             except Exception as e:
                 # Create error context
                 import uuid
+
                 error_ctx = ErrorContext.from_exception(
                     e,
                     error_id=str(uuid.uuid4()),
@@ -495,7 +491,7 @@ class ErrorAggregator:
     """Aggregates and analyzes errors."""
 
     def __init__(self, max_errors: int = 100) -> None:
-        self._errors: List[ErrorContext] = []
+        self._errors: list[ErrorContext] = []
         self._max_errors = max_errors
 
     def add(self, error: ErrorContext) -> None:
@@ -509,21 +505,21 @@ class ErrorAggregator:
         """Get total error count."""
         return len(self._errors)
 
-    def by_severity(self) -> Dict[ErrorSeverity, int]:
+    def by_severity(self) -> dict[ErrorSeverity, int]:
         """Count errors by severity."""
-        counts: Dict[ErrorSeverity, int] = {}
+        counts: dict[ErrorSeverity, int] = {}
         for error in self._errors:
             counts[error.severity] = counts.get(error.severity, 0) + 1
         return counts
 
-    def by_category(self) -> Dict[ErrorCategory, int]:
+    def by_category(self) -> dict[ErrorCategory, int]:
         """Count errors by category."""
-        counts: Dict[ErrorCategory, int] = {}
+        counts: dict[ErrorCategory, int] = {}
         for error in self._errors:
             counts[error.category] = counts.get(error.category, 0) + 1
         return counts
 
-    def recent(self, count: int = 10) -> List[ErrorContext]:
+    def recent(self, count: int = 10) -> list[ErrorContext]:
         """Get recent errors."""
         return self._errors[-count:]
 

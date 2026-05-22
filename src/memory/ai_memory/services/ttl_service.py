@@ -26,9 +26,9 @@ class TTLPolicy(str, Enum):
     """TTL policy presets."""
 
     NEVER = "never"
-    SHORT = "short"       # 1 hour
-    MEDIUM = "medium"     # 24 hours
-    LONG = "long"         # 7 days
+    SHORT = "short"  # 1 hour
+    MEDIUM = "medium"  # 24 hours
+    LONG = "long"  # 7 days
     EXTENDED = "extended"  # 30 days
     CUSTOM = "custom"
 
@@ -88,7 +88,9 @@ class TTLEntry:
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "ttl_policy": self.ttl_policy.value,
             "access_count": self.access_count,
-            "last_accessed_at": self.last_accessed_at.isoformat() if self.last_accessed_at else None,
+            "last_accessed_at": self.last_accessed_at.isoformat()
+            if self.last_accessed_at
+            else None,
             "extended_count": self.extended_count,
         }
 
@@ -158,7 +160,7 @@ class TTLService:
 
         if self.storage_path.exists():
             try:
-                with open(self.storage_path, "r", encoding="utf-8") as f:
+                with open(self.storage_path, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
                         if not line:
@@ -203,9 +205,7 @@ class TTLService:
         await self._ensure_loaded()
 
         seconds = _policy_seconds(policy, ttl_seconds)
-        expires_at = (
-            datetime.now() + timedelta(seconds=seconds) if seconds is not None else None
-        )
+        expires_at = datetime.now() + timedelta(seconds=seconds) if seconds is not None else None
 
         entry = TTLEntry(
             id=str(uuid.uuid4()),
@@ -218,7 +218,9 @@ class TTLService:
         self._entity_index[entity_id] = entry.id
         self._save_entry(entry)
 
-        logger.debug("Registered TTL for %s: policy=%s, expires=%s", entity_id, policy.value, expires_at)
+        logger.debug(
+            "Registered TTL for %s: policy=%s, expires=%s", entity_id, policy.value, expires_at
+        )
         return entry
 
     async def get_entry(self, entity_id: str) -> TTLEntry | None:

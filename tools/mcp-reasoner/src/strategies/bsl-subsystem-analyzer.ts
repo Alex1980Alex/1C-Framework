@@ -21,12 +21,12 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   async processThought(request: ReasoningRequest): Promise<ReasoningResponse> {
     const currentNode = await this.generateSubsystemThought(request);
-    
+
     // Enhanced evaluation for 1C subsystem analysis
     currentNode.score = this.evaluateBSLSubsystemAnalysis(currentNode);
-    
+
     await this.saveNode(currentNode);
-    
+
     return {
       nodeId: currentNode.id,
       thought: currentNode.thought,
@@ -40,9 +40,9 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   private async generateSubsystemThought(request: ReasoningRequest): Promise<ThoughtNode> {
     const nodeId = this.generateNodeId();
-    
+
     let subsystemThought = '';
-    
+
     if (request.thoughtNumber <= 2) {
       subsystemThought = this.analyzeSubsystemStructure(request.thought);
     } else if (request.thoughtNumber <= 4) {
@@ -71,7 +71,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   private analyzeSubsystemStructure(originalThought: string): string {
     this.subsystemsMapping++;
-    
+
     return `Провожу комплексный анализ структуры подсистем 1С в контексте "${originalThought}":
 
 **Иерархия и состав подсистем:**
@@ -95,7 +95,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
 4. **Выявленные проблемы**:
    - Объекты, не привязанные к подсистемам
-   - Дублирование функциональности между подсистемами  
+   - Дублирование функциональности между подсистемами
    - Нарушение иерархии (объекты в неподходящих подсистемах)
    - Избыточная фрагментация или чрезмерная концентрация
 
@@ -104,7 +104,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   private analyzeCrossSubsystemDependencies(originalThought: string): string {
     this.crossSubsystemDependencies++;
-    
+
     return `Детально исследую межподсистемные зависимости:
 
 **Типы межподсистемных связей:**
@@ -143,7 +143,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   private analyzeSecurityAndAccess(originalThought: string): string {
     this.securityViolations++;
-    
+
     return `Анализирую систему безопасности и контроля доступа в подсистемах:
 
 **Модель безопасности подсистем:**
@@ -192,7 +192,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   private analyzeIntegrationPatterns(originalThought: string): string {
     this.integrationPoints++;
-    
+
     return `Исследую паттерны интеграции между подсистемами и внешними системами:
 
 **Внутренние интеграции между подсистемами:**
@@ -235,7 +235,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
 **Архитектурные паттерны интеграции:**
 - **Enterprise Service Bus (ESB)**: централизованная шина интеграции
-- **API Gateway**: единая точка входа для внешних систем  
+- **API Gateway**: единая точка входа для внешних систем
 - **Microservices**: декомпозиция на независимые сервисы
 - **Event Sourcing**: хранение истории изменений для синхронизации
 
@@ -356,13 +356,13 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
     let score = 0;
 
     const thought = node.thought.toLowerCase();
-    
+
     // Subsystem-specific terms
     const subsystemTerms = [
       'подсистема', 'иерархия', 'зависимость', 'интеграция',
       'безопасность', 'роль', 'поток данных', 'архитектура'
     ];
-    
+
     for (const term of subsystemTerms) {
       if (thought.includes(term)) {
         score += 0.1;
@@ -374,7 +374,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
       'права доступа', 'роли', 'безопасность', 'аудит',
       'контроль', 'ограничения', 'защита'
     ];
-    
+
     for (const term of securityTerms) {
       if (thought.includes(term)) {
         score += 0.15;
@@ -386,7 +386,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
       'веб-сервис', 'api', 'интеграция', 'обмен данными',
       'синхронизация', 'событие', 'очередь'
     ];
-    
+
     for (const term of integrationTerms) {
       if (thought.includes(term)) {
         score += 0.15;
@@ -398,7 +398,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
       'event-driven', 'microservices', 'api gateway', 'solid',
       'ddd', 'паттерн', 'архитектурный принцип'
     ];
-    
+
     for (const term of patternTerms) {
       if (thought.includes(term)) {
         score += 0.2;
@@ -419,7 +419,7 @@ export class BSLSubsystemAnalyzer extends BaseStrategy {
 
   public async getMetrics(): Promise<BSLSubsystemMetrics> {
     const baseMetrics = await super.getMetrics();
-    
+
     return {
       ...baseMetrics,
       name: 'BSL Subsystem Analyzer',

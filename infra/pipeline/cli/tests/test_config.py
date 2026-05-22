@@ -8,16 +8,17 @@ Tests for CLI configuration module.
 """
 
 import json
-import pytest
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import os
+
+import pytest
 
 from cli.config import (
     CLIConfig,
-    ProjectConfig,
     ConfigManager,
     OutputFormat,
+    ProjectConfig,
     VerbosityLevel,
 )
 
@@ -43,7 +44,7 @@ class TestCLIConfig:
             project_root=Path("/custom/path"),
             max_parallel_tasks=8,
             timeout_seconds=7200,
-            output_format=OutputFormat.JSON
+            output_format=OutputFormat.JSON,
         )
 
         assert config.project_root == Path("/custom/path")
@@ -62,10 +63,7 @@ class TestCLIConfig:
 
     def test_to_dict(self):
         """Тест конвертации в словарь."""
-        config = CLIConfig(
-            project_root=Path("/test"),
-            max_parallel_tasks=2
-        )
+        config = CLIConfig(project_root=Path("/test"), max_parallel_tasks=2)
 
         data = config.to_dict()
 
@@ -86,11 +84,11 @@ class TestCLIConfig:
         """Тест загрузки из существующего файла."""
         with TemporaryDirectory() as tmpdir:
             config_file = Path(tmpdir) / "config.json"
-            config_file.write_text(json.dumps({
-                "project_root": "/from/file",
-                "max_parallel_tasks": 6,
-                "output_format": "json"
-            }))
+            config_file.write_text(
+                json.dumps(
+                    {"project_root": "/from/file", "max_parallel_tasks": 6, "output_format": "json"}
+                )
+            )
 
             config = CLIConfig.from_file(config_file)
 
@@ -125,10 +123,7 @@ class TestCLIConfig:
     def test_save(self):
         """Тест сохранения конфигурации."""
         with TemporaryDirectory() as tmpdir:
-            config = CLIConfig(
-                project_root=Path(tmpdir),
-                max_parallel_tasks=5
-            )
+            config = CLIConfig(project_root=Path(tmpdir), max_parallel_tasks=5)
             config_file = Path(tmpdir) / "test_config.json"
 
             config.save(config_file)
@@ -164,9 +159,7 @@ class TestCLIConfig:
         """Тест создания директорий."""
         with TemporaryDirectory() as tmpdir:
             config = CLIConfig(
-                project_root=Path(tmpdir),
-                artifacts_dir=Path("artifacts"),
-                logs_dir=Path("logs")
+                project_root=Path(tmpdir), artifacts_dir=Path("artifacts"), logs_dir=Path("logs")
             )
 
             config.ensure_dirs()
@@ -186,11 +179,7 @@ class TestCLIConfig:
 
     def test_post_init_string_conversion(self):
         """Тест конвертации строк в Path и Enum в __post_init__."""
-        config = CLIConfig(
-            project_root="/string/path",
-            output_format="json",
-            verbosity=2
-        )
+        config = CLIConfig(project_root="/string/path", output_format="json", verbosity=2)
 
         assert isinstance(config.project_root, Path)
         assert config.output_format == OutputFormat.JSON
@@ -203,9 +192,7 @@ class TestProjectConfig:
     def test_create_project_config(self):
         """Тест создания конфигурации проекта."""
         project = ProjectConfig(
-            name="TEST-PROJECT",
-            path=Path("/path/to/project"),
-            config_type="configuration"
+            name="TEST-PROJECT", path=Path("/path/to/project"), config_type="configuration"
         )
 
         assert project.name == "TEST-PROJECT"
@@ -214,11 +201,7 @@ class TestProjectConfig:
 
     def test_project_to_dict(self):
         """Тест конвертации проекта в словарь."""
-        project = ProjectConfig(
-            name="TEST",
-            path=Path("/test"),
-            config_type="extension"
-        )
+        project = ProjectConfig(name="TEST", path=Path("/test"), config_type="extension")
 
         data = project.to_dict()
 
@@ -233,7 +216,7 @@ class TestProjectConfig:
             "name": "MY-PROJECT",
             "path": "/my/path",
             "config_type": "data_processor",
-            "description": "Test project"
+            "description": "Test project",
         }
 
         project = ProjectConfig.from_dict(data)
@@ -256,10 +239,7 @@ class TestProjectConfig:
     def test_project_metadata(self):
         """Тест метаданных проекта."""
         project = ProjectConfig(
-            name="TEST",
-            path=Path("/test"),
-            created_at="2025-12-23",
-            total_runs=5
+            name="TEST", path=Path("/test"), created_at="2025-12-23", total_runs=5
         )
 
         assert project.created_at == "2025-12-23"
@@ -308,9 +288,7 @@ class TestConfigManager:
             manager = ConfigManager(base_path=Path(tmpdir))
 
             project = ProjectConfig(
-                name="NEW-PROJECT",
-                path=Path("/new/project"),
-                config_type="configuration"
+                name="NEW-PROJECT", path=Path("/new/project"), config_type="configuration"
             )
 
             manager.register_project(project)
@@ -327,9 +305,7 @@ class TestConfigManager:
 
             # Регистрируем проект
             project = ProjectConfig(
-                name="TO-REMOVE",
-                path=Path("/remove"),
-                config_type="configuration"
+                name="TO-REMOVE", path=Path("/remove"), config_type="configuration"
             )
             manager.register_project(project)
 
@@ -355,9 +331,7 @@ class TestConfigManager:
             manager = ConfigManager(base_path=Path(tmpdir))
 
             project = ProjectConfig(
-                name="GET-TEST",
-                path=Path("/get/test"),
-                config_type="extension"
+                name="GET-TEST", path=Path("/get/test"), config_type="extension"
             )
             manager.register_project(project)
 
@@ -433,9 +407,7 @@ class TestConfigIntegration:
             # Регистрируем несколько проектов
             for i in range(3):
                 project = ProjectConfig(
-                    name=f"PROJECT-{i}",
-                    path=Path(f"/project/{i}"),
-                    config_type="configuration"
+                    name=f"PROJECT-{i}", path=Path(f"/project/{i}"), config_type="configuration"
                 )
                 manager.register_project(project)
 
@@ -458,9 +430,7 @@ class TestConfigIntegration:
             manager1 = ConfigManager(base_path=Path(tmpdir))
 
             project = ProjectConfig(
-                name="PERSISTENT",
-                path=Path("/persistent"),
-                config_type="configuration"
+                name="PERSISTENT", path=Path("/persistent"), config_type="configuration"
             )
             manager1.register_project(project)
 

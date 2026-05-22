@@ -125,7 +125,11 @@ def bootstrap_ci(values: list[float], n_boot: int = 1000, ci: float = 0.95) -> d
         means.append(statistics.mean(sample))
     means.sort()
     alpha = (1 - ci) / 2
-    return {"lo": means[int(n_boot * alpha)], "hi": means[int(n_boot * (1 - alpha))], "mean": statistics.mean(values)}
+    return {
+        "lo": means[int(n_boot * alpha)],
+        "hi": means[int(n_boot * (1 - alpha))],
+        "mean": statistics.mean(values),
+    }
 
 
 # ── Retrieval eval ─────────────────────────────────────────────────────────────
@@ -134,7 +138,11 @@ def bootstrap_ci(values: list[float], n_boot: int = 1000, ci: float = 0.95) -> d
 def _search(client: QdrantClient, query_vec: list[float], k: int = TOP_K) -> list[dict]:
     resp = client.query_points(GRAPH_COLLECTION, query=query_vec, limit=k, with_payload=True)
     return [
-        {"name": p.payload.get("name", ""), "score": p.score, "entity_type": p.payload.get("entity_type", "")}
+        {
+            "name": p.payload.get("name", ""),
+            "score": p.score,
+            "entity_type": p.payload.get("entity_type", ""),
+        }
         for p in resp.points
     ]
 
@@ -154,9 +162,15 @@ def _search_with_rrf(
 ) -> list[dict]:
     graph_results = [r for r in _search(client, query_vec, k=k * 3) if r["name"].strip()]
 
-    wiki_resp = client.query_points(WIKI_COLLECTION, query=query_vec, limit=k * 2, with_payload=True)
+    wiki_resp = client.query_points(
+        WIKI_COLLECTION, query=query_vec, limit=k * 2, with_payload=True
+    )
     wiki_results = [
-        {"name": p.payload.get("name", ""), "score": p.score, "entity_type": p.payload.get("entity_type", "")}
+        {
+            "name": p.payload.get("name", ""),
+            "score": p.score,
+            "entity_type": p.payload.get("entity_type", ""),
+        }
         for p in wiki_resp.points
         if p.payload and p.payload.get("name", "").strip()
     ]
@@ -212,15 +226,19 @@ def run_eval(
         ndcgs.append(n)
         latencies.append(latency)
 
-        per_query.append({
-            "id": q["id"],
-            "query": q["query"],
-            "precision": p,
-            "recall": r,
-            "ndcg": n,
-            "latency": latency,
-            "top_results": [{"name": x["name"], "score": round(x["score"], 3)} for x in results[:5]],
-        })
+        per_query.append(
+            {
+                "id": q["id"],
+                "query": q["query"],
+                "precision": p,
+                "recall": r,
+                "ndcg": n,
+                "latency": latency,
+                "top_results": [
+                    {"name": x["name"], "score": round(x["score"], 3)} for x in results[:5]
+                ],
+            }
+        )
 
     metrics = {
         "precision@10": statistics.mean(precisions) if precisions else 0,
@@ -251,16 +269,30 @@ def cmd_smoke(_args: argparse.Namespace) -> None:
     print(f"[SMOKE] {GRAPH_COLLECTION}: {info.points_count} points")
 
     test_queries = [
-        {"id": "s1", "query": "справочник метаданных", "relevant_entity_names": ["СправочникМетаданные", "справочник"]},
-        {"id": "s2", "query": "ресурс регистра сведений", "relevant_entity_names": ["ресурс регистра сведений", "регистр"]},
-        {"id": "s3", "query": "расписание фоновых заданий", "relevant_entity_names": ["расписание фоновых заданий"]},
+        {
+            "id": "s1",
+            "query": "справочник метаданных",
+            "relevant_entity_names": ["СправочникМетаданные", "справочник"],
+        },
+        {
+            "id": "s2",
+            "query": "ресурс регистра сведений",
+            "relevant_entity_names": ["ресурс регистра сведений", "регистр"],
+        },
+        {
+            "id": "s3",
+            "query": "расписание фоновых заданий",
+            "relevant_entity_names": ["расписание фоновых заданий"],
+        },
     ]
 
     results = run_eval(test_queries, client)
     elapsed = time.perf_counter() - t0
     m = results["metrics"]
 
-    print(f"[SMOKE] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}")
+    print(
+        f"[SMOKE] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}"
+    )
     for pq in results["per_query"]:
         print(f"  {pq['id']}: P={pq['precision']:.2f} top={pq['top_results'][:3]}")
     print(f"[SMOKE] {elapsed:.1f}s — {'PASS' if elapsed < 60 else 'SLOW'}")
@@ -273,7 +305,9 @@ def cmd_baseline(args: argparse.Namespace) -> None:
     results = run_eval(queries, client)
     _save_json(results, args.output)
     m = results["metrics"]
-    print(f"[BASELINE] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}")
+    print(
+        f"[BASELINE] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}"
+    )
 
 
 def cmd_index_wiki(args: argparse.Namespace) -> None:
@@ -329,12 +363,14 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
                     break
 
             texts.append(content)
-            payloads.append({
-                "name": fp.stem,
-                "entity_type": entity_type,
-                "text": content[:2000],
-                "file_path": str(fp),
-            })
+            payloads.append(
+                {
+                    "name": fp.stem,
+                    "entity_type": entity_type,
+                    "text": content[:2000],
+                    "file_path": str(fp),
+                }
+            )
 
         if not texts:
             continue
@@ -342,11 +378,13 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
         vecs = list(model.embed(texts))
         points = []
         for j, (vec, payload) in enumerate(zip(vecs, payloads)):
-            points.append(PointStruct(
-                id=str(uuid.uuid5(uuid.NAMESPACE_URL, payload["name"])),
-                vector=vec.tolist(),
-                payload=payload,
-            ))
+            points.append(
+                PointStruct(
+                    id=str(uuid.uuid5(uuid.NAMESPACE_URL, payload["name"])),
+                    vector=vec.tolist(),
+                    payload=payload,
+                )
+            )
 
         client.upsert(WIKI_COLLECTION, points)
         total_indexed += len(points)
@@ -402,7 +440,9 @@ def cmd_wiki_eval(args: argparse.Namespace) -> None:
     results = run_eval(queries, client, use_rrf=True)
     _save_json(results, args.output)
     m = results["metrics"]
-    print(f"[WIKI-EVAL] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}")
+    print(
+        f"[WIKI-EVAL] P@10={m['precision@10']:.3f}, R@10={m['recall@10']:.3f}, NDCG@10={m['ndcg@10']:.3f}"
+    )
 
 
 def cmd_report(args: argparse.Namespace) -> None:

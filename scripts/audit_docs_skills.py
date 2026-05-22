@@ -34,6 +34,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 @dataclass
 class Feature:
     """A single feature extracted from code."""
+
     name: str
     category: str  # endpoint, mcp_tool, strategy, agent, cli_command, config_var
     source_file: str
@@ -43,6 +44,7 @@ class Feature:
 @dataclass
 class Gap:
     """A gap between code and documentation/skills."""
+
     feature_name: str
     category: str
     gap_type: str  # undocumented, phantom, outdated
@@ -54,6 +56,7 @@ class Gap:
 @dataclass
 class AuditReport:
     """Full audit results."""
+
     timestamp: str = ""
     features: list[Feature] = field(default_factory=list)
     doc_gaps: list[Gap] = field(default_factory=list)
@@ -88,12 +91,14 @@ def extract_api_endpoints() -> list[Feature]:
             method = m.group(1).upper()
             path = m.group(2)
             full_path = f"{router_prefix}{path}" if path != "/" else router_prefix + "/"
-            features.append(Feature(
-                name=f"{method} {full_path}",
-                category="endpoint",
-                source_file=str(py_file.relative_to(PROJECT_ROOT)),
-                details=f"router={py_file.stem}",
-            ))
+            features.append(
+                Feature(
+                    name=f"{method} {full_path}",
+                    category="endpoint",
+                    source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                    details=f"router={py_file.stem}",
+                )
+            )
     return features
 
 
@@ -125,21 +130,25 @@ def extract_mcp_tools() -> list[Feature]:
     # Extract tool names from Tool(name="xxx", ...)
     pattern = re.compile(r'Tool\(\s*name\s*=\s*["\']([^"\']+)["\']')
     for m in pattern.finditer(text):
-        features.append(Feature(
-            name=m.group(1),
-            category="mcp_tool",
-            source_file="src/mcp_server/server.py",
-        ))
+        features.append(
+            Feature(
+                name=m.group(1),
+                category="mcp_tool",
+                source_file="src/mcp_server/server.py",
+            )
+        )
 
     # Fallback: extract from call_tool handler
     if not features:
         handler_pattern = re.compile(r'name\s*==\s*["\']([^"\']+)["\']')
         for m in handler_pattern.finditer(text):
-            features.append(Feature(
-                name=m.group(1),
-                category="mcp_tool",
-                source_file="src/mcp_server/server.py",
-            ))
+            features.append(
+                Feature(
+                    name=m.group(1),
+                    category="mcp_tool",
+                    source_file="src/mcp_server/server.py",
+                )
+            )
 
     return features
 
@@ -158,15 +167,17 @@ def extract_search_strategies() -> list[Feature]:
         # Match: "strategy_name": ClassName or "strategy_name": ...
         map_pattern = re.compile(r'["\'](\w+)["\']\s*:\s*(\w+)')
         for m in map_pattern.finditer(init_text):
-            features.append(Feature(
-                name=m.group(1),
-                category="strategy",
-                source_file="src/pdf_framework/search/strategies/__init__.py",
-                details=f"class={m.group(2)}",
-            ))
+            features.append(
+                Feature(
+                    name=m.group(1),
+                    category="strategy",
+                    source_file="src/pdf_framework/search/strategies/__init__.py",
+                    details=f"class={m.group(2)}",
+                )
+            )
 
     # Also scan individual files for Strategy classes
-    class_pattern = re.compile(r'class\s+(\w+Strategy)\s*[:(]')
+    class_pattern = re.compile(r"class\s+(\w+Strategy)\s*[:(]")
     for py_file in sorted(strats_dir.glob("*.py")):
         if py_file.name == "__init__.py":
             continue
@@ -175,12 +186,14 @@ def extract_search_strategies() -> list[Feature]:
             name = _class_to_strategy_name(m.group(1))
             # Avoid duplicates from __init__.py
             if not any(f.name == name for f in features):
-                features.append(Feature(
-                    name=name,
-                    category="strategy",
-                    source_file=str(py_file.relative_to(PROJECT_ROOT)),
-                    details=f"class={m.group(1)}",
-                ))
+                features.append(
+                    Feature(
+                        name=name,
+                        category="strategy",
+                        source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                        details=f"class={m.group(1)}",
+                    )
+                )
     return features
 
 
@@ -188,7 +201,7 @@ def _class_to_strategy_name(cls_name: str) -> str:
     """Convert ClassName to strategy_name: HybridSearchStrategy → hybrid."""
     name = cls_name.replace("Strategy", "").replace("Search", "")
     # CamelCase to snake_case
-    s = re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+    s = re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
     return s.strip("_")
 
 
@@ -213,19 +226,21 @@ def extract_cli_commands() -> list[Feature]:
             else:
                 # Get function name from next def line
                 for j in range(i + 1, min(i + 5, len(lines))):
-                    def_match = re.match(r'\s*def\s+(\w+)\s*\(', lines[j])
+                    def_match = re.match(r"\s*def\s+(\w+)\s*\(", lines[j])
                     if def_match:
                         cmd_name = def_match.group(1)
                         break
                 else:
                     continue
 
-            features.append(Feature(
-                name=cmd_name,
-                category="cli_command",
-                source_file="src/cli/main.py",
-                details=f"line={i+1}",
-            ))
+            features.append(
+                Feature(
+                    name=cmd_name,
+                    category="cli_command",
+                    source_file="src/cli/main.py",
+                    details=f"line={i+1}",
+                )
+            )
     return features
 
 
@@ -244,15 +259,13 @@ def extract_config_vars() -> list[Feature]:
     base_text = base_file.read_text(encoding="utf-8", errors="replace")
 
     # Extract sub-settings field names: field_name: SettingsClass
-    subsettings_pattern = re.compile(
-        r'(\w+)\s*:\s*(\w+Settings)\s*=\s*Field'
-    )
+    subsettings_pattern = re.compile(r"(\w+)\s*:\s*(\w+Settings)\s*=\s*Field")
     subsettings = {}
     for m in subsettings_pattern.finditer(base_text):
         subsettings[m.group(2)] = m.group(1).upper()
 
     # Now scan all config files for field definitions in Settings classes
-    class_pattern = re.compile(r'class\s+(\w+Settings)\s*\(')
+    class_pattern = re.compile(r"class\s+(\w+Settings)\s*\(")
 
     for py_file in sorted(config_dir.glob("*.py")):
         text = py_file.read_text(encoding="utf-8", errors="replace")
@@ -270,14 +283,18 @@ def extract_config_vars() -> list[Feature]:
                     field_name = field_match.group(1)
                     if field_name.startswith("model_") or field_name.startswith("_"):
                         continue
-                    prefix = subsettings.get(current_class, current_class.replace("Settings", "").upper())
+                    prefix = subsettings.get(
+                        current_class, current_class.replace("Settings", "").upper()
+                    )
                     env_var = f"{prefix}__{field_name}".upper()
-                    features.append(Feature(
-                        name=env_var,
-                        category="config_var",
-                        source_file=str(py_file.relative_to(PROJECT_ROOT)),
-                        details=f"class={current_class}",
-                    ))
+                    features.append(
+                        Feature(
+                            name=env_var,
+                            category="config_var",
+                            source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                            details=f"class={current_class}",
+                        )
+                    )
     return features
 
 
@@ -294,22 +311,26 @@ def extract_agent_types() -> list[Feature]:
         agent_type = str(rel.parent)
         if agent_type == ".":
             continue
-        features.append(Feature(
-            name=agent_type,
-            category="agent",
-            source_file=str(agent_file.relative_to(PROJECT_ROOT)),
-        ))
+        features.append(
+            Feature(
+                name=agent_type,
+                category="agent",
+                source_file=str(agent_file.relative_to(PROJECT_ROOT)),
+            )
+        )
 
     # Also check for specific orchestrator/manager files
     for pattern_name in ["orchestrator.py", "manager.py"]:
         for f in agents_dir.rglob(pattern_name):
             agent_type = str(f.relative_to(agents_dir).parent)
             if not any(feat.name == agent_type for feat in features):
-                features.append(Feature(
-                    name=agent_type,
-                    category="agent",
-                    source_file=str(f.relative_to(PROJECT_ROOT)),
-                ))
+                features.append(
+                    Feature(
+                        name=agent_type,
+                        category="agent",
+                        source_file=str(f.relative_to(PROJECT_ROOT)),
+                    )
+                )
     return features
 
 
@@ -417,12 +438,14 @@ def extract_memory_subsystems() -> list[Feature]:
                 cls = m.group(1)
                 if cls.startswith("_") or cls.endswith("Config") or cls.endswith("Error"):
                     continue
-                features.append(Feature(
-                    name=cls,
-                    category="memory_subsystem",
-                    source_file=str(py_file.relative_to(PROJECT_ROOT)),
-                    details=f"subsystem={sub}",
-                ))
+                features.append(
+                    Feature(
+                        name=cls,
+                        category="memory_subsystem",
+                        source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                        details=f"subsystem={sub}",
+                    )
+                )
     return features
 
 
@@ -443,12 +466,14 @@ def extract_bsl_tools() -> list[Feature]:
                 cls = m.group(1)
                 if cls.startswith("_") or cls.endswith("Error"):
                     continue
-                features.append(Feature(
-                    name=cls,
-                    category="bsl_tool",
-                    source_file=str(py_file.relative_to(PROJECT_ROOT)),
-                    details=f"subsystem={sub_path.name}",
-                ))
+                features.append(
+                    Feature(
+                        name=cls,
+                        category="bsl_tool",
+                        source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                        details=f"subsystem={sub_path.name}",
+                    )
+                )
     return features
 
 
@@ -461,12 +486,14 @@ def extract_hooks() -> list[Feature]:
     for py_file in sorted(hooks_dir.glob("*.py")):
         if py_file.name.startswith("_"):
             continue
-        features.append(Feature(
-            name=py_file.stem,
-            category="hook",
-            source_file=str(py_file.relative_to(PROJECT_ROOT)),
-            details="hook script",
-        ))
+        features.append(
+            Feature(
+                name=py_file.stem,
+                category="hook",
+                source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                details="hook script",
+            )
+        )
     return features
 
 
@@ -478,17 +505,22 @@ def extract_wiki_components() -> list[Feature]:
         return features
     text = target.read_text(encoding="utf-8", errors="replace")
     wiki_classes = [
-        "WikiExporter", "ForwardSyncService", "IncrementalWikiSync",
-        "ReverseSyncService", "WikiSearchIndexer",
+        "WikiExporter",
+        "ForwardSyncService",
+        "IncrementalWikiSync",
+        "ReverseSyncService",
+        "WikiSearchIndexer",
     ]
     for cls in wiki_classes:
         if re.search(rf"^class\s+{cls}\b", text, re.MULTILINE):
-            features.append(Feature(
-                name=cls,
-                category="wiki_component",
-                source_file=str(target.relative_to(PROJECT_ROOT)),
-                details="wiki pipeline service",
-            ))
+            features.append(
+                Feature(
+                    name=cls,
+                    category="wiki_component",
+                    source_file=str(target.relative_to(PROJECT_ROOT)),
+                    details="wiki pipeline service",
+                )
+            )
     return features
 
 
@@ -518,9 +550,7 @@ def _feature_documented(feature: Feature, text: str) -> bool:
         if len(parts) == 2:
             path = parts[1]
             # Check path variants
-            return (path in text
-                    or path.rstrip("/") in text
-                    or path.lstrip("/") in text)
+            return path in text or path.rstrip("/") in text or path.lstrip("/") in text
         return name_lower in text
 
     elif feature.category == "config_var":
@@ -532,9 +562,11 @@ def _feature_documented(feature: Feature, text: str) -> bool:
 
     elif feature.category == "strategy":
         # For strategies: check name and common aliases
-        return (name_lower in text
-                or name_lower.replace("_", "") in text
-                or name_lower.replace("_", "-") in text)
+        return (
+            name_lower in text
+            or name_lower.replace("_", "") in text
+            or name_lower.replace("_", "-") in text
+        )
 
     elif feature.category == "mcp_tool":
         return name_lower in text
@@ -597,14 +629,16 @@ def run_audit() -> AuditReport:
                 break
 
         if not doc_found:
-            report.doc_gaps.append(Gap(
-                feature_name=feature.name,
-                category=feature.category,
-                gap_type="undocumented",
-                location=", ".join(mapping["docs"]),
-                source_file=feature.source_file,
-                details=feature.details,
-            ))
+            report.doc_gaps.append(
+                Gap(
+                    feature_name=feature.name,
+                    category=feature.category,
+                    gap_type="undocumented",
+                    location=", ".join(mapping["docs"]),
+                    source_file=feature.source_file,
+                    details=feature.details,
+                )
+            )
 
         # Check skills
         skill_found = False
@@ -615,14 +649,16 @@ def run_audit() -> AuditReport:
                 break
 
         if not skill_found:
-            report.skill_gaps.append(Gap(
-                feature_name=feature.name,
-                category=feature.category,
-                gap_type="undocumented",
-                location=", ".join(f".claude/skills/{s}/SKILL.md" for s in mapping["skills"]),
-                source_file=feature.source_file,
-                details=feature.details,
-            ))
+            report.skill_gaps.append(
+                Gap(
+                    feature_name=feature.name,
+                    category=feature.category,
+                    gap_type="undocumented",
+                    location=", ".join(f".claude/skills/{s}/SKILL.md" for s in mapping["skills"]),
+                    source_file=feature.source_file,
+                    details=feature.details,
+                )
+            )
 
     # 3. Build summary
     categories = set(f.category for f in report.features)
@@ -641,9 +677,7 @@ def run_audit() -> AuditReport:
             "total": len(cat_features),
             "doc_gaps": len(cat_doc_gaps),
             "skill_gaps": len(cat_skill_gaps),
-            "coverage_docs": round(
-                (1 - len(cat_doc_gaps) / max(len(cat_features), 1)) * 100, 1
-            ),
+            "coverage_docs": round((1 - len(cat_doc_gaps) / max(len(cat_features), 1)) * 100, 1),
             "coverage_skills": round(
                 (1 - len(cat_skill_gaps) / max(len(cat_features), 1)) * 100, 1
             ),
@@ -671,10 +705,10 @@ def format_markdown(report: AuditReport, include_fix: bool = False) -> str:
     lines: list[str] = []
     a = lines.append
 
-    a(f"# Audit: Code ↔ Documentation ↔ Skills")
-    a(f"")
+    a("# Audit: Code ↔ Documentation ↔ Skills")
+    a("")
     a(f"**Generated:** {report.timestamp}")
-    a(f"")
+    a("")
 
     # Summary table
     a("## Summary")
@@ -684,13 +718,17 @@ def format_markdown(report: AuditReport, include_fix: bool = False) -> str:
 
     for cat, stats in report.summary.get("by_category", {}).items():
         label = CATEGORY_LABELS.get(cat, cat)
-        a(f"| {label} | {stats['total']} | "
-          f"**{stats['doc_gaps']}** | **{stats['skill_gaps']}** | "
-          f"{stats['coverage_docs']}% | {stats['coverage_skills']}% |")
+        a(
+            f"| {label} | {stats['total']} | "
+            f"**{stats['doc_gaps']}** | **{stats['skill_gaps']}** | "
+            f"{stats['coverage_docs']}% | {stats['coverage_skills']}% |"
+        )
 
     total = report.summary
-    a(f"| **TOTAL** | **{total.get('total_features', 0)}** | "
-      f"**{total.get('doc_gaps', 0)}** | **{total.get('skill_gaps', 0)}** | | |")
+    a(
+        f"| **TOTAL** | **{total.get('total_features', 0)}** | "
+        f"**{total.get('doc_gaps', 0)}** | **{total.get('skill_gaps', 0)}** | | |"
+    )
     a("")
 
     # Documentation gaps
@@ -775,24 +813,36 @@ def format_markdown(report: AuditReport, include_fix: bool = False) -> str:
 
 def format_json(report: AuditReport) -> str:
     """Format report as JSON."""
-    return json.dumps({
-        "timestamp": report.timestamp,
-        "summary": report.summary,
-        "doc_gaps": [
-            {"feature": g.feature_name, "category": g.category,
-             "source": g.source_file, "target": g.location}
-            for g in report.doc_gaps
-        ],
-        "skill_gaps": [
-            {"feature": g.feature_name, "category": g.category,
-             "source": g.source_file, "target": g.location}
-            for g in report.skill_gaps
-        ],
-        "features": [
-            {"name": f.name, "category": f.category, "source": f.source_file}
-            for f in report.features
-        ],
-    }, ensure_ascii=False, indent=2)
+    return json.dumps(
+        {
+            "timestamp": report.timestamp,
+            "summary": report.summary,
+            "doc_gaps": [
+                {
+                    "feature": g.feature_name,
+                    "category": g.category,
+                    "source": g.source_file,
+                    "target": g.location,
+                }
+                for g in report.doc_gaps
+            ],
+            "skill_gaps": [
+                {
+                    "feature": g.feature_name,
+                    "category": g.category,
+                    "source": g.source_file,
+                    "target": g.location,
+                }
+                for g in report.skill_gaps
+            ],
+            "features": [
+                {"name": f.name, "category": f.category, "source": f.source_file}
+                for f in report.features
+            ],
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -873,8 +923,7 @@ def update_rest_api_doc(report: AuditReport) -> int:
 
     # Get endpoint gaps for this doc
     endpoint_gaps = [
-        g for g in report.doc_gaps
-        if g.category == "endpoint" and "06.2_REST_API" in g.location
+        g for g in report.doc_gaps if g.category == "endpoint" and "06.2_REST_API" in g.location
     ]
     if not endpoint_gaps:
         return 0
@@ -963,10 +1012,7 @@ def update_mcp_doc(report: AuditReport) -> int:
     doc_lower = text.lower()
     lines = text.splitlines()
 
-    mcp_gaps = [
-        g for g in report.doc_gaps
-        if g.category == "mcp_tool" and "06.4_MCP" in g.location
-    ]
+    mcp_gaps = [g for g in report.doc_gaps if g.category == "mcp_tool" and "06.4_MCP" in g.location]
     if not mcp_gaps:
         return 0
 
@@ -974,7 +1020,7 @@ def update_mcp_doc(report: AuditReport) -> int:
     last_tool_row = None
     last_num = 0
     for i, line in enumerate(lines):
-        m = re.match(r'\|\s*(\d+)\s*\|', line)
+        m = re.match(r"\|\s*(\d+)\s*\|", line)
         if m:
             last_tool_row = i
             last_num = int(m.group(1))
@@ -998,8 +1044,8 @@ def update_mcp_doc(report: AuditReport) -> int:
     # Update tool count in header
     total = last_num
     for i, line in enumerate(lines):
-        if "инструмент" in line.lower() and re.search(r'\d+', line):
-            lines[i] = re.sub(r'\d+', str(total), line, count=1)
+        if "инструмент" in line.lower() and re.search(r"\d+", line):
+            lines[i] = re.sub(r"\d+", str(total), line, count=1)
             break
 
     if added > 0:
@@ -1018,8 +1064,7 @@ def update_strategies_doc(report: AuditReport) -> int:
     lines = text.splitlines()
 
     strat_gaps = [
-        g for g in report.doc_gaps
-        if g.category == "strategy" and "04.1_Обзор" in g.location
+        g for g in report.doc_gaps if g.category == "strategy" and "04.1_Обзор" in g.location
     ]
     if not strat_gaps:
         return 0
@@ -1028,7 +1073,7 @@ def update_strategies_doc(report: AuditReport) -> int:
     last_row = None
     last_num = 0
     for i, line in enumerate(lines):
-        m = re.match(r'\|\s*(\d+)\s*\|', line)
+        m = re.match(r"\|\s*(\d+)\s*\|", line)
         if m:
             last_row = i
             last_num = int(m.group(1))
@@ -1044,8 +1089,7 @@ def update_strategies_doc(report: AuditReport) -> int:
         last_num += 1
         name = g.feature_name
         new_rows.append(
-            f"| {last_num} | `{name}` | Средняя | Хорошее | "
-            f"{name.replace('_', ' ').title()} |"
+            f"| {last_num} | `{name}` | Средняя | Хорошее | " f"{name.replace('_', ' ').title()} |"
         )
         added += 1
 
@@ -1055,8 +1099,8 @@ def update_strategies_doc(report: AuditReport) -> int:
     # Update strategy count
     total = last_num
     for i, line in enumerate(lines):
-        if "стратеги" in line.lower() and re.search(r'\d+', line):
-            lines[i] = re.sub(r'\d+', str(total), line, count=1)
+        if "стратеги" in line.lower() and re.search(r"\d+", line):
+            lines[i] = re.sub(r"\d+", str(total), line, count=1)
             break
 
     if added > 0:
@@ -1074,7 +1118,8 @@ def update_config_doc(report: AuditReport) -> int:
     doc_lower = text.lower()
 
     config_gaps = [
-        g for g in report.doc_gaps
+        g
+        for g in report.doc_gaps
         if g.category == "config_var" and "02.2_Конфигурация" in g.location
     ]
     if not config_gaps:
@@ -1210,8 +1255,7 @@ def update_cli_doc(report: AuditReport) -> int:
     lines = text.splitlines()
 
     cli_gaps = [
-        g for g in report.doc_gaps
-        if g.category == "cli_command" and "06.3_CLI" in g.location
+        g for g in report.doc_gaps if g.category == "cli_command" and "06.3_CLI" in g.location
     ]
     if not cli_gaps:
         return 0
@@ -1230,7 +1274,9 @@ def update_cli_doc(report: AuditReport) -> int:
         if g.feature_name.lower() in doc_lower:
             continue
         last_row += 1
-        lines.insert(last_row, f"| `{g.feature_name}` | {g.feature_name.replace('_', ' ').title()} |")
+        lines.insert(
+            last_row, f"| `{g.feature_name}` | {g.feature_name.replace('_', ' ').title()} |"
+        )
         added += 1
 
     if added > 0:
@@ -1248,10 +1294,7 @@ def update_agent_doc(report: AuditReport) -> int:
     text = doc_path.read_text(encoding="utf-8", errors="replace")
     doc_lower = text.lower()
 
-    agent_gaps = [
-        g for g in report.doc_gaps
-        if g.category == "agent"
-    ]
+    agent_gaps = [g for g in report.doc_gaps if g.category == "agent"]
     if not agent_gaps:
         return 0
 
@@ -1289,10 +1332,14 @@ def update_skill_file(skill_name: str, gaps: list[Gap]) -> int:
     skill_lower = text.lower()
 
     # Filter already-documented
-    missing = [g for g in gaps if not _feature_documented(
-        Feature(name=g.feature_name, category=g.category, source_file=g.source_file),
-        skill_lower,
-    )]
+    missing = [
+        g
+        for g in gaps
+        if not _feature_documented(
+            Feature(name=g.feature_name, category=g.category, source_file=g.source_file),
+            skill_lower,
+        )
+    ]
     if not missing:
         return 0
 
@@ -1400,7 +1447,7 @@ def apply_updates(report: AuditReport) -> dict[str, int]:
     for g in report.skill_gaps:
         for loc in g.location.split(", "):
             # Extract skill name from path
-            m = re.search(r'skills/([^/]+)/', loc)
+            m = re.search(r"skills/([^/]+)/", loc)
             if m:
                 skill_gaps.setdefault(m.group(1), []).append(g)
 
@@ -1423,8 +1470,9 @@ def main():
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument("--fix", action="store_true", help="Include action items in report")
-    parser.add_argument("--update", action="store_true",
-                        help="Auto-update docs and skills with missing features")
+    parser.add_argument(
+        "--update", action="store_true", help="Auto-update docs and skills with missing features"
+    )
     parser.add_argument("--stdout", action="store_true", help="Print to stdout instead of file")
     args = parser.parse_args()
 
@@ -1437,8 +1485,10 @@ def main():
         results = apply_updates(report)
         total_added = sum(results.values())
         print(f"\n{'='*60}", file=sys.stderr)
-        print(f"UPDATES APPLIED: {total_added} features added to {len(results)} files",
-              file=sys.stderr)
+        print(
+            f"UPDATES APPLIED: {total_added} features added to {len(results)} files",
+            file=sys.stderr,
+        )
         for fname, count in sorted(results.items()):
             print(f"  {fname}: +{count}", file=sys.stderr)
         print(f"{'='*60}", file=sys.stderr)

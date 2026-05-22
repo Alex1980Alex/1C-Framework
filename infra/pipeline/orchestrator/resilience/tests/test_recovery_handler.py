@@ -1,19 +1,19 @@
 """Tests for recovery_handler module."""
 
-import pytest
 import asyncio
-from datetime import datetime
 
+import pytest
+
+from .error_handler import ErrorCategory, ErrorContext, ErrorSeverity
 from .recovery_handler import (
-    RecoveryStrategy,
     RecoveryAction,
-    RecoveryStep,
+    RecoveryHandler,
     RecoveryPlan,
     RecoveryResult,
-    RecoveryHandler,
+    RecoveryStep,
+    RecoveryStrategy,
 )
-from .error_handler import ErrorContext, ErrorSeverity, ErrorCategory
-from .state_manager import StateManager, PipelinePhase
+from .state_manager import PipelinePhase, StateManager
 
 
 class TestRecoveryStrategy:
@@ -256,7 +256,10 @@ class TestRecoveryHandler:
         strategy = handler.select_strategy(low_error, PipelinePhase.PM_SPEC_SPEC)
 
         # Low severity validation errors should suggest SKIP
-        assert strategy in [RecoveryStrategy.SKIP_AND_CONTINUE, RecoveryStrategy.RESUME_FROM_CHECKPOINT]
+        assert strategy in [
+            RecoveryStrategy.SKIP_AND_CONTINUE,
+            RecoveryStrategy.RESUME_FROM_CHECKPOINT,
+        ]
 
     def test_select_strategy_high(self, handler, high_error):
         """Test strategy selection for high severity."""
@@ -384,10 +387,12 @@ class TestRecoveryHandler:
             called.append(plan.plan_id)
 
         handler.set_on_recovery_start(callback)
-        handler._on_recovery_start(RecoveryPlan(
-            plan_id="test",
-            strategy=RecoveryStrategy.ABORT,
-        ))
+        handler._on_recovery_start(
+            RecoveryPlan(
+                plan_id="test",
+                strategy=RecoveryStrategy.ABORT,
+            )
+        )
 
         assert len(called) == 1
         assert called[0] == "test"

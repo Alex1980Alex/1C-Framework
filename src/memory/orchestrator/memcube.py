@@ -23,13 +23,13 @@ from .unified_id import MemoryType, SourceServer
 class ContentType(str, Enum):
     """Auto-classified content type (Memori pattern)."""
 
-    FACT = "fact"                # Episodic fact, decision, conclusion
-    PREFERENCE = "preference"    # User preference, style choice
-    RULE = "rule"               # Coding rule, convention, standard
-    SKILL = "skill"             # Confirmed workflow, practice
-    CODE = "code"               # Code snippet, function, pattern
+    FACT = "fact"  # Episodic fact, decision, conclusion
+    PREFERENCE = "preference"  # User preference, style choice
+    RULE = "rule"  # Coding rule, convention, standard
+    SKILL = "skill"  # Confirmed workflow, practice
+    CODE = "code"  # Code snippet, function, pattern
     OBSERVATION = "observation"  # General observation, note
-    WIKI = "wiki"               # Wiki page content (frontmatter + markdown)
+    WIKI = "wiki"  # Wiki page content (frontmatter + markdown)
 
 
 @dataclass
@@ -137,8 +137,12 @@ class MemoryCube:
         cube = cls(
             cube_id=data.get("cube_id", str(uuid4())),
             content=data.get("content", ""),
-            content_type=ContentType(data["content_type"]) if "content_type" in data else ContentType.OBSERVATION,
-            memory_type=MemoryType(data["memory_type"]) if "memory_type" in data else MemoryType.EPISODIC,
+            content_type=ContentType(data["content_type"])
+            if "content_type" in data
+            else ContentType.OBSERVATION,
+            memory_type=MemoryType(data["memory_type"])
+            if "memory_type" in data
+            else MemoryType.EPISODIC,
             source=SourceServer(data["source"]) if "source" in data else SourceServer.MEMORY_AI,
             title=data.get("title"),
             confidence=data.get("confidence", 0.7),
@@ -302,8 +306,12 @@ class MemoryCube:
             cube_id=frontmatter.get("unified_id", "").split(":")[-1] or str(uuid4()),
             content=content,
             content_type=ContentType(frontmatter.get("content_type", "wiki")),
-            memory_type=MemoryType(frontmatter["memory_type"]) if "memory_type" in frontmatter else MemoryType.EPISODIC,
-            source=SourceServer(frontmatter["source"]) if "source" in frontmatter else SourceServer.MEMORY_AI,
+            memory_type=MemoryType(frontmatter["memory_type"])
+            if "memory_type" in frontmatter
+            else MemoryType.EPISODIC,
+            source=SourceServer(frontmatter["source"])
+            if "source" in frontmatter
+            else SourceServer.MEMORY_AI,
             title=frontmatter.get("title"),
             confidence=frontmatter.get("confidence", 0.7),
             importance=frontmatter.get("importance", 0.5),

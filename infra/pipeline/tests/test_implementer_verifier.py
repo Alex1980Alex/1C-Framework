@@ -2,11 +2,9 @@
 Integration tests for ImplementerVerifier.
 """
 
-import pytest
-
-from constants import VerificationStatus, ArtifactType, AgentRole
+from constants import AgentRole, ArtifactType, VerificationStatus
 from models import Artifact, ArtifactMetadata
-from verification import ImplementerVerifier, CheckType
+from verification import ImplementerVerifier
 
 
 class TestImplementerVerifier:
@@ -25,10 +23,7 @@ class TestImplementerVerifier:
         assert len(result.checks) > 0
 
         # Check that all critical checks passed
-        critical_failed = [
-            c for c in result.checks
-            if not c.passed and c.severity == "error"
-        ]
+        critical_failed = [c for c in result.checks if not c.passed and c.severity == "error"]
         assert len(critical_failed) == 0, f"Critical checks failed: {critical_failed}"
 
     def test_verify_incomplete_result(self):
@@ -57,7 +52,8 @@ class TestImplementerVerifier:
 
         # Should have check for changed files
         file_checks = [
-            c for c in result.checks
+            c
+            for c in result.checks
             if "файл" in c.message.lower() or "изменен" in c.message.lower()
         ]
         assert len(file_checks) > 0
@@ -68,7 +64,8 @@ class TestImplementerVerifier:
 
         # Should check for code blocks
         code_checks = [
-            c for c in result.checks
+            c
+            for c in result.checks
             if "код" in c.message.lower() or "реализаци" in c.message.lower()
         ]
         assert len(code_checks) > 0
@@ -76,8 +73,7 @@ class TestImplementerVerifier:
     def test_requirements_fulfillment_check(self, sample_result_artifact, sample_spec_artifact):
         """Test requirements fulfillment when spec is provided."""
         result = self.verifier.verify(
-            sample_result_artifact,
-            context={"spec": sample_spec_artifact}
+            sample_result_artifact, context={"spec": sample_spec_artifact}
         )
 
         # Should track requirements
@@ -88,10 +84,7 @@ class TestImplementerVerifier:
         result = self.verifier.verify(sample_result_artifact)
 
         # Should check for testing section
-        test_checks = [
-            c for c in result.checks
-            if "тест" in c.message.lower()
-        ]
+        test_checks = [c for c in result.checks if "тест" in c.message.lower()]
         assert len(test_checks) > 0
 
 
@@ -194,8 +187,7 @@ class TestImplementerVerifierEdgeCases:
         result = self.verifier.verify(artifact)
         # Should warn about missing code but may still pass
         code_warning = any(
-            "код" in c.message.lower() and c.severity == "warning"
-            for c in result.checks
+            "код" in c.message.lower() and c.severity == "warning" for c in result.checks
         )
         # Either warning present or status is revision_needed
         assert code_warning or result.status == VerificationStatus.REVISION_NEEDED
@@ -206,7 +198,8 @@ class TestImplementerVerifierEdgeCases:
 
         # Should detect BSL code
         bsl_checks = [
-            c for c in result.checks
+            c
+            for c in result.checks
             if "bsl" in c.message.lower() or "процедур" in c.message.lower()
         ]
         assert len(bsl_checks) > 0

@@ -16,6 +16,7 @@ Usage:
     python scripts/wiki_entity_merge_apply.py --apply < tmp/merge-candidates.jsonl
     python scripts/wiki_entity_merge_apply.py --apply --limit 5 < tmp/merge-candidates.jsonl
 """
+
 from __future__ import annotations
 
 import argparse
@@ -116,7 +117,12 @@ def process_group(group: dict, dry_run: bool) -> dict:
             files_archived += 1
         else:
             files_archived += 1
-    return {"status": "ok", "canonical": canonical.name, "files_archived": files_archived, "backlinks": total_backlinks}
+    return {
+        "status": "ok",
+        "canonical": canonical.name,
+        "files_archived": files_archived,
+        "backlinks": total_backlinks,
+    }
 
 
 def main() -> int:
@@ -124,14 +130,24 @@ def main() -> int:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--apply", action="store_true", default=False,
-        help="Actually mutate files. Without this flag the script runs in dry-run mode.")
-    parser.add_argument("--dry-run", action="store_true", default=False,
-        help="Explicit dry-run flag (default behaviour; alias for omitting --apply).")
-    parser.add_argument("--limit", type=int, default=None, metavar="N",
-        help="Process at most N groups.")
-    parser.add_argument("--archive-dir", type=Path, default=None, metavar="PATH",
-        help="Override archive directory.")
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        default=False,
+        help="Actually mutate files. Without this flag the script runs in dry-run mode.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Explicit dry-run flag (default behaviour; alias for omitting --apply).",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=None, metavar="N", help="Process at most N groups."
+    )
+    parser.add_argument(
+        "--archive-dir", type=Path, default=None, metavar="PATH", help="Override archive directory."
+    )
     args = parser.parse_args()
 
     dry_run = not args.apply

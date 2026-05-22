@@ -4,12 +4,12 @@ This document gives an overview of the ongoing and future development of Serena.
 If you have a proposal or want to discuss something, feel free to open a discussion
 on Github. For a summary of the past development, see the [changelog](/CHANGELOG.md).
 
-Want to see us reach our goals faster? You can help out with an issue, start a discussion, or 
+Want to see us reach our goals faster? You can help out with an issue, start a discussion, or
 inform us about funding opportunities so that we can devote more time to the project.
 
 ## Overall Goals
 
-Serena has the potential to be the go-to tool for most LLM coding tasks, since it is 
+Serena has the potential to be the go-to tool for most LLM coding tasks, since it is
 unique in its ability to be used as MCP Server in any kind of environment
 while still being a capable agent. We want to achieve the following goals in terms of functionality:
 
@@ -55,7 +55,7 @@ best practices are yet to be determined. We will share our experiences in [lesso
 
 The technologies and approaches taken in Serena can be used for various research and service ideas. Some thought that we had are:
 
-- PR and issue assistant working with GitHub, similar to how [OpenHands](https://github.com/All-Hands-AI/OpenHands) 
+- PR and issue assistant working with GitHub, similar to how [OpenHands](https://github.com/All-Hands-AI/OpenHands)
   and [qodo](https://github.com/qodo-ai/pr-agent) operate. Should be callable through @serena
 - Tuning a coding LLM with Serena's tools with RL on one-shot tasks. We would need compute-funding for that
 - Develop a web app to quantitatively compare the performance of various agents by scraping PRs and manually crafted metadata.

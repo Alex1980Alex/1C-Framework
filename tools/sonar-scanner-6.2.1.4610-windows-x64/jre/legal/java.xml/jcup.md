@@ -28,4 +28,3 @@ This is an open source license. It is also GPL-Compatible (see entry for
 into the CUP source code are (naturally) covered by this same license, as is
 the CUP runtime code linked with the generated parser.
 ```
-

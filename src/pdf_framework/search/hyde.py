@@ -256,6 +256,7 @@ class QueryExpander:
                 raise ValueError("embedding_engine required for multi_query HyDE expansion")
 
             import asyncio
+
             import numpy as np
 
             n = kwargs.get("n", 5)
@@ -270,7 +271,9 @@ class QueryExpander:
             valid = [h for h in hypotheticals if isinstance(h, str) and len(h) >= 20]
 
             if not valid:
-                logger.warning("[QueryExpander] multi_query: all generations failed, using raw query")
+                logger.warning(
+                    "[QueryExpander] multi_query: all generations failed, using raw query"
+                )
                 return query, await embedding_engine.embed_text(query)
 
             embeddings = await asyncio.gather(*[embedding_engine.embed_text(h) for h in valid])

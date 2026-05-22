@@ -82,4 +82,3 @@ ENV PATH="/workspaces/serena/.venv/bin:${PATH}"
 
 # Entrypoint to ensure environment is activated
 ENTRYPOINT ["/bin/bash", "-c", "source .venv/bin/activate && $0 $@"]
-

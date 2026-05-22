@@ -5,48 +5,45 @@ Sprint 3.2: Parallel Branches - enables parallel execution of independent tasks.
 """
 
 from .models import (
-    TaskNode,
-    TaskGraph,
-    TaskDependency,
+    Conflict,
+    ConflictResolution,
+    ConflictType,
     DependencyType,
     ExecutionPriority,
-    ParallelGroup,
     MergeStrategy,
-    ConflictType,
-    ConflictResolution,
+    ParallelGroup,
+    TaskDependency,
+    TaskGraph,
+    TaskNode,
     TaskStatus,
-    Conflict,
 )
-
-from .task_decomposer import (
-    TaskDecomposer,
-    decompose_task,
-    find_parallel_groups,
-    build_dependency_graph,
+from .orchestrator import (
+    Checkpoint,
+    CheckpointAction,
+    OrchestratorState,
+    PipelineConfig,
+    PipelineOrchestrator,
+    PipelineResult,
+    create_pipeline,
+    run_pipeline_sync,
 )
-
 from .parallel_executor import (
-    ExecutionState,
-    TaskResult,
     ExecutionProgress,
     ExecutionReport,
-    TaskExecutorInterface,
+    ExecutionState,
     MockTaskExecutor,
     ParallelExecutor,
+    TaskExecutorInterface,
+    TaskResult,
     execute_graph,
     execute_tasks,
     run_graph_sync,
 )
-
-from .orchestrator import (
-    PipelineOrchestrator,
-    OrchestratorState,
-    CheckpointAction,
-    Checkpoint,
-    PipelineConfig,
-    PipelineResult,
-    create_pipeline,
-    run_pipeline_sync,
+from .task_decomposer import (
+    TaskDecomposer,
+    build_dependency_graph,
+    decompose_task,
+    find_parallel_groups,
 )
 
 __all__ = [

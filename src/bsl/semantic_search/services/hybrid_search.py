@@ -257,6 +257,7 @@ def create_pipeline(
     """Factory: create BSLHybridPipeline or DualVectorPipeline based on collection type."""
     if dual_vector or collection.endswith("v4"):
         from .dual_vector_search import DualVectorPipeline
+
         return DualVectorPipeline(
             sqlite_db=sqlite_db,
             qdrant_client=qdrant_client,

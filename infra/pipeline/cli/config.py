@@ -4,30 +4,30 @@ CLI Configuration - конфигурация командной строки.
 Управление настройками CLI, путями, форматами вывода.
 """
 
+import json
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Dict, Any
-import json
-import os
+from typing import Any
 
 
 class OutputFormat(Enum):
     """Формат вывода CLI."""
 
-    TEXT = "text"       # Человекочитаемый текст
-    JSON = "json"       # JSON для автоматизации
+    TEXT = "text"  # Человекочитаемый текст
+    JSON = "json"  # JSON для автоматизации
     MARKDOWN = "markdown"  # Markdown для документации
-    TABLE = "table"     # Табличный формат
+    TABLE = "table"  # Табличный формат
 
 
 class VerbosityLevel(Enum):
     """Уровень детализации вывода."""
 
-    QUIET = 0      # Только ошибки
-    NORMAL = 1     # Стандартный вывод
-    VERBOSE = 2    # Подробный вывод
-    DEBUG = 3      # Отладочный вывод
+    QUIET = 0  # Только ошибки
+    NORMAL = 1  # Стандартный вывод
+    VERBOSE = 2  # Подробный вывод
+    DEBUG = 3  # Отладочный вывод
 
 
 @dataclass
@@ -47,15 +47,22 @@ class CLIConfig:
     unicode_enabled: bool = True
 
     # Pipeline настройки
-    default_project: Optional[str] = None
+    default_project: str | None = None
     max_parallel_tasks: int = 4
     timeout_seconds: int = 3600  # 1 час
     auto_commit: bool = False
 
     # Агенты
-    enabled_agents: list = field(default_factory=lambda: [
-        "initializer", "pm-spec", "architect", "implementer", "qa", "reviewer"
-    ])
+    enabled_agents: list = field(
+        default_factory=lambda: [
+            "initializer",
+            "pm-spec",
+            "architect",
+            "implementer",
+            "qa",
+            "reviewer",
+        ]
+    )
 
     # Интеграции
     memory_backend: str = "unified-memory"
@@ -82,7 +89,7 @@ class CLIConfig:
         if not path.exists():
             return cls()
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
 
         return cls(**data)
@@ -118,7 +125,7 @@ class CLIConfig:
 
         return config
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Преобразование в словарь."""
         return {
             "project_root": str(self.project_root),
@@ -138,7 +145,7 @@ class CLIConfig:
             "observability_enabled": self.observability_enabled,
         }
 
-    def save(self, path: Optional[Path] = None) -> None:
+    def save(self, path: Path | None = None) -> None:
         """Сохранение конфигурации в файл."""
         path = path or self.config_file
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,21 +191,21 @@ class ProjectConfig:
     description: str = ""
 
     # Настройки pipeline
-    enabled_phases: list = field(default_factory=lambda: [
-        "init", "spec", "design", "implement", "test", "review"
-    ])
+    enabled_phases: list = field(
+        default_factory=lambda: ["init", "spec", "design", "implement", "test", "review"]
+    )
 
     # Метаданные
-    created_at: Optional[str] = None
-    last_run: Optional[str] = None
+    created_at: str | None = None
+    last_run: str | None = None
     total_runs: int = 0
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ProjectConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "ProjectConfig":
         """Создание из словаря."""
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Преобразование в словарь."""
         return {
             "name": self.name,
@@ -218,8 +225,8 @@ class ConfigManager:
     def __init__(self, base_path: Path) -> None:
         self.base_path = base_path
         self.config_dir = base_path / ".pipeline"
-        self._cli_config: Optional[CLIConfig] = None
-        self._projects: Dict[str, ProjectConfig] = {}
+        self._cli_config: CLIConfig | None = None
+        self._projects: dict[str, ProjectConfig] = {}
 
     @property
     def cli_config(self) -> CLIConfig:
@@ -235,28 +242,25 @@ class ConfigManager:
         env_config = CLIConfig.from_env()
         return file_config.merge(env_config)
 
-    def save_cli_config(self, config: Optional[CLIConfig] = None) -> None:
+    def save_cli_config(self, config: CLIConfig | None = None) -> None:
         """Сохранение CLI конфигурации."""
         config = config or self._cli_config
         if config:
             config.save(self.config_dir / "config.json")
 
-    def list_projects(self) -> Dict[str, ProjectConfig]:
+    def list_projects(self) -> dict[str, ProjectConfig]:
         """Список зарегистрированных проектов."""
         projects_file = self.config_dir / "projects.json"
 
         if not projects_file.exists():
             return {}
 
-        with open(projects_file, "r", encoding="utf-8") as f:
+        with open(projects_file, encoding="utf-8") as f:
             data = json.load(f)
 
-        return {
-            name: ProjectConfig.from_dict(proj)
-            for name, proj in data.items()
-        }
+        return {name: ProjectConfig.from_dict(proj) for name, proj in data.items()}
 
-    def get_project(self, name: str) -> Optional[ProjectConfig]:
+    def get_project(self, name: str) -> ProjectConfig | None:
         """Получение проекта по имени."""
         projects = self.list_projects()
         return projects.get(name)
@@ -274,7 +278,7 @@ class ConfigManager:
                 {name: proj.to_dict() for name, proj in projects.items()},
                 f,
                 indent=2,
-                ensure_ascii=False
+                ensure_ascii=False,
             )
 
     def remove_project(self, name: str) -> bool:
@@ -292,7 +296,7 @@ class ConfigManager:
                 {name: proj.to_dict() for name, proj in projects.items()},
                 f,
                 indent=2,
-                ensure_ascii=False
+                ensure_ascii=False,
             )
 
         return True

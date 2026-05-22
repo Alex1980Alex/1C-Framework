@@ -9,11 +9,10 @@ Updated: 2026-02-23 (Added pending_learn support for Skill-First Enforcement)
 
 import json
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import threading
-
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 # State file location (overridable via SESSION_STATE_PATH env var for testing)
 _env_state_path = os.environ.get("SESSION_STATE_PATH")
@@ -33,10 +32,10 @@ class SessionState:
     """
 
     _lock = threading.Lock()
-    _state_cache: Optional[Dict[str, Any]] = None
+    _state_cache: dict[str, Any] | None = None
 
     @classmethod
-    def _empty_state(cls) -> Dict[str, Any]:
+    def _empty_state(cls) -> dict[str, Any]:
         """Return initial empty state structure."""
         return {
             "activated_skills": [],
@@ -44,11 +43,11 @@ class SessionState:
             "pending_learn": None,
             "session_id": None,
             "created_at": None,
-            "last_updated": None
+            "last_updated": None,
         }
 
     @classmethod
-    def _load_state(cls) -> Dict[str, Any]:
+    def _load_state(cls) -> dict[str, Any]:
         """Load state from disk, with caching."""
         with cls._lock:
             if cls._state_cache is not None:
@@ -64,17 +63,17 @@ class SessionState:
                 return initial_state
 
             try:
-                with open(STATE_FILE, "r", encoding="utf-8") as f:
+                with open(STATE_FILE, encoding="utf-8") as f:
                     cls._state_cache = json.load(f)
                     return cls._state_cache
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 # Corrupted file - start fresh
                 cls._state_cache = cls._empty_state()
                 cls._save_state(cls._state_cache)
                 return cls._state_cache
 
     @classmethod
-    def _save_state(cls, state: Dict[str, Any]) -> None:
+    def _save_state(cls, state: dict[str, Any]) -> None:
         """Save state to disk."""
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         state["last_updated"] = datetime.now().isoformat()
@@ -99,7 +98,7 @@ class SessionState:
             cls._save_state(state)
 
     @classmethod
-    def get_already_activated(cls) -> List[str]:
+    def get_already_activated(cls) -> list[str]:
         """
         Get list of skills already activated in this session.
 
@@ -132,7 +131,7 @@ class SessionState:
     # ===== RECOMMENDATION TRACKING (Session Dedup) =====
 
     @classmethod
-    def record_recommendation(cls, skills: List[str]) -> None:
+    def record_recommendation(cls, skills: list[str]) -> None:
         """
         Record that skills were recommended in this session (for dedup).
 
@@ -148,7 +147,7 @@ class SessionState:
         cls._save_state(state)
 
     @classmethod
-    def get_already_recommended(cls) -> List[str]:
+    def get_already_recommended(cls) -> list[str]:
         """
         Get list of skills already recommended in this session.
 
@@ -161,7 +160,7 @@ class SessionState:
     # ===== PENDING LEARN METHODS (Milestone 1.3) =====
 
     @classmethod
-    def set_pending_learn(cls, learn_data: Dict[str, Any]) -> None:
+    def set_pending_learn(cls, learn_data: dict[str, Any]) -> None:
         """
         Record pending learning task for LEARN phase.
 
@@ -189,7 +188,7 @@ class SessionState:
         cls._save_state(state)
 
     @classmethod
-    def get_pending_learn(cls) -> Optional[Dict[str, Any]]:
+    def get_pending_learn(cls) -> dict[str, Any] | None:
         """
         Retrieve and clear pending learning task.
 
@@ -229,11 +228,11 @@ class SessionState:
     # ===== TASK PROTOCOL STATE (Mandatory Execution Algorithm) =====
 
     @classmethod
-    def _default_task_protocol(cls) -> Dict[str, Any]:
+    def _default_task_protocol(cls) -> dict[str, Any]:
         """Default task protocol state."""
         return {
-            "phase": "idle",        # idle | classified | decomposed | skill_checked
-            "complexity": None,     # trivial | medium | complex
+            "phase": "idle",  # idle | classified | decomposed | skill_checked
+            "complexity": None,  # trivial | medium | complex
             "subtask_count": 0,
             "decomposed_at": None,
             "skill_checked_at": None,
@@ -270,7 +269,7 @@ class SessionState:
         cls._save_state(state)
 
     @classmethod
-    def get_task_protocol(cls) -> Dict[str, Any]:
+    def get_task_protocol(cls) -> dict[str, Any]:
         """Get current task protocol state.
 
         Returns:
@@ -358,7 +357,7 @@ class SessionState:
         cls._save_state(state)
 
     @classmethod
-    def get_prompt_id(cls) -> Optional[str]:
+    def get_prompt_id(cls) -> str | None:
         """
         Get current prompt_id for accuracy correlation.
 
@@ -388,7 +387,7 @@ class SessionState:
         return state.get("session_id", "unknown")
 
     @classmethod
-    def get_session_age(cls) -> Optional[float]:
+    def get_session_age(cls) -> float | None:
         """
         Get session age in hours.
 
@@ -418,7 +417,7 @@ class SessionState:
             cls._state_cache = initial_state
 
     @classmethod
-    def get_stats(cls) -> Dict[str, Any]:
+    def get_stats(cls) -> dict[str, Any]:
         """
         Get session statistics.
 
@@ -431,29 +430,30 @@ class SessionState:
             "age_hours": cls.get_session_age(),
             "activated_skills_count": len(state.get("activated_skills", [])),
             "has_pending_learn": state.get("pending_learn") is not None,
-            "last_updated": state.get("last_updated")
+            "last_updated": state.get("last_updated"),
         }
 
 
 # ===== MODULE-LEVEL CONVENIENCE FUNCTIONS =====
 # These match the import patterns: from shared.session_state import set_prompt_id
 
+
 def set_prompt_id(prompt_id: str) -> None:
     """Module-level wrapper for SessionState.set_prompt_id()."""
     SessionState.set_prompt_id(prompt_id)
 
 
-def get_prompt_id() -> Optional[str]:
+def get_prompt_id() -> str | None:
     """Module-level wrapper for SessionState.get_prompt_id()."""
     return SessionState.get_prompt_id()
 
 
-def record_recommendation(skills: List[str]) -> None:
+def record_recommendation(skills: list[str]) -> None:
     """Module-level wrapper for SessionState.record_recommendation()."""
     SessionState.record_recommendation(skills)
 
 
-def get_already_recommended() -> List[str]:
+def get_already_recommended() -> list[str]:
     """Module-level wrapper for SessionState.get_already_recommended()."""
     return SessionState.get_already_recommended()
 
@@ -463,7 +463,7 @@ def record_decomposition() -> None:
     SessionState.record_decomposition()
 
 
-def get_task_protocol() -> Dict[str, Any]:
+def get_task_protocol() -> dict[str, Any]:
     """Module-level wrapper for SessionState.get_task_protocol()."""
     return SessionState.get_task_protocol()
 
@@ -486,9 +486,13 @@ def record_skill_checked() -> None:
 # Export for use in hooks
 __all__ = [
     "SessionState",
-    "set_prompt_id", "get_prompt_id",
-    "record_recommendation", "get_already_recommended",
-    "record_decomposition", "get_task_protocol",
-    "reset_task_protocol", "set_task_classified",
+    "set_prompt_id",
+    "get_prompt_id",
+    "record_recommendation",
+    "get_already_recommended",
+    "record_decomposition",
+    "get_task_protocol",
+    "reset_task_protocol",
+    "set_task_classified",
     "record_skill_checked",
 ]

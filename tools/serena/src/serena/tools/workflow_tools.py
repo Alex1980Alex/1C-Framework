@@ -34,7 +34,7 @@ class CheckOnboardingPerformedTool(Tool):
             for the current task.
             Some memories may be based on previous conversations, others may be general for the current project.
             You should be able to tell which one you need based on the name of the memory.
-            
+
             {memories}"""
 
 

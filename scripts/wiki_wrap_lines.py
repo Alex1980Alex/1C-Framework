@@ -24,6 +24,7 @@ Delegation note: initial draft via mcp__llm-rotation__llm_complete
 broken table state machine on multi-row tables, missing `sys` import, no
 leading-indent preservation). Corrected to project standards before commit.
 """
+
 from __future__ import annotations
 
 import re
@@ -70,7 +71,7 @@ def add_blanks_around_blocks(text: str) -> str:
         if (is_fence and not in_fence) or is_list:
             prev = out[-1] if out else ""
             prev_is_list = _is_list_item(prev)
-            prev_blank = (prev.strip() == "")
+            prev_blank = prev.strip() == ""
             if not prev_blank:
                 # For fences: always need blank before.
                 # For lists: need blank before only if previous wasn't a list item.
@@ -161,8 +162,13 @@ def main() -> int:
 
     targets: list[Path] = list(wiki.glob("patterns/*.md"))
     stub_names = [
-        "patterns", "overview", "triad-architecture", "hooks-reference",
-        "skills-reference", "bsl-integration", "ralph-wiggum",
+        "patterns",
+        "overview",
+        "triad-architecture",
+        "hooks-reference",
+        "skills-reference",
+        "bsl-integration",
+        "ralph-wiggum",
         "core-framework-separation",
     ]
     for stem in stub_names:

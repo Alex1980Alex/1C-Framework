@@ -35,7 +35,7 @@
 </p><pre class="src_dev">МестоположениеWSDL <span class="operator">=</span> АдресПубликацииВебСервиса <span class="operator">+</span> <span class="string">"ws/dm.1cws?wsdl"</span><span class="operator">;</span>
 
 Определение <span class="operator">=</span> <span class="keyword">Новый</span> WSОпределения<span class="operator">(</span>
-	МестоположениеWSDL<span class="operator">,</span> 
+	МестоположениеWSDL<span class="operator">,</span>
 	ИмяПользователя<span class="operator">,</span>
 	Пароль<span class="operator">)</span><span class="operator">;</span>
 
@@ -44,13 +44,13 @@
 	<span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span>
 	<span class="string">"DMService"</span><span class="operator">,</span>
 	<span class="string">"DMServiceSoap"</span><span class="operator">)</span><span class="operator">;</span>
-	
+
 Прокси<span class="operator">.</span>Пользователь <span class="operator">=</span> ИмяПользователя<span class="operator">;</span>
 Прокси<span class="operator">.</span>Пароль <span class="operator">=</span> Пароль<span class="operator">;</span>
 
 ЗапросТип <span class="operator">=</span> Прокси<span class="operator">.</span>ФабрикаXDTO<span class="operator">.</span>Тип<span class="operator">(</span><span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span> <span class="string">"DMGetCurrentUserRequest"</span><span class="operator">)</span><span class="operator">;</span>
 Запрос <span class="operator">=</span> Прокси<span class="operator">.</span>ФабрикаXDTO<span class="operator">.</span>Создать<span class="operator">(</span>ЗапросТип<span class="operator">)</span><span class="operator">;</span>
-	
+
 Пользователь <span class="operator">=</span> Прокси<span class="operator">.</span>execute<span class="operator">(</span>Запрос<span class="operator">)</span><span class="operator">;</span></pre><p></p><h3><a name="DMMessageService"></a>Веб-сервис DMMessageService</h3><p>Этот веб-сервис используется для асинхронной интеграции Документооборота с другими приложениями и конфигурациями по принципу "отправил и забыл". Приложение-потребитель отправляет в Документооборот запросы на обработку путем вызова операции put и получает ответы вызовом операции get. Обработка сообщений может выполняться Документооборотом в любом порядке. На один запрос может быть сформировано несколько ответов.
 Этот веб-сервис удобно использовать для интеграции Документооборота с другими приложениями на платформе ESB (Enterprise Service Bus).
 </p><p></p><h4>Операция: get</h4><p>Возвращаемое значение: <a href="#DMMessage">DMMessage</a></p><table><tbody><tr><td class="head">Параметр</td><td class="head">Тип</td><td class="head">Описание</td></tr><tr><td>queue</td><td>string</td><td>Наименование очереди сообщений, которые являются входящими по отношению к интегрированному с 1С:Документооборотом приложению. До вызова этой операции очередь должна быть создана и настроена в 1С:Документообороте администратором. Подробнее о настройке очередей рассказывается в описании конфигурации 1С:Документооборот.</td></tr></tbody></table><p>Извлекает одно новое сообщение из указанной в параметре Queue очереди и возвращает его как объект класса <a href="#DMMessage">DMMessage</a>. Если новых сообщений нет, то возвращается объект класса <a href="#DMOK">DMOK</a>. Если при выполнении этой операции произошла ошибка, например, неверно указана очередь, то возвращается объект класса <a href="#DMERROR">DMERROR</a>.
@@ -59,7 +59,7 @@
 </p><pre class="src_dev">МестоположениеWSDL <span class="operator">=</span> АдресПубликацииВебСервиса <span class="operator">+</span> <span class="string">"ws/dm.1cws?wsdl"</span><span class="operator">;</span>
 
 Определение <span class="operator">=</span> <span class="keyword">Новый</span> WSОпределения<span class="operator">(</span>
-	МестоположениеWSDL<span class="operator">,</span> 
+	МестоположениеWSDL<span class="operator">,</span>
 	ИмяПользователя<span class="operator">,</span>
 	Пароль<span class="operator">)</span><span class="operator">;</span>
 
@@ -68,12 +68,12 @@
 	<span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span>
 	<span class="string">"DMService"</span><span class="operator">,</span>
 	<span class="string">"DMServiceSoap"</span><span class="operator">)</span><span class="operator">;</span>
-	
+
 Прокси<span class="operator">.</span>Пользователь <span class="operator">=</span> ИмяПользователя<span class="operator">;</span>
 Прокси<span class="operator">.</span>Пароль <span class="operator">=</span> Пароль<span class="operator">;</span>
 
 Ответ <span class="operator">=</span> Прокси<span class="operator">.</span>get<span class="operator">(</span><span class="string">"Incoming"</span><span class="operator">)</span><span class="operator">;</span>
-	
+
 <span class="keyword">Если</span> Ответ<span class="operator">.</span>Тип<span class="operator">(</span><span class="operator">)</span> <span class="operator">=</span> Прокси<span class="operator">.</span>ФабрикаXDTO<span class="operator">.</span>Тип<span class="operator">(</span><span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span> <span class="string">"DMOK"</span><span class="operator">)</span> <span class="keyword">Тогда</span>
 	<span class="comment">// Нет ответов для обработки</span>
 <span class="keyword">КонецЕсли</span><span class="operator">;</span></pre><p></p><h4>Операция: put</h4><p>Возвращаемое значение: <a href="#DMResponse">DMResponse</a></p><table><tbody><tr><td class="head">Параметр</td><td class="head">Тип</td><td class="head">Описание</td></tr><tr><td>message</td><td><a href="#DMMessage">DMMessage</a></td><td>Сообщение, которое нужно поместить в очередь сообщений</td><td>queue</td><td>string</td><td>Наименование очередь сообщений, в которую нужно поместить сообщение. Если очереди с таким наименованием нет, то будет возвращен объект класса DMError.</td></tr></tbody></table><p>Помещает указанное сообщение в очередь сообщений для последующей обработки. Возвращает DMOK в случае успешного помещения запроса в очередь.
@@ -83,7 +83,7 @@
 </p><pre class="src_dev">МестоположениеWSDL <span class="operator">=</span> АдресПубликацииВебСервиса <span class="operator">+</span> <span class="string">"ws/dm.1cws?wsdl"</span><span class="operator">;</span>
 
 Определение <span class="operator">=</span> <span class="keyword">Новый</span> WSОпределения<span class="operator">(</span>
-	МестоположениеWSDL<span class="operator">,</span> 
+	МестоположениеWSDL<span class="operator">,</span>
 	ИмяПользователя<span class="operator">,</span>
 	Пароль<span class="operator">)</span><span class="operator">;</span>
 
@@ -92,14 +92,14 @@
 	<span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span>
 	<span class="string">"DMService"</span><span class="operator">,</span>
 	<span class="string">"DMServiceSoap"</span><span class="operator">)</span><span class="operator">;</span>
-	
+
 Прокси<span class="operator">.</span>Пользователь <span class="operator">=</span> ИмяПользователя<span class="operator">;</span>
 Прокси<span class="operator">.</span>Пароль <span class="operator">=</span> Пароль<span class="operator">;</span>
 
 СообщениеТип <span class="operator">=</span> Прокси<span class="operator">.</span>ФабрикаXDTO<span class="operator">.</span>Тип<span class="operator">(</span><span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span> <span class="string">"DMGetCurrentUserRequest"</span><span class="operator">)</span><span class="operator">;</span>
 Сообщение <span class="operator">=</span> Прокси<span class="operator">.</span>ФабрикаXDTO<span class="operator">.</span>Создать<span class="operator">(</span>СообщениеТип<span class="operator">)</span><span class="operator">;</span>
 Сообщение<span class="operator">.</span>messageId <span class="operator">=</span> Строка<span class="operator">(</span><span class="keyword">Новый</span> УникальныйИдентификатор<span class="operator">)</span><span class="operator">;</span>
-	
+
 Результат <span class="operator">=</span> Прокси<span class="operator">.</span>put<span class="operator">(</span>Сообщение<span class="operator">,</span> <span class="string">"Outgoing"</span><span class="operator">)</span><span class="operator">;</span>
 
 <span class="keyword">Если</span> Результат<span class="operator">.</span>Тип<span class="operator">(</span><span class="operator">)</span> <span class="operator">&lt;</span><span class="operator">&gt;</span> Прокси<span class="operator">.</span>ФабрикаXDTO<span class="operator">.</span>Тип<span class="operator">(</span><span class="string">"http://www.1c.ru/dm"</span><span class="operator">,</span> <span class="string">"DMOK"</span><span class="operator">)</span> <span class="keyword">Тогда</span>
@@ -473,8 +473,8 @@
 	<li><a href="#DMUser">DMUser</a></li>
 	<li><a href="#DMPrivatePerson">DMPrivatePerson</a></li>
 </ul></td></tr></tbody></table><p class="Usual"><a href="#Классы">▲ в начало </a></p>
-<p></p><h3><a name="DMAddLinkedFileRequest"></a>Класс DMAddLinkedFileRequest</h3><p>Базовый класс: <a href="#DMRequest">DMRequest</a></p>Этот запрос регистрирует указанный файл в Документообороте и связывает его с внешним по отношению к Документообороту объектом. При этом не проверяется, что файл с таким именем уже создан и привязан к указанному объекту. Таким образом, при повторном вызове этого запроса с теми же самыми параметрами к внешнему объекту будут привязаны два одинаковых файла. 
-<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>file</td><td><a href="#DMFile">DMFile</a></td><td>Да</td><td>Нет</td><td>Объект типа <a href="#DMFile">DMFile</a>, в котором должны быть обязательно заполнены свойства: 
+<p></p><h3><a name="DMAddLinkedFileRequest"></a>Класс DMAddLinkedFileRequest</h3><p>Базовый класс: <a href="#DMRequest">DMRequest</a></p>Этот запрос регистрирует указанный файл в Документообороте и связывает его с внешним по отношению к Документообороту объектом. При этом не проверяется, что файл с таким именем уже создан и привязан к указанному объекту. Таким образом, при повторном вызове этого запроса с теми же самыми параметрами к внешнему объекту будут привязаны два одинаковых файла.
+<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>file</td><td><a href="#DMFile">DMFile</a></td><td>Да</td><td>Нет</td><td>Объект типа <a href="#DMFile">DMFile</a>, в котором должны быть обязательно заполнены свойства:
 <ul><li>BinaryData - двоичные данные файла</li>
 	<li>Text - описание файла</li>
 	<li>Name - наименование</li>
@@ -489,7 +489,7 @@
 <p></p><h3><a name="DMAddObjectLinkRequest"></a>Класс DMAddObjectLinkRequest</h3><p>Базовый класс: <a href="#DMRequest">DMRequest</a></p>Добавляет ссылку на объект Документооборота к внешнему по отношению к Документообороту объекту.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>linkedObject</td><td><a href="#DMObjectID">DMObjectID</a></td><td>Да</td><td>Нет</td><td>Новый элемент
 </td></tr><tr><td>ownerObject</td><td><a href="#ExternalObject">ExternalObject</a></td><td>Да</td><td>Нет</td><td>Внешний по отношению к Документообороту объект.</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMAddObjectLinkResponse">DMAddObjectLinkResponse</a></li><li><a href="#DMGetDocumentListRequest">DMGetDocumentListRequest</a></li><li><a href="#DMGetFileListRequest">DMGetFileListRequest</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMAddObjectLinkResponse"></a>Класс DMAddObjectLinkResponse</h3><p>Базовый класс: <a href="#DMResponse">DMResponse</a></p>Возвращается в результате успешной обработки запроса <a href="#DMAddObjectLinkRequest">DMAddObjectLinkRequest</a>.<p class="Usual"><a href="#Классы">▲ в начало </a></p>
-<p></p><h3><a name="DMAddressBookItem"></a>Класс DMAddressBookItem</h3>Описывает элемент адресной книги в Документообороте.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>addresses</td><td>string</td><td>Нет</td><td>Да</td><td>Список адресов электронной почты.</td></tr><tr><td>isFolder</td><td>boolean</td><td>Да</td><td>Нет</td><td>Признак папки.</td></tr><tr><td>items</td><td><a href="#DMAddressBookItem">DMAddressBookItem</a></td><td>Нет</td><td>Да</td><td>Подчиненные элементы.</td></tr><tr><td>object</td><td><a href="#DMObject">DMObject</a></td><td>Да</td><td>Нет</td><td>Объект адресной книги. Может содержать объекты типов: 
+<p></p><h3><a name="DMAddressBookItem"></a>Класс DMAddressBookItem</h3>Описывает элемент адресной книги в Документообороте.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>addresses</td><td>string</td><td>Нет</td><td>Да</td><td>Список адресов электронной почты.</td></tr><tr><td>isFolder</td><td>boolean</td><td>Да</td><td>Нет</td><td>Признак папки.</td></tr><tr><td>items</td><td><a href="#DMAddressBookItem">DMAddressBookItem</a></td><td>Нет</td><td>Да</td><td>Подчиненные элементы.</td></tr><tr><td>object</td><td><a href="#DMObject">DMObject</a></td><td>Да</td><td>Нет</td><td>Объект адресной книги. Может содержать объекты типов:
 <ul><li><a href="#DMUser">DMUser</a> - пользователь</li>
 <li><a href="#DMUserGroup">DMUserGroup</a> - группа пользователей</li>
 <li><a href="#DMSubdivision">DMSubdivision</a> - подразделение</li>
@@ -497,7 +497,7 @@
 <li><a href="#DMPersonalRecipient">DMPersonalRecipient</a> - личный контакт</li>
 <li><a href="#DMPersonalRecipientGroup">DMPersonalRecipientGroup</a> - группа личных контактов</li></ul></td></tr></tbody></table><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMAddressBookType"></a>Класс DMAddressBookType</h3>Перечисление. Описывает типы отображения данных адресной книги.
-Принимает значения: 
+Принимает значения:
 <ul><li>usersList - список пользователей</li>
 <li>usersInFolders - список пользователей по группам пользователей</li>
 <li>usersInSubdivisions - список пользователей по подразделениям</li>
@@ -663,7 +663,7 @@
 <p></p><h3><a name="DMCashFlowRow"></a>Класс DMCashFlowRow</h3>Строка расшифровки суммы по статьям движения денежных средств.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>item</td><td><a href="#DMCashFlowItem">DMCashFlowItem</a></td><td>Да</td><td>Нет</td><td>Статья движения денежных средств.</td></tr><tr><td>total</td><td>decimal</td><td>Да</td><td>Нет</td><td>Сумма (всего).</td></tr><tr><td>VAT</td><td>decimal</td><td>Да</td><td>Нет</td><td>Сумма НДС (в том числе).</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMCashFlowRows">DMCashFlowRows</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMCashFlowRows"></a>Класс DMCashFlowRows</h3>Расшифровка суммы по статьям движения денежных средств.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>rows</td><td><a href="#DMCashFlowRow">DMCashFlowRow</a></td><td>Нет</td><td>Да</td><td>Строки расшифровки.</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMInternalDocument">DMInternalDocument</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMCategoriesOfCases"></a>Класс DMCategoriesOfCases</h3>Перечисление. Описывает категории дел.
-Принимает значения: 
+Принимает значения:
 <ul><li>temporaryUpTo10years - временное до 10 лет</li>
 <li>temporaryOver10years - временное свыше 10 лет</li>
 <li>permanent - постоянное</li>
@@ -704,7 +704,7 @@
 <p></p><h3><a name="DMCurrency"></a>Класс DMCurrency</h3><p>Базовый класс: <a href="#DMObject">DMObject</a></p>Описывает валюту в Документообороте.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>code</td><td>string</td><td>Нет</td><td>Нет</td><td>Числовой код валюты по общероссийскому классификатору валют.</td></tr><tr><td>fullName</td><td>string</td><td>Нет</td><td>Нет</td><td>Полное наименование валюты.</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMDocument">DMDocument</a></li><li><a href="#DMIncomingDocumentType">DMIncomingDocumentType</a></li><li><a href="#DMOutgoingDocumentType">DMOutgoingDocumentType</a></li><li><a href="#DMInternalDocumentType">DMInternalDocumentType</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMDailyReport"></a>Класс DMDailyReport</h3><p>Базовый класс: <a href="#DMObject">DMObject</a></p>Описывает "Ежедневный отчет" в Документообороте.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>additionalProperties</td><td><a href="#DMAdditionalProperty">DMAdditionalProperty</a></td><td>Нет</td><td>Да</td><td>Дополнительные свойства.</td></tr><tr><td>author</td><td><a href="#DMUser">DMUser</a></td><td>Нет</td><td>Нет</td><td>Автор документа.</td></tr><tr><td>date</td><td>dateTime</td><td>Нет</td><td>Нет</td><td>Дата документа.</td></tr><tr><td>dayBegin</td><td>dateTime</td><td>Нет</td><td>Нет</td><td>Время начала работы.</td></tr><tr><td>dayEnd</td><td>dateTime</td><td>Нет</td><td>Нет</td><td>Время окончания работы.</td></tr><tr><td>duration</td><td>string</td><td>Нет</td><td>Нет</td><td>Длительность работ.</td></tr><tr><td>durationIncorrect</td><td>boolean</td><td>Нет</td><td>Нет</td><td>Признак некорректного ввода работ.</td></tr><tr><td>mainProject</td><td><a href="#DMProject">DMProject</a></td><td>Нет</td><td>Нет</td><td>Основной проект пользователя.</td></tr><tr><td>mainWorkType</td><td><a href="#DMWorkType">DMWorkType</a></td><td>Нет</td><td>Нет</td><td>Основной вид работ пользователя.</td></tr><tr><td>number</td><td>string</td><td>Нет</td><td>Нет</td><td>Номер документа.</td></tr><tr><td>projectsEnabled</td><td>boolean</td><td>Нет</td><td>Нет</td><td>Признак использования проектов.</td></tr><tr><td>timeInputMethod</td><td><a href="#DMTimeInputMethod">DMTimeInputMethod</a></td><td>Нет</td><td>Нет</td><td>Способ ввода рабочего времени.</td></tr><tr><td>user</td><td><a href="#DMUser">DMUser</a></td><td>Нет</td><td>Нет</td><td>Пользователь, на которого оформляется рабочий отчет.</td></tr><tr><td>workingDuration</td><td>string</td><td>Нет</td><td>Нет</td><td>Длительность (рабочая).</td></tr><tr><td>works</td><td><a href="#DMActualWork">DMActualWork</a></td><td>Нет</td><td>Да</td><td>Список работ.</td></tr></tbody></table><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMDaysOfTheWeek"></a>Класс DMDaysOfTheWeek</h3>Перечисление. Описывает дни недели.
-Принимает значения: 
+Принимает значения:
 <ul><li>Monday - Понедельник</li>
 <li>Tuesday - Вторник</li>
 <li>Wednesday - Среда</li>
@@ -818,7 +818,7 @@
 <p></p><h3><a name="DMGetNewBusinessProcessResponse"></a>Класс DMGetNewBusinessProcessResponse</h3><p>Базовый класс: <a href="#DMGetNewObjectResponse">DMGetNewObjectResponse</a></p>Возвращается в результате успешной обработки запроса <a href="#DMGetNewBusinessProcessRequest">DMGetNewBusinessProcessRequest</a>.
 В свойстве Object базового класса <a href="#DMGetNewObjectResponse">DMGetNewObjectResponse</a> содержится новый бизнес-процесс, свойства которого заполнены значениями по умолчанию.<p>Производные классы:</p><p></p><ul><li><a href="#DMGetBusinessProcessByTemplateResponse">DMGetBusinessProcessByTemplateResponse</a></li></ul><p>См. также:</p><p></p><ul><li><a href="#DMBusinessProcess">DMBusinessProcess</a></li><li><a href="#DMGetNewBusinessProcessRequest">DMGetNewBusinessProcessRequest</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMGetNewEMailRequest"></a>Класс DMGetNewEMailRequest</h3><p>Базовый класс: <a href="#DMGetNewObjectRequest">DMGetNewObjectRequest</a></p>Запрос на получение нового исходящего письма. Только редакции КОРП и ДГУ.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>targetID</td><td><a href="#DMObjectID">DMObjectID</a></td><td>Нет</td><td>Нет</td><td>Предмет исходящего письма. Если заполнено, то новое письмо будет заполнено по предмету.</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMGetNewEMailResponse">DMGetNewEMailResponse</a></li><li><a href="#DMOutgoingEMail">DMOutgoingEMail</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
-<p></p><h3><a name="DMGetNewEMailResponse"></a>Класс DMGetNewEMailResponse</h3><p>Базовый класс: <a href="#DMGetNewObjectResponse">DMGetNewObjectResponse</a></p>Ответ на запрос <a href="#DMGetNewEMailRequest">DMGetNewEMailRequest</a>. Возвращает новое исходящее письмо, заполненное по предмету, если предмет был передан при вызове. 
+<p></p><h3><a name="DMGetNewEMailResponse"></a>Класс DMGetNewEMailResponse</h3><p>Базовый класс: <a href="#DMGetNewObjectResponse">DMGetNewObjectResponse</a></p>Ответ на запрос <a href="#DMGetNewEMailRequest">DMGetNewEMailRequest</a>. Возвращает новое исходящее письмо, заполненное по предмету, если предмет был передан при вызове.
 Только редакции КОРП и ДГУ.<p>См. также:</p><p></p><ul><li><a href="#DMGetNewEMailRequest">DMGetNewEMailRequest</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMGetNewObjectRequest"></a>Класс DMGetNewObjectRequest</h3><p>Базовый класс: <a href="#DMRequest">DMRequest</a></p>Запрашивает новый объект указанного типа, заполненный значениями по умолчанию.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>columnSet</td><td>string</td><td>Нет</td><td>Да</td><td>Список свойств объекта, которые должны быть заполнены. Если список пуст или не указан, то будут заполнены все свойства, для которых в Документообороте предусмотрены или могут быть вычислены значения по умолчанию.</td></tr><tr><td>dataSource</td><td><a href="#DMObject">DMObject</a></td><td>Нет</td><td>Нет</td><td>Источник данных заполнения, например, шаблон документа.</td></tr><tr><td>type</td><td>string</td><td>Да</td><td>Нет</td><td>Имя типа XDTO объекта, который требуется получить.</td></tr></tbody></table><p>Производные классы:</p><p></p><ul><li><a href="#DMGetIncomingEMailAnswerRequest">DMGetIncomingEMailAnswerRequest</a></li><li><a href="#DMGetNewBusinessProcessRequest">DMGetNewBusinessProcessRequest</a></li><li><a href="#DMGetNewEMailRequest">DMGetNewEMailRequest</a></li><li><a href="#DMGetOutgoingEMailForwardRequest">DMGetOutgoingEMailForwardRequest</a></li></ul><p>См. также:</p><p></p><ul><li><a href="#DMGetNewObjectResponse">DMGetNewObjectResponse</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMGetNewObjectResponse"></a>Класс DMGetNewObjectResponse</h3><p>Базовый класс: <a href="#DMResponse">DMResponse</a></p>Возвращается в результате успешной обработки запроса <a href="#DMGetNewObjectRequest">DMGetNewObjectRequest</a> и производных от него запросов.
@@ -863,7 +863,7 @@
 <p></p><h3><a name="DMIncomingEMail"></a>Класс DMIncomingEMail</h3><p>Базовый класс: <a href="#DMObject">DMObject</a></p>Класс, описывающий входящее письмо в Документообороте. Только редакции КОРП и ДГУ.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>body</td><td>string</td><td>Нет</td><td>Нет</td><td>Текст письма.</td></tr><tr><td>courtesyCopyRecipients</td><td>string</td><td>Нет</td><td>Нет</td><td>Получатели копий.</td></tr><tr><td>creationDate</td><td>dateTime</td><td>Нет</td><td>Нет</td><td>Дата создания.</td></tr><tr><td>files</td><td><a href="#DMFile">DMFile</a></td><td>Нет</td><td>Да</td><td>Присоединенные файлы.</td></tr><tr><td>importance</td><td><a href="#DMEMailImportance">DMEMailImportance</a></td><td>Нет</td><td>Нет</td><td>Важность.</td></tr><tr><td>recipients</td><td>string</td><td>Нет</td><td>Нет</td><td>Получатели.</td></tr><tr><td>senderAddress</td><td>string</td><td>Нет</td><td>Нет</td><td>Адрес отправителя.</td></tr><tr><td>subject</td><td>string</td><td>Нет</td><td>Нет</td><td>Тема письма.</td></tr><tr><td>target</td><td><a href="#DMObject">DMObject</a></td><td>Нет</td><td>Нет</td><td>Предмет письма.</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMOutgoingEMail">DMOutgoingEMail</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMIncomingEMailAnswerType"></a>Класс DMIncomingEMailAnswerType</h3>Перечисление. Описывает тип ответа на письмо. Только редакции КОРП и ДГУ.
 Используется при получении Исходящего письма запросом <a href="#DMGetIncomingEMailAnswerRequest">DMGetIncomingEMailAnswerRequest</a>.
-Значения перечисления: 
+Значения перечисления:
 <ul><li>reply - ответ на письмо</li>
 <li>replyToAll - ответ всем</li>
 <li>transfer - пересылка письма</li>
@@ -884,7 +884,7 @@
 <li>Иное - бизнес-процесс позволяет обсудить вопросы решения задачи</li>
 </ul><p>См. также:</p><p></p><ul><li><a href="#DMBusinessProcessIssuesSolution">DMBusinessProcessIssuesSolution</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMKindsOfDays"></a>Класс DMKindsOfDays</h3>Перечисление. Описывает виды дней недели.
-Принимает значения: 
+Принимает значения:
 <ul><li>Working - Рабочий</li>
 <li>Holiday - Выходной</li>
 <li>Sick - Больничный</li>
@@ -1000,7 +1000,7 @@
 <p></p><h3><a name="DMSignatureOption"></a>Класс DMSignatureOption</h3><p>Базовый класс: <a href="#DMObject">DMObject</a></p>Вариант подписания документа.<p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMSubdivision"></a>Класс DMSubdivision</h3><p>Базовый класс: <a href="#DMObject">DMObject</a></p>Описывает структурное подразделение в Документообороте.<table><tbody><tr><td class="head">Свойство</td><td class="head">Тип</td><td class="head">Обязательное</td><td class="head">Список</td><td class="head">Описание</td></tr><tr><td>head</td><td><a href="#DMUser">DMUser</a></td><td>Нет</td><td>Нет</td><td>Руководитель подразделения.</td></tr></tbody></table><p>См. также:</p><p></p><ul><li><a href="#DMUser">DMUser</a></li><li><a href="#DMDocument">DMDocument</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMTaskExecutionOrder"></a>Класс DMTaskExecutionOrder</h3><p>Базовый класс: <a href="#DMObject">DMObject</a></p>Описывает перечисление "Порядок выполнения задач"
-Принимает значения: 
+Принимает значения:
 <ul><li>ВместеСПредыдущим - задача будет создана одновременно с предыдущей задачей;</li>
 <li>ПослеПредыдущего - задача будет создана после выполнения предыдущей задачи.</li>
 </ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
@@ -1010,7 +1010,7 @@
 <li>ВремяНачала - при учете времени используется время начала и окончания работ.</li>
 </ul><p>См. также:</p><p></p><ul><li><a href="#DMChronometrationSettings">DMChronometrationSettings</a></li></ul><p class="Usual"><a href="#Классы">▲ в начало </a></p>
 <p></p><h3><a name="DMTimeTrackingPolicy"></a>Класс DMTimeTrackingPolicy</h3>Перечисление. Описывает политику учета рабочего времени.
-Принимает значения: 
+Принимает значения:
 <ul><li>DoNotTrack - Не учитывать</li>
 <li>UseDailyReports - Использовать ежедневные отчеты</li>
 <li>UseWeeklyReports - Использовать еженедельные отчеты</li>

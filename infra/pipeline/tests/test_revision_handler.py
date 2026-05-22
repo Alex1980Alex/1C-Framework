@@ -2,18 +2,14 @@
 Integration tests for RevisionHandler.
 """
 
-import pytest
-
-from constants import VerificationStatus, ArtifactType, AgentRole
+from constants import AgentRole, ArtifactType, VerificationStatus
 from models import Artifact, ArtifactMetadata
 from verification import (
-    RevisionHandler,
-    RevisionAction,
-    RevisionHistory,
-    RevisionRequest,
-    VerificationResult,
     CheckResult,
     CheckType,
+    RevisionAction,
+    RevisionHandler,
+    VerificationResult,
 )
 
 

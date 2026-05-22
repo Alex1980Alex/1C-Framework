@@ -8,42 +8,41 @@ This package contains specialized agents for the development pipeline:
 - PROJECT-MANAGER Agent - multi-project coordination (Sprint 4.4)
 """
 
-from agents.qa import (
-    QAAgent,
-    ResultAnalyzer,
-    TestGenerator,
-    TestRunner,
-    ReportGenerator,
-    TestCase,
-    TestResult,
-    TestSuite,
-    QAReport,
-)
-
 from agents.project_manager import (
+    DependencyGraph,
+    DependencyTracker,
+    DependencyType,
+    Project,
+    ProjectManagerAgent,
+    ProjectManagerConfig,
+    ProjectManagerInput,
+    ProjectManagerOutput,
+    ProjectManagerResult,
+    # Classes
+    ProjectRepository,
     # Enums
     ProjectStatus,
-    TaskStatus,
-    TaskPriority,
-    DependencyType,
+    Schedule,
+    ScheduledTask,
     SchedulingStrategy,
     # Data classes
     Task,
     TaskDependency,
-    Project,
-    ProjectManagerConfig,
-    ProjectManagerInput,
-    ProjectManagerOutput,
-    ScheduledTask,
-    Schedule,
-    DependencyGraph,
-    # Classes
-    ProjectRepository,
+    TaskPriority,
     TaskRepository,
-    DependencyTracker,
     TaskScheduler,
-    ProjectManagerResult,
-    ProjectManagerAgent,
+    TaskStatus,
+)
+from agents.qa import (
+    QAAgent,
+    QAReport,
+    ReportGenerator,
+    ResultAnalyzer,
+    TestCase,
+    TestGenerator,
+    TestResult,
+    TestRunner,
+    TestSuite,
 )
 
 __all__ = [

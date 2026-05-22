@@ -9,6 +9,7 @@ Usage:
     python scripts/wiki_entity_normalize.py
     python scripts/wiki_entity_normalize.py --json > merge-candidates.jsonl
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,7 +42,9 @@ def main() -> int:
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-    entities_dir = args.entities_dir if args.entities_dir.is_absolute() else Path.cwd() / args.entities_dir
+    entities_dir = (
+        args.entities_dir if args.entities_dir.is_absolute() else Path.cwd() / args.entities_dir
+    )
     if not entities_dir.is_dir():
         print(f"Not a directory: {entities_dir}", file=sys.stderr)
         return 1
@@ -58,10 +61,15 @@ def main() -> int:
 
     if args.json:
         for key, paths in merge_candidates.items():
-            print(json.dumps({
-                "lemma_key": list(key),
-                "files": [str(p.relative_to(Path.cwd())) for p in paths],
-            }, ensure_ascii=False))
+            print(
+                json.dumps(
+                    {
+                        "lemma_key": list(key),
+                        "files": [str(p.relative_to(Path.cwd())) for p in paths],
+                    },
+                    ensure_ascii=False,
+                )
+            )
         return 0
 
     print(f"Entities scanned: {sum(len(v) for v in groups.values())}")

@@ -94,7 +94,9 @@ async def check_hallucination(
     if is_dspy_available():
         try:
             dspy_result = await async_predict(
-                HallucinationCheckSignature, answer=answer, context=context,
+                HallucinationCheckSignature,
+                answer=answer,
+                context=context,
             )
             grounded = dspy_result.get("grounded")
             reasoning = dspy_result.get("reasoning", "")

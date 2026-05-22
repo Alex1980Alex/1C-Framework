@@ -100,7 +100,7 @@ export class MetadataParser {
    */
   private detectTypeFromPath(xmlFilePath: string): { type: 'Form' | 'Command' | 'Template'; xmlNode?: any } | null {
     const normalizedPath = xmlFilePath.replace(/\\/g, '/').toLowerCase();
-    
+
     if (normalizedPath.includes('/forms/') || normalizedPath.includes('/формы/')) {
       return { type: 'Form' };
     }
@@ -110,7 +110,7 @@ export class MetadataParser {
     if (normalizedPath.includes('/templates/') || normalizedPath.includes('/макеты/')) {
       return { type: 'Template' };
     }
-    
+
     return null;
   }
 
@@ -118,14 +118,14 @@ export class MetadataParser {
    * Parse generic metadata when specific type parsing is not available
    */
   private async parseGenericMetadata(
-    xmlNode: any, 
-    xmlFilePath: string, 
+    xmlNode: any,
+    xmlFilePath: string,
     objectType: 'Form' | 'Command' | 'Template'
   ): Promise<IFormMetadata | ICommandMetadata | ITemplateMetadata> {
     // Try to find properties in various possible structures
     const properties = xmlNode.Properties?.[0] || xmlNode;
     const name = this.extractName(properties, xmlFilePath);
-    
+
     const baseMetadata = {
       uuid: xmlNode.$?.uuid || '',
       name: name,
@@ -190,7 +190,7 @@ export class MetadataParser {
       usePurposes: this.parseUsePurposes(properties.UsePurposes),
       includeHelpInContents: properties.IncludeHelpInContents?.[0] === 'true',
       extendedPresentation: properties.ExtendedPresentation?.[0],
-      
+
       formModule: undefined // Will be filled by findRelatedFiles
     };
   }
@@ -212,7 +212,7 @@ export class MetadataParser {
       commandParameterType: properties.CommandParameterType?.[0],
       modifiesData: properties.ModifiesData?.[0] === 'true',
       representation: properties.Representation?.[0],
-      
+
       commandModule: undefined // Will be filled by findRelatedFiles
     };
   }
@@ -239,7 +239,7 @@ export class MetadataParser {
    */
   private parseUsePurposes(usePurposesXml: any): string[] {
     if (!usePurposesXml) return [];
-    
+
     // Handle both array and nested xr:EnumValue structures
     if (Array.isArray(usePurposesXml)) {
       return usePurposesXml.map((up: any) => {
@@ -248,12 +248,12 @@ export class MetadataParser {
         return String(up);
       }).filter(Boolean);
     }
-    
+
     const enumValues = usePurposesXml['xr:EnumValue'];
     if (enumValues) {
       return enumValues.map((ev: any) => typeof ev === 'string' ? ev : String(ev));
     }
-    
+
     return [];
   }
 

@@ -6,7 +6,7 @@ pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
 
     const calc = calculator.Calculator.init();
-    
+
     const sum = calc.add(10, 5);
     const diff = calc.subtract(10, 5);
     const prod = calc.multiply(10, 5);

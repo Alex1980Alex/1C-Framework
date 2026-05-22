@@ -41,9 +41,7 @@ class MultilspyBackend:
         """Return confidence for renaming a symbol of the given kind."""
         return self._CONFIDENCE.get(symbol_kind, 0.0)
 
-    def plan_rename(
-        self, uri: str, line: int, character: int, new_name: str
-    ) -> WorkspaceEdit:
+    def plan_rename(self, uri: str, line: int, character: int, new_name: str) -> WorkspaceEdit:
         """Request a rename from the LSP and return it as a domain WorkspaceEdit.
 
         The `line` argument follows the EDT-MCP / Serena convention (1-based),
@@ -53,9 +51,7 @@ class MultilspyBackend:
         try:
             client = self._factory()
         except Exception as exc:
-            raise BackendError(
-                f"lsp client factory failed: {exc!r}", code="client_init"
-            ) from exc
+            raise BackendError(f"lsp client factory failed: {exc!r}", code="client_init") from exc
 
         lsp_line = line - 1 if line > 0 else line
         params = {
@@ -67,9 +63,7 @@ class MultilspyBackend:
         try:
             raw = client.rename(params)
         except Exception as exc:
-            raise BackendError(
-                f"lsp rename failed: {exc!r}", code="lsp_error"
-            ) from exc
+            raise BackendError(f"lsp rename failed: {exc!r}", code="lsp_error") from exc
 
         if not raw:
             return WorkspaceEdit(file_edits=[])
@@ -90,9 +84,7 @@ class MultilspyBackend:
                 new_text=d.get("newText", d.get("new_text", "")),
             )
         except (KeyError, TypeError) as exc:
-            raise BackendError(
-                f"malformed lsp response: {exc!r}", code="malformed"
-            ) from exc
+            raise BackendError(f"malformed lsp response: {exc!r}", code="malformed") from exc
 
     @staticmethod
     def _lsp_to_workspace_edit(raw: dict) -> WorkspaceEdit:
@@ -112,8 +104,6 @@ class MultilspyBackend:
                     edits = [parse(e) for e in edits_list]
                     file_edits.append(FileEdit(uri=uri, edits=edits))
         except (KeyError, TypeError) as exc:
-            raise BackendError(
-                f"malformed lsp response: {exc!r}", code="malformed"
-            ) from exc
+            raise BackendError(f"malformed lsp response: {exc!r}", code="malformed") from exc
 
         return WorkspaceEdit(file_edits=file_edits)

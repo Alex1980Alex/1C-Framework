@@ -61,9 +61,7 @@ def send_email(subject: str, body: str, *, timeout: int = 10) -> tuple[bool, str
     try:
         if cfg["tls"] == "ssl":
             ctx = ssl.create_default_context()
-            with smtplib.SMTP_SSL(
-                cfg["host"], cfg["port"], context=ctx, timeout=timeout
-            ) as srv:
+            with smtplib.SMTP_SSL(cfg["host"], cfg["port"], context=ctx, timeout=timeout) as srv:
                 if cfg["user"] and cfg["password"]:
                     srv.login(cfg["user"], cfg["password"])
                 srv.send_message(msg)
@@ -80,6 +78,7 @@ def send_email(subject: str, body: str, *, timeout: int = 10) -> tuple[bool, str
 
 
 # --- structured event helpers ------------------------------------------
+
 
 def notify_pr_created(task_id: str, subject: str, branch: str, pr_url: str) -> tuple[bool, str]:
     body = (

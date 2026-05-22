@@ -8,22 +8,21 @@ Usage:
     python scripts/wiki_cleanup_noise_entities.py --archive
     python scripts/wiki_cleanup_noise_entities.py --delete   (irreversible)
 """
+
 from __future__ import annotations
 
 import argparse
 import re
 import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 WIKI_DIR = Path("docs/wiki/entities")
 
 # Sync with src/pdf_framework/indexing/wiki_exporter.py:_NOISE_RE
 # Version strings (8.3.27, v1.2.3) NOT included — valid domain entities.
-_NOISE_RE = re.compile(
-    r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|[0-9a-f]{16,}|(?:20|19)\d{2})$"
-)
+_NOISE_RE = re.compile(r"^(?:\d{8}|\d{6,8}-\d{4,6}|\d{1,4}|[a-zа-я]|[0-9a-f]{16,}|(?:20|19)\d{2})$")
 
 
 def stem_is_noise(stem: str) -> bool:
@@ -37,7 +36,7 @@ def collect_noise(wiki_dir: Path) -> list[Path]:
 
 
 def archive_path(repo_root: Path) -> Path:
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    month = datetime.now(UTC).strftime("%Y-%m")
     target = repo_root / "docs" / "wiki" / "archive" / month / "noise-entities"
     target.mkdir(parents=True, exist_ok=True)
     return target

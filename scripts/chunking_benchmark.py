@@ -37,6 +37,7 @@ class ChunkingResult:
         processing_time: Time to chunk (seconds)
         metadata: Additional strategy-specific metadata
     """
+
     strategy: str
     chunks: list[dict] = field(default_factory=list)
     chunk_count: int = 0
@@ -68,6 +69,7 @@ class RetrievalMetrics:
         ndcg: Normalized DCG
         coverage: Fraction of queries with any result
     """
+
     recall_at_k: dict[int, float] = field(default_factory=dict)
     precision_at_k: dict[int, float] = field(default_factory=dict)
     mrr: float = 0.0
@@ -123,7 +125,7 @@ class ChunkingBenchmark:
         Returns:
             Tuple of (queries, documents)
         """
-        with open(self._dataset_path, "r", encoding="utf-8") as f:
+        with open(self._dataset_path, encoding="utf-8") as f:
             data = json.load(f)
 
         queries = data.get("queries", [])

@@ -31,8 +31,8 @@ import logging
 import signal
 import sys
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -121,8 +121,7 @@ def _reindex(
     paths = list(paths)
     if not paths:
         return 0
-    logger.info("watcher: reindexing %d files (sample: %s)",
-                len(paths), paths[:3])
+    logger.info("watcher: reindexing %d files (sample: %s)", len(paths), paths[:3])
     stats = run_index(
         only_paths=set(paths),
         collection=collection,
@@ -136,7 +135,9 @@ def _watch_loop(args: argparse.Namespace) -> None:
     client = QdrantClient(url=args.qdrant_url)
     logger.info(
         "watcher: started — collection=%s poll=%.1fs debounce=%.1fs",
-        args.collection, args.poll_interval, args.debounce,
+        args.collection,
+        args.poll_interval,
+        args.debounce,
     )
 
     last_full_reload_ts = 0.0
@@ -179,15 +180,21 @@ def main() -> int:
     ap.add_argument("--qdrant-url", default=DEFAULT_QDRANT_URL)
     ap.add_argument("--tei-url", default=DEFAULT_TEI_URL)
     ap.add_argument(
-        "--poll-interval", type=float, default=DEFAULT_POLL_INTERVAL_SEC,
+        "--poll-interval",
+        type=float,
+        default=DEFAULT_POLL_INTERVAL_SEC,
         help=f"Seconds between scans (default: {DEFAULT_POLL_INTERVAL_SEC})",
     )
     ap.add_argument(
-        "--debounce", type=float, default=DEFAULT_DEBOUNCE_SEC,
+        "--debounce",
+        type=float,
+        default=DEFAULT_DEBOUNCE_SEC,
         help=f"Skip files modified within last N seconds (default: {DEFAULT_DEBOUNCE_SEC})",
     )
     ap.add_argument(
-        "--max-files-per-batch", type=int, default=DEFAULT_MAX_FILES_PER_BATCH,
+        "--max-files-per-batch",
+        type=int,
+        default=DEFAULT_MAX_FILES_PER_BATCH,
         help=f"Cap per iteration (default: {DEFAULT_MAX_FILES_PER_BATCH})",
     )
     ap.add_argument("--quiet", "-q", action="store_true", help="WARNING level only")

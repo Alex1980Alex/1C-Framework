@@ -90,5 +90,3 @@ Implementation steps:
 ### Dependencies: None
 ### Description: Add functionality to load the TASK_MASTER_PROJECT_ROOT variable from .env files in the workspace, following best practices for environment variable management in MCP servers.
 ### Details:
-
-

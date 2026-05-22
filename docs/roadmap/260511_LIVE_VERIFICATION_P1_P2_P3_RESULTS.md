@@ -1,9 +1,9 @@
 # Live-верификация P1/P2/P3 на живом кластере — Результаты
 
-**Дата:** 2026-05-11  
-**Сессия отладки:** `fc5515a5-0bfe-4e8c-a808-1f86d2ce7db6`  
-**ИБ:** ИБTransportManagementDevelop (кластер localhost:1541)  
-**Предыдущая верификация:** Python E2E unit-тесты (213+ tests)  
+**Дата:** 2026-05-11
+**Сессия отладки:** `fc5515a5-0bfe-4e8c-a808-1f86d2ce7db6`
+**ИБ:** ИБTransportManagementDevelop (кластер localhost:1541)
+**Предыдущая верификация:** Python E2E unit-тесты (213+ tests)
 **Цель:** Первая live-верификация на реальном 1С:Предприятие 8.3.27 кластере
 
 ---
@@ -52,8 +52,8 @@ debug_coverage_register(lines=[
 </coverage>
 ```
 
-✅ Формат SonarQube `<coverage version="1">` корректный  
-✅ 2 файла, 9 `<lineToCover>` элементов  
+✅ Формат SonarQube `<coverage version="1">` корректный
+✅ 2 файла, 9 `<lineToCover>` элементов
 ⚠️ `covered="false"` для всех — причина: arm timing (см. «Инфра-наблюдение» ниже)
 
 ---
@@ -87,12 +87,12 @@ debug_session_summary(format="artifacts")
 ```
 
 ### breakpoints_cache.json
-Содержит оба ConfigModule-объекта: 
+Содержит оба ConfigModule-объекта:
 - `8d785b24` (ManagerModule): lines=[39, 157, 159, 160]
 - `9eb88c3d` (CommonModule): lines=[1751, 1760, 3517, 3530, 3540, 3560]
 
-✅ Все 4 файла созданы и корректны  
-✅ `set_count=10` совпадает с зарегистрированными BPs  
+✅ Все 4 файла созданы и корректны
+✅ `set_count=10` совпадает с зарегистрированными BPs
 ✅ `stop_events.json` содержит все 12 событий с timestamps
 
 ---
@@ -131,9 +131,9 @@ debug_replay_seek(0) → {
 }
 ```
 
-✅ `debug_session_record` захватывает снимки в реальном времени  
-✅ Полный 8-фреймовый call stack показывает реальный путь HTTP→BSL  
-✅ `debug_replay_seek(index)` возвращает правильную структуру с параметрами вызова  
+✅ `debug_session_record` захватывает снимки в реальном времени
+✅ Полный 8-фреймовый call stack показывает реальный путь HTTP→BSL
+✅ `debug_replay_seek(index)` возвращает правильную структуру с параметрами вызова
 ✅ 12 снимков с разными `target_id` (несколько rphosts)
 
 ---
@@ -158,7 +158,7 @@ debug_list_exception_bps() после clear
 → {filters: [], count: 0, default_behavior: "halt-all"} ✅
 ```
 
-✅ `default_behavior` корректно переходит `halt-all` → `filter-only` → `halt-all`  
+✅ `default_behavior` корректно переходит `halt-all` → `filter-only` → `halt-all`
 ✅ OR-семантика фильтров подтверждена (multiple calls accumulate)
 
 ---

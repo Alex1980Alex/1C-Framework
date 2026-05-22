@@ -86,7 +86,7 @@ rec {
         echo "Usage: calculator <num1> <op> <num2>"
         exit 1
       fi
-      
+
       case $2 in
         +) echo $(($1 + $3)) ;;
         -) echo $(($1 - $3)) ;;

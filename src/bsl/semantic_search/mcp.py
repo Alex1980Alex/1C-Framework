@@ -35,6 +35,8 @@ except ImportError:
     sys.exit(1)
 
 # Импорты сервисов
+from src.framework_search.config import DEFAULT_TEI_URL
+
 from .config import get_bsl_settings
 from .refactor import (
     BackendError,
@@ -44,7 +46,6 @@ from .refactor import (
     RenameResult,
 )
 from .services.search import BSLSearchService, SearchMode, SearchRequest
-from src.framework_search.config import DEFAULT_TEI_URL
 
 TEI_PRODUCTION_MODEL = "Qwen/Qwen3-Embedding-8B"
 
@@ -247,6 +248,7 @@ def bsl_similar(file_path: str, limit: int = 5) -> str:
         # Locate vectors for the source module_path
         try:
             from qdrant_client.http import models as qm
+
             scroll_filter = qm.Filter(
                 must=[qm.FieldCondition(key="module_path", match=qm.MatchValue(value=file_path))]
             )
@@ -262,7 +264,9 @@ def bsl_similar(file_path: str, limit: int = 5) -> str:
         )
 
         if not points:
-            return f"## Похожие модули для {file_path}\n\nФайл не найден в индексе. Запустите reindex."
+            return (
+                f"## Похожие модули для {file_path}\n\nФайл не найден в индексе. Запустите reindex."
+            )
 
         # Extract query vector (handle named-vector dict or plain list)
         vec = points[0].vector
@@ -286,12 +290,14 @@ def bsl_similar(file_path: str, limit: int = 5) -> str:
             if hit_path in seen_paths:
                 continue
             seen_paths.add(hit_path)
-            results.append({
-                "path": hit_path,
-                "name": p.get("name", ""),
-                "score": hit.score,
-                "symbol_type": p.get("symbol_type", ""),
-            })
+            results.append(
+                {
+                    "path": hit_path,
+                    "name": p.get("name", ""),
+                    "score": hit.score,
+                    "symbol_type": p.get("symbol_type", ""),
+                }
+            )
             if len(results) >= limit:
                 break
 
@@ -559,6 +565,7 @@ def _get_metadata_extractor(project_root: str | None = None):
             # Auto-detect via .bsl-language-server.json marker.
             # Falls back to framework root if no BSL projects found.
             from src.bsl.project_discovery import find_bsl_projects, get_bsl_source_root
+
             projects = find_bsl_projects(_FRAMEWORK_ROOT)
             if projects:
                 # Pick first discovered project; configurationRoot tells where src lives.
@@ -788,11 +795,14 @@ def _get_hybrid_pipeline():
         if qdrant:
             try:
                 from src.framework_search.embedder import FrameworkTEIEmbedder
+
                 class _TEIEmbedder:
                     def __init__(self):
                         self._tei = FrameworkTEIEmbedder()
+
                     def embed_query(self, text: str) -> list[float]:
                         return self._tei.embed_batch([text], is_query=True)[0]
+
                 embedder = _TEIEmbedder()
                 atexit.register(embedder._tei.close)
             except Exception as exc:  # noqa: BLE001 — TEI down → no fallback

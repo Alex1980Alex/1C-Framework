@@ -23,9 +23,9 @@ import json
 import os
 import tempfile
 import time
+from collections.abc import Iterator
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterator, Optional
 
 MAX_AGE_HOURS = 12
 TMP_GC_AGE_SECONDS = 3600  # cleanup orphan .tmp files older than 1 hour
@@ -37,6 +37,7 @@ LOCK_RETRY_DELAY = 0.05
 # adds noise — flags are clearer at the call site.
 try:
     import msvcrt as _msvcrt  # type: ignore[import-not-found]
+
     _HAS_MSVCRT = True
 except ImportError:
     _msvcrt = None  # type: ignore[assignment]
@@ -44,12 +45,13 @@ except ImportError:
 
 try:
     import fcntl as _fcntl  # type: ignore[import-not-found]
+
     _HAS_FCNTL = True
 except ImportError:
     _fcntl = None  # type: ignore[assignment]
     _HAS_FCNTL = False
 
-_MAP_FILE: Optional[Path] = None
+_MAP_FILE: Path | None = None
 
 
 def _get_map_file() -> Path:
@@ -60,6 +62,7 @@ def _get_map_file() -> Path:
 
     try:
         from shared.core_paths import get_project_dir
+
         project_root = get_project_dir().parent
     except ImportError:
         # Fallback: hooks/shared/ -> hooks/ -> .claude/ -> project/
@@ -160,7 +163,7 @@ def _read_map() -> dict:
     if not filepath.exists():
         return {}
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
             return {}

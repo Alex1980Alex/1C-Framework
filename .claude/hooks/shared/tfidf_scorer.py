@@ -20,7 +20,6 @@ import json
 import math
 import os
 import re
-from typing import Dict, Optional
 
 # Lazy-loaded numpy
 _np = None
@@ -30,6 +29,7 @@ def _get_numpy():
     global _np
     if _np is None:
         import numpy as np
+
         _np = np
     return _np
 
@@ -47,7 +47,7 @@ class TfidfScorer:
     def __init__(self, artifacts_dir: str):
         self._dir = artifacts_dir
         self._loaded = False
-        self._vocab: Dict[str, int] = {}
+        self._vocab: dict[str, int] = {}
         self._idf = None  # numpy ndarray, loaded lazily
         self._centroids = None  # numpy ndarray, loaded lazily
         self._bundle_names: list[str] = []
@@ -69,13 +69,13 @@ class TfidfScorer:
                 if not os.path.isfile(p):
                     return False
 
-            with open(vocab_path, "r", encoding="utf-8") as f:
+            with open(vocab_path, encoding="utf-8") as f:
                 self._vocab = json.load(f)
 
             self._idf = np.load(idf_path)
             self._centroids = np.load(centroids_path)
 
-            with open(meta_path, "r", encoding="utf-8") as f:
+            with open(meta_path, encoding="utf-8") as f:
                 meta = json.load(f)
             self._bundle_names = meta.get("bundle_names", [])
 
@@ -95,7 +95,7 @@ class TfidfScorer:
         """
         text = text.lower().strip()
         # Tokenize on whitespace (matching sklearn word boundary behavior)
-        words = re.split(r'\s+', text)
+        words = re.split(r"\s+", text)
         ngrams = []
         min_n, max_n = self._ngram_range
         for word in words:
@@ -104,7 +104,7 @@ class TfidfScorer:
             padded = f" {word} "
             for n in range(min_n, max_n + 1):
                 for i in range(len(padded) - n + 1):
-                    ngrams.append(padded[i:i + n])
+                    ngrams.append(padded[i : i + n])
         return ngrams
 
     def _text_to_tfidf_vector(self, text: str):
@@ -115,7 +115,7 @@ class TfidfScorer:
             return np.zeros(len(self._vocab), dtype=np.float64)
 
         # Term frequency (sublinear: 1 + log(tf))
-        tf_counts: Dict[int, int] = {}
+        tf_counts: dict[int, int] = {}
         for ng in ngrams:
             idx = self._vocab.get(ng)
             if idx is not None:
@@ -134,7 +134,7 @@ class TfidfScorer:
 
         return vec
 
-    def score(self, text: str) -> Dict[str, float]:
+    def score(self, text: str) -> dict[str, float]:
         """Score text against all bundle centroids.
 
         Returns dict of {bundle_name: cosine_similarity}.
@@ -149,10 +149,7 @@ class TfidfScorer:
         # (input vec is already L2-normalized)
         similarities = self._centroids @ vec
 
-        return {
-            name: float(sim)
-            for name, sim in zip(self._bundle_names, similarities)
-        }
+        return {name: float(sim) for name, sim in zip(self._bundle_names, similarities)}
 
     @property
     def available(self) -> bool:

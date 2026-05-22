@@ -135,4 +135,3 @@ Test the init command to ensure it properly creates .cursor/rules, scripts, and 
 ### Description: Ensure that the task-master and task-master-mcp binaries are properly defined in package.json, linked, and executable when installed via pnpm, in both global and local installations.
 ### Details:
 Check that the binaries defined in package.json are correctly linked in node_modules/.bin when installed with pnpm, and that they can be executed without errors. Validate that binaries work for ESM ('module') projects and are accessible after both global and local installs.
-

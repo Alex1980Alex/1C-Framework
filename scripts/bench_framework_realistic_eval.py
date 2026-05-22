@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
 import sys
 import time
 from collections import defaultdict
@@ -53,6 +52,7 @@ def _id_from_point(p: Any) -> str:
 def _mrl_truncate(vec: list[float], target_dim: int) -> list[float]:
     """MRL truncation + L2 renorm for query vectors going into 1024d collection."""
     import math
+
     v = vec[:target_dim]
     norm = math.sqrt(sum(x * x for x in v)) or 1.0
     return [x / norm for x in v]
@@ -78,11 +78,7 @@ def mrr(retr: list[str], exp: list[str]) -> float:
 
 
 def ndcg_at_k(retr: list[str], exp: list[str], k: int = 10) -> float:
-    dcg = sum(
-        1.0 / math.log2(rank + 1)
-        for rank, r in enumerate(retr[:k], 1)
-        if r in exp
-    )
+    dcg = sum(1.0 / math.log2(rank + 1) for rank, r in enumerate(retr[:k], 1) if r in exp)
     ideal = min(len(exp), k)
     idcg = sum(1.0 / math.log2(rank + 1) for rank in range(1, ideal + 1))
     return dcg / idcg if idcg > 0 else 0.0
@@ -90,8 +86,12 @@ def ndcg_at_k(retr: list[str], exp: list[str], k: int = 10) -> float:
 
 def search_dense(client, coll, dvec, k, filt):
     res = client.query_points(
-        collection_name=coll, query=dvec, using="dense",
-        limit=k, with_payload=True, query_filter=filt,
+        collection_name=coll,
+        query=dvec,
+        using="dense",
+        limit=k,
+        with_payload=True,
+        query_filter=filt,
     ).points
     return [_id_from_point(p) for p in res]
 
@@ -100,7 +100,10 @@ def search_bm25(client, coll, sp, k, filt):
     res = client.query_points(
         collection_name=coll,
         query=models.SparseVector(indices=sp.indices.tolist(), values=sp.values.tolist()),
-        using="bm25", limit=k, with_payload=True, query_filter=filt,
+        using="bm25",
+        limit=k,
+        with_payload=True,
+        query_filter=filt,
     ).points
     return [_id_from_point(p) for p in res]
 
@@ -114,13 +117,17 @@ def search_hybrid(client, coll, dvec, sp, k, filt):
             models.Prefetch(query=dvec, using="dense", limit=50, filter=filt),
             models.Prefetch(
                 query=models.SparseVector(
-                    indices=sp.indices.tolist(), values=sp.values.tolist(),
+                    indices=sp.indices.tolist(),
+                    values=sp.values.tolist(),
                 ),
-                using="bm25", limit=50, filter=filt,
+                using="bm25",
+                limit=50,
+                filter=filt,
             ),
         ],
         query=models.FusionQuery(fusion=models.Fusion.RRF),
-        limit=k, with_payload=True,
+        limit=k,
+        with_payload=True,
     ).points
     return [_id_from_point(p) for p in res]
 
@@ -133,17 +140,23 @@ def main() -> int:
     ap.add_argument("--golden", default="data/eval/golden_v1.json")
     ap.add_argument("--k", type=int, default=10)
     ap.add_argument("--out", default="data/reports/framework_realistic_eval.json")
-    ap.add_argument("--target-collection-filter", default="framework_code_v1",
-                    help="Filter golden items by target_collection field")
-    ap.add_argument("--target-dim", type=int, default=1024,
-                    help="MRL target dim (truncate query embedding to this)")
+    ap.add_argument(
+        "--target-collection-filter",
+        default="framework_code_v1",
+        help="Filter golden items by target_collection field",
+    )
+    ap.add_argument(
+        "--target-dim",
+        type=int,
+        default=1024,
+        help="MRL target dim (truncate query embedding to this)",
+    )
     args = ap.parse_args()
 
     golden_path = Path(args.golden)
     raw = json.loads(golden_path.read_text(encoding="utf-8"))
     all_items = raw.get("items", raw) if isinstance(raw, dict) else raw
-    items = [it for it in all_items
-             if it.get("target_collection") == args.target_collection_filter]
+    items = [it for it in all_items if it.get("target_collection") == args.target_collection_filter]
     print(f"[load] {golden_path}: {len(items)} queries (filtered from {len(all_items)})")
 
     client = QdrantClient(url=args.qdrant_url, timeout=120)
@@ -173,13 +186,19 @@ def main() -> int:
             print(f"[skip] {item.get('id','?')} embed failed: {e}")
             continue
         # MRL: truncate 4096d Qwen3 query embedding to collection dim (1024d).
-        dvec = _mrl_truncate(dvec_full, args.target_dim) if len(dvec_full) > args.target_dim else dvec_full
+        dvec = (
+            _mrl_truncate(dvec_full, args.target_dim)
+            if len(dvec_full) > args.target_dim
+            else dvec_full
+        )
         sparse = next(iter(bm25.embed([normalize_camelcase(query)])))
 
         retrievals = {
             "dense": search_dense(client, args.collection, dvec, args.k, scope_filter),
             "bm25": search_bm25(client, args.collection, sparse, args.k, scope_filter),
-            "hybrid_rrf": search_hybrid(client, args.collection, dvec, sparse, args.k, scope_filter),
+            "hybrid_rrf": search_hybrid(
+                client, args.collection, dvec, sparse, args.k, scope_filter
+            ),
         }
         qmetrics = {}
         for mode, retrieved in retrievals.items():
@@ -194,13 +213,15 @@ def main() -> int:
                 raw[mode][slc][metric].append(val)
                 overall[mode][metric].append(val)
 
-        query_log.append({
-            "id": item.get("id", f"q{i}"),
-            "slice": slc,
-            "query": query,
-            "expected_count": len(expected_ids),
-            "metrics": qmetrics,
-        })
+        query_log.append(
+            {
+                "id": item.get("id", f"q{i}"),
+                "slice": slc,
+                "query": query,
+                "expected_count": len(expected_ids),
+                "metrics": qmetrics,
+            }
+        )
 
         if (i + 1) % 10 == 0:
             print(
@@ -218,9 +239,7 @@ def main() -> int:
             slc: {m: sum(vs) / max(1, len(vs)) for m, vs in metrics.items()}
             for slc, metrics in raw[mode].items()
         }
-        per_slice["overall"] = {
-            m: sum(vs) / max(1, len(vs)) for m, vs in overall[mode].items()
-        }
+        per_slice["overall"] = {m: sum(vs) / max(1, len(vs)) for m, vs in overall[mode].items()}
         averaged[mode] = per_slice
 
     # Collect slice keys observed in raw + always include "overall"
@@ -249,10 +268,7 @@ def main() -> int:
     d_mrr = bm25_o["mrr"] - hyb_o["mrr"]
     d_recall = bm25_o["recall@10"] - hyb_o["recall@10"]
     print("\n=== Decision support ===")
-    print(
-        f"  BM25 vs Hybrid: dMRR={d_mrr*100:+.1f}pp, "
-        f"dRecall@10={d_recall*100:+.1f}pp"
-    )
+    print(f"  BM25 vs Hybrid: dMRR={d_mrr*100:+.1f}pp, " f"dRecall@10={d_recall*100:+.1f}pp")
     print(
         f"  Hybrid vs Dense: dMRR={(hyb_o['mrr']-dense_o['mrr'])*100:+.1f}pp, "
         f"dRecall@10={(hyb_o['recall@10']-dense_o['recall@10'])*100:+.1f}pp"
@@ -266,20 +282,24 @@ def main() -> int:
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
-        json.dumps({
-            "config": {
-                "collection": args.collection,
-                "golden_path": str(golden_path),
-                "k": args.k,
-                "scope_filter": None,
-                "target_collection_filter": args.target_collection_filter,
-                "target_dim": args.target_dim,
+        json.dumps(
+            {
+                "config": {
+                    "collection": args.collection,
+                    "golden_path": str(golden_path),
+                    "k": args.k,
+                    "scope_filter": None,
+                    "target_collection_filter": args.target_collection_filter,
+                    "target_dim": args.target_dim,
+                },
+                "averaged": averaged,
+                "queries": query_log,
+                "recommendation": recommendation,
+                "elapsed_s": round(elapsed, 1),
             },
-            "averaged": averaged,
-            "queries": query_log,
-            "recommendation": recommendation,
-            "elapsed_s": round(elapsed, 1),
-        }, indent=2, ensure_ascii=False),
+            indent=2,
+            ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
     print(f"\n[out] {out_path}")

@@ -20,25 +20,57 @@ SKILL_MD_PATH = os.path.join(".claude", "skills", "autoresearch", "SKILL.md")
 
 # AutoResearch trigger keywords (from SKILL.md YAML description)
 TRIGGER_KEYWORDS = [
-    "autoresearch", "автономный цикл", "улучши", "оптимизируй",
-    "уменьши", "повысь покрытие", "ускорь", "reduce errors",
-    "improve", "optimize", "benchmark", "качество кода",
-    "measure and improve", "keep/revert", "автоисследование",
-    "итеративно", "автономное улучшение", "улучши метрику",
-    "security audit", "docstring", "покрытие тестами",
-    "повысь", "уменьши ошибки",
+    "autoresearch",
+    "автономный цикл",
+    "улучши",
+    "оптимизируй",
+    "уменьши",
+    "повысь покрытие",
+    "ускорь",
+    "reduce errors",
+    "improve",
+    "optimize",
+    "benchmark",
+    "качество кода",
+    "measure and improve",
+    "keep/revert",
+    "автоисследование",
+    "итеративно",
+    "автономное улучшение",
+    "улучши метрику",
+    "security audit",
+    "docstring",
+    "покрытие тестами",
+    "повысь",
+    "уменьши ошибки",
 ]
 
 # Negative signals (should NOT trigger autoresearch)
 NEGATIVE_KEYWORDS = [
-    "исправь", "fix", "покажи", "объясни", "создай", "напиши",
-    "git", "commit", "расскажи", "настрой", "переименуй",
+    "исправь",
+    "fix",
+    "покажи",
+    "объясни",
+    "создай",
+    "напиши",
+    "git",
+    "commit",
+    "расскажи",
+    "настрой",
+    "переименуй",
 ]
 
 # Domain detection keywords
 DOMAIN_KEYWORDS = {
     "python-quality": ["ruff", "mypy", "lint", "ошибок", "errors", "quality"],
-    "python-performance": ["время ответа", "response time", "performance", "benchmark", "ускорь", "latency"],
+    "python-performance": [
+        "время ответа",
+        "response time",
+        "performance",
+        "benchmark",
+        "ускорь",
+        "latency",
+    ],
     "bsl": ["bsl", "1с код", "bsl_analyze"],
     "skills": ["skill", "скилл", "f1", "router", "description"],
     "docs": ["docstring", "документация", "documentation", "interrogate"],
@@ -82,7 +114,7 @@ def detect_domain(prompt: str) -> str | None:
 
 def run_eval(verbose: bool = False) -> dict:
     """Run evaluation and return metrics."""
-    with open(EVAL_PROMPTS_PATH, "r", encoding="utf-8") as f:
+    with open(EVAL_PROMPTS_PATH, encoding="utf-8") as f:
         prompts = json.load(f)
 
     tp = fp = tn = fn = 0
@@ -132,7 +164,9 @@ def run_eval(verbose: bool = False) -> dict:
                 print(f"       Expected: {expected_trigger}, Got: {actual_trigger}")
             if expected_domain and actual_trigger:
                 d_status = "OK" if actual_domain == expected_domain else "MISS"
-                print(f"       Domain [{d_status}]: expected={expected_domain}, got={actual_domain}")
+                print(
+                    f"       Domain [{d_status}]: expected={expected_domain}, got={actual_domain}"
+                )
 
     # Metrics
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
@@ -143,7 +177,10 @@ def run_eval(verbose: bool = False) -> dict:
 
     metrics = {
         "total": len(prompts),
-        "tp": tp, "fp": fp, "tn": tn, "fn": fn,
+        "tp": tp,
+        "fp": fp,
+        "tn": tn,
+        "fn": fn,
         "precision": round(precision, 4),
         "recall": round(recall, 4),
         "f1": round(f1, 4),
@@ -168,7 +205,7 @@ def main():
     data = run_eval(verbose=verbose)
     m = data["metrics"]
 
-    print(f"\n--- Results ---")
+    print("\n--- Results ---")
     print(f"Total prompts: {m['total']}")
     print(f"TP={m['tp']} FP={m['fp']} TN={m['tn']} FN={m['fn']}")
     print(f"Precision: {m['precision']}")
@@ -188,7 +225,7 @@ def main():
         print("\nSTATUS: PASS")
         return 0
     else:
-        print(f"\nSTATUS: NEEDS IMPROVEMENT (F1 target: 0.9, domain target: 0.85)")
+        print("\nSTATUS: NEEDS IMPROVEMENT (F1 target: 0.9, domain target: 0.85)")
         return 1
 
 

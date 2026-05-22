@@ -102,8 +102,9 @@ class Qwen3EmbeddingService:
         with self._lock:
             if self._st_model is not None:
                 return self._st_model
-            from sentence_transformers import SentenceTransformer
             import torch
+            from sentence_transformers import SentenceTransformer
+
             device = "cuda" if torch.cuda.is_available() else "cpu"
             logger.info("Loading Qwen3-Embedding-8B on %s (~15-30s, ~16 GB VRAM)...", device)
             self._st_model = SentenceTransformer(
@@ -130,8 +131,9 @@ class Qwen3EmbeddingService:
         text = self._truncate(text)
         try:
             model = self._ensure_model()
-            vec = model.encode([text], convert_to_numpy=True,
-                               show_progress_bar=False, normalize_embeddings=True)[0]
+            vec = model.encode(
+                [text], convert_to_numpy=True, show_progress_bar=False, normalize_embeddings=True
+            )[0]
             return vec.tolist()
         except Exception as e:
             logger.error("ST embed error: %s", e)
@@ -142,8 +144,13 @@ class Qwen3EmbeddingService:
         texts = [self._truncate(t) for t in texts]
         try:
             model = self._ensure_model()
-            vecs = model.encode(texts, convert_to_numpy=True, batch_size=8,
-                                show_progress_bar=False, normalize_embeddings=True)
+            vecs = model.encode(
+                texts,
+                convert_to_numpy=True,
+                batch_size=8,
+                show_progress_bar=False,
+                normalize_embeddings=True,
+            )
             return [v.tolist() for v in vecs]
         except Exception as e:
             logger.error("ST batch embed error: %s", e)
@@ -196,7 +203,9 @@ class Qwen3EmbeddingService:
         if results and all(r is None for r in results):
             tei = self._tei_fallback()
             if tei is not None:
-                logger.info("ST failed → falling back to TEI for batch embedding (%d texts)", len(texts))
+                logger.info(
+                    "ST failed → falling back to TEI for batch embedding (%d texts)", len(texts)
+                )
                 return tei.embed_batch(texts, is_query=is_query)
         return results
 
@@ -206,6 +215,7 @@ class Qwen3EmbeddingService:
             self._st_model = None
             try:
                 import torch
+
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
             except Exception:
@@ -265,8 +275,12 @@ class Qwen3TEIQueryService:
         try:
             r = self._get_client().post(
                 f"{self.base_url}/embed",
-                json={"inputs": [text], "normalize": True,
-                      "truncate": True, "truncation_direction": "Right"},
+                json={
+                    "inputs": [text],
+                    "normalize": True,
+                    "truncate": True,
+                    "truncation_direction": "Right",
+                },
             )
             r.raise_for_status()
             data = r.json()
@@ -296,8 +310,12 @@ class Qwen3TEIQueryService:
         try:
             r = self._get_client().post(
                 f"{self.base_url}/embed",
-                json={"inputs": texts, "normalize": True,
-                      "truncate": True, "truncation_direction": "Right"},
+                json={
+                    "inputs": texts,
+                    "normalize": True,
+                    "truncate": True,
+                    "truncation_direction": "Right",
+                },
             )
             r.raise_for_status()
             data = r.json()

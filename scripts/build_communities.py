@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Phase 2: Leiden communities + LLM summaries (GraphRAG roadmap 260502)."""
+
 from __future__ import annotations
+
 import argparse
-import os
 import sys
 import time
 import uuid
@@ -65,7 +66,9 @@ def fetch_subgraph(session):
 def run_leiden(nodes, edges, seed=42):
     print("Running Leiden...")
     nid_to_idx = {nid: i for i, nid in enumerate(nodes.keys())}
-    edge_list = [(nid_to_idx[s], nid_to_idx[t]) for s, t, _ in edges if s in nid_to_idx and t in nid_to_idx]
+    edge_list = [
+        (nid_to_idx[s], nid_to_idx[t]) for s, t, _ in edges if s in nid_to_idx and t in nid_to_idx
+    ]
     g = ig.Graph(n=len(nodes), edges=edge_list, directed=False)
     g.simplify(combine_edges=None)
     partition = leidenalg.find_partition(g, leidenalg.ModularityVertexPartition, seed=seed)
@@ -76,7 +79,9 @@ def run_leiden(nodes, edges, seed=42):
     print(f"  Detected {len(communities)} raw communities")
     nontrivial = {cid: ns for cid, ns in communities.items() if len(ns) >= MIN_COMMUNITY_SIZE}
     coverage = sum(len(ns) for ns in nontrivial.values()) / max(1, len(nodes))
-    print(f"  Nontrivial (>={MIN_COMMUNITY_SIZE} nodes): {len(nontrivial)} ({coverage*100:.1f}% coverage)")
+    print(
+        f"  Nontrivial (>={MIN_COMMUNITY_SIZE} nodes): {len(nontrivial)} ({coverage*100:.1f}% coverage)"
+    )
     return nontrivial
 
 
@@ -89,8 +94,9 @@ def build_summary_input(community_nids, nodes, edges, max_nodes=40):
         name = n.get("name") or n.get("path") or f"node-{nid}"
         by_label[n["label"]].append(str(name))
     for label in ("Object", "Module", "Symbol"):
-        items = [x for x in by_label.get(label, []) if x][:max_nodes // 3]
-        if items: nlines.append(f"{label}: " + ", ".join(items))
+        items = [x for x in by_label.get(label, []) if x][: max_nodes // 3]
+        if items:
+            nlines.append(f"{label}: " + ", ".join(items))
     elines = []
     seen = set()
     for s, t, rel in edges:
@@ -99,8 +105,10 @@ def build_summary_input(community_nids, nodes, edges, max_nodes=40):
             if ns and nt and ns.get("name") and nt.get("name"):
                 key = f"{ns['name']}->{nt['name']}"
                 if key not in seen:
-                    seen.add(key); elines.append(key)
-                    if len(elines) >= 20: break
+                    seen.add(key)
+                    elines.append(key)
+                    if len(elines) >= 20:
+                        break
     return "\n".join(nlines), "; ".join(elines) if elines else "(no internal calls)"
 
 
@@ -113,14 +121,18 @@ def build_deterministic_summary(community_nids, nodes, edges, top_n: int = 5) ->
     100% reproducibility, microseconds per community.
     """
     from collections import Counter
+
     cset = set(community_nids)
     objects, modules, symbols = [], [], []
     for nid in community_nids:
         n = nodes[nid]
         lab = n.get("label")
-        if lab == "Object": objects.append(n)
-        elif lab == "Module": modules.append(n)
-        elif lab == "Symbol": symbols.append(n)
+        if lab == "Object":
+            objects.append(n)
+        elif lab == "Module":
+            modules.append(n)
+        elif lab == "Symbol":
+            symbols.append(n)
 
     subs = Counter(n.get("subsystem", "") for n in modules + objects if n.get("subsystem"))
     obj_types = Counter(o.get("object_type", "") for o in objects if o.get("object_type"))
@@ -128,22 +140,33 @@ def build_deterministic_summary(community_nids, nodes, edges, top_n: int = 5) ->
     in_deg = Counter()
     internal_calls = 0
     for s, t, rel in edges:
-        if rel != "CALLS": continue
-        if t in cset: in_deg[t] += 1
-        if s in cset and t in cset: internal_calls += 1
-    top_syms = [(nodes[nid]["name"], deg) for nid, deg in in_deg.most_common(top_n)
-                if nid in cset and nodes[nid].get("name")]
+        if rel != "CALLS":
+            continue
+        if t in cset:
+            in_deg[t] += 1
+        if s in cset and t in cset:
+            internal_calls += 1
+    top_syms = [
+        (nodes[nid]["name"], deg)
+        for nid, deg in in_deg.most_common(top_n)
+        if nid in cset and nodes[nid].get("name")
+    ]
 
     parts = []
     if subs:
         parts.append("Подсистемы: " + ", ".join(s for s, _ in subs.most_common(3)) + ".")
     if obj_types:
-        parts.append("Объекты: " + ", ".join(f"{t} ({n})" for t, n in obj_types.most_common(5)) + ".")
+        parts.append(
+            "Объекты: " + ", ".join(f"{t} ({n})" for t, n in obj_types.most_common(5)) + "."
+        )
     parts.append(f"Модулей: {len(modules)}, символов: {len(symbols)}, объектов: {len(objects)}.")
     parts.append(f"Внутренних вызовов CALLS: {internal_calls}.")
     if top_syms:
-        parts.append("Ключевые функции (по числу вызывающих): "
-                     + ", ".join(f"{name}({deg})" for name, deg in top_syms) + ".")
+        parts.append(
+            "Ключевые функции (по числу вызывающих): "
+            + ", ".join(f"{name}({deg})" for name, deg in top_syms)
+            + "."
+        )
     if objects:
         obj_names = [o.get("name", "") for o in objects if o.get("name")][:5]
         if obj_names:
@@ -159,46 +182,65 @@ def save_communities(session, qdrant, communities, nodes, summaries):
         summary = summaries.get(cid, "")
         names = [nodes[nid]["name"] for nid in nids[:50]]
         # Neo4j Community node
-        session.run("""
+        session.run(
+            """
             MERGE (c:Community {id: $cid})
             SET c.name = $name, c.summary = $summary, c.size = $size, c.detected_by = "leiden"
-        """, cid=community_uuid, name=f"Community-{cid}",
-             summary=summary, size=len(nids))
+        """,
+            cid=community_uuid,
+            name=f"Community-{cid}",
+            summary=summary,
+            size=len(nids),
+        )
         # Link nodes
         for nid in nids:
             n = nodes[nid]
             label = n["label"]
-            session.run(f"""
+            session.run(
+                f"""
                 MATCH (c:Community {{id: $cid}})
                 MATCH (n:{label}) WHERE id(n) = $nid
                 MERGE (n)-[:BELONGS_TO]->(c)
-            """, cid=community_uuid, nid=nid)
+            """,
+                cid=community_uuid,
+                nid=nid,
+            )
         # Qdrant point (will get embedding later)
-        points.append({
-            "id": community_uuid,
-            "payload": {"kind": "Community", "name": f"Community-{cid}",
-                        "summary": summary[:2000], "size": len(nids),
-                        "node_names": names},
-        })
+        points.append(
+            {
+                "id": community_uuid,
+                "payload": {
+                    "kind": "Community",
+                    "name": f"Community-{cid}",
+                    "summary": summary[:2000],
+                    "size": len(nids),
+                    "node_names": names,
+                },
+            }
+        )
     return points
 
 
 def embed_and_upsert(qdrant, points, summaries):
     """Embed summaries via Qwen3-st and upsert to graph_embeddings."""
-    if not points: return 0
+    if not points:
+        return 0
     print(f"Embedding {len(points)} community summaries...")
-    from sentence_transformers import SentenceTransformer
     import torch
+    from sentence_transformers import SentenceTransformer
+
     # device_map="auto" + .to() triggers "Cannot copy out of meta tensor".
     # Pick device upfront and let SentenceTransformer load weights there.
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = SentenceTransformer("Qwen/Qwen3-Embedding-8B",
-        device=device,
-        tokenizer_kwargs={"padding_side": "left"})
+    model = SentenceTransformer(
+        "Qwen/Qwen3-Embedding-8B", device=device, tokenizer_kwargs={"padding_side": "left"}
+    )
     texts = [p["payload"]["summary"] or p["payload"]["name"] for p in points]
     embs = model.encode(texts, batch_size=20, show_progress_bar=False, convert_to_numpy=True)
-    qpoints = [qm.PointStruct(id=p["id"], vector=e.tolist(), payload=p["payload"])
-               for p, e in zip(points, embs)]
+    qpoints = [
+        qm.PointStruct(id=p["id"], vector=e.tolist(), payload=p["payload"])
+        for p, e in zip(points, embs)
+    ]
     qdrant.upsert(collection_name=COLLECTION, points=qpoints, wait=True)
     return len(qpoints)
 
@@ -216,12 +258,14 @@ def main():
         nodes, edges = fetch_subgraph(session)
         communities = run_leiden(nodes, edges)
         if args.limit > 0:
-            communities = dict(list(communities.items())[:args.limit])
+            communities = dict(list(communities.items())[: args.limit])
             print(f"  Limited to {len(communities)} communities for smoke test")
         # Deterministic summaries — no LLM dependency, 100% reproducible.
         print(f"\nGenerating deterministic summaries ({len(communities)} communities)...")
-        summaries = {cid: build_deterministic_summary(nids, nodes, edges)
-                     for cid, nids in communities.items()}
+        summaries = {
+            cid: build_deterministic_summary(nids, nodes, edges)
+            for cid, nids in communities.items()
+        }
         # Save
         points = save_communities(session, qdrant, communities, nodes, summaries)
         # Embed + upsert (only if not --no-llm to save time on stubs)

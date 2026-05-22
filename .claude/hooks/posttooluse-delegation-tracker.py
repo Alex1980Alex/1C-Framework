@@ -18,6 +18,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
+
 from shared.circuit_breaker import with_circuit_breaker
 
 
@@ -75,6 +76,7 @@ def _log_outcome(entry: dict) -> None:
     """Log delegation outcome to SQLite (fallback: JSONL)."""
     try:
         from shared.db_writer import log_delegation
+
         log_delegation(
             provider=entry.get("provider", "unknown"),
             model=entry.get("model", "unknown"),
@@ -174,8 +176,7 @@ class PostToolUseDelegationTracker(BaseHook):
         messages = []
         if not text:
             messages.append(
-                "Z.AI returned empty response. "
-                "Consider retrying or using a different provider."
+                "Z.AI returned empty response. " "Consider retrying or using a different provider."
             )
         elif response_time > 15.0:
             messages.append(
@@ -184,14 +185,11 @@ class PostToolUseDelegationTracker(BaseHook):
             )
         elif quality["score"] < 0.4:
             messages.append(
-                f"Z.AI quality score low ({quality['score']:.2f}). "
-                "Response may need review."
+                f"Z.AI quality score low ({quality['score']:.2f}). " "Response may need review."
             )
 
         if messages:
-            return HookOutput().hook_context(
-                "[delegation-tracker] " + " ".join(messages)
-            )
+            return HookOutput().hook_context("[delegation-tracker] " + " ".join(messages))
 
         return None
 

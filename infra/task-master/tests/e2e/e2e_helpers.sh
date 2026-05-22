@@ -209,4 +209,4 @@ EOF
   fi
 }
 
-export -f analyze_log_with_llm 
+export -f analyze_log_with_llm

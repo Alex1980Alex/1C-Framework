@@ -11,9 +11,8 @@ from typing import Protocol, runtime_checkable
 class PreFilter(Protocol):
     """Structural type for pre-filters limiting matches to expected files."""
 
-    def allowed_files(
-        self, old_name: str, module_hint: str | None = None
-    ) -> set[Path] | None: ...
+    def allowed_files(self, old_name: str, module_hint: str | None = None) -> set[Path] | None: ...
+
 
 from ..types import (
     BackendError,
@@ -80,9 +79,7 @@ class AstGrepBackend:
         """Return confidence for renaming a symbol of the given kind."""
         return self._CONFIDENCE.get(symbol_kind, 0.0)
 
-    def plan_rename(
-        self, uri: str, line: int, character: int, new_name: str
-    ) -> WorkspaceEdit:
+    def plan_rename(self, uri: str, line: int, character: int, new_name: str) -> WorkspaceEdit:
         """Extract identifier at (line, character), run ast-grep, build WorkspaceEdit."""
         # Reset per-call telemetry counters early so callers reading the attrs
         # after a raised BackendError do not see values leaked from a prior call.
@@ -94,9 +91,7 @@ class AstGrepBackend:
         try:
             text = path.read_text(encoding="utf-8")
         except OSError as exc:
-            raise BackendError(
-                f"cannot read file: {exc!r}", code="read_failed"
-            ) from exc
+            raise BackendError(f"cannot read file: {exc!r}", code="read_failed") from exc
 
         lines = text.splitlines()
         # Convert 1-based line (from EDT-MCP/Serena) to 0-based index.
@@ -114,15 +109,11 @@ class AstGrepBackend:
             )
 
         try:
-            matches = self._runner.run_rename(
-                self._workspace_root, old_name, new_name
-            )
+            matches = self._runner.run_rename(self._workspace_root, old_name, new_name)
         except BackendError:
             raise
         except Exception as exc:
-            raise BackendError(
-                f"ast-grep runner failed: {exc!r}", code="runner_error"
-            ) from exc
+            raise BackendError(f"ast-grep runner failed: {exc!r}", code="runner_error") from exc
 
         if self._prefilter is not None:
             module_hint = (
@@ -130,17 +121,12 @@ class AstGrepBackend:
                 if path.is_relative_to(self._workspace_root)
                 else None
             )
-            allowed = self._prefilter.allowed_files(
-                old_name, module_hint=module_hint
-            )
+            allowed = self._prefilter.allowed_files(old_name, module_hint=module_hint)
             if allowed is not None:
                 self.last_prefilter_used = True
                 resolved_allowed = {p.resolve() for p in allowed}
                 before = len(matches)
-                matches = [
-                    m for m in matches
-                    if m.file.resolve() in resolved_allowed
-                ]
+                matches = [m for m in matches if m.file.resolve() in resolved_allowed]
                 self.last_prefilter_dropped = before - len(matches)
 
         return self._matches_to_edit(matches, new_name, self._workspace_root)
@@ -196,7 +182,6 @@ class AstGrepBackend:
             )
             by_file.setdefault(path, []).append(edit)
         file_edits = [
-            FileEdit(uri=p.resolve().as_uri(), edits=edits)
-            for p, edits in by_file.items()
+            FileEdit(uri=p.resolve().as_uri(), edits=edits) for p, edits in by_file.items()
         ]
         return WorkspaceEdit(file_edits=file_edits)

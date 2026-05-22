@@ -330,9 +330,9 @@ const getModelForProvider = (provider, requestedModel) => {
     },
     // Add mappings for other providers
   };
-  
-  return (modelMappings[provider] && modelMappings[provider][requestedModel]) 
-    || modelMappings[provider]?.default 
+
+  return (modelMappings[provider] && modelMappings[provider][requestedModel])
+    || modelMappings[provider]?.default
     || requestedModel;
 };
 ```
@@ -341,15 +341,15 @@ const getModelForProvider = (provider, requestedModel) => {
 ```javascript
 export function getClient(providerName, model) {
   const cacheKey = `${providerName}:${model || 'default'}`;
-  
+
   if (clientCache.has(cacheKey)) {
     return clientCache.get(cacheKey);
   }
-  
+
   const modelName = getModelForProvider(providerName, model);
   const client = createClientInstance(providerName, { model: modelName });
   clientCache.set(cacheKey, client);
-  
+
   return client;
 }
 ```
@@ -366,9 +366,9 @@ function validateEnvironment(provider) {
     ollama: ['OLLAMA_BASE_URL'],
     xai: ['XAI_API_KEY']
   };
-  
+
   const missing = requirements[provider]?.filter(env => !process.env[env]) || [];
-  
+
   if (missing.length > 0) {
     throw new Error(`Missing environment variables for ${provider}: ${missing.join(', ')}`);
   }
@@ -385,18 +385,18 @@ describe('AI Client Factory', () => {
     process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
     // Add other mocks
   });
-  
+
   test('creates OpenAI client with correct configuration', () => {
     const client = getClient('openai');
     expect(client).toBeDefined();
     // Add assertions for client configuration
   });
-  
+
   test('throws error when environment variables are missing', () => {
     delete process.env.OPENAI_API_KEY;
     expect(() => getClient('openai')).toThrow(/Missing environment variables/);
   });
-  
+
   // Add tests for other providers
 });
 ```
@@ -507,10 +507,10 @@ When updating the main task processing logic, implement the following changes to
    // Before
    const apiKey = process.env.OPENAI_API_KEY;
    const modelId = process.env.MAIN_MODEL || "gpt-4";
-   
+
    // After
    import { getMainProvider, getMainModelId, getMainMaxTokens, getMainTemperature } from './config-manager.js';
-   
+
    const provider = getMainProvider();
    const modelId = getMainModelId();
    const maxTokens = getMainMaxTokens();
@@ -575,11 +575,11 @@ When implementing the refactored research processing logic, ensure the following
    // Old approach
    const apiKey = process.env.OPENAI_API_KEY;
    const model = "gpt-4";
-   
+
    // New approach
-   import { getResearchProvider, getResearchModelId, getResearchMaxTokens, 
+   import { getResearchProvider, getResearchModelId, getResearchMaxTokens,
             getResearchTemperature } from './config-manager.js';
-   
+
    const provider = getResearchProvider();
    const modelId = getResearchModelId();
    const maxTokens = getResearchMaxTokens();
@@ -618,7 +618,7 @@ When implementing the refactored research processing logic, ensure the following
        maxTokens: getResearchMaxTokens(),
        temperature: getResearchTemperature()
      };
-     
+
      // Adjust based on research type
      switch(researchType) {
        case 'deep':
@@ -759,7 +759,7 @@ The refactoring should leverage the new configuration system:
 1. Replace direct model references with calls to config-manager.js getters:
    ```javascript
    const { getModelForRole, getModelParams } = require('./config-manager');
-   
+
    // Instead of hardcoded models/parameters:
    const model = getModelForRole('subtask-generator');
    const modelParams = getModelParams('subtask-generator');
@@ -786,7 +786,7 @@ The refactoring should leverage the new configuration system:
 4. Add error handling that respects logging configuration:
    ```javascript
    const { isLoggingEnabled } = require('./config-manager');
-   
+
    try {
      // Generation code
    } catch (error) {
@@ -845,7 +845,7 @@ const { getModelForRole, getParametersForRole } = require('./config-manager');
 2. Replace any hardcoded model selections or parameters with config-manager calls:
 ```javascript
 // Replace direct model references like:
-// const model = "perplexity-model-7b-online" 
+// const model = "perplexity-model-7b-online"
 // With:
 const model = getModelForRole('research');
 const parameters = getParametersForRole('research');
@@ -930,16 +930,16 @@ To implement this refactoring, you'll need to:
    // OLD approach
    const aiResponse = await callLLM(prompt, modelName, temperature, maxTokens);
    const task = parseAIResponseToTask(aiResponse);
-   
+
    // NEW approach using generateObjectService with config-manager
    import { generateObjectService } from '../services/ai-services-unified.js';
    import { getAIModelForRole, getAITemperature, getAIMaxTokens } from '../config/config-manager.js';
    import { taskSchema } from '../schemas/task-schema.js'; // Create this Zod schema for a single task
-   
+
    const modelName = getAIModelForRole('taskCreation');
    const temperature = getAITemperature('taskCreation');
    const maxTokens = getAIMaxTokens('taskCreation');
-   
+
    const task = await generateObjectService({
      prompt: _buildAddTaskPrompt(...),
      schema: taskSchema,
@@ -974,7 +974,7 @@ When refactoring `sendChatWithContext` and related functions, ensure they align 
    ```javascript
    // Before
    const model = "gpt-4";
-   
+
    // After
    import { getModelForRole } from './config-manager.js';
    const model = getModelForRole('chat'); // or appropriate role
@@ -999,7 +999,7 @@ When refactoring `sendChatWithContext` and related functions, ensure they align 
 4. For logging control, check config settings:
    ```javascript
    import { isLoggingEnabled } from './config-manager.js';
-   
+
    if (isLoggingEnabled('aiCalls')) {
      console.log('AI request:', messages);
    }
@@ -1023,7 +1023,7 @@ The refactoring of callers to AI parsing utilities should align with the new con
    ```javascript
    // Old approach
    const model = "gpt-4";
-   
+
    // New approach
    import { getModelForRole } from './config-manager';
    const model = getModelForRole('parsing'); // or appropriate role
@@ -1034,7 +1034,7 @@ The refactoring of callers to AI parsing utilities should align with the new con
    // Old approach
    const maxTokens = 2000;
    const temperature = 0.2;
-   
+
    // New approach
    import { getAIParameterValue } from './config-manager';
    const maxTokens = getAIParameterValue('maxTokens', 'parsing');
@@ -1118,12 +1118,12 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
      jest.spyOn(configManager, 'getMainModel').mockReturnValue('gpt-4');
      jest.spyOn(configManager, 'getMainTemperature').mockReturnValue(0.7);
      jest.spyOn(configManager, 'getMainMaxTokens').mockReturnValue(1000);
-     
+
      const generateTextServiceSpy = jest.spyOn(aiServices, 'generateTextService')
        .mockResolvedValue({ choices: [{ message: { content: 'test content' } }] });
-     
+
      await updateSubtaskById(/* params */);
-     
+
      // Verify the service was called with correct transformed parameters
      expect(generateTextServiceSpy).toHaveBeenCalledWith({
        model: 'gpt-4',
@@ -1141,12 +1141,12 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
      const completion = await generateTextService({
        // parameters
      });
-     
+
      // Validate response structure before using
      if (!completion?.choices?.[0]?.message?.content) {
        throw new Error('Invalid response structure from AI service');
      }
-     
+
      // Continue with updating subtask
    } catch (error) {
      // Enhanced error handling
@@ -1169,7 +1169,7 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
        // Setup environment with controlled config values
        process.env.OPENAI_API_KEY = 'test-key';
      });
-     
+
      // Test cases follow...
    });
    ```
@@ -1180,13 +1180,13 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
      const mockError = new Error('Service unavailable');
      mockError.status = 503;
      jest.spyOn(aiServices, 'generateTextService').mockRejectedValue(mockError);
-     
+
      // Capture console errors if needed
      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-     
+
      // Execute with error expectation
      await expect(updateSubtaskById(1, { prompt: 'test' })).rejects.toThrow();
-     
+
      // Verify error was logged with appropriate context
      expect(consoleSpy).toHaveBeenCalledWith(
        expect.stringContaining('AI service error'),
@@ -1203,17 +1203,17 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
        id: 1,
        details: 'Existing details.\n\n'
      };
-     
+
      // Mock database retrieval
      getSubtaskById.mockResolvedValue(mockSubtask);
-     
+
      // Mock AI response
      generateTextService.mockResolvedValue({
        choices: [{ message: { content: 'New AI content.' } }]
      });
-     
+
      await updateSubtaskById(1, { prompt: 'Enhance this subtask' });
-     
+
      // Verify the update preserves existing content
      expect(updateSubtaskInDb).toHaveBeenCalledWith(
        1,
@@ -1221,7 +1221,7 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
          details: expect.stringContaining('Existing details.\n\n<info added on')
        })
      );
-     
+
      // Verify the new content was added
      expect(updateSubtaskInDb).toHaveBeenCalledWith(
        1,
@@ -1238,10 +1238,10 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
      // Mock date for consistent testing
      const mockDate = new Date('2025-04-22T10:00:00Z');
      jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
-     
+
      // Setup and execute test
      // ...
-     
+
      // Verify correct formatting
      expect(updateSubtaskInDb).toHaveBeenCalledWith(
        expect.any(Number),
@@ -1260,10 +1260,10 @@ When testing the non-streaming `generateTextService` call in `updateSubtaskById`
      // Setup mock subtask with no details
      const mockSubtask = { id: 1 };
      getSubtaskById.mockResolvedValue(mockSubtask);
-     
+
      // Execute test
      // ...
-     
+
      // Verify details were initialized properly
      expect(updateSubtaskInDb).toHaveBeenCalledWith(
        1,
@@ -1350,7 +1350,7 @@ import { createOpenAI } from 'ai';
 
 /**
  * Generates text using OpenAI models via Vercel AI SDK
- * 
+ *
  * @param {Object} params - Configuration parameters
  * @param {string} params.apiKey - OpenAI API key
  * @param {string} params.modelId - Model ID (e.g., 'gpt-4', 'gpt-3.5-turbo')
@@ -1362,20 +1362,20 @@ import { createOpenAI } from 'ai';
 export async function generateOpenAIText(params) {
   try {
     const { apiKey, modelId, messages, maxTokens, temperature = 0.7 } = params;
-    
+
     if (!apiKey) throw new Error('OpenAI API key is required');
     if (!modelId) throw new Error('Model ID is required');
     if (!messages || !Array.isArray(messages)) throw new Error('Messages array is required');
-    
+
     const openai = createOpenAI({ apiKey });
-    
+
     const response = await openai.chat.completions.create({
       model: modelId,
       messages,
       max_tokens: maxTokens,
       temperature,
     });
-    
+
     return response.choices[0].message.content;
   } catch (error) {
     console.error('OpenAI text generation error:', error);
@@ -1385,20 +1385,20 @@ export async function generateOpenAIText(params) {
 
 /**
  * Streams text using OpenAI models via Vercel AI SDK
- * 
+ *
  * @param {Object} params - Configuration parameters (same as generateOpenAIText)
  * @returns {ReadableStream} A stream of text chunks
  */
 export async function streamOpenAIText(params) {
   try {
     const { apiKey, modelId, messages, maxTokens, temperature = 0.7 } = params;
-    
+
     if (!apiKey) throw new Error('OpenAI API key is required');
     if (!modelId) throw new Error('Model ID is required');
     if (!messages || !Array.isArray(messages)) throw new Error('Messages array is required');
-    
+
     const openai = createOpenAI({ apiKey });
-    
+
     const stream = await openai.chat.completions.create({
       model: modelId,
       messages,
@@ -1406,7 +1406,7 @@ export async function streamOpenAIText(params) {
       temperature,
       stream: true,
     });
-    
+
     return stream;
   } catch (error) {
     console.error('OpenAI streaming error:', error);
@@ -1416,7 +1416,7 @@ export async function streamOpenAIText(params) {
 
 /**
  * Generates a structured object using OpenAI models via Vercel AI SDK
- * 
+ *
  * @param {Object} params - Configuration parameters
  * @param {string} params.apiKey - OpenAI API key
  * @param {string} params.modelId - Model ID (e.g., 'gpt-4', 'gpt-3.5-turbo')
@@ -1428,15 +1428,15 @@ export async function streamOpenAIText(params) {
 export async function generateOpenAIObject(params) {
   try {
     const { apiKey, modelId, messages, schema, objectName } = params;
-    
+
     if (!apiKey) throw new Error('OpenAI API key is required');
     if (!modelId) throw new Error('Model ID is required');
     if (!messages || !Array.isArray(messages)) throw new Error('Messages array is required');
     if (!schema) throw new Error('Schema is required');
     if (!objectName) throw new Error('Object name is required');
-    
+
     const openai = createOpenAI({ apiKey });
-    
+
     // Using the Vercel AI SDK's function calling capabilities
     const response = await openai.chat.completions.create({
       model: modelId,
@@ -1450,7 +1450,7 @@ export async function generateOpenAIObject(params) {
       ],
       function_call: { name: objectName },
     });
-    
+
     const functionCall = response.choices[0].message.function_call;
     return JSON.parse(functionCall.arguments);
   } catch (error) {
@@ -1497,7 +1497,7 @@ export const providerInfo = {
 
 /**
  * Helper function to format error responses consistently
- * 
+ *
  * @param {Error} error - The caught error
  * @param {string} operation - The operation being performed
  * @returns {Error} A formatted error
@@ -1506,28 +1506,28 @@ function formatError(error, operation) {
   // Extract OpenAI specific error details if available
   const statusCode = error.status || error.statusCode;
   const errorType = error.type || error.code || 'unknown_error';
-  
+
   // Create a more detailed error message
   const message = `OpenAI ${operation} error (${errorType}): ${error.message}`;
-  
+
   // Create a new error with the formatted message
   const formattedError = new Error(message);
-  
+
   // Add additional properties for debugging
   formattedError.originalError = error;
   formattedError.provider = 'openai';
   formattedError.statusCode = statusCode;
   formattedError.errorType = errorType;
-  
+
   return formattedError;
 }
 
 /**
  * Example usage with the unified AI services interface:
- * 
+ *
  * // In ai-services-unified.js
  * import * as openaiProvider from './ai-providers/openai.js';
- * 
+ *
  * export async function generateText(params) {
  *   switch(params.provider) {
  *     case 'openai':
@@ -1559,7 +1559,7 @@ import { createOpenAI, openai } from '@ai-sdk/openai';
 // The rest of the implementation remains the same, but uses the correct imports.
 // When implementing this module, ensure your package.json includes this dependency.
 
-// For streaming implementations with the Vercel AI SDK, you can also use the 
+// For streaming implementations with the Vercel AI SDK, you can also use the
 // streamText and experimental streamUI methods:
 
 /**
@@ -1568,11 +1568,11 @@ import { createOpenAI, openai } from '@ai-sdk/openai';
 export async function streamOpenAITextSimplified(params) {
   try {
     const { apiKey, modelId, messages, maxTokens, temperature = 0.7 } = params;
-    
+
     if (!apiKey) throw new Error('OpenAI API key is required');
-    
+
     const openaiClient = createOpenAI({ apiKey });
-    
+
     return openaiClient.streamText({
       model: modelId,
       messages,
@@ -1598,9 +1598,9 @@ The unified service should now use the configuration manager for provider select
 
 1. Import the config-manager functions:
 ```javascript
-const { 
-  getMainProvider, 
-  getResearchProvider, 
+const {
+  getMainProvider,
+  getResearchProvider,
   getFallbackProvider,
   getModelForRole,
   getProviderParameters
@@ -1612,7 +1612,7 @@ const {
 function selectProvider(role = 'default', context = {}) {
   // Try to get provider based on role or context
   let provider;
-  
+
   if (role === 'research') {
     provider = getResearchProvider();
   } else if (context.fallback) {
@@ -1620,7 +1620,7 @@ function selectProvider(role = 'default', context = {}) {
   } else {
     provider = getMainProvider();
   }
-  
+
   // Dynamically import the provider module
   return require(`./${provider}.js`);
 }
@@ -1633,11 +1633,11 @@ async function generateTextService(prompt, options = {}) {
   const provider = selectProvider(role, options);
   const model = getModelForRole(role);
   const parameters = getProviderParameters(provider.name);
-  
-  return provider.generateText(prompt, { 
-    model, 
+
+  return provider.generateText(prompt, {
+    model,
     ...parameters,
-    ...otherOptions 
+    ...otherOptions
   });
 }
 ```
@@ -1664,7 +1664,7 @@ function checkProviderCapability(provider, capability) {
     'openai': ['text', 'chat', 'stream', 'embedding', 'vision']
     // Add other providers as needed
   };
-  
+
   return capabilities[provider]?.includes(capability) || false;
 }
 ```
@@ -1689,65 +1689,65 @@ const DEFAULT_MODEL = "gemini-1.5-pro"; // Default model, can be overridden
 const TEMPERATURE_DEFAULT = 0.7;
 
 // 3. Function implementations
-export async function generateGoogleText({ 
-  prompt, 
-  model = DEFAULT_MODEL, 
+export async function generateGoogleText({
+  prompt,
+  model = DEFAULT_MODEL,
   temperature = TEMPERATURE_DEFAULT,
-  apiKey 
+  apiKey
 }) {
   if (!apiKey) throw new Error("Google API key is required");
-  
+
   const googleAI = new GoogleGenerativeAI(apiKey);
   const googleModel = googleAI.getGenerativeModel({ model });
-  
+
   const result = await generateText({
     model: googleModel,
     prompt,
     temperature
   });
-  
+
   return result;
 }
 
-export async function streamGoogleText({ 
-  prompt, 
-  model = DEFAULT_MODEL, 
+export async function streamGoogleText({
+  prompt,
+  model = DEFAULT_MODEL,
   temperature = TEMPERATURE_DEFAULT,
-  apiKey 
+  apiKey
 }) {
   if (!apiKey) throw new Error("Google API key is required");
-  
+
   const googleAI = new GoogleGenerativeAI(apiKey);
   const googleModel = googleAI.getGenerativeModel({ model });
-  
+
   const stream = await streamText({
     model: googleModel,
     prompt,
     temperature
   });
-  
+
   return stream;
 }
 
-export async function generateGoogleObject({ 
-  prompt, 
+export async function generateGoogleObject({
+  prompt,
   schema,
-  model = DEFAULT_MODEL, 
+  model = DEFAULT_MODEL,
   temperature = TEMPERATURE_DEFAULT,
-  apiKey 
+  apiKey
 }) {
   if (!apiKey) throw new Error("Google API key is required");
-  
+
   const googleAI = new GoogleGenerativeAI(apiKey);
   const googleModel = googleAI.getGenerativeModel({ model });
-  
+
   const result = await generateObject({
     model: googleModel,
     prompt,
     schema,
     temperature
   });
-  
+
   return result;
 }
 
@@ -1806,7 +1806,7 @@ export async function generateGoogleObject({
  * 1. process.env
  * 2. session.env (if available)
  * 3. Default values from .taskmasterconfig
- * 
+ *
  * @param {string} key - Configuration key to resolve
  * @param {object} session - Optional session object that may contain env values
  * @param {*} defaultValue - Default value if not found in any source
@@ -1820,12 +1820,12 @@ function resolveConfig(key, session = null, defaultValue = null) {
 function resolveAIConfig(session = null, role = 'default') {
   const provider = resolveConfig('AI_PROVIDER', session);
   const model = resolveConfig('AI_MODEL', session);
-  
+
   // If explicit provider/model specified, use those
   if (provider && model) {
     return { provider, model };
   }
-  
+
   // Otherwise fall back to role-based configuration
   const roleConfig = getRoleBasedAIConfig(role);
   return {
@@ -1840,18 +1840,18 @@ function resolveAIConfig(session = null, role = 'default') {
 
 /**
  * Configuration Resolution Documentation:
- * 
+ *
  * 1. Environment Variables:
  *    - AI_PROVIDER: Explicitly sets the AI provider (e.g., 'openai', 'anthropic')
  *    - AI_MODEL: Explicitly sets the model to use (e.g., 'gpt-4', 'claude-2')
  *    - OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.: Provider-specific API keys
- * 
+ *
  * 2. Resolution Strategy:
  *    - Values are first checked in process.env
  *    - If not found, session.env is checked (when available)
  *    - If still not found, defaults from .taskmasterconfig are used
  *    - For AI provider/model, explicit settings override role-based configuration
- * 
+ *
  * 3. Backward Compatibility:
  *    - Role-based selection continues to work when AI_PROVIDER/AI_MODEL are not set
  *    - Existing code using getRoleBasedAIConfig() will continue to function
@@ -1873,7 +1873,7 @@ const getLogLevel = () => resolveConfig('LOG_LEVEL', null, CONFIG.logging?.level
 const getMaxTokens = (role = 'default') => {
   const explicitMaxTokens = parseInt(resolveConfig('MAX_TOKENS', null, 0), 10);
   if (explicitMaxTokens > 0) return explicitMaxTokens;
-  
+
   // Fall back to role-based configuration
   return CONFIG.ai?.roles?.[role]?.maxTokens || CONFIG.ai?.defaultMaxTokens || 4096;
 };
@@ -1890,21 +1890,21 @@ function isApiKeySet(provider, session = null) {
 
 /**
  * Migration guide for application components:
- * 
+ *
  * 1. Replace direct CONFIG access:
  *    - Before: `const provider = CONFIG.ai.mainProvider;`
  *    - After: `const provider = getMainProvider();`
- * 
+ *
  * 2. Replace direct process.env access for API keys:
  *    - Before: `const apiKey = process.env.OPENAI_API_KEY;`
  *    - After: `const apiKey = resolveEnvVariable('OPENAI_API_KEY', session);`
- * 
+ *
  * 3. Check API key availability:
  *    - Before: `if (process.env.OPENAI_API_KEY) {...}`
  *    - After: `if (isApiKeySet('openai', session)) {...}`
- * 
+ *
  * 4. Update provider/model selection in ai-services:
- *    - Before: 
+ *    - Before:
  *      ```
  *      const provider = role ? CONFIG.ai.roles[role]?.provider : CONFIG.ai.mainProvider;
  *      const model = role ? CONFIG.ai.roles[role]?.model : CONFIG.ai.mainModel;
@@ -2000,7 +2000,7 @@ For the integration tests of the Unified AI Service, consider the following impl
      mockConfigManager.getAIProviderPreference.mockReturnValue(['openai', 'anthropic']);
      mockConfigManager.getModelForRole.mockReturnValue('gpt-4');
      mockConfigManager.getParametersForModel.mockReturnValue({ temperature: 0.7, maxTokens: 2000 });
-     
+
      // Verify task-manager uses these settings when calling the unified service
      // ...
    });
@@ -2066,7 +2066,7 @@ For the integration tests of the Unified AI Service, consider the following impl
      mockConfigManager.getAIProviderPreference.mockReturnValue(['openai', 'anthropic']);
      mockConfigManager.getModelForRole.mockReturnValue('gpt-4');
      mockConfigManager.getParametersForModel.mockReturnValue({ temperature: 0.7, maxTokens: 2000 });
-     
+
      // Verify task-manager uses these settings when calling the unified service
      // ...
    });
@@ -2121,7 +2121,7 @@ The new AI architecture introduces a clear separation between sensitive credenti
 
 ## Environment Variables vs Configuration File
 
-- **Environment Variables (.env)**: 
+- **Environment Variables (.env)**:
   - Store only sensitive API keys and credentials
   - Accessed via `resolveEnvVariable()` which checks both process.env and session.env
   - Example: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`
@@ -2138,7 +2138,7 @@ The new AI architecture introduces a clear separation between sensitive credenti
   - Accessed via getter functions from `config-manager.js` like:
     ```javascript
     import { getModelForRole, getDefaultTemperature } from './config-manager.js';
-    
+
     // Usage examples
     const model = getModelForRole('system');
     const temp = getDefaultTemperature();
@@ -2397,7 +2397,7 @@ for (const task of pendingTasks) {
 <info added on 2025-04-24T17:48:35.005Z>
 **Additional Implementation Notes for Refactoring get-subtasks-from-ai.js**
 
-- **Zod Schema Definition**:  
+- **Zod Schema Definition**:
   Define a Zod schema that precisely matches the expected subtask object structure. For example, if a subtask should have an id (string), title (string), and status (string), use:
   ```js
   import { z } from 'zod';
@@ -2413,7 +2413,7 @@ for (const task of pendingTasks) {
   ```
   This ensures robust runtime validation and clear error reporting if the AI response does not match expectations[5][1][3].
 
-- **Unified Service Invocation**:  
+- **Unified Service Invocation**:
   Replace all direct AI client and config usage with:
   ```js
   import { generateObjectService } from './ai-services-unified';
@@ -2428,13 +2428,13 @@ for (const task of pendingTasks) {
   ```
   This centralizes AI invocation and parameter management, ensuring consistency and easier maintenance.
 
-- **Role Determination**:  
+- **Role Determination**:
   Use the `useResearch` flag to select the AI role:
   ```js
   const role = useResearch ? 'researcher' : 'default';
   ```
 
-- **Error Handling**:  
+- **Error Handling**:
   Implement structured error handling:
   ```js
   try {
@@ -2455,16 +2455,16 @@ for (const task of pendingTasks) {
   ```
   This pattern ensures that consumers can distinguish between different failure modes and respond appropriately.
 
-- **Consumer Contract**:  
+- **Consumer Contract**:
   Update the function signature to require both `useResearch` and `session` parameters, and document this in JSDoc/type annotations for clarity.
 
-- **Prompt Construction**:  
+- **Prompt Construction**:
   Move all prompt construction logic outside the core function if possible, or encapsulate it so that errors can be caught and reported as `PromptConstructionError`.
 
-- **No AI Implementation Details**:  
+- **No AI Implementation Details**:
   The refactored function should not expose or depend on any AI implementation specifics—only the unified service interface and schema validation.
 
-- **Testing**:  
+- **Testing**:
   Add or update tests to cover:
   - Successful subtask generation
   - Schema validation failures (invalid AI output)
@@ -2503,7 +2503,7 @@ These enhancements ensure the refactored file is robust, maintainable, and align
 <info added on 2025-04-24T17:49:25.126Z>
 ## Additional Implementation Notes for Refactoring update-tasks.js
 
-- **Zod Schema for Batch Updates**:  
+- **Zod Schema for Batch Updates**:
   Define a Zod schema to validate the structure of the batch update payload. For example, if updating tasks requires an array of task objects with specific fields, use:
   ```typescript
   import { z } from "zod";
@@ -2523,7 +2523,7 @@ These enhancements ensure the refactored file is robust, maintainable, and align
   ```
   This ensures all incoming data for batch updates is validated at runtime, catching malformed input early and providing clear error messages[4][5].
 
-- **Function Schema Validation**:  
+- **Function Schema Validation**:
   If exposing the update logic as a callable function (e.g., for CLI or API), consider using Zod's function schema to validate both input and output:
   ```typescript
   const updateTasksFunction = z
@@ -2536,13 +2536,13 @@ These enhancements ensure the refactored file is robust, maintainable, and align
   ```
   This pattern enforces correct usage and output shape, improving reliability[1].
 
-- **Error Handling and Reporting**:  
+- **Error Handling and Reporting**:
   Use Zod's `.safeParse()` or `.parse()` methods to validate input. On validation failure, return or throw a formatted error to the caller (CLI, API, etc.), ensuring actionable feedback for users[5].
 
-- **Consistent JSON Output**:  
+- **Consistent JSON Output**:
   When invoking the core update function from wrappers (CLI, MCP), ensure the output is always serialized as JSON. This is critical for downstream consumers and for automated tooling.
 
-- **Logger Wrapper Example**:  
+- **Logger Wrapper Example**:
   Implement a logger utility that can be toggled for silent mode:
   ```typescript
   function createLogger(silent: boolean) {
@@ -2554,16 +2554,16 @@ These enhancements ensure the refactored file is robust, maintainable, and align
   ```
   Pass this logger to the core logic for consistent, suppressible output.
 
-- **Session Context Usage**:  
+- **Session Context Usage**:
   Ensure all AI service calls and config access are routed through the provided session context, not global config getters. This supports multi-user and multi-session environments.
 
-- **Task Filtering Logic**:  
+- **Task Filtering Logic**:
   Before invoking the AI service, filter the tasks array to only include those with `id >= from` and `status === "pending"`. This preserves the intended batch update semantics.
 
-- **Preserve File Regeneration**:  
+- **Preserve File Regeneration**:
   After updating tasks, ensure any logic that regenerates or writes task files is retained and invoked as before.
 
-- **CLI and API Parameter Validation**:  
+- **CLI and API Parameter Validation**:
   Use the same Zod schemas to validate CLI arguments and API payloads, ensuring consistency across all entry points[5].
 
 - **Example: Validating CLI Arguments**
@@ -2582,13 +2582,13 @@ These enhancements ensure robust validation, unified service usage, and maintain
 
 ## 42. Remove all unused imports [done]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
 ## 43. Remove all unnecessary console logs [done]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 <info added on 2025-05-02T20:47:07.566Z>
 1. Identify all files within the project directory that contain console log statements.
@@ -2657,7 +2657,7 @@ Here are more detailed steps for removing unnecessary console logs:
 
 ## 45. Add support for Bedrock provider with ai sdk and unified service [done]
 ### Dependencies: None
-### Description: 
+### Description:
 ### Details:
 
 
@@ -2695,4 +2695,3 @@ Here are more detailed steps for removing unnecessary console logs:
 
 - For unified service integration, ensure your service layer can route requests to Bedrock using the configured provider instance, and normalize responses if you support multiple AI backends.
 </info added on 2025-04-25T19:03:42.584Z>
-

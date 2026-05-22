@@ -9,11 +9,11 @@
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Добавляем src в путь
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from loader import ServerLoader
 from registry import Registry
@@ -25,7 +25,7 @@ async def test_docker_mcp_integration():
     print("=" * 60)
 
     # Загружаем registry
-    registry_path = os.path.join(os.path.dirname(__file__), 'config', 'registry.yaml')
+    registry_path = os.path.join(os.path.dirname(__file__), "config", "registry.yaml")
     print(f"\n[1] Loading registry: {registry_path}")
     registry = Registry(registry_path)
 
@@ -38,7 +38,7 @@ async def test_docker_mcp_integration():
     print("    This may take 15-20 seconds for gateway initialization...")
 
     try:
-        server = await loader.get_server('brave')
+        server = await loader.get_server("brave")
         if server:
             print(f"[2] ✓ Server started: {server.name}")
             print(f"    - Is proxy: {server.is_proxy}")
@@ -52,16 +52,18 @@ async def test_docker_mcp_integration():
     except Exception as e:
         print(f"[2] ✗ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     # Test 2: Проверка singleton (второй запрос должен быть быстрым)
     print("\n[3] Testing singleton pattern (second request should be instant)...")
     import time
+
     start = time.time()
 
     try:
-        server2 = await loader.get_server('fetch')
+        server2 = await loader.get_server("fetch")
         elapsed = time.time() - start
         if server2:
             print(f"[3] ✓ fetch server started in {elapsed:.2f}s")
@@ -78,16 +80,15 @@ async def test_docker_mcp_integration():
     # Test 3: Выполнение инструмента
     print("\n[4] Executing brave_web_search tool...")
     try:
-        result = await loader.execute_tool('brave', 'brave_web_search', {
-            'query': 'python programming',
-            'count': 1
-        })
+        result = await loader.execute_tool(
+            "brave", "brave_web_search", {"query": "python programming", "count": 1}
+        )
 
         if isinstance(result, dict):
-            if 'error' in result:
+            if "error" in result:
                 print(f"[4] ✗ Tool error: {result['error']}")
             else:
-                print(f"[4] ✓ Tool executed successfully")
+                print("[4] ✓ Tool executed successfully")
                 print(f"    - Result type: {type(result).__name__}")
                 # Показываем часть результата
                 result_str = str(result)[:200]
@@ -98,6 +99,7 @@ async def test_docker_mcp_integration():
     except Exception as e:
         print(f"[4] ✗ Error: {e}")
         import traceback
+
         traceback.print_exc()
 
     # Test 4: Список активных серверов

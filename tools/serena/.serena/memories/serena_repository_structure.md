@@ -11,7 +11,7 @@ Serena is a multi-language code assistant that combines two main components:
 serena/
 ├── src/                          # Main source code
 │   ├── serena/                   # Serena agent framework
-│   ├── solidlsp/                 # LSP wrapper library  
+│   ├── solidlsp/                 # LSP wrapper library
 │   └── interprompt/              # Multi-language prompt templates
 ├── test/                         # Test suites
 │   ├── serena/                   # Serena agent tests

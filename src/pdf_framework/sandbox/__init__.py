@@ -42,10 +42,12 @@ def select_backend(prefer: str = "auto") -> SandboxBackend:
 
     if prefer == "langsmith" or (prefer == "auto" and os.getenv("LANGSMITH_API_KEY")):
         from src.pdf_framework.sandbox.langsmith_backend import LangSmithBackend
+
         return LangSmithBackend()
 
     if prefer == "e2b" or (prefer == "auto" and os.getenv("E2B_API_KEY")):
         from src.pdf_framework.sandbox.e2b_backend import E2BBackend
+
         return E2BBackend()
 
     return DryRunBackend()

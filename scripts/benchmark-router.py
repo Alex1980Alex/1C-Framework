@@ -16,7 +16,6 @@ import os
 import subprocess
 import sys
 import time
-from collections import defaultdict
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +26,7 @@ if not PYTHON.exists():
     PYTHON = Path(sys.executable)
 
 import re
+
 _SKILL_RE = re.compile(r"Skill\('([^']+)'\)")
 _BUNDLE_RE = re.compile(r"\[SKILL-ROUTER\] Bundles: (.+)")
 
@@ -46,9 +46,14 @@ def run_router(prompt: str, env_extra: dict | None = None) -> dict:
         t0 = time.perf_counter()
         result = subprocess.run(
             [str(PYTHON), str(ROUTER_SCRIPT)],
-            input=input_data, capture_output=True, text=True, timeout=15,
-            cwd=str(PROJECT_DIR), env=env,
-            encoding="utf-8", errors="replace",
+            input=input_data,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            cwd=str(PROJECT_DIR),
+            env=env,
+            encoding="utf-8",
+            errors="replace",
         )
         latency_ms = (time.perf_counter() - t0) * 1000
         stdout = result.stdout.strip()
@@ -92,7 +97,7 @@ def load_ground_truth() -> list[dict]:
         print(f"ERROR: Ground truth not found: {GROUND_TRUTH}", file=sys.stderr)
         sys.exit(1)
     samples = []
-    with open(GROUND_TRUTH, "r", encoding="utf-8") as f:
+    with open(GROUND_TRUTH, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -139,7 +144,9 @@ def run_evaluation(samples: list[dict], mode: str = "full", verbose: bool = Fals
 
         if verbose:
             status = "OK" if m["f1"] == 1.0 or (not exp_skills and not pred_skills) else "MISS"
-            print(f"  [{i+1:3d}] {status:4s} P={m['precision']:.2f} R={m['recall']:.2f} F1={m['f1']:.2f} | {prompt[:50]}")
+            print(
+                f"  [{i+1:3d}] {status:4s} P={m['precision']:.2f} R={m['recall']:.2f} F1={m['f1']:.2f} | {prompt[:50]}"
+            )
 
     # Cleanup
     try:
@@ -170,7 +177,9 @@ def run_evaluation(samples: list[dict], mode: str = "full", verbose: bool = Fals
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Benchmark skill-router with/without TF-IDF Layer C")
+    parser = argparse.ArgumentParser(
+        description="Benchmark skill-router with/without TF-IDF Layer C"
+    )
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--ablation", action="store_true", help="Run with and without Layer C")
     parser.add_argument("--json", action="store_true", help="Output JSON")
@@ -215,12 +224,14 @@ def main():
             print(f"    Precision: {r['precision']:.4f}")
             print(f"    Recall:    {r['recall']:.4f}")
             print(f"    F1:        {r['f1']:.4f}")
-            print(f"    Latency:   p50={r['latency_p50']:.0f}ms  p95={r['latency_p95']:.0f}ms  p99={r['latency_p99']:.0f}ms")
+            print(
+                f"    Latency:   p50={r['latency_p50']:.0f}ms  p95={r['latency_p95']:.0f}ms  p99={r['latency_p99']:.0f}ms"
+            )
 
         if "no_tfidf" in results and "with_tfidf" in results:
             base = results["no_tfidf"]
             enhanced = results["with_tfidf"]
-            print(f"\n  DELTA (Layer C effect):")
+            print("\n  DELTA (Layer C effect):")
             print(f"    Precision: {enhanced['precision'] - base['precision']:+.4f}")
             print(f"    Recall:    {enhanced['recall'] - base['recall']:+.4f}")
             print(f"    F1:        {enhanced['f1'] - base['f1']:+.4f}")

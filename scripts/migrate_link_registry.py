@@ -76,10 +76,10 @@ def dry_run(db_path: Path):
         print("Already migrated (version >= 2). No action needed.")
         return
 
-    print(f"\nDry-run: would migrate to version 2")
+    print("\nDry-run: would migrate to version 2")
     print(f"New link types to be added: {', '.join(sorted(NEW_TYPES - OLD_TYPES))}")
     if new_type_links:
-        print(f"WARNING: Found links with new types (should be 0 before migration):")
+        print("WARNING: Found links with new types (should be 0 before migration):")
         for lt, cnt in new_type_links.items():
             if cnt > 0:
                 print(f"  {lt}: {cnt}")

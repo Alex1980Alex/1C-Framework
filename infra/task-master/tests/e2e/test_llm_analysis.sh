@@ -68,4 +68,4 @@ echo "[INFO] analyze_log_with_llm finished with exit code: $ANALYSIS_EXIT_CODE"
 # echo "[INFO] Changing back to project root: $PROJECT_ROOT"
 # cd "$PROJECT_ROOT"
 
-exit $ANALYSIS_EXIT_CODE 
+exit $ANALYSIS_EXIT_CODE

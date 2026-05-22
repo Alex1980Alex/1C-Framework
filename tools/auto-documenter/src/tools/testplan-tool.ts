@@ -21,9 +21,9 @@ export interface TestPlanToolConfig extends BaseToolConfig {
 export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
   readonly name = 'autotestplan';
   readonly description = 'Generates a test plan for code in a repository by recursively analyzing directories and files';
-  
+
   private openRouterClient: OpenRouterClient;
-  
+
   /**
    * Creates a new test plan tool
    * @param apiKey OpenRouter API key (optional)
@@ -33,7 +33,7 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
   constructor(apiKey?: string, model?: string, updateExisting?: boolean) {
     // Get default config
     const config = getConfig();
-    
+
     // Create tool config
     const toolConfig: TestPlanToolConfig = {
       outputFilename: 'testplan.md',
@@ -43,13 +43,13 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
       topLevelPrompt: testPlanPrompts.topLevelPrompt,
       withChildrenPrompt: testPlanPrompts.withChildrenPrompt
     };
-    
+
     super(toolConfig);
-    
+
     // Initialize OpenRouter client
     this.openRouterClient = new OpenRouterClient(apiKey, model, true);
   }
-  
+
   /**
    * Generates a test plan for a directory
    * @param directoryPath Path to the source directory
@@ -71,7 +71,7 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
     const testPlanFilePath = path.join(targetDir, this.config.outputFilename);
     const existingTestPlan = this.readExistingFile(testPlanFilePath);
     const isUpdate = existingTestPlan !== null;
-    
+
     // Skip generation if the file exists and updateExisting is false
     if (isUpdate && !this.config.updateExisting) {
       console.error(`Skipping test plan for ${directoryPath} - File exists and updateExisting is false`);
@@ -83,23 +83,23 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
         skipped: true
       };
     }
-    
+
     // Convert analyzed files to format expected by OpenRouterClient
     const files = analysisResult.analyzedFiles.map((file) => ({
       path: path.relative(directoryPath, file.path),
       content: file.content
     }));
-    
+
     try {
       // Determine the appropriate system prompt based on context
       let systemPrompt = this.config.systemPrompt;
-      
+
       if (isTopLevel) {
         systemPrompt = this.config.topLevelPrompt;
       } else if (childrenContent && childrenContent.length > 0) {
         systemPrompt = this.config.withChildrenPrompt;
       }
-      
+
       // Add instruction about existing test plan
       if (existingTestPlan) {
         systemPrompt += ` ${updateExistingContentPrompt}`;
@@ -113,7 +113,7 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
         isTopLevel,
         childrenContent
       );
-      
+
       if (!genResult.successful) {
         return {
           outputPath: testPlanFilePath,
@@ -123,13 +123,13 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
           isUpdate
         };
       }
-      
+
       // Ensure output directory exists (important when outputDir is different from source)
       await fs.promises.mkdir(targetDir, { recursive: true });
 
       // Write the generated test plan to file
       await fs.promises.writeFile(testPlanFilePath, genResult.content, 'utf8');
-      
+
       return {
         outputPath: testPlanFilePath,
         success: true,
@@ -146,7 +146,7 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
       };
     }
   }
-  
+
   /**
    * Creates fallback content for directories that exceed limits
    * @param directoryPath Path to the directory
@@ -158,13 +158,13 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
     analysisResult: AnalysisResult
   ): Promise<string> {
     const dirName = path.basename(directoryPath);
-    
+
     let content = `# ${dirName} - Test Plan Skipped\n\n`;
-    
+
     if (analysisResult.limited && analysisResult.limitReason) {
       content += `## Reason\n\n${analysisResult.limitReason}\n\n`;
     }
-    
+
     if (analysisResult.analyzedFiles.length > 0) {
       content += `## Analyzed Files\n\n`;
       for (const file of analysisResult.analyzedFiles) {
@@ -172,7 +172,7 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
       }
       content += '\n';
     }
-    
+
     if (analysisResult.excludedFiles.length > 0) {
       content += `## Excluded Files\n\n`;
       for (const file of analysisResult.excludedFiles) {
@@ -180,14 +180,14 @@ export class TestPlanTool extends BaseTool<TestPlanToolConfig> {
       }
       content += '\n';
     }
-    
+
     content += `## How to Fix\n\n`;
     content += `You can manually create a test plan for this directory by replacing this file with a proper ${this.config.outputFilename} file.\n`;
     content += `Alternatively, you can increase the file limits in the tool configuration and run again.\n`;
-    
+
     return content;
   }
-  
+
   /**
    * Reads an existing file if it exists
    * @param filePath Path to the file

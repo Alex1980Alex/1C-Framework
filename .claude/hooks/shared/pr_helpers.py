@@ -17,11 +17,11 @@ import os
 import re
 import subprocess
 import time
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
-
 
 # --- generic ------------------------------------------------------------
+
 
 def safe_int(value: str | int | None, default: int) -> int:
     if value is None:
@@ -39,6 +39,7 @@ def slugify(text: str) -> str:
 
 
 # --- git ----------------------------------------------------------------
+
 
 def run_git(
     *args: str,
@@ -106,6 +107,7 @@ def changed_paths(base: str, *, cwd: str | Path, head: str = "HEAD") -> list[str
 
 
 # --- gh CLI -------------------------------------------------------------
+
 
 def gh_available() -> bool:
     try:
@@ -195,9 +197,7 @@ def gh_pr_create(
 
 
 def gh_pr_comment(pr_url: str, body: str, *, cwd: str | Path) -> tuple[bool, str]:
-    code, _, err = _run_gh(
-        "pr", "comment", pr_url, "--body", body, cwd=cwd, timeout=20
-    )
+    code, _, err = _run_gh("pr", "comment", pr_url, "--body", body, cwd=cwd, timeout=20)
     return (code == 0), (err[:200] if err else "ok")
 
 
@@ -228,9 +228,7 @@ def gh_pr_checks_status(pr_url: str, *, cwd: str | Path) -> str:
     return "success"
 
 
-def gh_pr_wait_checks(
-    pr_url: str, *, cwd: str | Path, max_seconds: int = 300
-) -> tuple[bool, str]:
+def gh_pr_wait_checks(pr_url: str, *, cwd: str | Path, max_seconds: int = 300) -> tuple[bool, str]:
     """Poll until checks resolve. Returns (success, message). Bounded by max_seconds."""
     start = time.time()
     last = "unknown"
@@ -264,15 +262,11 @@ def gh_pr_add_reviewers(
     if not reviewers:
         return True, "no reviewers"
     rev_arg = ",".join(reviewers)
-    code, _, err = _run_gh(
-        "pr", "edit", pr_url, "--add-reviewer", rev_arg, cwd=cwd, timeout=15
-    )
+    code, _, err = _run_gh("pr", "edit", pr_url, "--add-reviewer", rev_arg, cwd=cwd, timeout=15)
     return (code == 0), (err[:200] if err else f"added {rev_arg}")
 
 
-def gh_pr_add_labels(
-    pr_url: str, labels: Sequence[str], *, cwd: str | Path
-) -> tuple[bool, str]:
+def gh_pr_add_labels(pr_url: str, labels: Sequence[str], *, cwd: str | Path) -> tuple[bool, str]:
     if not labels:
         return True, "no labels"
     code, _, err = _run_gh(
@@ -295,6 +289,7 @@ def gh_pr_delete_branch(branch: str, *, cwd: str | Path) -> tuple[bool, str]:
 
 # --- label / scope detection -------------------------------------------
 
+
 def task_meets_label_requirement(
     tool_input: dict | None, tool_result: dict | str | None, required_label: str
 ) -> tuple[bool, str]:
@@ -312,17 +307,15 @@ def task_meets_label_requirement(
         meta = tool_input.get("metadata")
         if isinstance(meta, dict):
             labels = meta.get("labels") or []
-            if isinstance(labels, list) and any(
-                str(lbl).lower() == label_lower for lbl in labels
-            ):
+            if isinstance(labels, list) and any(str(lbl).lower() == label_lower for lbl in labels):
                 return True, f"label `{required_label}` in metadata"
         subj = str(tool_input.get("subject") or "")
         if f"[{label_lower}]" in subj.lower():
-            return True, f"label tag in subject"
+            return True, "label tag in subject"
     if isinstance(tool_result, dict):
         subj = str(tool_result.get("subject") or "")
         if f"[{label_lower}]" in subj.lower():
-            return True, f"label tag in result subject"
+            return True, "label tag in result subject"
     return False, f"label `{required_label}` not found"
 
 
@@ -352,18 +345,14 @@ def _read_codeowners(repo_root: Path) -> list[tuple[str, list[str]]]:
                 if len(parts) < 2:
                     continue
                 pattern = parts[0]
-                owners = [
-                    o.lstrip("@") for o in parts[1:] if o.startswith("@") or "/" in o
-                ]
+                owners = [o.lstrip("@") for o in parts[1:] if o.startswith("@") or "/" in o]
                 if owners:
                     rules.append((pattern, owners))
             return rules
     return []
 
 
-def codeowners_for_paths(
-    paths: Iterable[str], *, repo_root: Path
-) -> list[str]:
+def codeowners_for_paths(paths: Iterable[str], *, repo_root: Path) -> list[str]:
     """Return unique reviewer logins matching changed paths in CODEOWNERS.
 
     Simple glob matching (gitignore-style). Later rules override earlier ones
@@ -431,23 +420,19 @@ def push_branch_safe(
     remote_ref = f"{remote}/{branch}"
     if is_ancestor(remote_ref, "HEAD", cwd=cwd):
         # remote is ancestor → simple FF, retry
-        code2, _, err2 = run_git(
-            "push", "-u", remote, branch, cwd=cwd, timeout=timeout
-        )
+        code2, _, err2 = run_git("push", "-u", remote, branch, cwd=cwd, timeout=timeout)
         if code2 == 0:
             return True, "stale_retry_ok", "fast-forwarded after fetch"
         return False, "conflict", f"retry failed: {err2[:200]}"
     return (
         False,
         "conflict",
-        (
-            f"branch `{branch}` has divergent commits on remote; "
-            "manual review needed"
-        ),
+        (f"branch `{branch}` has divergent commits on remote; " "manual review needed"),
     )
 
 
 # --- stale base check (P1.3) -------------------------------------------
+
 
 def base_drift_status(
     base: str, *, cwd: str | Path, remote: str = "origin"
@@ -472,16 +457,12 @@ def base_drift_status(
         return 0, 0, f"parse error: {out}"
 
 
-def auto_rebase_safe(
-    base: str, *, cwd: str | Path, remote: str = "origin"
-) -> tuple[bool, str]:
+def auto_rebase_safe(base: str, *, cwd: str | Path, remote: str = "origin") -> tuple[bool, str]:
     """Rebase current HEAD onto remote/base. Aborts on conflict.
 
     Caller must verify they want to rewrite history before calling.
     """
-    code, _, err = run_git(
-        "rebase", f"{remote}/{base}", cwd=cwd, timeout=60
-    )
+    code, _, err = run_git("rebase", f"{remote}/{base}", cwd=cwd, timeout=60)
     if code == 0:
         return True, "rebased"
     # try abort
@@ -490,6 +471,7 @@ def auto_rebase_safe(
 
 
 # --- env helper --------------------------------------------------------
+
 
 def env_flag(name: str, default: str = "0") -> bool:
     return os.environ.get(name, default).strip() == "1"

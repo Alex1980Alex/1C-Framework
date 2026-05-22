@@ -151,12 +151,21 @@ def main() -> int:
     has_warning = any(r["status"] == "warning" for r in results)
 
     if args.as_json:
-        print(json.dumps({"results": results, "summary": {
-            "total": len(results),
-            "ok": sum(1 for r in results if r["status"] == "ok"),
-            "warning": sum(1 for r in results if r["status"] == "warning"),
-            "error": sum(1 for r in results if r["status"] == "error"),
-        }}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "results": results,
+                    "summary": {
+                        "total": len(results),
+                        "ok": sum(1 for r in results if r["status"] == "ok"),
+                        "warning": sum(1 for r in results if r["status"] == "warning"),
+                        "error": sum(1 for r in results if r["status"] == "error"),
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         ok = sum(1 for r in results if r["status"] == "ok")
         wn = sum(1 for r in results if r["status"] == "warning")

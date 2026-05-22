@@ -73,5 +73,3 @@ The task will be considered complete when all tests pass consistently, coverage 
 ### Dependencies: 22.1, 22.2
 ### Description: Create integration tests that verify the correct interaction between different components of the CLI, including command execution, option parsing, and data flow. Implement end-to-end tests that simulate complete user workflows, such as creating a task, expanding it, and updating its status. Include tests for error scenarios, recovery processes, and handling large numbers of tasks.
 ### Details:
-
-

@@ -24,9 +24,7 @@ DOCKER_DESKTOP_CANDIDATES = [
     r"C:\Program Files (x86)\Docker\Docker\Docker Desktop.exe",
 ]
 # Собран в рантайме чтобы не матчить enforcer-regex для конфиг-файлов
-COMPOSE_FILE = os.path.join(
-    r"C:\1С-Framework\docker", f"docker-compose{os.extsep}yml"
-)
+COMPOSE_FILE = os.path.join(r"C:\1С-Framework\docker", f"docker-compose{os.extsep}yml")
 QDRANT_CONTAINER = "pdf-rag-qdrant"
 
 
@@ -91,9 +89,7 @@ class EnsureDockerQdrant(BaseHook):
         if _docker_engine_up():
             if _qdrant_running():
                 return None
-            if _spawn_detached(
-                ["docker", "compose", "-f", COMPOSE_FILE, "up", "-d", "qdrant"]
-            ):
+            if _spawn_detached(["docker", "compose", "-f", COMPOSE_FILE, "up", "-d", "qdrant"]):
                 return HookOutput().system_message(
                     "[DOCKER] Qdrant контейнер не запущен — стартую через compose в фоне. "
                     "Vector search будет доступен через ~10-15с. "
@@ -120,8 +116,7 @@ class EnsureDockerQdrant(BaseHook):
                 "memory-orchestrator, skill-learning, memory-ai работают в degraded mode."
             )
         return HookOutput().system_message(
-            "[DOCKER] Docker Desktop не запущен, авто-старт не удался. "
-            f"Запусти вручную: {exe}"
+            "[DOCKER] Docker Desktop не запущен, авто-старт не удался. " f"Запусти вручную: {exe}"
         )
 
 

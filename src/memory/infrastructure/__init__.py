@@ -30,11 +30,6 @@ from .event_bus import (
 )
 from .event_store import EventStore, EventStoreConfig
 from .metrics import MetricsCollector, MetricsTimer, get_metrics_collector, reset_metrics
-from .subscription_manager import (
-    ManagedSubscription,
-    SubscriptionManager,
-    SubscriptionManagerConfig,
-)
 from .retry import (
     MemoryError,
     PermanentError,
@@ -42,6 +37,11 @@ from .retry import (
     RetryConfig,
     async_retry,
     classify_exception,
+)
+from .subscription_manager import (
+    ManagedSubscription,
+    SubscriptionManager,
+    SubscriptionManagerConfig,
 )
 from .timeout import TimeoutConfig, get_timeout_config
 

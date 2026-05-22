@@ -129,6 +129,10 @@ class WikiDecayService:
 
         logger.debug(
             "[DECAY] %s: %.3f -> %.3f (idle %d days, rate %.3f)",
-            point.id, old_conf, new_conf, days_idle, decay_rate,
+            point.id,
+            old_conf,
+            new_conf,
+            days_idle,
+            decay_rate,
         )
         return "decayed"

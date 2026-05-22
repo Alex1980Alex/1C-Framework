@@ -7,24 +7,24 @@ Tests for CLI commands module.
 Дата: 2025-12-23
 """
 
-import pytest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, Any
+from typing import Any
+
+import pytest
 
 from cli.commands import (
+    COMMANDS,
     BaseCommand,
+    CommandResult,
+    ConfigCommand,
+    ListCommand,
+    LogsCommand,
     RunCommand,
     StatusCommand,
-    ListCommand,
-    ConfigCommand,
-    LogsCommand,
-    CommandResult,
-    COMMANDS,
     get_command,
 )
-from cli.config import CLIConfig, ProjectConfig, ConfigManager
+from cli.config import CLIConfig
 from cli.output import OutputFormatter
 
 
@@ -69,7 +69,7 @@ class TestBaseCommand:
             name = "test"
             description = "Test command"
 
-            def execute(self, args: Dict[str, Any]) -> CommandResult:
+            def execute(self, args: dict[str, Any]) -> CommandResult:
                 return CommandResult(success=True)
 
         cmd = TestCommand(config, formatter)

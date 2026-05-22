@@ -6,16 +6,14 @@ Selects relevant files based on task description and project structure.
 
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
 
 from agents.initializer.models import (
-    ObjectType,
     FileInfo,
+    InitializerConfig,
     ModuleInfo,
+    ObjectType,
     ProjectStructure,
     RelevantFile,
-    InitializerConfig,
 )
 
 
@@ -46,13 +44,11 @@ class FileSelector:
         "document": [ObjectType.DOCUMENT],
         "проведение": [ObjectType.DOCUMENT, ObjectType.ACCUMULATION_REGISTER],
         "posting": [ObjectType.DOCUMENT, ObjectType.ACCUMULATION_REGISTER],
-
         # Catalog operations
         "справочник": [ObjectType.CATALOG],
         "catalog": [ObjectType.CATALOG],
         "элемент": [ObjectType.CATALOG],
         "item": [ObjectType.CATALOG],
-
         # Register operations
         "регистр": [
             ObjectType.ACCUMULATION_REGISTER,
@@ -70,17 +66,14 @@ class FileSelector:
         "balance": [ObjectType.ACCUMULATION_REGISTER],
         "оборот": [ObjectType.ACCUMULATION_REGISTER],
         "turnover": [ObjectType.ACCUMULATION_REGISTER],
-
         # Report operations
         "отчет": [ObjectType.REPORT],
         "отчёт": [ObjectType.REPORT],
         "report": [ObjectType.REPORT],
-
         # Data processor operations
         "обработка": [ObjectType.DATA_PROCESSOR],
         "dataprocessor": [ObjectType.DATA_PROCESSOR],
         "processing": [ObjectType.DATA_PROCESSOR],
-
         # Common module operations
         "общий модуль": [ObjectType.COMMON_MODULE],
         "common module": [ObjectType.COMMON_MODULE],
@@ -88,11 +81,9 @@ class FileSelector:
         "function": [ObjectType.COMMON_MODULE],
         "процедура": [ObjectType.COMMON_MODULE],
         "procedure": [ObjectType.COMMON_MODULE],
-
         # Enum operations
         "перечисление": [ObjectType.ENUM],
         "enum": [ObjectType.ENUM],
-
         # Constant operations
         "константа": [ObjectType.CONSTANT],
         "constant": [ObjectType.CONSTANT],
@@ -117,7 +108,7 @@ class FileSelector:
         RelevanceKeyword("refactor", 1.0),
     ]
 
-    def __init__(self, config: Optional[InitializerConfig] = None) -> None:
+    def __init__(self, config: InitializerConfig | None = None) -> None:
         """Initialize selector with config."""
         self.config = config or InitializerConfig()
 
@@ -191,21 +182,35 @@ class FileSelector:
 
         # Filter short words and stopwords
         stopwords = {
-            "в", "на", "из", "для", "по", "с", "и", "или", "не", "а", "но",
-            "the", "a", "an", "in", "on", "for", "to", "of", "and", "or", "is",
+            "в",
+            "на",
+            "из",
+            "для",
+            "по",
+            "с",
+            "и",
+            "или",
+            "не",
+            "а",
+            "но",
+            "the",
+            "a",
+            "an",
+            "in",
+            "on",
+            "for",
+            "to",
+            "of",
+            "and",
+            "or",
+            "is",
         }
 
-        keywords = [
-            w for w in words
-            if len(w) > 2 and w not in stopwords
-        ]
+        keywords = [w for w in words if len(w) > 2 and w not in stopwords]
 
         return keywords
 
-    def _determine_target_types(
-        self,
-        keywords: list[str]
-    ) -> set[ObjectType]:
+    def _determine_target_types(self, keywords: list[str]) -> set[ObjectType]:
         """Determine target object types from keywords."""
         target_types: set[ObjectType] = set()
 
@@ -309,7 +314,7 @@ def select_relevant_files(
     structure: ProjectStructure,
     task_description: str,
     limit: int = 20,
-    config: Optional[InitializerConfig] = None,
+    config: InitializerConfig | None = None,
 ) -> list[RelevantFile]:
     """
     Select relevant files for task.
@@ -333,7 +338,7 @@ def get_high_relevance_files(
     structure: ProjectStructure,
     task_description: str,
     threshold: float = 0.8,
-    config: Optional[InitializerConfig] = None,
+    config: InitializerConfig | None = None,
 ) -> list[RelevantFile]:
     """
     Get only high relevance files.

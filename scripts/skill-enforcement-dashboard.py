@@ -15,10 +15,10 @@ Sections: decisions, levels, performance, accuracy, coverage (default: all)
 
 import argparse
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # --- Path resolution ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -31,7 +31,8 @@ PATTERNS_FILE = HOOKS_DIR / "shared" / "code-skill-patterns.json"
 
 # --- Period parsing ---
 
-def parse_period(period_str: str) -> Optional[datetime]:
+
+def parse_period(period_str: str) -> datetime | None:
     """Parse period string to cutoff datetime. None = no filter."""
     if period_str == "all":
         return None
@@ -43,13 +44,13 @@ def parse_period(period_str: str) -> Optional[datetime]:
     return now - timedelta(hours=24)
 
 
-def load_invocations(cutoff: Optional[datetime]) -> List[Dict[str, Any]]:
+def load_invocations(cutoff: datetime | None) -> list[dict[str, Any]]:
     """Load enforcement invocations from hook-invocations.jsonl."""
     entries = []
     if not INVOCATIONS_FILE.exists():
         return entries
 
-    with open(INVOCATIONS_FILE, "r", encoding="utf-8") as f:
+    with open(INVOCATIONS_FILE, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -80,17 +81,18 @@ def load_invocations(cutoff: Optional[datetime]) -> List[Dict[str, Any]]:
     return entries
 
 
-def load_patterns() -> Dict[str, Any]:
+def load_patterns() -> dict[str, Any]:
     """Load patterns config."""
     if not PATTERNS_FILE.exists():
         return {}
-    with open(PATTERNS_FILE, "r", encoding="utf-8") as f:
+    with open(PATTERNS_FILE, encoding="utf-8") as f:
         return json.load(f)
 
 
 # --- Dashboard sections ---
 
-def section_decisions(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+def section_decisions(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Decision breakdown: block/allow/advise/learn."""
     outcomes = Counter()
     for e in entries:
@@ -105,7 +107,7 @@ def section_decisions(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def section_levels(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+def section_levels(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Breakdown by enforcement level (A-F)."""
     levels = Counter()
     for e in entries:
@@ -115,7 +117,7 @@ def section_levels(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {"by_level": dict(levels)}
 
 
-def section_performance(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+def section_performance(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Latency statistics."""
     latencies = []
     for e in entries:
@@ -136,7 +138,7 @@ def section_performance(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def section_accuracy(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+def section_accuracy(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Accuracy: how many blocks led to skill activation vs abandonment."""
     blocks = [e for e in entries if e.get("outcome") == "block"]
     # Heuristic: if a block is followed by an allow for same skill, it was activated
@@ -153,7 +155,7 @@ def section_accuracy(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def section_coverage(config: Dict[str, Any]) -> Dict[str, Any]:
+def section_coverage(config: dict[str, Any]) -> dict[str, Any]:
     """Pattern coverage: patterns vs research_protocol."""
     patterns_count = len(config.get("patterns", {}).get("mappings", []))
     research_count = len(config.get("research_protocol", {}).get("patterns", []))
@@ -174,7 +176,8 @@ def section_coverage(config: Dict[str, Any]) -> Dict[str, Any]:
 
 # --- Display ---
 
-def print_section(title: str, data: Dict[str, Any]):
+
+def print_section(title: str, data: dict[str, Any]):
     """Print a dashboard section."""
     print(f"\n{'=' * 50}")
     print(f"  {title}")
@@ -191,8 +194,11 @@ def print_section(title: str, data: Dict[str, Any]):
 def main():
     parser = argparse.ArgumentParser(description="Skill Enforcement Dashboard")
     parser.add_argument("--period", default="24h", help="Time period: 1h, 24h, 7d, all")
-    parser.add_argument("--section", default="all",
-                        help="Section: decisions, levels, performance, accuracy, coverage, all")
+    parser.add_argument(
+        "--section",
+        default="all",
+        help="Section: decisions, levels, performance, accuracy, coverage, all",
+    )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     args = parser.parse_args()
 

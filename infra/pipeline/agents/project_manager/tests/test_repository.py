@@ -1,11 +1,11 @@
 """Tests for ProjectRepository and TaskRepository."""
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
 
-from agents.project_manager.models import Project, Task, TaskStatus, TaskPriority, ProjectStatus
+import pytest
+from agents.project_manager.models import Project, ProjectStatus, Task, TaskPriority, TaskStatus
 from agents.project_manager.repository import ProjectRepository, TaskRepository
 
 

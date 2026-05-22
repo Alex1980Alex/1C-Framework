@@ -13,26 +13,25 @@ This module provides functionality to:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
-from typing import Optional, Callable
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
+from constants import AgentRole
+
 from .models import (
-    TaskNode,
-    TaskGraph,
-    TaskDependency,
     DependencyType,
     ExecutionPriority,
     ParallelGroup,
-    MergeStrategy,
-    TaskStatus,
+    TaskDependency,
+    TaskGraph,
+    TaskNode,
 )
-from constants import AgentRole, ArtifactType
-
 
 # =============================================================================
 # Task Decomposition Patterns
 # =============================================================================
+
 
 @dataclass
 class DecompositionPattern:
@@ -57,6 +56,7 @@ class ResourcePattern:
 # Task Decomposer
 # =============================================================================
 
+
 class TaskDecomposer:
     """
     Decomposes complex tasks into subtasks and builds dependency graphs.
@@ -72,32 +72,52 @@ class TaskDecomposer:
     RESOURCE_PATTERNS: list[ResourcePattern] = [
         # Modules
         ResourcePattern(r"(?:модуль|module)\s+([А-Яа-яёЁ\w]+)", "module", False),
-        ResourcePattern(r"(?:создать|create)\s+(?:модуль|module)\s+([А-Яа-яёЁ\w]+)", "module", True),
-        ResourcePattern(r"(?:изменить|modify|update)\s+(?:модуль|module)\s+([А-Яа-яёЁ\w]+)", "module", True),
-
+        ResourcePattern(
+            r"(?:создать|create)\s+(?:модуль|module)\s+([А-Яа-яёЁ\w]+)", "module", True
+        ),
+        ResourcePattern(
+            r"(?:изменить|modify|update)\s+(?:модуль|module)\s+([А-Яа-яёЁ\w]+)", "module", True
+        ),
         # Documents
         ResourcePattern(r"(?:документ|document)\s+([А-Яа-яёЁ\w]+)", "document", False),
-        ResourcePattern(r"(?:создать|добавить|изменить|create|add|modify)\s+(?:документ|document)\s+([А-Яа-яёЁ\w]+)", "document", True),
-
+        ResourcePattern(
+            r"(?:создать|добавить|изменить|create|add|modify)\s+(?:документ|document)\s+([А-Яа-яёЁ\w]+)",
+            "document",
+            True,
+        ),
         # Catalogs
         ResourcePattern(r"(?:справочник|catalog)\s+([А-Яа-яёЁ\w]+)", "catalog", False),
-        ResourcePattern(r"(?:создать|добавить|create|add)\s+(?:справочник|catalog)\s+([А-Яа-яёЁ\w]+)", "catalog", True),
-
+        ResourcePattern(
+            r"(?:создать|добавить|create|add)\s+(?:справочник|catalog)\s+([А-Яа-яёЁ\w]+)",
+            "catalog",
+            True,
+        ),
         # Registers
         ResourcePattern(r"(?:регистр|register)\s+([А-Яа-яёЁ\w]+)", "register", False),
-        ResourcePattern(r"(?:изменить|modify)\s+(?:регистр|register)\s+([А-Яа-яёЁ\w]+)", "register", True),
-
+        ResourcePattern(
+            r"(?:изменить|modify)\s+(?:регистр|register)\s+([А-Яа-яёЁ\w]+)", "register", True
+        ),
         # Reports
         ResourcePattern(r"(?:отчёт|отчет|report)\s+([А-Яа-яёЁ\w]+)", "report", False),
-        ResourcePattern(r"(?:создать|добавить|create|add)\s+(?:отчёт|отчет|report)\s+([А-Яа-яёЁ\w]+)", "report", True),
-
+        ResourcePattern(
+            r"(?:создать|добавить|create|add)\s+(?:отчёт|отчет|report)\s+([А-Яа-яёЁ\w]+)",
+            "report",
+            True,
+        ),
         # Data Processors
-        ResourcePattern(r"(?:обработка|dataprocessor|processing)\s+([А-Яа-яёЁ\w]+)", "dataprocessor", False),
-        ResourcePattern(r"(?:изменить|modify)\s+(?:обработка|dataprocessor)\s+([А-Яа-яёЁ\w]+)", "dataprocessor", True),
-
+        ResourcePattern(
+            r"(?:обработка|dataprocessor|processing)\s+([А-Яа-яёЁ\w]+)", "dataprocessor", False
+        ),
+        ResourcePattern(
+            r"(?:изменить|modify)\s+(?:обработка|dataprocessor)\s+([А-Яа-яёЁ\w]+)",
+            "dataprocessor",
+            True,
+        ),
         # Files
         ResourcePattern(r"(?:файл|file)\s+([^\s,]+\.bsl)", "file", False),
-        ResourcePattern(r"(?:редактировать|edit|изменить|modify)\s+(?:файл|file)\s+([^\s,]+\.bsl)", "file", True),
+        ResourcePattern(
+            r"(?:редактировать|edit|изменить|modify)\s+(?:файл|file)\s+([^\s,]+\.bsl)", "file", True
+        ),
     ]
 
     # Task type patterns
@@ -113,7 +133,7 @@ class TaskDecomposer:
     def __init__(
         self,
         project_id: str,
-        project_path: Optional[str] = None,
+        project_path: str | None = None,
         max_parallel_tasks: int = 4,
     ):
         """
@@ -166,7 +186,7 @@ class TaskDecomposer:
                 id=self._generate_task_id(),
                 name=f"Task: {task_description[:50]}...",
                 description=task_description,
-                agent_role=agent_role.value if hasattr(agent_role, 'value') else str(agent_role),
+                agent_role=agent_role.value if hasattr(agent_role, "value") else str(agent_role),
                 agent_mode="BUILD",  # Default mode for implementation
                 resources_read=reads,
                 resources_write=writes,
@@ -235,7 +255,9 @@ class TaskDecomposer:
                     id=self._generate_task_id(),
                     name=f"Шаг {num}: {subtask_desc[:40]}...",
                     description=subtask_desc.strip(),
-                    agent_role=agent_role.value if hasattr(agent_role, 'value') else str(agent_role),
+                    agent_role=agent_role.value
+                    if hasattr(agent_role, "value")
+                    else str(agent_role),
                     agent_mode="BUILD",
                     resources_read=reads,
                     resources_write=writes,
@@ -255,7 +277,9 @@ class TaskDecomposer:
                     id=self._generate_task_id(),
                     name=f"Подзадача {i}: {subtask_desc[:40]}...",
                     description=subtask_desc.strip(),
-                    agent_role=agent_role.value if hasattr(agent_role, 'value') else str(agent_role),
+                    agent_role=agent_role.value
+                    if hasattr(agent_role, "value")
+                    else str(agent_role),
                     agent_mode="BUILD",
                     resources_read=reads,
                     resources_write=writes,
@@ -276,7 +300,9 @@ class TaskDecomposer:
                     id=self._generate_task_id(),
                     name=f"Часть {i}: {part[:40]}...",
                     description=part,
-                    agent_role=agent_role.value if hasattr(agent_role, 'value') else str(agent_role),
+                    agent_role=agent_role.value
+                    if hasattr(agent_role, "value")
+                    else str(agent_role),
                     agent_mode="BUILD",
                     resources_read=reads,
                     resources_write=writes,
@@ -314,21 +340,25 @@ class TaskDecomposer:
                 # other_task depends on task (source=other, target=task)
                 write_read_conflict = task.resources_write & other_task.resources_read
                 if write_read_conflict:
-                    graph.add_dependency(TaskDependency(
-                        source_id=other_task.id,
-                        target_id=task.id,
-                        dependency_type=DependencyType.PRODUCES,
-                    ))
+                    graph.add_dependency(
+                        TaskDependency(
+                            source_id=other_task.id,
+                            target_id=task.id,
+                            dependency_type=DependencyType.PRODUCES,
+                        )
+                    )
 
                 # Check if both write to the same resource
                 write_write_conflict = task.resources_write & other_task.resources_write
                 if write_write_conflict:
                     # other_task depends on task (task must complete first)
-                    graph.add_dependency(TaskDependency(
-                        source_id=other_task.id,
-                        target_id=task.id,
-                        dependency_type=DependencyType.MODIFIES,
-                    ))
+                    graph.add_dependency(
+                        TaskDependency(
+                            source_id=other_task.id,
+                            target_id=task.id,
+                            dependency_type=DependencyType.MODIFIES,
+                        )
+                    )
 
     def find_parallel_groups(self, graph: TaskGraph) -> list[ParallelGroup]:
         """
@@ -377,7 +407,7 @@ class TaskDecomposer:
                 break
 
             # Limit parallel tasks
-            wave = ready[:self.max_parallel_tasks]
+            wave = ready[: self.max_parallel_tasks]
             plan.append(wave)
 
             # Mark as completed
@@ -391,6 +421,7 @@ class TaskDecomposer:
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def decompose_task(
     task_description: str,
@@ -464,20 +495,24 @@ def build_dependency_graph(
                 # Write-Read dependency
                 # other_task depends on task (task writes, other reads)
                 if task.resources_write & other_task.resources_read:
-                    graph.add_dependency(TaskDependency(
-                        source_id=other_task.id,
-                        target_id=task.id,
-                        dependency_type=DependencyType.PRODUCES,
-                    ))
+                    graph.add_dependency(
+                        TaskDependency(
+                            source_id=other_task.id,
+                            target_id=task.id,
+                            dependency_type=DependencyType.PRODUCES,
+                        )
+                    )
 
                 # Write-Write conflict (sequential)
                 # other_task depends on task (task must complete first)
                 if task.resources_write & other_task.resources_write:
-                    graph.add_dependency(TaskDependency(
-                        source_id=other_task.id,
-                        target_id=task.id,
-                        dependency_type=DependencyType.MODIFIES,
-                    ))
+                    graph.add_dependency(
+                        TaskDependency(
+                            source_id=other_task.id,
+                            target_id=task.id,
+                            dependency_type=DependencyType.MODIFIES,
+                        )
+                    )
 
     return graph
 
@@ -515,10 +550,7 @@ def analyze_parallelism(graph: TaskGraph) -> dict:
         for dep in graph.get_dependencies(task_id):
             # dep.target_id is the task that must complete first
             if dep.target_id in distances:
-                distances[task_id] = max(
-                    distances[task_id],
-                    distances[dep.target_id] + 1
-                )
+                distances[task_id] = max(distances[task_id], distances[dep.target_id] + 1)
 
     critical_path_length = max(distances.values()) + 1 if distances else 1
 

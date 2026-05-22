@@ -37,7 +37,7 @@ update_user_test() ->
     ?assertEqual("john@example.com", UpdatedUser#user.email). % unchanged
 
 get_user_by_id_test() ->
-    ?assertEqual({ok, #user{id = 1, name = "John Doe"}}, 
+    ?assertEqual({ok, #user{id = 1, name = "John Doe"}},
                  models:get_user_by_id(1)),
     ?assertEqual({error, not_found}, models:get_user_by_id(999)).
 

@@ -4,17 +4,16 @@ Implements retry logic with configurable backoff strategies,
 jitter, and circuit breaker integration.
 """
 
-from enum import Enum
+import asyncio
+import logging
+import random
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Callable, Any, TypeVar, Type, Tuple, List
+from enum import Enum
 from functools import wraps
-import asyncio
-import random
-import logging
-import time
-
-from .error_handler import ErrorContext, ErrorSeverity, RecoverableError
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -45,15 +44,15 @@ class RetryConfig:
     jitter_factor: float = 0.25
 
     # Exception handling
-    retryable_exceptions: Tuple[Type[Exception], ...] = (Exception,)
-    non_retryable_exceptions: Tuple[Type[Exception], ...] = (
+    retryable_exceptions: tuple[type[Exception], ...] = (Exception,)
+    non_retryable_exceptions: tuple[type[Exception], ...] = (
         KeyboardInterrupt,
         SystemExit,
     )
 
     # Callbacks
-    on_retry: Optional[Callable[[int, Exception, float], None]] = None
-    on_failure: Optional[Callable[[Exception], None]] = None
+    on_retry: Callable[[int, Exception, float], None] | None = None
+    on_failure: Callable[[Exception], None] | None = None
 
     def calculate_delay(self, attempt: int) -> float:
         """Calculate delay for given attempt number."""
@@ -102,8 +101,8 @@ class RetryResult:
     result: Any = None
     attempts: int = 0
     total_delay: float = 0.0
-    last_exception: Optional[Exception] = None
-    exceptions: List[Exception] = field(default_factory=list)
+    last_exception: Exception | None = None
+    exceptions: list[Exception] = field(default_factory=list)
 
     @property
     def failed(self) -> bool:
@@ -114,11 +113,11 @@ class RetryResult:
 class RetryHandler:
     """Handler for retry operations."""
 
-    def __init__(self, config: Optional[RetryConfig] = None) -> None:
+    def __init__(self, config: RetryConfig | None = None) -> None:
         self._config = config or RetryConfig()
         self._attempt_count = 0
         self._total_delay = 0.0
-        self._exceptions: List[Exception] = []
+        self._exceptions: list[Exception] = []
 
     @property
     def config(self) -> RetryConfig:
@@ -136,12 +135,7 @@ class RetryHandler:
         self._total_delay = 0.0
         self._exceptions.clear()
 
-    async def execute(
-        self,
-        func: Callable[..., T],
-        *args,
-        **kwargs
-    ) -> RetryResult:
+    async def execute(self, func: Callable[..., T], *args, **kwargs) -> RetryResult:
         """Execute function with retry logic.
 
         Args:
@@ -219,12 +213,7 @@ class RetryHandler:
             exceptions=self._exceptions.copy(),
         )
 
-    def execute_sync(
-        self,
-        func: Callable[..., T],
-        *args,
-        **kwargs
-    ) -> RetryResult:
+    def execute_sync(self, func: Callable[..., T], *args, **kwargs) -> RetryResult:
         """Synchronous version of execute.
 
         Args:
@@ -295,8 +284,8 @@ def with_retry(
     initial_delay: float = 1.0,
     max_delay: float = 60.0,
     backoff_strategy: BackoffStrategy = BackoffStrategy.EXPONENTIAL,
-    retryable_exceptions: Tuple[Type[Exception], ...] = (Exception,),
-    on_retry: Optional[Callable[[int, Exception, float], None]] = None,
+    retryable_exceptions: tuple[type[Exception], ...] = (Exception,),
+    on_retry: Callable[[int, Exception, float], None] | None = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator for retry with exponential backoff.
 
@@ -350,9 +339,9 @@ def with_retry(
 class CircuitState(Enum):
     """Circuit breaker states."""
 
-    CLOSED = "closed"       # Normal operation
-    OPEN = "open"           # Failing, reject requests
-    HALF_OPEN = "half_open" # Testing if recovered
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject requests
+    HALF_OPEN = "half_open"  # Testing if recovered
 
 
 @dataclass
@@ -368,12 +357,12 @@ class CircuitBreakerConfig:
 class CircuitBreaker:
     """Circuit breaker for preventing cascading failures."""
 
-    def __init__(self, config: Optional[CircuitBreakerConfig] = None) -> None:
+    def __init__(self, config: CircuitBreakerConfig | None = None) -> None:
         self._config = config or CircuitBreakerConfig()
         self._state = CircuitState.CLOSED
         self._failure_count = 0
         self._success_count = 0
-        self._last_failure_time: Optional[datetime] = None
+        self._last_failure_time: datetime | None = None
         self._half_open_calls = 0
         self._lock = asyncio.Lock()
 
@@ -392,12 +381,7 @@ class CircuitBreaker:
         """Check if circuit is open (rejecting requests)."""
         return self._state == CircuitState.OPEN
 
-    async def call(
-        self,
-        func: Callable[..., T],
-        *args,
-        **kwargs
-    ) -> T:
+    async def call(self, func: Callable[..., T], *args, **kwargs) -> T:
         """Execute function through circuit breaker.
 
         Args:
@@ -437,7 +421,7 @@ class CircuitBreaker:
             await self._on_success()
             return result
 
-        except Exception as e:
+        except Exception:
             await self._on_failure()
             raise
 
@@ -467,9 +451,7 @@ class CircuitBreaker:
             elif self._state == CircuitState.CLOSED:
                 if self._failure_count >= self._config.failure_threshold:
                     self._state = CircuitState.OPEN
-                    logger.warning(
-                        f"Circuit breaker OPEN after {self._failure_count} failures"
-                    )
+                    logger.warning(f"Circuit breaker OPEN after {self._failure_count} failures")
 
     def _should_attempt_reset(self) -> bool:
         """Check if we should attempt to reset the circuit."""
@@ -491,12 +473,11 @@ class CircuitBreaker:
 
 class CircuitOpenError(Exception):
     """Exception raised when circuit breaker is open."""
+
     pass
 
 
-def with_circuit_breaker(
-    circuit: CircuitBreaker
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def with_circuit_breaker(circuit: CircuitBreaker) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator for circuit breaker protection.
 
     Args:
@@ -505,6 +486,7 @@ def with_circuit_breaker(
     Returns:
         Decorated function
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def async_wrapper(*args, **kwargs) -> T:

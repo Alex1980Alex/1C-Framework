@@ -1,6 +1,6 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2023, ООО 1С-Софт
-// Все права защищены. Эта программа и сопроводительные материалы предоставляются 
+// Все права защищены. Эта программа и сопроводительные материалы предоставляются
 // в соответствии с условиями лицензии Attribution 4.0 International (CC BY 4.0)
 // Текст лицензии доступен по ссылке:
 // https://creativecommons.org/licenses/by/4.0/legalcode
@@ -24,11 +24,11 @@
 // ему устанавливаются свойства.
 //
 Функция ИнициализироватьПечатнуюФормуOOWriter(Знач Шаблон = Неопределено) Экспорт
-	
+
 	Handler = Новый Структура("ServiceManager,Desktop,Document,Тип");
-	
+
 #Если Не МобильныйКлиент Тогда
-	
+
 	ИмяОбъекта = "com.sun.star.ServiceManager";
 	Попытка
 		ServiceManager = Новый COMОбъект(ИмяОбъекта);
@@ -36,13 +36,13 @@
 		ТекстОшибки = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(
 			НСтр("ru = 'Ошибка при связи с сервисом ""%1"".'", ОбщегоНазначенияКлиент.КодОсновногоЯзыка()), ИмяОбъекта)
 			+ Символы.ПС + ОбработкаОшибок.ПодробноеПредставлениеОшибки(ИнформацияОбОшибке());
-			
+
 		ЖурналРегистрацииКлиент.ДобавитьСообщениеДляЖурналаРегистрации(СобытиеЖурналаРегистрации(), "Ошибка",
 			ТекстОшибки, , Истина);
-			
+
 		НеУдалосьСформироватьПечатнуюФорму(ИнформацияОбОшибке());
 	КонецПопытки;
-	
+
 	ИмяОбъекта = "com.sun.star.frame.Desktop";
 	Попытка
 		Desktop = ServiceManager.CreateInstance(ИмяОбъекта);
@@ -50,45 +50,45 @@
 		ТекстОшибки = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(
 			НСтр("ru = 'Ошибка при запуске сервиса ""%1"".'", ОбщегоНазначенияКлиент.КодОсновногоЯзыка()), ИмяОбъекта)
 			+ Символы.ПС + ОбработкаОшибок.ПодробноеПредставлениеОшибки(ИнформацияОбОшибке());
-			
+
 		ЖурналРегистрацииКлиент.ДобавитьСообщениеДляЖурналаРегистрации(СобытиеЖурналаРегистрации(), "Ошибка",
 			ТекстОшибки,,Истина);
 		НеУдалосьСформироватьПечатнуюФорму(ИнформацияОбОшибке());
 	КонецПопытки;
-	
+
 	Параметры = ПолучитьComSafeArray();
-	
+
 #Если Не ВебКлиент Тогда
 	Параметры.SetValue(0, СвойствоЗначение(ServiceManager, "Hidden", Истина));
 #КонецЕсли
-	
+
 	Document = Desktop.LoadComponentFromURL("private:factory/swriter", "_blank", 0, Параметры);
-	
+
 #Если ВебКлиент Тогда
 	Document.getCurrentController().getFrame().getContainerWindow().setVisible(Ложь);
 #КонецЕсли
-	
+
 	Если Шаблон <> Неопределено Тогда
 		TemplateStyleName = Шаблон.Document.CurrentController.getViewCursor().PageStyleName;
 		TemplateStyle = Шаблон.Document.StyleFamilies.getByName("PageStyles").getByName(TemplateStyleName);
-			
+
 		StyleName = Document.CurrentController.getViewCursor().PageStyleName;
 		Style = Document.StyleFamilies.getByName("PageStyles").getByName(StyleName);
-		
+
 		Style.TopMargin = TemplateStyle.TopMargin;
 		Style.LeftMargin = TemplateStyle.LeftMargin;
 		Style.RightMargin = TemplateStyle.RightMargin;
 		Style.BottomMargin = TemplateStyle.BottomMargin;
 	КонецЕсли;
-	
+
 	Handler.ServiceManager = ServiceManager;
 	Handler.Desktop = Desktop;
 	Handler.Document = Document;
-	
+
 #КонецЕсли
 
 	Возврат Handler;
-	
+
 КонецФункции
 
 // Возвращает структуру с макетом печатной формы.
@@ -99,11 +99,11 @@
 //   Структура - ссылка макет.
 //
 Функция ПолучитьМакетOOWriter(Знач ДвоичныеДанныеШаблона, ИмяВременногоФайла) Экспорт
-	
+
 	Handler = Новый Структура("ServiceManager,Desktop,Document,ИмяФайла");
-	
+
 #Если Не МобильныйКлиент Тогда
-	
+
 	ИмяОбъекта = "com.sun.star.ServiceManager";
 	Попытка
 		ServiceManager = Новый COMОбъект(ИмяОбъекта);
@@ -111,12 +111,12 @@
 		ТекстОшибки = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(
 			НСтр("ru = 'Ошибка при связи с сервисом ""%1"".'", ОбщегоНазначенияКлиент.КодОсновногоЯзыка()), ИмяОбъекта)
 			+ Символы.ПС + ОбработкаОшибок.ПодробноеПредставлениеОшибки(ИнформацияОбОшибке());
-		
+
 		ЖурналРегистрацииКлиент.ДобавитьСообщениеДляЖурналаРегистрации(СобытиеЖурналаРегистрации(), "Ошибка",
 			ТекстОшибки, , Истина);
 		НеУдалосьСформироватьПечатнуюФорму(ИнформацияОбОшибке());
 	КонецПопытки;
-	
+
 	ИмяОбъекта = "com.sun.star.frame.Desktop";
 	Попытка
 		Desktop = ServiceManager.CreateInstance(ИмяОбъекта);
@@ -124,12 +124,12 @@
 		ТекстОшибки = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(
 			НСтр("ru = 'Ошибка при запуске сервиса ""%1"".'", ОбщегоНазначенияКлиент.КодОсновногоЯзыка()), ИмяОбъекта)
 			+ Символы.ПС + ОбработкаОшибок.ПодробноеПредставлениеОшибки(ИнформацияОбОшибке());
-			
+
 		ЖурналРегистрацииКлиент.ДобавитьСообщениеДляЖурналаРегистрации(СобытиеЖурналаРегистрации(), "Ошибка",
 			ТекстОшибки,,Истина);
 		НеУдалосьСформироватьПечатнуюФорму(ИнформацияОбОшибке());
 	КонецПопытки;
-	
+
 #Если ВебКлиент Тогда
 	ОписанияФайлов = Новый Массив;
 	ОписанияФайлов.Добавить(Новый ОписаниеПередаваемогоФайла(ИмяВременногоФайла, ПоместитьВоВременноеХранилище(ДвоичныеДанныеШаблона)));
@@ -142,66 +142,66 @@
 	ИмяВременногоФайла = ПолучитьИмяВременногоФайла("ODT");
 	ДвоичныеДанныеШаблона.Записать(ИмяВременногоФайла);
 #КонецЕсли
-	
+
 	ПараметрыДокумента = ПолучитьComSafeArray();
 #Если Не ВебКлиент Тогда
 	ПараметрыДокумента.SetValue(0, СвойствоЗначение(ServiceManager, "Hidden", Истина));
 #КонецЕсли
-	
+
 	// Параметры открытия: отключение исполнения макросов.
 	РежимЗапуска = СвойствоЗначение(ServiceManager,
 		"MacroExecutionMode",
 		0); // const short NEVER_EXECUTE = 0
 	ПараметрыДокумента.SetValue(0, РежимЗапуска);
-	
+
 	Document = Desktop.LoadComponentFromURL("file:///" + СтрЗаменить(ИмяВременногоФайла, "\", "/"), "_blank", 0, ПараметрыДокумента);
-	
+
 #Если ВебКлиент Тогда
 	Document.getCurrentController().getFrame().getContainerWindow().setVisible(Ложь);
 #КонецЕсли
-	
+
 	Handler.ServiceManager = ServiceManager;
 	Handler.Desktop = Desktop;
 	Handler.Document = Document;
 	Handler.ИмяФайла = ИмяВременногоФайла;
-	
+
 #КонецЕсли
 
 	Возврат Handler;
-	
+
 КонецФункции
 
 // Закрывает макет печатной формы и затирает ссылки на COM объект.
 //
 Процедура ЗакрытьСоединение(Handler, Знач ЗакрытьПриложение) Экспорт
-	
+
 	Если ЗакрытьПриложение Тогда
 		Handler.Document.Close(0);
 	КонецЕсли;
-	
+
 	Handler.Document = Неопределено;
 	Handler.Desktop = Неопределено;
 	Handler.ServiceManager = Неопределено;
-	
+
 	Если Handler.Свойство("ИмяФайла") Тогда
 		УдалитьФайлы(Handler.ИмяФайла);
 	КонецЕсли;
-	
+
 	Handler = Неопределено;
-	
+
 КонецПроцедуры
 
 // Устанавливает свойство видимости у приложения OO Writer.
-// 
+//
 // Параметры:
 //  Handler - Структура - ссылка на печатную форму.
 //
 Процедура ПоказатьДокументOOWriter(Знач Handler) Экспорт
-	
+
 	ContainerWindow = Handler.Document.getCurrentController().getFrame().getContainerWindow();
 	ContainerWindow.setVisible(Истина);
 	ContainerWindow.setFocus();
-	
+
 КонецПроцедуры
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,31 +219,31 @@
 //					перевода строки, перед операторной скобкой закрытия области.
 //
 Функция ПолучитьОбластьМакета(Знач Handler, Знач ИмяОбласти) Экспорт
-	
+
 	Результат = Новый Структура("Document,Start,End");
-	
+
 	Результат.Start = ПолучитьПозициюНачалаОбласти(Handler.Document, ИмяОбласти);
 	Результат.End   = ПолучитьПозициюОкончанияОбласти(Handler.Document, ИмяОбласти);
 	Результат.Document = Handler.Document;
-	
+
 	Возврат Результат;
-	
+
 КонецФункции
 
 // Получает область верхнего колонтитула.
 //
 Функция ПолучитьОбластьВерхнегоКолонтитула(Знач МакетСсылка) Экспорт
-	
+
 	Возврат Новый Структура("Document, ServiceManager", МакетСсылка.Document, МакетСсылка.ServiceManager);
-	
+
 КонецФункции
 
 // Получает область нижнего колонтитула.
 //
 Функция ПолучитьОбластьНижнегоКолонтитула(МакетСсылка) Экспорт
-	
+
 	Возврат Новый Структура("Document, ServiceManager", МакетСсылка.Document, МакетСсылка.ServiceManager);
-	
+
 КонецФункции
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,42 +254,42 @@
 //   Handler - ссылка на документ MS Word в который требуется вставить разрыв.
 //
 Процедура ВставитьРазрывНаНовуюСтроку(Знач Handler) Экспорт
-	
+
 	oText = Handler.Document.getText();
 	oCursor = oText.createTextCursor();
 	oCursor.gotoEnd(False);
 	oText.insertControlCharacter(oCursor, 0, False);
-	
+
 КонецПроцедуры
 
 // Добавляет верхний колонтитул к печатной форме.
 //
 Процедура ДобавитьВерхнийКолонтитул(Знач ПечатнаяФорма,
 									Знач Область) Экспорт
-	
+
 	Макет_oTxtCrsr = УстановитьОсновнойКурсорНаВерхнийКолонтитул(Область);
 	Пока Макет_oTxtCrsr.goRight(1, Истина) Цикл
 	КонецЦикла;
 	TransferableObject = Область.Document.getCurrentController().Frame.controller.getTransferable();
-	
+
 	УстановитьОсновнойКурсорНаВерхнийКолонтитул(ПечатнаяФорма);
 	ПечатнаяФорма.Document.getCurrentController().insertTransferable(TransferableObject);
-	
+
 КонецПроцедуры
 
 // Добавляет нижний колонтитул к печатной форме.
 //
 Процедура ДобавитьНижнийКолонтитул(Знач ПечатнаяФорма,
 									Знач Область) Экспорт
-	
+
 	Макет_oTxtCrsr = УстановитьОсновнойКурсорНаНижнийКолонтитул(Область);
 	Пока Макет_oTxtCrsr.goRight(1, Истина) Цикл
 	КонецЦикла;
 	TransferableObject = Область.Document.getCurrentController().Frame.controller.getTransferable();
-	
+
 	УстановитьОсновнойКурсорНаНижнийКолонтитул(ПечатнаяФорма);
 	ПечатнаяФорма.Document.getCurrentController().insertTransferable(TransferableObject);
-	
+
 КонецПроцедуры
 
 // Добавляет область в печатную форму из макета, при этом заменяя
@@ -305,33 +305,33 @@
 							Знач ОбластьHandler,
 							Знач ПереходНаСледСтроку = Истина,
 							Знач ПрисоединитьСтрокуТаблицы = Ложь) Экспорт
-	
+
 	Макет_oTxtCrsr = ОбластьHandler.Document.getCurrentController().getViewCursor();
 	Макет_oTxtCrsr.gotoRange(ОбластьHandler.Start, Ложь);
-	
+
 	Если НЕ ПрисоединитьСтрокуТаблицы Тогда
 		Макет_oTxtCrsr.goRight(1, Ложь);
 	КонецЕсли;
-	
+
 	Макет_oTxtCrsr.gotoRange(ОбластьHandler.End, Истина);
-	
+
 	TransferableObject = ОбластьHandler.Document.getCurrentController().Frame.controller.getTransferable();
 	ПечатнаяФормаHandler.Document.getCurrentController().insertTransferable(TransferableObject);
-	
+
 	Если ПрисоединитьСтрокуТаблицы Тогда
 		УдалитьСтроку(ПечатнаяФормаHandler);
 	КонецЕсли;
-	
+
 	Если ПереходНаСледСтроку Тогда
 		ВставитьРазрывНаНовуюСтроку(ПечатнаяФормаHandler);
 	КонецЕсли;
-	
+
 КонецПроцедуры
 
 // Заполняет параметры в табличном поле печатной формы.
 //
 Процедура ЗаполнитьПараметры(ПечатнаяФорма, Данные) Экспорт
-	
+
 	Для Каждого КлючЗначение Из Данные Цикл
 		Если ТипЗнч(КлючЗначение) <> Тип("Массив") Тогда
 			СтрокаЗамены = КлючЗначение.Значение;
@@ -342,13 +342,13 @@
 #Иначе
 				ИмяВременногоФайла = ПолучитьИмяВременногоФайла("tmp");
 #КонецЕсли
-				ДвоичныеДанные = ПолучитьИзВременногоХранилища(СтрокаЗамены); // ДвоичныеДанные - 
+				ДвоичныеДанные = ПолучитьИзВременногоХранилища(СтрокаЗамены); // ДвоичныеДанные -
 				ДвоичныеДанные.Записать(ИмяВременногоФайла);
-				
+
 				TextGraphicObject = ПечатнаяФорма.Document.createInstance("com.sun.star.text.TextGraphicObject");
 				FileURL = ИмяФайлаВURL(ИмяВременногоФайла);
 				TextGraphicObject.GraphicURL = FileURL;
-				
+
 				Document = ПечатнаяФорма.Document;
 				SearchDescriptor = Document.CreateSearchDescriptor();
 				SearchDescriptor.SearchString = "{v8 " + КлючЗначение.Ключ + "}";
@@ -368,7 +368,7 @@
 			КонецЕсли;
 		КонецЕсли;
 	КонецЦикла;
-	
+
 КонецПроцедуры
 
 // Добавляет область коллекции к печатной форме.
@@ -378,17 +378,17 @@
 										  Знач Данные,
 										  Знач ЭтоСтрокаТаблицы = Ложь,
 										  Знач ПереходНаСледСтроку = Истина) Экспорт
-	
+
 	Макет_oTxtCrsr = ОбластьHandler.Document.getCurrentController().getViewCursor();
 	Макет_oTxtCrsr.gotoRange(ОбластьHandler.Start, Ложь);
-	
+
 	Если НЕ ЭтоСтрокаТаблицы Тогда
 		Макет_oTxtCrsr.goRight(1, Ложь);
 	КонецЕсли;
 	Макет_oTxtCrsr.gotoRange(ОбластьHandler.End, Истина);
-	
+
 	TransferableObject = ОбластьHandler.Document.getCurrentController().Frame.controller.getTransferable();
-	
+
 	Для Каждого СтрокаСДанными Из Данные Цикл
 		ПечатнаяФормаHandler.Document.getCurrentController().insertTransferable(TransferableObject);
 		Если ЭтоСтрокаТаблицы Тогда
@@ -396,29 +396,29 @@
 		КонецЕсли;
 		ЗаполнитьПараметры(ПечатнаяФормаHandler, СтрокаСДанными);
 	КонецЦикла;
-	
+
 	Если ПереходНаСледСтроку Тогда
 		ВставитьРазрывНаНовуюСтроку(ПечатнаяФормаHandler);
 	КонецЕсли;
-	
+
 КонецПроцедуры
 
 // Устанавливает курсор в конец документа ДокументСсылка.
 //
 Процедура УстановитьОсновнойКурсорНаТелоДокумента(Знач ДокументСсылка) Экспорт
-	
+
 	oDoc = ДокументСсылка.Document;
 	oViewCursor = oDoc.getCurrentController().getViewCursor();
 	oTextCursor = oDoc.Text.createTextCursor();
 	oViewCursor.gotoRange(oTextCursor, Ложь);
 	oViewCursor.gotoEnd(Ложь);
-	
+
 КонецПроцедуры
 
 // Устанавливает курсор на верхний колонтитул.
 //
 Функция УстановитьОсновнойКурсорНаВерхнийКолонтитул(Знач ДокументСсылка) Экспорт
-	
+
 	xCursor = ДокументСсылка.Document.getCurrentController().getViewCursor();
 	PageStyleName = xCursor.getPropertyValue("PageStyleName");
 	oPStyle = ДокументСсылка.Document.getStyleFamilies().getByName("PageStyles").getByName(PageStyleName);
@@ -426,13 +426,13 @@
 	HeaderTextCursor = oPStyle.getPropertyValue("HeaderText").createTextCursor();
 	xCursor.gotoRange(HeaderTextCursor, Ложь);
 	Возврат xCursor;
-	
+
 КонецФункции
 
 // Устанавливает курсор на нижний колонтитул.
 //
 Функция УстановитьОсновнойКурсорНаНижнийКолонтитул(Знач ДокументСсылка) Экспорт
-	
+
 	xCursor = ДокументСсылка.Document.getCurrentController().getViewCursor();
 	PageStyleName = xCursor.getPropertyValue("PageStyleName");
 	oPStyle = ДокументСсылка.Document.getStyleFamilies().getByName("PageStyles").getByName(PageStyleName);
@@ -440,7 +440,7 @@
 	FooterTextCursor = oPStyle.getPropertyValue("FooterText").createTextCursor();
 	xCursor.gotoRange(FooterTextCursor, Ложь);
 	Возврат xCursor;
-	
+
 КонецФункции
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -450,71 +450,71 @@
 // параметры.
 //
 Функция СвойствоЗначение(Знач ServiceManager, Знач Свойство, Знач Значение)
-	
+
 	PropertyValue = ServiceManager.Bridge_GetStruct("com.sun.star.beans.PropertyValue");
 	PropertyValue.Name = Свойство;
 	PropertyValue.Value = Значение;
-	
+
 	Возврат PropertyValue;
-	
+
 КонецФункции
 
 Функция ПолучитьПозициюНачалаОбласти(Знач xDocument, Знач ИмяОбласти)
-	
+
 	ТекстДляПоиска = "{v8 Область." + ИмяОбласти + "}";
-	
+
 	xSearchDescr = xDocument.createSearchDescriptor();
 	xSearchDescr.SearchString = ТекстДляПоиска;
 	xSearchDescr.SearchCaseSensitive = Ложь;
 	xSearchDescr.SearchWords = Истина;
 	xFound = xDocument.findFirst(xSearchDescr);
 	Если xFound = Неопределено Тогда
-		ВызватьИсключение НСтр("ru = 'Не найдено начало области макета:'") + " " + ИмяОбласти;	
+		ВызватьИсключение НСтр("ru = 'Не найдено начало области макета:'") + " " + ИмяОбласти;
 	КонецЕсли;
 	Возврат xFound.End;
-	
+
 КонецФункции
 
 Функция ПолучитьПозициюОкончанияОбласти(Знач xDocument, Знач ИмяОбласти)
-	
+
 	ТекстДляПоиска = "{/v8 Область." + ИмяОбласти + "}";
-	
+
 	xSearchDescr = xDocument.createSearchDescriptor();
 	xSearchDescr.SearchString = ТекстДляПоиска;
 	xSearchDescr.SearchCaseSensitive = Ложь;
 	xSearchDescr.SearchWords = Истина;
 	xFound = xDocument.findFirst(xSearchDescr);
 	Если xFound = Неопределено Тогда
-		ВызватьИсключение НСтр("ru = 'Не найден конец области макета:'") + " " + ИмяОбласти;	
+		ВызватьИсключение НСтр("ru = 'Не найден конец области макета:'") + " " + ИмяОбласти;
 	КонецЕсли;
 	Возврат xFound.Start;
-	
+
 КонецФункции
 
 Процедура УдалитьСтроку(ПечатнаяФормаHandler)
-	
+
 	oFrame = ПечатнаяФормаHandler.Document.getCurrentController().Frame;
-	
+
 	dispatcher = ПечатнаяФормаHandler.ServiceManager.CreateInstance ("com.sun.star.frame.DispatchHelper");
-	
+
 	oViewCursor = ПечатнаяФормаHandler.Document.getCurrentController().getViewCursor();
-	
+
 	dispatcher.executeDispatch(oFrame, ".uno:GoUp", "", 0, ПолучитьComSafeArray());
-	
+
 	Пока oViewCursor.TextTable <> Неопределено Цикл
 		dispatcher.executeDispatch(oFrame, ".uno:GoUp", "", 0, ПолучитьComSafeArray());
 	КонецЦикла;
-	
+
 	dispatcher.executeDispatch(oFrame, ".uno:Delete", "", 0, ПолучитьComSafeArray());
-	
+
 	Пока oViewCursor.TextTable <> Неопределено Цикл
 		dispatcher.executeDispatch(oFrame, ".uno:GoDown", "", 0, ПолучитьComSafeArray());
 	КонецЦикла;
-	
+
 КонецПроцедуры
 
 Функция ПолучитьComSafeArray()
-	
+
 #Если ВебКлиент Тогда
 	scr = Новый COMОбъект("MSScriptControl.ScriptControl");
 	scr.language = "javascript";
@@ -524,7 +524,7 @@
 	Возврат Новый COMSafeArray("VT_DISPATCH", 1);
 #КонецЕсли
 	Возврат Неопределено;
-	
+
 КонецФункции
 
 Функция СобытиеЖурналаРегистрации()
@@ -540,7 +540,7 @@
 		"OpenOffice.org Writer", "OpenOffice.org");
 #КонецЕсли
 	ТекстИсключения = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(
-		НСтр("ru = 'Не удалось сформировать печатную форму: %1. 
+		НСтр("ru = 'Не удалось сформировать печатную форму: %1.
 			|%2'"),
 		ОбработкаОшибок.КраткоеПредставлениеОшибки(ИнформацияОбОшибке), ТекстУточнения);
 	ВызватьИсключение ТекстИсключения;
@@ -548,8 +548,8 @@
 
 Функция ИмяФайлаВURL(Знач ИмяФайла)
 	ИмяФайла = СтрЗаменить(ИмяФайла, " ", "%20");
-	ИмяФайла = СтрЗаменить(ИмяФайла, "\", "/"); 
-	Возврат "file:/" + "/localhost/" + ИмяФайла; 
+	ИмяФайла = СтрЗаменить(ИмяФайла, "\", "/");
+	Возврат "file:/" + "/localhost/" + ИмяФайла;
 КонецФункции
 
 #КонецОбласти

@@ -1,16 +1,14 @@
 """Tests for fallback_strategy module."""
 
 import pytest
-import asyncio
-from datetime import datetime, timedelta
 
 from .fallback_strategy import (
-    FallbackType,
-    FallbackStrategy,
-    FallbackResult,
+    CachedFallback,
     FallbackChain,
     FallbackRegistry,
-    CachedFallback,
+    FallbackResult,
+    FallbackStrategy,
+    FallbackType,
     with_fallback,
 )
 
@@ -34,6 +32,7 @@ class TestFallbackStrategy:
 
     def test_basic_creation(self):
         """Test basic strategy creation."""
+
         async def handler():
             return "fallback"
 
@@ -50,6 +49,7 @@ class TestFallbackStrategy:
 
     def test_condition_function(self):
         """Test strategy with condition."""
+
         def condition(error):
             return isinstance(error, ValueError)
 
@@ -75,6 +75,7 @@ class TestFallbackStrategy:
 
         # FallbackStrategy is a dataclass, convert to dict using dataclasses.asdict
         from dataclasses import asdict
+
         d = asdict(strategy)
 
         assert d["name"] == "serializable"
@@ -143,15 +144,18 @@ class TestFallbackChain:
     @pytest.mark.asyncio
     async def test_execute_first_success(self, chain):
         """Test chain returns first successful result."""
+
         async def success_handler():
             return "success"
 
-        chain.add(FallbackStrategy(
-            name="success",
-            fallback_type=FallbackType.DEFAULT_VALUE,
-            handler=success_handler,
-            priority=1,
-        ))
+        chain.add(
+            FallbackStrategy(
+                name="success",
+                fallback_type=FallbackType.DEFAULT_VALUE,
+                handler=success_handler,
+                priority=1,
+            )
+        )
 
         result = await chain.execute(ValueError("test"))
 
@@ -172,18 +176,22 @@ class TestFallbackChain:
             call_order.append("success")
             return "worked"
 
-        chain.add(FallbackStrategy(
-            name="fail_first",
-            fallback_type=FallbackType.ALTERNATIVE_SERVICE,
-            handler=fail_handler,
-            priority=1,
-        ))
-        chain.add(FallbackStrategy(
-            name="success_second",
-            fallback_type=FallbackType.DEFAULT_VALUE,
-            handler=success_handler,
-            priority=2,
-        ))
+        chain.add(
+            FallbackStrategy(
+                name="fail_first",
+                fallback_type=FallbackType.ALTERNATIVE_SERVICE,
+                handler=fail_handler,
+                priority=1,
+            )
+        )
+        chain.add(
+            FallbackStrategy(
+                name="success_second",
+                fallback_type=FallbackType.DEFAULT_VALUE,
+                handler=success_handler,
+                priority=2,
+            )
+        )
 
         result = await chain.execute(ValueError("test"))
 
@@ -193,21 +201,26 @@ class TestFallbackChain:
     @pytest.mark.asyncio
     async def test_execute_all_fail(self, chain):
         """Test chain when all strategies fail."""
+
         async def fail():
             raise RuntimeError("Failed")
 
-        chain.add(FallbackStrategy(
-            name="fail1",
-            fallback_type=FallbackType.DEFAULT_VALUE,
-            handler=fail,
-            priority=1,
-        ))
-        chain.add(FallbackStrategy(
-            name="fail2",
-            fallback_type=FallbackType.CACHED_RESULT,
-            handler=fail,
-            priority=2,
-        ))
+        chain.add(
+            FallbackStrategy(
+                name="fail1",
+                fallback_type=FallbackType.DEFAULT_VALUE,
+                handler=fail,
+                priority=1,
+            )
+        )
+        chain.add(
+            FallbackStrategy(
+                name="fail2",
+                fallback_type=FallbackType.CACHED_RESULT,
+                handler=fail,
+                priority=2,
+            )
+        )
 
         result = await chain.execute(ValueError("test"))
 
@@ -218,15 +231,18 @@ class TestFallbackChain:
     @pytest.mark.asyncio
     async def test_condition_filtering(self, chain):
         """Test strategies are filtered by condition."""
+
         async def handler():
             return "handled"
 
-        chain.add(FallbackStrategy(
-            name="value_only",
-            fallback_type=FallbackType.DEFAULT_VALUE,
-            handler=handler,
-            condition=lambda e: isinstance(e, ValueError),
-        ))
+        chain.add(
+            FallbackStrategy(
+                name="value_only",
+                fallback_type=FallbackType.DEFAULT_VALUE,
+                handler=handler,
+                condition=lambda e: isinstance(e, ValueError),
+            )
+        )
 
         # Should not match TypeError
         result = await chain.execute(TypeError("wrong type"))
@@ -235,6 +251,7 @@ class TestFallbackChain:
     @pytest.mark.asyncio
     async def test_disabled_strategy_skipped(self, chain):
         """Test disabled strategies are skipped."""
+
         # FallbackStrategy doesn't have enabled parameter
         # All strategies are executed in priority order
         # We test that condition can filter strategies instead
@@ -323,6 +340,7 @@ class TestCachedFallback:
 
         # Wait for expiration
         import time
+
         time.sleep(1.1)
 
         result = cached.get("key1")
@@ -356,6 +374,7 @@ class TestWithFallbackDecorator:
     @pytest.mark.asyncio
     async def test_decorator_success(self):
         """Test decorator with successful function."""
+
         @with_fallback(default_value="fallback")
         async def success_func():
             return "success"
@@ -366,6 +385,7 @@ class TestWithFallbackDecorator:
     @pytest.mark.asyncio
     async def test_decorator_fallback(self):
         """Test decorator uses fallback on error."""
+
         @with_fallback(default_value="fallback")
         async def fail_func():
             raise ValueError("Failed")
@@ -375,6 +395,7 @@ class TestWithFallbackDecorator:
 
     def test_sync_decorator(self):
         """Test decorator with sync function."""
+
         @with_fallback(default_value="sync_fallback")
         def sync_func():
             raise RuntimeError("Sync error")
@@ -386,11 +407,13 @@ class TestWithFallbackDecorator:
     async def test_decorator_with_chain(self):
         """Test decorator with fallback chain."""
         chain = FallbackChain(name="decorator_chain")
-        chain.add(FallbackStrategy(
-            name="chain_fallback",
-            fallback_type=FallbackType.DEFAULT_VALUE,
-            handler=lambda: "chain_value",
-        ))
+        chain.add(
+            FallbackStrategy(
+                name="chain_fallback",
+                fallback_type=FallbackType.DEFAULT_VALUE,
+                handler=lambda: "chain_value",
+            )
+        )
 
         @with_fallback(fallback_chain=chain)
         async def func_with_chain():
@@ -398,4 +421,3 @@ class TestWithFallbackDecorator:
 
         result = await func_with_chain()
         assert result == "chain_value"
-
