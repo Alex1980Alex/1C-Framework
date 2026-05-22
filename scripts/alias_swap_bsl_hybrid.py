@@ -172,45 +172,70 @@ def main() -> int:
 
     if args.dry_run:
         print("\n[dry-run] would execute:")
-        if not args.skip_backup:
-            print(f"  1. copy {args.source} -> {args.backup}")
-        print(f"  2. delete collection {args.source}")
-        print(f"  3. create alias {args.source} -> {args.hybrid}")
+        if current_alias_target:
+            print(f"  1. atomic alias re-point: '{args.source}' -> '{args.hybrid}'")
+            print(f"     (previous target '{current_alias_target}' kept as implicit backup)")
+        else:
+            if not args.skip_backup:
+                print(f"  1. copy {args.source} -> {args.backup}")
+            print(f"  2. delete collection {args.source}")
+            print(f"  3. create alias {args.source} -> {args.hybrid}")
         tracker.stop(summary={"status": "dry_run_ok"})
         return 0
 
-    # Step 1: backup.
-    if not args.skip_backup:
-        with tracker.stage("backup_copy"):
-            copied = copy_collection(client, args.source, args.backup)
-            print(f"[backup] copied {copied} pts -> {args.backup}")
-            backup_info = client.get_collection(args.backup)
-            if backup_info.points_count != src_count:
-                print(
-                    f"ERROR: backup count mismatch: {backup_info.points_count} vs source {src_count}. "
-                    f"Aborting swap — manually inspect {args.backup} and rerun with --skip-backup if OK."
-                )
-                tracker.stop(summary={"status": "backup_mismatch"})
-                return 1
-
-    # Step 2: delete old physical collection.
-    with tracker.stage("delete_source"):
-        client.delete_collection(collection_name=args.source)
-        print(f"[swap] deleted physical collection {args.source}")
-
-    # Step 3: create alias.
-    with tracker.stage("create_alias"):
-        client.update_collection_aliases(
-            change_aliases_operations=[
-                models.CreateAliasOperation(
-                    create_alias=models.CreateAlias(
-                        collection_name=args.hybrid,
-                        alias_name=args.source,
+    if current_alias_target:
+        # Cheap path: source is already an alias. Atomic delete+create in a
+        # single update_collection_aliases call — no backup copy needed since
+        # the previous alias target physical collection stays in place.
+        with tracker.stage("atomic_alias_swap"):
+            client.update_collection_aliases(
+                change_aliases_operations=[
+                    models.DeleteAliasOperation(
+                        delete_alias=models.DeleteAlias(alias_name=args.source),
+                    ),
+                    models.CreateAliasOperation(
+                        create_alias=models.CreateAlias(
+                            collection_name=args.hybrid,
+                            alias_name=args.source,
+                        ),
+                    ),
+                ],
+            )
+            print(
+                f"[swap] alias '{args.source}': '{current_alias_target}' -> '{args.hybrid}' "
+                f"(previous physical kept as implicit backup)"
+            )
+    else:
+        # Original path — source is a physical collection.
+        if not args.skip_backup:
+            with tracker.stage("backup_copy"):
+                copied = copy_collection(client, args.source, args.backup)
+                print(f"[backup] copied {copied} pts -> {args.backup}")
+                backup_info = client.get_collection(args.backup)
+                if backup_info.points_count != src_count:
+                    print(
+                        f"ERROR: backup count mismatch: {backup_info.points_count} vs source {src_count}. "
+                        f"Aborting swap — manually inspect {args.backup} and rerun with --skip-backup if OK."
                     )
-                )
-            ]
-        )
-        print(f"[swap] created alias {args.source} -> {args.hybrid}")
+                    tracker.stop(summary={"status": "backup_mismatch"})
+                    return 1
+
+        with tracker.stage("delete_source"):
+            client.delete_collection(collection_name=args.source)
+            print(f"[swap] deleted physical collection {args.source}")
+
+        with tracker.stage("create_alias"):
+            client.update_collection_aliases(
+                change_aliases_operations=[
+                    models.CreateAliasOperation(
+                        create_alias=models.CreateAlias(
+                            collection_name=args.hybrid,
+                            alias_name=args.source,
+                        ),
+                    ),
+                ],
+            )
+            print(f"[swap] created alias {args.source} -> {args.hybrid}")
 
     # Verify alias resolves to hybrid.
     resolved = client.get_collection(args.source)
