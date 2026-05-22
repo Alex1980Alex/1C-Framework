@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import time
+import uuid
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -482,6 +483,71 @@ def auto_rebase_safe(base: str, *, cwd: str | Path, remote: str = "origin") -> t
     # try abort
     run_git("rebase", "--abort", cwd=cwd, timeout=15)
     return False, f"rebase conflict (aborted): {err[:200]}"
+
+
+# --- cherry-pick branch model (P3.2) -----------------------------------
+
+
+def cherry_pick_range_to_branch(
+    start_sha: str,
+    head_sha: str,
+    branch: str,
+    base: str,
+    *,
+    cwd: str | Path,
+    remote: str = "origin",
+) -> tuple[bool, str]:
+    """Create a fresh `branch` off `remote/base` and cherry-pick start..head onto it.
+
+    Uses `git worktree add` so the current HEAD/working tree of the main repo
+    is untouched. After completion the worktree is removed but `branch` remains
+    pointing at the cherry-picked commits — ready to push as a clean PR head
+    against `base` (e.g. `dev-master`) without dragging unrelated history.
+
+    Returns (ok, msg). On any failure aborts cherry-pick and removes the
+    worktree best-effort. Existing local `branch` is force-replaced.
+    """
+    ok, fmsg = fetch_remote(remote, base, cwd=cwd, timeout=30)
+    if not ok:
+        return False, f"fetch {remote}/{base} failed: {fmsg[:200]}"
+
+    base_ref = f"{remote}/{base}"
+    code, out, err = run_git("rev-list", "--reverse", f"{start_sha}..{head_sha}", cwd=cwd)
+    if code != 0:
+        return False, f"rev-list failed: {err[:200]}"
+    commits = [ln for ln in out.splitlines() if ln.strip()]
+    if not commits:
+        return False, f"empty range {start_sha[:8]}..{head_sha[:8]}"
+
+    wt_root = Path(cwd) / ".tmp" / "cp-worktrees"
+    wt_root.mkdir(parents=True, exist_ok=True)
+    wt_dir = wt_root / f"{branch.replace('/', '-')}-{uuid.uuid4().hex[:8]}"
+
+    if branch_exists_local(branch, cwd=cwd):
+        run_git("branch", "-D", branch, cwd=cwd)
+
+    code, _, err = run_git(
+        "worktree",
+        "add",
+        "-b",
+        branch,
+        str(wt_dir),
+        base_ref,
+        cwd=cwd,
+        timeout=30,
+    )
+    if code != 0:
+        return False, f"worktree add failed: {err[:200]}"
+
+    try:
+        for sha in commits:
+            code, _, err = run_git("cherry-pick", sha, cwd=wt_dir, timeout=60)
+            if code != 0:
+                run_git("cherry-pick", "--abort", cwd=wt_dir, timeout=15)
+                return False, f"cherry-pick {sha[:12]} conflict: {err[:200]}"
+        return True, f"{len(commits)} commit(s) onto {base_ref}"
+    finally:
+        run_git("worktree", "remove", "--force", str(wt_dir), cwd=cwd, timeout=30)
 
 
 # --- env helper --------------------------------------------------------
