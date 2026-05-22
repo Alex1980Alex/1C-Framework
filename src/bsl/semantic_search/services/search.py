@@ -428,17 +428,9 @@ class BSLSearchService:
 
     @staticmethod
     def _normalize_camelcase_for_bm25(text: str) -> str:
-        """Split BSL CamelCase identifiers into space-separated tokens.
-
-        `ОбработкаПроведения` -> `обработка проведения`. Required for BM25 to
-        match natural-language queries against identifier-heavy BSL code.
-        Mirrors normalize_camelcase() in scripts/migrate_bsl_to_hybrid.py —
-        the indexed sparse vectors were tokenized with the same function, so
-        queries must use the same one.
-        """
-        import re
-        parts = re.findall(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+", text)
-        return " ".join(parts).lower() if parts else text.lower()
+        """Delegates to canonical bm25_tokenizer (single source of truth)."""
+        from .bm25_tokenizer import normalize_camelcase
+        return normalize_camelcase(text)
 
     async def _call_qdrant_search(self, query: str, limit: int, filters: Any) -> list[dict]:
         """Vector search via Qdrant.
