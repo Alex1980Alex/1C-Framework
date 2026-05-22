@@ -1379,6 +1379,16 @@ def main() -> None:
                     help="Default: bsl_code_v4_late (Qwen3+Late, production). "
                          "Legacy bsl_code_v3 dropped 2026-04-30 (§27).")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
+    ap.add_argument(
+        "--enable-sparse",
+        action="store_true",
+        help="When creating a new collection, use hybrid layout "
+             "(named `dense` + sparse `bm25` IDF). Existing collections "
+             "with hybrid layout are auto-detected regardless of this "
+             "flag — the production alias bsl_code_v4_late (hybrid since "
+             "2026-05-22 migration) makes incremental git post-commit "
+             "reindexes hybrid automatically.",
+    )
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
     ap.add_argument("--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)")
