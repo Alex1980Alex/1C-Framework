@@ -335,14 +335,21 @@ class PostTaskPushPR(BaseHook):
         branch_mode = "head-ref"
         cherry_note = ""
         if pr.env_flag("AUTO_PR_CHERRY_PICK") and start_sha:
-            ok_cp, cp_msg = pr.cherry_pick_range_to_branch(
-                start_sha, head_full, branch, base, cwd=PROJECT_ROOT
-            )
-            if ok_cp:
-                branch_mode = "cherry-pick"
-                cherry_note = f"cherry-pick: {cp_msg}"
+            cp_fn = getattr(pr, "cherry_pick_range_to_branch", None)
+            if cp_fn is None:
+                cherry_note = (
+                    "cherry-pick requested but pr_helpers.cherry_pick_range_to_branch "
+                    "not implemented → fallback to branch-at-HEAD"
+                )
             else:
-                cherry_note = f"cherry-pick failed → fallback to branch-at-HEAD ({cp_msg})"
+                ok_cp, cp_msg = cp_fn(
+                    start_sha, head_full, branch, base, cwd=PROJECT_ROOT
+                )
+                if ok_cp:
+                    branch_mode = "cherry-pick"
+                    cherry_note = f"cherry-pick: {cp_msg}"
+                else:
+                    cherry_note = f"cherry-pick failed → fallback to branch-at-HEAD ({cp_msg})"
         if branch_mode == "head-ref":
             code, _, err = pr.run_git("branch", "-f", branch, "HEAD", cwd=PROJECT_ROOT)
             if code != 0:
