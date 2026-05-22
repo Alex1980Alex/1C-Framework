@@ -444,16 +444,18 @@ class BSLSearchService:
         """Vector search via Qdrant.
 
         Auto-detects collection layout on first call:
-          * `hybrid` (named dense + sparse BM25) -> Prefetch(dense) +
-            Prefetch(bm25) -> FusionQuery(RRF). Anchor bench on bsl_code_v4_late
-            showed dense Hit@10 ~16% vs hybrid ~90% (content-specific win:
-            Cyrillic identifiers + repetitive BSL syntax).
+          * `hybrid` (named dense + sparse BM25) -> **pure BM25 sparse**
+            (`using="bm25"`). Realistic eval on 50 labeled BSL queries
+            (`data/bsl_golden_set.json`, 2026-05-22) showed pure BM25 strictly
+            dominates Prefetch+RRF: dMRR +7.3pp, dRecall@10 +6.0pp, dNDCG@10
+            +7.0pp. Dense Qwen3 contributes nothing useful on BSL content —
+            adding it via RRF degrades top-K ordering. Plus: skipping the TEI
+            dense embed cuts query latency.
           * `dense_only` (single-vector OR named without sparse) -> plain
             dense `query_points`. Backwards-compat for non-migrated collections.
         """
         try:
             from qdrant_client import QdrantClient
-            from qdrant_client import models as qm
 
             from ..config import get_bsl_settings
 
@@ -464,60 +466,39 @@ class BSLSearchService:
                     host=settings.qdrant_host, port=settings.qdrant_port
                 )
 
-            # Phase 8 §2.1: TEI Qwen3-Embedding-8B 4096d (was Ollama; tag mismatch silently returned empty embedding).
-            if self._embedding_service is None:
-                import atexit
-
-                from src.framework_search.embedder import FrameworkTEIEmbedder
-
-                self._embedding_service = FrameworkTEIEmbedder()
-                atexit.register(self._embedding_service.close)
-
-            try:
-                query_embedding = self._embedding_service.embed_batch([query], is_query=True)[0]
-            except Exception as exc:
-                logger.error(f"TEI embedding failed: {exc}", exc_info=True)
-                return []
-
-            if not query_embedding:
-                logger.error("TEI вернул пустой embedding для запроса")
-                return []
-
             collection_name = getattr(self.qdrant, "collection_name", settings.collection_name)
             layout = self._detect_collection_layout(collection_name)
 
             if layout == "hybrid":
                 bm25 = self._get_bm25_sparse()
                 if bm25 is not None:
+                    from qdrant_client import models as qm
                     norm_query = self._normalize_camelcase_for_bm25(query)
                     sparse_emb = next(iter(bm25.embed([norm_query])))
-                    # Prefetch limit > final limit: gives RRF room to rerank.
-                    # 50 matches the smoke benchmark setup.
-                    prefetch_limit = max(limit * 5, 50)
                     search_results = self._qdrant_client.query_points(
                         collection_name=collection_name,
-                        prefetch=[
-                            qm.Prefetch(
-                                query=query_embedding,
-                                using="dense",
-                                limit=prefetch_limit,
-                                filter=filters,
-                            ),
-                            qm.Prefetch(
-                                query=qm.SparseVector(
-                                    indices=sparse_emb.indices.tolist(),
-                                    values=sparse_emb.values.tolist(),
-                                ),
-                                using="bm25",
-                                limit=prefetch_limit,
-                                filter=filters,
-                            ),
-                        ],
-                        query=qm.FusionQuery(fusion=qm.Fusion.RRF),
+                        query=qm.SparseVector(
+                            indices=sparse_emb.indices.tolist(),
+                            values=sparse_emb.values.tolist(),
+                        ),
+                        using="bm25",
                         limit=limit,
+                        query_filter=filters,
                     ).points
                 else:
-                    # FastEmbed missing — query as plain dense via named vector.
+                    # FastEmbed missing — fall back to dense via named vector.
+                    # This is worse than BM25 (golden eval: dense ~18% recall@10
+                    # vs bm25 ~76%) but better than nothing.
+                    if self._embedding_service is None:
+                        import atexit
+                        from src.framework_search.embedder import FrameworkTEIEmbedder
+                        self._embedding_service = FrameworkTEIEmbedder()
+                        atexit.register(self._embedding_service.close)
+                    try:
+                        query_embedding = self._embedding_service.embed_batch([query], is_query=True)[0]
+                    except Exception as exc:
+                        logger.error(f"TEI embedding failed: {exc}", exc_info=True)
+                        return []
                     search_results = self._qdrant_client.query_points(
                         collection_name=collection_name,
                         query=query_embedding,
@@ -527,6 +508,20 @@ class BSLSearchService:
                     ).points
             else:
                 # Legacy single-vector path (Phase 8.12 BSL collections, others).
+                # Requires TEI dense embedding.
+                if self._embedding_service is None:
+                    import atexit
+                    from src.framework_search.embedder import FrameworkTEIEmbedder
+                    self._embedding_service = FrameworkTEIEmbedder()
+                    atexit.register(self._embedding_service.close)
+                try:
+                    query_embedding = self._embedding_service.embed_batch([query], is_query=True)[0]
+                except Exception as exc:
+                    logger.error(f"TEI embedding failed: {exc}", exc_info=True)
+                    return []
+                if not query_embedding:
+                    logger.error("TEI вернул пустой embedding для запроса")
+                    return []
                 search_results = self._qdrant_client.query_points(
                     collection_name=collection_name,
                     query=query_embedding,
