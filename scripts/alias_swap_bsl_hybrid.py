@@ -130,10 +130,17 @@ def main() -> int:
     except AttributeError:
         alias_names = set()
 
+    # `bsl_code_v4_late` is already an alias after 2026-05-20 Phase 5 swap to
+    # `bsl_code_v4_late_v2` (std pooling + FA2). Atomic re-point of the alias
+    # is the safest and cheapest path — the previous physical `_v2` collection
+    # remains untouched as the backup, no copy needed.
+    current_alias_target: str | None = None
     if args.source in alias_names:
-        print(f"ERROR: '{args.source}' is already an alias — looks like swap already ran.")
-        tracker.stop(summary={"status": "alias_exists", "source": args.source})
-        return 1
+        for a in aliases_info.aliases:
+            if a.alias_name == args.source:
+                current_alias_target = a.collection_name
+                break
+        print(f"[check] '{args.source}' is alias -> '{current_alias_target}' (will become backup)")
 
     try:
         src_info = client.get_collection(args.source)
