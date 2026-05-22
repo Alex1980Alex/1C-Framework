@@ -172,12 +172,8 @@ class BSLSearchService:
             return []
 
     async def _graph_search(self, request: SearchRequest) -> list[SearchResult]:
-        """Поиск по графу зависимостей через Neo4j"""
+        """Поиск по графу зависимостей через Neo4j (lazy-init driver)."""
         logger.debug("Выполняется graph search")
-
-        if not self.neo4j:
-            logger.warning("Neo4j недоступен")
-            return []
 
         try:
             raw_results = await self._call_neo4j_search(
@@ -448,43 +444,78 @@ class BSLSearchService:
             logger.error(f"Ошибка Qdrant search: {e}", exc_info=True)
             return []
 
+    async def _get_neo4j_driver(self):
+        """Lazy-init Neo4j AsyncDriver. Returns None if unavailable.
+
+        Default credentials match scripts/load_graph_to_neo4j.py.
+        Override via env: NEO4J_URI / NEO4J_USER / NEO4J_PASSWORD.
+        """
+        if self._neo4j_driver is not None:
+            return self._neo4j_driver
+        try:
+            import os
+
+            from neo4j import AsyncGraphDatabase
+
+            uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+            user = os.getenv("NEO4J_USER", "neo4j")
+            password = os.getenv("NEO4J_PASSWORD", "bsl-graph-2026")
+            self._neo4j_driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
+            await self._neo4j_driver.verify_connectivity()
+            logger.info(f"[NEO4J] AsyncDriver connected: {uri} as {user}")
+            return self._neo4j_driver
+        except Exception as e:
+            logger.warning(f"[NEO4J] Driver init failed: {type(e).__name__}: {e}")
+            self._neo4j_driver = None
+            return None
+
     async def _call_neo4j_search(self, query: str, limit: int) -> list[dict]:
-        """Вызов Neo4j search через Cypher запрос"""
-        if not self.neo4j:
-            logger.warning("Neo4j service недоступен")
+        """Вызов Neo4j search через Cypher. Schema (post-2026-05-20 reindex):
+        Module/Symbol/Object nodes + BELONGS_TO/DECLARES/CALLS/CONTAINS rels.
+        Properties: Module.path, Symbol.name/symbol_type/is_export.
+        """
+        # Backward-compat: legacy injection via constructor still works
+        if self.neo4j and hasattr(self.neo4j, "execute_query"):
+            return await self._call_neo4j_search_legacy(query, limit)
+
+        # Lazy driver path (default since 2026-05-22)
+        driver = await self._get_neo4j_driver()
+        if driver is None:
             return []
 
         try:
             keywords = self._extract_keywords_from_query(query)
-
             if not keywords:
                 logger.warning("Не удалось извлечь ключевые слова из запроса")
                 return []
 
+            # Match Symbol by name, traverse to Module via BELONGS_TO.
+            # Phase 8 schema: Module.path + Symbol.name/symbol_type/is_export.
             cypher_query = """
-            MATCH (m:Module)
+            MATCH (s:Symbol)
             WHERE ANY(keyword IN $keywords WHERE
-                toLower(m.name) CONTAINS toLower(keyword) OR
-                toLower(m.file_path) CONTAINS toLower(keyword)
+                toLower(s.name) CONTAINS toLower(keyword)
             )
-            OPTIONAL MATCH (m)-[:CONTAINS]->(f)
-            WHERE f:Function OR f:Procedure
-            OPTIONAL MATCH (m)-[:DEPENDS_ON]->(dep:Module)
-            WITH m,
-                 collect(DISTINCT f.name)[0..10] as functions,
-                 count(DISTINCT f) as functions_count,
-                 collect(DISTINCT dep.name)[0..5] as dependencies
+            OPTIONAL MATCH (s)-[:BELONGS_TO]->(m:Module)
+            WITH s, m,
+                 count{(m)-[:DECLARES]->(:Symbol)} AS sym_count
             RETURN
-                m.name as module_name,
-                m.file_path as file_path,
-                m.type as module_type,
-                functions,
-                functions_count,
-                dependencies
+                coalesce(s.name, '?') AS module_name,
+                coalesce(m.path, s.module_path, '') AS file_path,
+                coalesce(m.module_type, 'Unknown') AS module_type,
+                s.symbol_type AS symbol_type,
+                s.is_export AS is_export,
+                coalesce(m.object_type, '') AS object_type,
+                coalesce(m.object_name, '') AS object_name,
+                sym_count AS functions_count
             LIMIT $limit
             """
 
-            results = self.neo4j.execute_query(cypher_query, {"keywords": keywords, "limit": limit})
+            async with driver.session() as session:
+                result = await session.run(
+                    cypher_query, {"keywords": keywords, "limit": limit}
+                )
+                results = [dict(record) async for record in result]
 
             formatted_results = []
             for r in results:
