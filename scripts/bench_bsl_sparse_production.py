@@ -34,9 +34,8 @@ QWEN3_QUERY_INSTRUCT = (
 )
 
 
-def normalize_camelcase(text: str) -> str:
-    parts = re.findall(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+", text)
-    return " ".join(parts).lower() if parts else text.lower()
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
 
 
 def derive_query_fragment(content: str, seed: int) -> str:
