@@ -121,6 +121,8 @@ def _run_pre_push_tests() -> tuple[bool, str]:
             cmd_argv,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=pr.safe_int(pr.env_str("AUTO_PR_TEST_TIMEOUT"), 600),
             shell=False,
             check=False,
@@ -128,7 +130,7 @@ def _run_pre_push_tests() -> tuple[bool, str]:
         )
         if r.returncode == 0:
             return True, f"tests passed (`{cmd_argv[0]}`)"
-        tail = (r.stdout + r.stderr)[-500:].replace("\n", " | ")
+        tail = ((r.stdout or "") + (r.stderr or ""))[-500:].replace("\n", " | ")
         return False, f"tests failed (exit={r.returncode}): {tail}"
     except (subprocess.TimeoutExpired, OSError) as exc:
         return False, f"test run error: {type(exc).__name__}: {exc}"
@@ -342,9 +344,7 @@ class PostTaskPushPR(BaseHook):
                     "not implemented → fallback to branch-at-HEAD"
                 )
             else:
-                ok_cp, cp_msg = cp_fn(
-                    start_sha, head_full, branch, base, cwd=PROJECT_ROOT
-                )
+                ok_cp, cp_msg = cp_fn(start_sha, head_full, branch, base, cwd=PROJECT_ROOT)
                 if ok_cp:
                     branch_mode = "cherry-pick"
                     cherry_note = f"cherry-pick: {cp_msg}"
