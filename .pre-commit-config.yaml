@@ -1,6 +1,20 @@
 # Pre-commit hooks configuration
 # See https://pre-commit.com for more information
 
+# Top-level exclude — applies to ALL hooks.
+# - tools/serena/        vendored subrepo, has own pyproject + ruff config
+# - infra/task-master/   vendored npm/TS workspace (own tooling)
+# - cache/               runtime artifacts (active-todos.json etc)
+# - src/bsl/             1С Enterprise generated BSL/XML files (CRLF/whitespace
+#                        is platform-controlled, not pre-commit business)
+exclude: |
+  (?x)^(
+    tools/serena/.*|
+    infra/task-master/.*|
+    cache/.*|
+    src/bsl/.*
+  )$
+
 repos:
   # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks

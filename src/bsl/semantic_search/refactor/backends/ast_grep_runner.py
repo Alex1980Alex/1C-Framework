@@ -36,19 +36,12 @@ class SubprocessAstGrepRunner:
         self._rule_template = rule_template
         self._timeout = timeout_seconds
 
-    def run_rename(
-        self, workspace_root: Path, old_name: str, new_name: str
-    ) -> list[AstGrepMatch]:
+    def run_rename(self, workspace_root: Path, old_name: str, new_name: str) -> list[AstGrepMatch]:
         """Run ast-grep scan; return matches of `old_name` in workspace_root."""
         args = [self._binary, "scan", "--json=compact"]
         if self._config is not None:
             args += ["-c", str(self._config)]
-        inline_rule = (
-            f"id: rename-{old_name}\n"
-            f"language: bsl\n"
-            f"rule:\n"
-            f"  pattern: {old_name}\n"
-        )
+        inline_rule = f"id: rename-{old_name}\nlanguage: bsl\nrule:\n  pattern: {old_name}\n"
         args += ["--inline-rules", inline_rule, str(workspace_root)]
         try:
             proc = subprocess.run(
@@ -76,13 +69,9 @@ class SubprocessAstGrepRunner:
         try:
             raw = json.loads(proc.stdout)
         except json.JSONDecodeError as exc:
-            raise BackendError(
-                f"invalid ast-grep JSON: {exc!r}", code="invalid_json"
-            ) from exc
+            raise BackendError(f"invalid ast-grep JSON: {exc!r}", code="invalid_json") from exc
         if not isinstance(raw, list):
-            raise BackendError(
-                "expected JSON array of matches", code="invalid_json"
-            )
+            raise BackendError("expected JSON array of matches", code="invalid_json")
         return [self._parse_match(m) for m in raw]
 
     @staticmethod

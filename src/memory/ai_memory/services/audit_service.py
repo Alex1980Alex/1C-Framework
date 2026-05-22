@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,16 +47,16 @@ class AuditLogEntry:
     timestamp: datetime
     action: AuditAction
     resource_type: str
-    resource_id: Optional[str] = None
-    session_id: Optional[str] = None
-    old_value: Optional[Dict[str, Any]] = None
-    new_value: Optional[Dict[str, Any]] = None
+    resource_id: str | None = None
+    session_id: str | None = None
+    old_value: dict[str, Any] | None = None
+    new_value: dict[str, Any] | None = None
     success: bool = True
-    error_message: Optional[str] = None
-    duration_ms: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error_message: str | None = None
+    duration_ms: float | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat(),
@@ -73,7 +73,7 @@ class AuditLogEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuditLogEntry":
+    def from_dict(cls, data: dict[str, Any]) -> "AuditLogEntry":
         data = data.copy()
         if isinstance(data.get("timestamp"), str):
             data["timestamp"] = datetime.fromisoformat(data["timestamp"])
@@ -86,13 +86,13 @@ class AuditLogEntry:
 class AuditQuery:
     """Query parameters for audit log."""
 
-    resource_type: Optional[str] = None
-    resource_id: Optional[str] = None
-    session_id: Optional[str] = None
-    action: Optional[AuditAction] = None
+    resource_type: str | None = None
+    resource_id: str | None = None
+    session_id: str | None = None
+    action: AuditAction | None = None
     success_only: bool = False
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     offset: int = 0
     limit: int = 50
 
@@ -116,9 +116,9 @@ class AuditService:
         self.retention_days = retention_days
         self.max_buffer_size = max_buffer_size
 
-        self._buffer: List[AuditLogEntry] = []
+        self._buffer: list[AuditLogEntry] = []
         self._lock = asyncio.Lock()
-        self._stats: Dict[str, int] = defaultdict(int)
+        self._stats: dict[str, int] = defaultdict(int)
 
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info("AuditService initialized: %s", self.storage_path)
@@ -129,12 +129,12 @@ class AuditService:
         resource_type: str,
         resource_id: str | None = None,
         session_id: str | None = None,
-        old_value: Dict[str, Any] | None = None,
-        new_value: Dict[str, Any] | None = None,
+        old_value: dict[str, Any] | None = None,
+        new_value: dict[str, Any] | None = None,
         success: bool = True,
         error_message: str | None = None,
         duration_ms: float | None = None,
-        metadata: Dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> AuditLogEntry:
         """Record an audit event."""
         entry = AuditLogEntry(
@@ -169,7 +169,7 @@ class AuditService:
 
         return entry
 
-    async def query(self, query: AuditQuery) -> List[AuditLogEntry]:
+    async def query(self, query: AuditQuery) -> list[AuditLogEntry]:
         """Query audit log entries with filters."""
         all_entries = await self._load_entries()
         all_entries.extend(self._buffer)
@@ -197,25 +197,25 @@ class AuditService:
 
     async def get_recent(
         self, limit: int = 50, action: AuditAction | None = None
-    ) -> List[AuditLogEntry]:
+    ) -> list[AuditLogEntry]:
         """Get recent audit entries."""
         return await self.query(AuditQuery(action=action, limit=limit))
 
     async def get_by_resource(
         self, resource_type: str, resource_id: str, limit: int = 100
-    ) -> List[AuditLogEntry]:
+    ) -> list[AuditLogEntry]:
         """Get audit history for a specific resource."""
         return await self.query(
             AuditQuery(resource_type=resource_type, resource_id=resource_id, limit=limit)
         )
 
-    async def get_errors(self, limit: int = 100) -> List[AuditLogEntry]:
+    async def get_errors(self, limit: int = 100) -> list[AuditLogEntry]:
         """Get failed operations."""
         all_entries = await self._load_entries()
         all_entries.extend(self._buffer)
         # Deduplicate by ID (immediate-persist entries may be in both)
         seen: set[str] = set()
-        unique: List[AuditLogEntry] = []
+        unique: list[AuditLogEntry] = []
         for e in all_entries:
             if e.id not in seen:
                 seen.add(e.id)
@@ -226,7 +226,7 @@ class AuditService:
 
     async def get_stats(
         self, start_time: datetime | None = None, end_time: datetime | None = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get audit log statistics."""
         all_entries = await self._load_entries()
         all_entries.extend(self._buffer)
@@ -236,8 +236,8 @@ class AuditService:
         if end_time:
             all_entries = [e for e in all_entries if e.timestamp <= end_time]
 
-        by_action: Dict[str, int] = defaultdict(int)
-        by_resource: Dict[str, int] = defaultdict(int)
+        by_action: dict[str, int] = defaultdict(int)
+        by_resource: dict[str, int] = defaultdict(int)
         error_count = 0
 
         for entry in all_entries:
@@ -312,12 +312,12 @@ class AuditService:
                 return 0
             return count
 
-    async def _load_entries(self) -> List[AuditLogEntry]:
-        entries: List[AuditLogEntry] = []
+    async def _load_entries(self) -> list[AuditLogEntry]:
+        entries: list[AuditLogEntry] = []
         if not self.storage_path.exists():
             return entries
         try:
-            with open(self.storage_path, "r", encoding="utf-8") as f:
+            with open(self.storage_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
