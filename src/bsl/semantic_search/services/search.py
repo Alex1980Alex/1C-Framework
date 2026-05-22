@@ -101,6 +101,13 @@ class BSLSearchService:
         # mcp.py:131 hardcodes neo4j_service=None, ранее граф фактически
         # не использовался в production search).
         self._neo4j_driver = None
+        # Lazy-init BM25 sparse embedder + collection layout cache (2026-05-22:
+        # native Qdrant BM25 + RRF fusion. Anchor bench showed dense Hit@10
+        # ~16% vs hybrid ~90% on bsl_code_v4_late. Layout detected once on
+        # first query — None means "not probed yet", "dense_only"/"hybrid"
+        # decides the query path.
+        self._bm25_sparse = None
+        self._collection_layout: str | None = None
 
         logger.info("BSLSearchService инициализирован")
         logger.info(f"  Qdrant: {'✓' if qdrant_service else '✗'}")
