@@ -121,7 +121,7 @@ def _run_pre_push_tests() -> tuple[bool, str]:
             cmd_argv,
             capture_output=True,
             text=True,
-            timeout=safe_int(pr.env_str("AUTO_PR_TEST_TIMEOUT"), 600),
+            timeout=pr.safe_int(pr.env_str("AUTO_PR_TEST_TIMEOUT"), 600),
             shell=False,
             check=False,
             cwd=str(PROJECT_ROOT),
