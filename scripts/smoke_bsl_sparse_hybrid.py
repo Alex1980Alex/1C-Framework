@@ -23,15 +23,8 @@ from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient, models
 
 
-def normalize_camelcase(text: str) -> str:
-    """Split CamelCase identifiers (Russian/English) into space-separated words.
-
-    Critical for BSL — `ОбработкаПроведения` must match `обработка проведения` query.
-    """
-    import re
-
-    parts = re.findall(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+", text)
-    return " ".join(parts).lower() if parts else text.lower()
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
 
 
 def create_target_collection(
