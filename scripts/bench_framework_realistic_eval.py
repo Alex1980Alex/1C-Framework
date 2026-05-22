@@ -5,11 +5,10 @@ framework_code_v1 (Python+MD, English ids, 1024d MRL)? Bench uses parallel
 framework_code_v1_hybrid_bench. Point-id matching against expected_chunk_ids.
 Query embedding truncated 4096d->1024d MRL to match collection dim.
 
-Modes: dense (using="dense"), bm25 (using="bm25"), hybrid_rrf (Prefetch+RRF).
-Metrics: Recall@10, NDCG@10, MRR, P@5 per slice + overall.
+Modes: dense, bm25, hybrid_rrf. Metrics: Recall@10, NDCG@10, MRR, P@5.
 
 Run:
-    .venv\\Scripts\\python.exe scripts\\bench_bsl_realistic_eval.py
+    .venv\\Scripts\\python.exe scripts\\bench_framework_realistic_eval.py
 """
 
 from __future__ import annotations
