@@ -150,7 +150,7 @@ def main() -> int:
     src_info = client.get_collection(args.source)
     src_dim = src_info.config.params.vectors.size
     src_count = src_info.points_count
-    print(f"[src] {args.source}: {src_count} pts × {src_dim}d")
+    print(f"[src] {args.source}: {src_count} pts x {src_dim}d")
     tracker.event(
         "startup",
         source=args.source,
