@@ -1214,7 +1214,17 @@ def flush_batch(
             continue
         vec_list = vec if isinstance(vec, list) else vec.tolist()
 
-        if dual_vector and mp_vectors and mp_vectors[i] is not None:
+        if sparse_vectors is not None:
+            # Hybrid layout: named `dense` + optional `bm25` sparse.
+            # Mutually exclusive with dual_vector — refused in main().
+            vector_data: Any = {"dense": vec_list}
+            sp = sparse_vectors[i]
+            if len(sp.indices) > 0:
+                vector_data["bm25"] = models.SparseVector(
+                    indices=sp.indices.tolist(),
+                    values=sp.values.tolist(),
+                )
+        elif dual_vector and mp_vectors and mp_vectors[i] is not None:
             mp_vec = mp_vectors[i] if isinstance(mp_vectors[i], list) else mp_vectors[i].tolist()
             vector_data = {"content": vec_list, "module_path": mp_vec}
         else:
