@@ -466,8 +466,8 @@ class BSLSearchService:
                 if bm25 is not None:
                     from qdrant_client import models as qm
                     norm_query = self._normalize_camelcase_for_bm25(query)
-                    sparse_emb = next(iter(bm25.embed([norm_query])))
-                    search_results = self._qdrant_client.query_points(
+                    sparse_emb = await asyncio.to_thread(lambda: next(iter(bm25.embed([norm_query]))))
+                    search_results = (await asyncio.to_thread(self._qdrant_client.query_points,
                         collection_name=collection_name,
                         query=qm.SparseVector(
                             indices=sparse_emb.indices.tolist(),
