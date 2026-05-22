@@ -1114,19 +1114,9 @@ def _is_cuda_oom(exc: BaseException) -> bool:
     return name == "OutOfMemoryError" or "out of memory" in msg or "cuda oom" in msg
 
 
-_BSL_CAMELCASE_RE = re.compile(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+")
-
-
-def _normalize_camelcase_for_bm25(text: str) -> str:
-    """Split BSL CamelCase identifiers for BM25 tokenization.
-
-    Mirrors `normalize_camelcase` in scripts/migrate_bsl_to_hybrid.py and
-    `BSLSearchService._normalize_camelcase_for_bm25` in semantic_search/
-    services/search.py — index-time and query-time normalization MUST
-    match or the BM25 index becomes unusable for natural-language queries.
-    """
-    parts = _BSL_CAMELCASE_RE.findall(text)
-    return " ".join(parts).lower() if parts else text.lower()
+from src.bsl.semantic_search.services.bm25_tokenizer import (  # noqa: E402
+    normalize_camelcase as _normalize_camelcase_for_bm25,
+)
 
 
 def flush_batch(
