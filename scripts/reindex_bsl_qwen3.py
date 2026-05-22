@@ -1166,6 +1166,15 @@ def flush_batch(
         if dual_vector:
             mp_texts = [c.metadata.get("module_path", "") or "" for c in chunks]
             mp_vectors = embedder.embed_batch(mp_texts, is_query=False)
+
+        # Compute BM25 sparse vectors when sparse_encoder is provided.
+        # Mirrors smoke + migration: CamelCase-normalize chunk.content, embed
+        # via fastembed `Qdrant/bm25`, attach as `bm25` named sparse vector.
+        # Empty content -> no sparse entry on the point (dense-only).
+        sparse_vectors: list[Any] | None = None
+        if sparse_encoder is not None:
+            norm_texts = [_normalize_camelcase_for_bm25(t) if t else "" for t in texts]
+            sparse_vectors = list(sparse_encoder.embed(norm_texts))
     except Exception as e:  # noqa: BLE001 — we re-raise non-OOM
         if not _is_cuda_oom(e):
             raise
