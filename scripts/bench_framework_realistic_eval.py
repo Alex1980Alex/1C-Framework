@@ -31,12 +31,8 @@ QWEN3_QUERY_INSTRUCT = (
     "Instruct: Given a web search query, retrieve relevant passages "
     "that answer the query\nQuery: "
 )
-CAMELCASE_RE = re.compile(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+")
-
-
-def normalize_camelcase(text: str) -> str:
-    parts = CAMELCASE_RE.findall(text)
-    return " ".join(parts).lower() if parts else text.lower()
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
 
 
 def embed_query_tei(text: str, base_url: str) -> list[float]:
