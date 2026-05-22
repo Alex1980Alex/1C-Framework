@@ -327,12 +327,26 @@ class PostTaskPushPR(BaseHook):
                 f"Disable dry-run: `AUTO_PR_DRY_RUN=0`."
             )
 
-        # ---- create or update branch ref at HEAD (no checkout) ----
-        code, _, err = pr.run_git("branch", "-f", branch, "HEAD", cwd=PROJECT_ROOT)
-        if code != 0:
-            return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: branch ref failed: {err[:200]}"
+        # ---- P3.2: cherry-pick model OR default branch-at-HEAD ----
+        branch_mode = "head-ref"
+        cherry_note = ""
+        if pr.env_flag("AUTO_PR_CHERRY_PICK") and start_sha:
+            ok_cp, cp_msg = pr.cherry_pick_range_to_branch(
+                start_sha, head_full, branch, base, cwd=PROJECT_ROOT
             )
+            if ok_cp:
+                branch_mode = "cherry-pick"
+                cherry_note = f"cherry-pick: {cp_msg}"
+            else:
+                cherry_note = (
+                    f"cherry-pick failed → fallback to branch-at-HEAD ({cp_msg})"
+                )
+        if branch_mode == "head-ref":
+            code, _, err = pr.run_git("branch", "-f", branch, "HEAD", cwd=PROJECT_ROOT)
+            if code != 0:
+                return HookOutput().system_message(
+                    f"[POST-TASK-PUSH-PR] Task #{task_id}: branch ref failed: {err[:200]}"
+                )
 
         # ---- P0.2: push with conflict-aware retry ----
         push_ok, push_mode, push_msg = pr.push_branch_safe(branch, cwd=PROJECT_ROOT, timeout=90)
