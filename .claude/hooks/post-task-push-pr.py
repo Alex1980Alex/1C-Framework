@@ -30,6 +30,13 @@ Features (env-gated, all opt-in; `AUTO_PR_ENABLED=1` is master switch):
   Notifications  (SMTP, see shared/pr_notifier.py)
     AUTO_PR_SMTP_HOST, AUTO_PR_NOTIFY_TO  required for email alerts
 
+  Branch model (P3.2)
+    AUTO_PR_CHERRY_PICK            "1" — create branch from origin/base and
+                                   cherry-pick start_sha..HEAD onto it.
+                                   Gives a clean per-task diff; falls back
+                                   to the default branch-at-HEAD model on
+                                   cherry-pick conflict.
+
   Safety
     AUTO_PR_DRY_RUN                "1" — all checks run, but no push / PR / merge
 
