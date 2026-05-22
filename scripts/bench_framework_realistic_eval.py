@@ -166,16 +166,18 @@ def main() -> int:
 
     for i, item in enumerate(items):
         query = item["query"]
-        slc = item.get("slice", "overall")
-        expected_ids = [_id_from_expected(e) for e in item["expected"]]
+        slc = item.get("category", item.get("difficulty", "overall"))
+        expected_ids = list(item.get("expected_chunk_ids", []))
         if not expected_ids:
             continue
 
         try:
-            dvec = embed_query_tei(query, args.tei_url)
+            dvec_full = embed_query_tei(query, args.tei_url)
         except Exception as e:
             print(f"[skip] {item.get('id','?')} embed failed: {e}")
             continue
+        # MRL: truncate 4096d Qwen3 query embedding to collection dim (1024d).
+        dvec = _mrl_truncate(dvec_full, args.target_dim) if len(dvec_full) > args.target_dim else dvec_full
         sparse = next(iter(bm25.embed([normalize_camelcase(query)])))
 
         retrievals = {
