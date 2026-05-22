@@ -510,19 +510,20 @@ class BSLSearchService:
                     self._embedding_service = FrameworkTEIEmbedder()
                     atexit.register(self._embedding_service.close)
                 try:
-                    query_embedding = self._embedding_service.embed_batch([query], is_query=True)[0]
+                    query_embedding = (await asyncio.to_thread(self._embedding_service.embed_batch, [query], is_query=True))[0]
                 except Exception as exc:
                     logger.error(f"TEI embedding failed: {exc}", exc_info=True)
                     return []
                 if not query_embedding:
                     logger.error("TEI вернул пустой embedding для запроса")
                     return []
-                search_results = self._qdrant_client.query_points(
+                search_results = (await asyncio.to_thread(
+                    self._qdrant_client.query_points,
                     collection_name=collection_name,
                     query=query_embedding,
                     limit=limit,
                     query_filter=filters,
-                ).points
+                )).points
 
             # Преобразование результатов
             results = []
