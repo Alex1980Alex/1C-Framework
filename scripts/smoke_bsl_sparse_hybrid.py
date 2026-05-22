@@ -17,11 +17,11 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from pathlib import Path
 from typing import Any
 
 from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient, models
-
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
