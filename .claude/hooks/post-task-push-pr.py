@@ -338,9 +338,7 @@ class PostTaskPushPR(BaseHook):
                 branch_mode = "cherry-pick"
                 cherry_note = f"cherry-pick: {cp_msg}"
             else:
-                cherry_note = (
-                    f"cherry-pick failed → fallback to branch-at-HEAD ({cp_msg})"
-                )
+                cherry_note = f"cherry-pick failed → fallback to branch-at-HEAD ({cp_msg})"
         if branch_mode == "head-ref":
             code, _, err = pr.run_git("branch", "-f", branch, "HEAD", cwd=PROJECT_ROOT)
             if code != 0:

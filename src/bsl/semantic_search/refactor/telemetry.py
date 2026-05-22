@@ -9,7 +9,7 @@ import shutil
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Protocol
 
@@ -143,9 +143,7 @@ class JsonlTelemetryWriter:
             if not match or match["stem"] != stem or match["suffix"] != suffix:
                 continue
             try:
-                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(
-                    tzinfo=timezone.utc
-                )  # noqa: UP017
+                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(tzinfo=UTC)  # noqa: UP017
             except ValueError:
                 continue
             if file_date >= cutoff:

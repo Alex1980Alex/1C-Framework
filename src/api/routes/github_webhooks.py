@@ -21,6 +21,7 @@ Wiring (operator task)
        - Secret:       <same value as GITHUB_WEBHOOK_SECRET>
        - Events:       Pull requests, Check suites
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -72,9 +73,7 @@ def _save_state(state: dict) -> None:
     try:
         _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         tmp = _STATE_FILE.with_suffix(_STATE_FILE.suffix + ".tmp")
-        tmp.write_text(
-            json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        tmp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
         os.replace(tmp, _STATE_FILE)
     except OSError as exc:
         logger.warning("[gh-webhook] failed to persist state: %s", exc)
@@ -84,7 +83,7 @@ def _task_id_from_branch(branch: str) -> str | None:
     """`task/<id>-...` → `<id>` (or None)."""
     if not branch.startswith("task/"):
         return None
-    tail = branch[len("task/"):]
+    tail = branch[len("task/") :]
     head = tail.split("-", 1)[0]
     return head or None
 

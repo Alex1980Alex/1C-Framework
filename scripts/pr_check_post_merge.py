@@ -16,6 +16,7 @@ CLI:
                        [--base BRANCH]         # default master
                        [--state-file PATH]     # default repo .claude/cache/...
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,7 +25,7 @@ import os
 import shutil
 import sys
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -38,6 +39,7 @@ DEFAULT_STATE = PROJECT_ROOT / ".claude" / "cache" / "post-task-push-pr-state.js
 
 def _gh_json(*args: str, cwd: Path, timeout: int = 30) -> tuple[bool, dict | list]:
     import subprocess
+
     try:
         r = subprocess.run(
             ["gh", *args],
@@ -61,8 +63,11 @@ def _gh_json(*args: str, cwd: Path, timeout: int = 30) -> tuple[bool, dict | lis
 def pr_merge_info(pr_url: str, *, cwd: Path) -> dict | None:
     """Return {merged_at, merge_sha, base} for a merged PR, else None."""
     ok, data = _gh_json(
-        "pr", "view", pr_url,
-        "--json", "mergedAt,mergeCommit,baseRefName,state",
+        "pr",
+        "view",
+        pr_url,
+        "--json",
+        "mergedAt,mergeCommit,baseRefName,state",
         cwd=cwd,
     )
     if not ok or not isinstance(data, dict):
@@ -82,9 +87,14 @@ def runs_for_sha(sha: str, *, cwd: Path) -> tuple[str, str]:
     if not sha:
         return "none", "no merge sha"
     ok, data = _gh_json(
-        "run", "list", "--commit", sha,
-        "--json", "status,conclusion,workflowName,databaseId,url",
-        "--limit", "20",
+        "run",
+        "list",
+        "--commit",
+        sha,
+        "--json",
+        "status,conclusion,workflowName,databaseId,url",
+        "--limit",
+        "20",
         cwd=cwd,
     )
     if not ok:
@@ -96,7 +106,8 @@ def runs_for_sha(sha: str, *, cwd: Path) -> tuple[str, str]:
     if pending:
         return "pending", f"{len(pending)} run(s) still running"
     failed = [
-        r for r in runs
+        r
+        for r in runs
         if (r.get("conclusion") or "").lower()
         in {"failure", "cancelled", "timed_out", "action_required"}
     ]
@@ -128,8 +139,15 @@ def revert_merge_commit(
             pr.run_git("branch", "-D", revert_branch, cwd=cwd, timeout=15)
 
     code, _, err = pr.run_git(
-        "worktree", "add", "-f", "-B", revert_branch, str(worktree_dir),
-        f"origin/{base}", cwd=cwd, timeout=60,
+        "worktree",
+        "add",
+        "-f",
+        "-B",
+        revert_branch,
+        str(worktree_dir),
+        f"origin/{base}",
+        cwd=cwd,
+        timeout=60,
     )
     if code != 0:
         _cleanup(rm_branch=False)
@@ -138,23 +156,24 @@ def revert_merge_commit(
     # `-m 1` reverts to first-parent (the base side). Required for merge commits;
     # harmless flag on squash commits (git falls back to plain revert).
     code, _, err = pr.run_git(
-        "revert", "--no-edit", "-m", "1", merge_sha,
-        cwd=worktree_dir, timeout=60,
+        "revert",
+        "--no-edit",
+        "-m",
+        "1",
+        merge_sha,
+        cwd=worktree_dir,
+        timeout=60,
     )
     if code != 0:
         # try without -m for squash commits
         pr.run_git("revert", "--abort", cwd=worktree_dir, timeout=15)
-        code2, _, err2 = pr.run_git(
-            "revert", "--no-edit", merge_sha, cwd=worktree_dir, timeout=60
-        )
+        code2, _, err2 = pr.run_git("revert", "--no-edit", merge_sha, cwd=worktree_dir, timeout=60)
         if code2 != 0:
             pr.run_git("revert", "--abort", cwd=worktree_dir, timeout=15)
             _cleanup(rm_branch=True)
             return False, "", f"revert conflict: {(err2 or err)[:200]}"
 
-    code, _, err = pr.run_git(
-        "push", "-u", "origin", revert_branch, cwd=worktree_dir, timeout=60
-    )
+    code, _, err = pr.run_git("push", "-u", "origin", revert_branch, cwd=worktree_dir, timeout=60)
     if code != 0:
         _cleanup(rm_branch=True)
         return False, "", f"push: {err[:200]}"
@@ -167,9 +186,7 @@ def revert_merge_commit(
         f"- Detected by: `scripts/pr_check_post_merge.py`\n\n"
         f"Manual review required before merging this revert."
     )
-    ok_c, new_url = pr.gh_pr_create(
-        revert_branch, base, title, body, cwd=cwd
-    )
+    ok_c, new_url = pr.gh_pr_create(revert_branch, base, title, body, cwd=cwd)
     _cleanup(rm_branch=False)
     if not ok_c:
         return False, "", f"pr create: {new_url[:200]}"
@@ -197,7 +214,7 @@ def _within_lookback(merged_at_str: str, hours: int) -> bool:
         dt = datetime.fromisoformat(merged_at_str.replace("Z", "+00:00"))
     except ValueError:
         return False
-    return (datetime.now(timezone.utc) - dt) <= timedelta(hours=hours)
+    return (datetime.now(UTC) - dt) <= timedelta(hours=hours)
 
 
 def main() -> int:
@@ -208,8 +225,9 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="Post-merge CI check + auto-revert")
     parser.add_argument("--lookback-hours", type=int, default=72)
-    parser.add_argument("--apply", action="store_true",
-                        help="actually create revert PRs (default: report only)")
+    parser.add_argument(
+        "--apply", action="store_true", help="actually create revert PRs (default: report only)"
+    )
     parser.add_argument("--base", default=os.environ.get("AUTO_PR_BASE", "master"))
     parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE)
     args = parser.parse_args()
@@ -265,7 +283,7 @@ def main() -> int:
         summary["failures"] += 1
         print(f"{line} ({detail})")
         if not args.apply:
-            print(f"    -> would create revert PR (use --apply)")
+            print("    -> would create revert PR (use --apply)")
             continue
         ok, new_url, msg = revert_merge_commit(
             info["merge_sha"], info["base"] or args.base, pr_url, cwd=PROJECT_ROOT
