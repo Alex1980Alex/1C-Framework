@@ -133,11 +133,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--qdrant-url", default="http://localhost:6333")
     ap.add_argument("--tei-url", default="http://localhost:8080")
-    ap.add_argument("--collection", default="bsl_code_v4_late")
-    ap.add_argument("--golden", default="data/bsl_golden_set.json")
+    ap.add_argument("--collection", default="framework_code_v1_hybrid_bench")
+    ap.add_argument("--golden", default="data/eval/golden_v1.json")
     ap.add_argument("--k", type=int, default=10)
-    ap.add_argument("--out", default="data/reports/bsl_realistic_eval.json")
-    ap.add_argument("--no-scope-filter", action="store_true")
+    ap.add_argument("--out", default="data/reports/framework_realistic_eval.json")
+    ap.add_argument("--target-collection-filter", default="framework_code_v1",
+                    help="Filter golden items by target_collection field")
+    ap.add_argument("--target-dim", type=int, default=1024,
+                    help="MRL target dim (truncate query embedding to this)")
     args = ap.parse_args()
 
     golden_path = Path(args.golden)
