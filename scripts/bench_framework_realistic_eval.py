@@ -144,21 +144,17 @@ def main() -> int:
     args = ap.parse_args()
 
     golden_path = Path(args.golden)
-    items = json.loads(golden_path.read_text(encoding="utf-8"))
-    print(f"[load] {golden_path}: {len(items)} queries")
+    raw = json.loads(golden_path.read_text(encoding="utf-8"))
+    all_items = raw.get("items", raw) if isinstance(raw, dict) else raw
+    items = [it for it in all_items
+             if it.get("target_collection") == args.target_collection_filter]
+    print(f"[load] {golden_path}: {len(items)} queries (filtered from {len(all_items)})")
 
     client = QdrantClient(url=args.qdrant_url, timeout=120)
     print("[load] FastEmbed Qdrant/bm25...")
     bm25 = SparseTextEmbedding(model_name="Qdrant/bm25")
 
-    scope_filter = None
-    if not args.no_scope_filter:
-        scope_filter = models.Filter(
-            must=[models.FieldCondition(
-                key="module_path",
-                match=models.MatchText(text="CommonModules"),
-            )]
-        )
+    scope_filter = None  # no CommonModules concept for framework_code_v1
 
     modes = ["dense", "bm25", "hybrid_rrf"]
     raw: dict[str, dict[str, dict[str, list[float]]]] = {
