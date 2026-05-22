@@ -301,7 +301,7 @@
           {
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/post-task-push-pr.py",
-            "timeout": 90
+            "timeout": 1320
           }
         ]
       },
