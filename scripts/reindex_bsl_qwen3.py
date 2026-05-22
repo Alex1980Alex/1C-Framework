@@ -1636,10 +1636,34 @@ def main() -> None:
             print(f"Context enrichment unavailable: {e}")
             enricher = None
 
+    if args.enable_sparse and args.dual_vector:
+        # Existing dual_vector is content+module_path (2 dense slots);
+        # hybrid is dense+bm25 sparse. Combined layout {content, module_path,
+        # bm25} is untested and not used in production — refuse the combo.
+        print("ERROR: --enable-sparse is incompatible with --dual-vector")
+        sys.exit(1)
+
     qdrant = QdrantClient(host="localhost", port=6333, timeout=120)
-    create_collection(qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector)
+    layout = create_collection(
+        qdrant,
+        args.collection,
+        vector_dims,
+        args.recreate,
+        dual_vector=args.dual_vector,
+        enable_sparse=args.enable_sparse,
+    )
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
+
+    # Auto-init sparse encoder when collection layout is hybrid (covers both
+    # explicit --enable-sparse on a fresh collection and the incremental
+    # case of reindexing into an existing hybrid collection like the
+    # production alias bsl_code_v4_late).
+    sparse_encoder = None
+    if layout == "hybrid":
+        from fastembed import SparseTextEmbedding
+        sparse_encoder = SparseTextEmbedding(model_name="Qdrant/bm25")
+        print("Hybrid layout: BM25 sparse vectors via fastembed Qdrant/bm25")
 
     with _stage("file_scan", project=str(project), paths_mode=bool(args.paths)):
         if args.paths:
