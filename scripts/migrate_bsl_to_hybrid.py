@@ -42,20 +42,7 @@ from _progress import make_tracker  # noqa: E402
 from fastembed import SparseTextEmbedding  # noqa: E402
 from qdrant_client import QdrantClient, models  # noqa: E402
 
-CAMELCASE_RE = re.compile(r"[А-ЯЁ][а-яё]*|[A-Z][a-z]*|[а-яё]+|[a-z]+|\d+")
-
-
-def normalize_camelcase(text: str) -> str:
-    """Split CamelCase identifiers into space-separated tokens.
-
-    BSL identifiers like `ОбработкаПроведения` tokenize to
-    `обработка проведения` so BM25 can match queries that use the same
-    words in different surface forms. Without this normalization BM25
-    treats each CamelCase identifier as a single opaque token and recall
-    collapses for natural-language-style queries.
-    """
-    parts = CAMELCASE_RE.findall(text)
-    return " ".join(parts).lower() if parts else text.lower()
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
 
 
 def create_target_collection(
