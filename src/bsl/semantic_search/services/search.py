@@ -548,6 +548,28 @@ class BSLSearchService:
             logger.error(f"Ошибка Neo4j search: {e}", exc_info=True)
             return []
 
+    async def _call_neo4j_search_legacy(self, query: str, limit: int) -> list[dict]:
+        """Legacy path: использует injected service.execute_query() interface."""
+        try:
+            keywords = self._extract_keywords_from_query(query)
+            if not keywords:
+                return []
+            cypher_query = """
+            MATCH (s:Symbol)
+            WHERE ANY(keyword IN $keywords WHERE toLower(s.name) CONTAINS toLower(keyword))
+            OPTIONAL MATCH (s)-[:BELONGS_TO]->(m:Module)
+            WITH s, m, count{(m)-[:DECLARES]->(:Symbol)} AS sym_count
+            RETURN coalesce(s.name, '?') AS module_name,
+                   coalesce(m.path, s.module_path, '') AS file_path,
+                   coalesce(m.module_type, 'Unknown') AS module_type,
+                   sym_count AS functions_count
+            LIMIT $limit
+            """
+            return self.neo4j.execute_query(cypher_query, {"keywords": keywords, "limit": limit})
+        except Exception as e:
+            logger.error(f"Ошибка Neo4j legacy search: {e}")
+            return []
+
     async def _call_hybrid_search(self, query: str, limit: int) -> list[dict]:
         """Гибридный поиск - объединение semantic + graph"""
         try:
