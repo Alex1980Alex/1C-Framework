@@ -243,16 +243,30 @@ def gh_pr_wait_checks(pr_url: str, *, cwd: str | Path, max_seconds: int = 300) -
 
 
 def gh_pr_merge(
-    pr_url: str, *, cwd: str | Path, squash: bool = True, delete_branch: bool = True
+    pr_url: str,
+    *,
+    cwd: str | Path,
+    squash: bool = True,
+    delete_branch: bool = True,
+    queue: bool = False,
 ) -> tuple[bool, str]:
+    """Merge PR via `gh pr merge`.
+
+    queue=True uses `--merge-queue` (GitHub native merge queue, free since
+    2023; roadmap 40.4 P3.3 alternative to Mergify SaaS). Repo must have
+    merge queue enabled in branch protection.
+    """
     args = ["pr", "merge", pr_url]
-    if squash:
-        args.append("--squash")
-    if delete_branch:
-        args.append("--delete-branch")
+    if queue:
+        args.append("--merge-queue")
+    else:
+        if squash:
+            args.append("--squash")
+        if delete_branch:
+            args.append("--delete-branch")
     code, _, err = _run_gh(*args, cwd=cwd, timeout=30)
     if code == 0:
-        return True, "merged"
+        return True, ("queued" if queue else "merged")
     return False, (err or "")[:300]
 
 

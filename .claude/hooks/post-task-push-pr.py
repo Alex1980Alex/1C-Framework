@@ -24,6 +24,10 @@ Features (env-gated, all opt-in; `AUTO_PR_ENABLED=1` is master switch):
     AUTO_PR_REVIEWERS              comma-separated reviewer logins (fallback if
                                    CODEOWNERS finds none)
     AUTO_PR_AUTO_MERGE             "1" to `gh pr merge --squash` after create
+    AUTO_PR_MERGE_QUEUE            "1" to use `--merge-queue` instead of
+                                   `--squash` (GitHub native merge queue;
+                                   repo must have queue enabled in branch
+                                   protection — see roadmap 40.4 P3.3)
     AUTO_PR_WAIT_FOR_CHECKS        "1" to poll `gh pr checks` before merge
     AUTO_PR_CHECKS_TIMEOUT         seconds to wait for checks (default 300)
 
