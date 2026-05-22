@@ -140,7 +140,44 @@ def _looks_like_cyrillic_project(project: Path) -> bool:
     return any("Ѐ" <= ch <= "ӿ" for ch in str(project))
 
 
-def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False) -> None:
+def detect_collection_layout(client: QdrantClient, name: str) -> str:
+    """Return existing collection layout, or 'absent' if not found.
+
+    Layouts:
+      'hybrid'       - named {dense: dense_dim} + sparse {bm25: IDF}
+      'dual_vector'  - named {content, module_path} (Phase 8 legacy)
+      'dense_only'   - single-vector (legacy bsl_code_v4_late before 2026-05-22 swap)
+      'absent'       - collection does not exist
+    """
+    try:
+        info = client.get_collection(collection_name=name)
+    except (UnexpectedResponse, Exception):
+        return "absent"
+    vec_cfg = info.config.params.vectors
+    sparse_cfg = info.config.params.sparse_vectors
+    has_sparse_bm25 = bool(sparse_cfg and "bm25" in sparse_cfg)
+    if isinstance(vec_cfg, dict):
+        if "dense" in vec_cfg and has_sparse_bm25:
+            return "hybrid"
+        if "content" in vec_cfg and "module_path" in vec_cfg:
+            return "dual_vector"
+    return "dense_only"
+
+
+def create_collection(
+    client: QdrantClient,
+    name: str,
+    dims: int,
+    recreate: bool = False,
+    dual_vector: bool = False,
+    enable_sparse: bool = False,
+) -> str:
+    """Create collection if absent, return its (existing or new) layout.
+
+    `enable_sparse=True` only takes effect when CREATING the collection.
+    Auto-detect handles existing collections — important for the git
+    post-commit incremental flow that lands on the production alias.
+    """
     if recreate:
         try:
             client.delete_collection(collection_name=name)
@@ -148,28 +185,43 @@ def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool
         except (UnexpectedResponse, Exception):
             pass
 
-    try:
+    layout = detect_collection_layout(client, name)
+    if layout != "absent":
         info = client.get_collection(collection_name=name)
-        print(f"Collection '{name}' exists: {info.points_count} points")
-    except (UnexpectedResponse, Exception):
-        if dual_vector:
-            client.create_collection(
-                collection_name=name,
-                vectors_config={
-                    "content": models.VectorParams(size=dims, distance=models.Distance.COSINE),
-                    "module_path": models.VectorParams(size=dims, distance=models.Distance.COSINE),
-                },
-            )
-            print(f"Created dual-vector collection: {name} (content+module_path, {dims}d, cosine)")
-        else:
-            client.create_collection(
-                collection_name=name,
-                vectors_config=models.VectorParams(
-                    size=dims,
-                    distance=models.Distance.COSINE,
-                ),
-            )
-            print(f"Created collection: {name} (dims={dims}, cosine)")
+        print(f"Collection '{name}' exists: {info.points_count} points (layout={layout})")
+        return layout
+
+    if enable_sparse:
+        client.create_collection(
+            collection_name=name,
+            vectors_config={
+                "dense": models.VectorParams(size=dims, distance=models.Distance.COSINE),
+            },
+            sparse_vectors_config={
+                "bm25": models.SparseVectorParams(modifier=models.Modifier.IDF),
+            },
+        )
+        print(f"Created hybrid collection: {name} (dense={dims}d cosine, bm25 sparse IDF)")
+        return "hybrid"
+    if dual_vector:
+        client.create_collection(
+            collection_name=name,
+            vectors_config={
+                "content": models.VectorParams(size=dims, distance=models.Distance.COSINE),
+                "module_path": models.VectorParams(size=dims, distance=models.Distance.COSINE),
+            },
+        )
+        print(f"Created dual-vector collection: {name} (content+module_path, {dims}d, cosine)")
+        return "dual_vector"
+    client.create_collection(
+        collection_name=name,
+        vectors_config=models.VectorParams(
+            size=dims,
+            distance=models.Distance.COSINE,
+        ),
+    )
+    print(f"Created collection: {name} (dims={dims}, cosine)")
+    return "dense_only"
 
 
 def point_id(collection: str, chunk_id: str) -> str:
