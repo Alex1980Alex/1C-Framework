@@ -535,3 +535,27 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 **Categories:** `hook`, `mcp_call`, `slash_run`, `preflight`, `delegation_decision`
 
 **Diagnostic:** `tail -500 data/hook-invocations.jsonl | jq 'select(.outcome=="error")'`
+
+### 10.2 Cache state files (12 files)
+
+| File | Used by |
+|---|---|
+| `hook-todos.json` | task-enforcer, task_master (mandatory tasks queue) |
+| `session-skills.json` | task-protocol-observer (phase, activated skills) |
+| `post-task-push-pr-state.json` | post-task-push-pr + dashboard |
+| `auto-git-save.json` | auto-git-save (counter + files list) |
+| `auto-git-save.paused` | TTL string sentinel |
+| `circuit-breaker-state.json` | shared/circuit_breaker.py |
+| `memory-first-cooldown.json` | memory-first-hook |
+| `hook-todos.lock` / `session-skills.lock` | hook_lock concurrency |
+| `data/.current-runs.json` | slash-command-tracker + MCP logger correlation |
+
+### 10.3 Langfuse spans
+
+- `injected` (memory-first) — prompt_len, layer_counts, merged_count, duration_ms
+- `delegation.routing.decision` (z-ai-delegation A/B) — router_choice, score, exemplar_id
+- `wiki.promote` (session-memory-save L5) — promoted_count, draft_path
+
+---
+
+## §11 Next Improvements
