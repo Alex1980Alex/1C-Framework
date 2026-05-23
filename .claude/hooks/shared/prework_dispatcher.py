@@ -70,6 +70,12 @@ async def _run_worker(script: str, timeout: float, label: str, payload: str) -> 
         except json.JSONDecodeError as exc:
             return {"label": label, "items": [], "error": f"bad json: {exc}"}
     except asyncio.TimeoutError:
+        # Kill orphan subprocess (Windows zombie prevention)
+        try:
+            proc.kill()
+            await proc.wait()
+        except (ProcessLookupError, OSError):
+            pass
         return {"label": label, "items": [], "error": f"timeout {timeout}s"}
     except (OSError, ValueError) as exc:
         return {"label": label, "items": [], "error": f"{type(exc).__name__}: {exc}"}
