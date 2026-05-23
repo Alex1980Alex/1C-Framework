@@ -1270,6 +1270,14 @@ graceful degradation на failure. Escalation для complex через subagent
 | **§14 Pre-Work** | architecture-research cache 47 entries ✓; research-task-detector exists ✓ | "100% prompts pass" criterion impossible pre-impl | **Parallel UPS infra не существует**; aggregator unspecified | Token 7800>5K (criterion violation); 4 hooks count wrong; Task tool synchronous, not background | **HIGH 5-8d underestimated → 8-15d** |
 | **§15 Process Caching** | hook-invocations.jsonl atomic FileLock ✓ | "10k events/day" unverified; PyIceberg "best" не benchmark'd | DuckDB install, MinIO/S3 cred, crypto-shred Vault — new deps | §15.5 crypto-shred per-session-key — paths не implemented | **HIGH 6-10d underestimated** |
 
+### 16.3 Top 5 blocking risks (prioritized)
+
+1. **Wrong inventory baseline (12-18% off).** Каждый effort estimate, "4 new hooks (73→77)" claim, capacity-planning в §4 — все anchored к incorrect counts. **FIX FIRST:** recount + update §0/§4/§14.7.
+2. **§14 parallel-UPS assumption unimplemented.** §14.5 math assume parallel; settings.json — sequential. Sum: 9.1s + existing ~3s = >12s — нарушает UPS UX. **FIX:** build dispatcher OR rewrite §14 budget для sequential.
+3. **`AUTO_PR_MERGE_ENABLED` env var doc error.** §8.5 — anyone setting получит no-op. Real name `AUTO_PR_AUTO_MERGE`. `AUTO_PR_TIMEOUT` не существует. **FIX:** sync §8.5 env table к actual code.
+4. **§14 token budget self-contradicts (7800>5K).** Either relax target к ~8K или drop a check. **FIX:** decide.
+5. **§15 vs §10 observability path conflict.** §10: Langfuse `Have`. §15.6 P3: "если LGTM выбрано" non-decision. Risk: dual-write infra 6 months. **FIX:** explicit decision gate в §15.4.
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
