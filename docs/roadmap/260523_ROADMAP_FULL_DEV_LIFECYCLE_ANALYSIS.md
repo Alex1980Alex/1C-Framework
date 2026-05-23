@@ -1091,6 +1091,49 @@ Claude видит обогащённый context → начинает работ
 
 **Total:** 5-8 days focused work.
 
+### 14.7 ADR-ready decision record
+
+```markdown
+# ADR-014: Mandatory pre-work analysis pipeline (5-check automated)
+
+**Date:** 2026-05-23
+**Status:** proposed
+**Researched:** [260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS §14]
+**Cache:** lifecycle-hooks-defense-depth-saga-2026.md, memory-delegation-routing-2026.md
+
+## Context
+Code-changing prompts проходят только Memory recall (1/5 pre-work checks).
+Architecture/Code/GitHub/SO либо manual либо missing. Risk: duplicated
+ADRs, conflicting patterns, repeated known issues.
+
+## Decision
+Implement 4 new UPS hooks (prework-architecture, prework-similar-code,
+prework-github-bp, prework-stackoverflow) parallel to memory-first-hook.
+Aggregator deduplicates + ranks. Latency budget 8s, token budget 5K,
+graceful degradation на failure. Escalation для complex через subagent.
+
+## Consequences
++ 100% pre-work coverage automatically
++ Reduced cognitive load (context inline)
++ Reduced cycle time (no manual triggers)
+- 4 new hooks к maintain (73 → 77)
+- ~5K tokens overhead per prompt (mitigated via ranking)
+- UPS latency +3-5s worst case (parallel mitigation)
+
+## Alternatives rejected
+- Single mega-hook (хрупкий, не graceful)
+- All-subagent dispatch (latency 60s+)
+- Pre-emptive scheduled research only (low relevance)
+- Manual user invocation (status quo — gap не закрывается)
+
+## Related
+- Roadmap 260523 §14 (this analysis)
+- Skill task-evaluation (hybrid workflow used)
+- Memory feedback_post_merge_smoke_required (mandatory checks pattern)
+```
+
+---
+
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
 - При появлении нового failure class
