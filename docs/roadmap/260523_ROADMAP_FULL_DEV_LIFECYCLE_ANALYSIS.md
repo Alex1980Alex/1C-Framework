@@ -1454,11 +1454,11 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 |---|---|---|---|
 | 1 | Inventory baseline wrong | **RESOLVED 2026-05-23** | §0/§4/§14.7 recount applied (59/87/40/20/66 verified via find+wc) |
 | 2 | §14 parallel-UPS unimplemented | **RESOLVED → ADR-D1** | Build `shared/prework_dispatcher.py` (1d in P0c) |
-| 3 | `AUTO_PR_MERGE_ENABLED` doc error | **PENDING** | 0.25h fix §8.5 env table |
+| 3 | `AUTO_PR_MERGE_ENABLED` doc error | **RESOLVED 2026-05-23** | §8.5 env table synced к real code (16 actual env vars), wrong names anchored к actual replacements |
 | 4 | §14 token budget conflict | **RESOLVED → ADR-D2** | Implement adaptive routing + MMR (0.5d added to P1) |
 | 5 | §10 vs §15 observability path | **RESOLVED → ADR-D3** | OTel Collector container в docker-compose + 4-trigger dashboard (1d) |
 
-**Remaining mechanical fix:** ~0.75h (blockers #1 + #3).
+**Remaining mechanical fix:** ✅ **DONE 2026-05-23** (blockers #1 + #3 closed in ~45min). All 5 §16 blockers resolved → **GO for P0a-P0c sequencing per §16.4**.
 
 ### 17.6 Final GO criteria
 
