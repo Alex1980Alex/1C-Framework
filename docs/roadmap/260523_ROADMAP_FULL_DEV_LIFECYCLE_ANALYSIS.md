@@ -726,6 +726,20 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 | P4 | OpenSpec live JIRA sync (currently stub) | 2-3 days | Bidirectional sync |
 | P4 | Sandbox-execution LangSmith/E2B backends | 1 week | Currently DryRun only |
 
+### 11.1 Tech-driven future improvements
+
+| Pri | Tech direction | Why |
+|---|---|---|
+| P1 | Migrate ChromaDB → Qdrant (legacy fallback removal) | Single vector DB simplifies infra; ChromaDB лишь legacy `VECTOR_STORE__PROVIDER=chroma` opt-in |
+| P2 | TEI service health gauge → Prometheus `/metrics` | Currently silent fallback to `sentence-transformers` (1024d) на TEI down — observability missing |
+| P2 | Replace Russian stemmer на `pymorphy3>=2.0` (через `[morphology]` extra) | Custom 29-suffix regex имеет miss cases; pymorphy3 — dictionary-based, более точный |
+| P2 | Pydantic v2 `Field(..., examples=[...])` для всех schemas (OpenAPI docs) | Currently sparse coverage; FastAPI auto-OpenAPI generation выиграет от examples |
+| P3 | `tenacity` retry decorator audit (currently 1 explicit usage) | LLM rotation handles retry inline; consolidate в `shared/retry.py` через `@tenacity.retry` decorators (exponential backoff + jitter) |
+| P3 | `structlog` migration (currently builtin `logging`) | Structured JSON logs упростят Grafana/Loki integration |
+| P3 | OpenTelemetry tracing (current Langfuse) — distributed tracing | Langfuse привязан к LLM; OTel для full request trace |
+| P4 | Move from `httpx` async to `aiohttp` где есть hot path bottlenecks | `httpx` simpler API, но `aiohttp` faster на 1000+ rps |
+| P4 | Pre-built Docker images (TEI + Qdrant + Neo4j + pgvector) → single `docker compose up` | Currently требует ручного pull/setup для TEI Qwen3-Embedding-8B safetensors |
+
 ---
 
 ## §12 Связанные артефакты
