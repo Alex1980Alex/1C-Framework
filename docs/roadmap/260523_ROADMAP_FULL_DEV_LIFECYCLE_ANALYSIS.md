@@ -1187,3 +1187,25 @@ graceful degradation на failure. Escalation для complex через subagent
 | 13 | **Langfuse/LangSmith dataset export → RAGAS replay** — production traces = ground truth. **Reference-free** scoring критично для token-economy | docs.ragas.io/howtos/integrations/_langfuse, langfuse.com/guides/cookbook/evaluation_of_rag_with_ragas | Partial | Langfuse есть, dataset export не настроен |
 | 14 | **RocksDB Checkpoints (hard-link snapshots)** — `CreateCheckpoint(dir)` миллисекунды (hard-links SST), consistent across column families | github.com/facebook/rocksdb/wiki/Checkpoints | Concept fit | Переиспользовать в Python: `.claude/cache/snapshots/<ISO8601>/` через `os.link()`. Protection от NTFS recovery |
 | 15 | **Vector.dev (Rust) — universal observability pipeline** — fan-out [S3, Loki, Tempo], disk-based buffering, VRL transforms, 10× Logstash | github.com/vectordotdev/vector (18k★) | Missing | Если выберем LGTM, идеальный universal sender |
+
+### 15.3 Tooling options compared
+
+| Option | Pros | Cons | Effort |
+|---|---|---|---|
+| **A: Grafana LGTM all-in-one** | Full OTel-native, unified UI, S3 backend, docker-compose ready, free OSS | 4 components; Mimir overkill <10k metric series; Loki labels cardinality risk | 2-3 days |
+| **B: ClickHouse single-table + S3 cold tier** | Один engine для logs/traces/metrics; 2200× faster JSONL scan; S3 tiering встроен | Новый сервис; Vector.dev/Fluent Bit нужен; ETL миграция | 4-5 days |
+| **C: Stay JSONL + DuckDB + Iceberg cold tier** | **Zero migration**; jsonl source of truth; time-travel + NTFS-recovery protection; minimal infra | No real-time dashboards; no tracing UI; cardinality limits >10M rows | **1-2 days** P0 |
+
+### 15.4 Recommendation: Hybrid C (P0) → A (P1, по росту)
+
+**Rationale:** Option C закрывает 5 из 6 gap'ов без migration.
+
+**P0 (1-2 days):** DuckDB query layer + nightly `COPY TO parquet` + PyIceberg snapshot + `replay-checkpoint.json` + crypto-shredding per-session-key.
+
+**Causality cross-cutting (СЕЙЧАС):** CloudEvents envelope + W3C `traceparent` в `invocation_logger.py` — backend-agnostic foundation.
+
+**P1 (по росту >5GB jsonl):** Migrate в LGTM. Vector.dev для fan-out.
+
+### 15.5 Critical urgency
+
+**Crypto-shredding в первой итерации.** Immutability работает против нас — каждый день задержки = new plaintext events которые нельзя ретроактивно зашифровать.
