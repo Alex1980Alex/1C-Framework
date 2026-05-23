@@ -1,6 +1,6 @@
 """Tests for Document Summary Index (Phase 13.4)."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,6 +20,7 @@ PATCH_CHROMA = "src.pdf_framework.vector_store.providers.chroma.ChromaVectorStor
 # ---------------------------------------------------------------------------
 # DocumentSummary model
 # ---------------------------------------------------------------------------
+
 
 class TestDocumentSummary:
     def test_required_fields(self):
@@ -71,6 +72,7 @@ class TestDocumentSummary:
 # ---------------------------------------------------------------------------
 # DocumentSummaryIndex
 # ---------------------------------------------------------------------------
+
 
 class TestDocumentSummaryIndex:
     def test_init_defaults(self):
@@ -225,23 +227,25 @@ class TestDocumentSummaryIndex:
 
         # Pre-initialize
         mock_store = AsyncMock()
-        mock_store.search = AsyncMock(return_value=[
-            SearchResult(
-                chunk=DocumentChunk(
-                    id="summary_doc1",
-                    content="Summary about AI",
-                    document_id="doc1",
-                    metadata={
-                        "summary_id": "doc1",
-                        "title": "AI Paper",
-                        "chunk_count": 42,
-                        "created_at": "2024-01-01",
-                    },
+        mock_store.search = AsyncMock(
+            return_value=[
+                SearchResult(
+                    chunk=DocumentChunk(
+                        id="summary_doc1",
+                        content="Summary about AI",
+                        document_id="doc1",
+                        metadata={
+                            "summary_id": "doc1",
+                            "title": "AI Paper",
+                            "chunk_count": 42,
+                            "created_at": "2024-01-01",
+                        },
+                    ),
+                    score=0.9,
+                    source="vector",
                 ),
-                score=0.9,
-                source="vector",
-            ),
-        ])
+            ]
+        )
         idx._vector_store = mock_store
         idx._initialized = True
 
@@ -285,10 +289,12 @@ class TestDocumentSummaryIndex:
             mock_llm.ainvoke = AsyncMock(return_value=mock_response)
             mock_cls.return_value = mock_llm
 
-            await idx.rebuild([
-                ("doc1", [{"content": "chunk1"}]),
-                ("doc2", [{"content": "chunk2"}]),
-            ])
+            await idx.rebuild(
+                [
+                    ("doc1", [{"content": "chunk1"}]),
+                    ("doc2", [{"content": "chunk2"}]),
+                ]
+            )
 
         mock_store.clear.assert_awaited_once()
         assert mock_store.add_documents.await_count == 2
@@ -300,9 +306,7 @@ class TestDocumentSummaryIndex:
         mock_store = AsyncMock()
         mock_store.clear = AsyncMock()
         # First call succeeds, second fails
-        mock_store.add_documents = AsyncMock(
-            side_effect=[["id1"], Exception("fail")]
-        )
+        mock_store.add_documents = AsyncMock(side_effect=[["id1"], Exception("fail")])
         idx._vector_store = mock_store
         idx._initialized = True
 
@@ -315,10 +319,12 @@ class TestDocumentSummaryIndex:
             mock_cls.return_value = mock_llm
 
             # Should not raise despite second document failing
-            await idx.rebuild([
-                ("doc1", [{"content": "c1"}]),
-                ("doc2", [{"content": "c2"}]),
-            ])
+            await idx.rebuild(
+                [
+                    ("doc1", [{"content": "c1"}]),
+                    ("doc2", [{"content": "c2"}]),
+                ]
+            )
 
     @pytest.mark.asyncio
     async def test_generate_summary_error_fallback(self):
@@ -336,9 +342,11 @@ class TestDocumentSummaryIndex:
 # get_summary_index singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetSummaryIndex:
     def test_returns_instance(self):
         import src.pdf_framework.processing.summary_index as mod
+
         mod._summary_index = None
 
         idx = get_summary_index()
@@ -347,6 +355,7 @@ class TestGetSummaryIndex:
 
     def test_returns_same_instance(self):
         import src.pdf_framework.processing.summary_index as mod
+
         mod._summary_index = None
 
         i1 = get_summary_index()
@@ -356,6 +365,7 @@ class TestGetSummaryIndex:
 
     def test_accepts_kwargs(self):
         import src.pdf_framework.processing.summary_index as mod
+
         mod._summary_index = None
 
         idx = get_summary_index(api_key="my-key", collection_name="custom")

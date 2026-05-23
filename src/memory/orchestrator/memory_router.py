@@ -166,25 +166,6 @@ EXPLICIT_KEYWORDS: dict[str, list[str]] = {
         "рабочий процесс",
         "алгоритм работы",
     ],
-    "wiki": [
-        "wiki",
-        "статья",
-        "article",
-        "документация",
-        "promote",
-        "продвинуть",
-        "опубликовать",
-        "publish",
-        "obsidian",
-        "заметка",
-        "note",
-        "драфт",
-        "draft",
-        "карточка",
-        "card",
-        "справка",
-        "reference",
-    ],
 }
 
 CATEGORY_TARGETS: dict[str, str] = {
@@ -283,22 +264,6 @@ CATEGORY_KEYWORDS: dict[str, list[str]] = {
         "эффективный",
         "working",
         "проверенный",
-    ],
-    "wiki": [
-        "wiki",
-        "статья",
-        "article",
-        "заметка",
-        "note",
-        "promote",
-        "продвинуть",
-        "опубликовать",
-        "publish",
-        "obsidian",
-        "драфт",
-        "draft",
-        "карточка",
-        "card",
     ],
 }
 

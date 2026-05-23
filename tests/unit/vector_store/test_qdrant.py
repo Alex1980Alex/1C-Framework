@@ -6,7 +6,7 @@ Tests:
 - F2.7.3: Test Qdrant MMR with named vectors
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -32,10 +32,7 @@ class TestQdrantIDMapping:
 
         store = QdrantVectorStore()
 
-        ids = [
-            store._to_qdrant_id(f"chunk_{i}")
-            for i in range(100)
-        ]
+        ids = [store._to_qdrant_id(f"chunk_{i}") for i in range(100)]
 
         assert len(set(ids)) == 100
 
@@ -142,7 +139,7 @@ class TestQdrantMMR:
             [1.0, 0.0, 0.0],
             [0.95, 0.0, 0.0],  # Very similar to first
             [0.0, 1.0, 0.0],  # Diverse
-            [0.9, 0.0, 0.0],   # Similar to first
+            [0.9, 0.0, 0.0],  # Similar to first
         ]
 
         diverse_results = store._mmr_diversify(
@@ -187,16 +184,8 @@ class TestQdrantMMR:
 
         # Mock results with named vectors
         results = [
-            {
-                "id": "chunk_1",
-                "score": 0.9,
-                "vector": {"dense": [1.0, 0.0], "sparse": {1: 0.5}}
-            },
-            {
-                "id": "chunk_2",
-                "score": 0.8,
-                "vector": {"dense": [0.9, 0.0], "sparse": {1: 0.3}}
-            },
+            {"id": "chunk_1", "score": 0.9, "vector": {"dense": [1.0, 0.0], "sparse": {1: 0.5}}},
+            {"id": "chunk_2", "score": 0.8, "vector": {"dense": [0.9, 0.0], "sparse": {1: 0.3}}},
         ]
 
         # MMR should work with named vector structure

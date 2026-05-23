@@ -176,7 +176,7 @@ def main():
         if args.verbose:
             status = "OK" if sm["f1"] == 1.0 or (not exp_skills and not pred_skills) else "MISS"
             print(
-                f"  [{i+1:3d}] {status:4s} | P={sm['precision']:.2f} R={sm['recall']:.2f} F1={sm['f1']:.2f} | {prompt[:50]}",
+                f"  [{i + 1:3d}] {status:4s} | P={sm['precision']:.2f} R={sm['recall']:.2f} F1={sm['f1']:.2f} | {prompt[:50]}",
                 file=sys.stderr,
             )
 
@@ -270,7 +270,7 @@ def main():
         print("\nIntent Accuracy:")
         for intent, data in report["intent_accuracy"].items():
             print(
-                f"  {intent:15s}: {data['accuracy']*100:.0f}% ({data['correct']}/{data['total']})"
+                f"  {intent:15s}: {data['accuracy'] * 100:.0f}% ({data['correct']}/{data['total']})"
             )
         if fps_list:
             print(f"\nTop False Positives ({len(fps_list)}):")

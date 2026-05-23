@@ -107,10 +107,14 @@ class TestNeo4jIntegration:
 
         await store.add_entity(Entity(id="s1", name="A", entity_type="T"))
         await store.add_entity(Entity(id="s2", name="B", entity_type="T"))
-        await store.add_relation(Relation(
-            id="sr1", source_entity_id="s1", target_entity_id="s2",
-            relation_type="LINK",
-        ))
+        await store.add_relation(
+            Relation(
+                id="sr1",
+                source_entity_id="s1",
+                target_entity_id="s2",
+                relation_type="LINK",
+            )
+        )
 
         stats = await store.get_statistics()
         assert stats["node_count"] == 2
@@ -123,9 +127,13 @@ class TestNeo4jIntegration:
 
         store.set_batch_mode(True)
         for i in range(100):
-            await store.add_entity(Entity(
-                id=f"batch-{i}", name=f"Entity {i}", entity_type="TEST",
-            ))
+            await store.add_entity(
+                Entity(
+                    id=f"batch-{i}",
+                    name=f"Entity {i}",
+                    entity_type="TEST",
+                )
+            )
         await store.flush()
         store.set_batch_mode(False)
 
@@ -140,8 +148,12 @@ class TestNeo4jIntegration:
         # Create chain: A -> B -> C
         for name in ["A", "B", "C"]:
             await store.add_entity(Entity(id=name, name=name, entity_type="NODE"))
-        await store.add_relation(Relation(id="ab", source_entity_id="A", target_entity_id="B", relation_type="NEXT"))
-        await store.add_relation(Relation(id="bc", source_entity_id="B", target_entity_id="C", relation_type="NEXT"))
+        await store.add_relation(
+            Relation(id="ab", source_entity_id="A", target_entity_id="B", relation_type="NEXT")
+        )
+        await store.add_relation(
+            Relation(id="bc", source_entity_id="B", target_entity_id="C", relation_type="NEXT")
+        )
 
         path = await store.find_path("A", "C", max_depth=5)
         assert len(path.entities) == 3

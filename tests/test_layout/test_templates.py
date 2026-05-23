@@ -4,11 +4,11 @@ Tests template classes, registry, and auto-detection logic.
 """
 
 from src.pdf_framework.loaders.templates.base import (
+    TEMPLATE_REGISTRY,
     GenericTemplate,
     ParseTemplate,
     ResearchPaperTemplate,
     UserManualTemplate,
-    TEMPLATE_REGISTRY,
     detect_document_type,
     get_template,
 )

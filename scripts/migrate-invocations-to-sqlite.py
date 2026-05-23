@@ -76,7 +76,7 @@ def migrate_jsonl(jsonl_path: str, db_path: str, dry_run: bool = False) -> int:
     print(f"Read {len(rows)} rows from {jsonl_path}")
 
     if dry_run:
-        print(f"[DRY RUN] Would insert {len(rows)} rows " f"into {table_name} at {db_path}")
+        print(f"[DRY RUN] Would insert {len(rows)} rows into {table_name} at {db_path}")
         return len(rows)
 
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -130,7 +130,7 @@ def migrate_jsonl(jsonl_path: str, db_path: str, dry_run: bool = False) -> int:
 
     conn.commit()
     conn.close()
-    print(f"Migrated {count}/{len(rows)} rows " f"into {table_name} at {db_path}")
+    print(f"Migrated {count}/{len(rows)} rows into {table_name} at {db_path}")
     return count
 
 
@@ -138,7 +138,7 @@ def main():
     parser = argparse.ArgumentParser(description="Migrate hook JSONL files to SQLite")
     parser.add_argument(
         "--input",
-        help="Path to JSONL file " "(default: both invocations + latency)",
+        help="Path to JSONL file (default: both invocations + latency)",
         default=None,
     )
     parser.add_argument(

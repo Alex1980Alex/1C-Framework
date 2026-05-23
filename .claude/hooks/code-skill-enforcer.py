@@ -471,8 +471,7 @@ class CodeSkillEnforcer(BaseHook):
 
         # Advisory backup (in case A.1 block was bypassed)
         return HookOutput().system_message(
-            f"[LEARN] No dedicated skill for '{label}'. "
-            f"Run Skill('learning-loop') to create one."
+            f"[LEARN] No dedicated skill for '{label}'. Run Skill('learning-loop') to create one."
         )
 
 

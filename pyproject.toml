@@ -130,7 +130,12 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
-    "ruff>=0.8",
+    # `aiosqlite` required by tests/test_conversational/, tests/test_multitenancy/,
+    # tests/integration/test_proposition.py etc. — async SQLite backend for
+    # session-state + multitenancy tests. Was missing → CI Tests failed with
+    # ModuleNotFoundError on ~30 test files.
+    "aiosqlite>=0.20",
+    "ruff>=0.15",
     "mypy>=1.13",
     "mypy-baseline>=0.7.4",
     "interrogate>=1.7",
@@ -163,9 +168,51 @@ ignore = [
     "UP042",  # replace-str-enum — requires StrEnum (3.11+)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Tests: fixture-only imports, unused vars в test scaffolding, debug f-strings
+# и placeholder tests с TODO-ассертами — стандартный шум test-кода
+"tests/**" = [
+    "F401",  # unused imports (pytest fixtures, mocking setup)
+    "F541",  # f-string without placeholders (debug output)
+    "F821",  # undefined name (placeholder/TODO tests)
+    "F841",  # unused local variable (intermediate assertions)
+    "E741",  # ambiguous variable (test data l/I/O is fine)
+]
+# Claude Code hooks + tests: graceful fallback imports, lazy-loaded modules,
+# intentionally short-aliased deps (`_DT = datetime`, `_P = Path`)
+# для compact hook-кода
+".claude/**" = [
+    "F401",  # graceful import fallbacks (try/except import patterns)
+    "F541",  # debug f-strings в логировании
+    "F841",  # logged exception variables / intermediate assertions
+    "E741",  # ambiguous variable (l/I/O — short loop vars в hot path'ах)
+    "N812",  # lowercase import as non-lowercase alias (`_DT = datetime`)
+    "N814",  # camelcase import as constant alias (`_P = Path`)
+]
+# Scripts: utilities, ad-hoc tooling, exploratory code
+"scripts/**" = [
+    "F401",  # placeholder/exploratory imports
+    "F541",  # f-string templates без переменных
+    "F841",  # debug-only assignments
+    "E741",  # ambiguous variable name (script loop vars)
+    "N805",  # script-style funcs that look like methods
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# `--import-mode=importlib` — modern pytest discovery that does NOT require
+# every test directory to have `__init__.py`. Without it pytest builds module
+# names from the rootdir + `__init__.py` chain, which on this repo causes:
+#   1. `tests/bsl/test_parser.py` → name `bsl.test_parser` → collides with
+#      `src/bsl/` package (no `bsl.test_parser` submodule exists there).
+#   2. `tests/unit/agents/test_plan_execute.py` collides with
+#      `tests/integration/test_plan_execute.py` (same basename, different dirs,
+#      both end up as bare `test_plan_execute` → second one fails to collect).
+#   3. Same collision for `test_neo4j.py` between unit/graph_store/ and integration/.
+# `importlib` mode skips sys.modules registration and treats each test file
+# by full path, eliminating all three collisions in one knob.
+addopts = "--import-mode=importlib"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests (require external services)",

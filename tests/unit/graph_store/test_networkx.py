@@ -5,9 +5,6 @@ Tests:
 - F2.8.3: Test JSON persistence (save/load)
 """
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 

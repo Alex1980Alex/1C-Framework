@@ -28,7 +28,6 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
-
 from shared.task_master import add_task, get_pending_tasks, has_recent_completion
 
 HOOK_ID = "factory-enforcer-hook"

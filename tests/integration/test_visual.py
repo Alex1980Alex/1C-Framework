@@ -1,18 +1,17 @@
 """Integration tests for Visual Search (Phase 55)."""
 
-import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from src.pdf_framework.indexing.visual_indexer import (
-    VisualIndexer,
     VisualIndexConfig,
+    VisualIndexer,
     VisualPage,
 )
+from src.pdf_framework.schemas.documents import DocumentChunk, SearchResult
 from src.pdf_framework.search.strategies.visual import VisualSearchStrategy
-from src.pdf_framework.schemas.documents import SearchResult, DocumentChunk
 
 
 @pytest.fixture
@@ -41,6 +40,7 @@ def mock_colpali():
     provider = MagicMock()
 
     import torch
+
     # Mock multi-vector embeddings
     provider.embed_image = MagicMock(
         return_value=torch.randn(128, 128)  # (n_tokens, dim)
@@ -68,9 +68,7 @@ def mock_page_renderer():
     ]
 
     renderer.render_pages = MagicMock(return_value=mock_images)
-    renderer.render_page = MagicMock(
-        side_effect=lambda doc, n: mock_images[n][1]
-    )
+    renderer.render_page = MagicMock(side_effect=lambda doc, n: mock_images[n][1])
 
     return renderer
 

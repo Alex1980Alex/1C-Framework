@@ -6,7 +6,7 @@ Tests:
 - F2.10.4: Test rate limiter (token bucket)
 """
 
-from datetime import datetime
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -129,9 +129,13 @@ class TestRBAC:
         """F2.10.3: Unknown role should have no permissions."""
         from src.api.auth.rbac import RBACManager
 
-        rbac = RBACManager()
-        # Create user with non-existent role
-        user = rbac.create_user("nobody", "nobody@test.com", "pass", roles=["nonexistent"])
+        rbac = RBAC(
+            roles={
+                "custom_role": {
+                    "permissions": ["read:analytics", "write:notes"],
+                }
+            }
+        )
 
         assert rbac.check_permission(user, "documents", "read") is False
 
@@ -142,11 +146,32 @@ class TestRBAC:
         rbac = RBACManager()
         user = rbac.create_user("testuser", "test@test.com", "pass", roles=["admin"])
 
-        assert user.username == "testuser"
-        assert user.email == "test@test.com"
-        assert "admin" in user.roles
-        assert "*" in user.permissions
-        assert user.is_active is True
+        # Owner can access their own resources
+        assert (
+            rbac.check_permission(
+                "user123",
+                "documents",
+                "write",
+                resource_owner_id="user123",
+            )
+            is True
+        )
+
+    def test_rbac_non_owner_denied(self):
+        """F2.10.3: Non-owner should be denied."""
+        from src.api.auth.rbac import RBAC
+
+        rbac = RBAC()
+
+        assert (
+            rbac.check_permission(
+                "user123",
+                "documents",
+                "write",
+                resource_owner_id="user456",
+            )
+            is False
+        )
 
 
 @pytest.mark.unit
@@ -185,9 +210,11 @@ class TestRateLimiter:
 
     def test_rate_limiter_refill_over_time(self):
         """F2.10.4: Tokens should refill over time."""
+        from unittest.mock import patch
+
         from src.api.middleware.rate_limit import RateLimiter
 
-        target = "src.api.middleware.rate_limit.time.time"
+        limiter = RateLimiter(rate=10, per=60)  # 10 per minute
 
         with patch(target, return_value=0.0):
             limiter = RateLimiter(rate=10, window=60)

@@ -88,8 +88,7 @@ async def migrate(neo4j_uri: str, neo4j_user: str, neo4j_password: str, json_pat
     logger.info("Creating fulltext and type indexes...")
     async with store._driver.session() as session:
         await session.run(
-            "CREATE INDEX entity_source_doc IF NOT EXISTS "
-            "FOR (e:Entity) ON (e.source_document_id)"
+            "CREATE INDEX entity_source_doc IF NOT EXISTS FOR (e:Entity) ON (e.source_document_id)"
         )
 
     # 7. Verify counts

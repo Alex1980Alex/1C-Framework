@@ -176,7 +176,7 @@ class PostToolUseDelegationTracker(BaseHook):
         messages = []
         if not text:
             messages.append(
-                "Z.AI returned empty response. " "Consider retrying or using a different provider."
+                "Z.AI returned empty response. Consider retrying or using a different provider."
             )
         elif response_time > 15.0:
             messages.append(
@@ -185,7 +185,7 @@ class PostToolUseDelegationTracker(BaseHook):
             )
         elif quality["score"] < 0.4:
             messages.append(
-                f"Z.AI quality score low ({quality['score']:.2f}). " "Response may need review."
+                f"Z.AI quality score low ({quality['score']:.2f}). Response may need review."
             )
 
         if messages:

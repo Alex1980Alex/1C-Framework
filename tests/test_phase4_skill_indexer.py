@@ -3,8 +3,7 @@
 import json
 import os
 import sys
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, ".claude", "hooks"))
@@ -14,10 +13,11 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, "scripts", "hooks", "learning"))
 
 # ── parse_frontmatter tests ──────────────────────────────────────────
 
-class TestParseFrontmatter:
 
+class TestParseFrontmatter:
     def setup_method(self):
         import importlib
+
         spec = importlib.util.spec_from_file_location(
             "index_skills", os.path.join(PROJECT_ROOT, "scripts", "index-skills-to-qdrant.py")
         )
@@ -39,7 +39,7 @@ class TestParseFrontmatter:
         assert result == {}
 
     def test_triggers_extracted(self):
-        content = '---\nname: x\ndescription: "Скилл. Триггеры: \'a\', \'b\', \'c\'"\n---\nBody'
+        content = "---\nname: x\ndescription: \"Скилл. Триггеры: 'a', 'b', 'c'\"\n---\nBody"
         result = self.mod.parse_frontmatter(content)
         assert "a" in result["triggers"]
 
@@ -52,20 +52,23 @@ class TestParseFrontmatter:
 
 # ── semantic_search shared module tests ──────────────────────────────
 
-class TestSemanticSearchModule:
 
+class TestSemanticSearchModule:
     def test_disabled_via_env(self):
         from shared.semantic_search import search_skills_semantic
+
         with patch.dict(os.environ, {"SKILL_ROUTER_SEMANTIC_DISABLED": "1"}):
             assert search_skills_semantic("test") == []
 
     def test_embed_query_disabled(self):
         from shared.semantic_search import embed_query_ollama
+
         with patch.dict(os.environ, {"SKILL_ROUTER_SEMANTIC_DISABLED": "1"}):
             assert embed_query_ollama("test") is None
 
     def test_embed_query_success(self):
         from shared.semantic_search import embed_query_ollama
+
         fake_resp = json.dumps({"embedding": [0.1] * 768}).encode()
         mock_resp = MagicMock()
         mock_resp.read.return_value = fake_resp
@@ -79,16 +82,19 @@ class TestSemanticSearchModule:
 
     def test_embed_query_timeout(self):
         from shared.semantic_search import embed_query_ollama
+
         with patch("shared.semantic_search.urllib.request.urlopen", side_effect=TimeoutError):
             assert embed_query_ollama("test", timeout=0.1) is None
 
     def test_search_qdrant_connection_error(self):
         from shared.semantic_search import search_qdrant_semantic
+
         with patch("qdrant_client.QdrantClient", side_effect=ConnectionError("down")):
             assert search_qdrant_semantic("col", [0.1] * 768) == []
 
     def test_search_qdrant_formats_results(self):
         from shared.semantic_search import search_qdrant_semantic
+
         mock_point = MagicMock()
         mock_point.id = "abc-123"
         mock_point.score = 0.85
@@ -107,10 +113,18 @@ class TestSemanticSearchModule:
 
     def test_search_skills_formats_output(self):
         from shared.semantic_search import search_skills_semantic
+
         with patch("shared.semantic_search.embed_query_ollama", return_value=[0.1] * 768):
-            with patch("shared.semantic_search.search_qdrant_semantic", return_value=[
-                {"id": "1", "score": 0.9, "payload": {"skill_name": "bsl-dev", "description": "BSL"}}
-            ]):
+            with patch(
+                "shared.semantic_search.search_qdrant_semantic",
+                return_value=[
+                    {
+                        "id": "1",
+                        "score": 0.9,
+                        "payload": {"skill_name": "bsl-dev", "description": "BSL"},
+                    }
+                ],
+            ):
                 results = search_skills_semantic("test")
                 assert len(results) == 1
                 assert results[0]["skill_name"] == "bsl-dev"
@@ -119,10 +133,18 @@ class TestSemanticSearchModule:
 
     def test_search_experiences_formats_output(self):
         from shared.semantic_search import search_experiences_semantic
+
         with patch("shared.semantic_search.embed_query_ollama", return_value=[0.1] * 768):
-            with patch("shared.semantic_search.search_qdrant_semantic", return_value=[
-                {"id": "exp1", "score": 0.8, "payload": {"experience_id": "exp-001", "insight": "use ast-grep"}}
-            ]):
+            with patch(
+                "shared.semantic_search.search_qdrant_semantic",
+                return_value=[
+                    {
+                        "id": "exp1",
+                        "score": 0.8,
+                        "payload": {"experience_id": "exp-001", "insight": "use ast-grep"},
+                    }
+                ],
+            ):
                 results = search_experiences_semantic("test")
                 assert len(results) == 1
                 assert results[0]["experience_id"] == "exp-001"
@@ -130,21 +152,24 @@ class TestSemanticSearchModule:
 
     def test_search_skills_embed_fails_returns_empty(self):
         from shared.semantic_search import search_skills_semantic
+
         with patch("shared.semantic_search.embed_query_ollama", return_value=None):
             assert search_skills_semantic("test") == []
 
     def test_search_experiences_disabled(self):
         from shared.semantic_search import search_experiences_semantic
+
         with patch.dict(os.environ, {"SKILL_ROUTER_SEMANTIC_DISABLED": "1"}):
             assert search_experiences_semantic("test") == []
 
 
 # ── experience-embedder tests ────────────────────────────────────────
 
-class TestExperienceEmbedder:
 
+class TestExperienceEmbedder:
     def setup_method(self):
         import importlib
+
         spec = importlib.util.spec_from_file_location(
             "experience_embedder",
             os.path.join(PROJECT_ROOT, "scripts", "hooks", "learning", "experience-embedder.py"),

@@ -8,9 +8,7 @@ Tests:
 - Service statistics
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -22,7 +20,6 @@ from src.shared.llm_rotation.service import (
     ProviderState,
     ProviderStatus,
 )
-
 
 # ========== ProviderConfig Tests ==========
 
@@ -97,6 +94,7 @@ class TestProviderState:
     def test_cooldown_expires(self):
         """CB OPEN → HALF_OPEN after reset_timeout, then available."""
         from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
+
         cfg = ProviderConfig(name="test", base_url="http://test", api_key_env="", default_model="m")
         cb = CircuitBreaker(fail_threshold=3, reset_timeout=0.01)
         state = ProviderState(config=cfg, circuit_breaker=cb)
@@ -107,6 +105,7 @@ class TestProviderState:
         assert not state.is_available()
         # Wait for reset_timeout to expire
         import time
+
         time.sleep(0.02)
         assert state.is_available()
         assert state.circuit_breaker.state == CircuitState.HALF_OPEN
@@ -142,8 +141,20 @@ class TestLLMRotationService:
 
     def test_create_with_custom_providers(self):
         configs = [
-            ProviderConfig(name="test1", base_url="http://t1", api_key_env="", default_model="m1", requires_key=False),
-            ProviderConfig(name="test2", base_url="http://t2", api_key_env="", default_model="m2", requires_key=False),
+            ProviderConfig(
+                name="test1",
+                base_url="http://t1",
+                api_key_env="",
+                default_model="m1",
+                requires_key=False,
+            ),
+            ProviderConfig(
+                name="test2",
+                base_url="http://t2",
+                api_key_env="",
+                default_model="m2",
+                requires_key=False,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         assert len(service._providers) == 2
@@ -151,22 +162,47 @@ class TestLLMRotationService:
     def test_get_available_no_keys(self):
         """Providers requiring keys but without env vars are not available."""
         configs = [
-            ProviderConfig(name="needs-key", base_url="http://t", api_key_env="NONEXISTENT_KEY_12345", default_model="m"),
+            ProviderConfig(
+                name="needs-key",
+                base_url="http://t",
+                api_key_env="NONEXISTENT_KEY_12345",
+                default_model="m",
+            ),
         ]
         service = LLMRotationService(providers=configs)
         assert len(service.get_available_providers()) == 0
 
     def test_get_available_no_key_required(self):
         configs = [
-            ProviderConfig(name="free", base_url="http://t", api_key_env="", default_model="m", requires_key=False),
+            ProviderConfig(
+                name="free",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         assert len(service.get_available_providers()) == 1
 
     def test_get_best_provider(self):
         configs = [
-            ProviderConfig(name="p1", base_url="http://t", api_key_env="", default_model="m", requires_key=False, priority=2),
-            ProviderConfig(name="p2", base_url="http://t", api_key_env="", default_model="m", requires_key=False, priority=1),
+            ProviderConfig(
+                name="p1",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=2,
+            ),
+            ProviderConfig(
+                name="p2",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=1,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         best = service.get_best_provider()
@@ -176,8 +212,22 @@ class TestLLMRotationService:
     def test_get_best_prefers_healthy(self):
         """Provider with errors should sort after healthy provider."""
         configs = [
-            ProviderConfig(name="degraded", base_url="http://t", api_key_env="", default_model="m", requires_key=False, priority=0),
-            ProviderConfig(name="healthy", base_url="http://t", api_key_env="", default_model="m", requires_key=False, priority=1),
+            ProviderConfig(
+                name="degraded",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=0,
+            ),
+            ProviderConfig(
+                name="healthy",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=1,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         # Record errors to make CB track failures (status derives from CB)
@@ -187,7 +237,13 @@ class TestLLMRotationService:
 
     def test_reset_provider(self):
         configs = [
-            ProviderConfig(name="test", base_url="http://t", api_key_env="", default_model="m", requires_key=False),
+            ProviderConfig(
+                name="test",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         service._providers["test"].status = ProviderStatus.COOLDOWN
@@ -202,8 +258,20 @@ class TestLLMRotationService:
 
     def test_reset_all(self):
         configs = [
-            ProviderConfig(name="p1", base_url="http://t", api_key_env="", default_model="m", requires_key=False),
-            ProviderConfig(name="p2", base_url="http://t", api_key_env="", default_model="m", requires_key=False),
+            ProviderConfig(
+                name="p1",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+            ),
+            ProviderConfig(
+                name="p2",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         service._providers["p1"].status = ProviderStatus.COOLDOWN
@@ -213,7 +281,13 @@ class TestLLMRotationService:
 
     def test_get_stats(self):
         configs = [
-            ProviderConfig(name="test", base_url="http://t", api_key_env="", default_model="m", requires_key=False),
+            ProviderConfig(
+                name="test",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+            ),
         ]
         service = LLMRotationService(providers=configs)
         service._providers["test"].record_success(1.5)
@@ -234,7 +308,13 @@ class TestLLMRotationService:
     async def test_complete_with_mock(self):
         """Test successful completion with mocked HTTP."""
         configs = [
-            ProviderConfig(name="mock", base_url="http://mock", api_key_env="", default_model="m", requires_key=False),
+            ProviderConfig(
+                name="mock",
+                base_url="http://mock",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+            ),
         ]
         service = LLMRotationService(providers=configs)
 
@@ -244,7 +324,9 @@ class TestLLMRotationService:
             "usage": {"prompt_tokens": 5, "completion_tokens": 2},
         }
 
-        with patch.object(service, "_make_request_openai", new_callable=AsyncMock, return_value=mock_response):
+        with patch.object(
+            service, "_make_request_openai", new_callable=AsyncMock, return_value=mock_response
+        ):
             result = await service.complete("Say hello")
             assert result["provider"] == "mock"
             assert result["text"] == "Hello!"
@@ -254,8 +336,22 @@ class TestLLMRotationService:
     async def test_fallback_on_error(self):
         """Test automatic fallback when first provider fails."""
         configs = [
-            ProviderConfig(name="failing", base_url="http://f", api_key_env="", default_model="m", requires_key=False, priority=0),
-            ProviderConfig(name="working", base_url="http://w", api_key_env="", default_model="m", requires_key=False, priority=1),
+            ProviderConfig(
+                name="failing",
+                base_url="http://f",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=0,
+            ),
+            ProviderConfig(
+                name="working",
+                base_url="http://w",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=1,
+            ),
         ]
         service = LLMRotationService(providers=configs)
 
@@ -283,8 +379,22 @@ class TestLLMRotationService:
     async def test_preferred_provider_rotation_on_failure(self):
         """Test that preferred_provider falls back to other providers after failure."""
         configs = [
-            ProviderConfig(name="preferred", base_url="http://p", api_key_env="", default_model="m", requires_key=False, priority=0),
-            ProviderConfig(name="fallback", base_url="http://f", api_key_env="", default_model="m", requires_key=False, priority=1),
+            ProviderConfig(
+                name="preferred",
+                base_url="http://p",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=0,
+            ),
+            ProviderConfig(
+                name="fallback",
+                base_url="http://f",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
+                priority=1,
+            ),
         ]
         service = LLMRotationService(providers=configs)
 
@@ -342,14 +452,16 @@ class TestZAIProxy:
     def test_openai_to_anthropic_basic(self):
         from src.shared.llm_rotation.zai_proxy import openai_to_anthropic
 
-        result = openai_to_anthropic({
-            "model": "glm-5",
-            "messages": [
-                {"role": "system", "content": "You are helpful."},
-                {"role": "user", "content": "Hello"},
-            ],
-            "max_tokens": 100,
-        })
+        result = openai_to_anthropic(
+            {
+                "model": "glm-5",
+                "messages": [
+                    {"role": "system", "content": "You are helpful."},
+                    {"role": "user", "content": "Hello"},
+                ],
+                "max_tokens": 100,
+            }
+        )
         assert result["model"] == "glm-5"
         assert result["system"] == "You are helpful."
         assert len(result["messages"]) == 1
@@ -359,13 +471,15 @@ class TestZAIProxy:
     def test_anthropic_to_openai_basic(self):
         from src.shared.llm_rotation.zai_proxy import anthropic_to_openai
 
-        result = anthropic_to_openai({
-            "id": "msg_123",
-            "content": [{"type": "text", "text": "Hello back!"}],
-            "stop_reason": "end_turn",
-            "model": "glm-5",
-            "usage": {"input_tokens": 10, "output_tokens": 5},
-        })
+        result = anthropic_to_openai(
+            {
+                "id": "msg_123",
+                "content": [{"type": "text", "text": "Hello back!"}],
+                "stop_reason": "end_turn",
+                "model": "glm-5",
+                "usage": {"input_tokens": 10, "output_tokens": 5},
+            }
+        )
         assert result["choices"][0]["message"]["content"] == "Hello back!"
         assert result["choices"][0]["finish_reason"] == "stop"
         assert result["usage"]["total_tokens"] == 15
@@ -381,34 +495,43 @@ class TestZAIProxy:
     def test_tool_conversion(self):
         from src.shared.llm_rotation.zai_proxy import openai_to_anthropic
 
-        result = openai_to_anthropic({
-            "model": "glm-5",
-            "messages": [{"role": "user", "content": "Search for X"}],
-            "tools": [{
-                "type": "function",
-                "function": {
-                    "name": "search",
-                    "description": "Search documents",
-                    "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
-                },
-            }],
-        })
+        result = openai_to_anthropic(
+            {
+                "model": "glm-5",
+                "messages": [{"role": "user", "content": "Search for X"}],
+                "tools": [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "search",
+                            "description": "Search documents",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {"query": {"type": "string"}},
+                            },
+                        },
+                    }
+                ],
+            }
+        )
         assert len(result["tools"]) == 1
         assert result["tools"][0]["name"] == "search"
 
     def test_thinking_response(self):
         from src.shared.llm_rotation.zai_proxy import anthropic_to_openai
 
-        result = anthropic_to_openai({
-            "id": "msg_456",
-            "content": [
-                {"type": "thinking", "thinking": "Let me think..."},
-                {"type": "text", "text": "The answer is 42."},
-            ],
-            "stop_reason": "end_turn",
-            "model": "glm-5",
-            "usage": {"input_tokens": 10, "output_tokens": 20},
-        })
+        result = anthropic_to_openai(
+            {
+                "id": "msg_456",
+                "content": [
+                    {"type": "thinking", "thinking": "Let me think..."},
+                    {"type": "text", "text": "The answer is 42."},
+                ],
+                "stop_reason": "end_turn",
+                "model": "glm-5",
+                "usage": {"input_tokens": 10, "output_tokens": 20},
+            }
+        )
         msg = result["choices"][0]["message"]
         assert msg["content"] == "The answer is 42."
         assert msg["reasoning_content"] == "Let me think..."

@@ -684,7 +684,7 @@ def _format_mcp_health() -> str:
         ok = sum(1 for s in servers if s.get("status") == "ok")
         total = len(servers)
         lines.append(f"  {'Server':<28} {'Status':<8} {'Latency':<10} {'Tools':<6} {'Type':<8}")
-        lines.append(f"  {'─'*28} {'─'*8} {'─'*10} {'─'*6} {'─'*8}")
+        lines.append(f"  {'─' * 28} {'─' * 8} {'─' * 10} {'─' * 6} {'─' * 8}")
 
         for s in servers:
             status = s.get("status", "?")

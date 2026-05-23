@@ -53,11 +53,13 @@ def run_git(
             ["git", *args],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             check=False,
             cwd=str(cwd),
         )
-        return r.returncode, r.stdout.strip(), r.stderr.strip()
+        return r.returncode, (r.stdout or "").strip(), (r.stderr or "").strip()
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as exc:
         return 1, "", f"{type(exc).__name__}: {exc}"
 
@@ -135,12 +137,14 @@ def _run_gh(
             ["gh", *args],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             check=False,
             cwd=str(cwd),
             shell=False,
         )
-        return r.returncode, r.stdout.strip(), r.stderr.strip()
+        return r.returncode, (r.stdout or "").strip(), (r.stderr or "").strip()
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as exc:
         return 1, "", f"{type(exc).__name__}: {exc}"
 
@@ -442,7 +446,7 @@ def push_branch_safe(
     return (
         False,
         "conflict",
-        (f"branch `{branch}` has divergent commits on remote; " "manual review needed"),
+        (f"branch `{branch}` has divergent commits on remote; manual review needed"),
     )
 
 
@@ -519,7 +523,10 @@ def cherry_pick_range_to_branch(
     if not commits:
         return False, f"empty range {start_sha[:8]}..{head_sha[:8]}"
 
-    wt_root = Path(cwd) / ".tmp" / "cp-worktrees"
+    # Worktrees live under `.claude/cache/` — already git-ignored and used
+    # for hook state. Previously used `.tmp/cp-worktrees` in repo root which
+    # cluttered the workspace (per Gemini Code Assist review on PR #4).
+    wt_root = Path(cwd) / ".claude" / "cache" / "cp-worktrees"
     wt_root.mkdir(parents=True, exist_ok=True)
     wt_dir = wt_root / f"{branch.replace('/', '-')}-{uuid.uuid4().hex[:8]}"
 

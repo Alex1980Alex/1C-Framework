@@ -3,8 +3,6 @@
 Tests parsing and helper functions without LLM calls.
 """
 
-import pytest
-
 from src.pdf_framework.agents.memory.conversation import Message
 from src.pdf_framework.agents.rag.nodes.reformulator import (
     _format_history,
@@ -51,19 +49,31 @@ class TestParseReformulatedQuery:
     """Test _parse_reformulated_query parser."""
 
     def test_plain_text(self):
-        assert _parse_reformulated_query("How do I install PostgreSQL?") == "How do I install PostgreSQL?"
+        assert (
+            _parse_reformulated_query("How do I install PostgreSQL?")
+            == "How do I install PostgreSQL?"
+        )
 
     def test_removes_rewritten_prefix(self):
-        assert _parse_reformulated_query("Rewritten: How do I install PostgreSQL?") == "How do I install PostgreSQL?"
+        assert (
+            _parse_reformulated_query("Rewritten: How do I install PostgreSQL?")
+            == "How do I install PostgreSQL?"
+        )
 
     def test_removes_query_prefix(self):
         assert _parse_reformulated_query("Query: What is 1C?") == "What is 1C?"
 
     def test_removes_double_quotes(self):
-        assert _parse_reformulated_query('"How do I install PostgreSQL?"') == "How do I install PostgreSQL?"
+        assert (
+            _parse_reformulated_query('"How do I install PostgreSQL?"')
+            == "How do I install PostgreSQL?"
+        )
 
     def test_removes_single_quotes(self):
-        assert _parse_reformulated_query("'How do I install PostgreSQL?'") == "How do I install PostgreSQL?"
+        assert (
+            _parse_reformulated_query("'How do I install PostgreSQL?'")
+            == "How do I install PostgreSQL?"
+        )
 
     def test_strips_whitespace(self):
         assert _parse_reformulated_query("  Hello world  ") == "Hello world"

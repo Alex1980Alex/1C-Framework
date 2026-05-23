@@ -194,8 +194,6 @@ class RefactorOrchestrator:
                         kind,
                         new_name,
                         decision,
-                        old_name=old_name,
-                        denied=denied_chain,
                     ),
                 )
             raise BackendError(

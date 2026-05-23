@@ -1,7 +1,5 @@
 """Tests for Phase 14 configuration (UISettings, OpenAICompat, Suggestions)."""
 
-import pytest
-
 from src.pdf_framework.config import (
     OpenAICompatSettings,
     Settings,
@@ -9,10 +7,10 @@ from src.pdf_framework.config import (
     UISettings,
 )
 
-
 # ---------------------------------------------------------------------------
 # UISettings
 # ---------------------------------------------------------------------------
+
 
 class TestUISettings:
     def test_defaults(self):
@@ -43,6 +41,7 @@ class TestUISettings:
 # OpenAICompatSettings
 # ---------------------------------------------------------------------------
 
+
 class TestOpenAICompatSettings:
     def test_defaults(self):
         s = OpenAICompatSettings()
@@ -64,6 +63,7 @@ class TestOpenAICompatSettings:
 # ---------------------------------------------------------------------------
 # SuggestionSettings
 # ---------------------------------------------------------------------------
+
 
 class TestSuggestionSettings:
     def test_defaults(self):
@@ -95,6 +95,7 @@ class TestSuggestionSettings:
 # ---------------------------------------------------------------------------
 # Root Settings Integration
 # ---------------------------------------------------------------------------
+
 
 class TestSettingsPhase14Integration:
     def test_ui_in_settings(self):

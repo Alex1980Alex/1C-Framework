@@ -7,8 +7,7 @@ import asyncio
 
 import pytest
 
-from src.pdf_framework.agents.cache import LLMResponseCache, get_llm_cache
-
+from src.pdf_framework.agents.cache import LLMResponseCache
 
 # ── LLMResponseCache Init Tests ────────────────────────────────
 
@@ -98,8 +97,11 @@ class TestLLMCacheGetSet:
 
         async def _run():
             await cache.set(
-                "model", messages, "response",
-                prompt_tokens=100, completion_tokens=50,
+                "model",
+                messages,
+                "response",
+                prompt_tokens=100,
+                completion_tokens=50,
             )
             return await cache.get("model", messages)
 

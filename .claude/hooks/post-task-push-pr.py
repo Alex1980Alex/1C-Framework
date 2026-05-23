@@ -57,7 +57,7 @@ import os
 import shlex
 import subprocess
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -209,7 +209,7 @@ class PostTaskPushPR(BaseHook):
                 start = pr.head_sha(cwd=PROJECT_ROOT)
                 if start:
                     entry["start_sha"] = start
-                    entry["in_progress_ts"] = datetime.now().isoformat(timespec="seconds")
+                    entry["in_progress_ts"] = datetime.now(UTC).isoformat(timespec="seconds")
                     entry["blockedBy"] = list(
                         ti.get("addBlockedBy") or (ti.get("metadata") or {}).get("blockedBy") or []
                     )
@@ -314,7 +314,7 @@ class PostTaskPushPR(BaseHook):
         if not tests_ok:
             notify.notify_checks_failed(task_id, "", tests_msg)
             return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: pre-push gate FAILED. " f"{tests_msg}"
+                f"[POST-TASK-PUSH-PR] Task #{task_id}: pre-push gate FAILED. {tests_msg}"
             )
 
         slug = pr.slugify(subject or f"task-{task_id}")
@@ -362,7 +362,7 @@ class PostTaskPushPR(BaseHook):
         if not push_ok:
             notify.notify_pr_failed(task_id, "push", push_msg)
             return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: push failed " f"({push_mode}): {push_msg}"
+                f"[POST-TASK-PUSH-PR] Task #{task_id}: push failed ({push_mode}): {push_msg}"
             )
 
         # ---- P0.3: detect existing PR ----
@@ -460,7 +460,7 @@ class PostTaskPushPR(BaseHook):
             "head_sha": head_short,
             "branch": branch,
             "pr_url": pr_url,
-            "completed_ts": datetime.now().isoformat(timespec="seconds"),
+            "completed_ts": datetime.now(UTC).isoformat(timespec="seconds"),
             "blockedBy": blocked_task_ids,
         }
         _save_state(state)

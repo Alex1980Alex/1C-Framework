@@ -3,4 +3,4 @@
 Phase 59: Async Processing Queue - background tasks for indexing, graph, evaluation.
 """
 
-__all__ = []
+__all__: list[str] = []

@@ -2,12 +2,11 @@
 
 import pytest
 
+from src.pdf_framework.agents.routing.budget import CostBudget
 from src.pdf_framework.agents.routing.classifier import (
     ComplexityLevel,
     ModelRoutingClassifier,
 )
-from src.pdf_framework.agents.routing.budget import CostBudget
-
 
 # ============================================================================
 # Classifier Tests
@@ -48,12 +47,16 @@ class TestModelRoutingClassifier:
         assert result.level == ComplexityLevel.MODERATE
 
     def test_complex_comparison(self, classifier):
-        result = classifier.classify("Сравни справочники и перечисления — в чём различия между ними?")
+        result = classifier.classify(
+            "Сравни справочники и перечисления — в чём различия между ними?"
+        )
         assert result.level == ComplexityLevel.COMPLEX
         assert "opus" in result.model.lower()
 
     def test_complex_analysis(self, classifier):
-        result = classifier.classify("Проанализируй архитектуру регистров накопления и объясни подробно")
+        result = classifier.classify(
+            "Проанализируй архитектуру регистров накопления и объясни подробно"
+        )
         assert result.level == ComplexityLevel.COMPLEX
 
     def test_complex_multi_question(self, classifier):

@@ -1,7 +1,5 @@
 """Unit tests for ID generation (F2.6.4)."""
 
-from unittest.mock import patch
-
 import pytest
 
 
@@ -22,10 +20,7 @@ class TestIDGenerator:
         """F2.6.4: Different inputs produce different IDs."""
         from src.pdf_framework.utils.id_generator import generate_id
 
-        ids = [
-            generate_id("test.pdf", i, 0)
-            for i in range(10)
-        ]
+        ids = [generate_id("test.pdf", i, 0) for i in range(10)]
 
         assert len(set(ids)) == 10
 

@@ -1,6 +1,6 @@
 """Unit tests for Processing pipeline (F2.6.3)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 

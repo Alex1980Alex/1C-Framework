@@ -29,23 +29,13 @@ class SubprocessAstGrepRunner:
         self._rule_template = rule_template
         self._timeout = timeout_seconds
 
-    def run_rename(
-        self,
-        workspace_root: Path,
-        old_name: str,
-        new_name: str,  # noqa: ARG002
-    ) -> list[AstGrepMatch]:
+    def run_rename(self, workspace_root: Path, old_name: str, new_name: str) -> list[AstGrepMatch]:
         """Run ast-grep scan; return matches of `old_name` in workspace_root."""
-        if not all(c.isalnum() or c == "_" for c in old_name):
-            raise BackendError(
-                f"invalid identifier for ast-grep pattern: {old_name!r}",
-                code="invalid_identifier",
-            )
-        rule_content = (
-            f"id: rename-{old_name}\n" f"language: bsl\n" f"rule:\n" f"  pattern: {old_name}\n"
-        )
-
-        rule_path: str | None = None
+        args = [self._binary, "scan", "--json=compact"]
+        if self._config is not None:
+            args += ["-c", str(self._config)]
+        inline_rule = f"id: rename-{old_name}\nlanguage: bsl\nrule:\n  pattern: {old_name}\n"
+        args += ["--inline-rules", inline_rule, str(workspace_root)]
         try:
             with tempfile.NamedTemporaryFile(
                 mode="w", suffix=".yml", delete=False, encoding="utf-8"

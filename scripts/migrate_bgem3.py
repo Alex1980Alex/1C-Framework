@@ -139,9 +139,7 @@ def main(
         logger.info(f"[MIGRATION] New collection has {new_count} points")
 
         if new_count != current_count:
-            logger.error(
-                f"[MIGRATION] Count mismatch! " f"Expected {current_count}, got {new_count}"
-            )
+            logger.error(f"[MIGRATION] Count mismatch! Expected {current_count}, got {new_count}")
             return
 
         # Step 5: Benchmark comparison

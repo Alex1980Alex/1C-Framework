@@ -533,9 +533,10 @@ class HybridSearchEngine:
             cursor = conn.cursor()
 
             # Находим все документы с путём, начинающимся с source_path
+            source_path_windows = source_path_normalized.replace("/", "\\\\")
             cursor.execute(
                 "SELECT id, path FROM documents WHERE path LIKE ? OR path LIKE ?",
-                (f"{source_path_normalized}%", f"{source_path_normalized.replace('/', '\\\\')}%"),
+                (f"{source_path_normalized}%", f"{source_path_windows}%"),
             )
             docs_to_delete = cursor.fetchall()
 

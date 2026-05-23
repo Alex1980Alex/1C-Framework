@@ -49,9 +49,9 @@ $ARGUMENTS
 **Используй skill `analyze-1c-task-v2`** — единый источник методологии анализа.
 
 Skill определяет:
-- 5 последовательных фаз (Требования → Объекты → **[опц. Фаза 2.5 Runtime Trace]** → Алгоритм → План → Верификация)
-- Допущенные MCP-инструменты (`bsl-semantic-search`, `bsl-platform-context`, `1c-mcp-crud`, `pdf-vector-graph`, `ast-grep` через профиль bsl, **`1c-debug-hmr` для Фазы 2.5**)
-- Формат отчёта `ANALYSIS-REPORT.md` (с опциональной секцией «3.Y Runtime Trace»)
+- 5 последовательных фаз (Требования → Объекты → Алгоритм → План → Верификация)
+- Допущенные MCP-инструменты (Serena, ast-grep, bsl-platform-context, bsl-semantic-search, pdf-vector-graph)
+- Формат отчёта
 - Best practices и common pitfalls
 
 ### Входные данные
@@ -74,12 +74,9 @@ Skill определяет:
 
 ---
 
-## ВАЖНО
-
-- Для BSL используй **`bsl-semantic-search`** (не Serena для парсинга BSL — для BSL нет LSP).
-- Используй **`bsl-platform-context`** для проверки API платформы 1С:8.3.27 (типы, методы, свойства, конструкторы).
-- Используй **`bsl-semantic-search`** (`bsl_search`/`bsl_hybrid_search`) для поиска похожего кода в 3 900+ модулях.
-- Используй **`pdf-vector-graph`** (`search_documents`/`ask_question`) для поиска в индексированной документации 1С.
-- Используй **`1c-mcp-crud`** (`get_metadata`/`validate_query`/`execute_query`) для верификации имён полей и SQL-запросов на живой базе.
-- **Для сложных runtime-алгоритмов** (≥3 ветвлений по runtime-данным: `Пользователи.ТекущийПользователь()`, `ПолучитьФункциональнуюОпцию`, `Тип(Параметр)`) используй опциональную **Фазу 2.5 Runtime Trace** через `1c-debug-hmr` — см. skill для протокола. Триггер: флаг `--trace` в `$ARGUMENTS` или self-decision skill'а. Output: секция «3.Y Runtime Trace» в ANALYSIS-REPORT с Entry/Stack/Variables/Branch evaluation/**Discrepancies** (static vs runtime).
-- Сохрани результат анализа в файл `ANALYSIS-REPORT.md`, а также в память через **`memory-orchestrator`** (`route_and_save`) для последующих сессий.
+## ВАЖНО:
+- Для BSL используй  (не Serena для парсинга BSL!)
+- Используй  для проверки API платформы
+- Используй  для поиска похожего кода
+- Используй  для поиска в документации 1С
+- Сохрани результат анализа в файл, а также в память через

@@ -3,8 +3,9 @@
 Tests orchestration with mocked classifier, router, and search manager.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.pdf_framework.config import AdaptiveRAGSettings
 from src.pdf_framework.schemas.documents import (
@@ -118,9 +119,7 @@ class TestAdaptiveSearch:
         s._classifier.classify = AsyncMock()
 
         # Mock router
-        decision = RoutingDecision(
-            strategy="vector", use_reranking=False, k=5
-        )
+        decision = RoutingDecision(strategy="vector", use_reranking=False, k=5)
         s._router.route = AsyncMock(return_value=decision)
 
         response = await s.search("test query", k=5, force_route="vector")
@@ -209,6 +208,7 @@ class TestAdaptiveSearch:
         assert routing["routed_strategy"] == "vector"
         assert routing["decomposed"] is False
 
+
 class TestDecomposedSearch:
     """Test decomposed search flow."""
 
@@ -221,17 +221,17 @@ class TestDecomposedSearch:
         )
         s._classifier.classify = AsyncMock(return_value=classification)
 
-        decision = RoutingDecision(
-            strategy="hybrid", decompose=True, k=5
-        )
+        decision = RoutingDecision(strategy="hybrid", decompose=True, k=5)
         s._router.route = AsyncMock(return_value=decision)
 
         # Mock decomposer
         s._decomposer.should_decompose = MagicMock(return_value=True)
-        s._decomposer.decompose = AsyncMock(return_value=[
-            "What are the features of A?",
-            "What are the features of B?",
-        ])
+        s._decomposer.decompose = AsyncMock(
+            return_value=[
+                "What are the features of A?",
+                "What are the features of B?",
+            ]
+        )
         s._decomposer.synthesize = AsyncMock(return_value="A and B differ in...")
 
         response = await s.search("Compare A and B")

@@ -14,8 +14,8 @@ class TestSearchPipeline:
 
     async def test_full_search_flow(self):
         """F2.11.2: query → results should work end-to-end."""
-        from src.pdf_framework.search.manager import SearchManager
         from src.pdf_framework.schemas.documents import SearchResult
+        from src.pdf_framework.search.manager import SearchManager
 
         manager = SearchManager()
 

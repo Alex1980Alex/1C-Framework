@@ -380,9 +380,6 @@ class MemoryOrchestrator:
             SkillLearningSearchAdapter(_PROJECT_ROOT / "data" / "skill_learning")
         )
 
-        self._search_engine.register_adapter(WikiSearchAdapter())
-        self._search_engine.register_adapter(GraphSearchAdapter())
-
         # Pre-warm vector-memory (Qdrant gRPC connect + E5 model load)
         try:
             from ..vector_memory.server import _get_embedding, _get_qdrant

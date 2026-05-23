@@ -3,7 +3,6 @@
 Tests full indexing flow: PDF → chunks → Qdrant
 """
 
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -44,7 +43,9 @@ class TestIndexingPipeline:
         test_pdf.write_bytes(b"%PDF-1.4\n%test content")
 
         with patch("src.pdf_framework.vector_store.providers.qdrant.QdrantClient"):
-            with patch("src.pdf_framework.embeddings.providers.local.LocalEmbeddingProvider") as mock_emb:
+            with patch(
+                "src.pdf_framework.embeddings.providers.local.LocalEmbeddingProvider"
+            ) as mock_emb:
                 mock_emb.return_value.embed_batch = AsyncMock(
                     return_value=[[0.1] * 1024 for _ in range(10)]
                 )
@@ -92,7 +93,9 @@ class TestIndexingPipeline:
             pipeline = IndexingPipeline()
 
             # First attempt fails partway
-            with patch.object(pipeline, "_process_chunks", side_effect=Exception("Partial failure")):
+            with patch.object(
+                pipeline, "_process_chunks", side_effect=Exception("Partial failure")
+            ):
                 try:
                     await pipeline.index_pdf(str(test_pdf))
                 except Exception:

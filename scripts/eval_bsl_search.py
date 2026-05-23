@@ -66,7 +66,7 @@ def _extract_module_name(file_path: str) -> str:
     # Pattern: .../ObjectName/Ext/ModuleType.bsl
     for i, p in enumerate(parts):
         if p == "Ext" and i > 0:
-            return f"{parts[i-1]}.{name}"
+            return f"{parts[i - 1]}.{name}"
     return name
 
 

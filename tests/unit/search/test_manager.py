@@ -48,10 +48,12 @@ class TestBM25Store:
 
         store = BM25Store()
 
-        store.add_documents([
-            {"id": "1", "content": "test document"},
-            {"id": "2", "content": "another test"},
-        ])
+        store.add_documents(
+            [
+                {"id": "1", "content": "test document"},
+                {"id": "2", "content": "another test"},
+            ]
+        )
 
         results = store.search("test")
 

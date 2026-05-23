@@ -207,7 +207,7 @@ def main() -> None:
             eta = (total_files - i) / (i / elapsed) if elapsed > 0 else 0
             print(
                 f"[{i}/{total_files}] {total_symbols} sym, {total_chunks} chunks, "
-                f"{speed:.1f} ch/s, ETA ~{eta/60:.0f}min"
+                f"{speed:.1f} ch/s, ETA ~{eta / 60:.0f}min"
             )
 
     # Flush remaining
@@ -227,8 +227,8 @@ def main() -> None:
     print(f"  Chunks:     {total_chunks}")
     print(f"  Qdrant pts: {info.points_count}")
     print(f"  Errors:     {errors}")
-    print(f"  Time:       {elapsed:.0f}s ({elapsed/60:.1f}min)")
-    print(f"  Speed:      {total_chunks/elapsed:.1f} chunks/s")
+    print(f"  Time:       {elapsed:.0f}s ({elapsed / 60:.1f}min)")
+    print(f"  Speed:      {total_chunks / elapsed:.1f} chunks/s")
     print(f"  Collection: {args.collection}")
     print("=" * 60)
 

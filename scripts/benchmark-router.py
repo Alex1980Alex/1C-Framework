@@ -145,7 +145,7 @@ def run_evaluation(samples: list[dict], mode: str = "full", verbose: bool = Fals
         if verbose:
             status = "OK" if m["f1"] == 1.0 or (not exp_skills and not pred_skills) else "MISS"
             print(
-                f"  [{i+1:3d}] {status:4s} P={m['precision']:.2f} R={m['recall']:.2f} F1={m['f1']:.2f} | {prompt[:50]}"
+                f"  [{i + 1:3d}] {status:4s} P={m['precision']:.2f} R={m['recall']:.2f} F1={m['f1']:.2f} | {prompt[:50]}"
             )
 
     # Cleanup

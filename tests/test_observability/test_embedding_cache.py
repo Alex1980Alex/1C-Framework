@@ -4,16 +4,13 @@ Tests SQLite-backed embedding cache with TTL, stats, and cleanup.
 """
 
 import asyncio
-from pathlib import Path
 
 import pytest
 
 from src.pdf_framework.embeddings.cache import (
     CacheStats,
     EmbeddingCache,
-    get_embedding_cache,
 )
-
 
 # ── CacheStats Tests ───────────────────────────────────────────
 
@@ -102,9 +99,7 @@ class TestEmbeddingCacheGetSet:
         return EmbeddingCache(db_path=db_path, ttl_days=30)
 
     def test_get_miss_returns_none(self, cache):
-        result = asyncio.get_event_loop().run_until_complete(
-            cache.get("unknown text", "model-a")
-        )
+        result = asyncio.get_event_loop().run_until_complete(cache.get("unknown text", "model-a"))
         assert result is None
 
     def test_set_and_get(self, cache):
@@ -165,9 +160,7 @@ class TestEmbeddingCacheStats:
         assert stats.total == 0
 
     def test_miss_increments(self, cache):
-        asyncio.get_event_loop().run_until_complete(
-            cache.get("nonexistent", "model")
-        )
+        asyncio.get_event_loop().run_until_complete(cache.get("nonexistent", "model"))
         stats = cache.get_stats()
         assert stats.misses == 1
         assert stats.hits == 0

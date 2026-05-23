@@ -21,7 +21,6 @@ sys.path.insert(0, _HOOK_DIR)
 from base import BaseHook, HookInput, HookOutput
 
 _DEBOUNCE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "git-save-debounce.json")
-_PAUSE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "auto-git-save.paused")
 _DEBOUNCE_SECONDS = 5.0
 _MAX_PENDING = 20
 
@@ -121,11 +120,17 @@ def _git_commit(files: list[str]) -> bool:
         if not result.stdout.strip():
             return False
         # Commit
-        from shared.auto_save_core import format_commit_message
-
-        commit_msg = format_commit_message(files, prefix="chore: auto-save")
+        file_list = ", ".join(os.path.basename(f) for f in files[:3])
+        if len(files) > 3:
+            file_list += f" +{len(files) - 3} more"
         subprocess.run(
-            ["git", "commit", "-m", commit_msg, "--no-verify"],
+            [
+                "git",
+                "commit",
+                "-m",
+                f"chore: auto-save {file_list}",
+                "--no-verify",
+            ],
             capture_output=True,
             timeout=15,
             cwd=project_dir,
@@ -169,18 +174,6 @@ class PostToolUseAutoGitSave(BaseHook):
 
         if elapsed < _DEBOUNCE_SECONDS:
             # Within debounce window — save and wait
-            _save_pending(
-                {
-                    "files": files,
-                    "last_commit": last_commit,
-                }
-            )
-            return None
-
-        # Pause sentinel honored: shared with auto-git-save.py; user toggles
-        # both hooks with one `.claude/cache/auto-git-save.paused` file.
-        # We still accumulate files in pending so commit resumes when lifted.
-        if _is_paused():
             _save_pending(
                 {
                     "files": files,

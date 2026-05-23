@@ -29,7 +29,7 @@ import hmac
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -113,7 +113,7 @@ def _apply_pr_event(payload: dict[str, Any]) -> dict[str, Any]:
     entry["pr_url"] = pr_url or entry.get("pr_url")
     entry["branch"] = head_ref or entry.get("branch")
     entry["webhook_last_event"] = action
-    entry["webhook_last_ts"] = datetime.now().isoformat(timespec="seconds")
+    entry["webhook_last_ts"] = datetime.now(UTC).isoformat(timespec="seconds")
     if merged:
         entry["merged_ts"] = pr_obj.get("merged_at") or entry.get("merged_ts")
         entry["merge_sha"] = merge_sha or entry.get("merge_sha")
@@ -144,7 +144,7 @@ def _apply_check_suite_event(payload: dict[str, Any]) -> dict[str, Any]:
             "sha": sha,
             "status": status_str,
             "conclusion": conclusion,
-            "ts": datetime.now().isoformat(timespec="seconds"),
+            "ts": datetime.now(UTC).isoformat(timespec="seconds"),
         }
     )
     # cap history length to last 20

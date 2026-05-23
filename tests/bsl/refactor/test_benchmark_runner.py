@@ -20,6 +20,7 @@ from benchmark.runner import (
 # Namespace collision: tests/bsl/__init__.py shadows src/bsl/.
 # Force-load src/bsl/ into sys.modules as 'bsl' before importing types.
 import importlib  # noqa: E402
+
 _bsl_pkg = importlib.import_module("src.bsl")
 sys.modules["bsl"] = _bsl_pkg
 
@@ -49,33 +50,60 @@ class MockBackend:
 
 def _task(task_id="T01", **kw):
     defaults = dict(
-        id=task_id, file_uri="test.bsl", line=0, character=0,
-        new_name="Foo", expected_files=[], parent_sha="synthetic",
-        category="CAT-1-local-variable", commit_sha="synthetic",
-        old_name="Bar", expected_files_affected=0, expected_edits=0, notes="test",
+        id=task_id,
+        file_uri="test.bsl",
+        line=0,
+        character=0,
+        new_name="Foo",
+        expected_files=[],
+        parent_sha="synthetic",
+        category="CAT-1-local-variable",
+        commit_sha="synthetic",
+        old_name="Bar",
+        expected_files_affected=0,
+        expected_edits=0,
+        notes="test",
     )
     defaults.update(kw)
     return defaults
 
 
 def _edit_single(uri="test.bsl"):
-    return WorkspaceEdit(file_edits=[
-        FileEdit(uri=uri, edits=[
-            TextEdit(
-                range=Range(start=Position(line=0, character=0), end=Position(line=0, character=3)),
-                new_text="Foo",
+    return WorkspaceEdit(
+        file_edits=[
+            FileEdit(
+                uri=uri,
+                edits=[
+                    TextEdit(
+                        range=Range(
+                            start=Position(line=0, character=0), end=Position(line=0, character=3)
+                        ),
+                        new_text="Foo",
+                    )
+                ],
             )
-        ])
-    ])
+        ]
+    )
 
 
 def _result(**kw):
     defaults = dict(
-        task_id="T01", backend="mock", applied=False, rolled_back=False,
-        files_affected=0, files_match_expected=False, edits_match_expected=False,
-        duration_ms_plan=0, duration_ms_apply=0, error_code=None,
-        fallback_used=False, manual_required=False, classifier_confidence=0.0,
-        matrix_confidence=0.0, actual_files=[], expected_files=[],
+        task_id="T01",
+        backend="mock",
+        applied=False,
+        rolled_back=False,
+        files_affected=0,
+        files_match_expected=False,
+        edits_match_expected=False,
+        duration_ms_plan=0,
+        duration_ms_apply=0,
+        error_code=None,
+        fallback_used=False,
+        manual_required=False,
+        classifier_confidence=0.0,
+        matrix_confidence=0.0,
+        actual_files=[],
+        expected_files=[],
     )
     defaults.update(kw)
     return TaskResult(**defaults)
@@ -113,13 +141,17 @@ class TestWorktreeManager:
         try:
             subprocess.run(
                 ["git", "rev-parse", "--is-inside-work-tree"],
-                capture_output=True, check=True, cwd=REPO_ROOT,
+                capture_output=True,
+                check=True,
+                cwd=REPO_ROOT,
             )
         except Exception:
             pytest.skip("Not in a git repo")
 
         sha = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, encoding="utf-8",
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO_ROOT,
+            encoding="utf-8",
         ).strip()
 
         mgr = WorktreeManager(repo_root=REPO_ROOT, base_tmp=tmp_path)

@@ -9,7 +9,7 @@ try:
     import yaml
 except ImportError as exc:
     raise ImportError(
-        "PyYAML is required for routing matrix loading. " "Install it with: pip install pyyaml"
+        "PyYAML is required for routing matrix loading. Install it with: pip install pyyaml"
     ) from exc
 
 log = logging.getLogger(__name__)
@@ -49,14 +49,12 @@ _DEFAULT_ROUTES: dict[SymbolKind, RouteDecision] = {
     SymbolKind.MODULE_LOCAL_FUNC: RouteDecision(
         "multilspy", "ast-grep", 0.95, "module-scope — calibrated pilot-B 4/4 success"
     ),
-    SymbolKind.LOCAL_VARIABLE: RouteDecision(
-        "multilspy", None, 0.95, "local scope, single file — calibrated pilot-B 4/4 success"
-    ),
+    SymbolKind.LOCAL_VARIABLE: RouteDecision("multilspy", None, 0.70, "local scope, single file"),
     SymbolKind.FORM_HANDLER: RouteDecision(
         "ast-grep",
         "multilspy",
-        0.95,
-        "form handlers — calibrated pilot-B 4/4 success",
+        0.60,
+        "form handlers may have XML-side refs",
         manual_fallback=True,
     ),
     SymbolKind.UNKNOWN: RouteDecision(
@@ -118,7 +116,7 @@ class RoutingMatrix:
         version = data.get("version")
         if version != 2:
             raise ValueError(
-                f"Unsupported routing matrix version {version!r} " f"(expected 2) in {path}"
+                f"Unsupported routing matrix version {version!r} (expected 2) in {path}"
             )
 
         raw_routes: dict[str, dict] = data.get("routes")

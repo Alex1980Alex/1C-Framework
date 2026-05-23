@@ -137,14 +137,14 @@ def already_saved(session_id):
         # Primary dedup: by session_id (if available)
         if session_id:
             row = conn.execute(
-                "SELECT 1 FROM important_messages " "WHERE category = ? AND metadata LIKE ?",
+                "SELECT 1 FROM important_messages WHERE category = ? AND metadata LIKE ?",
                 (CATEGORY, f'%"session_id": "{session_id}"%'),
             ).fetchone()
         else:
             # Fallback dedup: by today's date (max 1 session summary per day)
             today = date.today().isoformat()
             row = conn.execute(
-                "SELECT 1 FROM important_messages " "WHERE category = ? AND metadata LIKE ?",
+                "SELECT 1 FROM important_messages WHERE category = ? AND metadata LIKE ?",
                 (CATEGORY, f'%"session_date": "{today}"%'),
             ).fetchone()
         conn.close()
@@ -259,100 +259,6 @@ def save_to_sqlite(ctx):
     conn.commit()
     conn.close()
     return True
-
-
-def save_to_wiki_log(ctx):
-    """Append brief session summary to docs/wiki/log.md."""
-    if not WIKI_LOG.exists():
-        return False
-
-    try:
-        today = date.today().isoformat()
-        summary = format_summary(ctx)
-        skills_str = ", ".join(ctx["skills"][:5]) if ctx["skills"] else "none"
-        files_count = len(ctx["files_changed"])
-
-        entry = (
-            f"\n## {today} — Session Summary\n\n"
-            f"**Event:** Auto-saved session\n\n"
-            f"- Skills: {skills_str}\n"
-            f"- Files changed: {files_count}\n"
-            f"- Summary: {summary}\n\n"
-        )
-
-        with open(WIKI_LOG, "a", encoding="utf-8") as f:
-            f.write(entry)
-
-        # Trim if over max lines
-        try:
-            lines = WIKI_LOG.read_text(encoding="utf-8").splitlines(keepends=True)
-            if len(lines) > WIKI_LOG_MAX_LINES:
-                # Keep frontmatter + first section + tail
-                kept = lines[:30] + lines[-(WIKI_LOG_MAX_LINES - 30) :]
-                WIKI_LOG.write_text("".join(kept), encoding="utf-8")
-        except Exception:
-            pass
-
-        return True
-    except Exception:
-        return False
-
-
-def try_promote_patterns() -> None:
-    """L2→L5 promotion: scan learned_patterns, write drafts. Best-effort, non-blocking.
-
-    Uses CLI defaults (confidence>=0.8, application_count>=5). Failures are swallowed —
-    drafts/ is advisory state; missing run is acceptable. Disable with
-    SESSION_MEMORY_NO_PROMOTE=1 (e.g. CI, dev with no Qdrant).
-    """
-    if os.environ.get("SESSION_MEMORY_NO_PROMOTE") == "1":
-        return
-    try:
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "scripts.export_graph_to_wiki",
-                "promote-patterns",
-            ],
-            capture_output=True,
-            text=True,
-            # 4s leaves margin under the 5s Stop-hook timeout (per docstring).
-            # If Qdrant scroll + dedup takes longer, promotion is skipped — the
-            # next Stop will retry. Drafts/ is advisory; missing run is fine.
-            timeout=4,
-            cwd=str(PROJECT_ROOT),
-            encoding="utf-8",
-            errors="replace",
-        )
-        if result.returncode == 0 and "Promoted" in (result.stdout or ""):
-            # Surface successful promotions via wiki log; the CLI itself already
-            # appends per-pattern entries through WikiPromoter._append_log.
-            pass
-    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
-        pass
-
-
-def _emit_langfuse_span(ctx: dict, status: str) -> None:
-    """Roadmap §5c.4: эмитит Langfuse observation. Никогда не блокирует hook."""
-    try:
-        sys.path.insert(0, str(PROJECT_ROOT))
-        from src.pdf_framework.observability.langfuse_setup import emit_observation
-
-        emit_observation(
-            name="session-memory-save",
-            input={
-                "session_id": ctx.get("session_id"),
-                "files_changed": len(ctx.get("changed_files", [])),
-                "commits": len(ctx.get("commits", [])),
-                "skills": len(ctx.get("skills", [])),
-            },
-            output={"status": status, "category": CATEGORY},
-            session_id=str(ctx.get("session_id", "")) or None,
-            metadata={"hook": "session-memory-save", "event": "Stop"},
-        )
-    except Exception:
-        pass
 
 
 class SessionMemorySave(BaseHook):

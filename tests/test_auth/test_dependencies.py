@@ -1,12 +1,10 @@
 """Tests for FastAPI authentication dependencies (Phase 12.3)."""
 
-from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.api.auth.jwt_handler import JWTHandler, TokenPayload
-
 
 SECRET = "test-dep-secret"
 
@@ -46,21 +44,27 @@ def mock_settings_auth_disabled():
 # get_current_tenant
 # ---------------------------------------------------------------------------
 
+
 class TestGetCurrentTenant:
     @pytest.mark.asyncio
     async def test_auth_disabled_returns_default(self, mock_settings_auth_disabled):
         from src.api.auth.dependencies import get_current_tenant
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_disabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_disabled
+        ):
             result = await get_current_tenant(credentials=None)
             assert result == "default"
 
     @pytest.mark.asyncio
     async def test_auth_enabled_no_credentials_raises(self, mock_settings_auth_enabled):
         from fastapi import HTTPException
+
         from src.api.auth.dependencies import get_current_tenant
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_tenant(credentials=None)
             assert exc_info.value.status_code == 401
@@ -72,19 +76,24 @@ class TestGetCurrentTenant:
         creds = MagicMock()
         creds.credentials = valid_token
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             result = await get_current_tenant(credentials=creds)
             assert result == "test-tenant"
 
     @pytest.mark.asyncio
     async def test_auth_enabled_invalid_token_raises(self, mock_settings_auth_enabled):
         from fastapi import HTTPException
+
         from src.api.auth.dependencies import get_current_tenant
 
         creds = MagicMock()
         creds.credentials = "invalid-token"
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_tenant(credentials=creds)
             assert exc_info.value.status_code == 401
@@ -94,12 +103,15 @@ class TestGetCurrentTenant:
 # get_current_role
 # ---------------------------------------------------------------------------
 
+
 class TestGetCurrentRole:
     @pytest.mark.asyncio
     async def test_auth_disabled_returns_admin(self, mock_settings_auth_disabled):
         from src.api.auth.dependencies import get_current_role
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_disabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_disabled
+        ):
             result = await get_current_role(credentials=None)
             assert result == "admin"
 
@@ -110,16 +122,21 @@ class TestGetCurrentRole:
         creds = MagicMock()
         creds.credentials = valid_token
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             result = await get_current_role(credentials=creds)
             assert result == "editor"
 
     @pytest.mark.asyncio
     async def test_auth_enabled_no_creds_raises(self, mock_settings_auth_enabled):
         from fastapi import HTTPException
+
         from src.api.auth.dependencies import get_current_role
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_role(credentials=None)
             assert exc_info.value.status_code == 401
@@ -129,12 +146,15 @@ class TestGetCurrentRole:
 # get_token_payload
 # ---------------------------------------------------------------------------
 
+
 class TestGetTokenPayload:
     @pytest.mark.asyncio
     async def test_auth_disabled_returns_default_payload(self, mock_settings_auth_disabled):
         from src.api.auth.dependencies import get_token_payload
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_disabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_disabled
+        ):
             payload = await get_token_payload(credentials=None)
             assert isinstance(payload, TokenPayload)
             assert payload.tenant_id == "default"
@@ -148,7 +168,9 @@ class TestGetTokenPayload:
         creds = MagicMock()
         creds.credentials = valid_token
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             payload = await get_token_payload(credentials=creds)
             assert isinstance(payload, TokenPayload)
             assert payload.tenant_id == "test-tenant"
@@ -157,12 +179,15 @@ class TestGetTokenPayload:
     @pytest.mark.asyncio
     async def test_auth_enabled_invalid_raises(self, mock_settings_auth_enabled):
         from fastapi import HTTPException
+
         from src.api.auth.dependencies import get_token_payload
 
         creds = MagicMock()
         creds.credentials = "bad-token"
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await get_token_payload(credentials=creds)
             assert exc_info.value.status_code == 401
@@ -170,9 +195,12 @@ class TestGetTokenPayload:
     @pytest.mark.asyncio
     async def test_auth_enabled_no_creds_raises(self, mock_settings_auth_enabled):
         from fastapi import HTTPException
+
         from src.api.auth.dependencies import get_token_payload
 
-        with patch("src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled):
+        with patch(
+            "src.api.auth.dependencies.get_settings", return_value=mock_settings_auth_enabled
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await get_token_payload(credentials=None)
             assert exc_info.value.status_code == 401

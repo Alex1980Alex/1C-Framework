@@ -138,7 +138,7 @@ def render_dashboard(session_dir: str, as_json: bool = False):
                 bar_len = int((val - mn) / (mx - mn + 0.001) * width) if mx > mn else width // 2
                 bar = "#" * max(bar_len, 1)
                 marker = " <-- best" if val == max(nums) else ""
-                print(f"  {idx+1:3d} | {val:8.4f} {bar}{marker}")
+                print(f"  {idx + 1:3d} | {val:8.4f} {bar}{marker}")
 
     # Top improvements
     improvements = []

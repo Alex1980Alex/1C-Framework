@@ -65,8 +65,8 @@ LANGUAGE_TO_EXTENSION: dict[str, str] = {
 }
 
 GLOBAL_SKIP_PATTERNS: list[str] = [
-    "configuration\\",
-    "configuration/",
+    "src\\projects\\configuration",
+    "src/projects/configuration",
     "node_modules",
     "__pycache__",
     ".venv",

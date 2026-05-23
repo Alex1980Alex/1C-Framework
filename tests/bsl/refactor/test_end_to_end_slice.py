@@ -33,9 +33,7 @@ def workspace(tmp_path: Path) -> Path:
 
 def test_end_to_end_rename_via_backend_applier_verifier(workspace: Path) -> None:
     file_a = workspace / "module.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
 
     uri = _file_uri(file_a)
     lsp_response = {

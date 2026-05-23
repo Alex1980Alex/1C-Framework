@@ -224,7 +224,7 @@ class DecisionToTriad(BaseHook):
         if triad_score >= 1:
             return self._factory_message(
                 "TRIAD-COMPONENT-DETECTED",
-                "Обнаружен запрос на создание компонента триады " "(hook / skill / MCP / домен).",
+                "Обнаружен запрос на создание компонента триады (hook / skill / MCP / домен).",
             )
 
         decision_score = sum(1 for kw in self.DECISION_PHRASES_RU if kw in prompt_lower) + sum(
@@ -246,7 +246,7 @@ class DecisionToTriad(BaseHook):
         if decision_score >= 1 and arch_score >= 1:
             return self._factory_message(
                 "ARCHITECTURE-DECISION",
-                "Обнаружено архитектурное решение " "(новый компонент / фаза / стратегия).",
+                "Обнаружено архитектурное решение (новый компонент / фаза / стратегия).",
             )
 
         if decision_score >= 2:

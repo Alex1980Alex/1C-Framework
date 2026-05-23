@@ -57,7 +57,7 @@ class TestStreamEvent:
         assert sse.endswith("\n\n")
 
         # Parse the JSON payload
-        payload = json.loads(sse[len("data: "):-2])
+        payload = json.loads(sse[len("data: ") : -2])
         assert payload["type"] == "token"
         assert payload["data"] == "Hello"
 
@@ -79,7 +79,7 @@ class TestStreamEvent:
             data=[{"id": "doc1", "score": 0.9}],
         )
         sse = event.to_sse()
-        payload = json.loads(sse[len("data: "):-2])
+        payload = json.loads(sse[len("data: ") : -2])
         assert payload["type"] == "source"
         assert payload["data"][0]["score"] == 0.9
 
@@ -155,6 +155,7 @@ class TestCollectStream:
     @pytest.mark.asyncio
     async def test_source_as_single_dict(self):
         """Source data can be a single dict instead of list."""
+
         async def gen():
             yield StreamEvent(type=StreamEventType.SOURCE, data={"id": "doc1"})
             yield StreamEvent(type=StreamEventType.DONE, data="")

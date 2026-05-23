@@ -3,8 +3,9 @@
 Tests CRUD operations and Cypher query generation with mocked Neo4j driver.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.pdf_framework.config import GraphStoreSettings
 from src.pdf_framework.schemas.entities import Entity, Relation
@@ -114,6 +115,7 @@ class TestNeo4jGraphStore:
     @pytest.mark.asyncio
     async def test_get_entity(self, settings, mock_driver, mock_session):
         """Test fetching an entity by ID."""
+
         # Use a dict subclass that mimics Neo4j Node (dict() works correctly)
         class FakeNode(dict):
             pass
@@ -200,7 +202,9 @@ class TestNeo4jGraphStore:
         assert stats["edge_count"] == 200
 
     @pytest.mark.asyncio
-    async def test_batch_mode_defers_writes(self, settings, mock_driver, mock_session, sample_entity):
+    async def test_batch_mode_defers_writes(
+        self, settings, mock_driver, mock_session, sample_entity
+    ):
         """Test batch mode defers writes."""
         store = _make_store(settings, mock_driver)
         store.set_batch_mode(True)

@@ -4,7 +4,7 @@ Tests:
 - F2.8.2: Test deduplication in GraphBuilder
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -20,14 +20,8 @@ class TestGraphBuilder:
         builder = GraphBuilder()
 
         chunks = [
-            MagicMock(
-                content="John Doe works at Acme Corporation.",
-                metadata={"entities": []}
-            ),
-            MagicMock(
-                content="Jane Smith is a colleague of John Doe.",
-                metadata={"entities": []}
-            ),
+            MagicMock(content="John Doe works at Acme Corporation.", metadata={"entities": []}),
+            MagicMock(content="Jane Smith is a colleague of John Doe.", metadata={"entities": []}),
         ]
 
         graph = builder.build(chunks)
@@ -44,11 +38,11 @@ class TestGraphBuilder:
         chunks = [
             MagicMock(
                 content="John Doe is a person.",
-                metadata={"entities": [{"name": "John Doe", "type": "Person"}]}
+                metadata={"entities": [{"name": "John Doe", "type": "Person"}]},
             ),
             MagicMock(
                 content="John Doe lives in New York.",
-                metadata={"entities": [{"name": "John Doe", "type": "Person"}]}
+                metadata={"entities": [{"name": "John Doe", "type": "Person"}]},
             ),
         ]
 
@@ -67,11 +61,11 @@ class TestGraphBuilder:
         chunks = [
             MagicMock(
                 content="john doe is a person",
-                metadata={"entities": [{"name": "john doe", "type": "Person"}]}
+                metadata={"entities": [{"name": "john doe", "type": "Person"}]},
             ),
             MagicMock(
                 content="John Doe lives here",
-                metadata={"entities": [{"name": "John Doe", "type": "Person"}]}
+                metadata={"entities": [{"name": "John Doe", "type": "Person"}]},
             ),
         ]
 
@@ -90,11 +84,13 @@ class TestGraphBuilder:
 
         chunk = MagicMock(
             content="John Doe works at Acme Corporation. He is managed by Jane Smith.",
-            metadata={"entities": [
-                {"name": "John Doe", "type": "Person"},
-                {"name": "Acme Corporation", "type": "Organization"},
-                {"name": "Jane Smith", "type": "Person"},
-            ]}
+            metadata={
+                "entities": [
+                    {"name": "John Doe", "type": "Person"},
+                    {"name": "Acme Corporation", "type": "Organization"},
+                    {"name": "Jane Smith", "type": "Person"},
+                ]
+            },
         )
 
         graph = builder.build([chunk], extract_relations=True)
@@ -111,10 +107,12 @@ class TestGraphBuilder:
 
         chunk = MagicMock(
             content="Test content",
-            metadata={"entities": [
-                {"name": "High Confidence", "confidence": 0.9},
-                {"name": "Low Confidence", "confidence": 0.5},
-            ]}
+            metadata={
+                "entities": [
+                    {"name": "High Confidence", "confidence": 0.9},
+                    {"name": "Low Confidence", "confidence": 0.5},
+                ]
+            },
         )
 
         graph = builder.build([chunk])

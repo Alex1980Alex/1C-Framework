@@ -160,9 +160,9 @@ class TaskExecutor:
             wt_prefix = worktree_path.as_posix()
             for fe in edit.file_edits:
                 uri_norm = fe.uri.replace("\\", "/")
-                # Strip scheme BEFORE comparing to worktree path — LSP URIs
-                # are always `file:///...` and may be URL-encoded (Cyrillic
-                # becomes %XX%XX).
+                wt_prefix = worktree_path.as_posix()
+                if uri_norm.startswith(wt_prefix):
+                    uri_norm = uri_norm[len(wt_prefix) :].lstrip("/")
                 if uri_norm.startswith("file:///"):
                     uri_norm = uri_norm[8:]
                 uri_norm = unquote(uri_norm)

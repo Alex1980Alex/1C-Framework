@@ -24,7 +24,6 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
-
 from shared.task_master import MANDATORY_HOOKS, get_pending_tasks
 
 

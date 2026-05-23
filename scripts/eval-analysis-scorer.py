@@ -126,14 +126,14 @@ def main():
         print(f"{r['id']:<18} {a:>5} {r['human']:>6} {d:>6} {r['auto_gaps']:>5} {r['exp_gaps']:>5}")
 
     # Summary
-    print(f"\n{'='*52}")
+    print(f"\n{'=' * 52}")
     print(f"  Reports:       {n}")
     print(f"  MAE:           {mae:.1f}  (target < 10)")
     print(f"  Pearson R:     {corr:.4f}  (target > 0.8)")
     print(f"  Gap Precision: {prec:.1%}  ")
     print(f"  Gap Recall:    {rec:.1%}  ")
     print(f"  Gap F1:        {f1:.1%}  (target > 0.7)")
-    print(f"{'='*52}")
+    print(f"{'=' * 52}")
 
     # Verdict
     ok_mae = mae < 10

@@ -12,27 +12,21 @@ Tests:
 """
 
 import asyncio
-import json
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from src.memory.orchestrator.memory_orchestrator import (
-    OrchestratorConfig,
-    OrchestratorError,
     EntityNotFoundError,
-    InvalidLinkError,
-    SubsystemUnavailableError,
     MemoryOrchestrator,
+    OrchestratorConfig,
+    SubsystemUnavailableError,
 )
-from src.memory.orchestrator.memory_router import RouterConfig
 from src.memory.orchestrator.unified_id import MemoryType, SourceServer
 from src.memory.orchestrator.unified_search import (
-    SearchResultItem,
     BaseSearchAdapter,
+    SearchResultItem,
 )
-
 
 # ===== Mock Adapters =====
 
@@ -152,9 +146,7 @@ class TestUnifiedSearch:
 
     @pytest.mark.asyncio
     async def test_source_filtering(self, orchestrator: MemoryOrchestrator):
-        result = await orchestrator.unified_search(
-            "test", include=["memory-ai"]
-        )
+        result = await orchestrator.unified_search("test", include=["memory-ai"])
         sources = [r["source"] for r in result["results"]]
         assert all(s == "memory-ai" for s in sources)
 
@@ -175,9 +167,7 @@ class TestRouteAndSave:
         with patch.object(orchestrator, "_save_to_target", new_callable=AsyncMock) as mock_save:
             mock_save.return_value = "test-entity-id"
 
-            result = await orchestrator.route_and_save(
-                "Запомни: важный факт о системе"
-            )
+            result = await orchestrator.route_and_save("Запомни: важный факт о системе")
             assert result["success"] is True
             assert len(result["saved_entities"]) > 0
             assert mock_save.called
@@ -200,9 +190,7 @@ class TestLinkOperations:
 
     @pytest.mark.asyncio
     async def test_get_related_empty(self, orchestrator: MemoryOrchestrator):
-        result = await orchestrator.get_related(
-            entity_id="episodic:memory-ai:nonexistent"
-        )
+        result = await orchestrator.get_related(entity_id="episodic:memory-ai:nonexistent")
         assert result["related_count"] == 0
 
     @pytest.mark.asyncio
@@ -215,9 +203,7 @@ class TestLinkOperations:
             strength=0.8,
         )
         # Get related
-        result = await orchestrator.get_related(
-            entity_id="episodic:memory-ai:x"
-        )
+        result = await orchestrator.get_related(entity_id="episodic:memory-ai:x")
         assert result["related_count"] == 1
         assert "semantic:vector-memory:y" in str(result["related"])
 

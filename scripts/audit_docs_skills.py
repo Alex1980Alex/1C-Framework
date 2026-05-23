@@ -238,7 +238,7 @@ def extract_cli_commands() -> list[Feature]:
                     name=cmd_name,
                     category="cli_command",
                     source_file="src/cli/main.py",
-                    details=f"line={i+1}",
+                    details=f"line={i + 1}",
                 )
             )
     return features
@@ -1089,7 +1089,7 @@ def update_strategies_doc(report: AuditReport) -> int:
         last_num += 1
         name = g.feature_name
         new_rows.append(
-            f"| {last_num} | `{name}` | Средняя | Хорошее | " f"{name.replace('_', ' ').title()} |"
+            f"| {last_num} | `{name}` | Средняя | Хорошее | {name.replace('_', ' ').title()} |"
         )
         added += 1
 
@@ -1484,14 +1484,14 @@ def main():
         print("\nApplying updates...", file=sys.stderr)
         results = apply_updates(report)
         total_added = sum(results.values())
-        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"\n{'=' * 60}", file=sys.stderr)
         print(
             f"UPDATES APPLIED: {total_added} features added to {len(results)} files",
             file=sys.stderr,
         )
         for fname, count in sorted(results.items()):
             print(f"  {fname}: +{count}", file=sys.stderr)
-        print(f"{'='*60}", file=sys.stderr)
+        print(f"{'=' * 60}", file=sys.stderr)
 
         # Re-run audit to show updated coverage
         print("\nRe-scanning after updates...", file=sys.stderr)
@@ -1516,11 +1516,11 @@ def main():
 
     # Print summary to stderr
     s = report.summary
-    print(f"\n{'='*60}", file=sys.stderr)
+    print(f"\n{'=' * 60}", file=sys.stderr)
     print(f"AUDIT COMPLETE: {s.get('total_features', 0)} features found", file=sys.stderr)
     print(f"  Documentation gaps: {s.get('doc_gaps', 0)}", file=sys.stderr)
     print(f"  Skill gaps:         {s.get('skill_gaps', 0)}", file=sys.stderr)
-    print(f"{'='*60}", file=sys.stderr)
+    print(f"{'=' * 60}", file=sys.stderr)
 
     for cat, stats in s.get("by_category", {}).items():
         label = CATEGORY_LABELS.get(cat, cat)

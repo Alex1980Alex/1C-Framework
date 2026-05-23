@@ -1,7 +1,6 @@
 """Tests for document versioning (Phase 12.5)."""
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -23,6 +22,7 @@ def vm(tmp_path):
 # ---------------------------------------------------------------------------
 # VersionInfo model
 # ---------------------------------------------------------------------------
+
 
 class TestVersionInfo:
     def test_model_fields(self):
@@ -58,6 +58,7 @@ class TestVersionInfo:
 # DocumentVersionManager init
 # ---------------------------------------------------------------------------
 
+
 class TestVersionManagerInit:
     def test_creates_directories(self, tmp_path):
         db_path = tmp_path / "sub" / "versions.db"
@@ -70,6 +71,7 @@ class TestVersionManagerInit:
 # ---------------------------------------------------------------------------
 # create_version
 # ---------------------------------------------------------------------------
+
 
 class TestCreateVersion:
     @pytest.mark.asyncio
@@ -144,6 +146,7 @@ class TestCreateVersion:
 # get_versions / get_latest_version / get_version
 # ---------------------------------------------------------------------------
 
+
 class TestGetVersions:
     @pytest.mark.asyncio
     async def test_get_versions_empty(self, vm):
@@ -197,6 +200,7 @@ class TestGetVersions:
 # get_version_chunks
 # ---------------------------------------------------------------------------
 
+
 class TestGetVersionChunks:
     @pytest.mark.asyncio
     async def test_retrieves_cached_chunks(self, vm):
@@ -215,6 +219,7 @@ class TestGetVersionChunks:
 # ---------------------------------------------------------------------------
 # rollback
 # ---------------------------------------------------------------------------
+
 
 class TestRollback:
     @pytest.mark.asyncio
@@ -253,6 +258,7 @@ class TestRollback:
 # delete_document
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteDocument:
     @pytest.mark.asyncio
     async def test_deletes_all_versions(self, vm):
@@ -283,9 +289,11 @@ class TestDeleteDocument:
 # get_version_manager singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetVersionManager:
     def test_returns_instance(self):
         import src.pdf_framework.processing.versioning as mod
+
         mod._version_manager = None
 
         mgr = get_version_manager()
@@ -295,6 +303,7 @@ class TestGetVersionManager:
 
     def test_returns_same_instance(self):
         import src.pdf_framework.processing.versioning as mod
+
         mod._version_manager = None
 
         m1 = get_version_manager()

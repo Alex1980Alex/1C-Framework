@@ -24,10 +24,10 @@ class TestBackoffStrategy:
 
     def test_exponential_growth(self):
         bs = BackoffStrategy(base_delay=1.0, multiplier=2.0, jitter=0.0)
-        assert bs.compute_delay(0) == 1.0   # 1 * 2^0
-        assert bs.compute_delay(1) == 2.0   # 1 * 2^1
-        assert bs.compute_delay(2) == 4.0   # 1 * 2^2
-        assert bs.compute_delay(3) == 8.0   # 1 * 2^3
+        assert bs.compute_delay(0) == 1.0  # 1 * 2^0
+        assert bs.compute_delay(1) == 2.0  # 1 * 2^1
+        assert bs.compute_delay(2) == 4.0  # 1 * 2^2
+        assert bs.compute_delay(3) == 8.0  # 1 * 2^3
 
     def test_max_delay_cap(self):
         bs = BackoffStrategy(base_delay=1.0, multiplier=2.0, max_delay=5.0, jitter=0.0)
@@ -72,9 +72,9 @@ class TestBackoffStrategy:
 
     def test_custom_multiplier(self):
         bs = BackoffStrategy(base_delay=1.0, multiplier=3.0, jitter=0.0)
-        assert bs.compute_delay(0) == 1.0   # 1 * 3^0
-        assert bs.compute_delay(1) == 3.0   # 1 * 3^1
-        assert bs.compute_delay(2) == 9.0   # 1 * 3^2
+        assert bs.compute_delay(0) == 1.0  # 1 * 3^0
+        assert bs.compute_delay(1) == 3.0  # 1 * 3^1
+        assert bs.compute_delay(2) == 9.0  # 1 * 3^2
 
     def test_default_values(self):
         bs = BackoffStrategy()
@@ -103,28 +103,32 @@ class TestRateLimitError:
 class TestParseRetryAfter:
     def test_valid_integer(self):
         from src.shared.llm_rotation.service import _parse_retry_after
+
         assert _parse_retry_after("30") == 30.0
 
     def test_valid_float(self):
         from src.shared.llm_rotation.service import _parse_retry_after
+
         assert _parse_retry_after("1.5") == 1.5
 
     def test_none(self):
         from src.shared.llm_rotation.service import _parse_retry_after
+
         assert _parse_retry_after(None) is None
 
     def test_empty_string(self):
         from src.shared.llm_rotation.service import _parse_retry_after
+
         assert _parse_retry_after("") is None
 
     def test_invalid(self):
         from src.shared.llm_rotation.service import _parse_retry_after
+
         assert _parse_retry_after("not-a-number") is None
 
 
 # ========== Health Check Tests (Iteration 3) ==========
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -141,8 +145,11 @@ class TestHealthCheck:
     def _make_service(self, **kwargs) -> LLMRotationService:
         configs = [
             ProviderConfig(
-                name="test-provider", base_url="http://test",
-                api_key_env="", default_model="m", requires_key=False,
+                name="test-provider",
+                base_url="http://test",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
             ),
         ]
         defaults = dict(health_check_enabled=True, health_check_interval=1)
@@ -183,11 +190,15 @@ class TestHealthCheck:
         assert state.circuit_breaker.state == CircuitState.OPEN
 
         import time
+
         time.sleep(0.02)
 
         mock_response = {
-            "provider": "test-provider", "model": "m", "text": "pong",
-            "response_time": 0.1, "usage": {},
+            "provider": "test-provider",
+            "model": "m",
+            "text": "pong",
+            "response_time": 0.1,
+            "usage": {},
         }
 
         async def mock_call_provider(*args, **kwargs):
@@ -195,7 +206,9 @@ class TestHealthCheck:
             state.record_success(0.1)
             return mock_response
 
-        with patch.object(service, "_call_provider", new_callable=AsyncMock, side_effect=mock_call_provider):
+        with patch.object(
+            service, "_call_provider", new_callable=AsyncMock, side_effect=mock_call_provider
+        ):
             await service._health_check_loop_once()
 
         assert state.circuit_breaker.state == CircuitState.CLOSED
@@ -209,9 +222,12 @@ class TestHealthCheck:
         state.circuit_breaker.record_failure()
 
         import time
+
         time.sleep(0.02)
 
-        with patch.object(service, "_call_provider", new_callable=AsyncMock, side_effect=RuntimeError("down")):
+        with patch.object(
+            service, "_call_provider", new_callable=AsyncMock, side_effect=RuntimeError("down")
+        ):
             await service._health_check_loop_once()
 
         assert state.circuit_breaker.state == CircuitState.OPEN
@@ -279,21 +295,35 @@ class TestMultiLevelFailover:
         """Transient error on default model → tries alt model of same provider."""
         configs = [
             ProviderConfig(
-                name="multi", base_url="http://m", api_key_env="",
-                default_model="model-a", models=["model-a", "model-b"],
+                name="multi",
+                base_url="http://m",
+                api_key_env="",
+                default_model="model-a",
+                models=["model-a", "model-b"],
                 requires_key=False,
             ),
         ]
         service = LLMRotationService(providers=configs)
         call_models = []
 
-        async def mock_call(state, prompt, system_prompt=None, model=None, temperature=0.7, max_tokens=2048, **kwargs):
+        async def mock_call(
+            state,
+            prompt,
+            system_prompt=None,
+            model=None,
+            temperature=0.7,
+            max_tokens=2048,
+            **kwargs,
+        ):
             call_models.append(model)
             if model == "model-a":
                 raise RuntimeError("HTTP 500 Internal Server Error")
             return {
-                "provider": "multi", "model": model, "text": "ok",
-                "response_time": 0.1, "usage": {},
+                "provider": "multi",
+                "model": model,
+                "text": "ok",
+                "response_time": 0.1,
+                "usage": {},
             }
 
         with patch.object(service, "_call_provider", side_effect=mock_call):
@@ -307,26 +337,45 @@ class TestMultiLevelFailover:
         """Non-transient error → skip to next provider, don't try alt model."""
         configs = [
             ProviderConfig(
-                name="p1", base_url="http://p1", api_key_env="",
-                default_model="m1", models=["m1", "m1-alt"],
-                requires_key=False, priority=0,
+                name="p1",
+                base_url="http://p1",
+                api_key_env="",
+                default_model="m1",
+                models=["m1", "m1-alt"],
+                requires_key=False,
+                priority=0,
             ),
             ProviderConfig(
-                name="p2", base_url="http://p2", api_key_env="",
-                default_model="m2", models=["m2"],
-                requires_key=False, priority=1,
+                name="p2",
+                base_url="http://p2",
+                api_key_env="",
+                default_model="m2",
+                models=["m2"],
+                requires_key=False,
+                priority=1,
             ),
         ]
         service = LLMRotationService(providers=configs)
         call_log = []
 
-        async def mock_call(state, prompt, system_prompt=None, model=None, temperature=0.7, max_tokens=2048, **kwargs):
+        async def mock_call(
+            state,
+            prompt,
+            system_prompt=None,
+            model=None,
+            temperature=0.7,
+            max_tokens=2048,
+            **kwargs,
+        ):
             call_log.append(f"{state.config.name}/{model}")
             if state.config.name == "p1":
                 raise RuntimeError("HTTP 400 Bad Request")  # non-transient
             return {
-                "provider": "p2", "model": model, "text": "ok",
-                "response_time": 0.1, "usage": {},
+                "provider": "p2",
+                "model": model,
+                "text": "ok",
+                "response_time": 0.1,
+                "usage": {},
             }
 
         with patch.object(service, "_call_provider", side_effect=mock_call):
@@ -341,7 +390,6 @@ class TestMultiLevelFailover:
 from src.shared.llm_rotation.adaptive import (
     AdaptiveScorer,
     BudgetTracker,
-    PRICE_PER_1K_TOKENS,
 )
 
 
@@ -454,8 +502,11 @@ class TestAdaptiveIntegration:
     async def test_stats_include_adaptive(self):
         configs = [
             ProviderConfig(
-                name="test", base_url="http://t", api_key_env="",
-                default_model="m", requires_key=False,
+                name="test",
+                base_url="http://t",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
             ),
         ]
         settings = LLMRotationSettings(adaptive_routing=True)
@@ -468,8 +519,11 @@ class TestAdaptiveIntegration:
     async def test_completion_records_adaptive(self):
         configs = [
             ProviderConfig(
-                name="mock", base_url="http://m", api_key_env="",
-                default_model="m", requires_key=False,
+                name="mock",
+                base_url="http://m",
+                api_key_env="",
+                default_model="m",
+                requires_key=False,
             ),
         ]
         settings = LLMRotationSettings(adaptive_routing=True)
@@ -480,7 +534,9 @@ class TestAdaptiveIntegration:
             "model": "m",
             "usage": {"prompt_tokens": 10, "completion_tokens": 5},
         }
-        with patch.object(service, "_make_request_openai", new_callable=AsyncMock, return_value=mock_response):
+        with patch.object(
+            service, "_make_request_openai", new_callable=AsyncMock, return_value=mock_response
+        ):
             await service.complete("test")
 
         # Should have recorded one outcome

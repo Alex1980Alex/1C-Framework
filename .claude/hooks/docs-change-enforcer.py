@@ -69,29 +69,6 @@ DOCS_BASE = "docs/framework documentation"
 
 CODE_TO_DOMAIN = [
     # code_prefix                           docs_subdir              skill_name
-    # SPECIFIC OVERRIDES (must come before general prefixes — first match wins)
-    # Roadmap §3.1/§3.7/§3.3 closure findings: these specific files document
-    # to 09_АДМИНИСТРИРОВАНИЕ (observability/monitoring), not generic categories.
-    (
-        "src/pdf_framework/callbacks/langfuse/",
-        "09_АДМИНИСТРИРОВАНИЕ",
-        "deployment",
-    ),  # Langfuse = observability
-    ("src/pdf_framework/callbacks/metrics/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/pdf_framework/callbacks/logging/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    (
-        "src/pdf_framework/config/observability.py",
-        "09_АДМИНИСТРИРОВАНИЕ",
-        "deployment",
-    ),  # Langfuse settings
-    (
-        "src/pdf_framework/utils/retry.py",
-        "09_АДМИНИСТРИРОВАНИЕ",
-        "tenacity-retry",
-    ),  # Retry policy in 09.4
-    # Wiki export pipeline lives in indexing/ but is chapter 32 owned (2026-05-15)
-    ("src/pdf_framework/indexing/wiki_exporter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
-    # GENERAL PREFIXES (fallback after specific overrides)
     ("src/pdf_framework/search/", "04_ПОИСК", "search-pipeline-debug"),
     ("src/pdf_framework/agents/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
     ("src/pdf_framework/loaders/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
@@ -104,32 +81,12 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/optimization/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
-    # DSPy signatures used by RAG agent nodes (grader/rewriter/hallucination-check).
-    # Routes to chapter 05 since signatures define agent contracts.
-    ("src/pdf_framework/prompts/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
-    # General callbacks/ — all subdirs are observability (langfuse/logging/metrics)
-    # already covered by specific overrides above. Fallback for new sibling files
-    # (callbacks/__init__.py, callbacks/base.py, etc.) should match 09
-    # observability, NOT caching (roadmap 260509 §5d.6 fix, 2026-05-16).
-    # Historical mismapping to 07_КЭШИРОВАНИЕ produced false-positive
-    # docs-change-tracker todos demanding caching docs for observability code.
-    ("src/pdf_framework/callbacks/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/callbacks/", "07_КЭШИРОВАНИЕ", "framework-caching"),
     ("src/pdf_framework/multitenancy/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/pdf_framework/guardrails/", "33_GUARDRAILS", "framework-troubleshooting"),
-    ("src/pdf_framework/knowledge_base/", "34_KNOWLEDGE_BASE", "framework-config"),
-    # Agent execution sandbox (hermes-llm-wiki Ф5). Skeleton lives at
-    # src/pdf_framework/sandbox/ (ABC + DryRun); LangSmith/E2B backends
-    # land in later Ф5 commits. Docs chapter aligns with research-agents
-    # since the spec routes sandbox into architecture/tech-research agents.
-    ("src/pdf_framework/sandbox/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
-    ("src/extensions/", "35_EXTENSIONS", "pdf-knowledge"),
+    ("src/pdf_framework/guardrails/", "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
     ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/api/auth/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),  # IDOR in 09.2
-    # Dependency injection bundle (shared by REST API, MCP server, CLI).
-    # Components() lifecycle + lazy-init lives here; documented alongside API.
-    ("src/api/dependencies/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
     ("src/mcp_server/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
@@ -140,19 +97,7 @@ CODE_TO_DOMAIN = [
     ("src/bsl/", "06_ИНТЕРФЕЙСЫ", "bsl-development"),
     ("src/shared/llm_rotation/", None, "llm-rotation"),
     ("src/shared/", "01_ОБЗОР", "pdf-knowledge"),
-    # Wiki pipeline subsystem — Librarian lives here (chapter 32, 2026-05-15)
-    ("src/memory/librarian/wiki_promoter.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
-    ("src/memory/librarian/wiki_decay.py", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
-    ("src/memory/librarian/", "32_WIKI_KNOWLEDGE_LAYER", "wiki-pipeline"),
-    # Memory subsystem (general) — chapter 27 Unified Memory
-    ("src/memory/orchestrator/", "27_UNIFIED_MEMORY", "memory-unified"),
-    ("src/memory/ai_memory/", "27_UNIFIED_MEMORY", "memory-unified"),
-    ("src/memory/vector_memory/", "27_UNIFIED_MEMORY", "memory-unified"),
-    ("src/memory/skill_learning/", "29_XSKILL_CONTINUOUS_LEARNING", "memory-unified"),
-    ("src/memory/infrastructure/", "27_UNIFIED_MEMORY", "memory-unified"),
-    ("src/memory/", "27_UNIFIED_MEMORY", "memory-unified"),
-    # Framework self-search (Phase 8 §25 / chapter 31)
-    ("src/framework_search/", "31_QWEN3_RETRIEVAL_PRODUCTION", "framework-search"),
+    ("src/memory/", "01_ОБЗОР", "pdf-knowledge"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -418,7 +363,7 @@ def get_session_files(session_id: str = "") -> set[str]:
 
     try:
         r = subprocess.run(
-            ["git", "log", since_arg, "--name-only", "--pretty=", *grep_args],
+            ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -742,7 +687,7 @@ def main() -> None:
                 cf_names += f" (+{len(code_files) - 3})"
 
             items.append(
-                f"  📄 {DOCS_BASE}/{doc_subdir}/\n" f"     Skill: {skill}\n" f"     Код: {cf_names}"
+                f"  📄 {DOCS_BASE}/{doc_subdir}/\n     Skill: {skill}\n     Код: {cf_names}"
             )
 
         items_str = "\n".join(items)

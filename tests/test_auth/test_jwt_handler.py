@@ -1,17 +1,15 @@
 """Tests for JWT token handling (Phase 12.3)."""
 
-import time
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from src.api.auth.jwt_handler import JWTHandler, TokenPayload, get_jwt_handler
 
-
 # ---------------------------------------------------------------------------
 # JWTHandler init
 # ---------------------------------------------------------------------------
+
 
 class TestJWTHandlerInit:
     def test_default_parameters(self):
@@ -29,6 +27,7 @@ class TestJWTHandlerInit:
 # ---------------------------------------------------------------------------
 # Token creation
 # ---------------------------------------------------------------------------
+
 
 class TestCreateToken:
     def setup_method(self):
@@ -64,19 +63,20 @@ class TestCreateToken:
     def test_expiration_is_set(self):
         token = self.handler.create_token("t")
         payload = self.handler.verify_token(token)
-        assert payload.exp > datetime.now(timezone.utc)
+        assert payload.exp > datetime.now(UTC)
 
     def test_iat_is_set(self):
         token = self.handler.create_token("t")
         payload = self.handler.verify_token(token)
         # iat should be roughly now
-        diff = abs((datetime.now(timezone.utc) - payload.iat).total_seconds())
+        diff = abs((datetime.now(UTC) - payload.iat).total_seconds())
         assert diff < 5
 
 
 # ---------------------------------------------------------------------------
 # Token verification
 # ---------------------------------------------------------------------------
+
 
 class TestVerifyToken:
     def setup_method(self):
@@ -108,7 +108,7 @@ class TestVerifyToken:
         # Create a token that expires immediately
         import jwt as pyjwt
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload = {
             "tenant_id": "t",
             "role": "viewer",
@@ -131,7 +131,7 @@ class TestVerifyToken:
         import jwt as pyjwt
 
         # Token missing role field
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload = {
             "tenant_id": "t",
             "exp": now + timedelta(hours=1),
@@ -144,6 +144,7 @@ class TestVerifyToken:
 # ---------------------------------------------------------------------------
 # extract_tenant_id
 # ---------------------------------------------------------------------------
+
 
 class TestExtractTenantId:
     def setup_method(self):
@@ -161,6 +162,7 @@ class TestExtractTenantId:
 # get_default_token
 # ---------------------------------------------------------------------------
 
+
 class TestGetDefaultToken:
     def test_default_token_is_admin(self):
         handler = JWTHandler(secret="def-secret")
@@ -174,9 +176,10 @@ class TestGetDefaultToken:
 # TokenPayload model
 # ---------------------------------------------------------------------------
 
+
 class TestTokenPayload:
     def test_model_fields(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         tp = TokenPayload(
             tenant_id="org",
             role="editor",
@@ -187,7 +190,7 @@ class TestTokenPayload:
         assert tp.role == "editor"
 
     def test_role_validation(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # Invalid role should fail validation
         with pytest.raises(Exception):
             TokenPayload(
@@ -202,10 +205,12 @@ class TestTokenPayload:
 # get_jwt_handler singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetJWTHandler:
     def test_returns_handler(self):
         # Reset global
         import src.api.auth.jwt_handler as mod
+
         mod._jwt_handler = None
 
         handler = get_jwt_handler(secret="singleton-secret")
@@ -213,6 +218,7 @@ class TestGetJWTHandler:
 
     def test_returns_same_instance(self):
         import src.api.auth.jwt_handler as mod
+
         mod._jwt_handler = None
 
         h1 = get_jwt_handler(secret="singleton-secret-2")

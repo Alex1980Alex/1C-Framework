@@ -11,12 +11,22 @@ Tests:
 
 import asyncio
 import json
-import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
 
+from src.memory.ai_memory.adapters.base import (
+    BackendStats,
+    BaseMemoryAdapter,
+    SaveRequest,
+    SearchResult,
+)
+from src.memory.ai_memory.services.audit_service import (
+    AuditAction,
+    AuditQuery,
+    AuditService,
+)
 from src.memory.infrastructure.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
@@ -26,32 +36,13 @@ from src.memory.infrastructure.circuit_breaker import (
 )
 from src.memory.orchestrator.link_registry import LinkRegistry, LinkType
 from src.memory.orchestrator.propagation_engine import (
-    FORWARD_PROPAGATION_LINKS,
     PropagationConfig,
     PropagationEngine,
-    PropagationResult,
-    RECEIVER_TYPES,
-)
-from src.memory.orchestrator.unified_id import SourceServer, UnifiedID
-from src.memory.ai_memory.services.audit_service import (
-    AuditAction,
-    AuditLogEntry,
-    AuditQuery,
-    AuditService,
-)
-from src.memory.ai_memory.adapters.base import (
-    BaseMemoryAdapter,
-    BackendStats,
-    SaveRequest,
-    SearchResult,
 )
 from src.memory.skill_learning.merge_patterns import (
     ConflictStrategy,
-    MergeResult,
     PatternMerger,
-    PatternRecord,
 )
-
 
 # =============================================================================
 # CircuitBreaker Tests
@@ -183,12 +174,16 @@ class TestPropagationEngine:
     async def test_propagate_through_links(self, link_registry):
         # Create linked entities
         link_registry.create_link(
-            "semantic:vector-memory:a", "semantic:vector-memory:b",
-            LinkType.SUPPORTS, strength=0.8,
+            "semantic:vector-memory:a",
+            "semantic:vector-memory:b",
+            LinkType.SUPPORTS,
+            strength=0.8,
         )
         link_registry.create_link(
-            "semantic:vector-memory:b", "episodic:memory-ai:c",
-            LinkType.BASED_ON, strength=0.6,
+            "semantic:vector-memory:b",
+            "episodic:memory-ai:c",
+            LinkType.BASED_ON,
+            strength=0.6,
         )
 
         engine = PropagationEngine(
@@ -205,7 +200,10 @@ class TestPropagationEngine:
         ids = [f"semantic:vector-memory:{i}" for i in range(6)]
         for i in range(5):
             link_registry.create_link(
-                ids[i], ids[i + 1], LinkType.EXTENDS, strength=0.9,
+                ids[i],
+                ids[i + 1],
+                LinkType.EXTENDS,
+                strength=0.9,
             )
 
         engine = PropagationEngine(
@@ -223,8 +221,10 @@ class TestPropagationEngine:
     @pytest.mark.asyncio
     async def test_delta_threshold(self, link_registry):
         link_registry.create_link(
-            "semantic:vector-memory:a", "semantic:vector-memory:b",
-            LinkType.SUPPORTS, strength=0.001,
+            "semantic:vector-memory:a",
+            "semantic:vector-memory:b",
+            LinkType.SUPPORTS,
+            strength=0.001,
         )
 
         engine = PropagationEngine(
@@ -332,7 +332,9 @@ class TestAuditService:
     async def test_get_errors(self, audit_dir):
         svc = AuditService(storage_path=audit_dir / "audit.jsonl")
         await svc.log(action=AuditAction.CREATE, resource_type="x", success=True)
-        await svc.log(action=AuditAction.DELETE, resource_type="y", success=False, error_message="not found")
+        await svc.log(
+            action=AuditAction.DELETE, resource_type="y", success=False, error_message="not found"
+        )
         # Flush so buffer is clear and only persisted entries remain
         await svc.flush()
         errors = await svc.get_errors()
@@ -393,6 +395,7 @@ class ConcreteAdapter(BaseMemoryAdapter):
 
     async def save(self, request: SaveRequest) -> str | None:
         import uuid
+
         eid = str(uuid.uuid4())
         self._store[eid] = {"content": request.content, **request.metadata}
         return eid
@@ -401,10 +404,14 @@ class ConcreteAdapter(BaseMemoryAdapter):
         results = []
         for eid, data in self._store.items():
             if query.lower() in data.get("content", "").lower():
-                results.append(SearchResult(
-                    content=data["content"], score=0.8, source="test",
-                    entity_id=eid,
-                ))
+                results.append(
+                    SearchResult(
+                        content=data["content"],
+                        score=0.8,
+                        source="test",
+                        entity_id=eid,
+                    )
+                )
         return results[:limit]
 
     async def get(self, entity_id: str) -> dict | None:
@@ -424,7 +431,8 @@ class ConcreteAdapter(BaseMemoryAdapter):
 
     async def get_stats(self) -> BackendStats:
         return BackendStats(
-            backend_name="test", status="healthy",
+            backend_name="test",
+            status="healthy",
             total_items=len(self._store),
         )
 
@@ -486,10 +494,25 @@ class TestPatternMerger:
 
     @pytest.mark.asyncio
     async def test_no_duplicates(self, storage_dir):
-        self._write_patterns(storage_dir / "patterns.jsonl", [
-            {"pattern_id": "1", "name": "a", "content": "pattern A", "confidence": 0.8, "tags": ["x"]},
-            {"pattern_id": "2", "name": "b", "content": "pattern B", "confidence": 0.9, "tags": ["y"]},
-        ])
+        self._write_patterns(
+            storage_dir / "patterns.jsonl",
+            [
+                {
+                    "pattern_id": "1",
+                    "name": "a",
+                    "content": "pattern A",
+                    "confidence": 0.8,
+                    "tags": ["x"],
+                },
+                {
+                    "pattern_id": "2",
+                    "name": "b",
+                    "content": "pattern B",
+                    "confidence": 0.9,
+                    "tags": ["y"],
+                },
+            ],
+        )
         merger = PatternMerger(storage_dir)
         result = await merger.merge_duplicates()
         assert result.duplicates_found == 0
@@ -497,12 +520,29 @@ class TestPatternMerger:
 
     @pytest.mark.asyncio
     async def test_merge_exact_duplicates(self, storage_dir):
-        self._write_patterns(storage_dir / "patterns.jsonl", [
-            {"pattern_id": "1", "name": "test", "content": "hello world", "confidence": 0.7,
-             "tags": ["a"], "application_count": 5, "created_at": "2026-01-01T00:00:00"},
-            {"pattern_id": "2", "name": "test", "content": "hello world", "confidence": 0.9,
-             "tags": ["b"], "application_count": 3, "created_at": "2026-01-02T00:00:00"},
-        ])
+        self._write_patterns(
+            storage_dir / "patterns.jsonl",
+            [
+                {
+                    "pattern_id": "1",
+                    "name": "test",
+                    "content": "hello world",
+                    "confidence": 0.7,
+                    "tags": ["a"],
+                    "application_count": 5,
+                    "created_at": "2026-01-01T00:00:00",
+                },
+                {
+                    "pattern_id": "2",
+                    "name": "test",
+                    "content": "hello world",
+                    "confidence": 0.9,
+                    "tags": ["b"],
+                    "application_count": 3,
+                    "created_at": "2026-01-02T00:00:00",
+                },
+            ],
+        )
         merger = PatternMerger(storage_dir)
         result = await merger.merge_duplicates(strategy=ConflictStrategy.KEEP_HIGHER_CONFIDENCE)
         assert result.duplicates_found == 1
@@ -511,12 +551,29 @@ class TestPatternMerger:
 
     @pytest.mark.asyncio
     async def test_merge_preserves_tags_and_counts(self, storage_dir):
-        self._write_patterns(storage_dir / "patterns.jsonl", [
-            {"pattern_id": "1", "name": "x", "content": "same content", "confidence": 0.9,
-             "tags": ["a", "b"], "application_count": 10, "created_at": "2026-01-01T00:00:00"},
-            {"pattern_id": "2", "name": "x", "content": "same content", "confidence": 0.5,
-             "tags": ["c"], "application_count": 5, "created_at": "2026-01-02T00:00:00"},
-        ])
+        self._write_patterns(
+            storage_dir / "patterns.jsonl",
+            [
+                {
+                    "pattern_id": "1",
+                    "name": "x",
+                    "content": "same content",
+                    "confidence": 0.9,
+                    "tags": ["a", "b"],
+                    "application_count": 10,
+                    "created_at": "2026-01-01T00:00:00",
+                },
+                {
+                    "pattern_id": "2",
+                    "name": "x",
+                    "content": "same content",
+                    "confidence": 0.5,
+                    "tags": ["c"],
+                    "application_count": 5,
+                    "created_at": "2026-01-02T00:00:00",
+                },
+            ],
+        )
         merger = PatternMerger(storage_dir)
         result = await merger.merge_duplicates()
         # After merge, the file should have 1 pattern with merged tags and counts
@@ -530,10 +587,13 @@ class TestPatternMerger:
 
     @pytest.mark.asyncio
     async def test_dry_run_no_write(self, storage_dir):
-        self._write_patterns(storage_dir / "patterns.jsonl", [
-            {"pattern_id": "1", "content": "same", "confidence": 0.7, "tags": []},
-            {"pattern_id": "2", "content": "same", "confidence": 0.9, "tags": []},
-        ])
+        self._write_patterns(
+            storage_dir / "patterns.jsonl",
+            [
+                {"pattern_id": "1", "content": "same", "confidence": 0.7, "tags": []},
+                {"pattern_id": "2", "content": "same", "confidence": 0.9, "tags": []},
+            ],
+        )
         merger = PatternMerger(storage_dir)
         result = await merger.merge_duplicates(dry_run=True)
         assert result.duplicates_found == 1
@@ -544,11 +604,14 @@ class TestPatternMerger:
 
     @pytest.mark.asyncio
     async def test_find_duplicates(self, storage_dir):
-        self._write_patterns(storage_dir / "patterns.jsonl", [
-            {"pattern_id": "1", "content": "unique", "confidence": 0.7, "tags": []},
-            {"pattern_id": "2", "content": "dup", "confidence": 0.8, "tags": []},
-            {"pattern_id": "3", "content": "dup", "confidence": 0.9, "tags": []},
-        ])
+        self._write_patterns(
+            storage_dir / "patterns.jsonl",
+            [
+                {"pattern_id": "1", "content": "unique", "confidence": 0.7, "tags": []},
+                {"pattern_id": "2", "content": "dup", "confidence": 0.8, "tags": []},
+                {"pattern_id": "3", "content": "dup", "confidence": 0.9, "tags": []},
+            ],
+        )
         merger = PatternMerger(storage_dir)
         groups = await merger.find_duplicates()
         assert len(groups) == 1

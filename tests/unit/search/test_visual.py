@@ -1,10 +1,11 @@
 """Unit tests for Visual Search Strategy (Phase 55)."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, Mock
 
+import pytest
+
+from src.pdf_framework.schemas.documents import DocumentChunk, SearchResult
 from src.pdf_framework.search.strategies.visual import VisualSearchStrategy
-from src.pdf_framework.schemas.documents import SearchResult, DocumentChunk
 
 
 @pytest.fixture
@@ -19,32 +20,36 @@ def mock_colpali():
 def mock_vector_store():
     """Mock vector store."""
     store = AsyncMock()
-    store.search = AsyncMock(return_value=[
-        SearchResult(
-            chunk=DocumentChunk(
-                id="page_001",
-                content="Visual page 0",
-                document_id="doc1",
-                page_number=0,
-                section="visual",
+    store.search = AsyncMock(
+        return_value=[
+            SearchResult(
+                chunk=DocumentChunk(
+                    id="page_001",
+                    content="Visual page 0",
+                    document_id="doc1",
+                    page_number=0,
+                    section="visual",
+                ),
+                score=0.85,
+                source="qdrant_visual",
             ),
-            score=0.85,
-            source="qdrant_visual",
-        ),
-    ])
-    store.visual_search = AsyncMock(return_value=[
-        SearchResult(
-            chunk=DocumentChunk(
-                id="page_001",
-                content="Visual page 0",
-                document_id="doc1",
-                page_number=0,
-                section="visual",
+        ]
+    )
+    store.visual_search = AsyncMock(
+        return_value=[
+            SearchResult(
+                chunk=DocumentChunk(
+                    id="page_001",
+                    content="Visual page 0",
+                    document_id="doc1",
+                    page_number=0,
+                    section="visual",
+                ),
+                score=0.90,
+                source="qdrant_visual",
             ),
-            score=0.90,
-            source="qdrant_visual",
-        ),
-    ])
+        ]
+    )
     return store
 
 
@@ -66,6 +71,7 @@ class TestVisualSearchStrategy:
         """Test basic visual search."""
         # Mock query embedding
         import torch
+
         mock_tensor = torch.randn(32, 128)
         mock_colpali.embed_query.return_value = mock_tensor
 
@@ -90,6 +96,7 @@ class TestVisualSearchStrategy:
     async def test_hybrid_visual_text_search(self, visual_strategy, mock_colpali):
         """Test hybrid visual+text search with RRF fusion."""
         import torch
+
         mock_tensor = torch.randn(32, 128)
         mock_colpali.embed_query.return_value = mock_tensor
 
@@ -183,6 +190,7 @@ class TestVisualSearchStrategy:
         )
 
         import torch
+
         mock_tensor = torch.randn(32, 128)
         mock_colpali.embed_query.return_value = mock_tensor
 
@@ -197,7 +205,7 @@ def test_create_visual_search_strategy(mock_colpali, mock_vector_store):
     from src.pdf_framework.search.strategies.visual import create_visual_search_strategy
 
     strategy = create_visual_search_strategy(
-        colpali_provider=mock_colpai,
+        colpali_provider=mock_colpali,
         vector_store=mock_vector_store,
         visual_collection="test_visual",
     )

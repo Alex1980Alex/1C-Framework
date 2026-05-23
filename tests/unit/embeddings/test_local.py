@@ -1,7 +1,5 @@
 """Unit tests for Local Embedding Provider (F2.4.1-F2.4.2)."""
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 

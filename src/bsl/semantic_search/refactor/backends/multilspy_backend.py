@@ -42,12 +42,7 @@ class MultilspyBackend:
         return self._CONFIDENCE.get(symbol_kind, 0.0)
 
     def plan_rename(self, uri: str, line: int, character: int, new_name: str) -> WorkspaceEdit:
-        """Request a rename from the LSP and return it as a domain WorkspaceEdit.
-
-        The `line` argument follows the EDT-MCP / Serena convention (1-based),
-        consistent with `AstGrepBackend`. LSP positions are 0-based, so we
-        convert here.
-        """
+        """Request a rename from the LSP and return it as a domain WorkspaceEdit."""
         try:
             client = self._factory()
         except Exception as exc:

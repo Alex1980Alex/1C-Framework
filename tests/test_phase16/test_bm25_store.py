@@ -6,8 +6,8 @@ Tests for BM25Store: initialization, add, search, delete, lemmatization.
 import pytest
 
 from src.pdf_framework.search.bm25_store import (
-    BM25Store,
     RUSSIAN_STOP_WORDS,
+    BM25Store,
     lemmatize_text,
     lemmatize_word,
 )
@@ -22,6 +22,7 @@ def bm25_store(tmp_path):
 # ---------------------------------------------------------------------------
 # Initialization
 # ---------------------------------------------------------------------------
+
 
 class TestBM25StoreInit:
     @pytest.mark.asyncio
@@ -46,6 +47,7 @@ class TestBM25StoreInit:
 # ---------------------------------------------------------------------------
 # Add chunks
 # ---------------------------------------------------------------------------
+
 
 class TestBM25Add:
     @pytest.mark.asyncio
@@ -102,12 +104,16 @@ class TestBM25Add:
     async def test_upsert_replaces_existing(self, bm25_store):
         await bm25_store.initialize()
         await bm25_store.add_chunks(
-            chunk_ids=["c1"], contents=["Старый текст"],
-            document_ids=["d1"], sources=["s"],
+            chunk_ids=["c1"],
+            contents=["Старый текст"],
+            document_ids=["d1"],
+            sources=["s"],
         )
         await bm25_store.add_chunks(
-            chunk_ids=["c1"], contents=["Новый текст"],
-            document_ids=["d1"], sources=["s"],
+            chunk_ids=["c1"],
+            contents=["Новый текст"],
+            document_ids=["d1"],
+            sources=["s"],
         )
         assert await bm25_store.count() == 1
         # Old text should not be found
@@ -126,6 +132,7 @@ class TestBM25Add:
 # ---------------------------------------------------------------------------
 # Search
 # ---------------------------------------------------------------------------
+
 
 class TestBM25Search:
     @pytest.mark.asyncio
@@ -219,6 +226,7 @@ class TestBM25Search:
 # Lemmatization
 # ---------------------------------------------------------------------------
 
+
 class TestLemmatization:
     def test_lemmatize_word_russian(self):
         lemma = lemmatize_word("регистров")
@@ -264,7 +272,7 @@ class TestTokenizeQuery:
         assert "регистр" in tokens
 
     def test_strips_quotes(self):
-        tokens = BM25Store._tokenize_query('"регистр" \'накопления\'')
+        tokens = BM25Store._tokenize_query("\"регистр\" 'накопления'")
         assert "регистр" in tokens
 
 
@@ -285,6 +293,7 @@ class TestStemToken:
 # ---------------------------------------------------------------------------
 # Delete
 # ---------------------------------------------------------------------------
+
 
 class TestBM25Delete:
     @pytest.mark.asyncio
@@ -323,6 +332,7 @@ class TestBM25Delete:
 # ---------------------------------------------------------------------------
 # Clear and Count
 # ---------------------------------------------------------------------------
+
 
 class TestBM25ClearCount:
     @pytest.mark.asyncio

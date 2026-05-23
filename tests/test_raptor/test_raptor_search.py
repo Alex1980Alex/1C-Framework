@@ -4,21 +4,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from src.pdf_framework.schemas.documents import (
+    DocumentChunk,
+    SearchResponse,
+    SearchResult,
+)
 from src.pdf_framework.search.strategies.raptor_search import (
     RAPTORSearchConfig,
     RAPTORSearchStrategy,
     create_raptor_search_strategy,
 )
-from src.pdf_framework.schemas.documents import (
-    DocumentChunk,
-    SearchResult,
-    SearchResponse,
-)
-
 
 # ---------------------------------------------------------------------------
 # RAPTORSearchConfig
 # ---------------------------------------------------------------------------
+
 
 class TestRAPTORSearchConfig:
     def test_defaults(self):
@@ -43,6 +43,7 @@ class TestRAPTORSearchConfig:
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 def _make_search_result(chunk_id: str, score: float, raptor_level: int = 0):
     chunk = DocumentChunk(
         id=chunk_id,
@@ -60,18 +61,21 @@ def _make_search_result(chunk_id: str, score: float, raptor_level: int = 0):
 @pytest.fixture
 def mock_vector_store():
     store = AsyncMock()
-    store.search = AsyncMock(return_value=[
-        _make_search_result("leaf_0", 0.9, raptor_level=0),
-        _make_search_result("leaf_1", 0.8, raptor_level=0),
-        _make_search_result("summary_0", 0.7, raptor_level=1),
-        _make_search_result("summary_1", 0.6, raptor_level=2),
-    ])
+    store.search = AsyncMock(
+        return_value=[
+            _make_search_result("leaf_0", 0.9, raptor_level=0),
+            _make_search_result("leaf_1", 0.8, raptor_level=0),
+            _make_search_result("summary_0", 0.7, raptor_level=1),
+            _make_search_result("summary_1", 0.6, raptor_level=2),
+        ]
+    )
     return store
 
 
 # ---------------------------------------------------------------------------
 # RAPTORSearchStrategy
 # ---------------------------------------------------------------------------
+
 
 class TestRAPTORSearchStrategy:
     def test_init_defaults(self, mock_vector_store):
@@ -81,7 +85,8 @@ class TestRAPTORSearchStrategy:
     def test_init_custom_config(self, mock_vector_store):
         config = RAPTORSearchConfig(search_mode="tree_traversal")
         strategy = RAPTORSearchStrategy(
-            vector_store=mock_vector_store, config=config,
+            vector_store=mock_vector_store,
+            config=config,
         )
         assert strategy._config.search_mode == "tree_traversal"
 
@@ -181,12 +186,15 @@ class TestRAPTORSearchStrategy:
         """tree_traversal mode falls back to collapsed."""
         config = RAPTORSearchConfig(search_mode="tree_traversal")
         strategy = RAPTORSearchStrategy(
-            vector_store=mock_vector_store, config=config,
+            vector_store=mock_vector_store,
+            config=config,
         )
         embedding = [0.1] * 384
 
         response = await strategy.search(
-            query="test", query_embedding=embedding, k=3,
+            query="test",
+            query_embedding=embedding,
+            k=3,
         )
 
         assert isinstance(response, SearchResponse)
@@ -217,6 +225,7 @@ class TestRAPTORSearchStrategy:
 # _level_weight
 # ---------------------------------------------------------------------------
 
+
 class TestLevelWeight:
     def test_level_0(self):
         strategy = RAPTORSearchStrategy(vector_store=MagicMock())
@@ -234,6 +243,7 @@ class TestLevelWeight:
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
 
 class TestFactory:
     def test_create_raptor_search_strategy(self):

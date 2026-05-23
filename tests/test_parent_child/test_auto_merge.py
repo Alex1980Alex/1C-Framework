@@ -166,10 +166,12 @@ class TestSearchLogic:
         s = _make_strategy(merge_threshold=2)
 
         s._embedding.embed_text = AsyncMock(return_value=[0.1] * 384)
-        s._vector_store.search = AsyncMock(return_value=[
-            _orphan_result("o1", score=0.9),
-            _orphan_result("o2", score=0.8),
-        ])
+        s._vector_store.search = AsyncMock(
+            return_value=[
+                _orphan_result("o1", score=0.9),
+                _orphan_result("o2", score=0.8),
+            ]
+        )
 
         response = await s.search("test query", k=5)
 
@@ -194,9 +196,7 @@ class TestSearchLogic:
             _orphan_result("o1", 0.75),
         ]
         s._vector_store.search = AsyncMock(return_value=results)
-        s._parent_store.get_parent = AsyncMock(
-            return_value=_parent_chunk("p1", "merged parent")
-        )
+        s._parent_store.get_parent = AsyncMock(return_value=_parent_chunk("p1", "merged parent"))
 
         response = await s.search("test query", k=5)
 

@@ -209,7 +209,7 @@ keywords: {json.dumps(keywords, ensure_ascii=False)}
 
 ## 1. Идентификация
 
-> Заполни из исходных файлов: {', '.join(f.name for f in files[:5])}
+> Заполни из исходных файлов: {", ".join(f.name for f in files[:5])}
 
 **Что это:** [TODO: извлечь из документации]
 **Для чего:** [TODO]
@@ -298,9 +298,9 @@ def print_plan(groups: dict[str, list[Path]], index: dict) -> None:
     total_files = sum(len(files) for files in groups.values())
     existing = set(index.get("topics", {}).keys())
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Doc-to-Cache: План обработки")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Тем: {len(groups)}, Файлов: {total_files}")
     print(f"Существующих тем в кеше: {len(existing)}")
     print()
@@ -324,9 +324,9 @@ def print_plan(groups: dict[str, list[Path]], index: dict) -> None:
             print(f"           ... и ещё {len(files) - 5}")
         print()
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Выходной каталог: {CACHE_DIR.relative_to(PROJECT_ROOT)}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 def create_scaffolds(groups: dict[str, list[Path]], index: dict) -> None:

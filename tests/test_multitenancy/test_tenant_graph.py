@@ -1,7 +1,7 @@
 """Tests for tenant graph store (Phase 12.2)."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,10 +13,10 @@ from src.pdf_framework.multitenancy.tenant_graph import (
 )
 from src.pdf_framework.schemas.entities import Entity, Relation, SubGraph
 
-
 # ---------------------------------------------------------------------------
 # _sanitize_tenant_id
 # ---------------------------------------------------------------------------
+
 
 class TestSanitizeTenantId:
     def test_simple(self):
@@ -35,6 +35,7 @@ class TestSanitizeTenantId:
 # ---------------------------------------------------------------------------
 # TenantGraphStore init
 # ---------------------------------------------------------------------------
+
 
 class TestTenantGraphStoreInit:
     def test_creates_graph_dir(self, tmp_path):
@@ -69,6 +70,7 @@ class TestTenantGraphStoreInit:
 # ---------------------------------------------------------------------------
 # TenantGraphStore methods with real NetworkX
 # ---------------------------------------------------------------------------
+
 
 class TestTenantGraphStoreIntegration:
     """Integration tests using real NetworkXGraphStore."""
@@ -298,10 +300,12 @@ class TestTenantGraphStoreIntegration:
 # TenantGraphManager
 # ---------------------------------------------------------------------------
 
+
 class TestTenantGraphManager:
     @pytest.fixture
     def graph_manager(self, tmp_path):
         from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+
         return TenantGraphManager(
             base_store_class=NetworkXGraphStore,
             graph_dir=tmp_path / "graphs",
@@ -344,9 +348,11 @@ class TestTenantGraphManager:
 # get_tenant_graph_manager singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetTenantGraphManager:
     def test_returns_instance(self):
         import src.pdf_framework.multitenancy.tenant_graph as mod
+
         mod._tenant_graph_manager = None
 
         mgr = get_tenant_graph_manager()
@@ -356,6 +362,7 @@ class TestGetTenantGraphManager:
 
     def test_returns_same_instance(self):
         import src.pdf_framework.multitenancy.tenant_graph as mod
+
         mod._tenant_graph_manager = None
 
         m1 = get_tenant_graph_manager()

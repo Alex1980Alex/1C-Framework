@@ -36,18 +36,21 @@ def test_routing_matrix_yaml_roundtrip():
 
 def test_routing_matrix_yaml_missing_kind_falls_back_to_unknown(tmp_path):
     yaml_path = tmp_path / "routes.yaml"
-    _write_yaml(yaml_path, {
-        "version": 2,
-        "routes": {
-            "unknown": {
-                "primary": "semantic",
-                "fallback": None,
-                "confidence": 0.25,
-                "reason": "unknown catch-all",
-                "manual_fallback": True,
+    _write_yaml(
+        yaml_path,
+        {
+            "version": 2,
+            "routes": {
+                "unknown": {
+                    "primary": "semantic",
+                    "fallback": None,
+                    "confidence": 0.25,
+                    "reason": "unknown catch-all",
+                    "manual_fallback": True,
+                },
             },
         },
-    })
+    )
     RoutingMatrix.load(yaml_path)
     result = RoutingMatrix.route_for(SymbolKind.MODULE_EXPORT_PROC)
     assert result.primary == "semantic"
@@ -57,17 +60,20 @@ def test_routing_matrix_yaml_missing_kind_falls_back_to_unknown(tmp_path):
 
 def test_routing_matrix_yaml_unknown_route_name_skipped(tmp_path):
     yaml_path = tmp_path / "routes.yaml"
-    _write_yaml(yaml_path, {
-        "version": 2,
-        "routes": {
-            "nonexistent_kind": {
-                "primary": "x",
-                "fallback": None,
-                "confidence": 0.1,
-                "reason": "bad",
+    _write_yaml(
+        yaml_path,
+        {
+            "version": 2,
+            "routes": {
+                "nonexistent_kind": {
+                    "primary": "x",
+                    "fallback": None,
+                    "confidence": 0.1,
+                    "reason": "bad",
+                },
             },
         },
-    })
+    )
     RoutingMatrix.load(yaml_path)
     for kind in RoutingMatrix.all_kinds():
         decision = RoutingMatrix.route_for(kind)
@@ -131,18 +137,21 @@ def test_global_ast_grep_unknown_keys_dropped(tmp_path):
 
 def test_routing_matrix_reset_restores_defaults(tmp_path):
     yaml_path = tmp_path / "routes.yaml"
-    _write_yaml(yaml_path, {
-        "version": 2,
-        "routes": {
-            "module_export_proc": {
-                "primary": "regex",
-                "fallback": None,
-                "confidence": 0.1,
-                "reason": "custom",
-                "manual_fallback": True,
+    _write_yaml(
+        yaml_path,
+        {
+            "version": 2,
+            "routes": {
+                "module_export_proc": {
+                    "primary": "regex",
+                    "fallback": None,
+                    "confidence": 0.1,
+                    "reason": "custom",
+                    "manual_fallback": True,
+                },
             },
         },
-    })
+    )
     RoutingMatrix.load(yaml_path)
     assert RoutingMatrix.route_for(SymbolKind.MODULE_EXPORT_PROC).primary == "regex"
 

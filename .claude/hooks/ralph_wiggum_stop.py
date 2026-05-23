@@ -263,8 +263,7 @@ def main():
         _block(
             count,
             max_iter,
-            f"Task may not be complete.{unmet_str} "
-            "Check all criteria. Include RALPH_DONE if done.",
+            f"Task may not be complete.{unmet_str} Check all criteria. Include RALPH_DONE if done.",
         )
 
     # 10. Later iterations with no signals → allow stop

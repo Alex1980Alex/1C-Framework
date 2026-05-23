@@ -100,7 +100,10 @@ def test_manual_instruction_includes_suggested_approach_per_kind(tmp_path):
 
     result = orch.rename(uri, 0, 10, "ПриЗагрузке", dry_run=True)
     assert result.manual_instruction is not None
-    assert "Grep" in result.manual_instruction.suggested_approach or "EDT" in result.manual_instruction.suggested_approach
+    assert (
+        "Grep" in result.manual_instruction.suggested_approach
+        or "EDT" in result.manual_instruction.suggested_approach
+    )
     assert len(result.manual_instruction.warnings) > 0
 
 

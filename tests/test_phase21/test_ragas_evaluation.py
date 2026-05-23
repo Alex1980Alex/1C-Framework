@@ -30,8 +30,10 @@ class TestRAGASAdapter:
 
         adapter = RAGASAdapter()
         dataset = adapter.to_ragas_dataset(
-            questions=["Q?"], answers=["A."],
-            contexts=[["C."]], ground_truths=["GT."],
+            questions=["Q?"],
+            answers=["A."],
+            contexts=[["C."]],
+            ground_truths=["GT."],
         )
         result = await adapter.evaluate(dataset, metrics=["faithfulness"])
         assert "faithfulness" in result
@@ -80,7 +82,7 @@ class TestRegressionTester:
 class TestErrorAnalyzer:
     @pytest.mark.asyncio
     async def test_classify_retrieval_miss(self):
-        from src.pdf_framework.evaluation.error_analysis import ErrorAnalyzer, ErrorType
+        from src.pdf_framework.evaluation.error_analysis import ErrorAnalyzer
 
         analyzer = ErrorAnalyzer()
         report = await analyzer.analyze(report=None)

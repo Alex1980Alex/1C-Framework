@@ -230,8 +230,9 @@ async def main():
     if not args.skip_graph:
         logger.info("[Step 6] Rebuilding graph entity embeddings...")
         try:
-            from src.pdf_framework.graph_store.entity_embeddings import EntityEmbeddingBuilder
             from src.pdf_framework.graph_store.providers.networkx import NetworkXGraphStore
+
+            from src.pdf_framework.graph_store.entity_embeddings import EntityEmbeddingBuilder
 
             graph_store = NetworkXGraphStore(current_settings.graphrag)
             builder = EntityEmbeddingBuilder(

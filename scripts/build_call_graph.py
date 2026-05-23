@@ -52,12 +52,15 @@ def main() -> None:
             store.clear()
             print("Cleared existing call graph")
 
-    with tracker.stage("file_scan"):
-        bsl_files = sorted(
-            f
-            for f in project.rglob("*.bsl")
-            if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
-        )
+    if args.clear:
+        store.clear()
+        print("Cleared existing call graph")
+
+    bsl_files = sorted(
+        f
+        for f in project.rglob("*.bsl")
+        if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
+    )
     print(f"Found {len(bsl_files)} BSL files")
     tracker.event("file_scan_done", count=len(bsl_files))
     tracker.set_state(total_files=len(bsl_files), file_idx=0, errors=0)
@@ -84,9 +87,9 @@ def main() -> None:
     elapsed = time.time() - t0
     stats = store.stats()
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("CALL GRAPH BUILD COMPLETE")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"  Files:      {len(bsl_files)}")
     print(f"  Symbols:    {stats['symbols']}")
     print(f"  Calls:      {stats['calls']}")
@@ -97,7 +100,7 @@ def main() -> None:
     print(f"  Errors:     {errors}")
     print(f"  Time:       {elapsed:.1f}s")
     print(f"  DB:         {args.db}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     tracker.stop(
         summary={

@@ -68,6 +68,11 @@
       "d:\\1С-Framework\\.claude\\skills"
     ]
   },
+  "env": {
+    "AUTO_PR_ENABLED": "0",
+    "AUTO_PR_BASE": "dev-master",
+    "AUTO_PR_MIN_COMMITS": "3"
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -392,6 +397,16 @@
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-bash-errors.py",
             "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "TaskUpdate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/post-task-push-pr.py",
+            "timeout": 1320
           }
         ]
       }

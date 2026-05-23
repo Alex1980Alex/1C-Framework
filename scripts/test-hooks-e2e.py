@@ -579,9 +579,9 @@ ALL_TESTS = {
 
 def run_tests(filter_suite: str = None, verbose: bool = False) -> int:
     """Run all tests and print results. Returns exit code (0=all pass, 1=failures)."""
-    print(f"\n{BOLD}{'='*60}{RESET}")
+    print(f"\n{BOLD}{'=' * 60}{RESET}")
     print(f"{BOLD}  Hook E2E Tests{RESET}")
-    print(f"{BOLD}{'='*60}{RESET}\n")
+    print(f"{BOLD}{'=' * 60}{RESET}\n")
 
     # Check Python interpreter
     if not Path(PYTHON).exists():
@@ -615,10 +615,10 @@ def run_tests(filter_suite: str = None, verbose: bool = False) -> int:
         results_by_suite[suite_name] = suite_results
 
     # Summary
-    print(f"\n{BOLD}{'='*60}{RESET}")
+    print(f"\n{BOLD}{'=' * 60}{RESET}")
     color = GREEN if failed == 0 else RED
     print(f"{color}{BOLD}  Results: {passed}/{total} passed, {failed} failed{RESET}")
-    print(f"{BOLD}{'='*60}{RESET}\n")
+    print(f"{BOLD}{'=' * 60}{RESET}\n")
 
     return 0 if failed == 0 else 1
 

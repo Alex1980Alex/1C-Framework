@@ -150,9 +150,7 @@ def format_report(fresh, stale, no_date, max_age_days) -> str:
         lines.append("\n| Skill | Age (days) | Last verified |")
         lines.append("|-------|-----------|---------------|")
         for s in sorted(fresh, key=lambda x: x["age_days"]):
-            lines.append(
-                f"| {s['name']} | {s['age_days']} | " f"{s['date'].strftime('%Y-%m-%d')} |"
-            )
+            lines.append(f"| {s['name']} | {s['age_days']} | {s['date'].strftime('%Y-%m-%d')} |")
 
     return "\n".join(lines) + "\n"
 

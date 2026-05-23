@@ -7,8 +7,6 @@ Tests:
 - F2.6.4: deterministic ID generation
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 
@@ -127,10 +125,7 @@ class TestPipeline:
 
         pipeline = ProcessingPipeline()
 
-        chunks = [
-            {"content": f"chunk {i}"}
-            for i in range(10)
-        ]
+        chunks = [{"content": f"chunk {i}"} for i in range(10)]
 
         result = pipeline._assign_page_numbers(chunks, start_page=1)
 
@@ -161,9 +156,7 @@ class TestPipeline:
 
         pipeline = ProcessingPipeline()
 
-        chunks = [
-            {"content": "test", "metadata": {"key": "value"}}
-        ]
+        chunks = [{"content": "test", "metadata": {"key": "value"}}]
 
         result = pipeline._assign_page_numbers(chunks, start_page=1)
 
@@ -188,10 +181,7 @@ class TestIDGeneration:
         """F2.6.4: Different chunks should have unique IDs."""
         from src.pdf_framework.utils.id_generator import generate_id
 
-        ids = [
-            generate_id("doc.pdf", 0, i)
-            for i in range(100)
-        ]
+        ids = [generate_id("doc.pdf", 0, i) for i in range(100)]
 
         assert len(set(ids)) == 100  # All unique
 

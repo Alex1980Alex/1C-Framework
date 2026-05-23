@@ -97,9 +97,7 @@ class TestContextGenerator:
         mock_response = MagicMock()
         mock_response.content = "Этот фрагмент описывает справочники в платформе 1С:Предприятие."
 
-        with patch.object(
-            ContextGenerator, "__init__", lambda self, **kw: None
-        ):
+        with patch.object(ContextGenerator, "__init__", lambda self, **kw: None):
             gen = ContextGenerator.__new__(ContextGenerator)
             gen._settings = agent_settings
             gen._ctx = ctx_settings
@@ -109,7 +107,9 @@ class TestContextGenerator:
             gen._cache = None
             gen._model_name = "haiku"
 
-            chunk = _make_chunk("Справочники используются для хранения условно постоянной информации.")
+            chunk = _make_chunk(
+                "Справочники используются для хранения условно постоянной информации."
+            )
             doc = _make_document()
             context = await gen.generate_context(chunk, doc)
 
@@ -120,9 +120,7 @@ class TestContextGenerator:
     async def test_skip_short_chunks(self, ctx_settings, agent_settings):
         from src.pdf_framework.processing.context_generator import ContextGenerator
 
-        with patch.object(
-            ContextGenerator, "__init__", lambda self, **kw: None
-        ):
+        with patch.object(ContextGenerator, "__init__", lambda self, **kw: None):
             gen = ContextGenerator.__new__(ContextGenerator)
             gen._settings = agent_settings
             gen._ctx = ctx_settings  # min_chunk_tokens=10
@@ -148,9 +146,7 @@ class TestContextGenerator:
         cache = _ContextCache(tmp_path / "ctx.db")
         cache.put("c1", "d1", "Cached context about config.", "haiku")
 
-        with patch.object(
-            ContextGenerator, "__init__", lambda self, **kw: None
-        ):
+        with patch.object(ContextGenerator, "__init__", lambda self, **kw: None):
             gen = ContextGenerator.__new__(ContextGenerator)
             gen._settings = agent_settings
             gen._ctx = ctx_settings
@@ -180,9 +176,7 @@ class TestContextGenerator:
         mock_response = MagicMock()
         mock_response.content = "Контекст: этот фрагмент описывает объекты конфигурации."
 
-        with patch.object(
-            ContextGenerator, "__init__", lambda self, **kw: None
-        ):
+        with patch.object(ContextGenerator, "__init__", lambda self, **kw: None):
             gen = ContextGenerator.__new__(ContextGenerator)
             gen._settings = agent_settings
             gen._ctx = ctx_settings
@@ -218,9 +212,7 @@ class TestContextGenerator:
         good_response = MagicMock()
         good_response.content = "Этот фрагмент описывает механизм проведения документов в 1С."
 
-        with patch.object(
-            ContextGenerator, "__init__", lambda self, **kw: None
-        ):
+        with patch.object(ContextGenerator, "__init__", lambda self, **kw: None):
             gen = ContextGenerator.__new__(ContextGenerator)
             gen._settings = agent_settings
             gen._ctx = ctx_settings
@@ -247,9 +239,7 @@ class TestContextGenerator:
         mock_block.text = "Этот фрагмент описывает справочники и их реквизиты."
         mock_response.content = [mock_block]
 
-        with patch.object(
-            ContextGenerator, "__init__", lambda self, **kw: None
-        ):
+        with patch.object(ContextGenerator, "__init__", lambda self, **kw: None):
             gen = ContextGenerator.__new__(ContextGenerator)
             gen._settings = agent_settings
             gen._ctx = ctx_settings
@@ -259,7 +249,9 @@ class TestContextGenerator:
             gen._cache = None
             gen._model_name = "haiku"
 
-            chunk = _make_chunk("Справочники хранят условно постоянную информацию о множестве объектов.")
+            chunk = _make_chunk(
+                "Справочники хранят условно постоянную информацию о множестве объектов."
+            )
             doc = _make_document()
             context = await gen.generate_context(chunk, doc)
 

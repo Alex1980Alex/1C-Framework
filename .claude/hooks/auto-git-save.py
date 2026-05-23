@@ -39,7 +39,6 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime as _dt
 from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -364,7 +363,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
-        log.debug(f"step3: rc={commit.returncode} duration={time.time()-start:.1f}s")
+        log.debug(f"step3: rc={commit.returncode} duration={time.time() - start:.1f}s")
 
         if commit.returncode == 0:
             # Extract hash
@@ -397,7 +396,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             }
 
     except subprocess.TimeoutExpired:
-        log.error(f"TIMEOUT after {timeout}s total_elapsed={time.time()-start:.1f}s")
+        log.error(f"TIMEOUT after {timeout}s total_elapsed={time.time() - start:.1f}s")
         return {"success": False, "error": f"Timeout after {timeout}s", "timeout": True}
     except Exception as e:
         log.error(f"EXCEPTION {type(e).__name__}: {e}")
@@ -632,7 +631,7 @@ class AutoGitSave(BaseHook):
                 self._ensure_task(modified_data)
                 save_modified_files(modified_data)
                 return HookOutput().system_message(
-                    f"[AUTO-GIT-SAVE FAILED] {error}. " "Создана задача для ручного коммита."
+                    f"[AUTO-GIT-SAVE FAILED] {error}. Создана задача для ручного коммита."
                 )
 
         # --- Below threshold: track + create/update task ---

@@ -130,56 +130,9 @@ def should_skip(path: Path) -> bool:
     return any(p in path_str for p in SKIP_PATTERNS)
 
 
-def _looks_like_cyrillic_project(project: Path) -> bool:
-    """Heuristic: does the project root path contain Cyrillic characters?
-
-    Used by the late-chunking-requires-FA2 guard. Cyrillic in the path is
-    a strong signal that BSL files inside also contain Cyrillic identifiers
-    (and therefore trigger the slow-without-FA2 path documented in roadmap
-    260518 §1.2.2). False positives (Latin project path containing Cyrillic
-    files) are escape-hatched via BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2=1.
-    """
-    return any("Ѐ" <= ch <= "ӿ" for ch in str(project))
-
-
-def detect_collection_layout(client: QdrantClient, name: str) -> str:
-    """Return existing collection layout, or 'absent' if not found.
-
-    Layouts:
-      'hybrid'       - named {dense: dense_dim} + sparse {bm25: IDF}
-      'dual_vector'  - named {content, module_path} (Phase 8 legacy)
-      'dense_only'   - single-vector (legacy bsl_code_v4_late before 2026-05-22 swap)
-      'absent'       - collection does not exist
-    """
-    try:
-        info = client.get_collection(collection_name=name)
-    except (UnexpectedResponse, Exception):
-        return "absent"
-    vec_cfg = info.config.params.vectors
-    sparse_cfg = info.config.params.sparse_vectors
-    has_sparse_bm25 = bool(sparse_cfg and "bm25" in sparse_cfg)
-    if isinstance(vec_cfg, dict):
-        if "dense" in vec_cfg and has_sparse_bm25:
-            return "hybrid"
-        if "content" in vec_cfg and "module_path" in vec_cfg:
-            return "dual_vector"
-    return "dense_only"
-
-
 def create_collection(
-    client: QdrantClient,
-    name: str,
-    dims: int,
-    recreate: bool = False,
-    dual_vector: bool = False,
-    enable_sparse: bool = False,
-) -> str:
-    """Create collection if absent, return its (existing or new) layout.
-
-    `enable_sparse=True` only takes effect when CREATING the collection.
-    Auto-detect handles existing collections — important for the git
-    post-commit incremental flow that lands on the production alias.
-    """
+    client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False
+) -> None:
     if recreate:
         try:
             client.delete_collection(collection_name=name)
@@ -1370,33 +1323,9 @@ def _delete_stale_for_paths(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
+    ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
     ap.add_argument(
-        "--project",
-        type=Path,
-        default=None,
-        help="Project root with BSL files (required unless --paths is given)",
-    )
-    ap.add_argument(
-        "--paths",
-        nargs="*",
-        default=None,
-        help="Incremental mode: list of .bsl files to reindex (instead of "
-        "walking --project). Auto-detects project root from path. "
-        "Used by git post-commit hooks for per-file updates.",
-    )
-    ap.add_argument(
-        "--embedder",
-        choices=["e5", "qwen3", "qwen3-st", "qwen3-tei"],
-        default="e5",
-        help="Embedding model (default: e5; Phase 8.8 uses qwen3-st, Phase "
-        "8.12.6 adds qwen3-tei HTTP backend via text-embeddings-inference "
-        "Docker — see docker/docker-compose.gpu.yml `tei` profile)",
-    )
-    ap.add_argument(
-        "--tei-url",
-        default=Qwen3TEIEmbedder.DEFAULT_BASE_URL,
-        help="qwen3-tei only: base URL of the TEI HTTP server (default: "
-        f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
+        "--embedder", choices=["e5", "qwen3"], default="e5", help="Embedding model (default: e5)"
     )
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument(
@@ -1428,46 +1357,6 @@ def main() -> None:
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
     ap.add_argument(
         "--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)"
-    )
-    ap.add_argument(
-        "--enable-fa2",
-        action="store_true",
-        help="qwen3-st only: enable FlashAttention 2 (1.5-2x on long chunks). "
-        "Requires `pip install flash-attn` and CUDA 12.x toolkit + MSVC on Windows. "
-        "Auto-applies left-padding (Phase 8.12 C6) - required for FA2 + last-token pooling.",
-    )
-    ap.add_argument(
-        "--pooling-mode",
-        choices=["standard", "late-chunking"],
-        default="standard",
-        help="qwen3-st only. 'standard' (default): each chunk embedded "
-        "independently. 'late-chunking' (Phase 8.12.9 A2-alt, "
-        "arXiv:2409.04701): one forward pass per module, then mean-pool "
-        "the contextualized hidden states per chunk's char span. Each "
-        "chunk vector retains document-level context. Tail chunks past "
-        "the model's max_seq_length truncation fall back to standard "
-        "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
-    )
-    ap.add_argument(
-        "--sliding-overlap",
-        type=float,
-        default=None,
-        help="Phase 2 of roadmap 260518: override sliding-window overlap "
-        "ratio (default 0.15). Raise to 0.25 to chase fallback%% below "
-        "<1%% on god-object modules at the cost of ~10%% more wall-clock "
-        "from extra overlap windows. See roadmap section 4.5.",
-    )
-    ap.add_argument(
-        "--no-region-aware",
-        action="store_true",
-        help="late-chunking only (Phase 3 of roadmap 260518). RECOMMENDED "
-        "for Cyrillic BSL production after section 1.2.5 quality "
-        "benchmark (2026-05-20) showed region-aware grouping causes "
-        "-25pp recall@10 regression on medium-sized modules. Disables "
-        "`(module_path, region)` grouping in late-chunking orchestrator "
-        "and reverts to the legacy `module_path` grouping (Phase 8.12.9 "
-        "behaviour). Region-aware grouping is ON by default (kept for "
-        "backwards compat); production reindex MUST add this flag.",
     )
     args = ap.parse_args()
 
@@ -1677,21 +1566,9 @@ def main() -> None:
             print(f"Context enrichment unavailable: {e}")
             enricher = None
 
-    if args.enable_sparse and args.dual_vector:
-        # Existing dual_vector is content+module_path (2 dense slots);
-        # hybrid is dense+bm25 sparse. Combined layout {content, module_path,
-        # bm25} is untested and not used in production — refuse the combo.
-        print("ERROR: --enable-sparse is incompatible with --dual-vector")
-        sys.exit(1)
-
-    qdrant = QdrantClient(host="localhost", port=6333, timeout=120)
-    layout = create_collection(
-        qdrant,
-        args.collection,
-        vector_dims,
-        args.recreate,
-        dual_vector=args.dual_vector,
-        enable_sparse=args.enable_sparse,
+    qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
+    create_collection(
+        qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector
     )
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
@@ -1754,25 +1631,12 @@ def main() -> None:
 
             for chunk in chunks:
                 batch.append(chunk)
-                if len(batch) >= buffer_size:
-                    # Phase 8.12 C3: clear the buffer in `finally` so a
-                    # mid-flush OOM (or any other exception) cannot leave
-                    # the previous batch around to grow unbounded — the
-                    # zombie-loop bug that ate ~75% of the 28.04 reindex.
-                    try:
-                        n = flush_batch(
-                            qdrant,
-                            embedder,
-                            args.collection,
-                            batch,
-                            dual_vector=args.dual_vector,
-                            pooling_mode=args.pooling_mode,
-                            region_aware=not args.no_region_aware,
-                            sparse_encoder=sparse_encoder,
-                        )
-                        total_chunks += n
-                    finally:
-                        batch.clear()
+                if len(batch) >= args.batch_size:
+                    n = flush_batch(
+                        qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector
+                    )
+                    total_chunks += n
+                    batch.clear()
                     if args.limit and total_chunks >= args.limit:
                         break
 
@@ -1822,16 +1686,16 @@ def main() -> None:
         print(f"[{mode}] delete-stale: {cleaned} files cleaned")
 
     elapsed = time.time() - t0
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("REINDEX COMPLETE")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"  Files:    {len(bsl_files)}")
     print(f"  Symbols:  {total_symbols}")
     print(f"  Chunks:   {total_chunks}")
     print(f"  Errors:   {errors}")
-    print(f"  Time:     {elapsed:.1f}s ({elapsed/max(len(bsl_files),1):.2f}s/file)")
+    print(f"  Time:     {elapsed:.1f}s ({elapsed / max(len(bsl_files), 1):.2f}s/file)")
     print(f"  Collection: {args.collection}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     embedder.close()
     # roadmap 260518 follow-up — final summary lands in JSONL run_end record;

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.pdf_framework.schemas.documents import DocumentChunk, SearchResult, SearchResponse
+from src.pdf_framework.schemas.documents import DocumentChunk, SearchResponse, SearchResult
 
 
 def _make_search_response() -> SearchResponse:
