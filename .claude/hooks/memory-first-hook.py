@@ -34,6 +34,14 @@ import sys
 import time
 from pathlib import Path
 
+# Windows cp1251 stdout не кодирует Unicode (→, ↔, эмодзи) → UnicodeEncodeError
+# на print(msg). Force UTF-8 для stdout/stderr (Python 3.7+).
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, OSError):
+    pass
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput
