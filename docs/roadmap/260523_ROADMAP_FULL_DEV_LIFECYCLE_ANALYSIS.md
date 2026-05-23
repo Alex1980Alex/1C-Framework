@@ -973,6 +973,16 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 | 4a | — Cache reminder post-fetch | `knowledge-cache-reminder.py` PostToolUse:WebSearch\|WebFetch | YES | Have (reactive only) | Reminds to cache, не запускает search |
 | 5 | Stack Overflow search | (none) | NO | **Missing** | No hook exists |
 
+### 14.2 Problem framing
+
+**Что решаем:** code-changing prompts (детект через task-protocol classification + content patterns `feat`/`fix`/`refactor`/`implement`) сейчас проходят только Memory recall (1/5). Остальные 4 — manual или missing. Risk class: дубли архитектурных решений, противоречие existing patterns, повтор known issues.
+
+**Контекст:** infrastructure уже есть (`architecture-research` 41 cached topics, `framework-search` Qdrant MCP, WebSearch tool, `research-task-detector`). Gap — **automation glue**: hooks триггерящие правильные tools без user trigger.
+
+**Критерии успеха:** (1) 100% code-changing prompts проходят все 5 checks; (2) latency ≤8s total; (3) token cost <5K injected; (4) graceful degradation на failure; (5) override через `/skip-prework`.
+
+**Ограничения:** UPS hook timeout 30s; WebSearch latency 2-5s per query; token budget per 1K reduces conversation length.
+
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
 - При появлении нового failure class
