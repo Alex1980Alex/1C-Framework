@@ -710,13 +710,20 @@ Hook/skill file created → mandatory tasks для registration + verification (
 AUTO_PR_ENABLED=0|1                  # Master switch (default 0)
 AUTO_PR_BASE=master                  # Base branch (post-reconciliation 2026-05-23)
 AUTO_PR_MIN_COMMITS=3                # Min scope threshold
-AUTO_PR_TIMEOUT=600                  # Step timeout (10min)
-AUTO_PR_MERGE_ENABLED=1              # Allow merge after checks
-AUTO_PR_MERGE_QUEUE=0|1              # Use merge queue
-AUTO_PR_LABEL_PATTERNS=P0|P1|...     # Trigger regex
-AUTO_PR_DRY_RUN=0|1                  # Dry-run for testing
-AUTO_PR_CHECKS_TIMEOUT=300           # wait-for-checks poll ceiling
-SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD  # pr_notifier.py
+AUTO_PR_AUTO_MERGE=0|1               # Allow auto-merge после wait-for-checks (was AUTO_PR_MERGE_ENABLED — does not exist в коде)
+AUTO_PR_MERGE_QUEUE=0|1              # Use GitHub merge queue (vs squash)
+AUTO_PR_REQUIRE_LABEL=<regex>        # Trigger label regex (was AUTO_PR_LABEL_PATTERNS — wrong name)
+AUTO_PR_DRY_RUN=0|1                  # Dry-run для testing
+AUTO_PR_WAIT_FOR_CHECKS=0|1          # Poll checks перед merge
+AUTO_PR_CHECKS_TIMEOUT=300           # wait-for-checks poll ceiling в секундах
+AUTO_PR_AUTO_REBASE=0|1              # Rebase on drift detected
+AUTO_PR_CHERRY_PICK=0|1              # Use cherry-pick branch model (P3.2)
+AUTO_PR_NO_TESTS=0|1                 # Skip pre-commit run --all-files перед push
+AUTO_PR_TEST_CMD=<cmd>               # Custom test command (default: pre-commit run --all-files)
+AUTO_PR_TEST_TIMEOUT=<sec>           # Test command timeout
+AUTO_PR_REVIEWERS=user1,user2        # Fallback reviewer list
+AUTO_PR_NOTIFY_TO=email@example.com  # SMTP notification recipient
+AUTO_PR_SMTP_HOST=smtp.example.com   # SMTP host для pr_notifier.py
 ```
 
 **Pre-commit framework v4.6.0** — `.pre-commit-config.yaml` с excludes (vendor: `tools/`, `infra/`, `external/`, `jre/`, `.serena/`, `.vscode-extensions/`, `*.log`, `docs/documentation/`) + ruff 0.15 + gitleaks v8.21.2 + file size check + YAML/JSON/TOML validators
@@ -944,7 +951,7 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 - `.claude/hooks/base/{base.py, protocol.py}` — BaseHook
 - `.claude/hooks/shared/` — 24 modules
 - `data/hook-invocations.jsonl` — audit trail
-- `~/.claude/projects/C--1--Framework/memory/MEMORY.md` — 45 entries index
+- `~/.claude/projects/C--1--Framework/memory/MEMORY.md` — 40 entries index
 
 ---
 
