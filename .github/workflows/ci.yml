@@ -228,7 +228,7 @@ jobs:
       - name: Upload coverage XML artifact (unit)
         # Belt-and-suspenders: artifact даже если Codecov upload fails (rate limit / network).
         # Retention 30d для local download + offline review.
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-unit-py${{ matrix.python-version }}
@@ -295,7 +295,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage XML artifact (integration)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-integration-py${{ matrix.python-version }}

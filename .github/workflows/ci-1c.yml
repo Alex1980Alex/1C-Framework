@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload BSL Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bsl-report
           path: build/bsl-report/
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload YAxUnit Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: yaxunit-report
           path: build/reports/junit.xml
@@ -124,7 +124,7 @@ jobs:
 
       - name: Upload BDD Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bdd-report
           path: |
@@ -194,7 +194,7 @@ jobs:
 
       - name: Upload Coverage Report
         if: always() && steps.check-coverage.outputs.available == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: build/reports/coverage.xml
@@ -224,7 +224,7 @@ jobs:
           allure generate build/allure-results -o build/allure-report --clean
 
       - name: Upload Allure Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: allure-report
           path: build/allure-report/
